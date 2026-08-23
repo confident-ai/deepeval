@@ -26,6 +26,17 @@ from deepeval.templates import make_template_class
 HallucinationTemplate = make_template_class("HallucinationMetric")
 
 
+def _is_contradiction(value: str) -> bool:
+    """The single predicate behind score and reason classification (#3098).
+
+    _calculate_score counts only explicit "no" verdicts as hallucinations;
+    reason-side bucketing must use the same test so untagged verdicts that
+    slip past the lenient JSON extraction ("yes.", "yes ", "yes____") land
+    on the same side in both places.
+    """
+    return value.strip().lower() == "no"
+
+
 class HallucinationMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -159,10 +170,10 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                factual_alignments.append(verdict.reason)
-            else:
+            if _is_contradiction(verdict.verdict):
                 contradictions.append(verdict.reason)
+            else:
+                factual_alignments.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -186,10 +197,10 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                factual_alignments.append(verdict.reason)
-            else:
+            if _is_contradiction(verdict.verdict):
                 contradictions.append(verdict.reason)
+            else:
+                factual_alignments.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -251,7 +262,7 @@ class HallucinationMetric(BaseMetric):
 
         hallucination_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if _is_contradiction(verdict.verdict):
                 hallucination_count += 1
 
         score = hallucination_count / number_of_verdicts
