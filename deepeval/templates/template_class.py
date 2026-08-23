@@ -11,9 +11,11 @@ in Python.
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Type, cast
 
 from deepeval.templates.resolver import (
+    Feature,
+    TemplateMethod,
     iter_base_template_methods,
     resolve_template,
 )
@@ -69,9 +71,11 @@ def filter_template_kwargs(
     return {k: v for k, v in kwargs.items() if k in accepted}
 
 
-def _make_render_method(class_name: str, method: str) -> staticmethod:
+def _make_render_method(
+    class_name: str, method: TemplateMethod, *, feature: Feature = "metrics"
+) -> staticmethod:
     def render(**kwargs: Any) -> str:
-        return resolve_template("metrics", class_name, method, **kwargs)
+        return resolve_template(feature, class_name, method, **kwargs)
 
     render.__name__ = method
     render.__qualname__ = f"{template_class_name(class_name)}.{method}"
@@ -83,7 +87,9 @@ def _make_render_method(class_name: str, method: str) -> staticmethod:
     return staticmethod(render)
 
 
-def make_template_class(class_name: str) -> Type[Any]:
+def make_template_class(
+    class_name: str, *, feature: Feature = "metrics"
+) -> Type[Any]:
     """Build the `<Metric>Template` class for a bundled class key.
 
     Raises `MetricTemplateNotFoundError` if the key has no bundled templates,
@@ -92,6 +98,7 @@ def make_template_class(class_name: str) -> Type[Any]:
     name = template_class_name(class_name)
     namespace: Dict[str, Any] = {
         "_template_class": class_name,
+        "_template_feature": feature,
         "__doc__": (
             f"Default prompt templates for `{class_name}`.\n\n"
             "Subclass this and override any method below to customize a prompt, "
@@ -99,7 +106,9 @@ def make_template_class(class_name: str) -> Type[Any]:
         ),
     }
 
-    for method, _ in iter_base_template_methods("metrics", class_name):
-        namespace[method] = _make_render_method(class_name, method)
+    for method, _ in iter_base_template_methods(feature, class_name):
+        namespace[method] = _make_render_method(
+            class_name, cast(TemplateMethod, method), feature=feature
+        )
 
     return type(name, (), namespace)

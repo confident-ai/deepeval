@@ -1,0 +1,1 @@
+Interrupt aggressively on verbosity, slow pacing, digressions, or any chance to cut ahead with the user's next point. Still skip interruptions that would be nonsense mid-word.

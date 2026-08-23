@@ -280,8 +280,18 @@ class ToolCorrectnessMetric(BaseMetric):
             expected_tool.name for expected_tool in self.expected_tools
         ]
 
+        type_mismatches = self._get_type_mismatches()
+
         if self.should_exact_match:
-            return f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}. See details above."
+            return (
+                f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}."
+                + (
+                    f" Tool type mismatches: {type_mismatches}."
+                    if type_mismatches
+                    else ""
+                )
+                + " See details above."
+            )
 
         elif self.should_consider_ordering:
             lcs, weighted_length = self._compute_weighted_lcs()
@@ -306,6 +316,8 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"missing tools {list(missing)}")
                 if out_of_order:
                     issues.append(f"out-of-order tools {list(out_of_order)}")
+                if type_mismatches:
+                    issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
             used_expected = set(self.tools_called).intersection(
@@ -315,7 +327,26 @@ class ToolCorrectnessMetric(BaseMetric):
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
-                return f"Incomplete tool usage: missing tools {list(missing)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+                issues = []
+                if missing or not type_mismatches:
+                    issues.append(f"missing tools {list(missing)}")
+                if type_mismatches:
+                    issues.append(f"tool type mismatches {type_mismatches}")
+                return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+
+    def _get_type_mismatches(self) -> List[str]:
+        mismatches = []
+        for expected_tool in self.expected_tools:
+            for called_tool in self.tools_called:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type != called_tool.type
+                ):
+                    mismatches.append(
+                        f"{expected_tool.name} (expected {expected_tool.type.value}, called {called_tool.type.value})"
+                    )
+                    break
+        return mismatches
 
     def _construct_final_reason(
         self,
@@ -405,6 +436,8 @@ class ToolCorrectnessMetric(BaseMetric):
         for i in range(len(self.tools_called)):
             if self.tools_called[i].name != self.expected_tools[i].name:
                 return 0.0
+            if self.tools_called[i].type != self.expected_tools[i].type:
+                return 0.0
             if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
                 if (
                     self.tools_called[i].input_parameters
@@ -425,7 +458,10 @@ class ToolCorrectnessMetric(BaseMetric):
             for called_tool in self.tools_called:
                 if called_tool in matched_called_tools:
                     continue
-                if expected_tool.name == called_tool.name:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type == called_tool.type
+                ):
                     match_score = 1.0
                     if (
                         ToolCallParams.INPUT_PARAMETERS
@@ -466,7 +502,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     self.expected_tools[i - 1],
                     self.tools_called[j - 1],
                 )
-                if expected_tool.name != called_tool.name:
+                if (
+                    expected_tool.name != called_tool.name
+                    or expected_tool.type != called_tool.type
+                ):
                     dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
                     continue
                 score = 1.0

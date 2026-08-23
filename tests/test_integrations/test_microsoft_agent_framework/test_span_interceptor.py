@@ -9,7 +9,6 @@ from deepeval.integrations.microsoft_agent_framework.instrumentator import (
     MicrosoftAgentFrameworkSpanInterceptor,
 )
 
-
 _span_ids = count(start=1)
 _trace_ids = count(start=1)
 

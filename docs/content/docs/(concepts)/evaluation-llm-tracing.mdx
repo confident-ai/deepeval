@@ -757,6 +757,37 @@ CONFIDENT_TRACE_VERBOSE=0
 CONFIDENT_TRACE_FLUSH=0
 ```
 
+---
+
+## Flushing Traces Before Shutdown
+
+Traces are posted from a background worker thread, so a process that tears down immediately after its last traced call can exit before those traces reach Confident AI. Call `flush_traces()` to wait for the worker to finish:
+
+```python title="main.py" showLineNumbers {6}
+import deepeval
+
+def main():
+    run_agent()
+
+    if not deepeval.flush_traces(timeout=30.0):
+        print("Some traces were not sent before shutdown")
+```
+
+It returns `True` once nothing is left to send, and `False` if `timeout` (30 seconds by default) elapsed with traces still pending. Use `a_flush_traces()` from `async` code so the event loop keeps running while you wait:
+
+```python title="main.py" showLineNumbers {6}
+import deepeval
+
+async def main():
+    await run_agent()
+
+    await deepeval.a_flush_traces(timeout=30.0)
+```
+
+This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. It complements `CONFIDENT_TRACE_FLUSH=1`, which only flushes on interpreter exit and gives you no way to know whether the traces landed.
+
+If you send traces through OpenTelemetry, `ConfidentSpanExporter.force_flush()` and `ContextAwareSpanProcessor.force_flush()` wait on the same queue, so the standard `TracerProvider.force_flush()` call also drains pending traces.
+
 ## Visualize and Monitor on Confident AI
 
 Everything above runs entirely locally — you don't need an account for any of it. But once your traces start carrying real data (test cases, span types, tags, metadata, token costs), reading them in a terminal stops scaling.
