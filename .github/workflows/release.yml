@@ -107,7 +107,25 @@ jobs:
               | python .scripts/changelog/release_notes.py --sdk "$SDK_SLUG" \
                 > notes.md
 
-            gh release create "$TAG" --title "$SDK ${TAG#$PREFIX}" --draft --notes-file notes.md
+            # Drafts are reviewed by hand, so a re-run for a tag that already has
+            # one would leave two to pick between. Drop the old one first.
+            gh api "repos/$REPO/releases" --paginate \
+              --jq ".[] | select(.draft and .tag_name == \"$TAG\") | .id" \
+              | while read -r ID; do
+                  echo "Removing stale draft $ID for $TAG."
+                  gh api -X DELETE "repos/$REPO/releases/$ID"
+                done
+
+            CREATE_ARGS=(--title "$SDK ${TAG#$PREFIX}" --draft --notes-file notes.md)
+            # GitHub has one "Latest" badge for the whole repo and picks the newest
+            # published, non-prerelease release for it — so a TypeScript release can
+            # claim the slot from Python. Marking TypeScript as a prerelease keeps
+            # the badge on Python, which is what a visitor to this repo expects.
+            if [ "$SDK" = "TypeScript" ]; then
+              CREATE_ARGS+=(--prerelease)
+            fi
+
+            gh release create "$TAG" "${CREATE_ARGS[@]}"
 
             if [ "$SDK" = "Python" ]; then
               gh workflow run changelog.yml -f tag="$TAG"
