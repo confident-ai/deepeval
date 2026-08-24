@@ -36,7 +36,7 @@ START_MARKER = "{/* DeepEval release notes start */}"
 LEGACY_START_MARKER = "<!-- DeepEval release notes start -->"
 
 CATEGORY_ORDER = [
-    "Backward Incompatible Change",
+    "Breaking Change",
     "New Feature",
     "Experimental Feature",
     "Improvement",
@@ -490,7 +490,7 @@ If the PR is unclear, write the safest high-level improvement without guessing d
 IMPORTANT: Output only valid JSON with no code fences or comments.
 
 Allowed categories:
-- Backward Incompatible Change
+- Breaking Change
 - New Feature
 - Experimental Feature
 - Improvement
@@ -712,7 +712,7 @@ def classify(title: str, body: str) -> str:
             "breaking change",
         ]
     ):
-        return "Backward Incompatible Change"
+        return "Breaking Change"
     if any(
         key_word in title_lower or key_word in body_lower
         for key_word in ["security", "vuln", "cve"]

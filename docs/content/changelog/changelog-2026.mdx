@@ -24,7 +24,7 @@ First things first, DeepEval exists because of everyone who opened issues, revie
 
 August brought major improvements to the developer tool, focusing on enhanced reliability, flexibility, and user experience. The DAG metrics system was overhauled for easier construction and validation, while new end-to-end tests and stricter type checking increased robustness across the codebase. Documentation saw significant updates, including expanded TypeScript support and clearer examples, and onboarding was streamlined with a new setup wizard and dynamic questionnaires. Notably, support for voice conversation simulations and component-level evaluations was introduced, broadening the tool's capabilities for testing conversational and multimodal AI systems. Numerous bug fixes and refin­e
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v4.1.11
 - Updated [`BiasMetric`](/docs/metrics-bias), [`HallucinationMetric`](/docs/metrics-hallucination), [`MisuseMetric`](/docs/metrics-misuse) and [`ToxicityMetric`](/docs/metrics-toxicity) scoring logic to align with `deepeval`'s standard convention where higher scores indicate better performance (range: 0 to 1). Users are required to review and update their metric thresholds and evaluation code to reflect this directional change. ([#3102](https://github.com/confident-ai/deepeval/pull/3102)) {/* pr:3102 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -273,7 +273,7 @@ May was a month of significant enhancements and new integrations for the tool, f
 
 April's release focused on streamlining configuration and improving model support, with legacy options removed and new features added for both OpenAI and Anthropic models, including multimodal and structured output capabilities. The release introduced prompt branch management, enhanced tracing with better test case correlation, and expanded support for custom metadata and tags in evaluation workflows. Documentation and changelog tooling saw significant upgrades, including a new Next.js-based docs site and improved parsing for release notes. Numerous bug fixes addressed issues in tracing, schema handling, and CSV round-tripping, while new CLI commands and simulator APIs made it easier to work
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v3.9.9
 - Remove the legacy `API_KEY` alias and require `CONFIDENT_API_KEY` for Confident uploads. Update dataset loading to use `metadata` instead of `additional_metadata`, and refresh docs/examples to use `SingleTurnParams` for `GEval` evaluation parameters. ([#2635](https://github.com/confident-ai/deepeval/pull/2635)) {/* pr:2635 */} ([Jeffrey Ip](https://github.com/penguine-ip))

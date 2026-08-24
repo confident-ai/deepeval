@@ -121,7 +121,7 @@ export function createSection(config: SectionConfig) {
       <>
         <Banner id="docs-announcement" height="30px">
           💥 BREAKING CHANGE: All metric scores are now HIGHER THE BETTER.{" "}
-          <Link href="/changelog/changelog-2026#backward-incompatible-change">
+          <Link href="/changelog/changelog-2026#breaking-change">
             Read changelog →
           </Link>
         </Banner>
