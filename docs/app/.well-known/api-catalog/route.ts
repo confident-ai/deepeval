@@ -1,9 +1,7 @@
-// RFC 9727 API catalog, reached through the /.well-known/api-catalog rewrite
-// in next.config.mjs (the app router ignores dot-prefixed folders, so the
-// canonical path can't be a route directory). The linkset format is RFC 9264.
-// DeepEval itself ships no HTTP API — the entries point at the Confident AI
-// platform APIs, whose OpenAPI spec and reference live on confident-ai.com
-// (published by confident-landing PR #130).
+// RFC 9727 API catalog; the linkset format is RFC 9264. DeepEval itself ships
+// no HTTP API — the entries point at the Confident AI platform APIs, whose
+// OpenAPI spec and reference live on confident-ai.com (published by
+// confident-landing PR #130).
 export const revalidate = false;
 
 const confidentSite = 'https://www.confident-ai.com';

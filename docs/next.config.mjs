@@ -5,23 +5,14 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  async rewrites() {
-    return [
-      {
-        // The app router ignores dot-prefixed folders, so the RFC 9727
-        // catalog route lives at /well-known/ and is exposed here at
-        // its canonical .well-known path.
-        source: '/.well-known/api-catalog',
-        destination: '/well-known/api-catalog',
-      },
-    ];
-  },
   async headers() {
     return [
       {
         // RFC 8288 Link headers on the homepage so agents can discover
         // the docs, the llms.txt index, and the API catalog without
-        // parsing HTML.
+        // parsing HTML. (`Vary: Accept` for the negotiated routes is set in
+        // `proxy.ts`, which can append to Next's own `Vary` instead of
+        // replacing it.)
         source: '/',
         headers: [
           {

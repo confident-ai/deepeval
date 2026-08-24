@@ -32,6 +32,24 @@ const rewrites = sections.map((section) => {
   };
 });
 
+/**
+ * Mark a negotiated response as varying on `Accept` (RFC 9110 §12.5.5):
+ * these URLs return HTML or markdown for the same path, so a shared cache
+ * that ignores `Accept` could serve one representation to a client that
+ * asked for the other.
+ *
+ * Only the markdown branch can carry this. Next 16 sets its own `Vary` on
+ * rendered HTML routes and overrides both a middleware append and a
+ * `next.config.mjs` header, verified against `next start`. What limits the
+ * fallout is that negotiation happens as a rewrite to a distinct path, so
+ * any cache keyed on the resolved path stores the two representations
+ * separately; a cache keyed on the request URL alone is the residual gap.
+ */
+function varyOnAccept(response: NextResponse) {
+  response.headers.append('Vary', 'Accept');
+  return response;
+}
+
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -44,13 +62,17 @@ export default function proxy(request: NextRequest) {
 
   if (isMarkdownPreferred(request)) {
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL('/home.md', request.nextUrl));
+      return varyOnAccept(
+        NextResponse.rewrite(new URL('/home.md', request.nextUrl)),
+      );
     }
 
     for (const { negotiated } of rewrites) {
       const result = negotiated(pathname);
       if (result) {
-        return NextResponse.rewrite(new URL(result, request.nextUrl));
+        return varyOnAccept(
+          NextResponse.rewrite(new URL(result, request.nextUrl)),
+        );
       }
     }
   }

@@ -5,18 +5,16 @@ description: >
   Observatory. TRIGGER when the user wants to send OpenTelemetry or OTLP
   traces/spans from an LLM app, agent, RAG pipeline, or chatbot to Confident
   AI; configure the Confident AI OTLP endpoint; set confident.span.* or
-  confident.trace.* attributes; export AI-app traces to Confident AI without
-  the deepeval Python package; wire an OTLPSpanExporter, OpenTelemetry
-  Collector, or vendor-neutral OTel SDK to Confident AI; or pick the US vs EU
-  Confident AI OTLP endpoint. Language-agnostic — the mechanism is OTLP
-  attribute keys plus an exporter endpoint. DO NOT TRIGGER for building
-  DeepEval pytest eval suites, datasets, goldens, metrics, or deepeval test run
-  (use the `deepeval` skill); for instrumenting with the DeepEval SDK's
-  @observe decorator or framework integrations (use the `deepeval-tracing`
-  skill); or for instrumenting non-AI software such as web servers, CRUD
-  backends, or infrastructure — the confident.* attributes describe AI
-  components (agents, LLM calls, retrievers, tools) and apply to AI
-  applications only.
+  confident.trace.* attributes; export AI-app traces without the deepeval
+  Python package; wire an OTLPSpanExporter, OpenTelemetry Collector, or
+  vendor-neutral OTel SDK to Confident AI; or pick the US vs EU OTLP endpoint.
+  Language-agnostic: the mechanism is OTLP attribute keys plus an exporter
+  endpoint. DO NOT TRIGGER for building DeepEval pytest eval suites, datasets,
+  goldens, metrics, or deepeval test run (use the `deepeval` skill); for
+  instrumenting with the DeepEval SDK's @observe decorator or framework
+  integrations (use the `deepeval-tracing` skill); or for non-AI software such
+  as web servers, CRUD backends, or infrastructure: the confident.* attributes
+  describe AI components only.
 license: Apache-2.0
 metadata:
   author: Confident AI

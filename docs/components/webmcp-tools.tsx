@@ -36,11 +36,21 @@ function text(value: string): WebMcpToolResult {
   return { content: [{ type: 'text', text: value }] };
 }
 
+// `/api/search` covers `/docs` only, so an empty result set is not evidence
+// that the content is missing. Both the empty and the failed branch point at
+// the surfaces that do cover the whole site.
+const OTHER_SECTIONS =
+  'Guides, tutorials, integrations, changelog, and blog are not in this index: read / with Accept: text/markdown for the full site index.';
+const SEARCH_FALLBACK = 'Search is unavailable. Fetch /llms.txt instead.';
+
 const tools: WebMcpTool[] = [
   {
     name: 'search_deepeval_docs',
+    // Scoped to /docs on purpose: `/api/search` indexes `docsSource` only.
+    // Naming the other sections here would turn "not indexed" into "does not
+    // exist" for any agent that searches for a guide or a blog post.
     description:
-      'Search the DeepEval documentation, guides, tutorials, integrations, and blog. Returns titles and URLs. Request any result URL with Accept: text/markdown (or append .mdx) for markdown.',
+      'Search the DeepEval documentation (the /docs section). Returns titles and URLs. Request any result URL with Accept: text/markdown (or append .mdx) for markdown. For guides, tutorials, integrations, changelog, and blog, read / with Accept: text/markdown for the full site index.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -54,11 +64,13 @@ const tools: WebMcpTool[] = [
       try {
         const params = new URLSearchParams({ query });
         const res = await fetch(`/api/search?${params}`);
-        if (!res.ok) return text(`HTTP ${res.status}`);
+        if (!res.ok) return text(`${SEARCH_FALLBACK} (HTTP ${res.status})`);
         const results = (await res.json()) as SearchResult[];
         const pages = results.filter((r) => r.type === 'page').slice(0, 5);
         const top = pages.length > 0 ? pages : results.slice(0, 5);
-        if (top.length === 0) return text('No results.');
+        if (top.length === 0) {
+          return text(`No results in /docs. ${OTHER_SECTIONS}`);
+        }
         return text(
           top
             .map((r) => `${r.content}\n${location.origin}${r.url}`)
@@ -66,7 +78,7 @@ const tools: WebMcpTool[] = [
         );
       } catch (err) {
         console.warn('WebMCP: search failed', err);
-        return text('Search is unavailable. Fetch /llms.txt instead.');
+        return text(SEARCH_FALLBACK);
       }
     },
   },
@@ -85,14 +97,25 @@ const tools: WebMcpTool[] = [
       },
     },
     execute: async (input) => {
+      // Two separate failures with opposite remedies: a malformed path is the
+      // caller's to fix, a failed fetch is worth a retry. One catch around
+      // both would tell an agent holding a correct path to reformat it.
+      let target: URL;
       try {
-        const target = new URL(
+        target = new URL(
           String(input.path ?? location.pathname),
           location.origin,
         );
-        if (target.origin !== location.origin) {
-          return text('Only paths on this site are allowed.');
-        }
+      } catch (err) {
+        console.warn('WebMCP: get_page_markdown got an unparseable path', err);
+        return text(
+          'Could not parse that path. Provide a site-relative path such as /docs/introduction.',
+        );
+      }
+      if (target.origin !== location.origin) {
+        return text('Only paths on this site are allowed.');
+      }
+      try {
         const res = await fetch(target, {
           headers: { accept: 'text/markdown' },
         });
@@ -103,9 +126,9 @@ const tools: WebMcpTool[] = [
         }
         return text(await res.text());
       } catch (err) {
-        console.warn('WebMCP: get_page_markdown failed', err);
+        console.warn('WebMCP: get_page_markdown fetch failed', err);
         return text(
-          'Could not fetch that path. Provide a site-relative path such as /docs/introduction.',
+          `Network error while fetching ${target.pathname}. The path is valid, so retry.`,
         );
       }
     },
@@ -128,10 +151,13 @@ const tools: WebMcpTool[] = [
   },
 ];
 
-// Module-level guard: if the host ignores both the abort signal and the
-// returned handle, effect cleanup cannot unregister, and StrictMode's dev
-// double-mount would register every tool twice. The flag resets only when
-// cleanup had real handles to unregister with.
+// Module-level guard against StrictMode's dev double-mount registering every
+// tool twice. `registerTool` cleanup always calls `controller.abort()`, so a
+// spec-conformant host has released the tools by the time cleanup returns
+// whether or not it handed back a handle — the flag has to clear either way,
+// or a host that honors the signal and returns nothing would leave the second
+// mount with zero tools and no error. `provideContext` has no abort path, so
+// only that branch keeps the flag set.
 let registered = false;
 
 export default function WebMcpTools() {
@@ -143,6 +169,7 @@ export default function WebMcpTools() {
     registered = true;
     const controller = new AbortController();
     const unregisters: Array<() => void> = [];
+    const usedRegisterTool = Boolean(host.registerTool);
     if (host.registerTool) {
       for (const tool of tools) {
         try {
@@ -174,7 +201,7 @@ export default function WebMcpTools() {
     }
     return () => {
       controller.abort();
-      if (unregisters.length > 0) registered = false;
+      if (usedRegisterTool) registered = false;
       for (const unregister of unregisters) {
         try {
           unregister();
