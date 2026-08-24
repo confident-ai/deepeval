@@ -290,7 +290,7 @@ def parse_args() -> argparse.Namespace:
         description="Clean up and SDK-scope GitHub release notes from stdin."
     )
     ap.add_argument("--sdk", required=True, choices=["python", "typescript"])
-    ap.add_argument("--ai-model", default="gpt-5.2")
+    ap.add_argument("--ai-model", default="gpt-4.1")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-ai", action="store_true")
     ap.add_argument("--silent", action="store_true")
