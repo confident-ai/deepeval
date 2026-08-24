@@ -1,13 +1,13 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, List, Tuple, Union, Dict, Type
+from typing import Optional, List, Tuple, Union, Type
 from rich.console import Console
-import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
     Rubric,
+    calculate_weighted_summed_score,
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
@@ -360,44 +360,7 @@ class ConversationalGEval(BaseConversationalMetric):
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion
     ) -> Union[int, float]:
-        generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the token that we care for logprobs, i.e., the token matching the score
-        score_logprobs = None
-        for token_logprobs in generated_logprobs:
-            if token_logprobs.token == str(raw_score):
-                score_logprobs = token_logprobs
-                break
-        # Then, calculate the score based on the logprobs
-        token_linear_probability: Dict[int, float] = {}
-        sum_linear_probability = 0
-        # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
-        min_logprob = math.log(0.01)
-        for token_logprob in score_logprobs.top_logprobs:
-            logprob = token_logprob.logprob
-
-            # Filter out low probability tokens
-            if logprob < min_logprob:
-                continue
-            # Filter out non-decimal token to prevent errors in later int(token) conversion
-            if not token_logprob.token.isdecimal():
-                continue
-
-            # Calculate the linear probability
-            linear_prob = math.exp(logprob)
-            token_score = int(token_logprob.token)
-            if token_linear_probability.get(token_score):
-                token_linear_probability[token_score] += linear_prob
-            else:
-                token_linear_probability[token_score] = linear_prob
-            sum_linear_probability += linear_prob
-
-        sum_of_weighted_scores = 0.0
-        for score, prob in token_linear_probability.items():
-            sum_of_weighted_scores += score * prob
-
-        # Scale the sum of linear probability to 1
-        weighted_summed_score = sum_of_weighted_scores / sum_linear_probability
-        return weighted_summed_score
+        return calculate_weighted_summed_score(raw_score, raw_response)
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
