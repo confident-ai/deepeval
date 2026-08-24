@@ -27,17 +27,27 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    container:
-      image: node:22
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Regenerate the published skills
         run: node docs/scripts/generate-agent-skills.mjs
 
       - name: Fail if the committed copies are stale
         run: |
+          # Without this guard a non-repo checkout would make `git diff` error
+          # out to stderr and print nothing, which the comparison below would
+          # read as "no drift" and pass.
+          git rev-parse --is-inside-work-tree > /dev/null 2>&1 || {
+            echo "::error::not a git work tree, cannot compare against the committed copies"
+            exit 1
+          }
           if ! git diff --exit-code -- docs/public/.well-known/agent-skills; then
             echo "::error::docs/public/.well-known/agent-skills is out of date. Run 'node docs/scripts/generate-agent-skills.mjs' from the repo root and commit the result."
             exit 1
