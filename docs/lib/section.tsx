@@ -120,11 +120,10 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          ⚡️ Some metrics' scoring logic has been updated to match the conventions of HIGHER IS BETTER. {" "}
+          💥 BREAKING CHANGE: All metric scores are now HIGHER THE BETTER.{" "}
           <Link href="/changelog/changelog-2026#backward-incompatible-change">
-            Read the changelog
+            Read changelog →
           </Link>
-          .
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
