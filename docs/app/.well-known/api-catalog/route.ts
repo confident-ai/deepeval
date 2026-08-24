@@ -20,20 +20,32 @@ const apiEntry = (anchor: string) => ({
   status: [{ href: 'https://status.confident-ai.com/' }],
 });
 
+const mcpEntry = (anchor: string) => ({
+  anchor,
+  'service-doc': [
+    {
+      href: `${confidentSite}/docs/coding-agents/mcp`,
+      type: 'text/html',
+    },
+  ],
+  'service-desc': [
+    {
+      href: `${confidentSite}/.well-known/mcp/server-card.json`,
+      type: 'application/mcp-server-card+json',
+    },
+  ],
+  status: [{ href: 'https://status.confident-ai.com/' }],
+});
+
+// Both regions for both services. The MCP server card lists a US and an EU
+// remote, so listing only US here would have left half the deployment
+// undiscoverable while the REST entries advertised both.
 const catalog = {
   linkset: [
     apiEntry('https://api.confident-ai.com/'),
     apiEntry('https://eu.api.confident-ai.com/'),
-    {
-      anchor: 'https://mcp.confident-ai.com/mcp',
-      'service-doc': [
-        {
-          href: `${confidentSite}/docs/coding-agents/mcp`,
-          type: 'text/html',
-        },
-      ],
-      status: [{ href: 'https://status.confident-ai.com/' }],
-    },
+    mcpEntry('https://mcp.confident-ai.com/mcp'),
+    mcpEntry('https://eu.mcp.confident-ai.com/mcp'),
   ],
 };
 
