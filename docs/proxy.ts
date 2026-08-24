@@ -1,27 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation';
-import { docsContentRoute, docsRoute } from '@/lib/shared';
+import { contentRouteFor } from '@/lib/shared';
 
-const { rewrite: rewriteDocs } = rewritePath(
-  `${docsRoute}{/*path}`,
-  `${docsContentRoute}{/*path}/content.md`,
-);
-const { rewrite: rewriteSuffix } = rewritePath(
-  `${docsRoute}{/*path}.mdx`,
-  `${docsContentRoute}{/*path}/content.md`,
-);
+/**
+ * Every MDX-backed section gets two rewrites into its raw-markdown
+ * route (`/llms.mdx/<section>/.../content.md`): an explicit `.mdx`
+ * suffix that always works, and an `Accept: text/markdown`
+ * content-negotiation rewrite so agents can request any page as
+ * markdown while browsers keep getting HTML.
+ */
+const sections = [
+  'docs',
+  'guides',
+  'tutorials',
+  'integrations',
+  'changelog',
+  'blog',
+] as const;
+
+const rewrites = sections.map((section) => {
+  const contentRoute = contentRouteFor(section);
+  return {
+    suffix: rewritePath(
+      `/${section}{/*path}.mdx`,
+      `${contentRoute}{/*path}/content.md`,
+    ).rewrite,
+    negotiated: rewritePath(
+      `/${section}{/*path}`,
+      `${contentRoute}{/*path}/content.md`,
+    ).rewrite,
+  };
+});
 
 export default function proxy(request: NextRequest) {
-  const result = rewriteSuffix(request.nextUrl.pathname);
-  if (result) {
-    return NextResponse.rewrite(new URL(result, request.nextUrl));
+  const { pathname } = request.nextUrl;
+
+  for (const { suffix } of rewrites) {
+    const result = suffix(pathname);
+    if (result) {
+      return NextResponse.rewrite(new URL(result, request.nextUrl));
+    }
   }
 
   if (isMarkdownPreferred(request)) {
-    const result = rewriteDocs(request.nextUrl.pathname);
+    if (pathname === '/') {
+      return NextResponse.rewrite(new URL('/home.md', request.nextUrl));
+    }
 
-    if (result) {
-      return NextResponse.rewrite(new URL(result, request.nextUrl));
+    for (const { negotiated } of rewrites) {
+      const result = negotiated(pathname);
+      if (result) {
+        return NextResponse.rewrite(new URL(result, request.nextUrl));
+      }
     }
   }
 
