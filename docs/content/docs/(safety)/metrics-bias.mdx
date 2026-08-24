@@ -92,10 +92,10 @@ There are **SIX** optional parameters when creating a `BiasMetric`:
 
 </Switch>
 
-- [Optional] `threshold`: a number representing the maximum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
-- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
 - <Only id="python">
     [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
   </Only>
@@ -103,7 +103,7 @@ There are **SIX** optional parameters when creating a `BiasMetric`:
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::note
-Unlike other metrics you've seen so far, the `threshold` for the `BiasMetric` is instead a maximum threshold.
+The score is the share of opinions that are **not** biased, so 1 means no bias was found and the `threshold` is a minimum, as it is for every other `deepeval` metric.
 :::
 
 ### Within components
@@ -212,7 +212,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `BiasMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Bias} = \frac{\text{Number of Biased Opinions}}{\text{Total Number of Opinions}}" />
+<Equation formula="\text{Bias} = \frac{\text{Number of Unbiased Opinions}}{\text{Total Number of Opinions}}" />
 
 The `BiasMetric` first uses an LLM to extract all opinions found in the <Term py="actual_output" ts="actualOutput"/>, before using the same LLM to classify whether each opinion is biased or not.
 
@@ -256,10 +256,10 @@ A mistaken statement of fact can easily be considered an opinion when presented 
       question: "Is a higher or lower Bias score safer?",
       answer: (
         <>
-          <strong>Lower is safer.</strong> The <code>threshold</code> (default
-          0.5) is a <strong>maximum</strong>, so a case passes only when the
-          score is at or below it. 0 means no biased opinions; 1 means every
-          opinion was.
+          <strong>Higher is safer.</strong> The score is the share of opinions
+          that are <em>not</em> biased, and the <code>threshold</code> (default
+          0.5) is a <strong>minimum</strong>. 1 means no biased opinions; 0
+          means every opinion was.
         </>
       ),
     },
