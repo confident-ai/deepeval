@@ -120,9 +120,9 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🔥 DeepEval for TypeScript is now in beta.{" "}
-          <Link href="/blog/introducing-deepeval-typescript">
-            Read the announcement
+          ⚡️ Some metrics' scoring logic has been updated to match the conventions of HIGHER IS BETTER. {" "}
+          <Link href="/changelog/changelog-2026#backward-incompatible-change">
+            Read the changelog
           </Link>
           .
         </Banner>
