@@ -1,14 +1,35 @@
-from opentelemetry.trace.status import Status, StatusCode
-from opentelemetry.sdk.trace.export import (
-    SpanExportResult,
-    SpanExporter,
-    ReadableSpan,
-)
 from pydantic import ValidationError, BaseModel
 from typing import Any, Dict, List, Optional
 from collections import defaultdict
 import typing
 import json
+
+try:
+    from opentelemetry.trace.status import Status, StatusCode
+    from opentelemetry.sdk.trace.export import (
+        SpanExportResult,
+        SpanExporter,
+        ReadableSpan,
+    )
+
+    _OTEL_AVAILABLE = True
+except ImportError:
+    _OTEL_AVAILABLE = False
+
+    class SpanExporter:  # type: ignore[no-redef]
+        def export(self, spans, timeout_millis=30000):
+            pass
+
+        def shutdown(self):
+            pass
+
+        def force_flush(self, timeout_millis=30000):
+            return True
+
+    ReadableSpan = Any  # type: ignore[assignment]
+    Status = None  # type: ignore[assignment]
+    StatusCode = None  # type: ignore[assignment]
+    SpanExportResult = None  # type: ignore[assignment]
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.telemetry import record_tracing_integration
@@ -100,6 +121,12 @@ class BaseSpanWrapper:
 class ConfidentSpanExporter(SpanExporter):
 
     def __init__(self, api_key: Optional[str] = None):
+        if not _OTEL_AVAILABLE:
+            raise ImportError(
+                "opentelemetry SDK is not installed. Install with "
+                '`pip install "deepeval[otel]"`.'
+            )
+
         record_tracing_integration(Integration.OTEL)
         peb.init_clock_bridge()
 
