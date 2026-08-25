@@ -13,7 +13,8 @@
     "sdk-versions": "node scripts/generate-sdk-versions.mjs",
     "page-languages": "node scripts/generate-page-languages.mjs",
     "validate-terms": "node scripts/validate-terms.mjs",
-    "prebuild": "npm run validate-terms && npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions && npm run page-languages",
+    "agent-skills": "node scripts/generate-agent-skills.mjs",
+    "prebuild": "npm run validate-terms && npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions && npm run page-languages && npm run agent-skills",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
