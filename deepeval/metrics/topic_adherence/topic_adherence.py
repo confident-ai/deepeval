@@ -21,7 +21,6 @@ from deepeval.metrics.topic_adherence.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 TopicAdherenceTemplate = make_template_class("TopicAdherenceMetric")
 
 

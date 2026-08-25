@@ -23,7 +23,6 @@ from deepeval.metrics.misuse.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 MisuseTemplate = make_template_class("MisuseMetric")
 
 

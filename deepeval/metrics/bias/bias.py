@@ -23,7 +23,6 @@ from deepeval.metrics.bias.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 BiasTemplate = make_template_class("BiasMetric")
 
 

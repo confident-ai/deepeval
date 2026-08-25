@@ -22,7 +22,6 @@ from deepeval.metrics.task_completion.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 TaskCompletionTemplate = make_template_class("TaskCompletionMetric")
 
 

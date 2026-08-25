@@ -22,7 +22,6 @@ from deepeval.metrics.hallucination.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 HallucinationTemplate = make_template_class("HallucinationMetric")
 
 

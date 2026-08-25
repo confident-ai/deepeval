@@ -12,7 +12,6 @@ from rich.text import Text
 
 from deepeval.inspect.types import Trace, TraceOrSpan
 
-
 # `(glyph, tag, rich style)` per span type. Tags are full words rather
 # than abbreviations because the tree pane is wide enough to spell them
 # out, and "RETRIEVER" reads instantly while "RET" trips users into

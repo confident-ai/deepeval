@@ -7,7 +7,6 @@ from typing import Union
 from deepeval.test_case import ToolCall, Turn, MLLMImage, RetrievedContextData
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
-
 InterruptionLevel = Literal["rare", "normal", "frequent"]
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
 

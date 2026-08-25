@@ -25,7 +25,6 @@ from deepeval.inspect.widgets._styling import (
     type_prefix,
 )
 
-
 # Minimum gap (in cells) between the left content (name + metric badge +
 # optional ERRORED pill) and the right-aligned duration. Below this the
 # right column gives up trying to right-align and just leaves the

@@ -43,7 +43,6 @@ import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.templates import make_template_class
 
-
 ConversationalGEvalTemplate = make_template_class("ConversationalGEval")
 
 

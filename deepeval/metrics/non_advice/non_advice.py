@@ -26,7 +26,6 @@ from deepeval.metrics.non_advice.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 NonAdviceTemplate = make_template_class("NonAdviceMetric")
 
 

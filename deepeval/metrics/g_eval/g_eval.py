@@ -44,7 +44,6 @@ from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.templates import make_template_class
 
-
 GEvalTemplate = make_template_class("GEval")
 
 
