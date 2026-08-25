@@ -38,7 +38,6 @@ from deepeval import evaluate
 
 metric = ImageReferenceMetric(
     threshold=0.7,
-    include_reason=True,
 )
 m_test_case = LLMTestCase(
     input=f"Provide step-by-step instructions on how to fold a paper airplane.",
@@ -92,19 +91,20 @@ await evaluate([mTestCase], [metric]);
 
 <Case id="python">
 
-There are **SIX** optional parameters when creating a `ImageReferenceMetric`:
+There are **SEVEN** optional parameters when creating an `ImageReferenceMetric`:
 
 </Case>
 
 <Case id="typescript">
 
-There are **FIVE** optional parameters when creating a `ImageReferenceMetric`:
+There are **SIX** optional parameters when creating an `ImageReferenceMetric`:
 
 </Case>
 
 </Switch>
 
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
 - <Only id="python">
     [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
