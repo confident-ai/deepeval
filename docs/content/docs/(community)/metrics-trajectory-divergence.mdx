@@ -28,6 +28,10 @@ The metric takes both traces at construction time. Each trace is an iterable of 
 
 The `LLMTestCase` passed to `measure` is accepted for `BaseMetric` compatibility — the traces themselves are the metric's data.
 
+:::note
+Create **one metric instance per trace pair**. Because both traces are supplied at construction time, reusing a single instance across multiple test cases in `evaluate([tc1, tc2, tc3], [metric])` compares the same trace pair for every test case — unlike most DeepEval metrics, which read fresh data from each test case.
+:::
+
 ## Usage
 
 ```python

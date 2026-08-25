@@ -2,6 +2,10 @@ import pytest
 
 from deepeval.metrics.community import TrajectoryDivergenceMetric
 from deepeval.metrics.community.trace_divergence import align
+from deepeval.metrics.community.trace_divergence.alignment import (
+    AlignmentResult,
+    project,
+)
 from deepeval.test_case import LLMTestCase
 
 
@@ -73,6 +77,45 @@ def test_reorder_is_a_divergence():
     assert "different order" in metric.reason
     assert metric.score < 1.0
     assert metric.success is False
+
+
+def test_order_change_summary_honors_resync_at_zero():
+    metric = TrajectoryDivergenceMetric(*aligned_traces())
+    result = AlignmentResult(
+        aligned=False,
+        matched_prefix_len=0,
+        first_divergence=0,
+        divergence_kind="order_change",
+        resync_at=0,
+        baseline_len=2,
+        candidate_len=2,
+    )
+    baseline_events = project([SEARCH, OPEN])
+    candidate_events = project([OPEN, SEARCH])
+    summary = metric._summarize_divergence(
+        result, baseline_events, candidate_events
+    )
+    assert "steps 1-0" in summary
+    reason = metric._generate_reason(result, baseline_events, candidate_events)
+    assert "resynchronize at step 1" in reason
+    assert "steps 1-0" in reason
+
+
+def test_order_change_summary_falls_back_to_step_when_no_resync():
+    metric = TrajectoryDivergenceMetric(*aligned_traces())
+    result = AlignmentResult(
+        aligned=False,
+        matched_prefix_len=0,
+        first_divergence=0,
+        divergence_kind="order_change",
+        resync_at=None,
+        baseline_len=2,
+        candidate_len=2,
+    )
+    summary = metric._summarize_divergence(
+        result, project([SEARCH, OPEN]), project([OPEN, SEARCH])
+    )
+    assert "steps 1-1" in summary
 
 
 def test_retry_that_rejoins_is_localized_not_divergence_to_end():

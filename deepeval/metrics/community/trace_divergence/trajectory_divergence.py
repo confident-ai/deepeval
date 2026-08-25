@@ -40,6 +40,13 @@ class TrajectoryDivergenceMetric(BaseMetric):
     ``measure`` is accepted for ``BaseMetric`` compatibility; the traces
     themselves are the metric's data.
 
+    Because both traces are pinned per instance, create one
+    ``TrajectoryDivergenceMetric`` per trace pair. Reusing a single
+    instance across multiple test cases (e.g.
+    ``evaluate([tc1, tc2], [metric])``) repeats the identical comparison
+    for every test case, unlike most DeepEval metrics where each test case
+    supplies fresh data.
+
     The score is ``1.0 - divergence_ratio``, so ``1.0`` means the traces are
     fully aligned and ``0.0`` means no step after the matched prefix could be
     aligned. With the default threshold of ``1.0`` only fully aligned traces
@@ -205,7 +212,9 @@ class TrajectoryDivergenceMetric(BaseMetric):
                 step, baseline_tool, candidate_tool
             )
         if kind == "order_change":
-            last_step = result.resync_at or step
+            last_step = (
+                result.resync_at if result.resync_at is not None else step
+            )
             return TrajectoryDivergenceTemplate.order_change(step, last_step)
         if kind == "absent" and index < len(baseline_events):
             return TrajectoryDivergenceTemplate.absent(
