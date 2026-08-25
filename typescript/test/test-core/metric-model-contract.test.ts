@@ -180,6 +180,7 @@ describe("evaluateGEvalPrompt", () => {
     const [score, reason] = await evaluateGEvalPrompt(metric, "p", {
       topLogprobs: 20,
       strictMode: false,
+      integralScoreScale: true,
     });
     expect(score).toBeCloseTo(7.7, 10);
     expect(reason).toBe("solid");
@@ -195,6 +196,7 @@ describe("evaluateGEvalPrompt", () => {
     const [score] = await evaluateGEvalPrompt(metric, "p", {
       topLogprobs: 20,
       strictMode: true,
+      integralScoreScale: true,
     });
     expect(score).toBe(8);
   });
@@ -211,6 +213,7 @@ describe("evaluateGEvalPrompt", () => {
     const [score, reason] = await evaluateGEvalPrompt(metric, "p", {
       topLogprobs: 20,
       strictMode: false,
+      integralScoreScale: true,
     });
     expect(score).toBe(4);
     expect(reason).toBe("fallback");
@@ -223,6 +226,7 @@ describe("evaluateGEvalPrompt", () => {
     const [score, reason] = await evaluateGEvalPrompt(metric, "p", {
       topLogprobs: 20,
       strictMode: false,
+      integralScoreScale: true,
     });
     expect(score).toBe(6);
     expect(reason).toBe("plain");
@@ -242,7 +246,31 @@ describe("evaluateGEvalPrompt", () => {
     await evaluateGEvalPrompt(metric, "p", {
       topLogprobs: 5,
       strictMode: false,
+      integralScoreScale: true,
     });
     expect(seen).toBe(5);
+  });
+
+  it("skips log-prob weighting on a fractional score scale", async () => {
+    const metric = metricWith(
+      new StubModel(
+        { output: { score: 0.65, reason: "decimal" }, cost: 0 },
+        async () => ({
+          output: '{"score": 0.65, "reason": "decimal"}',
+          cost: 0.1,
+          logProbs: [tokenLogProbs("0", { "0": 0.7, "1": 0.3 })],
+        }),
+      ),
+    );
+
+    const [score, reason] = await evaluateGEvalPrompt(metric, "p", {
+      topLogprobs: 20,
+      strictMode: false,
+      integralScoreScale: false,
+    });
+    // Weighting would average the integer tokens 0 and 1 into 0.3; the raw
+    // decimal score must survive untouched instead.
+    expect(score).toBe(0.65);
+    expect(reason).toBe("decimal");
   });
 });

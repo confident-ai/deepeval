@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple, Dict
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 from openai.types.chat.chat_completion import ChatCompletion
 import math
 
@@ -33,21 +33,69 @@ class MetricPullResponse(BaseModel):
 
 
 class Rubric(BaseModel):
-    score_range: Tuple[int, int]
+    """A score band and the outcome it represents.
+
+    Bounds are arbitrary finite numbers, so a rubric can be expressed on any
+    scale — 0-10, 0-1 with decimals, 1-5, 0-100. The metric normalizes whatever
+    the judge returns to 0-1 using the rubric's overall span, so the scale is a
+    presentation choice for the judge rather than something callers must undo.
+    """
+
+    score_range: Tuple[float, float]
     expected_outcome: str
 
     @field_validator("score_range")
     def validate_score_range(cls, value):
         start, end = value
-        if not (0 <= start <= 10 and 0 <= end <= 10):
+        if not (math.isfinite(start) and math.isfinite(end)):
             raise ValueError(
-                "Both Rubric's 'score_range' values must be between 0 and 10 inclusive."
+                "Both Rubric's 'score_range' values must be finite numbers."
             )
         if start > end:
             raise ValueError(
                 "Rubric's 'score_range' start must be less than or equal to end."
             )
         return value
+
+
+def is_integral_rubric_scale(rubric: Optional[List[Rubric]]) -> bool:
+    """Whether *every* rubric bound is a whole number.
+
+    Note this looks at all bands, not just the outer bounds: a 0-1 rubric split
+    at `0.3`/`0.4` spans a whole-numbered 0.0 to 1.0 but is still a decimal
+    scale, and the judge must be asked for a decimal accordingly.
+
+    Also gates the log-prob weighting: `calculate_weighted_summed_score` matches
+    the score token by `str(raw_score)` and calls `int(token)`, so it only ever
+    works on integer scores.
+    """
+    if rubric is None:
+        return True
+
+    return all(
+        float(bound).is_integer() for r in rubric for bound in r.score_range
+    )
+
+
+def _as_number(value: float) -> Union[int, float]:
+    """`0.0` -> `0`, `0.5` -> `0.5`."""
+    return int(value) if float(value).is_integer() else float(value)
+
+
+def _render_bounds(
+    values: Iterable[float], integral: bool
+) -> Tuple[Union[int, float], ...]:
+    """Render rubric bounds consistently across a whole scale.
+
+    Bounds are floats internally, but an integral scale must keep rendering and
+    serializing as ints — `0-5` in a prompt, `[0, 5]` in an upload payload —
+    since emitting `0.0-5.0` would silently change every existing prompt. A
+    decimal scale stays decimal throughout so `0.0-0.3` and `1.0` don't sit
+    next to a bare `1`.
+    """
+    return tuple(
+        _as_number(value) if integral else float(value) for value in values
+    )
 
 
 G_EVAL_PARAMS = {
@@ -161,9 +209,10 @@ def construct_geval_upload_payload(
         payload["evaluationSteps"] = evaluation_steps
 
     if rubric is not None:
+        integral = is_integral_rubric_scale(rubric)
         payload["rubric"] = [
             {
-                "scoreRange": list(r.score_range),
+                "scoreRange": list(_render_bounds(r.score_range, integral)),
                 "expectedOutcome": r.expected_outcome,
             }
             for r in rubric
@@ -234,6 +283,8 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
     if rubrics is None:
         return None
 
+    integral = is_integral_rubric_scale(rubrics)
+
     return "\n".join(
         (
             f"{start}: {rubric.expected_outcome}"
@@ -241,7 +292,7 @@ def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
             else f"{start}-{end}: {rubric.expected_outcome}"
         )
         for rubric in rubrics
-        for start, end in [rubric.score_range]
+        for start, end in [_render_bounds(rubric.score_range, integral)]
     )
 
 
@@ -399,8 +450,29 @@ def number_test_case_contents(test_case_contents: List[str]) -> str:
     return formatted_test_case_contents
 
 
-def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
+def get_score_range(
+    rubric: Optional[List[Rubric]],
+) -> Tuple[Union[int, float], Union[int, float]]:
+    """The scale the judge is asked to score on: the rubric's outer bounds.
+
+    Values go straight into the prompt, so they are rendered to match the
+    rubric's own scale.
+    """
     if rubric is None:
         return (0, 10)
 
-    return rubric[0].score_range[0], rubric[-1].score_range[1]
+    start, end = rubric[0].score_range[0], rubric[-1].score_range[1]
+    return _render_bounds((start, end), is_integral_rubric_scale(rubric))
+
+
+def normalize_score(
+    raw_score: Union[int, float], score_range: Tuple[float, float]
+) -> float:
+    """Map a judge score on `score_range` onto 0-1, clamped."""
+    start, end = float(score_range[0]), float(score_range[1])
+    span = end - start
+    if span <= 0:
+        # Degenerate rubric collapsed to a single point — nothing to interpolate.
+        return 1.0 if float(raw_score) >= start else 0.0
+
+    return min(1.0, max(0.0, (float(raw_score) - start) / span))

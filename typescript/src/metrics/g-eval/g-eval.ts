@@ -16,7 +16,10 @@ import {
   evaluateGEvalPrompt,
   numberEvaluationSteps,
   formatRubrics,
+  formatScoreRange,
   getScoreRange,
+  isIntegralRubricScale,
+  normalizeScore,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
 } from "@/metrics/g-eval/utils";
@@ -52,6 +55,8 @@ export class GEval extends BaseMetric {
   readonly metricName: string;
   private readonly scoreRange: [number, number];
   private readonly scoreRangeSpan: number;
+  private readonly scoreRangeDisplay: [string, string];
+  private readonly scoreRangeIsIntegral: boolean;
   private readonly includeGEvalSuffix: boolean;
   private readonly topLogprobs: number;
 
@@ -83,6 +88,8 @@ export class GEval extends BaseMetric {
     this.rubric = validateAndSortRubrics(options.rubric);
     this.scoreRange = getScoreRange(this.rubric);
     this.scoreRangeSpan = this.scoreRange[1] - this.scoreRange[0];
+    this.scoreRangeDisplay = formatScoreRange(this.rubric);
+    this.scoreRangeIsIntegral = isIntegralRubricScale(this.rubric);
     this.evaluationSteps =
       options.evaluationSteps && options.evaluationSteps.length > 0
         ? options.evaluationSteps
@@ -108,7 +115,7 @@ export class GEval extends BaseMetric {
 
       this.score = this.strictMode
         ? Math.trunc(gScore)
-        : (gScore - this.scoreRange[0]) / this.scoreRangeSpan;
+        : normalizeScore(gScore, this.scoreRange);
       this.success = this.isSuccessful();
       this.reason = reason;
 
@@ -155,13 +162,15 @@ export class GEval extends BaseMetric {
           test_case_content: testCaseContent,
           parameters,
           rubric: this.rubric ? formatRubrics(this.rubric) : null,
-          score_range: this.scoreRange,
+          score_range: this.scoreRangeDisplay,
+          score_range_is_integral: this.scoreRangeIsIntegral,
           _additional_context: null,
         });
 
     return evaluateGEvalPrompt(this, prompt, {
       topLogprobs: this.topLogprobs,
       strictMode: this.strictMode,
+      integralScoreScale: this.scoreRangeIsIntegral,
     });
   }
 

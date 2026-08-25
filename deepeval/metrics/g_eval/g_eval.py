@@ -33,6 +33,8 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
     get_score_range,
+    is_integral_rubric_scale,
+    normalize_score,
     construct_geval_upload_payload,
     construct_geval_pull_evaluation_params,
     ensure_required_params,
@@ -76,6 +78,7 @@ class GEval(BaseMetric):
         self.rubric = validate_and_sort_rubrics(rubric)
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
+        self.score_range_is_integral = is_integral_rubric_scale(self.rubric)
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
@@ -151,8 +154,7 @@ class GEval(BaseMetric):
                     multimodal=multimodal,
                 )
                 self.score = (
-                    (float(g_score) - self.score_range[0])
-                    / self.score_range_span
+                    normalize_score(g_score, self.score_range)
                     if not self.strict_mode
                     else int(g_score)
                 )
@@ -213,7 +215,7 @@ class GEval(BaseMetric):
                 multimodal=multimodal,
             )
             self.score = (
-                (float(g_score) - self.score_range[0]) / self.score_range_span
+                normalize_score(g_score, self.score_range)
                 if not self.strict_mode
                 else int(g_score)
             )
@@ -295,6 +297,7 @@ class GEval(BaseMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
                 score_range=self.score_range,
+                score_range_is_integral=self.score_range_is_integral,
                 _additional_context=_additional_context,
                 multimodal=multimodal,
             )
@@ -326,6 +329,12 @@ class GEval(BaseMetric):
             reason = data["reason"]
             score = data["score"]
             if self.strict_mode:
+                return score, reason
+
+            # Log-prob weighting locates the score's own token and averages the
+            # integer candidates around it, so it only applies to an integer
+            # scale. A fractional rubric keeps the raw score as-is.
+            if not self.score_range_is_integral:
                 return score, reason
 
             try:
@@ -367,6 +376,7 @@ class GEval(BaseMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
                 score_range=self.score_range,
+                score_range_is_integral=self.score_range_is_integral,
                 _additional_context=_additional_context,
                 multimodal=multimodal,
             )
@@ -395,6 +405,12 @@ class GEval(BaseMetric):
             reason = data["reason"]
             score = data["score"]
             if self.strict_mode:
+                return score, reason
+
+            # Log-prob weighting locates the score's own token and averages the
+            # integer candidates around it, so it only applies to an integer
+            # scale. A fractional rubric keeps the raw score as-is.
+            if not self.score_range_is_integral:
                 return score, reason
 
             try:
@@ -482,6 +498,7 @@ class GEval(BaseMetric):
 
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
+        self.score_range_is_integral = is_integral_rubric_scale(self.rubric)
 
         ensure_required_params(
             self.evaluation_params, self.criteria, self.evaluation_steps

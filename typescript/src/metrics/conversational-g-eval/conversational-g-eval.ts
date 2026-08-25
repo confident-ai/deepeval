@@ -18,6 +18,10 @@ import {
   evaluateGEvalPrompt,
   numberEvaluationSteps,
   formatRubrics,
+  formatScoreRange,
+  getScoreRange,
+  isIntegralRubricScale,
+  normalizeScore,
   validateAndSortRubrics,
   validateCriteriaAndEvaluationSteps,
 } from "@/metrics/g-eval/utils";
@@ -54,8 +58,9 @@ export interface ConversationalGEvalMetricOptions {
 /**
  * Conversational GEval — a flexible LLM judge over a whole conversation: generate
  * eval steps from `criteria` (or use supplied `evaluationSteps`), then score the
- * conversation 0–10 (normalized to 0–1) with a reason. Like single-turn GEval but
- * over turns + conversation-level fields.
+ * conversation on the rubric's scale — 0–10 by default, always normalized to
+ * 0–1 — with a reason. Like single-turn GEval but over turns +
+ * conversation-level fields.
  */
 export class ConversationalGEval extends BaseConversationalMetric {
   evaluationParams: MultiTurnParams[];
@@ -63,6 +68,9 @@ export class ConversationalGEval extends BaseConversationalMetric {
   evaluationSteps?: string[];
   rubric?: Rubric[];
   readonly metricName: string;
+  private readonly scoreRange: [number, number];
+  private readonly scoreRangeDisplay: [string, string];
+  private readonly scoreRangeIsIntegral: boolean;
   private readonly includeGEvalSuffix: boolean;
   private readonly topLogprobs: number;
 
@@ -98,6 +106,9 @@ export class ConversationalGEval extends BaseConversationalMetric {
     this.metricName = options.name;
     this.criteria = options.criteria;
     this.rubric = validateAndSortRubrics(options.rubric);
+    this.scoreRange = getScoreRange(this.rubric);
+    this.scoreRangeDisplay = formatScoreRange(this.rubric);
+    this.scoreRangeIsIntegral = isIntegralRubricScale(this.rubric);
     this.evaluationSteps =
       options.evaluationSteps && options.evaluationSteps.length > 0
         ? options.evaluationSteps
@@ -121,7 +132,9 @@ export class ConversationalGEval extends BaseConversationalMetric {
       this.evaluationSteps = await this.generateEvaluationSteps();
       const [gScore, reason] = await this.evaluate(testCase);
 
-      this.score = this.applyStrictMode(gScore / 10);
+      this.score = this.applyStrictMode(
+        normalizeScore(gScore, this.scoreRange),
+      );
       this.reason = reason;
       this.success = this.isSuccessful();
 
@@ -165,10 +178,13 @@ export class ConversationalGEval extends BaseConversationalMetric {
         this.evaluationParams,
       ),
       rubric: this.rubric ? formatRubrics(this.rubric) : null,
+      score_range: this.scoreRangeDisplay,
+      score_range_is_integral: this.scoreRangeIsIntegral,
     });
     return evaluateGEvalPrompt(this, prompt, {
       topLogprobs: this.topLogprobs,
       strictMode: this.strictMode,
+      integralScoreScale: this.scoreRangeIsIntegral,
     });
   }
 

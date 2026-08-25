@@ -5,7 +5,13 @@ import type { BaseMetricCore } from "@/metrics/base-metrics";
 import { generateWithSchema } from "@/metrics/utils";
 import { ReasonScoreSchema } from "@/metrics/g-eval/schema";
 
-/** A score band and the outcome it represents (GEval rubric). */
+/**
+ * A score band and the outcome it represents (GEval rubric).
+ *
+ * Bounds are arbitrary finite numbers, so a rubric can be expressed on any
+ * scale — 0-10, 0-1 with decimals, 1-5, 0-100. The metric normalizes whatever
+ * the judge returns to 0-1 using the rubric's overall span.
+ */
 export interface Rubric {
   scoreRange: [number, number];
   expectedOutcome: string;
@@ -88,20 +94,71 @@ export function numberEvaluationSteps(steps: string[]): string {
   return steps.map((s, i) => `${i + 1}. ${s}\n`).join("");
 }
 
+/**
+ * Whether *every* rubric bound is a whole number.
+ *
+ * Looks at all bands, not just the outer bounds: a 0-1 rubric split at
+ * `0.3`/`0.4` spans a whole-numbered 0 to 1 but is still a decimal scale, and
+ * the judge must be asked for a decimal accordingly. Also gates the log-prob
+ * weighting, which can only ever work on integer scores.
+ */
+export function isIntegralRubricScale(rubrics?: Rubric[]): boolean {
+  if (!rubrics) return true;
+  return rubrics.every(({ scoreRange }) => scoreRange.every(Number.isInteger));
+}
+
+/**
+ * Render a rubric bound consistently across a whole scale.
+ *
+ * JS has no int/float distinction — `${1.0}` is `"1"` — so a decimal scale has
+ * to spell out the tenth explicitly, otherwise `1` would sit next to `0.0-0.3`
+ * and read as a different scale. Integral scales stay bare (`0`, `10`) so
+ * existing prompts are unchanged.
+ */
+export function formatScoreBound(value: number, integral: boolean): string {
+  if (integral) return String(value);
+  return Number.isInteger(value) ? value.toFixed(1) : String(value);
+}
+
 export function formatRubrics(rubrics?: Rubric[]): string | null {
   if (!rubrics) return null;
+  const integral = isIntegralRubricScale(rubrics);
   return rubrics
-    .map(({ scoreRange: [start, end], expectedOutcome }) =>
-      start === end
-        ? `${start}: ${expectedOutcome}`
-        : `${start}-${end}: ${expectedOutcome}`,
-    )
+    .map(({ scoreRange: [start, end], expectedOutcome }) => {
+      const from = formatScoreBound(start, integral);
+      const to = formatScoreBound(end, integral);
+      return start === end
+        ? `${from}: ${expectedOutcome}`
+        : `${from}-${to}: ${expectedOutcome}`;
+    })
     .join("\n");
 }
 
+/** The numeric scale the judge scores on: the rubric's outer bounds. */
 export function getScoreRange(rubrics?: Rubric[]): [number, number] {
   if (!rubrics) return [0, 10];
   return [rubrics[0].scoreRange[0], rubrics[rubrics.length - 1].scoreRange[1]];
+}
+
+/** The same bounds rendered for interpolation into a prompt. */
+export function formatScoreRange(rubrics?: Rubric[]): [string, string] {
+  const integral = isIntegralRubricScale(rubrics);
+  const [start, end] = getScoreRange(rubrics);
+  return [formatScoreBound(start, integral), formatScoreBound(end, integral)];
+}
+
+/** Map a judge score on `scoreRange` onto 0-1, clamped. */
+export function normalizeScore(
+  rawScore: number,
+  scoreRange: [number, number],
+): number {
+  const [start, end] = scoreRange;
+  const span = end - start;
+  if (span <= 0) {
+    // Degenerate rubric collapsed to a single point — nothing to interpolate.
+    return rawScore >= start ? 1 : 0;
+  }
+  return Math.min(1, Math.max(0, (rawScore - start) / span));
 }
 
 /** Sort rubrics by start and reject overlaps. Returns undefined for none. */
@@ -109,6 +166,19 @@ export function validateAndSortRubrics(
   rubrics?: Rubric[],
 ): Rubric[] | undefined {
   if (!rubrics || rubrics.length === 0) return undefined;
+  for (const { scoreRange } of rubrics) {
+    const [start, end] = scoreRange;
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      throw new Error(
+        "Both of a Rubric's 'scoreRange' values must be finite numbers.",
+      );
+    }
+    if (start > end) {
+      throw new Error(
+        "A Rubric's 'scoreRange' start must be less than or equal to end.",
+      );
+    }
+  }
   const sorted = [...rubrics].sort((a, b) => a.scoreRange[0] - b.scoreRange[0]);
   for (let i = 0; i < sorted.length; i++) {
     const [, aEnd] = sorted[i].scoreRange;
@@ -182,7 +252,16 @@ export function calculateWeightedSummedScore(
 export async function evaluateGEvalPrompt(
   metric: BaseMetricCore,
   prompt: string,
-  options: { topLogprobs: number; strictMode: boolean },
+  options: {
+    topLogprobs: number;
+    strictMode: boolean;
+    /**
+     * Log-prob weighting locates the score's own token and averages the integer
+     * candidates around it, so it only applies to an integer scale. A
+     * fractional rubric keeps the raw score as-is.
+     */
+    integralScoreScale: boolean;
+  },
 ): Promise<[number, string]> {
   const model = metric.model;
   if (model?.generateRaw && model.supportsLogProbs() !== false) {
@@ -193,7 +272,7 @@ export async function evaluateGEvalPrompt(
       metric.accrueCost(cost);
       const { score, reason } = ReasonScoreSchema.parse(extractJson(output));
       return [
-        options.strictMode
+        options.strictMode || !options.integralScoreScale
           ? score
           : calculateWeightedSummedScore(score, logProbs),
         reason,
