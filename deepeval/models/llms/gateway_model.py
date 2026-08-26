@@ -25,6 +25,7 @@ Two layers live here:
     (settings keys, default base URL, auth headers).
 """
 
+import contextlib
 import inspect
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Type, Union
@@ -195,43 +196,43 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     async def _a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        client = self.load_model(async_mode=True)
         messages = self._build_messages(prompt)
 
-        if schema:
-            # Try the gateway's native JSON-Schema structured output first.
-            try:
-                completion = await client.chat.completions.create(
-                    model=self.name,
-                    messages=messages,
-                    response_format=self._schema_response_format(schema),
-                    temperature=self.temperature,
-                    **self.generation_kwargs,
-                )
-                json_output = trim_and_load_json(
-                    completion.choices[0].message.content
-                )
-                cost = self.calculate_cost(
-                    completion.usage.prompt_tokens,
-                    completion.usage.completion_tokens,
-                    response=completion,
-                )
-                return schema.model_validate(json_output), cost
-            except Exception as e:
-                warnings.warn(
-                    f"Structured outputs not supported for model '{self.name}'. "
-                    f"Falling back to regular generation with JSON parsing. "
-                    f"Error: {str(e)}",
-                    UserWarning,
-                    stacklevel=3,
-                )
+        async with self._scoped_async_client() as client:
+            if schema:
+                # Try the gateway's native JSON-Schema structured output first.
+                try:
+                    completion = await client.chat.completions.create(
+                        model=self.name,
+                        messages=messages,
+                        response_format=self._schema_response_format(schema),
+                        temperature=self.temperature,
+                        **self.generation_kwargs,
+                    )
+                    json_output = trim_and_load_json(
+                        completion.choices[0].message.content
+                    )
+                    cost = self.calculate_cost(
+                        completion.usage.prompt_tokens,
+                        completion.usage.completion_tokens,
+                        response=completion,
+                    )
+                    return schema.model_validate(json_output), cost
+                except Exception as e:
+                    warnings.warn(
+                        f"Structured outputs not supported for model '{self.name}'. "
+                        f"Falling back to regular generation with JSON parsing. "
+                        f"Error: {str(e)}",
+                        UserWarning,
+                        stacklevel=3,
+                    )
 
-        completion = await client.chat.completions.create(
-            model=self.name,
-            messages=messages,
-            temperature=self.temperature,
-            **self.generation_kwargs,
-        )
+            completion = await client.chat.completions.create(
+                model=self.name,
+                messages=messages,
+                temperature=self.temperature,
+                **self.generation_kwargs,
+            )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
@@ -261,15 +262,15 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     def _generate_raw_response(
         self, prompt: str, top_logprobs: int = 5
     ) -> Tuple[object, Optional[float]]:
-        client = self.load_model(async_mode=False)
-        completion = client.chat.completions.create(
-            model=self.name,
-            messages=self._build_messages(prompt),
-            temperature=self.temperature,
-            logprobs=True,
-            top_logprobs=top_logprobs,
-            **self.generation_kwargs,
-        )
+        with self._scoped_sync_client() as client:
+            completion = client.chat.completions.create(
+                model=self.name,
+                messages=self._build_messages(prompt),
+                temperature=self.temperature,
+                logprobs=True,
+                top_logprobs=top_logprobs,
+                **self.generation_kwargs,
+            )
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
             completion.usage.completion_tokens,
@@ -280,15 +281,15 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     async def _a_generate_raw_response(
         self, prompt: str, top_logprobs: int = 5
     ) -> Tuple[object, Optional[float]]:
-        client = self.load_model(async_mode=True)
-        completion = await client.chat.completions.create(
-            model=self.name,
-            messages=self._build_messages(prompt),
-            temperature=self.temperature,
-            logprobs=True,
-            top_logprobs=top_logprobs,
-            **self.generation_kwargs,
-        )
+        async with self._scoped_async_client() as client:
+            completion = await client.chat.completions.create(
+                model=self.name,
+                messages=self._build_messages(prompt),
+                temperature=self.temperature,
+                logprobs=True,
+                top_logprobs=top_logprobs,
+                **self.generation_kwargs,
+            )
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
             completion.usage.completion_tokens,
@@ -304,14 +305,14 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     def _generate_samples(
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[List[str], Optional[float]]:
-        client = self.load_model(async_mode=False)
-        response = client.chat.completions.create(
-            model=self.name,
-            messages=self._build_messages(prompt),
-            n=n,
-            temperature=temperature,
-            **self.generation_kwargs,
-        )
+        with self._scoped_sync_client() as client:
+            response = client.chat.completions.create(
+                model=self.name,
+                messages=self._build_messages(prompt),
+                n=n,
+                temperature=temperature,
+                **self.generation_kwargs,
+            )
         completions = [choice.message.content for choice in response.choices]
         cost = self.calculate_cost(
             response.usage.prompt_tokens,
@@ -417,6 +418,41 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
 
     def load_model(self, async_mode: bool = False):
         return self._build_client(AsyncOpenAI if async_mode else OpenAI)
+
+    def _owns_http_client(self) -> bool:
+        """Whether clients built by this model own their HTTP transport.
+
+        When the user passes ``http_client`` through ``kwargs``, every client
+        this model builds wraps that same object; closing it would break
+        later calls, so its lifetime stays with the user.
+        """
+        return (self.kwargs or {}).get("http_client") is None
+
+    @contextlib.asynccontextmanager
+    async def _scoped_async_client(self):
+        """Yield a fresh ``AsyncOpenAI`` client scoped to a single call.
+
+        A new client is built per call, so it is closed again on exit, in the
+        event loop that created it. Leaving these clients to the GC leaks
+        connections and, once the creating loop is gone, produces
+        ``RuntimeError: Event loop is closed`` tracebacks (issue #3120).
+        """
+        client = self.load_model(async_mode=True)
+        if not self._owns_http_client():
+            yield client
+            return
+        async with client:
+            yield client
+
+    @contextlib.contextmanager
+    def _scoped_sync_client(self):
+        """Sync counterpart of ``_scoped_async_client``."""
+        client = self.load_model(async_mode=False)
+        if not self._owns_http_client():
+            yield client
+            return
+        with client:
+            yield client
 
     def _client_kwargs(self) -> Dict:
         kwargs = dict(self.kwargs or {})
