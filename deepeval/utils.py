@@ -11,6 +11,8 @@ import nest_asyncio
 import uuid
 import math
 import logging
+import subprocess
+import shutil
 
 from contextvars import ContextVar
 from enum import Enum
@@ -686,26 +688,46 @@ def format_turn(
 # GPU-related business
 
 
+def _get_gpu_memory_free() -> List[int]:
+    if not shutil.which("nvidia-smi"):
+        return []
+    try:
+        res = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.free",
+                "--format=csv,nounits,noheader",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return [
+            int(line.strip())
+            for line in res.stdout.strip().splitlines()
+            if line.strip()
+        ]
+    except Exception:
+        return []
+
+
 def get_freer_gpu():
     import numpy as np
 
-    os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
-    memory_available = [
-        int(x.split()[2]) + 5 * i
-        for i, x in enumerate(open("tmp_smi", "r").readlines())
+    memory_available = _get_gpu_memory_free()
+    if not memory_available:
+        return 0
+    adjusted = [
+        int(x) + 5 * i for i, x in enumerate(memory_available)
     ]
-    os.remove("tmp_smi")
-    return np.argmax(memory_available)
+    return int(np.argmax(adjusted))
 
 
 def any_gpu_with_space(gb_needed):
-    os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
-    memory_available = [
-        float(x.split()[2]) / 1024.0
-        for i, x in enumerate(open("tmp_smi", "r").readlines())
-    ]
-    os.remove("tmp_smi")
-    return any([mem >= gb_needed for mem in memory_available])
+    memory_available = _get_gpu_memory_free()
+    if not memory_available:
+        return False
+    return any([float(x) / 1024.0 >= gb_needed for x in memory_available])
 
 
 def wait_free_gpu(gb_needed):

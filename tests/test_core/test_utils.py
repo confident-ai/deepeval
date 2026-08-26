@@ -220,3 +220,35 @@ def test_update_pbar_noops_when_task_removed_between_callbacks():
     n = len(progress.records)
     update_pbar(progress, pbar_id=123, remove=True)  # should no-op after fix
     assert len(progress.records) == n
+
+
+####################
+# GPU utility tests #
+####################
+
+
+def test_get_freer_gpu_with_mocked_smi(monkeypatch):
+    from deepeval.utils import get_freer_gpu
+    import deepeval.utils as utils_mod
+
+    monkeypatch.setattr(utils_mod, "_get_gpu_memory_free", lambda: [1000, 4000, 2000])
+    # GPU 1 has 4000 + 5*1 = 4005, which is maximum
+    assert get_freer_gpu() == 1
+
+
+def test_get_freer_gpu_no_gpu(monkeypatch):
+    from deepeval.utils import get_freer_gpu
+    import deepeval.utils as utils_mod
+
+    monkeypatch.setattr(utils_mod, "_get_gpu_memory_free", lambda: [])
+    assert get_freer_gpu() == 0
+
+
+def test_any_gpu_with_space(monkeypatch):
+    from deepeval.utils import any_gpu_with_space
+    import deepeval.utils as utils_mod
+
+    monkeypatch.setattr(utils_mod, "_get_gpu_memory_free", lambda: [1024, 2048])
+    assert any_gpu_with_space(2.0)  # 2048 MB = 2.0 GB
+    assert not any_gpu_with_space(3.0)
+
