@@ -707,6 +707,61 @@ export class EvaluationDataset {
     }
   }
 
+  async updateGolden(params: {
+    golden: GoldenUnion;
+    finalized?: boolean;
+    projectId?: string;
+    alias?: string;
+  }): Promise<void> {
+    const { golden, finalized = true, projectId, alias } = params;
+    const datasetAlias = alias ?? this._alias;
+    if (!golden.id || !datasetAlias) {
+      throw new Error(
+        "Cannot update a golden without an id and alias. Pull the dataset first so it carries alias and golden ids assigned by Confident AI, or pass the alias and golden id directly.",
+      );
+    }
+    const api = new Api();
+    const body = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
+    delete body.id;
+    body.finalized = finalized;
+    await api.sendRequest(
+      HttpMethods.PUT,
+      Endpoints.GOLDEN_ENDPOINT,
+      body,
+      undefined,
+      undefined,
+      { goldenId: golden.id, alias: datasetAlias },
+      projectId,
+    );
+    console.log("✅ Golden successfully updated on Confident AI!");
+  }
+
+  async deleteGolden(params: {
+    golden: GoldenUnion | string;
+    projectId?: string;
+    alias?: string;
+  }): Promise<void> {
+    const { golden, projectId, alias } = params;
+    const datasetAlias = alias ?? this._alias;
+    const goldenId = typeof golden === "string" ? golden : golden.id;
+    if (!goldenId || !datasetAlias) {
+      throw new Error(
+        "Cannot delete a golden without an id and alias. Pull the dataset first so it carries alias and golden ids assigned by Confident AI, or pass the alias and golden id directly.",
+      );
+    }
+    const api = new Api();
+    await api.sendRequest(
+      HttpMethods.DELETE,
+      Endpoints.GOLDEN_ENDPOINT,
+      undefined,
+      undefined,
+      undefined,
+      { goldenId, alias: datasetAlias },
+      projectId,
+    );
+    console.log("✅ Golden successfully deleted from Confident AI!");
+  }
+
   /** A column the file lacks stays unset, so a metric still reports it missing. */
   async addTestCasesFromCSV({
     filePath,
