@@ -37,6 +37,20 @@ from deepeval.templates import make_template_class
 SummarizationTemplate = make_template_class("SummarizationMetric")
 
 
+def _is_yes(value: str) -> bool:
+    """The single predicate behind score and reason classification.
+
+    _calculate_score counts only an explicit "yes" verdict as aligned (or
+    covered); the reason-side bucketing must use the same test so any other
+    verdict string lands on the same side in both places.
+    """
+    return value.strip().lower() == "yes"
+
+
+def _is_idk(value: str) -> bool:
+    return value.strip().lower() == "idk"
+
+
 class SummarizationMetric(BaseMetric):
 
     _required_params: List[SingleTurnParams] = [
@@ -213,17 +227,18 @@ class SummarizationMetric(BaseMetric):
         contradictions = []
         redundancies = []
         for verdict in self.alignment_verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                contradictions.append(verdict.reason)
-            elif verdict.verdict.strip().lower() == "idk":
+            if _is_yes(verdict.verdict):
+                continue
+            if _is_idk(verdict.verdict):
                 redundancies.append(verdict.reason)
+            else:
+                contradictions.append(verdict.reason)
 
         questions = []
         if self.coverage_verdicts:
             for verdict in self.coverage_verdicts:
-                if (
-                    verdict.original_verdict.strip().lower() == "yes"
-                    and verdict.summary_verdict.strip().lower() == "no"
+                if _is_yes(verdict.original_verdict) and not _is_yes(
+                    verdict.summary_verdict
                 ):
                     questions.append(verdict.question)
 
@@ -258,17 +273,18 @@ class SummarizationMetric(BaseMetric):
         contradictions = []
         redundancies = []
         for verdict in self.alignment_verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                contradictions.append(verdict.reason)
-            elif verdict.verdict.strip().lower() == "idk":
+            if _is_yes(verdict.verdict):
+                continue
+            if _is_idk(verdict.verdict):
                 redundancies.append(verdict.reason)
+            else:
+                contradictions.append(verdict.reason)
 
         questions = []
         if self.coverage_verdicts:
             for verdict in self.coverage_verdicts:
-                if (
-                    verdict.original_verdict.strip().lower() == "yes"
-                    and verdict.summary_verdict.strip().lower() == "no"
+                if _is_yes(verdict.original_verdict) and not _is_yes(
+                    verdict.summary_verdict
                 ):
                     questions.append(verdict.question)
 
@@ -305,7 +321,7 @@ class SummarizationMetric(BaseMetric):
             for verdict in self.alignment_verdicts:
                 # Different from the faithfulness score, this
                 # penalizes 'idk' (full of fluff) summaries
-                if verdict.verdict.strip().lower() == "yes":
+                if _is_yes(verdict.verdict):
                     faithfulness_count += 1
 
             score = faithfulness_count / total
@@ -316,9 +332,9 @@ class SummarizationMetric(BaseMetric):
             total = 0
             coverage_count = 0
             for verdict in self.coverage_verdicts:
-                if verdict.original_verdict.strip().lower() == "yes":
+                if _is_yes(verdict.original_verdict):
                     total += 1
-                    if verdict.summary_verdict.strip().lower() == "yes":
+                    if _is_yes(verdict.summary_verdict):
                         coverage_count += 1
 
             if total == 0:

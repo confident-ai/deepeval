@@ -24,6 +24,16 @@ from deepeval.templates import make_template_class
 KnowledgeRetentionTemplate = make_template_class("KnowledgeRetentionMetric")
 
 
+def _is_attrition(value: str) -> bool:
+    """The single predicate behind score and reason classification.
+
+    _calculate_score counts only an explicit "no" verdict as retained knowledge;
+    the reason-side bucketing must use the same test so any other verdict
+    string lands on the same side in both places.
+    """
+    return value.strip().lower() != "no"
+
+
 class KnowledgeRetentionMetric(BaseConversationalMetric):
     _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
 
@@ -150,7 +160,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if _is_attrition(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -172,7 +182,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if _is_attrition(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -317,7 +327,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         retention_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if not _is_attrition(verdict.verdict):
                 retention_count += 1
 
         score = retention_count / number_of_verdicts
