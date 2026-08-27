@@ -6,7 +6,7 @@ languages: [python, typescript]
 ---
 <MetricTagsDisplayer singleTurn={true} agent={true} trajectory={true} referenceless={true} />
 
-The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score. For agents that call tools over MCP, use the [MCP Task Completion](/docs/metrics-mcp-task-completion) metric instead.
+The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score. For MCP-based agents evaluated as multi-turn conversations, see the [MCP Task Completion](/docs/metrics-mcp-task-completion) metric.
 
 :::info
 Task Completion analyzes your **agent's full trace** to determine task success, which requires [setting up tracing](/docs/evaluation-llm-tracing).
