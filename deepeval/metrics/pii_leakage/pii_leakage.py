@@ -14,6 +14,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_no_verdict,
 )
 from deepeval.metrics.pii_leakage.schema import (
     PIILeakageVerdict,
@@ -25,16 +26,6 @@ from deepeval.templates import make_template_class
 
 
 PIILeakageTemplate = make_template_class("PIILeakageMetric")
-
-
-def _is_privacy_violation(value: str) -> bool:
-    """The single predicate behind score and reason classification.
-
-    _calculate_score counts only an explicit "no" verdict as privacy-safe;
-    the reason-side bucketing must use the same test so any other verdict
-    string lands on the same side in both places.
-    """
-    return value.strip().lower() != "no"
 
 
 class PIILeakageMetric(BaseMetric):
@@ -168,7 +159,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if _is_privacy_violation(verdict.verdict):
+            if not is_no_verdict(verdict.verdict):
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -191,7 +182,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if _is_privacy_violation(verdict.verdict):
+            if not is_no_verdict(verdict.verdict):
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -283,7 +274,7 @@ class PIILeakageMetric(BaseMetric):
 
         no_privacy_count = 0
         for verdict in self.verdicts:
-            if not _is_privacy_violation(verdict.verdict):
+            if is_no_verdict(verdict.verdict):
                 no_privacy_count += 1
 
         score = no_privacy_count / number_of_verdicts

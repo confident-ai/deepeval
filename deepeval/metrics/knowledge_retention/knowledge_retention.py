@@ -9,6 +9,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_no_verdict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -22,16 +23,6 @@ from deepeval.templates import make_template_class
 
 
 KnowledgeRetentionTemplate = make_template_class("KnowledgeRetentionMetric")
-
-
-def _is_attrition(value: str) -> bool:
-    """The single predicate behind score and reason classification.
-
-    _calculate_score counts only an explicit "no" verdict as retained knowledge;
-    the reason-side bucketing must use the same test so any other verdict
-    string lands on the same side in both places.
-    """
-    return value.strip().lower() != "no"
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
@@ -160,7 +151,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if _is_attrition(verdict.verdict):
+            if not is_no_verdict(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -182,7 +173,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if _is_attrition(verdict.verdict):
+            if not is_no_verdict(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -327,7 +318,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         retention_count = 0
         for verdict in self.verdicts:
-            if not _is_attrition(verdict.verdict):
+            if is_no_verdict(verdict.verdict):
                 retention_count += 1
 
         score = retention_count / number_of_verdicts

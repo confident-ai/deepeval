@@ -32,6 +32,12 @@ from deepeval.metrics.summarization.schema import (
     SummarizationAlignmentVerdict,
     SummarizationCoverageVerdict,
 )
+from deepeval.metrics.utils import (
+    is_idk_verdict,
+    is_no_verdict,
+    is_yes_verdict,
+    normalize_verdict,
+)
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 
@@ -171,3 +177,45 @@ def test_summarization_idk_is_still_a_redundancy():
     metric.score = 0.0
 
     assert "pure fluff" in _reason_prompt(metric, use_async=False)
+
+
+def test_normalize_verdict_strips_and_lowercases():
+    assert normalize_verdict("  Yes\n") == "yes"
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("yes", True),
+        (" Yes ", True),
+        ("YES\n", True),
+        ("yes.", False),
+        ("Yes!", False),
+        ("no", False),
+        ("unknown", False),
+    ],
+)
+def test_is_yes_verdict_matches_only_the_exact_token(value, expected):
+    assert is_yes_verdict(value) is expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("no", True),
+        (" No ", True),
+        ("no.", False),
+        ("n/a", False),
+        ("yes", False),
+    ],
+)
+def test_is_no_verdict_matches_only_the_exact_token(value, expected):
+    assert is_no_verdict(value) is expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [("idk", True), (" IDK ", True), ("idk?", False), ("yes", False)],
+)
+def test_is_idk_verdict_matches_only_the_exact_token(value, expected):
+    assert is_idk_verdict(value) is expected
