@@ -42,7 +42,7 @@ sequenceDiagram
     STT-->>Simulator: assistant transcript
 ```
 
-By default this loop is **half-duplex** (`exchange_turn`). To exercise barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
+By default this loop is **half-duplex (no interruptions; each side takes a turn)**. To exercise barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
 
 Who does the talking on the simulated side — their voice, their temperament, the noise around them — comes from the golden's [`Persona`](/docs/conversation-simulator-voice-personas).
 
@@ -51,6 +51,10 @@ Everything else about the simulation — scenario-driven user turns, [stopping l
 ## Setup Voice Mode
 
 In `deepeval`'s `ConversationSimulator`, `voice_config` and `model_callback` are mutually exclusive: provide exactly one.
+
+Start by choosing the connector that matches your deployed voice agent. `deepeval` provides connectors for ElevenLabs conversational agents, LiveKit agents, compatible raw-audio WebSockets, and in-process Python callables. You only need to implement a custom connector when none of these can reach your agent; see [Voice Connectors](/docs/conversation-simulator-voice-connectors).
+
+The example below connects to an existing **ElevenLabs conversational agent**. `ElevenLabsConnector` is the bridge to that agent — it is not the TTS or STT model used by the simulator.
 
 ```python
 from deepeval.voice import VoiceConfig, ElevenLabsConnector
@@ -63,17 +67,16 @@ voice_config = VoiceConfig(
 simulator = ConversationSimulator(voice_config=voice_config)
 ```
 
-There are **ONE** mandatory and **FIVE** optional parameters when creating a `VoiceConfig`:
+There are **ONE** mandatory and **FOUR** optional parameters when creating a `VoiceConfig`:
 
 - `connector`: a [`BaseVoiceConnector`](/docs/conversation-simulator-voice-connectors) that carries audio to and from your voice agent.
 - [Optional] `tts_model`: a [`DeepEvalBaseTTS`](#tts-and-stt-models) that speaks the simulated user's messages. Defaulted to `OpenAITTSModel`.
 - [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
 - [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Left unset, it falls back to the `DEEPEVAL_VOICE_FOLDER` [environment variable](/docs/environment-variables) and then to `".deepeval-voice-simulations"`.
 - [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
-- [Optional] `interruption_settings`: **deprecated** — set [`Persona(interruption_behavior=...)`](/docs/conversation-simulator-voice-personas#interruptions) on the golden instead. Defaulted to `None`.
 
 ::::tip
-`VoiceConfig` is how you reach your agent; the [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` is who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
+The connector in `VoiceConfig` determines how `deepeval` reaches your agent. The [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` determines who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
 ::::
 
 ::::note
@@ -89,10 +92,9 @@ Voice mode introduces two speech models that sit on opposite sides of the connec
 | `tts_model`  | `DeepEvalBaseTTS` | Speaks the **simulated user's** messages to your agent          | `OpenAITTSModel` (`gpt-4o-mini-tts`, `alloy`) | What your agent hears. Unclear or unnatural speech degrades your agent's own speech recognition and skews the whole simulation. |
 | `stt_model`  | `DeepEvalBaseSTT` | Transcribes **your agent's** spoken replies into `Turn.content` | `OpenAISTTModel` (`gpt-4o-transcribe`)        | Transcript fidelity. Every multi-turn metric judges this transcript, so STT accuracy directly bounds evaluation quality.        |
 
-Two details worth knowing:
+STT is skipped when the connector already carries a transcript. Some platforms, including ElevenLabs, send the agent's transcript alongside its audio. When present, it becomes `Turn.content` directly and the `stt_model` is not called for that turn.
 
-- **STT is skipped when the connector already carries a transcript.** Some platforms (like ElevenLabs) send the agent's own transcript alongside its audio; when present, it becomes `Turn.content` directly and your `stt_model` is never called for that turn.
-- **Speech costs are tracked separately** from the simulator model's LLM cost: after a run, `simulator.tts_cost` and `simulator.stt_cost` hold the accumulated TTS and STT spend.
+Speech costs are tracked separately from the simulator model's LLM cost. After a run, `simulator.tts_cost` and `simulator.stt_cost` contain the accumulated TTS and STT spend.
 
 ### Using Custom Speech Models
 
