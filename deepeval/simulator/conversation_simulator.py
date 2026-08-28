@@ -630,6 +630,7 @@ class ConversationSimulator:
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
                 turns.append(await self._voice_listen(call, turns))
+                await _notify_turns(on_turn, turns, index)
 
             while True:
                 logger.debug(
@@ -706,6 +707,7 @@ class ConversationSimulator:
                     user_input = ""
                     update_pbar(progress, pbar_max_user_simluations_id)
                     simulation_counter += 1
+                    await _notify_turns(on_turn, turns, index)
                 else:
                     if emission_task is None:
                         user_started = time.perf_counter()
@@ -735,6 +737,7 @@ class ConversationSimulator:
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
                     simulation_counter += 1
+                    await _notify_turns(on_turn, turns, index)
 
                 # Generate turn from assistant (half-duplex or duplex barge-in)
                 assistant_started = time.perf_counter()
@@ -767,6 +770,8 @@ class ConversationSimulator:
                         thread_id=thread_id,
                     )
                     turns.append(assistant_turn)
+
+                await _notify_turns(on_turn, turns, index)
 
                 exchange_seconds = time.perf_counter() - assistant_started
                 logger.debug(
