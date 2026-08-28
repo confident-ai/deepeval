@@ -7,6 +7,7 @@ import enterpriseStyles from "./EnterpriseHeroSection.module.scss";
 export type EnterpriseLogoItem = {
   name: string;
   slug: string;
+  src?: string;
 };
 
 type EnterpriseHeroSectionProps = {
@@ -16,8 +17,9 @@ type EnterpriseHeroSectionProps = {
 
 const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
   {
-    name: "Syngenta Group",
-    slug: "syngenta-group",
+    name: "LEGO",
+    slug: "lego",
+    src: "/icons/companies/lego.svg",
   },
   { name: "Panasonic", slug: "panasonic" },
   { name: "Finom", slug: "finom" },
@@ -77,7 +79,7 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
           {logoItems.map((brand) => (
             <div key={brand.slug} className={styles.cell}>
               <img
-                src={`/icons/brand-icons/${brand.slug}.svg`}
+                src={brand.src ?? `/icons/brand-icons/${brand.slug}.svg`}
                 alt={brand.name}
                 className={styles.logo}
               />
