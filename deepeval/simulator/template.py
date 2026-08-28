@@ -1,7 +1,7 @@
 from typing import List
 import textwrap
 
-from deepeval.dataset import ConversationalGolden, golden_persona
+from deepeval.dataset import ConversationalGolden
 from deepeval.simulator.utils import serialize_turns_for_prompt
 from deepeval.test_case import Turn
 
@@ -22,10 +22,9 @@ class SimulationTemplate:
         The first line inherits its indentation from the template itself, so
         only continuation lines are padded.
         """
-        persona = golden_persona(golden)
-        if persona is None:
+        if golden.persona is None:
             return ""
-        block = persona.prompt_block()
+        block = golden.persona.prompt_block()
         return block.replace("\n", "\n" + " " * indent)
 
     @staticmethod

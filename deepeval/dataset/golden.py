@@ -160,16 +160,6 @@ def resolve_persona(
     return persona, persona.characteristics
 
 
-def golden_persona(golden: object) -> Optional[Persona]:
-    persona = getattr(golden, "persona", None)
-    if persona is not None:
-        return persona
-    user_description = getattr(golden, "user_description", None)
-    if not user_description:
-        return None
-    return Persona(characteristics=user_description)
-
-
 class Golden(BaseModel):
     id: Optional[str] = Field(default=None, exclude=True)
     input: str

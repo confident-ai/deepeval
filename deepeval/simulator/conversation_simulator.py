@@ -52,7 +52,7 @@ from deepeval.simulator.simulation_graph.runner import (
     _GraphConversationState,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
-from deepeval.dataset import ConversationalGolden, golden_persona
+from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
     from deepeval.dataset import Persona
@@ -451,10 +451,11 @@ class ConversationSimulator:
             total=max_user_simulations + 1,
         )
 
-        persona = golden_persona(golden)
         additional_metadata = {
             "Persona": (
-                persona.characteristics if persona is not None else None
+                golden.persona.characteristics
+                if golden.persona is not None
+                else None
             )
         }
         user_input = None
@@ -582,10 +583,11 @@ class ConversationSimulator:
             total=max_user_simulations + 1,
         )
 
-        persona = golden_persona(golden)
         additional_metadata = {
             "Persona": (
-                persona.characteristics if persona is not None else None
+                golden.persona.characteristics
+                if golden.persona is not None
+                else None
             )
         }
         user_input = None
@@ -602,7 +604,7 @@ class ConversationSimulator:
         call: Optional[_VoiceCall] = None
         if voice is not None:
             policy, floor = self._build_interruption(golden)
-            call = voice.begin_conversation(persona, policy, floor)
+            call = voice.begin_conversation(golden.persona, policy, floor)
 
         async with AsyncExitStack() as stack:
             # Voice mode: one live call per conversation. The connector is
@@ -621,6 +623,7 @@ class ConversationSimulator:
                     time.perf_counter() - connect_started,
                 )
 
+            persona = golden.persona
             voice_mode = call is not None
             muted = voice_mode and persona is not None and persona.muted
             hold_timeout = persona.hold_timeout if persona is not None else None
@@ -958,9 +961,10 @@ class ConversationSimulator:
         from deepeval.voice.floor_control import FloorController
         from deepeval.voice.interruption import interruption_policy
 
-        persona = golden_persona(golden)
         behavior = (
-            persona.interruption_behavior if persona is not None else None
+            golden.persona.interruption_behavior
+            if golden.persona is not None
+            else None
         )
         if behavior is None:
             behavior = self._voice.config.interruption_settings
@@ -1269,7 +1273,7 @@ class ConversationSimulator:
 
         call_started_at = call.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
-            call, input, golden_persona(golden), trailing_silence=True
+            call, input, golden.persona, trailing_silence=True
         )
         user_audio.start_time = max(0.0, uplink_started_at - call_started_at)
         if turns and turns[-1].role == "user":
