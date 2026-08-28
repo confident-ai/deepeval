@@ -173,6 +173,7 @@ secrets
 # Generated voice simulation audio (voice_simulations/ was the old default)
 .deepeval-voice-simulations/
 voice_simulations/
+voice_simulations_ws/
 
 # Mac OS system files
 **/.DS_Store
