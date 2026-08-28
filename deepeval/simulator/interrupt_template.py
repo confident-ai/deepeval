@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from deepeval.dataset import ConversationalGolden
+from deepeval.dataset import ConversationalGolden, golden_persona
 from deepeval.simulator.utils import serialize_turns_for_prompt
 from deepeval.test_case import Turn
 from deepeval.templates import SimulatorTemplateMethod, resolve_template
@@ -43,6 +43,7 @@ class SimulatorInterruptTemplate:
                 _TEMPLATE_CLASS,
                 "interruption_frustration",
             ).strip()
+        persona = golden_persona(golden)
 
         return resolve_template(
             _FEATURE,
@@ -55,11 +56,7 @@ class SimulatorInterruptTemplate:
             frustrated=frustrated,
             frustration_block=frustration_block,
             language=language,
-            persona=(
-                golden.persona.prompt_block()
-                if golden.persona is not None
-                else ""
-            ),
+            persona=(persona.prompt_block() if persona is not None else ""),
             scenario=golden.scenario or "",
             previous_conversation=previous_conversation,
             partial_agent_transcript=partial_agent_transcript,
