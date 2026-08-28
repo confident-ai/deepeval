@@ -402,6 +402,8 @@ class ConversationSimulator:
             Callable[[ConversationalTestCase, int], None]
         ] = None,
     ) -> ConversationalTestCase:
+        if self._voice is not None:
+            raise ValueError("Voice simulation requires `async_mode=True`.")
         simulation_counter = 0
         if max_user_simulations <= 0:
             raise ValueError("max_user_simulations must be greater than 0")
