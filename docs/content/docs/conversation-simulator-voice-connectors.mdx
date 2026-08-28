@@ -54,7 +54,7 @@ from deepeval.voice import LiveKitConnector
 connector = LiveKitConnector(agent_name="restaurant-agent")
 ```
 
-There are **EIGHT** optional parameters when creating a `LiveKitConnector` (credentials may also come from the environment):
+There are **NINE** optional parameters when creating a `LiveKitConnector` (credentials may also come from the environment):
 
 - [Optional] `url`: the LiveKit server URL. When omitted, reads `LIVEKIT_URL`. Defaulted to `None`.
 - [Optional] `api_key`: the LiveKit API key. When omitted, reads `LIVEKIT_API_KEY`. Defaulted to `None`.
@@ -62,12 +62,49 @@ There are **EIGHT** optional parameters when creating a `LiveKitConnector` (cred
 - [Optional] `room_name`: the room to join. When omitted, a room is created for the session. Defaulted to `None`.
 - [Optional] `identity`: the participant identity for the simulator. Defaulted to `"deepeval-test"`.
 - [Optional] `agent_name`: the name of the agent to dispatch into the room. Defaulted to `None`.
+- [Optional] `agent_identity`: the participant identity whose audio track is treated as the agent. When omitted, the first audio track heard in the room is the agent. Defaulted to `None`.
 - [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 - [Optional] `connect_timeout_s`: timeout (seconds) for establishing the room connection. Defaulted to `15.0`.
 
 ::::note
 `url`, `api_key`, and `api_secret` are required collectively — pass them explicitly or set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET`.
 ::::
+
+### Phone numbers
+
+`deepeval` has no carrier of its own, so it ships no phone connector. What it ships is the seam: `LiveKitConnector.connect()` joins the room, awaits `_after_join()`, then waits for the agent's audio track. Subclass it, dial the number inside `_after_join()` through an outbound SIP trunk you have configured in LiveKit, and set `agent_identity` to the callee's identity so its track is the one adopted:
+
+```python
+from deepeval.voice import LiveKitConnector, VoiceProtocol
+
+class SipDialConnector(LiveKitConnector):
+    protocol = VoiceProtocol.SIP
+
+    def __init__(self, phone_number, sip_trunk_id, **kwargs):
+        kwargs.setdefault("agent_identity", "callee")
+        kwargs.setdefault("connect_timeout_s", 60.0)
+        super().__init__(**kwargs)
+        self.phone_number = phone_number
+        self.sip_trunk_id = sip_trunk_id
+
+    async def _after_join(self):
+        api = self._api
+        client = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
+        try:
+            await client.sip.create_sip_participant(
+                api.CreateSIPParticipantRequest(
+                    sip_trunk_id=self.sip_trunk_id,
+                    sip_call_to=self.phone_number,
+                    room_name=self.room_name,
+                    participant_identity="callee",
+                    wait_until_answered=True,
+                )
+            )
+        finally:
+            await client.aclose()
+```
+
+Pass it as a factory so every conversation dials its own call: `VoiceConfig(connector=lambda: SipDialConnector("+14155550100", "ST_..."))`. A complete runnable version lives at [`examples/voice/sip_dial_connector.py`](https://github.com/confident-ai/deepeval/blob/main/examples/voice/sip_dial_connector.py). Carriers meter these calls per minute and usually cap new calls per second, so keep `max_concurrent` modest.
 
 ## Generic WebSocket
 

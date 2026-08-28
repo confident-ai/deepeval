@@ -108,7 +108,7 @@ This makes STT the more quality-critical of the two — transcription accuracy d
 
 There is no single way to reach a deployed voice agent. In practice, agents are reachable over a handful of transports:
 
-- **SIP / PSTN (telephony)** — the universal path. Any agent behind a phone number or SIP URI can be called, regardless of vendor: Vapi, Retell, Bland, LiveKit deployments, ElevenLabs agents with phone numbers.
+- **SIP / PSTN (telephony)** — the universal path. Any agent behind a phone number or SIP URI can be called, regardless of vendor: Vapi, Retell, Bland, LiveKit deployments, ElevenLabs agents with phone numbers. `deepeval` has no carrier of its own, so there is no built-in SIP connector: you dial through your own LiveKit SIP trunk by subclassing `LiveKitConnector` (see [Phone numbers](/docs/conversation-simulator-voice-connectors#phone-numbers)).
 - **WebRTC** — real-time peer-to-peer media. Used by LiveKit rooms, Pipecat, and the web-call modes of Vapi and Retell. Lowest latency, but requires a WebRTC client stack.
 - **WebSocket** — raw audio frames over a socket. Used by ElevenLabs conversational agents and many custom in-house agents.
 - **REST "create call" APIs** — most managed platforms have one, but it only _initiates_ the session; the audio itself still flows over one of the transports above.
@@ -326,9 +326,13 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
         <>
           Whichever your agent is already deployed behind. Agents in LiveKit
           rooms are WebRTC; ElevenLabs conversational agents and most custom
-          in-house agents are WebSocket; anything with a phone number is SIP. If
-          you're still building the pipeline, start with <code>CALLBACK</code> —
-          no transport at all.
+          in-house agents are WebSocket; anything with a phone number is SIP,
+          reached through your own LiveKit trunk (see{" "}
+          <a href="/docs/conversation-simulator-voice-connectors#phone-numbers">
+            Phone numbers
+          </a>
+          ). If you're still building the pipeline, start with{" "}
+          <code>CALLBACK</code> — no transport at all.
         </>
       ),
     },
