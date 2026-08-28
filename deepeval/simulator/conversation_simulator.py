@@ -1,6 +1,7 @@
 from typing import (
     TYPE_CHECKING,
     Any,
+    Awaitable,
     Optional,
     List,
     Tuple,
@@ -148,6 +149,35 @@ def _populate_audio_duration(audio) -> None:
         audio.duration = (len(pcm) / 2 / max(channels, 1)) / sample_rate
 
 
+TurnHook = Callable[[List[Turn], int], Union[None, Awaitable[None]]]
+
+
+async def _notify_turns(
+    on_turn: Optional[TurnHook], turns: List[Turn], index: Optional[int]
+) -> None:
+    if on_turn is None:
+        return
+    try:
+        result = on_turn(list(turns), index if index is not None else 0)
+        if inspect.isawaitable(result):
+            await result
+    except Exception:
+        logger.exception("on_turn hook failed")
+
+
+def _notify_turns_sync(
+    on_turn: Optional[TurnHook], turns: List[Turn], index: Optional[int]
+) -> None:
+    if on_turn is None:
+        return
+    try:
+        result = on_turn(list(turns), index if index is not None else 0)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception:
+        logger.exception("on_turn hook failed")
+
+
 async def _discard_task(task: Optional[asyncio.Task]) -> None:
     """Drop work started ahead of a decision that turned out not to need it."""
     if task is None:
@@ -270,6 +300,7 @@ class ConversationSimulator:
         on_simulation_complete: Optional[
             Callable[[ConversationalTestCase, int], None]
         ] = None,
+        on_turn: Optional[TurnHook] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
         if self._voice is not None:
@@ -288,6 +319,7 @@ class ConversationSimulator:
                         conversational_goldens=conversational_goldens,
                         max_user_simulations=max_user_simulations,
                         on_simulation_complete=on_simulation_complete,
+                        on_turn=on_turn,
                         progress=progress,
                         pbar_id=pbar_id,
                     )
@@ -325,6 +357,7 @@ class ConversationSimulator:
                             progress=progress,
                             pbar_id=pbar_id,
                             on_simulation_complete=on_simulation_complete,
+                            on_turn=on_turn,
                         )
                     )
                     conversational_test_cases.append(conversational_test_case)
@@ -340,6 +373,7 @@ class ConversationSimulator:
         on_simulation_complete: Optional[
             Callable[[ConversationalTestCase, int], None]
         ] = None,
+        on_turn: Optional[TurnHook] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
@@ -379,6 +413,7 @@ class ConversationSimulator:
                     progress=progress,
                     pbar_id=pbar_id,
                     on_simulation_complete=on_simulation_complete,
+                    on_turn=on_turn,
                 )
 
         tasks = [
@@ -401,6 +436,7 @@ class ConversationSimulator:
         on_simulation_complete: Optional[
             Callable[[ConversationalTestCase, int], None]
         ] = None,
+        on_turn: Optional[TurnHook] = None,
     ) -> ConversationalTestCase:
         if self._voice is not None:
             raise ValueError("Voice simulation requires `async_mode=True`.")
@@ -532,6 +568,7 @@ class ConversationSimulator:
         on_simulation_complete: Optional[
             Callable[[ConversationalTestCase, int], None]
         ] = None,
+        on_turn: Optional[TurnHook] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
