@@ -32,7 +32,7 @@ from deepeval.voice.streaming import (
 )
 from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 
-_INSTALL_HINT = "Install it with `pip install \"deepeval[voice]\"`."
+_INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 
 
 class LiveKitConnector(BaseVoiceConnector):
