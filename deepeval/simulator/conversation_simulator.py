@@ -195,15 +195,10 @@ class ConversationSimulator:
                 "`voice_config` (voice agents)."
             )
 
-        # Voice mode lives in one object, rebuilt per run and per conversation.
-        # Voice pins `max_concurrent` to 1, so a single active one is safe.
         self._voice: Optional[_VoiceRun] = None
         if voice_config is not None:
             if not async_mode:
                 raise ValueError("Voice simulation requires `async_mode=True`.")
-            # A single connector holds a single live call; concurrent
-            # conversations would interleave audio on the same session.
-            max_concurrent = 1
             from deepeval.models.tts_models import OpenAITTSModel
             from deepeval.models.stt_models import OpenAISTTModel
 
