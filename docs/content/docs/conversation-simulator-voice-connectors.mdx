@@ -158,6 +158,20 @@ async def my_agent(user_audio) -> ConnectorTurn:
 connector = CallbackVoiceConnector(my_agent)
 ```
 
+## Concurrency
+
+A connector holds one live call, so the simulator never runs two conversations over the same instance. Before each conversation it either clones the connector you passed to `VoiceConfig` or, if you passed a zero-argument function, calls it to build a fresh one. Pass a factory when your connector holds state that a shallow copy would share, or when each call needs different arguments:
+
+```python
+from deepeval.voice import LiveKitConnector, VoiceConfig
+
+voice_config = VoiceConfig(
+    connector=lambda: LiveKitConnector(agent_name="support-agent"),
+)
+```
+
+Custom connectors get the default `clone()` (a shallow copy) from `BaseVoiceConnector`; override it if your subclass opens resources in `__init__` rather than in `connect()`.
+
 ## Turn Detection
 
 Nothing in an audio stream announces that your agent has finished speaking, so the end of its turn is inferred from silence. Every connector takes a `turn_detection` preset controlling how long that silence has to last, along with the hard ceiling that stops an agent which never goes quiet from hanging the simulation:
