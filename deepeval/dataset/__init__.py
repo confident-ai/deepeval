@@ -6,6 +6,7 @@ from .golden import (
     Persona,
     BackgroundNoiseSettings,
     InterruptionBehavior,
+    golden_persona,
 )
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "Persona",
     "BackgroundNoiseSettings",
     "InterruptionBehavior",
+    "golden_persona",
     "get_current_golden",
 ]
