@@ -509,6 +509,7 @@ class ConversationSimulator:
                 user_input = emission.turn.content
                 update_pbar(progress, pbar_max_user_simluations_id)
                 simulation_counter += 1
+                _notify_turns_sync(on_turn, turns, index)
 
             # Generate turn from assistant
             if self.is_callback_async:
@@ -528,6 +529,7 @@ class ConversationSimulator:
                     thread_id=thread_id,
                 )
             turns.append(assistant_turn)
+            _notify_turns_sync(on_turn, turns, index)
 
             # Route to the next graph node based on the assistant reply.
             self._graph_runner.advance(
