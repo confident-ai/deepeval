@@ -14,7 +14,7 @@ beta: true
 
 `deepeval` treats voice as a first-class modality, and it changes **how conversations are produced, not how they are evaluated**: the pipeline you already know — goldens in, test cases out, metrics on top — is untouched. A simulated voice conversation produces a standard `ConversationalTestCase` whose `Turn`s carry audio and timing alongside the transcript, so your existing LLM-as-a-judge metrics keep working while the audio and timing data is preserved for voice-specific analysis.
 
-This page explains the concepts behind `deepeval`'s voice support — speech models, transports, connectors, voice data on test cases, and interruptions. To actually run voice simulations, see [Voice Mode](/docs/conversation-simulator-voice-mode) on the `ConversationSimulator`.
+Three pieces make that possible: a TTS model speaks for the simulated caller, an STT model transcribes the agent's replies, and a connector bridges `deepeval` to your deployed voice agent. This page explains how those pieces fit together, how voice data appears on test cases, and how turn-taking changes when interruptions are enabled. To actually run voice simulations, see [Voice Mode](/docs/conversation-simulator-voice-mode) on the `ConversationSimulator`.
 
 ## Why Voice Is Different
 
@@ -23,7 +23,7 @@ A text chatbot is a function: you call it with a message and it returns one. A d
 This has two consequences for evaluation:
 
 1. **You need speech models of your own.** To simulate a user, `deepeval` must _speak_ messages to your agent (text-to-speech) and _listen_ to its replies (speech-to-text). These sit outside your agent — they are the simulated caller's mouth and ears.
-2. **You need a transport integration.** There is no universal API for "send this audio to my agent"; agents are reachable over different protocols depending on where they're deployed. `deepeval` abstracts this behind connectors.
+2. **You need a bridge to your agent.** There is no universal API for "send this audio to my agent"; agents are reachable over different protocols depending on where they're deployed. A `deepeval` connector opens that live session and carries audio between the simulator and your agent.
 
 ## How Voice Evals Work
 
@@ -47,7 +47,7 @@ sequenceDiagram
     Simulator->>TTS: 1. simulated user message (text)
     TTS-->>Simulator: 2. user audio
     Simulator->>Connector: user audio
-    Connector->>Agent: 3. audio over a live transport (WebRTC / WebSocket / SIP)
+    Connector->>Agent: 3. audio over a live transport (WebRTC / WebSocket)
     Agent-->>Connector: spoken reply
     Connector-->>Simulator: reply audio + latency_ms
     Simulator->>STT: 4. reply audio
@@ -61,7 +61,7 @@ Step 4 is skipped when the platform already provides a transcript: some connecto
 :::warning
 Steps 2–4 are where the pipeline can distort what you measure. Know the trade-offs:
 
-- **Half-duplex by default** — by default the simulated user finishes speaking and waits for the agent, so barge-in isn't exercised. See [Interruptions](#interruptions) for the duplex model.
+- **Half-duplex by default (no interruptions; each side takes a turn)** — the simulated user finishes speaking and waits for the agent, so barge-in isn't exercised. See [Interruptions](#interruptions) for the duplex model.
 - **An idealized caller by default** — TTS speech is clean and studio-quality: no background noise, muffled mics, or hesitations. A [persona](/docs/conversation-simulator-voice-personas) can add ambient noise and a different voice, but passing still proves conversational competence more than audio robustness.
 - **STT errors look like agent errors** — transcription accuracy is the ceiling on evaluation accuracy, so the STT model is the most quality-critical choice in the pipeline.
 - **End-of-turn is a heuristic** — silence thresholds can clip long pauses and pad `latency_ms`, which is why latencies only compare within a protocol.
@@ -92,6 +92,8 @@ An audio clip without `start_time` can still be evaluated for how it sounded. It
 
 Text-to-speech (TTS) and speech-to-text (STT) are separate model families from LLMs, with largely separate providers. Because they are genuinely different model types, `deepeval` gives them their own base classes — `DeepEvalBaseTTS` and `DeepEvalBaseSTT` — rather than bolting `synthesize`/`transcribe` methods onto `DeepEvalBaseLLM`. In a voice simulation the two play opposite roles, and their quality matters asymmetrically.
 
+`deepeval` currently uses OpenAI's TTS and STT models by default. To use another provider, supply custom speech models; see [Voice Mode](/docs/conversation-simulator-voice-mode#tts-and-stt-models) for the required methods.
+
 ### Text-to-Speech (TTS)
 
 A TTS model turns text into spoken audio. In a voice simulation, the **TTS model is the simulated user's voice**: every user message the simulator generates is synthesized to speech before it reaches your agent.
@@ -102,47 +104,40 @@ Some LLM providers offer TTS (OpenAI, Gemini), while dedicated vendors like Elev
 
 An STT model turns spoken audio into text. In a voice simulation, the **STT model is how `deepeval` hears your agent**: its transcription of each spoken reply becomes the `Turn.content` that your metrics judge.
 
-This makes STT the more quality-critical of the two — transcription accuracy directly bounds evaluation quality, and it decides voice-specific measurements like word error rate (WER). It's also why supporting industry-standard STT providers (Deepgram, AssemblyAI, OpenAI's Whisper family) matters more than TTS breadth.
+This makes STT the more quality-critical of the two — transcription accuracy directly bounds evaluation quality, and it decides voice-specific measurements like word error rate (WER).
 
-## Transports
+## Interruptions
 
-There is no single way to reach a deployed voice agent. In practice, agents are reachable over a handful of transports:
+A voice simulation starts in **half-duplex (no interruptions; each side takes a turn)**. The simulated caller finishes speaking, then waits until the agent has finished before continuing. This is the simplest way to evaluate the conversation, but it does not test overlap or barge-in.
 
-- **SIP / PSTN (telephony)** — the universal path. Any agent behind a phone number or SIP URI can be called, regardless of vendor: Vapi, Retell, Bland, LiveKit deployments, ElevenLabs agents with phone numbers.
-- **WebRTC** — real-time peer-to-peer media. Used by LiveKit rooms, Pipecat, and the web-call modes of Vapi and Retell. Lowest latency, but requires a WebRTC client stack.
-- **WebSocket** — raw audio frames over a socket. Used by ElevenLabs conversational agents and many custom in-house agents.
-- **REST "create call" APIs** — most managed platforms have one, but it only _initiates_ the session; the audio itself still flows over one of the transports above.
+Enable **duplex** behavior when interruptions are part of what you need to evaluate. In duplex mode, audio can flow in both directions at once: the simulated caller can speak while the agent is still talking, and either side can yield when speech overlaps. This changes how the connector is driven, but it does not require a different connector.
 
-`deepeval` makes the transport explicit with the `VoiceProtocol` enum. Every connector class declares which protocol it speaks:
+Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because interruption frequency and overlap behavior are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
 
-```python
-class VoiceProtocol(Enum):
-    WEBRTC = "webrtc"        # LiveKit rooms, Pipecat, Vapi/Retell web calls
-    WEBSOCKET = "websocket"  # raw-audio WS APIs (ElevenLabs ConvAI, custom agents)
-    SIP = "sip"              # PSTN / telephony (Twilio et al.)
-    CALLBACK = "callback"    # in-process Python callable, no transport
-```
+## Transports and Connectors
 
-Two design decisions are worth calling out:
+A **transport** is how audio moves, such as WebRTC or WebSocket. A **connector** is the `deepeval` integration that uses that transport to reach your agent. You choose a connector based on how your existing agent is deployed; it is not your STT or TTS model.
 
-- **One protocol maps to many connectors.** LiveKit, Pipecat, and Vapi web calls are all `WEBRTC`; ElevenLabs and a custom in-house agent can both be `WEBSOCKET`. The protocol describes the transport, not the vendor.
-- **Timing semantics are defined per protocol, not per connector.** How end-of-turn is detected and what `latency_ms` measures follows from the transport's characteristics, so latencies are comparable across connectors that share a protocol — but not across different protocols.
+`deepeval` currently ships these connectors:
 
-`CALLBACK` is the exception that proves the rule: it is `deepeval`-specific and carries no network transport at all — the "agent" is an in-process Python callable.
+| Connector                | Use it when your agent is...                     | What you provide                                                |
+| ------------------------ | ------------------------------------------------ | --------------------------------------------------------------- |
+| `ElevenLabsConnector`    | an ElevenLabs conversational agent               | Its agent ID and, for a private agent, an API key               |
+| `LiveKitConnector`       | running in a LiveKit room                        | A LiveKit URL, API key, API secret, and optional agent dispatch |
+| `WebSocketConnector`     | exposed through a compatible raw-audio WebSocket | The URL and your message schema                                 |
+| `CallbackVoiceConnector` | callable directly from the same Python process   | A callable that accepts user audio and returns the agent reply  |
 
-:::tip
-Start with `CALLBACK` before going live. It runs the entire simulation pipeline — TTS, turn handling, STT, metrics — against an in-process function, so you can debug your setup without spending call minutes on a deployed agent.
-:::
+The first two are provider integrations. `WebSocketConnector` is configuration-based, so a custom WebSocket agent usually does not require a new wrapper class. `CallbackVoiceConnector` is the in-process option and is useful while building or testing a pipeline. Only agents with a different transport or message lifecycle need a custom `BaseVoiceConnector`.
 
-## Connectors
+See [Voice Connectors](/docs/conversation-simulator-voice-connectors) for installation, credentials, message-schema options, and custom connector guidance.
 
-A connector is `deepeval`'s adapter between the simulator and a live audio session. It holds the call and, by default, drives it **one full exchange at a time**:
+A connector holds one agent session for the entire simulated conversation. In half-duplex mode, it drives that session one full exchange at a time:
 
-| Method            | Responsibility                                                               |
-| ----------------- | ---------------------------------------------------------------------------- |
-| `connect()`       | Establish the session: join the room, open the socket, place the call.       |
-| `exchange_turn()` | Play user audio to the agent, wait for the spoken reply, and measure timing. |
-| `disconnect()`    | Tear the session down.                                                       |
+| Method            | Responsibility                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `connect()`       | Open and retain a usable agent session: join the room or open the socket, authenticate, and wait until audio can flow. |
+| `exchange_turn()` | Play user audio to the agent, wait for the spoken reply, and measure timing.                                           |
+| `disconnect()`    | Tear down the session and release its resources.                                                                       |
 
 `exchange_turn()` is step 3 in [How Voice Evals Work](#how-voice-evals-work). `connect()` and `disconnect()` bracket the whole conversation — one live call per conversation:
 
@@ -165,21 +160,7 @@ sequenceDiagram
     Connector->>Agent: end the call
 ```
 
-One live call per connector is also why voice simulations run sequentially — concurrent conversations would interleave audio on the same session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback).
-
-### Detecting the end of a turn
-
-The hardest part of a voice connector is knowing when the agent has _finished_ speaking — audio streams don't come with return statements. Connectors use a turn engine that combines signals:
-
-- **Silence detection**: a window of quiet after speech marks the end of the reply. Crucially this is silence _since the last speech_, not silence totalled across the turn, so an agent that pauses repeatedly is not eventually cut off by the sum of its pauses.
-- **Platform events**: some protocols emit explicit turn-complete messages, which take precedence.
-- **Timeouts**: a hard cap so an unresponsive agent can't hang the simulation.
-
-Both thresholds come from the connector's [`turn_detection`](/docs/conversation-simulator-voice-connectors#turn-detection) preset — `"eager"`, `"balanced"`, or `"patient"` — rather than being set individually. Their _meaning_ is fixed per protocol, which is what keeps `latency_ms` comparable within a protocol.
-
-:::tip
-If your agent pauses mid-reply (looking up an order, calling a tool) over a transport that never signals the end of a turn, the default window may clip its turn in half. Use `turn_detection="patient"`.
-:::
+One live call per connector is also why voice simulations run sequentially — concurrent conversations would interleave audio on the same session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback). Connector-specific end-of-turn behavior is covered under [Turn Detection](/docs/conversation-simulator-voice-connectors#turn-detection).
 
 ## Voice Data on Test Cases
 
@@ -217,6 +198,16 @@ class Audio:
     start_time: Optional[float] = None
 ```
 
+There are **SEVEN** fields on an `Audio`:
+
+- [Optional] `url`: a string that is a local file path or an `http(s)://` URL. When set, `mimeType`, `filename`, and (for local files) `dataBase64` are derived for you. Defaulted to `None`.
+- [Optional] `dataBase64`: a string of base64-encoded audio bytes stored on the object. Set automatically by `Audio.from_bytes(...)` or when loading a local `url`; not something you normally pass in. Defaulted to `None`.
+- [Optional] `mimeType`: a string specifying the audio MIME type, such as `"audio/wav"`, `"audio/mpeg"`, `"audio/opus"`, `"audio/aac"`, `"audio/flac"`, or `"audio/pcm"`. Guessed from the file extension when constructing from `url` (falling back to `"audio/wav"`). Required for `Audio.from_bytes(...)`. Defaulted to `None`.
+- [Optional] `sampleRate`: an integer sample rate in Hz (e.g. `24000`). Metadata only — set it when you know it. Defaulted to `None`.
+- [Optional] `encoding`: a string container/codec label (e.g. `"wav"`). Metadata only. Defaulted to `None`.
+- [Optional] `duration`: a number representing the length of this audio clip in seconds. Metadata only — this is how long the speech _is_, not how long the agent took to reply (`Turn.latency_ms`). Defaulted to `None`.
+- [Optional] `start_time`: the number of seconds from the beginning of the call to the first frame of this clip. Voice simulations populate it from the live monotonic call clock. Together with `duration`, it lets metrics reconstruct real silence and overlap without duplicating a full-call recording. Defaulted to `None` for manually constructed or legacy audio.
+
 Construct an `Audio` in exactly one of two ways:
 
 ```python
@@ -231,66 +222,15 @@ recording = Audio.from_bytes(wav_bytes, mimeType="audio/wav", sampleRate=24000)
 
 `Audio.from_bytes(...)` is the supported in-memory constructor: pass raw `bytes` plus `mimeType`, and it stores them as `dataBase64` under the hood. You generally should not pass `dataBase64=` yourself.
 
-There are **SEVEN** fields on an `Audio`:
-
-- [Optional] `url`: a string that is a local file path or an `http(s)://` URL. When set, `mimeType`, `filename`, and (for local files) `dataBase64` are derived for you. Defaulted to `None`.
-- [Optional] `dataBase64`: a string of base64-encoded audio bytes stored on the object. Set automatically by `Audio.from_bytes(...)` or when loading a local `url`; not something you normally pass in. Defaulted to `None`.
-- [Optional] `mimeType`: a string specifying the audio MIME type, such as `"audio/wav"`, `"audio/mpeg"`, `"audio/opus"`, `"audio/aac"`, `"audio/flac"`, or `"audio/pcm"`. Guessed from the file extension when constructing from `url` (falling back to `"audio/wav"`). Required for `Audio.from_bytes(...)`. Defaulted to `None`.
-- [Optional] `sampleRate`: an integer sample rate in Hz (e.g. `24000`). Metadata only — set it when you know it. Defaulted to `None`.
-- [Optional] `encoding`: a string container/codec label (e.g. `"wav"`). Metadata only. Defaulted to `None`.
-- [Optional] `duration`: a number representing the length of this audio clip in seconds. Metadata only — this is how long the speech _is_, not how long the agent took to reply (`Turn.latency_ms`). Defaulted to `None`.
-- [Optional] `start_time`: the number of seconds from the beginning of the call to the first frame of this clip. Voice simulations populate it from the live monotonic call clock. Together with `duration`, it lets metrics reconstruct real silence and overlap without duplicating a full-call recording. Defaulted to `None` for manually constructed or legacy audio.
-
-When constructing from `url`, two read-only properties are derived for you: `local` (whether the URL points to a local file) and `filename` (the basename of the path). They can't be passed to the constructor.
-
-To read the raw bytes back out — for example to compute audio measurements or write files to disk — call `recording.get_bytes()`.
-
 :::info
 During a voice simulation you never build `Audio` objects yourself — the TTS model and the connector construct them and attach them to `Turn`s. You'll construct one manually only when assembling test cases by hand, such as from recorded production calls.
 :::
 
-## Interruptions
-
-A live voice call is almost always **bidirectional on the wire**: audio can flow to the agent and from the agent at the same time. What varies is how the _simulation_ uses that pipe.
-
-From the simulated caller's point of view:
-
-- **Uplink** — speech going out to the agent (what the agent hears).
-- **Downlink** — speech coming back from the agent (what you record and transcribe).
-
-That distinction matters more than how audio is packetized. User speech is typically sent as a sequence of short frames either way; the important choice is whether the simulator **waits for the agent before doing anything else**.
-
-### Half-duplex vs duplex
-
-- **Half-duplex** — one side at a time. The simulated user speaks, then the simulator waits until the agent has finished before continuing. Overlap and barge-in are not exercised. This is the default, and it is what [`exchange_turn()`](#connectors) does.
-- **Duplex** — both directions can be active together. The simulator can listen to the agent while (or after) starting to speak, cut its own uplink short, and react when both sides talk at once. That is what makes **interruptions** (barge-in) evaluable.
-
-So "duplex" here is not a second kind of connector. The same live session can be driven either way: as a strict exchange of full turns, or as concurrent uplink and downlink with interruption behavior on top.
-
-When interruptions are enabled, the simulator stops using `exchange_turn()` and instead drives the same connector with:
-
-| Method                | Responsibility                                                                  |
-| --------------------- | ------------------------------------------------------------------------------- |
-| `stream_uplink()`     | Push user audio on the uplink only (cancelable), without waiting for the agent. |
-| `stop_uplink()`       | Cut in-flight user audio when the simulator yields the floor.                   |
-| `iter_agent_events()` | Observe downlink audio / transcripts as they arrive.                            |
-
-### What an interruption is
-
-An interruption is simply **overlap**: uplink and downlink active at the same time.
-
-- The **user** interrupts when the simulated caller starts speaking while the agent is still talking. On the resulting assistant [`Turn`](#voice-data-on-test-cases), `interrupted` is set to `True`.
-- The **agent** "interrupts" (or keeps the floor) when agent speech continues — or resumes — while the user is speaking. The simulator notices that on the downlink and can stop the user's uplink so the call can recover, the same awkward way a phone conversation does when both people talk and then both pause.
-
-Whether to barge in at all is a trait of the simulated caller (how aggressive they are), which is why it is configured on their [persona](/docs/conversation-simulator-voice-personas). The concepts that matter on the call itself are only: uplink, downlink, and whether the control loop allows them to overlap.
-
-::::tip
-How to turn interruptions on, how aggressive the caller should be, and the timing of yield / retry behavior are covered in the [Interruptions](/docs/conversation-simulator-voice-interruptions) docs.
-::::
-
 ## Simulating Voice Conversations
 
 The `ConversationSimulator` puts all of this together: pass a `VoiceConfig` (connector + optional speech models) instead of a `model_callback`, and every simulated conversation becomes a voice call.
+
+In this example, `ElevenLabsConnector` connects to an existing ElevenLabs conversational agent. It is the agent bridge; the TTS and STT models used by the simulated caller remain the `VoiceConfig` defaults.
 
 ```python
 from deepeval.voice import VoiceConfig, ElevenLabsConnector
@@ -321,14 +261,15 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
       ),
     },
     {
-      question: "Which transport should I use to reach my agent?",
+      question: "Which connector should I use to reach my agent?",
       answer: (
         <>
-          Whichever your agent is already deployed behind. Agents in LiveKit
-          rooms are WebRTC; ElevenLabs conversational agents and most custom
-          in-house agents are WebSocket; anything with a phone number is SIP. If
-          you're still building the pipeline, start with <code>CALLBACK</code> —
-          no transport at all.
+          Use the connector matching how your agent is already deployed:{" "}
+          <code>ElevenLabsConnector</code> for ElevenLabs conversational agents,{" "}
+          <code>LiveKitConnector</code> for LiveKit rooms, or{" "}
+          <code>WebSocketConnector</code> for a compatible raw-audio WebSocket.
+          For an agent callable in the same Python process, use{" "}
+          <code>CallbackVoiceConnector</code>.
         </>
       ),
     },
@@ -337,10 +278,9 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
       answer: (
         <>
           The time from sending the simulated user's audio to capturing the
-          agent's spoken reply. End-of-turn detection (silence windows,
-          turn-complete events) is defined per <code>VoiceProtocol</code>, so
-          latencies are comparable across connectors sharing a protocol but not
-          across different protocols.
+          agent's spoken reply. The exact timing boundary depends on the
+          connector's transport, so compare latency measurements made through
+          the same connector type.
         </>
       ),
     },
