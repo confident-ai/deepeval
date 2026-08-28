@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, List, Optional
 
-from deepeval.dataset import ConversationalGolden
+from deepeval.dataset import ConversationalGolden, golden_persona
 from deepeval.test_case import Audio, Turn
 from deepeval.voice.background import BackgroundMixer, mix_background
 from deepeval.voice.connectors import audio_utils
@@ -189,13 +189,10 @@ class DuplexExchange:
         self.a_generate_schema = a_generate_schema
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
-        self.tts_kwargs = (
-            golden.persona.tts_kwargs() if golden.persona is not None else {}
-        )
+        persona = golden_persona(golden)
+        self.tts_kwargs = persona.tts_kwargs() if persona is not None else {}
         self.background_noise = (
-            golden.persona.background_noise
-            if golden.persona is not None
-            else None
+            persona.background_noise if persona is not None else None
         )
 
     async def run(
