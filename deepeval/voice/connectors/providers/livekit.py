@@ -104,6 +104,11 @@ class LiveKitConnector(BaseVoiceConnector):
         return self.livekit_sample_rate
 
     async def connect(self) -> None:
+        await self._join_room()
+        await self._after_join()
+        await self._await_agent_track()
+
+    async def _join_room(self) -> None:
         self._rtc = require_dependency(
             "livekit.rtc",
             provider_label="LiveKitConnector",
@@ -143,6 +148,10 @@ class LiveKitConnector(BaseVoiceConnector):
             rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE),
         )
 
+    async def _after_join(self) -> None:
+        return None
+
+    async def _await_agent_track(self) -> None:
         self._adopt_existing_agent_track()
 
         try:
