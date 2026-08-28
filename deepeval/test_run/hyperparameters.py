@@ -1,10 +1,12 @@
-from typing import Union, Dict, Optional, List
-from deepeval.test_run import global_test_run_manager
+from collections.abc import Callable
+from functools import wraps
+from typing import Dict, List, Optional, Union
+
+from deepeval.confident.api import is_confident
 from deepeval.prompt import Prompt
 from deepeval.prompt.api import PromptApi
-from deepeval.test_run.test_run import TEMP_FILE_PATH
-from deepeval.confident.api import is_confident
-from deepeval.test_run.test_run import PromptData
+from deepeval.test_run import global_test_run_manager
+from deepeval.test_run.test_run import TEMP_FILE_PATH, PromptData
 
 
 def process_hyperparameters(
@@ -58,25 +60,41 @@ def process_hyperparameters(
     return processed_hyperparameters
 
 
-def log_hyperparameters(func):
-    test_run = global_test_run_manager.get_test_run()
+def log_hyperparameters(
+    func: Optional[Callable] = None,
+    *,
+    model: Optional[str] = None,
+    prompt_template: Optional[str] = None,
+):
+    def register(f: Callable):
+        merged_hyperparameters = f()
 
-    def modified_hyperparameters():
-        base_hyperparameters = func()
-        return base_hyperparameters
+        if model is not None or prompt_template is not None:
+            if merged_hyperparameters is None:
+                merged_hyperparameters = {}
 
-    hyperparameters = process_hyperparameters(modified_hyperparameters())
-    test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+            if isinstance(merged_hyperparameters, dict):
+                merged_hyperparameters = dict(merged_hyperparameters)
+                if model is not None:
+                    merged_hyperparameters["model"] = model
+                if prompt_template is not None:
+                    merged_hyperparameters["prompt template"] = prompt_template
 
-    # Define the wrapper function that will be the actual decorator
-    def wrapper(*args, **kwargs):
-        # Optional: You can decide if you want to do something else here
-        # every time the decorated function is called
-        return func(*args, **kwargs)
+        test_run = global_test_run_manager.get_test_run()
+        test_run.hyperparameters = process_hyperparameters(
+            merged_hyperparameters
+        )
+        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-    # Return the wrapper function to be used as the decorator
-    return wrapper
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    if func is None:
+        return register
+    return register(func)
 
 
 def process_prompts(
