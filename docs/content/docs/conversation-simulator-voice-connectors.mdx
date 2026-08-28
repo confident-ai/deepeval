@@ -6,26 +6,30 @@ languages: [python]
 beta: true
 ---
 
-A connector manages the live call in [voice mode](/docs/conversation-simulator-voice-mode): it establishes the connection, plays the simulated user's audio to your agent, captures the spoken reply, and measures response latency. Every connector declares the transport it speaks via a `protocol` class variable of type `VoiceProtocol` — see [Voice concepts](/docs/evaluation-voice#transports) for the full transport landscape and how protocols define timing semantics.
+A connector is the bridge between `deepeval` and your voice agent. In [voice mode](/docs/conversation-simulator-voice-mode), it opens a live session, plays the simulated user's audio to your agent, captures the spoken reply, and measures response latency.
 
-Pick the connector that matches where your agent is deployed:
+You normally do not write a connector. Pick the provided integration that matches where your agent is deployed:
 
-| Connector                | `VoiceProtocol` | Talks to                                                                     |
-| ------------------------ | --------------- | ---------------------------------------------------------------------------- |
-| `ElevenLabsConnector`    | `WEBSOCKET`     | ElevenLabs conversational agents, by `agent_id`.                             |
-| `LiveKitConnector`       | `WEBRTC`        | Agents deployed in LiveKit rooms.                                            |
-| `WebSocketConnector`     | `WEBSOCKET`     | Any custom agent that speaks raw audio over a WebSocket.                     |
-| `CallbackVoiceConnector` | `CALLBACK`      | An in-process Python callable — no network, ideal for testing your pipeline. |
+| Connector                | Transport  | Talks to                                                                     |
+| ------------------------ | ---------- | ---------------------------------------------------------------------------- |
+| `ElevenLabsConnector`    | WebSocket  | ElevenLabs conversational agents, by `agent_id`.                             |
+| `LiveKitConnector`       | WebRTC     | Agents deployed in LiveKit rooms.                                            |
+| `WebSocketConnector`     | WebSocket  | Any custom agent that speaks raw audio over a compatible WebSocket.          |
+| `CallbackVoiceConnector` | In-process | A Python callable — no network, useful for testing your pipeline.            |
 
-Pass the connector into `VoiceConfig(connector=...)`. For the half-duplex vs duplex APIs a connector exposes, see [Voice concepts — Connectors](/docs/evaluation-voice#connectors) and [Interruptions](/docs/conversation-simulator-voice-interruptions).
+Unlike a model name, a connector cannot be only a string: it owns a stateful, bidirectional audio session, including authentication, connection setup, provider-specific messages, and cleanup. The provided classes handle that lifecycle; you supply only the details needed to reach your agent.
+
+Connectors are media integrations, not tracing callbacks. A tracing callback observes an agent running inside your application; a voice evaluation must join the call as a remote participant and exchange audio with the deployed agent. The connector handles the provider's transport API or SDK internally.
+
+Pass the connector into `VoiceConfig(connector=...)`. For how connectors fit into the evaluation loop, see [Voice concepts — Transports and Connectors](/docs/evaluation-voice#transports-and-connectors). For barge-in and duplex requirements, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
 
 ::::note
-We're still adding connectors. If yours isn't listed yet, [open a GitHub issue](https://github.com/confident-ai/deepeval/issues/new) with the platform you're using — we prioritize requests for fast turnaround. In the meantime, try `WebSocketConnector` for raw-audio agents or `CallbackVoiceConnector` for in-process testing.
+If your provider is not listed, first check whether its agent exposes a compatible raw-audio WebSocket; `WebSocketConnector` only needs the URL and message shape. Use `CallbackVoiceConnector` when your agent is callable in the same Python process. Implement `BaseVoiceConnector` only for a transport or session lifecycle the provided connectors cannot represent.
 ::::
 
 ## ElevenLabs
 
-Connects to an ElevenLabs conversational agent.
+Connects to an ElevenLabs conversational agent over its WebSocket API. Provide the ID of the agent you already configured in ElevenLabs; private agents also require an API key.
 
 ```python
 from deepeval.voice import ElevenLabsConnector
@@ -42,7 +46,9 @@ There are **ONE** mandatory and **THREE** optional parameters when creating an `
 
 ## LiveKit
 
-Joins a LiveKit room as a participant and exchanges audio with your agent over WebRTC. Requires LiveKit's own SDKs:
+Joins a LiveKit room as a participant and exchanges audio with your agent over WebRTC. Your LiveKit agent must already be deployed and able to join the room.
+
+Install LiveKit's SDKs:
 
 ```bash
 pip install livekit livekit-api
@@ -51,23 +57,26 @@ pip install livekit livekit-api
 ```python
 from deepeval.voice import LiveKitConnector
 
-connector = LiveKitConnector(agent_name="restaurant-agent")
+connector = LiveKitConnector(
+    url="wss://your-project.livekit.cloud",
+    api_key="your-api-key",
+    api_secret="your-api-secret",
+    agent_name="restaurant-agent",
+)
 ```
 
-There are **EIGHT** optional parameters when creating a `LiveKitConnector` (credentials may also come from the environment):
+There are **THREE** mandatory and **FIVE** optional parameters when creating a `LiveKitConnector`. The three mandatory connection values can instead come from the environment:
 
-- [Optional] `url`: the LiveKit server URL. When omitted, reads `LIVEKIT_URL`. Defaulted to `None`.
-- [Optional] `api_key`: the LiveKit API key. When omitted, reads `LIVEKIT_API_KEY`. Defaulted to `None`.
-- [Optional] `api_secret`: the LiveKit API secret. When omitted, reads `LIVEKIT_API_SECRET`. Defaulted to `None`.
+- `url`: the LiveKit server URL. Required unless `LIVEKIT_URL` is set.
+- `api_key`: the LiveKit API key. Required unless `LIVEKIT_API_KEY` is set.
+- `api_secret`: the LiveKit API secret. Required unless `LIVEKIT_API_SECRET` is set.
 - [Optional] `room_name`: the room to join. When omitted, a room is created for the session. Defaulted to `None`.
 - [Optional] `identity`: the participant identity for the simulator. Defaulted to `"deepeval-test"`.
 - [Optional] `agent_name`: the name of the agent to dispatch into the room. Defaulted to `None`.
 - [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 - [Optional] `connect_timeout_s`: timeout (seconds) for establishing the room connection. Defaulted to `15.0`.
 
-::::note
-`url`, `api_key`, and `api_secret` are required collectively — pass them explicitly or set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET`.
-::::
+`room_name` and `agent_name` determine how the connector finds your agent. If `room_name` is omitted, the connector creates a room. If `agent_name` is set, LiveKit dispatches that named agent into it; otherwise your existing LiveKit routing must place the agent in the room.
 
 ## Generic WebSocket
 
@@ -103,6 +112,12 @@ There are **ONE** mandatory and **TWELVE** optional parameters when creating a `
 ## Callback
 
 Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
+
+```python
+from deepeval.voice import CallbackVoiceConnector
+
+connector = CallbackVoiceConnector(my_agent)
+```
 
 There are **ONE** mandatory and **THREE** optional parameters when creating a `CallbackVoiceConnector`:
 
@@ -155,7 +170,6 @@ async def my_agent(user_audio) -> ConnectorTurn:
         latency_ms=latency_ms,
     )
 
-connector = CallbackVoiceConnector(my_agent)
 ```
 
 ## Turn Detection
