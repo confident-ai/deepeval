@@ -1,6 +1,6 @@
 """Simulate a call against a real streaming voice agent, over a plain WebSocket.
 
-`b.py` talks to an in-process callback that is handed one finished utterance,
+`callback_agent_barge_in.py` talks to an in-process callback that is handed one finished utterance,
 transcribes it, thinks, and synthesizes a reply. Nothing about it can start
 before the caller's last frame exists, so it cannot show what streaming the
 uplink buys.
@@ -38,11 +38,11 @@ depends on.
 
 Start the agent and leave it running:
 
-    python c.py agent
+    python streaming_websocket_agent.py agent
 
 Then, in another shell:
 
-    python c.py
+    python streaming_websocket_agent.py
 """
 
 import asyncio
@@ -437,7 +437,7 @@ def _require_agent() -> None:
             return
     raise RuntimeError(
         f"Nothing is listening on {WS_URL}. The agent runs as its own process: "
-        "start it in another shell with `python c.py agent`, wait for it to say "
+        "start it in another shell with `python streaming_websocket_agent.py agent`, wait for it to say "
         "it is listening, then run this again."
     )
 
