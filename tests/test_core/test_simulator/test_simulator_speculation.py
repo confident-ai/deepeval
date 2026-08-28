@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator import ConversationSimulator
