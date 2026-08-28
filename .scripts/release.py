@@ -5,8 +5,20 @@
     python .scripts/release.py --dry-run
 
 It asks for both versions, one prompt each, showing what that SDK is on now.
-Press enter to take the patch bump it offers, or type `major`/`minor`/`patch` or
-an explicit version like `4.2.0`. Type `skip` to leave one SDK where it is.
+Press enter to take the next version that can actually be tagged — after the
+highest existing `python-v*` / `typescript-v*` tag, skipping any number that
+is already taken. Or type `major`/`minor`/`patch` or an explicit version like
+`4.2.0`. Type `skip` to leave one SDK where it is.
+
+The two SDKs are versioned independently: separate tags, separate registries,
+separate release notes. A shared number would mean nothing to either audience,
+so an SDK whose own files have not changed since its own last tag defaults to
+`skip` rather than to a bump. Enter is safe on the SDK you did not touch.
+
+Python components are single digits (`x.y.z`, each 0-9), so a patch bump after
+`4.1.9` is `4.2.0` and after `4.9.9` it is `5.0.0`. TypeScript uses plain
+semver instead — npm reads the major as a break signal and `0.x` as unstable,
+so `0.9.12` goes to `0.9.13`, not `1.0.0`.
 
 This does not publish. It rewrites the version files, commits them as
 "new release", and prints the publish commands for you to run.
@@ -39,6 +51,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SDK_VERSIONS_JSON = "docs/lib/generated/sdk-versions.json"
 COMMIT_MESSAGE = "new release"
 SEMVER = re.compile(r"^\d+\.\d+\.\d+(?:[-.]?[0-9A-Za-z.-]+)?$")
+MAX_COMPONENT = 9  # each of x.y.z stays a single digit; overflow carries left
 
 
 @dataclass(frozen=True)
@@ -63,6 +76,8 @@ class Target:
     edits: List[Edit]
     json_key: str  # key in sdk-versions.json
     publish_commands: List[str]  # printed at the end, never run
+    paths: List[str]  # what shipping this SDK covers, for "did it change?"
+    single_digit: bool  # cap x.y.z at 9 and carry left, rather than plain semver
 
 
 TARGETS: Dict[str, Target] = {
@@ -83,6 +98,8 @@ TARGETS: Dict[str, Target] = {
         ],
         json_key="python",
         publish_commands=["poetry build", "poetry publish"],
+        paths=["deepeval", "pyproject.toml"],
+        single_digit=True,
     ),
     "typescript": Target(
         name="typescript",
@@ -91,6 +108,10 @@ TARGETS: Dict[str, Target] = {
         ],
         json_key="typescript",
         publish_commands=["cd typescript && npm publish"],
+        paths=["typescript"],
+        # npm consumers read the major as a break signal and 0.x as unstable,
+        # so this one follows plain semver: 0.9.12 -> 0.9.13, not 1.0.0.
+        single_digit=False,
     ),
 }
 
@@ -182,39 +203,118 @@ def current_version(target: Target) -> str:
     return found[0][1]
 
 
-def next_version(current: str, bump: str) -> str:
+def _core_parts(version: str) -> Optional[tuple]:
+    core = re.match(r"^(\d+)\.(\d+)\.(\d+)", version)
+    if not core:
+        return None
+    return tuple(int(part) for part in core.groups())
+
+
+def _require_single_digit_version(version: str) -> None:
+    """New releases are x.y.z with each component 0-9. Current may already be past that."""
+    parts = _core_parts(version)
+    if parts is None:
+        return
+    if any(part > MAX_COMPONENT for part in parts):
+        raise ValueError(
+            f"'{version}' has a double-digit component — "
+            "releases are [0-9].[0-9].[0-9] (e.g. 4.2.0, not 4.1.10)."
+        )
+
+
+def _join(major: int, minor: int, patch: int, single_digit: bool) -> str:
+    """Under single_digit, roll patch>9 into minor and minor>9 into major."""
+    if not single_digit:
+        return f"{major}.{minor}.{patch}"
+    if patch > MAX_COMPONENT:
+        patch = 0
+        minor += 1
+    if minor > MAX_COMPONENT:
+        minor = 0
+        major += 1
+    if major > MAX_COMPONENT:
+        raise ValueError("cannot bump past 9.9.9 — type a version explicitly.")
+    return f"{major}.{minor}.{patch}"
+
+
+def next_version(current: str, bump: str, single_digit: bool) -> str:
     """Raises ValueError rather than exiting: the prompt re-asks instead of dying."""
     if bump in {"major", "minor", "patch"}:
-        core = re.match(r"^(\d+)\.(\d+)\.(\d+)", current)
-        if not core:
+        parts = _core_parts(current)
+        if not parts:
             raise ValueError(
                 f"cannot {bump}-bump a non-semver version ({current}) — "
                 "type one explicitly."
             )
-        major, minor, patch = (int(part) for part in core.groups())
+        major, minor, patch = parts
         if bump == "major":
-            return f"{major + 1}.0.0"
+            return _join(major + 1, 0, 0, single_digit)
         if bump == "minor":
-            return f"{major}.{minor + 1}.0"
-        return f"{major}.{minor}.{patch + 1}"
+            return _join(major, minor + 1, 0, single_digit)
+        return _join(major, minor, patch + 1, single_digit)
 
     if not SEMVER.match(bump):
         raise ValueError(
             f"'{bump}' is neither major/minor/patch nor a version number."
         )
+    if single_digit:
+        _require_single_digit_version(bump)
     return bump
+
+
+def _version_key(version: str) -> tuple:
+    return _core_parts(version) or (-1, -1, -1)
+
+
+def next_taggable(target: Target, current: str, bump: str) -> str:
+    """Next bump that is not already a local or origin tag.
+
+    Starts from whichever is higher: the version in the files, or the highest
+    existing tag. Then keeps bumping until release.yml would have something new
+    to create.
+    """
+    tagged = tag_versions(target)
+    highest = highest_tag_version(target)
+    start = current
+    if highest and _version_key(highest) > _version_key(current):
+        start = highest
+
+    version = next_version(start, bump, target.single_digit)
+    seen = {start}
+    while version in tagged:
+        if version in seen:
+            raise ValueError(
+                f"cannot find a free {target.name} tag after {start}"
+            )
+        seen.add(version)
+        version = next_version(version, bump, target.single_digit)
+    return version
 
 
 def prompt_version(target: Target, current: str) -> Optional[str]:
     """Ask what to release this SDK as. None means leave it alone."""
-    try:
-        default = next_version(current, "patch")
-    except ValueError:
-        default = (
-            None  # non-semver current: no bump to offer, so require an answer
+    unchanged = not has_unreleased_changes(target)
+    default: Optional[str] = None
+    if not unchanged:
+        try:
+            default = next_taggable(target, current, "patch")
+        except ValueError:
+            # non-semver current: no bump to offer, so require an answer
+            default = None
+
+    if default:
+        suggestion = f" [{default}]"
+    elif unchanged:
+        suggestion = " [skip]"
+    else:
+        suggestion = ""
+
+    if unchanged:
+        print(
+            f"    nothing under {'/, '.join(target.paths)}/ changed since "
+            f"{target.name}-v{highest_tag_version(target)}"
         )
 
-    suggestion = f" [{default}]" if default else ""
     while True:
         try:
             answer = input(
@@ -226,19 +326,30 @@ def prompt_version(target: Target, current: str) -> Optional[str]:
         if not answer:
             if default:
                 return default
+            if unchanged:
+                return None
             print(f"    {current} is not semver — type a version.")
             continue
         if answer.lower() in {"skip", "s"}:
             return None
 
         try:
-            version = next_version(current, answer)
+            if answer.lower() in {"major", "minor", "patch"}:
+                version = next_taggable(target, current, answer.lower())
+            else:
+                version = next_version(current, answer, target.single_digit)
         except ValueError as error:
             print(f"    {error}")
             continue
         if version == current:
             print(
                 f"    {target.name} is already at {version} — pick a higher one."
+            )
+            continue
+        existing = existing_tag(target, version)
+        if existing:
+            print(
+                f"    tag {existing} already exists — that version has been released."
             )
             continue
         return version
@@ -257,11 +368,85 @@ def check_clean_tree() -> None:
         )
 
 
-def check_tag_free(target: Target, version: str) -> None:
-    tag = f"{target.name}-v{version}"
+_TAG_VERSIONS: Optional[Dict[str, set]] = None
+
+
+def _load_tag_versions() -> Dict[str, set]:
+    """Every python-v* / typescript-v* version, local and on origin, in one pass."""
+    by_target: Dict[str, set] = {name: set() for name in TARGETS}
+    for name in TARGETS:
+        prefix = f"{name}-v"
+        try:
+            for line in git("tag", "-l", f"{prefix}*").splitlines():
+                if line.startswith(prefix):
+                    by_target[name].add(line[len(prefix) :])
+        except subprocess.CalledProcessError:
+            pass
     try:
-        git("rev-parse", "-q", "--verify", f"refs/tags/{tag}")
+        for line in git("ls-remote", "--tags", "origin").splitlines():
+            if not line.strip():
+                continue
+            ref = line.split()[-1]
+            if ref.endswith("^{}"):
+                continue
+            tag = ref.rsplit("/", 1)[-1]
+            for name in TARGETS:
+                prefix = f"{name}-v"
+                if tag.startswith(prefix):
+                    by_target[name].add(tag[len(prefix) :])
     except subprocess.CalledProcessError:
+        pass
+    return by_target
+
+
+def tag_versions(target: Target) -> set:
+    global _TAG_VERSIONS
+    if _TAG_VERSIONS is None:
+        _TAG_VERSIONS = _load_tag_versions()
+    return _TAG_VERSIONS[target.name]
+
+
+def existing_tag(target: Target, version: str) -> Optional[str]:
+    """A tag that already exists locally or on origin still blocks a re-release."""
+    if version in tag_versions(target):
+        return f"{target.name}-v{version}"
+    return None
+
+
+def highest_tag_version(target: Target) -> Optional[str]:
+    cores = [
+        version for version in tag_versions(target) if _core_parts(version)
+    ]
+    return max(cores, key=_version_key) if cores else None
+
+
+def has_unreleased_changes(target: Target) -> bool:
+    """Did this SDK's own files move since its own last tag?
+
+    The two SDKs ship to different registries off different tags, so releasing
+    one because the other changed publishes a version with nothing in it. When
+    the answer can't be determined (no tag yet, or the tag is only on origin),
+    say yes and let the prompt decide.
+    """
+    version = highest_tag_version(target)
+    if version is None:
+        return True
+    try:
+        changed = git(
+            "diff",
+            "--name-only",
+            f"{target.name}-v{version}..HEAD",
+            "--",
+            *target.paths,
+        )
+    except subprocess.CalledProcessError:
+        return True
+    return bool(changed.strip())
+
+
+def check_tag_free(target: Target, version: str) -> None:
+    tag = existing_tag(target, version)
+    if tag is None:
         return
     fail(
         f"tag {tag} already exists — that version has been released. "
@@ -300,7 +485,8 @@ def main() -> None:
     }
 
     say(
-        "version to release (enter for the patch bump, or major/minor/patch/skip):"
+        "version to release (enter for the next free tag, or "
+        "major/minor/patch/skip):"
     )
     plan: Dict[str, str] = {}
     for name, target in TARGETS.items():

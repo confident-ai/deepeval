@@ -1139,7 +1139,7 @@ You can find examples of how this can be done in more detail on the **Customize 
 
 ## Metric Thresholds
 
-Every metric accepts a `threshold` parameter (defaulted to `0.5`) that decides whether it passes or fails: <Term py="metric.is_successful()" ts="metric.isSuccessful()"/> is only <Term py="True" ts="true"/> if `metric.score` reaches the `threshold` (or stays below it, for "lower is better" metrics such as `BiasMetric`).
+Every metric accepts a `threshold` parameter (defaulted to `0.5`) that decides whether it passes or fails: <Term py="metric.is_successful()" ts="metric.isSuccessful()"/> is only <Term py="True" ts="true"/> if `metric.score` reaches the `threshold`. Every metric scores in the same direction: 1 is a pass, 0 is a failure, and `threshold` is always a minimum.
 
 <Switch>
 

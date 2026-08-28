@@ -1,10 +1,10 @@
-"""Regression tests for halluctimation verdict classification (#3098).
+"""Regression tests for hallucination verdict classification (#3098).
 
-The score side (only explicit "no" counts as hallucination) and the
-reason side (everything not exactly "yes" was bucketed as contradiction)
+The score side (a verdict is factually aligned unless it is exactly "no") and
+the reason side (everything not exactly "yes" was bucketed as a contradiction)
 used different predicates: untagged verdicts that slip past the lenient
-JSON extraction ("yes.", "yes ", trailing non-Latin appendages) scored
-clean but were reported as contradictions in the generated reason.
+JSON extraction ("no.", "no ", trailing non-Latin appendages) scored as a full
+alignment but were reported as contradictions in the generated reason.
 
 These tests are offline: no model calls, no API key — they exercise the
 classification predicate and the reason-side bucketing via _get_prompt
@@ -56,9 +56,9 @@ class TestIsContradiction:
 
 
 class TestScoreReasonAgreement:
-    """For every malformed verdict the extraction layer can produce, the
-    reason bucket must agree with the score count (pre-fix: "yes." scored
-    0.0 hallucinations but the reason listed it as a contradiction)."""
+    """For every malformed verdict the extraction layer can produce, the reason
+    bucket must agree with the score (pre-fix: "yes." scored a full alignment
+    but the reason listed it as a contradiction)."""
 
     @pytest.mark.parametrize("value,expected", VERDICT_MATRIX)
     def test_reason_bucket_matches_score(
@@ -66,11 +66,11 @@ class TestScoreReasonAgreement:
     ):
         metric = HallucinationMetric(async_mode=False)
         metric.verdicts = [_verdict(value)]
-        metric.score = metric._calculate_score()
+        metric.score = score = metric._calculate_score()
 
-        # Recompute the score's classification the way the fix defines it.
-        # Contradiction-bucketed verdicts are exactly the ones the score counts.
-        classification_as_bucket = "contradiction" if expected else "aligned"
+        # A lone verdict is either the whole alignment (1.0) or none of it (0.0),
+        # so the score reveals which side the classifier put it on.
+        assert (score == 0.0) is expected
 
         captured = {}
         metric._get_prompt = lambda key, **kw: captured.update(kw) or {}
@@ -87,7 +87,7 @@ class TestScoreReasonAgreement:
 
         metric._generate_reason()
 
-        if classification_as_bucket == "contradiction":
+        if score == 0.0:
             assert captured["contradictions"] == ["r"]
             assert captured["factual_alignments"] == []
         else:
@@ -96,12 +96,12 @@ class TestScoreReasonAgreement:
 
     def test_untagged_verdict_does_not_contradict_score(self, monkeypatch):
         """Regression heart: 'yes.' must not be reported as a contradiction
-        while scoring 0.0 hallucinations (pre-fix FAIL)."""
+        while scoring a full alignment (pre-fix FAIL)."""
         metric = HallucinationMetric(async_mode=False)
         metric.verdicts = [_verdict("yes.")]
 
-        assert metric._calculate_score() == 0.0
-        metric.score = 0.0
+        assert metric._calculate_score() == 1.0
+        metric.score = 1.0
 
         captured = {}
         metric._get_prompt = lambda key, **kw: captured.update(kw) or {}
