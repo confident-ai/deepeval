@@ -26,8 +26,19 @@ from deepeval.models.embedding_models import (
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
 )
-from deepeval.models.tts_models import OpenAITTSModel
-from deepeval.models.stt_models import OpenAISTTModel
+from deepeval.models.tts import (
+    CartesiaTTSModel,
+    DeepgramTTSModel,
+    ElevenLabsTTSModel,
+    OpenAITTSModel,
+)
+from deepeval.models.stt import (
+    AssemblyAISTTModel,
+    CartesiaSTTModel,
+    DeepgramSTTModel,
+    ElevenLabsSTTModel,
+    OpenAISTTModel,
+)
 
 __all__ = [
     "DeepEvalBaseModel",
@@ -54,6 +65,13 @@ __all__ = [
     "OpenRouterModel",
     "OpenAITTSModel",
     "OpenAISTTModel",
+    "CartesiaTTSModel",
+    "DeepgramTTSModel",
+    "ElevenLabsTTSModel",
+    "AssemblyAISTTModel",
+    "CartesiaSTTModel",
+    "DeepgramSTTModel",
+    "ElevenLabsSTTModel",
 ]
 
 

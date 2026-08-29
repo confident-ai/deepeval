@@ -1,8 +1,4 @@
-import io
-import wave
 from typing import (
-    AsyncGenerator,
-    AsyncIterable,
     Optional,
     Dict,
     Tuple,
@@ -10,13 +6,14 @@ from typing import (
 from pydantic import SecretStr
 from openai import OpenAI, AsyncOpenAI
 
-from deepeval.test_case import Audio, AudioChunk
+from deepeval.test_case import Audio
 from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.models.stt._audio import audio_duration_seconds
+from deepeval.models.stt._stream import BufferedTranscribeMixin
 from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.models.retry_policy import create_retry_decorator
 from deepeval.constants import ProviderSlug as PS
 from deepeval.config.settings import get_settings
-from deepeval.voice.connectors import audio_utils
 
 retry_openai = create_retry_decorator(PS.OPENAI)
 
@@ -32,7 +29,7 @@ _STT_PRICE_PER_MINUTE = {
 }
 
 
-class OpenAISTTModel(DeepEvalBaseSTT):
+class OpenAISTTModel(BufferedTranscribeMixin, DeepEvalBaseSTT):
     # Whisper and the gpt-4o transcribe family both finish clipped words, so
     # they need a tail of silence to be told the utterance ended where it did.
     truncated_audio_pad_seconds: float = 0.3
@@ -115,20 +112,6 @@ class OpenAISTTModel(DeepEvalBaseSTT):
             merged["language"] = lang
         return merged
 
-    @staticmethod
-    def _audio_duration_seconds(audio: Audio) -> Optional[float]:
-        if audio.duration is not None:
-            return audio.duration
-        try:
-            with wave.open(io.BytesIO(audio.get_bytes()), "rb") as wf:
-                frames = wf.getnframes()
-                rate = wf.getframerate()
-                if rate:
-                    return frames / float(rate)
-        except (wave.Error, EOFError, ValueError):
-            pass
-        return None
-
     def _calculate_cost(self, audio: Audio, response) -> Optional[float]:
         usage = getattr(response, "usage", None)
         usage_type = getattr(usage, "type", None)
@@ -152,7 +135,7 @@ class OpenAISTTModel(DeepEvalBaseSTT):
                 else None
             )
             if seconds is None:
-                seconds = self._audio_duration_seconds(audio)
+                seconds = audio_duration_seconds(audio)
             if seconds is not None:
                 return seconds / 60.0 * self.cost_per_minute
 
@@ -179,53 +162,6 @@ class OpenAISTTModel(DeepEvalBaseSTT):
             **self._request_kwargs(language, kwargs),
         )
         return response.text, self._calculate_cost(audio, response)
-
-    async def a_transcribe_stream(
-        self,
-        audio_stream: AsyncIterable[AudioChunk],
-        *args,
-        language: Optional[str] = None,
-        partial_every_seconds: float = 1.0,
-        **kwargs,
-    ) -> AsyncGenerator[str, None]:
-        """Yield progressively updated transcripts from a live PCM stream.
-
-        OpenAI's batch transcription API has no true partial streaming, so
-        this buffers chunks and re-transcribes the accumulated WAV whenever
-        roughly `partial_every_seconds` of new audio arrives. Used as a
-        duplex barge-in fallback when the transport has no text partials
-        (e.g. LiveKit).
-        """
-        pcm = bytearray()
-        sample_rate = 24000
-        bytes_since_partial = 0
-        last_text = ""
-        async for chunk in audio_stream:
-            if chunk.sampleRate:
-                sample_rate = chunk.sampleRate
-            frame = chunk.get_bytes()
-            pcm.extend(frame)
-            bytes_since_partial += len(frame)
-            threshold = int(sample_rate * 2 * partial_every_seconds)
-            if bytes_since_partial >= threshold or chunk.final:
-                audio = Audio.from_bytes(
-                    audio_utils.pcm16_to_wav_bytes(bytes(pcm), sample_rate, 1),
-                    "audio/wav",
-                    sampleRate=sample_rate,
-                    encoding="wav",
-                )
-                text, _ = await self.a_transcribe(
-                    audio, language=language, **kwargs
-                )
-                if text and text != last_text:
-                    last_text = text
-                    yield text
-                bytes_since_partial = 0
-                if chunk.final:
-                    break
-
-    def supports_streaming(self) -> bool:
-        return True
 
     def get_model_name(self) -> str:
         return self.name

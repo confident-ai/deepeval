@@ -12,6 +12,36 @@ if TYPE_CHECKING:
     from deepeval.dataset.golden import InterruptionBehavior
 
 
+def resolve_tts_model(
+    model: Optional[Union[str, DeepEvalBaseTTS]],
+) -> DeepEvalBaseTTS:
+    """The TTS model to speak with.
+
+    A model name is the name for the provider selected by `USE_*_TTS`, and
+    `None` leaves both the provider and the name to the environment. Model
+    objects are left alone, including ones that only duck-type the base class.
+    """
+    # Imported here because `deepeval.models.tts` reaches back into
+    # `deepeval.voice`, so importing it at module scope would cycle.
+    from deepeval.models.speech_selection import initialize_tts_model
+
+    return initialize_tts_model(model)
+
+
+def resolve_stt_model(
+    model: Optional[Union[str, DeepEvalBaseSTT]],
+) -> DeepEvalBaseSTT:
+    """The STT model to transcribe with.
+
+    A model name is the name for the provider selected by `USE_*_STT`, and
+    `None` leaves both the provider and the name to the environment. Model
+    objects are left alone, including ones that only duck-type the base class.
+    """
+    from deepeval.models.speech_selection import initialize_stt_model
+
+    return initialize_stt_model(model)
+
+
 @dataclass
 class VoiceConfig:
     """Voice-mode settings for `ConversationSimulator`.
@@ -19,7 +49,13 @@ class VoiceConfig:
     Passing a `VoiceConfig` puts the simulator in voice mode: simulated user
     turns are spoken (TTS), sent to the agent over `connector`, and the
     agent's spoken replies are transcribed (STT). `tts_model` / `stt_model`
-    default to the OpenAI implementations when left as None.
+    come from the environment when left as None — the `USE_*_TTS` /
+    `USE_*_STT` flag picks the provider and `DEEPEVAL_TTS_MODEL` /
+    `DEEPEVAL_STT_MODEL` picks the model, both defaulting to OpenAI. A bare
+    model name is the name for that same selected provider, so
+    `stt_model="whisper-1"` is shorthand for `OpenAISTTModel(model="whisper-1")`
+    unless another `USE_*_STT` flag is set. Pass the model object itself to
+    reach a specific provider or set anything beyond the name.
 
     `connector` is the connector the session runs over — `ElevenLabsConnector`,
     `LiveKitConnector`, `WebSocketConnector`, `CallbackVoiceConnector`, or your
@@ -34,8 +70,8 @@ class VoiceConfig:
     """
 
     connector: Union[BaseVoiceConnector, Callable[[], BaseVoiceConnector]]
-    tts_model: Optional[DeepEvalBaseTTS] = None
-    stt_model: Optional[DeepEvalBaseSTT] = None
+    tts_model: Optional[Union[str, DeepEvalBaseTTS]] = None
+    stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None
     # Directory to write per-turn and combined audio files into. Left alone,
     # this resolves through `DEEPEVAL_VOICE_FOLDER` to a default folder; pass
     # `None` to skip writing audio to disk. Resolved once, here, so that by the
@@ -53,6 +89,8 @@ class VoiceConfig:
             self.connector, BaseVoiceConnector
         ):
             self.connector = validate_connector(self.connector)
+        self.tts_model = resolve_tts_model(self.tts_model)
+        self.stt_model = resolve_stt_model(self.stt_model)
         self.output_dir = resolve_output_dir(self.output_dir)
 
     def make_connector(self) -> BaseVoiceConnector:

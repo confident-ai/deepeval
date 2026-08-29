@@ -3,6 +3,7 @@ import json
 import re
 import sys
 import warnings
+from pydantic import SecretStr
 from typing import (
     Any,
     Callable,
@@ -621,8 +622,13 @@ def should_use_local_model():
 
 
 def should_use_ollama_model():
-    if SETTINGS.LOCAL_MODEL_API_KEY:
-        return SETTINGS.LOCAL_MODEL_API_KEY == "ollama"
+    local_key = SETTINGS.LOCAL_MODEL_API_KEY
+    if local_key:
+        # `LOCAL_MODEL_API_KEY` is a `SecretStr`, which never compares equal to
+        # a plain string, so the sentinel is read out before comparing.
+        if isinstance(local_key, SecretStr):
+            local_key = local_key.get_secret_value()
+        return local_key == "ollama"
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
     return value == "ollama"
 

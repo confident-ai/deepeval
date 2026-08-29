@@ -196,14 +196,11 @@ class ConversationSimulator:
             # A single connector holds a single live call; concurrent
             # conversations would interleave audio on the same session.
             max_concurrent = 1
-            from deepeval.models.tts_models import OpenAITTSModel
-            from deepeval.models.stt_models import OpenAISTTModel
-
             self._voice = _VoiceRun(
                 config=voice_config,
                 connector=voice_config.connector,
-                tts_model=voice_config.tts_model or OpenAITTSModel(),
-                stt_model=voice_config.stt_model or OpenAISTTModel(),
+                tts_model=voice_config.tts_model,
+                stt_model=voice_config.stt_model,
             )
             model_callback = self._voice_model_callback
             if voice_config.interruption_settings is not None:

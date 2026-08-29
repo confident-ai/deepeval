@@ -52,6 +52,19 @@ model = LocalModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `LocalModel`:
+
+- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; raises an error at runtime if unset. Local servers without authentication accept any placeholder string.
+- [Optional] `base_url`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `format`: A string specifying the structured-output response format. Defaults to `LOCAL_MODEL_FORMAT` if not passed; falls back to `"json"` if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the local server's `chat.completions.create(...)` call.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed directly to `LocalModel(...)`; these are forwarded to the underlying OpenAI client constructor.
+:::
+
 </Tab>
 <Tab value="ENV">
 
@@ -69,19 +82,6 @@ You should also set the other necessary vars like `LOCAL_MODEL_BASE_URL` and `LO
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SIX** optional parameters when creating a `LocalModel`:
-
-- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; raises an error at runtime if unset. Local servers without authentication accept any placeholder string.
-- [Optional] `base_url`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `format`: A string specifying the structured-output response format. Defaults to `LOCAL_MODEL_FORMAT` if not passed; falls back to `"json"` if unset.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the local server's `chat.completions.create(...)` call.
-
-:::tip
-Any `**kwargs` you would like to use for your model can be passed directly to `LocalModel(...)`; these are forwarded to the underlying OpenAI client constructor.
-:::
 
 </Case>
 
@@ -102,6 +102,27 @@ const model = new LocalModel({
 });
 
 const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LocalModel`:
+
+- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error if unset.
+- [Optional] `apiKey`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; falls back to a placeholder string, so local servers without authentication work out of the box.
+- [Optional] `baseURL`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; raises an error if unset.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the local server's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new LocalModel({
+  model: "<model_name>",
+  baseURL: "http://localhost:8000/v1/",
+  top_p: 0.9,
+  max_tokens: 512,
+});
 ```
 
 </Tab>
@@ -129,27 +150,6 @@ const answerRelevancy = new AnswerRelevancyMetric({
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LocalModel`:
-
-- [Optional] `model`: A string specifying the local model to use. Defaults to `LOCAL_MODEL_NAME` if not passed; raises an error if unset.
-- [Optional] `apiKey`: A string specifying the API key for your local server. Defaults to `LOCAL_MODEL_API_KEY` if not passed; falls back to a placeholder string, so local servers without authentication work out of the box.
-- [Optional] `baseURL`: A string specifying the base URL of your local server. Defaults to `LOCAL_MODEL_BASE_URL` if not passed; raises an error if unset.
-- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
-- [Optional] `defaultHeaders`: An object of extra HTTP headers sent with every request.
-- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-
-Any other key you pass is forwarded as-is to the local server's `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
-
-```typescript
-const model = new LocalModel({
-  model: "<model_name>",
-  baseURL: "http://localhost:8000/v1/",
-  top_p: 0.9,
-  max_tokens: 512,
-});
-```
 
 </Case>
 

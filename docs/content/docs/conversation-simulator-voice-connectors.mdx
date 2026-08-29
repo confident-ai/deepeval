@@ -12,8 +12,10 @@ You won't need to write one. Pick whichever matches where your agent runs, tell 
 
 | Connector                | Transport  | Use it for                                                           |
 | ------------------------ | ---------- | -------------------------------------------------------------------- |
+| `VapiConnector`          | WebSocket  | Vapi assistants, addressed by `assistant_id`.                        |
 | `ElevenLabsConnector`    | WebSocket  | ElevenLabs agents, addressed by `agent_id`.                          |
 | `LiveKitConnector`       | WebRTC     | Agents dispatched into LiveKit rooms.                                |
+| `PipecatConnector`       | WebSocket  | Self-hosted Pipecat pipelines, addressed by URL.                     |
 | `WebSocketConnector`     | WebSocket  | Custom agents that speak raw audio over a WebSocket.                 |
 | `CallbackVoiceConnector` | In-process | A Python callable, no network — handy for testing your own pipeline. |
 
@@ -25,132 +27,11 @@ See [Voice concepts](/docs/evaluation-voice#transports-and-connectors) for where
 Provider not listed? If your agent exposes a raw-audio WebSocket, `WebSocketConnector` needs only the URL and the message shape. If it's callable in the same Python process, use `CallbackVoiceConnector`. Subclass `BaseVoiceConnector` only for a transport the others can't express.
 ::::
 
-## ElevenLabs
-
-Your agent lives in the ElevenLabs dashboard, so the connector only needs its `agent_id`. It speaks ElevenLabs' WebSocket API directly, so the `elevenlabs` package isn't required. Private agents also need an API key.
-
-```python
-from deepeval.voice import ElevenLabsConnector
-
-connector = ElevenLabsConnector(agent_id="your-agent-id")
-```
-
-There are **ONE** mandatory and **SEVEN** optional parameters when creating an `ElevenLabsConnector`:
-
-- `agent_id`: a string identifying the ElevenLabs conversational agent.
-- [Optional] `api_key`: a string API key. When omitted, reads `ELEVENLABS_API_KEY` from the environment. Defaulted to `None`.
-- [Optional] `region`: a string naming an ElevenLabs [data residency](https://elevenlabs.io/docs/overview/administration/data-residency) region — one of `"us"`, `"eu"`, `"in"`, or `"sg"`. Any other value raises. Defaulted to `None` (global host).
-- [Optional] `client_tools`: a dictionary mapping [client tool](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools) names to the functions that run them. Defaulted to `None`.
-- [Optional] `dynamic_variables`: a dictionary of [dynamic variables](https://elevenlabs.io/docs/eleven-agents/customization/personalization/dynamic-variables) for this conversation. Defaulted to `None`.
-- [Optional] `conversation_config_override`: a dictionary of [overrides](https://elevenlabs.io/docs/eleven-agents/customization/personalization/overrides) for this conversation, such as prompt, first message, language, or voice. Defaulted to `None`.
-- [Optional] `client_tool_timeout_s`: how long to wait for one of your tool functions before answering the agent with an error. Defaulted to `30.0`.
-- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
-
-The connector reads ElevenLabs' [`agent_response_complete`](https://elevenlabs.io/docs/eleven-agents/api-reference/eleven-agents/websocket) message off the wire, so it knows exactly when a turn ended instead of inferring it from silence.
-
-### Client tools
-
-If your agent calls client tools, give the connector a function for each one. Declare the tool in the ElevenLabs dashboard as usual; the name here has to match.
-
-```python
-async def get_customer_details(parameters):
-    return {"name": "Alice", "subscription": "Pro"}
-
-connector = ElevenLabsConnector(
-    agent_id="your-agent-id",
-    client_tools={"getCustomerDetails": get_customer_details},
-)
-```
-
-Handlers can be `async def` or plain functions — a plain one runs in a thread so it can block without stalling the call. Each receives one dictionary of the tool's parameters, plus `tool_call_id`, and whatever it returns is given to the agent as context. Returning realistic data is what keeps the rest of the conversation realistic.
-
-Your agent is waiting on that return value, so a handler is never allowed to leave it hanging. An unregistered name, a handler that raises, and one that outlives `client_tool_timeout_s` are all answered with an error result, and time spent inside your handler is excluded from the reported latency and from end-of-turn detection — otherwise a slow tool would read as a slow agent, or cut its turn short.
-
-### Personalizing a run
-
-`dynamic_variables` and `conversation_config_override` are sent per conversation, so one dashboard agent can be simulated as many different callers — a different customer, tier, or language per golden.
-
-```python
-connector = ElevenLabsConnector(
-    agent_id="your-agent-id",
-    dynamic_variables={"customer_name": "Alice", "tier": "enterprise"},
-    conversation_config_override={"agent": {"language": "fr"}},
-)
-```
-
-::::note
-Overrides only take effect if you've enabled the matching fields on the agent in ElevenLabs first. Left disabled, they're ignored rather than rejected, which looks like the override silently doing nothing.
-::::
-
-## LiveKit
-
-`deepeval` joins your agent's room as another participant and trades audio over WebRTC, so the agent needs to be deployed and able to join. Install LiveKit's SDKs:
-
-```bash
-pip install livekit livekit-api
-```
-
-A LiveKit agent has no id you can dial — it's a worker [dispatched](https://docs.livekit.io/agents/server/agent-dispatch/) into a [room](https://docs.livekit.io/intro/basics/connect/). So instead of naming the agent, you tell the connector how to reach the room. Give it credentials and it mints a token and creates one:
-
-```python
-from deepeval.voice import LiveKitConnector
-
-connector = LiveKitConnector(
-    url="wss://your-project.livekit.cloud",
-    api_key="your-api-key",
-    api_secret="your-api-secret",
-    agent_name="restaurant-agent",
-)
-```
-
-There are **ZERO** mandatory and **ELEVEN** optional parameters when creating a `LiveKitConnector`. None is mandatory on its own, but the connector needs some way to reach the room — either the three connection values, or a `token`, or a connected `room`:
-
-- [Optional] `url`: the LiveKit server URL. Required unless `LIVEKIT_URL` is set, or `room` is already connected. Defaulted to `None`.
-- [Optional] `api_key`: the LiveKit API key. Required to mint a token, unless `LIVEKIT_API_KEY` is set. Defaulted to `None`.
-- [Optional] `api_secret`: the LiveKit API secret. Required to mint a token, unless `LIVEKIT_API_SECRET` is set. Defaulted to `None`.
-- [Optional] `room`: an [`rtc.Room`](https://docs.livekit.io/reference/python/livekit/rtc/room.html) to use instead of creating one. Connected or not. Defaulted to `None`.
-- [Optional] `token`: a LiveKit [access token](https://docs.livekit.io/frontends/reference/tokens-grants/) you minted yourself, used instead of `api_key` / `api_secret`. Defaulted to `None`.
-- [Optional] `room_name`: the room to join. When omitted, a room is created for the session. Defaulted to `None`.
-- [Optional] `identity`: the participant identity for the simulator. Defaulted to `"deepeval-test"`.
-- [Optional] `agent_name`: the name of the agent to [dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) into the room. Defaulted to `None`.
-- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
-- [Optional] `connect_timeout_s`: timeout (seconds) for establishing the room connection. Defaulted to `15.0`.
-- [Optional] `transcript_grace_s`: how long to wait after your agent stops speaking for its transcript to arrive. Defaulted to `1.5`.
-
-`room_name` and `agent_name` are what actually find your agent. Omit `room_name` and the connector creates a room. Set `agent_name` and LiveKit dispatches that agent into it; leave it unset and your existing routing has to put the agent there.
-
-If your test setup already joined a room, hand that over instead and skip the credentials:
-
-```python
-from livekit import rtc
-from deepeval.voice import LiveKitConnector
-
-room = rtc.Room()
-await room.connect("wss://your-project.livekit.cloud", your_token)
-
-connector = LiveKitConnector(room=room)
-```
-
-`deepeval` publishes a microphone track, listens for the agent, and leaves the room as it found it — a room you connected stays connected afterwards, with just the simulated microphone removed. An unconnected room gets connected using the parameters above.
-
-::::note
-`deepeval` reads your agent's own transcript from LiveKit's [`lk.transcription`](https://docs.livekit.io/agents/multimodality/text/) text stream, so STT is usually unnecessary here — the words the agent actually spoke become the assistant `Turn.content`. STT is the fallback when your agent publishes no transcript.
-::::
+<include cwd>snippets/voice/connector-tabs.mdx</include>
 
 ## Generic WebSocket
 
 For custom agents that accept and emit raw audio over a WebSocket, `WebSocketConnector` lets you describe your agent's message shape — which JSON keys carry audio in and out, whether frames are binary, and what marks the end of a turn.
-
-```python
-from deepeval.voice import WebSocketConnector
-
-connector = WebSocketConnector(
-    url="wss://your-agent.example.com/audio",
-    send_key="audio",
-    receive_audio_key="audio",
-    turn_complete_type="turn_end",
-)
-```
 
 There are **ONE** mandatory and **TWELVE** optional parameters when creating a `WebSocketConnector`:
 
@@ -171,12 +52,6 @@ There are **ONE** mandatory and **TWELVE** optional parameters when creating a `
 ## Callback
 
 Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
-
-```python
-from deepeval.voice import CallbackVoiceConnector
-
-connector = CallbackVoiceConnector(my_agent)
-```
 
 There are **ONE** mandatory and **THREE** optional parameters when creating a `CallbackVoiceConnector`:
 
@@ -247,9 +122,9 @@ connector = CallbackVoiceConnector(my_agent, turn_detection="patient")
 
 Pick by listening to your agent's longest natural pause. Too eager and its turn ends at that pause, cutting the reply short and discarding the rest of it; too patient and the simulator sits through dead air before responding, which inflates the gaps in the recording and slows the run.
 
-When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies.
+When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `VapiConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies.
 
-The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` gets a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at.
+The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` gets a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at. `PipecatConnector` falls on either side depending on your pipeline: it's believed over a pause once your pipeline has been seen to announce an end of turn, and reads silence until then.
 
 ::::note
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
