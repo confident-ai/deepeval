@@ -171,13 +171,13 @@ An `EvaluationDataset` holds either single-turn or multi-turn goldens, never bot
 <Case id="python">
 
 ```python
-from deepeval.dataset import ConversationalGolden, EvaluationDataset
+from deepeval.dataset import ConversationalGolden, EvaluationDataset, Persona
 
 goldens = [
     ConversationalGolden(
         scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
         expected_outcome="Successful purchase of a ticket.",
-        user_description="Andy Byron is the CEO of Astronomer.",
+        persona=Persona(characteristics="Andy Byron is the CEO of Astronomer."),
     ),
     # ...
 ]
@@ -190,14 +190,20 @@ dataset = EvaluationDataset(goldens=goldens)
 <Case id="typescript">
 
 ```typescript
-import { ConversationalGolden, EvaluationDataset } from "deepeval/dataset";
+import {
+  ConversationalGolden,
+  EvaluationDataset,
+  Persona,
+} from "deepeval/dataset";
 
 const goldens = [
   new ConversationalGolden({
     scenario:
       "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expectedOutcome: "Successful purchase of a ticket.",
-    userDescription: "Andy Byron is the CEO of Astronomer.",
+    persona: new Persona({
+      characteristics: "Andy Byron is the CEO of Astronomer.",
+    }),
   }),
   // ...
 ];
@@ -299,7 +305,7 @@ dataset.add_goldens_from_json_file(
     file_path="conversations.json",
     scenario_key_name="scenario",
     expected_outcome_key_name="expected_outcome",
-    user_description_key_name="user_description",
+    persona_key_name="persona",
 )
 ```
 

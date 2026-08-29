@@ -1,0 +1,226 @@
+---
+id: conversation-simulator-voice-personas
+title: Personas
+sidebar_label: Personas
+languages: [python]
+beta: true
+---
+
+A `Persona` defines **who the simulated user is, how they behave, and how they sound**.
+
+A persona pairs with a `ConversationalGolden`: the persona is _who_ is calling, while the golden's `scenario` and `expected_outcome` are _what_ they are trying to do.
+
+```python
+from deepeval.dataset import ConversationalGolden, Persona
+
+golden = ConversationalGolden(
+    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    persona=Persona(characteristics="Something."),
+)
+```
+
+::::note
+Keep traits on the persona and the task on the golden. "You are impatient and talk over people" belongs in `characteristics`; "buy a VIP ticket" belongs in `scenario`. Mixing the two makes a persona single-use — the whole point is to run the same caller across many scenarios, and the same scenario across many callers.
+::::
+
+## Create A Persona
+
+```python
+from deepeval.dataset import Persona
+
+persona = Persona(
+    name="Andy Byron",
+    characteristics="You are the CEO of Astronomer. You are curt and used to being deferred to. You speak in short sentences and interrupt long explanations.",
+    voice="onyx",
+)
+```
+
+There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Persona`:
+
+- `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
+- [Optional] `name`: a string name for the caller. Defaulted to `None`.
+- [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
+- [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that enables duplex barge-in, or `None` for half-duplex. Defaulted to `None`.
+- [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
+- [Optional] `muted`: a boolean which when set to `True` makes the caller stay completely silent for the whole call. Defaulted to `False`.
+- [Optional] `background_noise`: a [`BackgroundNoiseSettings`](#background-noise) that loops ambient audio underneath the caller's speech. Defaulted to `None`.
+- [Optional] `multilingual_stt`: a boolean which when set to `True` asks your `stt_model` to detect the agent's language per utterance instead of locking to one. Defaulted to `False`.
+- [Optional] `hold_timeout`: a float number of seconds of agent silence or hold music before the caller hangs up. Defaulted to `None`.
+
+Only `name` and `characteristics` apply to text simulations. Everything else is voice-only and is ignored when you simulate with a `model_callback`.
+
+:::caution
+`persona` supersedes the deprecated `user_description` on `ConversationalGolden`. Passing `user_description` still works and is promoted to `Persona(characteristics=...)` for you.
+:::
+
+## Configuring Characteristics
+
+`characteristics` is a **prompt, not a label**. The simulator model writes the caller's dialogue from it and the TTS model speaks that text verbatim — so emotion, hesitation, and pacing come from the words you tell the persona to use, not from vocal knobs.
+
+Describe behavior in terms of word choice and conversational patterns:
+
+```python
+# Less effective — a label the model has to interpret
+Persona(characteristics="You are an angry customer.")
+
+# More effective — observable behavior the model can act out
+Persona(
+    characteristics="""You are extremely frustrated and losing patience. You use short, clipped sentences.
+When you have to repeat information you have already given, you say things like "I already told you this."
+Your language gets sharper the longer the agent takes to resolve your issue.""",
+)
+```
+
+A few things that matter more in voice than in text:
+
+- **Give the caller an emotional arc.** Real callers escalate and de-escalate: "You start calm but grow frustrated if the agent puts you on hold. If your issue is resolved, your tone softens."
+- **Punctuation is a speech cue.** `!` reads as emphasis, `,` as a natural pause, `-` as a brief break, and short sentences as stress. Avoid `...`, which some TTS engines read aloud as "dot dot dot".
+- **Spell filler words plainly.** `um`, `uh`, `hmm`, `oh`, `well` — not `ummm` or `uhhhh`, which TTS engines often spell out letter by letter.
+- **Tag blocks work well.** `characteristics` is free-form multi-line text, so `<speaking_style>…</speaking_style>` or `<end_call>…</end_call>` sections are a good way to separate delivery from call-control instructions.
+
+## Configuring Audio
+
+### Voice
+
+`voice` is passed straight through to your `tts_model`, so valid values depend on the model you configured on [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) — `"alloy"`, `"onyx"`, `"shimmer"`, etc. for the default `OpenAITTSModel`.
+
+```python
+persona = Persona(
+    characteristics="You are an older adult who is uncomfortable with technology.",
+    voice="onyx",
+)
+```
+
+Rate, pitch, and delivery style are **not** persona fields, because no two TTS providers spell them the same way. Set those on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) and keep the persona portable.
+
+### Background Noise
+
+Real calls are not made from a recording booth. `background_noise` loops an ambient audio file underneath the caller's speech, so your agent's speech recognition has to work through it:
+
+```python
+from deepeval.dataset import Persona, BackgroundNoiseSettings
+
+persona = Persona(
+    characteristics="You are calling from a busy cafe and keep losing your train of thought.",
+    background_noise=BackgroundNoiseSettings(audio="cafe.wav", volume=0.3),
+)
+```
+
+There is **ONE** mandatory and **ONE** optional parameter when creating a `BackgroundNoiseSettings`:
+
+- `audio`: a path to a `.wav` or `.mp3` file, which is looped for the length of the call.
+- [Optional] `volume`: a float between `0.0` and `1.0` for how loudly the noise is mixed in. Defaulted to `0.3`.
+
+:::tip
+Pick a file that loops cleanly — an abrupt cut or trailing silence repeats for the whole conversation. `.mp3` files need `pydub` and `ffmpeg` installed; `.wav` files need nothing.
+:::
+
+## Configuring Behavior
+
+### Who Speaks First
+
+Most voice agents open with a greeting. Set `speaks_first=False` and the simulated caller stays quiet until the agent has spoken, so the greeting becomes the first `Turn` of the conversation:
+
+```python
+persona = Persona(
+    characteristics="You are a patient caller who waits to be greeted.",
+    speaks_first=False,
+)
+```
+
+### Silent Callers
+
+`muted=True` makes the caller never speak at all — every user turn is empty and only silence goes up the wire. Use it to test how your agent handles dead air: does it re-prompt, escalate, or hang up?
+
+```python
+persona = Persona(characteristics="You are unable to speak.", muted=True)
+```
+
+### Hanging Up On Hold Music
+
+`hold_timeout` is the number of seconds of agent silence (or hold music) the caller tolerates before ending the call. Without it, the simulation runs until `max_user_simulations` is exhausted:
+
+```python
+persona = Persona(
+    characteristics="You are in a hurry and will not sit through hold music.",
+    hold_timeout=15,
+)
+```
+
+This is most useful for transfer flows — set it to 10–15 seconds to confirm a hand-off actually happened without waiting out the agent's own timeout.
+
+### Multilingual Recognition
+
+By default the caller "hears" your agent in whatever language your `stt_model` is configured for. Set `multilingual_stt=True` and the STT model detects the language per utterance instead, which is what you want for agents that switch mid-call ("For English press one, para español presione dos").
+
+### Interruptions
+
+`interruption_behavior` turns the call **duplex**: instead of politely waiting for each reply, the caller can cut in mid-sentence while the agent is still speaking.
+
+```python
+from deepeval.dataset import Persona, InterruptionBehavior
+
+persona = Persona(
+    characteristics="You are impatient and finish other people's sentences.",
+    interruption_behavior=InterruptionBehavior(frequency="frequent", overlap="insist"),
+)
+```
+
+`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` keeps the conversation half-duplex.
+
+::::tip
+Barge-in is a whole simulation mode of its own — how the judge decides to interrupt, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).
+::::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Do personas work in text simulations too?",
+      answer: (
+        <>
+          Yes, but only <code>name</code> and <code>characteristics</code> mean
+          anything there — those are what the simulator model role-plays from.
+          Voice, background noise, interruptions, and the behavioral flags
+          require a <code>VoiceConfig</code> and are ignored otherwise.
+        </>
+      ),
+    },
+    {
+      question: "Can one persona be reused across many goldens?",
+      answer: (
+        <>
+          That's the intent. A persona is attached per{" "}
+          <code>ConversationalGolden</code>, so build one <code>Persona</code>{" "}
+          and pass the same object to every golden you want that caller to run —
+          a matrix of personas against scenarios is how you find the cases where
+          your agent only works for the easy caller.
+        </>
+      ),
+    },
+    {
+      question: "Why isn't there a speaking rate or accent field?",
+      answer: (
+        <>
+          Because <code>voice</code> is the only synthesis knob every{" "}
+          <code>DeepEvalBaseTTS</code> implementation shares. Rate, pitch, and
+          style are spelled differently by every provider, so they belong on
+          your TTS model rather than on the persona. Accent, in practice, is a
+          property of the voice you pick.
+        </>
+      ),
+    },
+    {
+      question: "Does the persona reach Confident AI?",
+      answer: (
+        <>
+          The persona's <code>characteristics</code> are sent as the test case's
+          user description today. The structured voice settings stay local until
+          the platform has a field for them.
+        </>
+      ),
+    },
+  ]}
+/>

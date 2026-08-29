@@ -3,10 +3,10 @@ import inspect
 import json
 import re
 
-from typing import List, Optional, Any
+from typing import Dict, List, Optional, Any
 
 from deepeval.dataset.api import Golden
-from deepeval.dataset.golden import ConversationalGolden
+from deepeval.dataset.golden import ConversationalGolden, Persona
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -14,12 +14,38 @@ from deepeval.test_case import (
     RetrievedContextData,
 )
 
+# Single source of truth for how list-valued cells are flattened into a single
+# csv/jsonl cell. Every save path joins on these and every load path splits on
+# them, so a save/load round-trip is lossless.
+DELIMITER = "|"
+TOOLS_DELIMITER = ";"
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
 _RETRIEVED_CONTEXT_MARKER = re.compile(
     r"^deepeval_source=(?P<source>.*?),deepeval_context=(?P<context>.*)$"
 )
+
+
+def persona_kwargs(raw_persona: Any, user_description: Optional[str]) -> Dict:
+    """Build the `ConversationalGolden` persona kwarg from one loaded row.
+
+    Files written before personas existed only carry `user_description`, which
+    the golden upgrades (with a deprecation warning) on construction.
+    """
+    if isinstance(raw_persona, Persona):
+        return {"persona": raw_persona}
+    if isinstance(raw_persona, dict):
+        return {"persona": Persona(**raw_persona)}
+    return {"user_description": user_description}
+
+
+def serialize_persona(persona: Optional[Persona]) -> Optional[Dict]:
+    """Dump a persona for file output, omitting defaults to keep rows small."""
+    if persona is None:
+        return None
+    return persona.model_dump(exclude_defaults=True, mode="json")
 
 
 def serialize_retrieval_context(retrieval_context):
@@ -37,12 +63,19 @@ def serialize_retrieval_context(retrieval_context):
     ]
 
 
-def join_retrieval_context(retrieval_context, delimiter="|"):
+def join_retrieval_context(retrieval_context, delimiter=DELIMITER):
     """Flat join of serialized retrieval_context for csv/jsonl cells."""
     serialized = serialize_retrieval_context(retrieval_context)
     if serialized is None:
         return None
     return delimiter.join(str(item) for item in serialized)
+
+
+def join_context(context, delimiter=DELIMITER):
+    """Flat join of context for csv/jsonl cells."""
+    if context is None:
+        return None
+    return delimiter.join(str(item) for item in context)
 
 
 def reconstruct_retrieval_context(retrieval_context):
@@ -127,7 +160,13 @@ def convert_convo_test_cases_to_convo_goldens(
             "scenario": test_case.scenario,
             "turns": test_case.turns,
             "expected_outcome": test_case.expected_outcome,
-            "user_description": test_case.user_description,
+            # A test case only keeps the flattened text, so rebuild a minimal
+            # persona rather than tripping the `user_description` deprecation.
+            "persona": (
+                Persona(characteristics=test_case.user_description)
+                if test_case.user_description
+                else None
+            ),
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
         }

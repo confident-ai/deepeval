@@ -1375,6 +1375,7 @@ class Observer:
             )
         elif self.span_type == SpanType.LLM.value:
             model = self.observe_kwargs.get("model", None)
+            provider = self.observe_kwargs.get("provider", None)
             cost_per_input_token = self.observe_kwargs.get(
                 "cost_per_input_token", None
             )
@@ -1384,6 +1385,7 @@ class Observer:
             return LlmSpan(
                 **span_kwargs,
                 model=model,
+                provider=provider,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
             )

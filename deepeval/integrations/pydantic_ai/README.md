@@ -663,7 +663,7 @@ first, they're discarded.
 
 ### `available_tools` / `agent_handoffs` not visible in OTel attrs
 
-The placeholder serializer (`_serialize_placeholder_to_otel_attrs`)
+The placeholder serializer (`serialize_placeholder_to_otel_attrs`)
 writes a fixed list of fields back to `confident.span.*`. Some
 agent-specific fields (`available_tools`, `agent_handoffs`) are
 present on the `AgentSpan` placeholder but not currently serialized.
@@ -673,7 +673,7 @@ update.
 
 For JSON-serializable values (`available_tools` / `agent_handoffs`
 are lists of structured dicts), the fix is to add them to
-`_serialize_placeholder_to_otel_attrs` and read them back in the
+`serialize_placeholder_to_otel_attrs` and read them back in the
 exporter, like `metric_collection`/`tools_called` already do.
 
 For Python instances that can't be JSON'd (the `metrics` field), see
@@ -682,7 +682,7 @@ For Python instances that can't be JSON'd (the `metrics` field), see
 ### Span name collision
 
 `next_agent_span(name="custom")` writes `placeholder.name = "custom"`,
-but `_serialize_placeholder_to_otel_attrs` skips writing
+but `serialize_placeholder_to_otel_attrs` skips writing
 `confident.span.name` if it's already set — and `_add_agent_span` sets
 it at `on_start` from `gen_ai.agent.name`. Net effect: `name` from
 `next_agent_span` does NOT override the pydantic-ai-derived agent

@@ -9,12 +9,11 @@ import { ASSETS } from "@site/src/assets";
 
 ## Quick Summary
 
-A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **SIX** parameters:
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **FIVE** parameters:
 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
-- [Optional] `user_description`
 - [Optional] `context`
 - [Optional] `chatbot_role`
 
@@ -143,6 +142,26 @@ class RetrievedContextData(BaseModel):
 
 The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
 
+<Only id="python">
+
+For **voice conversations**, a `Turn` carries additional fields that record what was actually spoken, when, and whether the reply was cut short:
+
+```python
+class Turn:
+    ...
+    audio: Optional[Audio] = None
+    latency_ms: Optional[float] = None
+    interrupted: Optional[bool] = None
+```
+
+- **`audio`** — the spoken audio for that turn as an [`Audio`](/docs/evaluation-voice#audio-data-model) object (clip length is `Audio.duration`).
+- **`latency_ms`** — how long the assistant took to start speaking after the user finished (assistant turns).
+- **`interrupted`** — `True` if a user barge-in cut this assistant reply short; `None` otherwise.
+
+A `ConversationalTestCase` whose turns carry audio has its `voice` flag set to `True` automatically. See [Voice](/docs/evaluation-voice) for what these fields mean in a simulation.
+
+</Only>
+
 ### Scenario
 
 The `scenario` parameter is an **optional** parameter that specifies the circumstances of which a conversation is taking place in.
@@ -241,40 +260,6 @@ const testCase = new ConversationalTestCase({
 
 </Switch>
 
-### User Description
-
-The `user_description` parameter is an **optional** parameter that specifies the profile of the user for a given conversation.
-
-<Switch>
-
-<Case id="python">
-
-```python
-from deepeval.test_case import Turn, ConversationalTestCase
-
-test_case = ConversationalTestCase(
-    user_description="John Smith, lives in NYC, has a dog, divorced.",
-    turns=[Turn(...)]
-)
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn, ConversationalTestCase } from "deepeval/test-case";
-
-const testCase = new ConversationalTestCase({
-  userDescription: "John Smith, lives in NYC, has a dog, divorced.",
-  turns: [new Turn({ role: "user", content: "..." })],
-});
-```
-
-</Case>
-
-</Switch>
-
 ### Context
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
@@ -322,7 +307,7 @@ By default `deepeval` supports passing both text and images inside your test cas
 <Case id="python">
 
 ```python
-from deepeval.test_case import ConversationalTestCase, Turn, MLLMImage
+from deepeval.test_case import ConversationalTestCase, MLLMImage, Turn
 
 shoes = MLLMImage(url='./shoes.png', local=True)
 
@@ -333,7 +318,6 @@ test_case = ConversationalTestCase(
     ],
     scenario=f"A person trying to buy shoes online by looking at a customer's photo {shoes}",
     expected_outcome=f"The assistant must clarify that the shoes in the image {shoes} are blue color.",
-    user_description=f"...",
     context=[f"..."]
 )
 ```
@@ -354,7 +338,6 @@ const testCase = new ConversationalTestCase({
   ],
   scenario: `A person trying to buy shoes online by looking at a customer's photo ${shoes}`,
   expectedOutcome: `The assistant must clarify that the shoes in the image ${shoes} are blue color.`,
-  userDescription: `...`,
   context: [`...`],
 });
 ```
@@ -584,7 +567,7 @@ Unlike for single-turn test cases, the concept of component-level evaluation doe
           No. You can author turns manually, or generate them automatically with
           the{" "}
           <a href="/docs/conversation-simulator">conversation simulator</a> from
-          a <code>ConversationalGolden</code>'s scenario and user description.
+          a <code>ConversationalGolden</code>'s scenario and user persona.
         </>
       ),
     },

@@ -1,0 +1,165 @@
+---
+id: metrics-turn-taking-naturalness
+title: Turn-Taking Naturalness
+sidebar_label: Turn-Taking Naturalness
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+
+The turn-taking naturalness metric measures the **rhythm of the call** — how long each speaker waited before answering, and how much they talked over each other. It reconstructs the call timeline from the audio on every turn and returns a score between 0 and 1, where a higher score means smoother hand-offs.
+
+:::note
+This is the only voice metric that judges *when* things happened rather than what was said or how it sounded. It needs `start_time` on every audio clip, which voice simulations populate from the live call clock.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import TurnTakingNaturalnessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks three short follow-up questions about a delivery.",
+    expected_outcome="The agent answers each question in turn.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = TurnTakingNaturalnessMetric(threshold=0.6)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `TurnTakingNaturalnessMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.78
+print(metric.score_breakdown)
+```
+
+For `TurnTakingNaturalnessMetric` the breakdown is one entry per speaker change:
+
+```python
+{
+    "transitions": [
+        {
+            "from_turn": 0,
+            "to_turn": 1,
+            "kind": "gap",
+            "gap_seconds": 0.82,
+            "score": 0.72,
+        },
+        {
+            "from_turn": 1,
+            "to_turn": 2,
+            "kind": "user_barge_in",
+            "gap_seconds": -0.35,
+            "score": 0.84,
+        },
+    ],
+}
+```
+
+A negative `gap_seconds` is overlap: the next speaker started before the previous one finished.
+
+## How Is It Calculated?
+
+`TurnTakingNaturalnessMetric` places every clip on a call-relative timeline using `Audio.start_time` and `Audio.duration`, then scores each transition between consecutive turns with **different** roles. Same-speaker transitions are ignored, so an agent's two-part reply is not scored as a hand-off.
+
+Each transition decays exponentially from a perfect 1 at zero delay, and the conversation score is their mean:
+
+<Equation formula="\text{Turn-Taking Naturalness} = \frac{1}{T} \sum_{t=1}^{T} e^{-|\Delta_t| / \tau_t}" />
+
+where _T_ is the number of speaker changes, Δ is the gap or overlap in seconds, and the time constant τ is chosen by what kind of transition it is:
+
+| `kind`          | Transition                                      | τ     |
+| --------------- | ----------------------------------------------- | ----- |
+| `gap`           | Silence between the two turns.                  | 2.5s  |
+| `user_barge_in` | The caller started while the agent was talking. | 2.0s  |
+| `agent_overlap` | The agent talked over the caller.               | 0.6s  |
+
+A smaller τ decays faster. Agent-on-user overlap is the harshest because it is the most disruptive: half a second of it scores 0.43, where half a second of caller barge-in still scores 0.78.
+
+There is no latency cutoff — the curve is continuous, so a 1.7s silence scores 0.5 and a 4s silence scores 0.2. Judge the score against your own baseline rather than expecting a natural call to reach 1.
+
+The metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
+
+:::caution
+Silence-based end-of-turn detection is part of what this metric measures. A `turn_detection="patient"` preset waits longer before the caller replies, which shows up here as larger gaps — that is real dead air on the recording, but it is your harness's, not your agent's. For the same reason, timings only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why was my test case skipped?",
+      answer: (
+        <>
+          Almost always a missing <code>start_time</code>. Every clip needs a
+          call-relative placement; without one, silence and overlap would have
+          to be guessed from clip order, and the metric refuses to invent timing
+          evidence. Test cases assembled by hand from recordings need{" "}
+          <code>start_time</code> set explicitly.
+        </>
+      ),
+    },
+    {
+      question: "Is this the same as `latency_ms`?",
+      answer: (
+        <>
+          Related but not the same. <code>latency_ms</code> is one number per
+          assistant turn — how long the agent took to start speaking. This
+          metric scores every hand-off in both directions, including the
+          caller's, and accounts for overlap that a latency figure cannot
+          express.
+        </>
+      ),
+    },
+    {
+      question: "Do interruptions hurt the score?",
+      answer: (
+        <>
+          Mildly, by design. A caller barging in is normal phone behavior, so it
+          decays slowly; the agent failing to yield decays more than three times
+          as fast.
+          Enabling{" "}
+          <a href="/docs/conversation-simulator-voice-interruptions">
+            interruptions
+          </a>{" "}
+          is what makes those transitions appear at all.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Scoring is deterministic and reads clip timings, so it has no
+          model or token cost.
+        </>
+      ),
+    },
+  ]}
+/>

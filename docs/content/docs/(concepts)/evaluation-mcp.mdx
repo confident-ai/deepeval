@@ -598,6 +598,10 @@ This applies to `tools_called` and `expected_tools` on an `LLMTestCase`, and to 
 Tool calls are matched **by name**. A regular function that shares its name with an MCP tool on one of your servers will be tagged as `ToolCallType.MCP`.
 :::
 
+:::tip
+The [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) matches on the type alongside the name, so an `MCP` tool call is not deemed correct against an expected `FUNCTION` tool call of the same name.
+:::
+
 ✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.
 
 ## FAQs

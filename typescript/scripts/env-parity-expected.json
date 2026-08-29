@@ -56,6 +56,10 @@
           "MEDIA_IMAGE_READ_TIMEOUT_SECONDS"
         ]
       },
+      "voiceSimulation": {
+        "$comment": "Voice mode is Python-only: there is no VoiceConfig, connector, or TTS/STT model in typescript/src, so there is no audio for TS to write anywhere.",
+        "names": ["DEEPEVAL_VOICE_FOLDER"]
+      },
       "other": ["DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING"]
     },
     "neverPorting": {

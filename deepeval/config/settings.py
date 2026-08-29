@@ -35,6 +35,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Optional,
     Union,
     NamedTuple,
@@ -49,7 +50,12 @@ from deepeval.config.utils import (
     parse_bool,
     read_dotenv_file,
 )
-from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
+from deepeval.constants import (
+    CONFIDENT_REGIONS,
+    SUPPORTED_CONFIDENT_REGIONS,
+    SUPPORTED_PROVIDER_SLUGS,
+    slugify,
+)
 
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
@@ -294,9 +300,9 @@ class Settings(BaseSettings):
         ".",
         description="Extra PYTHONPATH used by the CLI runner (default: current project '.').",
     )
-    CONFIDENT_REGION: Optional[str] = Field(
+    CONFIDENT_REGION: Optional[CONFIDENT_REGIONS] = Field(
         None,
-        description="Optional Confident AI region hint (uppercased).",
+        description="Confident AI data region (US or EU).",
     )
     CONFIDENT_OPEN_BROWSER: Optional[bool] = Field(
         True,
@@ -342,6 +348,14 @@ class Settings(BaseSettings):
     DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
         ".deepeval",
         description="Path to the directory used by DeepEval to store cache files. If set, this overrides the default cache location. The directory will be created if it does not exist.",
+    )
+
+    # Where simulated voice conversations write their audio. Unlike the cache,
+    # these are recordings the user listens to, so they are kept out of the
+    # cache folder and survive clearing it.
+    DEEPEVAL_VOICE_FOLDER: Optional[Path] = Field(
+        None,
+        description="Directory that voice simulations write conversation audio into (created if missing). Overridden by an explicit `VoiceConfig(output_dir=...)`. Defaults to `.deepeval-voice-simulations` in the current working directory.",
     )
 
     # Display / Truncation
@@ -423,6 +437,10 @@ class Settings(BaseSettings):
         None,
         description="Global default model temperature (0–2). Model-specific constructors may override.",
     )
+    DEEPEVAL_MODEL_THINKING: Optional[bool] = Field(
+        None,
+        description="Let models that expose a thinking/reasoning parameter think before answering. Off unless set, so judges spend their token budget on the verdict.",
+    )
 
     # Anthropic
     USE_ANTHROPIC_MODEL: Optional[bool] = Field(
@@ -471,7 +489,8 @@ class Settings(BaseSettings):
         None, description="Bedrock input token cost (used for cost reporting)."
     )
     AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = Field(
-        None, description="Bedrock output token cost (used for cost reporting)."
+        None,
+        description="Bedrock output token cost (used for cost reporting).",
     )
     # Azure Open AI
     USE_AZURE_OPENAI: Optional[bool] = Field(
@@ -513,7 +532,8 @@ class Settings(BaseSettings):
         None, description="DeepSeek model name."
     )
     DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="DeepSeek input token cost (used for cost reporting)."
+        None,
+        description="DeepSeek input token cost (used for cost reporting).",
     )
     DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -626,7 +646,8 @@ class Settings(BaseSettings):
         None, description="Moonshot model name."
     )
     MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="Moonshot input token cost (used for cost reporting)."
+        None,
+        description="Moonshot input token cost (used for cost reporting).",
     )
     MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -802,7 +823,8 @@ class Settings(BaseSettings):
         None, description="Enable verbose logging and additional warnings."
     )
     DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = Field(
-        None, description="Include stack traces in certain DeepEval error logs."
+        None,
+        description="Include stack traces in certain DeepEval error logs.",
     )
     ENABLE_DEEPEVAL_CACHE: Optional[bool] = Field(
         None,
@@ -1021,6 +1043,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_DISABLE_DOTENV",
         "DEEPEVAL_TELEMETRY_OPT_OUT",
         "DEEPEVAL_TELEMETRY_ENABLED",
+        "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
         "GOOGLE_GENAI_USE_VERTEXAI",
@@ -1050,6 +1073,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_RESULTS_FOLDER",
         "ENV_DIR_PATH",
         "DEEPEVAL_CACHE_FOLDER",
+        "DEEPEVAL_VOICE_FOLDER",
         mode="before",
     )
     @classmethod
@@ -1136,7 +1160,13 @@ class Settings(BaseSettings):
         s = str(v).strip()
         if not s:
             return None
-        return s.upper()
+        s = s.upper()
+        if s not in SUPPORTED_CONFIDENT_REGIONS:
+            allowed = ", ".join(sorted(SUPPORTED_CONFIDENT_REGIONS))
+            raise ValueError(
+                f"CONFIDENT_REGION must be one of {allowed} (case-insensitive), got {s!r}."
+            )
+        return s
 
     @field_validator("AWS_BEDROCK_REGION", mode="before")
     @classmethod

@@ -1062,7 +1062,7 @@ An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
-Remember, parameters such as `context` should be a list of strings and in the context of CSV files, it means you have to supply a `context_col_delimiter` argument to tell `deepeval` how to split your context cells into a list of strings.
+Remember, parameters such as `context` should be a list of strings, and in the context of CSV files that means a cell holding a list is split on `context_col_delimiter`, which defaults to `|` — the same delimiter [`save_as()`](#save-dataset) joins on, so a saved dataset reloads without any configuration. Supply it only if your file uses something else.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -1092,9 +1092,9 @@ dataset.add_test_cases_from_csv_file(
     actual_output_col_name="actual_output",
     expected_output_col_name="expected_output",
     context_col_name="context",
-    context_col_delimiter= ";",
+    context_col_delimiter="|",
     retrieval_context_col_name="retrieval_context",
-    retrieval_context_col_delimiter= ";"
+    retrieval_context_col_delimiter="|"
 )
 ```
 
@@ -1108,7 +1108,7 @@ Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `ex
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `filePath` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
-Remember, parameters such as `context` hold a list of strings, so pass a `contextDelimiter` to tell `deepeval` how to split those cells into a list of strings.
+Remember, parameters such as `context` hold a list of strings, so a cell holding a list is split on `contextDelimiter`, which defaults to `|` — the same delimiter [`saveAs()`](#save-dataset) joins on, so a saved dataset reloads without any configuration. Pass it only if your file uses something else.
 
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
@@ -1127,8 +1127,6 @@ Column names default to `deepeval`'s own, so a file that already uses them needs
 await dataset.addGoldensFromCSV({
   filePath: "example.csv",
   keys: { input: "query", actualOutput: "response" },
-  contextDelimiter: ";",
-  retrievalContextDelimiter: ";",
 });
 ```
 
@@ -1142,8 +1140,10 @@ await dataset.addTestCasesFromCSV({
   filePath: "example.csv",
   inputCol: "query",
   actualOutputCol: "response",
-  contextDelimiter: ";",
-  retrievalContextDelimiter: ";",
+  contextCol: "context",
+  contextDelimiter: "|",
+  retrievalContextCol: "retrieval_context",
+  retrievalContextDelimiter: "|",
 });
 ```
 
@@ -1375,7 +1375,7 @@ from pydantic import BaseModel
 class ConversationalGolden(BaseModel):
     scenario: str
     expected_outcome: Optional[str] = None
-    user_description: Optional[str] = None
+    persona: Optional[Persona] = None
     context: Optional[List[str]] = None
 
     # Useful metadata for generating test cases
@@ -1395,7 +1395,7 @@ class ConversationalGolden(BaseModel):
 class ConversationalGolden {
   scenario: string;
   expectedOutcome?: string;
-  userDescription?: string;
+  persona?: Persona;
   context?: string[];
 
   // Useful metadata for generating test cases
@@ -1411,6 +1411,10 @@ class ConversationalGolden {
 </Case>
 
 </Switch>
+
+:::caution
+<Term py="user_description" ts="userDescription"/> is deprecated in favor of [`persona`](/docs/conversation-simulator-voice-personas). Goldens and dataset files that still carry it keep loading — the string is promoted to a persona built from those characteristics, and the two stay in sync — but the parameter will be removed in a future release.
+:::
 
 You can easily add and edit custom columns on [Confident AI.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens#custom-dataset-columns)
 

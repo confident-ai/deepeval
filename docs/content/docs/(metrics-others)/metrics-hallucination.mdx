@@ -104,10 +104,10 @@ There are **SIX** optional parameters when creating a `HallucinationMetric`:
 
 </Switch>
 
-- [Optional] `threshold`: a number representing the maximum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
-- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
 - <Only id="python">
     [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
   </Only>
@@ -220,7 +220,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `HallucinationMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Hallucination} = \frac{\text{Number of Contradicted Contexts}}{\text{Total Number of Contexts}}" />
+<Equation formula="\text{Hallucination} = \frac{\text{Number of Aligned Contexts}}{\text{Total Number of Contexts}}" />
 
 The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the <Term py="actual_output" ts="actualOutput"/>.
 
@@ -246,13 +246,14 @@ Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric
       ),
     },
     {
-      question: "Why does a lower score pass while a higher score fails?",
+      question: "Is a higher or lower Hallucination score better?",
       answer: (
         <>
-          The score is the fraction of <code>context</code> documents that
-          contradict the <Term py="actual_output" ts="actualOutput"/>, so 0 is perfect.{" "}
-          <code>threshold</code> is therefore a <em>maximum</em> — output passes
-          at or below it. <Term py="strict_mode" ts="strictMode"/> forces the threshold to 0.
+          <strong>Higher is better.</strong> The score is the fraction of{" "}
+          <code>context</code> documents the <Term py="actual_output" ts="actualOutput"/> stays
+          consistent with, so 1 is perfect. <code>threshold</code> is therefore
+          a <em>minimum</em> — output passes at or above it.{" "}
+          <Term py="strict_mode" ts="strictMode"/> forces the threshold to 1.
         </>
       ),
     },

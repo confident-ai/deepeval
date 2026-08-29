@@ -30,7 +30,7 @@ test_case = LLMTestCase(
 
 When evaluating RAG based applications, **you don't want to evaluate it on a random set of queries.** You will have to create questions and queries that test the RAG application's abilities on edge cases that are in and outside your knowledge base.
 
-## Setup Testing Enviroment
+## Setup Testing Environment
 
 There are 2 primary approaches to evaluating RAG based applications. They are:
 
@@ -62,7 +62,7 @@ for query in queries:
 print(test_cases)
 ```
 
-This method is the quickest because the data already exists, however it might not be feasible becuase you may or may not store the retrieval context in your database. It also provides insights from the pevious knowledge base and does not represent your current RAG agent's capabilities. Hence, this is not recommended.
+This method is the quickest because the data already exists, however it might not be feasible because you may or may not store the retrieval context in your database. It also provides insights from the previous knowledge base and does not represent your current RAG agent's capabilities. Hence, this is not recommended.
 
 ### Generate QA Pairs
 

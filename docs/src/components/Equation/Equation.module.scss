@@ -1,4 +1,70 @@
+$fade-width: 48px;
+
 .equationContainer {
-  margin: 60px 0;
-  text-align: center;
+  // Bottom margin is short by the padding below, so the space around the
+  // formula stays even whether or not a scrollbar is present.
+  margin: 60px 0 48px;
+  // Keeps the scrollbar clear of the formula's descenders instead of letting
+  // it sit across them.
+  padding-bottom: 12px;
+  // A long formula is one unbreakable line, so let it scroll rather than
+  // bleed past the content column. `safe center` keeps short formulas
+  // centered while leaving the left edge of an overflowing one reachable.
+  display: flex;
+  justify-content: center;
+  justify-content: safe center;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-fd-border) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-fd-border);
+    border-radius: 999px;
+  }
+
+  :global(.katex-display) {
+    // KaTeX adds its own vertical rhythm; the container already owns it.
+    margin: 0;
+  }
+}
+
+// Masking the scroll container fades what is clipped at its edges: the mask is
+// positioned against the container's own box, so it stays put while the
+// formula scrolls underneath it. Each side is applied only while there is
+// something hidden on that side.
+.fadeLeft {
+  -webkit-mask-image: linear-gradient(to right, transparent, black $fade-width);
+  mask-image: linear-gradient(to right, transparent, black $fade-width);
+}
+
+.fadeRight {
+  -webkit-mask-image: linear-gradient(to left, transparent, black $fade-width);
+  mask-image: linear-gradient(to left, transparent, black $fade-width);
+}
+
+.fadeLeft.fadeRight {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black $fade-width,
+    black calc(100% - #{$fade-width}),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black $fade-width,
+    black calc(100% - #{$fade-width}),
+    transparent
+  );
 }
