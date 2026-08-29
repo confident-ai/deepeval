@@ -15,30 +15,57 @@ async def collect_agent_turn(
     max_turn_timeout_s: float,
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS,
     cancel_event: Optional[asyncio.Event] = None,
+    hold_event: Optional[asyncio.Event] = None,
 ) -> Tuple[bytes, Optional[float]]:
     """Buffer agent audio until end-of-turn, optional cancel, or timeout.
 
     Queue items may be raw PCM `bytes`, `AgentEvent`, or `None` / an event
     with `turn_complete=True` as an end sentinel.
+
+    `hold_event`, while set, means the agent has gone quiet waiting on
+    something deepeval is doing for it — running one of its client tools, say —
+    rather than because it finished speaking. Silence proves nothing then, so
+    neither the gap nor the ceiling may end the turn, and the time spent
+    waiting is credited back to the deadline once the tool returns.
     """
     collected = bytearray()
     started = False
     trailing_silence_ms = 0.0
     first_audio_at: Optional[float] = None
     deadline = time.perf_counter() + max_turn_timeout_s
+    held_since: Optional[float] = None
 
     while True:
         if cancel_event is not None and cancel_event.is_set():
             break
-        remaining = deadline - time.perf_counter()
-        if remaining <= 0:
+
+        now = time.perf_counter()
+        holding = hold_event is not None and hold_event.is_set()
+        if holding and held_since is None:
+            held_since = now
+        elif not holding and held_since is not None:
+            deadline += now - held_since
+            held_since = None
+            trailing_silence_ms = 0.0
+
+        remaining = deadline - now
+        if not holding and remaining <= 0:
             break
         try:
             item = await asyncio.wait_for(
-                frames.get(), timeout=min(frame_gap_timeout_s, remaining)
+                frames.get(),
+                timeout=(
+                    frame_gap_timeout_s
+                    if holding
+                    else min(frame_gap_timeout_s, remaining)
+                ),
             )
         except asyncio.TimeoutError:
-            if started:
+            # Re-read the hold: the wait is where the gap elapses, so a tool
+            # call that began during it would otherwise be missed and the
+            # silence it caused mistaken for the agent finishing.
+            holding = hold_event is not None and hold_event.is_set()
+            if started and not holding:
                 break  # gap after speech -> end of turn
             continue  # still waiting for the agent to start speaking
 
@@ -60,7 +87,7 @@ async def collect_agent_turn(
         collected.extend(pcm)
         if silent:
             trailing_silence_ms += frame_ms
-            if trailing_silence_ms >= end_of_turn_silence_ms:
+            if trailing_silence_ms >= end_of_turn_silence_ms and not holding:
                 break
         else:
             trailing_silence_ms = 0.0

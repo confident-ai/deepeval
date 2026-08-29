@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -112,6 +113,19 @@ class BaseVoiceConnector(ABC):
                 "set to a VoiceProtocol member (e.g. "
                 "`protocol = VoiceProtocol.WEBRTC`)."
             )
+
+    def clone(self) -> "BaseVoiceConnector":
+        """A second connector with the same configuration, for a parallel call.
+
+        Concurrent conversations each need their own session, so the simulator
+        clones rather than sharing one connector. The copy is shallow, which
+        holds only because subclasses build their per-session state in
+        `connect()`; anything mutable created in `__init__` and not rebound in
+        `connect()` would be shared between two live calls. Override this when
+        a subclass holds a resource that cannot be, such as a connection or a
+        room the caller passed in.
+        """
+        return copy.copy(self)
 
     @abstractmethod
     async def connect(self) -> None:
