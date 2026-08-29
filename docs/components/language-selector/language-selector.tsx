@@ -16,6 +16,7 @@ import {
   type LanguageMeta,
 } from "@/lib/lang/languages";
 import { SDK_VERSIONS } from "@/lib/lang/versions";
+import { StatusTag } from "@/components/status-tag";
 import {
   LANGUAGE_SELECTOR_HINT_DISMISSED_EVENT,
   LANGUAGE_SELECTOR_HINT_STORAGE_KEY,
@@ -33,7 +34,7 @@ const badge = (src: string, label: string) => (
 );
 
 const tag = (text: string | undefined) =>
-  text ? <span className={styles.tag}>{text}</span> : null;
+  text ? <StatusTag>{text}</StatusTag> : null;
 
 type LanguageOption = { id: Language } & LanguageMeta;
 

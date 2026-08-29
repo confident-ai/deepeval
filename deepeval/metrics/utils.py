@@ -9,6 +9,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     TypeVar,
@@ -85,6 +86,28 @@ MULTIMODAL_SUPPORTED_MODELS = {
 SETTINGS = get_settings()
 SOURCE_GROUPING_GRANULARITY_WARNING_THRESHOLD = 0.5
 SOURCE_GROUPING_GRANULARITY_WARNING_MIN_COUNT = 3
+
+
+# Metrics whose score direction was inverted; each warns once per process so a
+# run that builds the metric per test case doesn't repeat itself.
+_score_direction_warned: Set[str] = set()
+
+
+def warn_score_direction_flipped(metric_name: str) -> None:
+    if metric_name in _score_direction_warned:
+        return
+    _score_direction_warned.add(metric_name)
+    warnings.warn(
+        f"'{metric_name}' now scores in the same direction as every other "
+        "deepeval metric: 1 is a pass, 0 is a failure, and 'threshold' is the "
+        "MINIMUM passing score. It previously scored the proportion of "
+        "violations, where 'threshold' was a maximum. Review any 'threshold' "
+        "you pass and any code reading '.score' - a threshold of 0.2 that "
+        "used to mean 'at most 20% violations' should now be 0.8. This notice "
+        "will be removed in a future release.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
 
 
 def check_at_least_one_metric_has_threshold(

@@ -1,12 +1,24 @@
 import inspect
-from typing import Type
+from typing import TYPE_CHECKING, List, Type
 
-from deepeval.simulator.template import SimulationTemplate
+from deepeval.test_case import Turn
+from deepeval.utils import serialize_to_json
+
+if TYPE_CHECKING:
+    from deepeval.simulator.template import SimulationTemplate
+
+
+def serialize_turns_for_prompt(turns: List[Turn]) -> str:
+    """Serialize conversation state without embedding voice audio bytes."""
+    prompt_turns = [turn.model_dump_for_prompt() for turn in turns]
+    return serialize_to_json(prompt_turns, indent=4, ensure_ascii=False)
 
 
 def validate_simulation_template(
-    simulation_template: Type[SimulationTemplate],
+    simulation_template: Type["SimulationTemplate"],
 ):
+    from deepeval.simulator.template import SimulationTemplate
+
     if not issubclass(simulation_template, SimulationTemplate):
         raise TypeError(
             "simulation_template must inherit from " "SimulationTemplate."

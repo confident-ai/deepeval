@@ -141,7 +141,7 @@ sequenceDiagram
 
 The simulation works in three steps:
 
-1. A `ConversationalGolden` feeds the scenario and user description into the `ConversationSimulator`.
+1. A `ConversationalGolden` feeds the scenario and persona into the `ConversationSimulator`.
 2. The simulator generates user messages, your LLM responds, and this loops until the expected outcome is reached or max turns is hit.
 3. The full conversation is packaged into a `ConversationalTestCase` for evaluation.
 
@@ -150,23 +150,23 @@ The simulation works in three steps:
 Instead of pre-defined input-output pairs, multi-turn evaluation starts with **scenarios**—descriptions of the conversational situations you want to test. In `deepeval`, these are represented as [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation):
 
 ```python
-from deepeval.dataset import EvaluationDataset, ConversationalGolden
+from deepeval.dataset import EvaluationDataset, ConversationalGolden, Persona
 
 dataset = EvaluationDataset(goldens=[
     ConversationalGolden(
         scenario="Frustrated customer requesting a refund for a defective product",
         expected_outcome="Customer receives refund confirmation and apology",
-        user_description="Impatient customer who has already contacted support twice"
+        persona=Persona(characteristics="Impatient customer who has already contacted support twice"),
     ),
     ConversationalGolden(
         scenario="New user asking for help setting up their account",
         expected_outcome="User successfully creates account and understands key features",
-        user_description="Non-technical user, first time using the product"
+        persona=Persona(characteristics="Non-technical user, first time using the product"),
     ),
     ConversationalGolden(
         scenario="User asking complex technical questions about API integration",
         expected_outcome="User gets accurate technical guidance with code examples",
-        user_description="Senior software engineer integrating the product's REST API"
+        persona=Persona(characteristics="Senior software engineer integrating the product's REST API"),
     ),
 ])
 ```

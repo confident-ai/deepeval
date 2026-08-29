@@ -13,7 +13,12 @@ import {
   RetrieverSpan,
   TraceSpanStatus,
 } from "@/tracing/tracing";
-import { applyPendingToSpan, popPendingFor } from "@/tracing/pending-context";
+import {
+  applyPendingToSpan,
+  pendingToOtelAttributes,
+  popPendingFor,
+  setDefaultSpanAttribute,
+} from "@/tracing/pending-context";
 import {
   ROUTE_TO_REST_ATTRIBUTE,
   endOtelImplicitTrace,
@@ -22,6 +27,7 @@ import {
 } from "@/tracing/otel-routing";
 import { AiSdkInstrumentationOptions } from "@/integrations/ai-sdk/index";
 import { ToolCall } from "@/test-case";
+import { ConfidentAttr } from "@/tracing/attributes";
 
 export const ROOT_VERCEL_SPANS = new Set([
   "ai.generateText",
@@ -77,7 +83,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       (span as any).parentSpanId || (span as any).parentSpanContext?.spanId;
     const isAiRoot = !parentId || !this.aiSpanIds.has(parentId);
     if (isAiRoot) {
-      span.setAttribute("confident.internal.is_ai_root", true);
+      span.setAttribute(ConfidentAttr.INTERNAL_IS_AI_ROOT, true);
     }
 
     this.setTraceAttributes(span);
@@ -97,7 +103,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       const currentTrace = resolveTraceForOtelSpan(isAiRoot);
       if (currentTrace) {
         const traceId = currentTrace.uuid;
-        span.setAttribute("confident.internal.trace_uuid", traceId);
+        span.setAttribute(ConfidentAttr.INTERNAL_TRACE_UUID, traceId);
 
         const spanId = span.spanContext().spanId;
         const parentId =
@@ -142,6 +148,12 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
         this.previousSpans.set(spanId, getCurrentSpan());
         setCurrentSpan(deepEvalSpan);
       }
+    } else {
+      const type = this.determineSpanType(spanName);
+      const staged = pendingToOtelAttributes(popPendingFor(type), type);
+      for (const [key, value] of Object.entries(staged)) {
+        span.setAttribute(key, value);
+      }
     }
   }
 
@@ -162,13 +174,13 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
     const attributes = (span as any).attributes || {};
     const type = this.determineSpanType(name);
-    const isAiRoot = attributes["confident.internal.is_ai_root"] === true;
+    const isAiRoot = attributes[ConfidentAttr.INTERNAL_IS_AI_ROOT] === true;
 
     this.setSpanLevelAttributes(attributes, name);
 
     if (type === SpanType.TOOL) {
       const traceId =
-        (attributes["confident.internal.trace_uuid"] as string) ||
+        (attributes[ConfidentAttr.INTERNAL_TRACE_UUID] as string) ||
         getCurrentTrace()?.uuid;
 
       if (traceId) {
@@ -178,21 +190,21 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
             currentTrace.toolsCalled = [];
           }
           const toolCall: ToolCall = {
-            name: attributes["confident.tool.name"]
-              ? String(attributes["confident.tool.name"])
+            name: attributes[ConfidentAttr.TOOL_NAME]
+              ? String(attributes[ConfidentAttr.TOOL_NAME])
               : name,
             inputParameters: this.safeJsonParse(
-              attributes["confident.span.input"],
+              attributes[ConfidentAttr.SPAN_INPUT],
             ),
-            output: this.safeJsonParse(attributes["confident.span.output"]),
-            description: attributes["confident.span.metadata"]
-              ? JSON.parse(attributes["confident.span.metadata"]).description
+            output: this.safeJsonParse(attributes[ConfidentAttr.SPAN_OUTPUT]),
+            description: attributes[ConfidentAttr.SPAN_METADATA]
+              ? JSON.parse(attributes[ConfidentAttr.SPAN_METADATA]).description
               : undefined,
           };
 
           currentTrace.toolsCalled.push(toolCall);
 
-          attributes["confident.trace.tools_called"] = JSON.stringify(
+          attributes[ConfidentAttr.TRACE_TOOLS_CALLED] = JSON.stringify(
             currentTrace.toolsCalled,
           );
         }
@@ -201,38 +213,38 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
     if (ROOT_VERCEL_SPANS.has(name)) {
       const currentTrace = getCurrentTrace();
-      if (attributes["confident.span.input"]) {
+      if (attributes[ConfidentAttr.SPAN_INPUT]) {
         if (currentTrace) {
           if (isAiRoot && !currentTrace.input) {
-            currentTrace.input = attributes["confident.span.input"];
+            currentTrace.input = attributes[ConfidentAttr.SPAN_INPUT];
           }
           if (isAiRoot) {
-            attributes["confident.trace.input"] =
-              currentTrace.input || attributes["confident.span.input"];
+            attributes[ConfidentAttr.TRACE_INPUT] =
+              currentTrace.input || attributes[ConfidentAttr.SPAN_INPUT];
           }
         } else {
           if (isAiRoot) {
-            attributes["confident.trace.input"] =
-              attributes["confident.span.input"];
+            attributes[ConfidentAttr.TRACE_INPUT] =
+              attributes[ConfidentAttr.SPAN_INPUT];
           }
         }
       }
-      if (attributes["confident.span.output"]) {
+      if (attributes[ConfidentAttr.SPAN_OUTPUT]) {
         if (currentTrace) {
           if (isAiRoot) {
-            currentTrace.output = attributes["confident.span.output"];
-            attributes["confident.trace.output"] =
-              currentTrace.output || attributes["confident.span.output"];
+            currentTrace.output = attributes[ConfidentAttr.SPAN_OUTPUT];
+            attributes[ConfidentAttr.TRACE_OUTPUT] =
+              currentTrace.output || attributes[ConfidentAttr.SPAN_OUTPUT];
           }
         } else {
           if (isAiRoot) {
-            attributes["confident.trace.output"] =
-              attributes["confident.span.output"];
+            attributes[ConfidentAttr.TRACE_OUTPUT] =
+              attributes[ConfidentAttr.SPAN_OUTPUT];
           }
         }
       }
       if (attributes["ai.telemetry.functionId"]) {
-        attributes["confident.trace.name"] =
+        attributes[ConfidentAttr.TRACE_NAME] =
           attributes["ai.telemetry.functionId"];
       }
     }
@@ -251,17 +263,17 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
   private setTraceAttributes(span: Span): void {
     if (this.options.name) {
-      span.setAttribute("confident.trace.name", this.options.name);
+      span.setAttribute(ConfidentAttr.TRACE_NAME, this.options.name);
     }
     if (this.options.environment) {
       span.setAttribute(
-        "confident.trace.environment",
+        ConfidentAttr.TRACE_ENVIRONMENT,
         this.options.environment,
       );
     }
     if (this.options.traceMetricCollection) {
       span.setAttribute(
-        "confident.trace.metric_collection",
+        ConfidentAttr.TRACE_METRIC_COLLECTION,
         this.options.traceMetricCollection,
       );
     }
@@ -270,59 +282,59 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
     if (currentTrace) {
       if (currentTrace.threadId) {
-        span.setAttribute("confident.trace.thread_id", currentTrace.threadId);
+        span.setAttribute(ConfidentAttr.TRACE_THREAD_ID, currentTrace.threadId);
       }
       if (currentTrace.userId) {
-        span.setAttribute("confident.trace.user_id", currentTrace.userId);
+        span.setAttribute(ConfidentAttr.TRACE_USER_ID, currentTrace.userId);
       }
       if (currentTrace.testCaseId) {
         span.setAttribute(
-          "confident.trace.test_case_id",
+          ConfidentAttr.TRACE_TEST_CASE_ID,
           currentTrace.testCaseId,
         );
       }
       if (currentTrace.turnId) {
-        span.setAttribute("confident.trace.turn_id", currentTrace.turnId);
+        span.setAttribute(ConfidentAttr.TRACE_TURN_ID, currentTrace.turnId);
       }
       if (currentTrace.metadata) {
         span.setAttribute(
-          "confident.trace.metadata",
+          ConfidentAttr.TRACE_METADATA,
           JSON.stringify(currentTrace.metadata),
         );
       }
       if (currentTrace.tags) {
         span.setAttribute(
-          "confident.trace.tags",
+          ConfidentAttr.TRACE_TAGS,
           JSON.stringify(currentTrace.tags),
         );
       }
       if (currentTrace.metricCollection) {
         span.setAttribute(
-          "confident.trace.metric_collection",
+          ConfidentAttr.TRACE_METRIC_COLLECTION,
           currentTrace.metricCollection,
         );
       }
       if (currentTrace.context) {
         span.setAttribute(
-          "confident.trace.context",
+          ConfidentAttr.TRACE_CONTEXT,
           JSON.stringify(currentTrace.context),
         );
       }
       if (currentTrace.retrievalContext) {
         span.setAttribute(
-          "confident.trace.retrieval_context",
+          ConfidentAttr.TRACE_RETRIEVAL_CONTEXT,
           JSON.stringify(currentTrace.retrievalContext),
         );
       }
       if (currentTrace.expectedOutput) {
         span.setAttribute(
-          "confident.trace.expected_output",
+          ConfidentAttr.TRACE_EXPECTED_OUTPUT,
           currentTrace.expectedOutput,
         );
       }
       if (currentTrace.expectedTools) {
         span.setAttribute(
-          "confident.trace.expected_tools",
+          ConfidentAttr.TRACE_EXPECTED_TOOLS,
           JSON.stringify(currentTrace.expectedTools),
         );
       }
@@ -332,7 +344,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
   private setSpanAttributes(span: Span, spanName: string): void {
     const type = this.determineSpanType(spanName);
 
-    span.setAttribute("confident.span.type", type);
+    span.setAttribute(ConfidentAttr.SPAN_TYPE, type);
 
     const llmContext = getLlmContext();
 
@@ -340,49 +352,49 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       if (llmContext) {
         if (llmContext.metricCollection) {
           span.setAttribute(
-            "confident.span.metric_collection",
+            ConfidentAttr.SPAN_METRIC_COLLECTION,
             llmContext.metricCollection,
           );
         }
         if (llmContext.context) {
           span.setAttribute(
-            "confident.span.context",
+            ConfidentAttr.SPAN_CONTEXT,
             JSON.stringify(llmContext.context),
           );
         }
         if (llmContext.retrievalContext) {
           span.setAttribute(
-            "confident.span.retrieval_context",
+            ConfidentAttr.SPAN_RETRIEVAL_CONTEXT,
             JSON.stringify(llmContext.retrievalContext),
           );
         }
         if (llmContext.expectedOutput) {
           span.setAttribute(
-            "confident.span.expected_output",
+            ConfidentAttr.SPAN_EXPECTED_OUTPUT,
             llmContext.expectedOutput,
           );
         }
         if (llmContext.expectedTools) {
           span.setAttribute(
-            "confident.span.expected_tools",
+            ConfidentAttr.SPAN_EXPECTED_TOOLS,
             JSON.stringify(llmContext.expectedTools),
           );
         }
         if (llmContext.prompt) {
           span.setAttribute(
-            "confident.span.prompt_alias",
+            ConfidentAttr.SPAN_PROMPT_ALIAS,
             llmContext.prompt._alias || "",
           );
           span.setAttribute(
-            "confident.span.prompt_commit_hash",
+            ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
             llmContext.prompt.hash || "",
           );
           span.setAttribute(
-            "confident.span.prompt_label",
+            ConfidentAttr.SPAN_PROMPT_LABEL,
             llmContext.prompt.label || "",
           );
           span.setAttribute(
-            "confident.span.prompt_version",
+            ConfidentAttr.SPAN_PROMPT_VERSION,
             llmContext.prompt.version || "",
           );
         }
@@ -390,15 +402,18 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     } else if (type === SpanType.TOOL) {
       const metricCollection = llmContext?.toolsMetricCollection;
       if (metricCollection) {
-        span.setAttribute("confident.span.metric_collection", metricCollection);
+        span.setAttribute(
+          ConfidentAttr.SPAN_METRIC_COLLECTION,
+          metricCollection,
+        );
       }
-      span.setAttribute("confident.trace.tools_called", "true");
+      span.setAttribute(ConfidentAttr.TRACE_TOOLS_CALLED, "true");
     }
   }
 
   private setSpanLevelAttributes(attributes: any, spanName: string): void {
     const type = this.determineSpanType(spanName);
-    attributes["confident.span.type"] = type;
+    attributes[ConfidentAttr.SPAN_TYPE] = type;
 
     const getMeta = (key: string) => {
       const val = attributes[`ai.telemetry.metadata.${key}`];
@@ -406,59 +421,61 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     };
 
     const userId = getMeta("userId");
-    if (userId) attributes["confident.trace.user_id"] = String(userId);
+    if (userId) attributes[ConfidentAttr.TRACE_USER_ID] = String(userId);
 
     const testCaseId = getMeta("testCaseId");
     if (testCaseId)
-      attributes["confident.trace.test_case_id"] = String(testCaseId);
+      attributes[ConfidentAttr.TRACE_TEST_CASE_ID] = String(testCaseId);
 
     const turnId = getMeta("turnId");
-    if (turnId) attributes["confident.trace.turn_id"] = String(turnId);
+    if (turnId) attributes[ConfidentAttr.TRACE_TURN_ID] = String(turnId);
 
     const threadId = getMeta("threadId");
-    if (threadId) attributes["confident.trace.thread_id"] = String(threadId);
+    if (threadId) attributes[ConfidentAttr.TRACE_THREAD_ID] = String(threadId);
 
     const metricCollection = getMeta("metricCollection");
     if (metricCollection)
-      attributes["confident.span.metric_collection"] = String(metricCollection);
+      attributes[ConfidentAttr.SPAN_METRIC_COLLECTION] =
+        String(metricCollection);
 
     const tags = getMeta("tags");
     if (tags) {
-      attributes["confident.trace.tags"] =
+      attributes[ConfidentAttr.TRACE_TAGS] =
         typeof tags === "string" ? tags : JSON.stringify(tags);
     }
 
     const contextAttr = getMeta("context");
     if (contextAttr) {
-      attributes["confident.trace.context"] =
+      attributes[ConfidentAttr.TRACE_CONTEXT] =
         typeof contextAttr === "string"
           ? contextAttr
           : JSON.stringify(contextAttr);
     }
 
     const traceName = getMeta("traceName");
-    if (traceName) attributes["confident.trace.name"] = String(traceName);
+    if (traceName) attributes[ConfidentAttr.TRACE_NAME] = String(traceName);
 
     const traceMetricCollection = getMeta("traceMetricCollection");
     if (traceMetricCollection)
-      attributes["confident.trace.metric_collection"] = String(
+      attributes[ConfidentAttr.TRACE_METRIC_COLLECTION] = String(
         traceMetricCollection,
       );
 
     const expectedOutput = getMeta("expectedOutput");
     if (expectedOutput)
-      attributes["confident.trace.expected_output"] = String(expectedOutput);
+      attributes[ConfidentAttr.TRACE_EXPECTED_OUTPUT] = String(expectedOutput);
 
     const sessionId = getMeta("sessionId");
-    if (sessionId) attributes["confident.trace.session_id"] = String(sessionId);
+    if (sessionId)
+      attributes[ConfidentAttr.TRACE_SESSION_ID] = String(sessionId);
 
     const promptAlias = getMeta("promptAlias");
     if (promptAlias)
-      attributes["confident.span.prompt_alias"] = String(promptAlias);
+      attributes[ConfidentAttr.SPAN_PROMPT_ALIAS] = String(promptAlias);
 
     const promptCommitHash = getMeta("promptCommitHash");
     if (promptCommitHash)
-      attributes["confident.span.prompt_commit_hash"] =
+      attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH] =
         String(promptCommitHash);
 
     const metadata: Record<string, any> = {};
@@ -470,18 +487,30 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       }
     }
 
+    // What the SDK reports is a default: on the OTLP route anything already on
+    // the span was staged by user code at onStart and outranks it.
     if (type === SpanType.LLM) {
       const model =
         attributes["ai.model.id"] ||
         attributes["gen_ai.request.model"] ||
         attributes["gen_ai.response.model"];
-      if (model) attributes["confident.llm.model"] = String(model);
+      if (model)
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.LLM_MODEL,
+          String(model),
+        );
 
       let input = attributes["ai.prompt"];
       if (!input && attributes["ai.prompt.messages"]) {
         input = this.ensureString(attributes["ai.prompt.messages"]);
       }
-      if (input) attributes["confident.span.input"] = this.ensureString(input);
+      if (input)
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_INPUT,
+          this.ensureString(input),
+        );
 
       let output = attributes["ai.response.text"];
       if (!output && attributes["ai.response.object"]) {
@@ -491,7 +520,11 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
         output = this.ensureString(attributes["ai.response.toolCalls"]);
       }
       if (output)
-        attributes["confident.span.output"] = this.ensureString(output);
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_OUTPUT,
+          this.ensureString(output),
+        );
 
       if (!ROOT_VERCEL_SPANS.has(spanName)) {
         const inputTokens =
@@ -500,7 +533,11 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
           attributes["ai.usage.promptTokens"];
 
         if (inputTokens !== undefined) {
-          attributes["confident.llm.input_token_count"] = Number(inputTokens);
+          setDefaultSpanAttribute(
+            attributes,
+            ConfidentAttr.LLM_INPUT_TOKEN_COUNT,
+            Number(inputTokens),
+          );
         }
         const outputTokens =
           attributes["ai.usage.outputTokens.total"] ||
@@ -508,7 +545,11 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
           attributes["ai.usage.completionTokens"];
 
         if (outputTokens !== undefined) {
-          attributes["confident.llm.output_token_count"] = Number(outputTokens);
+          setDefaultSpanAttribute(
+            attributes,
+            ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT,
+            Number(outputTokens),
+          );
         }
       }
 
@@ -640,30 +681,52 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       }
     } else if (type === SpanType.TOOL) {
       const toolName = attributes["ai.toolCall.name"];
-      if (toolName) attributes["confident.tool.name"] = String(toolName);
+      if (toolName) attributes[ConfidentAttr.TOOL_NAME] = String(toolName);
 
       const args = attributes["ai.toolCall.args"];
-      if (args) attributes["confident.span.input"] = this.ensureString(args);
+      if (args)
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_INPUT,
+          this.ensureString(args),
+        );
 
       const result = attributes["ai.toolCall.result"];
       if (result)
-        attributes["confident.span.output"] = this.ensureString(result);
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_OUTPUT,
+          this.ensureString(result),
+        );
 
       const toolId = attributes["ai.toolCall.id"];
       if (toolId)
-        attributes["confident.span.metadata.tool_id"] = String(toolId);
+        attributes[ConfidentAttr.SPAN_METADATA_TOOL_ID] = String(toolId);
     } else if (type === SpanType.RETRIEVER) {
       const embedder = attributes["ai.model.id"];
       if (embedder)
-        attributes["confident.retriever.embedder"] = String(embedder);
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.RETRIEVER_EMBEDDER,
+          String(embedder),
+        );
 
       const val = attributes["ai.value"] || attributes["ai.values"];
-      if (val) attributes["confident.span.input"] = this.ensureString(val);
+      if (val)
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_INPUT,
+          this.ensureString(val),
+        );
 
       const embedding =
         attributes["ai.embedding"] || attributes["ai.embeddings"];
       if (embedding)
-        attributes["confident.span.output"] = this.ensureString(embedding);
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_OUTPUT,
+          this.ensureString(embedding),
+        );
 
       if (!ROOT_VERCEL_SPANS.has(spanName)) {
         this.collectMetadata(attributes, metadata, "ai.usage.tokens", "tokens");
@@ -671,7 +734,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     }
 
     if (Object.keys(metadata).length > 0) {
-      attributes["confident.span.metadata"] = JSON.stringify(metadata);
+      attributes[ConfidentAttr.SPAN_METADATA] = JSON.stringify(metadata);
     }
   }
 
@@ -706,7 +769,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
   }
 
   private updateAndEndSpan(span: ReadableSpan, attributes: any, name: string) {
-    const traceId = attributes["confident.internal.trace_uuid"] as string;
+    const traceId = attributes[ConfidentAttr.INTERNAL_TRACE_UUID] as string;
     if (!traceId) return;
 
     const spanId = span.spanContext().spanId;
@@ -723,8 +786,8 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
 
     if (attributes["error"]) deepEvalSpan.status = TraceSpanStatus.ERRORED;
 
-    let inputObj = attributes["confident.span.input"];
-    let outputObj = attributes["confident.span.output"];
+    let inputObj = attributes[ConfidentAttr.SPAN_INPUT];
+    let outputObj = attributes[ConfidentAttr.SPAN_OUTPUT];
     try {
       if (typeof inputObj === "string") inputObj = JSON.parse(inputObj);
     } catch {
@@ -737,9 +800,9 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     }
 
     let metadataObj = undefined;
-    if (attributes["confident.span.metadata"]) {
+    if (attributes[ConfidentAttr.SPAN_METADATA]) {
       try {
-        metadataObj = JSON.parse(attributes["confident.span.metadata"]);
+        metadataObj = JSON.parse(attributes[ConfidentAttr.SPAN_METADATA]);
       } catch {
         // Ignore parsing normal strings
       }
@@ -748,43 +811,60 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
     deepEvalSpan.error = attributes["error"]
       ? String(attributes["error"])
       : undefined;
-    // Assign only when the attribute carries something: these fields can also
-    // have been set from user code (`next*Span`, `updateCurrentSpan`), and an
-    // absent attribute must not erase that.
-    if (inputObj !== undefined) {
+    // These fields can also have been set from user code (`next*Span`,
+    // `updateCurrentSpan`), which outranks what the SDK reported: assign only
+    // where the attribute carries something and the span does not.
+    if (inputObj !== undefined && deepEvalSpan.input === undefined) {
       deepEvalSpan.input = inputObj;
     }
-    if (outputObj !== undefined) {
+    if (outputObj !== undefined && deepEvalSpan.output === undefined) {
       deepEvalSpan.output = outputObj;
     }
-    if (attributes["confident.span.metric_collection"] !== undefined) {
+    if (
+      attributes[ConfidentAttr.SPAN_METRIC_COLLECTION] !== undefined &&
+      deepEvalSpan.metricCollection === undefined
+    ) {
       deepEvalSpan.metricCollection =
-        attributes["confident.span.metric_collection"];
+        attributes[ConfidentAttr.SPAN_METRIC_COLLECTION];
     }
-    if (metadataObj !== undefined) {
+    if (metadataObj !== undefined && deepEvalSpan.metadata === undefined) {
       deepEvalSpan.metadata = metadataObj;
     }
 
     if (deepEvalSpan.type === SpanType.LLM) {
       const llmSpan = deepEvalSpan as LlmSpan;
-      llmSpan.model = attributes["confident.llm.model"] || "unknown";
-      llmSpan.inputTokenCount = attributes["confident.llm.input_token_count"];
-      llmSpan.outputTokenCount = attributes["confident.llm.output_token_count"];
-      if (attributes["confident.span.prompt_alias"])
-        llmSpan.promptAlias = String(attributes["confident.span.prompt_alias"]);
-      if (attributes["confident.span.prompt_commit_hash"])
-        llmSpan.promptCommitHash = String(
-          attributes["confident.span.prompt_commit_hash"],
+      // The span is constructed with a placeholder model, so anything other
+      // than "unknown" here came from user code and stands.
+      if (!llmSpan.model || llmSpan.model === "unknown") {
+        llmSpan.model = attributes[ConfidentAttr.LLM_MODEL] || "unknown";
+      }
+      if (llmSpan.inputTokenCount === undefined) {
+        llmSpan.inputTokenCount =
+          attributes[ConfidentAttr.LLM_INPUT_TOKEN_COUNT];
+      }
+      if (llmSpan.outputTokenCount === undefined) {
+        llmSpan.outputTokenCount =
+          attributes[ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT];
+      }
+      if (attributes[ConfidentAttr.SPAN_PROMPT_ALIAS])
+        llmSpan.promptAlias = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_ALIAS],
         );
-      if (attributes["confident.span.prompt_label"])
-        llmSpan.promptLabel = String(attributes["confident.span.prompt_label"]);
-      if (attributes["confident.span.prompt_version"])
+      if (attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH])
+        llmSpan.promptCommitHash = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH],
+        );
+      if (attributes[ConfidentAttr.SPAN_PROMPT_LABEL])
+        llmSpan.promptLabel = String(
+          attributes[ConfidentAttr.SPAN_PROMPT_LABEL],
+        );
+      if (attributes[ConfidentAttr.SPAN_PROMPT_VERSION])
         llmSpan.promptVersion = String(
-          attributes["confident.span.prompt_version"],
+          attributes[ConfidentAttr.SPAN_PROMPT_VERSION],
         );
     } else if (deepEvalSpan.type === SpanType.TOOL) {
-      deepEvalSpan.name = attributes["confident.tool.name"]
-        ? String(attributes["confident.tool.name"])
+      deepEvalSpan.name = attributes[ConfidentAttr.TOOL_NAME]
+        ? String(attributes[ConfidentAttr.TOOL_NAME])
         : name;
 
       const currentTrace = traceManager.getTraceByUuid(traceId);
@@ -807,7 +887,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       }
     } else if (deepEvalSpan.type === SpanType.RETRIEVER) {
       (deepEvalSpan as RetrieverSpan).embedder =
-        attributes["confident.retriever.embedder"] || "unknown";
+        attributes[ConfidentAttr.RETRIEVER_EMBEDDER] || "unknown";
     }
 
     if (ROOT_VERCEL_SPANS.has(name)) {

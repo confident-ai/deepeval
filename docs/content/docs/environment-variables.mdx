@@ -40,7 +40,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | Variable                     | Values                     | Effect                                                                                                                                                        |
 | ---------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CONFIDENT_API_KEY`          | `string` / unset           | Logs in to Confident AI. Enables tracing observability, and automatically uploads test results to the cloud when an evaluation completes.                     |
-| `CONFIDENT_REGION`           | `US` / `EU` / `AU` / unset | Confident AI data region. When unset, the region is inferred from your API key prefix.                                                                        |
+| `CONFIDENT_REGION`           | <Switch><Case id="python">`US` / `EU` / unset</Case><Case id="typescript">`US` / `EU` / `AU` / unset</Case></Switch> | Confident AI data region. When unset, the region is inferred from your API key prefix.                                                                        |
 | `CONFIDENT_BASE_URL`         | `string` / unset           | Base URL for the Confident AI API server (set only when using a custom or self-hosted endpoint). Takes precedence over `CONFIDENT_REGION`.                    |
 | `CONFIDENT_DISABLE_SSL`      | `1` / `0` / unset          | Disable TLS certificate verification for requests to the Confident AI API server. Only use with self-hosted endpoints that have self-signed certificates.     |
 | `CONFIDENT_OPEN_BROWSER`     | `1` / `0` / unset          | Open a browser automatically for Confident AI links and flows. Defaults to on; set `0` on CI and headless machines.                                           |
@@ -50,6 +50,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_DEFAULT_SAVE`      | `dotenv[:path]` / unset    | Default persistence target for <Term py="deepeval set-* --save" ts="npx deepeval set-* --save"/> when `--save` is omitted.                                     |
 | `DEEPEVAL_FILE_SYSTEM`       | `READ_ONLY` / unset        | Stop `deepeval` writing its own files: the keystore, dotenv persistence, the metric cache, the latest test run, and the results export.                       |
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
+| `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
 | `IGNORE_DEEPEVAL_ERRORS`     | `1` / `0` / unset          | Continue a run when a metric errors, instead of failing the test case.                                                                                        |
 | `SKIP_DEEPEVAL_MISSING_PARAMS` | `1` / `0` / unset        | Skip a metric when the test case is missing a parameter it requires.                                                                                          |
@@ -208,6 +209,14 @@ Explicit constructor arguments (e.g. <Term py="OpenAIModel(api_key=...)" ts="new
 
 You can also set `TEMPERATURE` to provide a default temperature for all model instances.
 
+| Variable                  | Values            | Effect                                                                                                                                                          |
+| ------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_MODEL_THINKING` | `1` / `0` / unset | Let models that expose a thinking parameter think before answering. Thinking is **disabled by default**, so a judge spends its whole token budget on the verdict. |
+
+Thinking is off unless you set `DEEPEVAL_MODEL_THINKING=1`, and models without a thinking parameter ignore it. Enabling it raises the default output budget to make room for the reasoning, since providers count thinking tokens against the same <Term py="max_tokens" ts="maxTokens"/> ceiling as the response — an explicit value still wins, and one too small to hold both raises an error rather than returning a truncated verdict.
+
+Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way.
+
 ### Variable Options
 
 When set to `1`, `USE_{PROVIDER}_MODEL` (e.g. `USE_OPENAI_MODEL`) tells `deepeval` which provider to use for LLM-as-a-judge metrics when no model is explicitly passed.
@@ -228,7 +237,7 @@ If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK defa
 | `USE_AWS_BEDROCK_MODEL`             | `1` / `0` / unset | Prefer Bedrock as the default LLM provider (where applicable).   |
 | `AWS_ACCESS_KEY_ID`                 | `string` / unset  | Optional AWS access key ID for authentication.                   |
 | `AWS_SECRET_ACCESS_KEY`             | `string` / unset  | Optional AWS secret access key for authentication.               |
-| `AWS_BEDROCK_MODEL_NAME`            | `string` / unset  | Bedrock model ID (e.g. `anthropic.claude-3-opus-20240229-v1:0`). |
+| `AWS_BEDROCK_MODEL_NAME`            | `string` / unset  | Bedrock model ID (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). |
 | `AWS_BEDROCK_REGION`                | `string` / unset  | AWS region (e.g. `us-east-1`).                                   |
 | `AWS_BEDROCK_COST_PER_INPUT_TOKEN`  | `float` / unset   | Optional input-token cost used for cost reporting.               |
 | `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | `float` / unset   | Optional output-token cost used for cost reporting.              |

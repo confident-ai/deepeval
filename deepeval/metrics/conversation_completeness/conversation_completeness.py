@@ -171,6 +171,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             return self.score
 
     async def _a_generate_reason(self, multimodal: bool) -> str:
+        if self.include_reason is False:
+            return None
+
         incompletenesses: List[str] = []
         for verdict in self.verdicts:
             if (
