@@ -353,6 +353,9 @@ class ToolCorrectnessMetric(BaseMetric):
         tool_calling_reason,
         tool_selection_reason,
     ):
+        if self.include_reason is False:
+            return None
+
         final_reason = "[\n"
         final_reason += "\t Tool Calling Reason: " + tool_calling_reason + "\n"
         final_reason += (
