@@ -452,11 +452,16 @@ class ToolCorrectnessMetric(BaseMetric):
     # Non exact matching score
     def _calculate_non_exact_match_score(self) -> float:
         total_score = 0.0
-        matched_called_tools = set()
+        # Track matched calls by index rather than by value: ToolCall equality is
+        # value-based, so two genuinely distinct calls of the same tool are equal
+        # and a value set would let one match consume both, under-scoring an agent
+        # that correctly calls the same tool more than once.
+        matched_called_indices = set()
         for expected_tool in self.expected_tools:
             best_score = 0.0
-            for called_tool in self.tools_called:
-                if called_tool in matched_called_tools:
+            best_called_index = None
+            for index, called_tool in enumerate(self.tools_called):
+                if index in matched_called_indices:
                     continue
                 if (
                     expected_tool.name == called_tool.name
@@ -478,10 +483,10 @@ class ToolCorrectnessMetric(BaseMetric):
                         match_score = 0.0
                     if match_score > best_score:
                         best_score = match_score
-                        best_called_tool = called_tool
+                        best_called_index = index
             if best_score > 0:
                 total_score += best_score
-                matched_called_tools.add(best_called_tool)
+                matched_called_indices.add(best_called_index)
         return (
             1.0
             if not self.expected_tools and not self.tools_called
