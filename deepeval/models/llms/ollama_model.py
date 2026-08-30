@@ -219,7 +219,8 @@ class OllamaModel(DeepEvalBaseLLM):
 
                 schema = schemas[i] if schemas and i < len(schemas) else None
 
-                # if a schema was requested and we got a string/json response, parse it into the Pydantic model
+                # if a schema was requested and we got a string/json response
+                # parse it into the Pydantic model
                 if schema and isinstance(output, str):
                     try:
                         # attempt to parse structured JSON from output string
