@@ -87,31 +87,43 @@ Connect your application to MCP servers and create the `MCPServer` object for al
 
 <Case id="python">
 
-```python title="main.py" showLineNumbers {6,19-23}
-import mcp
-
+```python title="main.py" showLineNumbers {8,14-20,27-31}
+import os
+import httpx
 from contextlib import AsyncExitStack
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamable_http_client
 from deepeval.test_case import MCPServer
 
-url = "https://example.com/mcp"
+url = os.environ["MCP_SERVER_URL"]
+headers = {"Authorization": f"Bearer {os.environ['MCP_API_KEY']}"}
 
 mcp_servers = []
 tools_called = []
 
 async def main():
-    read, write, _  = await AsyncExitStack().enter_async_context(streamablehttp_client(url))
-    session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
-    await session.initialize()
+    async with AsyncExitStack() as stack:
+        http_client = await stack.enter_async_context(
+            httpx.AsyncClient(
+                headers=headers,
+                timeout=httpx.Timeout(30, read=300),
+            )
+        )
+        read, write, _ = await stack.enter_async_context(
+            streamable_http_client(url, http_client=http_client)
+        )
+        session = await stack.enter_async_context(ClientSession(read, write))
+        await session.initialize()
 
-    tool_list = await session.list_tools()
+        tool_list = await session.list_tools()
 
-    mcp_servers.append(MCPServer(
-        server_name=url,
-        transport="streamable-http",
-        available_tools=tool_list.tools,
-    ))
+        mcp_servers.append(MCPServer(
+            server_name=url,
+            transport="streamable-http",
+            available_tools=tool_list.tools,
+        ))
+
+        # Run the host and track its interactions before leaving this block.
 ```
 
 </Case>
@@ -148,6 +160,10 @@ async function main() {
 
 </Switch>
 
+The Python sample sends bearer credentials in an authorization header. Never
+include API keys in the server URL. The exit stack keeps the connection open
+while the host runs and closes every transport afterward.
+
 </Step>
 <Step>
 ### Track your MCP interactions
@@ -168,7 +184,7 @@ from deepeval.test_case import MCPToolCall
 
 available_tools = [
     {"name": tool.name, "description": tool.description, "input_schema": tool.inputSchema}
-    for tool in tool_list
+    for tool in tool_list.tools
 ]
 
 response = self.anthropic.messages.create(
@@ -275,10 +291,15 @@ const testCase = new LLMTestCase({
 </Switch>
 
 The test cases must be created after the execution of your application.
+Set `actual_output` to the final model response after all MCP tool results have
+returned. The first response can contain only tool calls and is not a complete
+answer.
 
 <Only id="python">
 
-Click here to see a [full example on how to create single-turn test cases](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_single_turn.py) for MCP evaluations.
+The [complete Xquik example](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_single_turn.py)
+applies this pattern to public X search. It includes a bounded tool loop,
+secure bearer authentication, connection cleanup, and test-case creation.
 
 </Only>
 
