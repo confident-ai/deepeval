@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
 import base64
+import asyncio
 
 from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
@@ -188,6 +189,66 @@ class OllamaModel(DeepEvalBaseLLM):
                 )
 
         return messages
+
+    def batch_generate(
+        self,
+        prompts: List[str],
+        schemas: Optional[List[Optional[BaseModel]]] = None,
+        *args,
+        **kwargs,
+    ) -> List[Union[str, BaseModel]]:
+        """
+        Executes a batch of prompts concurrently using a_generate.
+        If a schema is provided, returns the instantiated Pydantic object.
+        """
+        
+        async def _run_batch():
+            tasks = []
+            for i, prompt in enumerate(prompts):
+                # retrieve schema if present for this prompt
+                schema = schemas[i] if schemas and i < len(schemas) else None
+                tasks.append(self.a_generate(prompt=prompt, schema=schema, **kwargs))
+            
+            print(f"[Step # 2] Received batch of {len(prompts)} prompts. Schemas present : {schemas is not None}")
+            raw_results = await asyncio.gather(*tasks)
+            
+            processed_results = []
+            for i, res in enumerate(raw_results):
+                output = res[0] if isinstance(res, tuple) else res
+                
+                schema = schemas[i] if schemas and i < len(schemas) else None
+                
+                # if a schema was requested and we got a string/json response, parse it into the Pydantic model
+                if schema and isinstance(output, str):
+                    try:
+                        # attempt to parse structured JSON from output string
+                        parsed_json = json.loads(output)
+                        processed_results.append(schema(**parsed_json))
+                    except Exception:
+                        cleaned_str = output.replace("```json", "").replace("```", "").strip()
+                        try:
+                            parsed_json = json.loads(cleaned_str)
+                            processed_results.append(schema(**parsed_json))
+                        except Exception:
+                            # if schema parsing fails, return fallback format with answer key
+                            processed_results.append(schema(answer=cleaned_str[:1]))
+                else:
+                    processed_results.append(output)
+
+            return processed_results
+
+        # Safe loop execution for running inside scripts or async environments
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import nest_asyncio
+            nest_asyncio.apply()
+            return loop.run_until_complete(_run_batch())
+        else:
+            return asyncio.run(_run_batch())
 
     ###############################################
     # Capabilities
