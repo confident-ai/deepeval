@@ -198,20 +198,53 @@ def convert_convo_goldens_to_convo_test_cases(
     return test_cases
 
 
+def _strip_think_tags(text: str) -> str:
+    """Strip reasoning/thinking blocks emitted by models like DeepSeek-R1, QwQ,
+    and Nemotron.  Handles both fully-paired ``<think>...</think>`` and the
+    closing-tag-only variant where the chat template injects the opening tag so
+    the model only emits ``</think>``."""
+    stripped = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    if stripped == text:
+        stripped = re.sub(r"^.*?</think>", "", text, flags=re.DOTALL)
+    return stripped.strip()
+
+
 def trimAndLoadJson(input_string: str) -> Any:
     stripped = input_string.strip()
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
-        # Strip a trailing comma before a closing ] or } and retry, but only
-        # after a direct parse fails, so valid JSON string values containing
-        # ", ]" or ", }" are never corrupted.
+        pass
+
+    # Fallback 1: strip trailing commas before ] or }.
+    try:
+        return json.loads(re.sub(r",\s*([\]}])", r"\1", stripped))
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback 2: strip <think> blocks whose braces confused extraction,
+    # then re-extract and parse.
+    cleaned = _strip_think_tags(stripped)
+    if cleaned != stripped:
+        # Try full cleaned string first (may already be valid JSON).
         try:
-            return json.loads(re.sub(r",\s*([\]}])", r"\1", stripped))
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+        # Extract {…} substring in case of surrounding text (e.g. code fences).
+        start = cleaned.find("{")
+        end = cleaned.rfind("}") + 1
+        if start != -1 and end > 0:
+            jsonStr2 = cleaned[start:end]
+            try:
+                return json.loads(jsonStr2)
+            except json.JSONDecodeError:
+                try:
+                    return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr2))
+                except json.JSONDecodeError:
+                    pass
+
+    raise ValueError(f"Invalid JSON: {input_string}")
 
 
 def format_turns(turns: List[Turn]) -> str:

@@ -452,6 +452,29 @@ def check_arena_test_case_params(
         )
 
 
+def _strip_think_tags(text: str) -> str:
+    """Strip reasoning/thinking blocks emitted by models like DeepSeek-R1, QwQ,
+    and Nemotron.  Handles both fully-paired ``<think>...</think>`` and the
+    closing-tag-only variant where the chat template injects the opening tag so
+    the model only emits ``</think>``."""
+    stripped = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+    if stripped == text:
+        # No paired tags found — try the closing-tag-only variant:
+        # everything up to and including the first </think>.
+        stripped = re.sub(r"^.*?</think>", "", text, flags=re.DOTALL)
+    return stripped.strip()
+
+
+def _extract_json(text: str) -> str:
+    """Extract the outermost ``{...}`` substring from *text*."""
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    if end == 0 and start != -1:
+        text = text + "}"
+        end = len(text)
+    return text[start:end] if start != -1 and end != 0 else ""
+
+
 def trimAndLoadJson(
     input_string: Optional[str],
     metric: Optional[BaseMetric] = None,
@@ -462,30 +485,36 @@ def trimAndLoadJson(
             metric.error = error_str
         raise ValueError(error_str)
 
-    start = input_string.find("{")
-    end = input_string.rfind("}") + 1
-
-    if end == 0 and start != -1:
-        input_string = input_string + "}"
-        end = len(input_string)
-
-    jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+    jsonStr = _extract_json(input_string)
 
     try:
         return json.loads(jsonStr)
     except json.JSONDecodeError:
-        # Some models emit a trailing comma before a closing ] or }. Strip it
-        # and retry, but only after a direct parse fails, so valid JSON string
-        # values containing ", ]" or ", }" are never corrupted.
+        pass
+
+    # Fallback 1: strip trailing commas before ] or }.
+    try:
+        return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
+    except json.JSONDecodeError:
+        pass
+
+    # Fallback 2: strip <think> blocks whose braces confused extraction,
+    # then re-extract and parse.
+    cleaned = _strip_think_tags(input_string)
+    if cleaned != input_string:
+        jsonStr2 = _extract_json(cleaned)
         try:
-            return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
+            return json.loads(jsonStr2)
         except json.JSONDecodeError:
-            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-            if metric is not None:
-                metric.error = error_str
-            raise ValueError(error_str)
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
+            try:
+                return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr2))
+            except json.JSONDecodeError:
+                pass
+
+    error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+    if metric is not None:
+        metric.error = error_str
+    raise ValueError(error_str)
 
 
 SchemaType = TypeVar("SchemaType")
