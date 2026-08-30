@@ -1,4 +1,5 @@
 from enum import Enum
+from contextlib import nullcontext
 import os
 import json
 from pathlib import Path
@@ -30,6 +31,8 @@ from deepeval.utils import (
     shorten,
     format_turn,
     len_short,
+    should_print_evaluation_output,
+    suppress_evaluation_output,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.telemetry import (
@@ -544,10 +547,11 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
-                    f"Warning: Could not load test run from disk: {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"Warning: Could not load test run from disk: {e}",
+                        file=sys.stderr,
+                    )
 
         return self.test_run
 
@@ -626,10 +630,11 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
-                    f"Warning: Could not update test run on disk: {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"Warning: Could not update test run on disk: {e}",
+                        file=sys.stderr,
+                    )
                 if self.test_run is None:
                     # guarantee a valid in-memory run so the update can proceed.
                     # never destroy in-memory state on I/O failure.
@@ -913,12 +918,17 @@ class TestRunManager:
         )
         print(table)
 
-    def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
+    def post_test_run(
+        self, test_run: TestRun, print_results: Optional[bool] = None
+    ) -> Optional[Tuple[str, str]]:
+        if print_results is None:
+            print_results = should_print_evaluation_output()
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
         ):
-            print("No test cases found, unable to upload to Confident AI.")
+            if print_results:
+                print("No test cases found, unable to upload to Confident AI.")
             return
 
         api = Api()
@@ -939,7 +949,7 @@ class TestRunManager:
         initial_batch = all_test_cases_to_process[:BATCH_SIZE]
         remaining_test_cases_to_process = all_test_cases_to_process[BATCH_SIZE:]
 
-        if len(remaining_test_cases_to_process) > 0:
+        if print_results and len(remaining_test_cases_to_process) > 0:
             console.print(
                 "Sending a large test run to Confident, this might take a bit longer than usual..."
             )
@@ -1039,21 +1049,24 @@ class TestRunManager:
                 message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
                 raise Exception(message) from e
 
-        console.print(
-            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
-            f"[link={link}]{link}[/link]"
-        )
+        if print_results:
+            console.print(
+                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
+                f"[link={link}]{link}[/link]"
+            )
         self.save_final_test_run_link(link)
         open_browser(link)
         return link, res.id
 
-    def save_test_run_locally(self):
+    def save_test_run_locally(self, print_results: Optional[bool] = None):
         """Persist the current TestRun to disk.
 
         Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
         Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json` to
         `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
         """
+        if print_results is None:
+            print_results = should_print_evaluation_output()
         if self.test_run is None:
             return
 
@@ -1063,7 +1076,9 @@ class TestRunManager:
             write_test_run,
         )
 
-        rolling_path = write_rolling_test_run(self.test_run)
+        rolling_path = write_rolling_test_run(
+            self.test_run, print_results=print_results
+        )
         if rolling_path is not None:
             self.last_saved_path = rolling_path
 
@@ -1075,39 +1090,60 @@ class TestRunManager:
             return
 
         if target_dir.exists() and target_dir.is_file():
-            print(
-                f"❌ Error: results_folder={target_dir} already exists and is a file.\n"
-                "Detailed results won't be saved. Please specify a folder or an available path."
-            )
+            if print_results:
+                print(
+                    f"❌ Error: results_folder={target_dir} already exists and is a file.\n"
+                    "Detailed results won't be saved. Please specify a folder or an available path."
+                )
             return
 
         try:
             path = write_test_run(target_dir, self.test_run)
             self.last_saved_path = path
-            print(f"Test run saved at {path}")
+            if print_results:
+                print(f"Test run saved at {path}")
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {target_dir}: {e}",
-                file=sys.stderr,
-            )
+            if print_results:
+                print(
+                    f"Warning: failed to save test run to {target_dir}: {e}",
+                    file=sys.stderr,
+                )
 
     def wrap_up_test_run(
         self,
         runDuration: float,
         display_table: bool = True,
         display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
+        print_results: Optional[bool] = None,
     ) -> Optional[Tuple[str, str]]:
-        test_run = self.get_test_run()
+        if print_results is None:
+            print_results = should_print_evaluation_output()
+        with (
+            suppress_evaluation_output() if not print_results else nullcontext()
+        ):
+            test_run = self.get_test_run()
         if test_run is None:
-            print("Test Run is empty, please try again.")
-            delete_file_if_exists(self.temp_file_path)
+            if print_results:
+                print("Test Run is empty, please try again.")
+            with (
+                suppress_evaluation_output()
+                if not print_results
+                else nullcontext()
+            ):
+                delete_file_if_exists(self.temp_file_path)
             return
         elif (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
         ):
-            print("No test cases found, please try again.")
-            delete_file_if_exists(self.temp_file_path)
+            if print_results:
+                print("No test cases found, please try again.")
+            with (
+                suppress_evaluation_output()
+                if not print_results
+                else nullcontext()
+            ):
+                delete_file_if_exists(self.temp_file_path)
             return
 
         # Mark the run as the official if requested via the `--official` CLI flag or `evaluate(official=True)`.
@@ -1121,7 +1157,7 @@ class TestRunManager:
         # which the dashboard can render. Just warn so it's not mistaken
         # for a successful run.
         valid_scores = test_run.construct_metrics_scores()
-        if valid_scores == 0:
+        if print_results and valid_scores == 0:
             console.print(
                 "\n[bold yellow]⚠ WARNING:[/bold yellow] All metrics errored "
                 "across every test case — no metric scores were recorded. "
@@ -1136,52 +1172,65 @@ class TestRunManager:
             global_test_run_cache_manager.disable_write_cache = not bool(
                 get_is_running_deepeval()
             )
-        global_test_run_cache_manager.wrap_up_cached_test_run()
+        with (
+            suppress_evaluation_output() if not print_results else nullcontext()
+        ):
+            global_test_run_cache_manager.wrap_up_cached_test_run()
 
-        if display_table:
+        if print_results and display_table:
             self.display_results_table(test_run, display)
 
-        if test_run.hyperparameters is None:
-            console.print(
-                "\n[bold yellow]⚠ WARNING:[/bold yellow] No hyperparameters logged.\n"
-                "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log hyperparameters[/link][/bold blue] to attribute prompts and models to your test runs.\n\n"
-                + "=" * 80
-            )
-        else:
-            if not test_run.prompts:
+        if print_results:
+            if test_run.hyperparameters is None:
                 console.print(
-                    "\n[bold yellow]⚠ WARNING:[/bold yellow] No prompts logged.\n"
-                    "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log prompts[/link][/bold blue] to evaluate and optimize your prompt templates and models.\n\n"
+                    "\n[bold yellow]⚠ WARNING:[/bold yellow] No hyperparameters logged.\n"
+                    "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log hyperparameters[/link][/bold blue] to attribute prompts and models to your test runs.\n\n"
                     + "=" * 80
                 )
             else:
-                console.print("\n[bold green]✓ Prompts Logged[/bold green]\n")
-                self._render_prompts_panels(prompts=test_run.prompts)
+                if not test_run.prompts:
+                    console.print(
+                        "\n[bold yellow]⚠ WARNING:[/bold yellow] No prompts logged.\n"
+                        "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log prompts[/link][/bold blue] to evaluate and optimize your prompt templates and models.\n\n"
+                        + "=" * 80
+                    )
+                else:
+                    console.print(
+                        "\n[bold green]✓ Prompts Logged[/bold green]\n"
+                    )
+                    self._render_prompts_panels(prompts=test_run.prompts)
 
-        self.save_test_run_locally()
-        delete_file_if_exists(self.temp_file_path)
-        confident_enabled = is_confident()
-        if confident_enabled and self.disable_request is False:
-            return self.post_test_run(test_run)
-        else:
-            self.save_test_run(
-                LATEST_TEST_RUN_FILE_PATH,
-                save_under_key=LATEST_TEST_RUN_DATA_KEY,
-            )
-            token_cost = (
-                f"{test_run.evaluation_cost} USD"
-                if test_run.evaluation_cost
-                else "None"
-            )
-            capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
-            console.print(
-                f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
-                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
-                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
-                "=" * 80,
-                "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
-            )
+        # Suppressing output must not skip persistence, cache finalization, or
+        # uploading the run. A scoped context also keeps public methods with
+        # legacy override signatures callable without new keyword arguments.
+        with (
+            suppress_evaluation_output() if not print_results else nullcontext()
+        ):
+            self.save_test_run_locally()
+            delete_file_if_exists(self.temp_file_path)
+            confident_enabled = is_confident()
+            if confident_enabled and self.disable_request is False:
+                return self.post_test_run(test_run)
+            else:
+                self.save_test_run(
+                    LATEST_TEST_RUN_FILE_PATH,
+                    save_under_key=LATEST_TEST_RUN_DATA_KEY,
+                )
+                if print_results:
+                    token_cost = (
+                        f"{test_run.evaluation_cost} USD"
+                        if test_run.evaluation_cost
+                        else "None"
+                    )
+                    capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+                    console.print(
+                        f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
+                        f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
+                        f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
+                        "=" * 80,
+                        "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                        "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                    )
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:
         try:

@@ -325,7 +325,6 @@ def validate_evaluate_inputs(
                 if isinstance(
                     test_case, ConversationalTestCase
                 ) and not isinstance(metric, BaseConversationalMetric):
-                    print(type(metric))
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )

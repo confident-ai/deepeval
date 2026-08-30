@@ -48,6 +48,7 @@ from deepeval.utils import (
     format_error_text,
     get_per_task_timeout_seconds,
     get_gather_timeout,
+    should_print_evaluation_output,
 )
 from deepeval.telemetry import record_golden
 from deepeval.metrics import BaseMetric
@@ -79,10 +80,6 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
-
-logger = logging.getLogger(__name__)
-
-
 from deepeval.evaluate.execute._common import (
     _await_with_outer_deadline,
     _execute_metric,
@@ -99,6 +96,8 @@ from deepeval.evaluate.execute.agentic import (
     _a_execute_agentic_test_case,
 )
 from deepeval.evaluate.execute.e2e import _evaluate_test_case_pairs
+
+logger = logging.getLogger(__name__)
 
 
 def _span_subtree_has_metrics(span: BaseSpan) -> bool:
@@ -643,7 +642,10 @@ def a_execute_agentic_test_cases_from_loop(
                                     _mark_trace_error(trace, root, msg)
                                     break
 
-                if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                if (
+                    get_settings().DEEPEVAL_DEBUG_ASYNC
+                    and display_config.print_results
+                ):
                     # Using info level here to make it easy to spot these logs.
                     golden_name = meta.get("golden_name")
                     duration = time.perf_counter() - meta.get(
@@ -757,41 +759,46 @@ def a_execute_agentic_test_cases_from_loop(
 
                 _log_gather_timeout(logger, exc=e, pending=len(pending))
 
-                # Log the elapsed time for each task that was pending
-                for t in pending:
-                    meta = task_meta.get(t, {})
-                    start_time = meta.get("started", time.perf_counter())
-                    elapsed_time = time.perf_counter() - start_time
+                if display_config.print_results:
+                    # Log the elapsed time for each task that was pending
+                    for t in pending:
+                        meta = task_meta.get(t, {})
+                        start_time = meta.get("started", time.perf_counter())
+                        elapsed_time = time.perf_counter() - start_time
 
-                    # Determine if it was a per task or gather timeout based on task's elapsed time
-                    if not settings.DEEPEVAL_DISABLE_TIMEOUTS:
-                        timeout_type = (
-                            "per-task"
-                            if elapsed_time >= get_per_task_timeout_seconds()
-                            else "gather"
-                        )
-                        logger.info(
-                            "  - PENDING %s elapsed_time=%.2fs timeout_type=%s meta=%s",
-                            t.get_name(),
-                            elapsed_time,
-                            timeout_type,
-                            meta,
-                        )
-                    else:
-                        logger.info(
-                            "  - PENDING %s elapsed_time=%.2fs meta=%s",
-                            t.get_name(),
-                            elapsed_time,
-                            meta,
-                        )
+                        # Determine if it was a per task or gather timeout based on task's elapsed time
+                        if not settings.DEEPEVAL_DISABLE_TIMEOUTS:
+                            timeout_type = (
+                                "per-task"
+                                if elapsed_time
+                                >= get_per_task_timeout_seconds()
+                                else "gather"
+                            )
+                            logger.info(
+                                "  - PENDING %s elapsed_time=%.2fs timeout_type=%s meta=%s",
+                                t.get_name(),
+                                elapsed_time,
+                                timeout_type,
+                                meta,
+                            )
+                        else:
+                            logger.info(
+                                "  - PENDING %s elapsed_time=%.2fs meta=%s",
+                                t.get_name(),
+                                elapsed_time,
+                                meta,
+                            )
 
-                    if loop.get_debug() and get_settings().DEEPEVAL_DEBUG_ASYNC:
-                        frames = t.get_stack(limit=6)
-                        if frames:
-                            logger.info("    stack:")
-                            for fr in frames:
-                                for line in traceback.format_stack(fr):
-                                    logger.info("      " + line.rstrip())
+                        if (
+                            loop.get_debug()
+                            and get_settings().DEEPEVAL_DEBUG_ASYNC
+                        ):
+                            frames = t.get_stack(limit=6)
+                            if frames:
+                                logger.info("    stack:")
+                                for fr in frames:
+                                    for line in traceback.format_stack(fr):
+                                        logger.info("      " + line.rstrip())
 
                 # Cancel and drain the tasks
                 for t in pending:
@@ -821,7 +828,10 @@ def a_execute_agentic_test_cases_from_loop(
                     and not t.done()
                 ]
 
-                if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                if (
+                    get_settings().DEEPEVAL_DEBUG_ASYNC
+                    and display_config.print_results
+                ):
                     if len(leftovers) > 0:
                         logger.warning(
                             "[deepeval] %d stray task(s) not tracked; cancelling...",
@@ -843,7 +853,10 @@ def a_execute_agentic_test_cases_from_loop(
                         )
                     except RuntimeError:
                         # If the loop is closing here, just continue
-                        if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                        if (
+                            get_settings().DEEPEVAL_DEBUG_ASYNC
+                            and display_config.print_results
+                        ):
                             logger.warning(
                                 "[deepeval] failed to drain stray tasks because loop is closing"
                             )
@@ -976,6 +989,7 @@ async def _a_evaluate_traces(
             if (
                 logger.isEnabledFor(logging.DEBUG)
                 and get_settings().DEEPEVAL_VERBOSE_MODE
+                and should_print_evaluation_output()
             ):
                 logger.debug(
                     "Skipping trace %s: no golden association found in eval_session",
