@@ -53,9 +53,12 @@ jinja2 = "*"
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
 questionary = ">=2.0.0,<3.0.0"
+livekit = { version = "*", optional = true }
+livekit-api = { version = "*", optional = true }
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
+voice = ["livekit", "livekit-api"]
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"

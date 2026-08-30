@@ -32,7 +32,7 @@ from deepeval.voice.streaming import (
 )
 from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 
-_INSTALL_HINT = "Install it with `pip install livekit livekit-api`."
+_INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 
 
 class LiveKitConnector(BaseVoiceConnector):
@@ -48,6 +48,7 @@ class LiveKitConnector(BaseVoiceConnector):
         room_name: Optional[str] = None,
         identity: str = "deepeval-test",
         agent_name: Optional[str] = None,
+        agent_identity: Optional[str] = None,
         turn_detection: TurnDetection = "balanced",
         connect_timeout_s: float = 15.0,
         input_sample_rate: int = 24000,
@@ -68,6 +69,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self.room_name = room_name
         self.identity = identity
         self.agent_name = agent_name
+        self.agent_identity = agent_identity
         self.turn_detection = turn_detection
         timing = turn_detection_timing(turn_detection)
         self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
@@ -104,6 +106,11 @@ class LiveKitConnector(BaseVoiceConnector):
         return self.livekit_sample_rate
 
     async def connect(self) -> None:
+        await self._join_room()
+        await self._after_join()
+        await self._await_agent_track()
+
+    async def _join_room(self) -> None:
         self._rtc = require_dependency(
             "livekit.rtc",
             provider_label="LiveKitConnector",
@@ -143,6 +150,10 @@ class LiveKitConnector(BaseVoiceConnector):
             rtc.TrackPublishOptions(source=rtc.TrackSource.SOURCE_MICROPHONE),
         )
 
+    async def _after_join(self) -> None:
+        return None
+
+    async def _await_agent_track(self) -> None:
         self._adopt_existing_agent_track()
 
         try:
@@ -151,11 +162,22 @@ class LiveKitConnector(BaseVoiceConnector):
             )
         except asyncio.TimeoutError:
             await self.disconnect()
+            if self.agent_identity is not None:
+                raise DeepEvalError(
+                    f"Participant '{self.agent_identity}' published no audio in "
+                    f"room '{self.room_name}' within {self.connect_timeout_s}s."
+                )
             raise DeepEvalError(
                 f"No LiveKit agent joined room '{self.room_name}' within "
                 f"{self.connect_timeout_s}s. Is the agent worker running and "
                 "dispatched to this project?"
             )
+
+    def _is_agent_participant(self, participant) -> bool:
+        return (
+            self.agent_identity is None
+            or participant.identity == self.agent_identity
+        )
 
     def _build_token(self) -> str:
         api = self._api
@@ -186,6 +208,8 @@ class LiveKitConnector(BaseVoiceConnector):
             return
         rtc = self._rtc
         for participant in self._room.remote_participants.values():
+            if not self._is_agent_participant(participant):
+                continue
             for publication in participant.track_publications.values():
                 track = publication.track
                 if track is not None and track.kind == rtc.TrackKind.KIND_AUDIO:
@@ -196,11 +220,15 @@ class LiveKitConnector(BaseVoiceConnector):
         rtc = self._rtc
         if self._agent_track is not None:
             return
+        if not self._is_agent_participant(participant):
+            return
         if track.kind == rtc.TrackKind.KIND_AUDIO:
             self._attach_agent_track(track, participant)
 
     def _on_participant_connected(self, participant) -> None:
-        if self._agent_participant is None:
+        if self._agent_participant is None and self._is_agent_participant(
+            participant
+        ):
             self._agent_participant = participant
 
     def _attach_agent_track(self, track, participant) -> None:

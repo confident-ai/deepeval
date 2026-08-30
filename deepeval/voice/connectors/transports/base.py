@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -112,6 +113,9 @@ class BaseVoiceConnector(ABC):
                 "set to a VoiceProtocol member (e.g. "
                 "`protocol = VoiceProtocol.WEBRTC`)."
             )
+
+    def clone(self) -> "BaseVoiceConnector":
+        return copy.copy(self)
 
     @abstractmethod
     async def connect(self) -> None:

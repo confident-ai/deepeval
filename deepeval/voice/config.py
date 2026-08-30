@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Callable, Optional, TYPE_CHECKING, Union
 
 from deepeval.models.base_model import DeepEvalBaseTTS, DeepEvalBaseSTT
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
@@ -25,7 +25,7 @@ class VoiceConfig:
     it applies to every golden that has no persona-level behavior of its own.
     """
 
-    connector: BaseVoiceConnector
+    connector: Union[BaseVoiceConnector, Callable[[], BaseVoiceConnector]]
     tts_model: Optional[DeepEvalBaseTTS] = None
     stt_model: Optional[DeepEvalBaseSTT] = None
     # Directory to write per-turn and combined audio files into. Left alone,
@@ -37,7 +37,25 @@ class VoiceConfig:
     interruption_settings: Optional[InterruptionBehavior] = None
 
     def __post_init__(self) -> None:
+        if not isinstance(self.connector, BaseVoiceConnector) and not callable(
+            self.connector
+        ):
+            raise TypeError(
+                "`connector` must be a BaseVoiceConnector or a zero-argument "
+                "callable that returns one."
+            )
         self.output_dir = resolve_output_dir(self.output_dir)
+
+    def make_connector(self) -> BaseVoiceConnector:
+        if isinstance(self.connector, BaseVoiceConnector):
+            return self.connector.clone()
+        connector = self.connector()
+        if not isinstance(connector, BaseVoiceConnector):
+            raise TypeError(
+                "The `connector` factory must return a BaseVoiceConnector, got "
+                f"{type(connector).__name__}."
+            )
+        return connector
 
 
 def __getattr__(name: str):

@@ -65,7 +65,7 @@ connector = LiveKitConnector(
 )
 ```
 
-There are **THREE** mandatory and **FIVE** optional parameters when creating a `LiveKitConnector`. The three mandatory connection values can instead come from the environment:
+There are **THREE** mandatory and **SIX** optional parameters when creating a `LiveKitConnector`. The three mandatory connection values can instead come from the environment:
 
 - `url`: the LiveKit server URL. Required unless `LIVEKIT_URL` is set.
 - `api_key`: the LiveKit API key. Required unless `LIVEKIT_API_KEY` is set.
@@ -73,10 +73,47 @@ There are **THREE** mandatory and **FIVE** optional parameters when creating a `
 - [Optional] `room_name`: the room to join. When omitted, a room is created for the session. Defaulted to `None`.
 - [Optional] `identity`: the participant identity for the simulator. Defaulted to `"deepeval-test"`.
 - [Optional] `agent_name`: the name of the agent to dispatch into the room. Defaulted to `None`.
+- [Optional] `agent_identity`: the participant identity whose audio track is treated as the agent. When omitted, the first audio track heard in the room is the agent. Defaulted to `None`.
 - [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 - [Optional] `connect_timeout_s`: timeout (seconds) for establishing the room connection. Defaulted to `15.0`.
 
 `room_name` and `agent_name` determine how the connector finds your agent. If `room_name` is omitted, the connector creates a room. If `agent_name` is set, LiveKit dispatches that named agent into it; otherwise your existing LiveKit routing must place the agent in the room.
+
+### Phone numbers
+
+`deepeval` has no carrier of its own, so it ships no phone connector. What it ships is the seam: `LiveKitConnector.connect()` joins the room, awaits `_after_join()`, then waits for the agent's audio track. Subclass it, dial the number inside `_after_join()` through an outbound SIP trunk you have configured in LiveKit, and set `agent_identity` to the callee's identity so its track is the one adopted:
+
+```python
+from deepeval.voice import LiveKitConnector, VoiceProtocol
+
+class SipDialConnector(LiveKitConnector):
+    protocol = VoiceProtocol.SIP
+
+    def __init__(self, phone_number, sip_trunk_id, **kwargs):
+        kwargs.setdefault("agent_identity", "callee")
+        kwargs.setdefault("connect_timeout_s", 60.0)
+        super().__init__(**kwargs)
+        self.phone_number = phone_number
+        self.sip_trunk_id = sip_trunk_id
+
+    async def _after_join(self):
+        api = self._api
+        client = api.LiveKitAPI(self.url, self.api_key, self.api_secret)
+        try:
+            await client.sip.create_sip_participant(
+                api.CreateSIPParticipantRequest(
+                    sip_trunk_id=self.sip_trunk_id,
+                    sip_call_to=self.phone_number,
+                    room_name=self.room_name,
+                    participant_identity="callee",
+                    wait_until_answered=True,
+                )
+            )
+        finally:
+            await client.aclose()
+```
+
+Pass it as a factory so every conversation dials its own call: `VoiceConfig(connector=lambda: SipDialConnector("+14155550100", "ST_..."))`. A complete runnable version lives at [`examples/voice/sip_dial_connector.py`](https://github.com/confident-ai/deepeval/blob/main/examples/voice/sip_dial_connector.py). Carriers meter these calls per minute and usually cap new calls per second, so keep `max_concurrent` modest.
 
 ## Generic WebSocket
 
@@ -171,6 +208,20 @@ async def my_agent(user_audio) -> ConnectorTurn:
     )
 
 ```
+
+## Concurrency
+
+A connector holds one live call, so the simulator never runs two conversations over the same instance. Before each conversation it either clones the connector you passed to `VoiceConfig` or, if you passed a zero-argument function, calls it to build a fresh one. Pass a factory when your connector holds state that a shallow copy would share, or when each call needs different arguments:
+
+```python
+from deepeval.voice import LiveKitConnector, VoiceConfig
+
+voice_config = VoiceConfig(
+    connector=lambda: LiveKitConnector(agent_name="support-agent"),
+)
+```
+
+Custom connectors get the default `clone()` (a shallow copy) from `BaseVoiceConnector`; override it if your subclass opens resources in `__init__` rather than in `connect()`.
 
 ## Turn Detection
 

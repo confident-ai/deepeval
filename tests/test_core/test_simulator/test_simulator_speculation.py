@@ -2,30 +2,21 @@
 
 import asyncio
 import time
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator import ConversationSimulator
-from deepeval.test_case import Audio
 from deepeval.voice import VoiceConfig
-from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.callback import (
     CallbackVoiceConnector,
 )
-from deepeval.voice.connectors.types import ConnectorTurn
 from tests.test_core.test_simulator.helpers import (
     StaticSimulatorModel,
     async_static_callback,
 )
+from tests.test_core.test_voice.helpers import EchoAgent, StubSTT, StubTTS
 
 _CALL_DELAY_S = 0.2
-
-
-def _wav_audio() -> Audio:
-    return Audio.from_bytes(
-        audio_utils.pcm16_to_wav_bytes(b"\xe8\x03" * 240, sample_rate=24000),
-        "audio/wav",
-    )
 
 
 class TimedSimulatorModel(StaticSimulatorModel):
@@ -51,23 +42,6 @@ class TimedSimulatorModel(StaticSimulatorModel):
         return False
 
 
-class _Agent:
-    async def __call__(self, audio: Audio) -> ConnectorTurn:
-        return ConnectorTurn(audio=_wav_audio(), transcript="Agent reply")
-
-
-class _TTS:
-    async def a_synthesize(self, text: str, **kwargs):
-        return _wav_audio(), None
-
-
-class _STT:
-    truncated_audio_pad_seconds = 0.0
-
-    async def a_transcribe(self, audio, **kwargs):
-        return "Agent reply", None
-
-
 def _golden() -> ConversationalGolden:
     # The stopping check only calls the model when there is an outcome to check
     # and a conversation to check it against, so it first runs on turn two.
@@ -88,9 +62,9 @@ def test_voice_generates_the_next_turn_while_the_stopping_check_runs():
     simulator = ConversationSimulator(
         simulator_model=model,
         voice_config=VoiceConfig(
-            connector=CallbackVoiceConnector(_Agent()),
-            tts_model=_TTS(),
-            stt_model=_STT(),
+            connector=CallbackVoiceConnector(EchoAgent()),
+            tts_model=StubTTS(),
+            stt_model=StubSTT(),
             output_dir=None,
             combine_audio_files=False,
         ),

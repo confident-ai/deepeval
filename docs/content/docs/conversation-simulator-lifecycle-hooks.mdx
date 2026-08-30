@@ -5,14 +5,21 @@ sidebar_label: Lifecycle Hooks
 languages: [python]
 ---
 
-The `ConversationSimulator` provides an `on_simulation_complete` hook that allows you to execute custom logic whenever a simulation of an individual test case has completed. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
+The `ConversationSimulator` provides two hooks. `on_simulation_complete` runs whenever a simulation of an individual test case has completed, so you can process each `ConversationalTestCase` as soon as it's generated rather than waiting for the whole batch. `on_turn` runs after every turn inside a conversation, so you can show a conversation as it happens.
 
 ## Supported Arguments
 
-The hook function receives two parameters:
+`on_simulation_complete` receives two parameters:
 
 - `test_case`: the completed `ConversationalTestCase` object containing all turns and metadata.
 - `index`: the index of the corresponding golden that was simulated (**ordering is preserved** during simulation).
+
+`on_turn` receives two parameters:
+
+- `turns`: a copy of the conversation so far, ending with the turn that was just added (a simulated user turn or an agent reply).
+- `index`: the index of the golden being simulated.
+
+Both hooks may be plain functions or `async` functions; async hooks are awaited. A hook that raises is logged and skipped, and the conversation continues.
 
 ## Example
 
@@ -26,6 +33,21 @@ def handle_simulation_complete(test_case: ConversationalTestCase, index: int):
 conversational_test_cases = simulator.simulate(
     conversational_goldens=[golden1, golden2, golden3],
     on_simulation_complete=handle_simulation_complete
+)
+```
+
+## Streaming Turns
+
+Pass `on_turn` to see a conversation as it unfolds. In voice mode this is the only way to observe a live call before it ends, since the simulator drives the agent over a connector rather than through your `model_callback`.
+
+```python
+def show_turn(turns, index):
+    latest = turns[-1]
+    print(f"[{index}] {latest.role}: {latest.content}")
+
+simulator.simulate(
+    conversational_goldens=goldens,
+    on_turn=show_turn,
 )
 ```
 

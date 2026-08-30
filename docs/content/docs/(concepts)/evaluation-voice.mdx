@@ -269,7 +269,13 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
           <code>LiveKitConnector</code> for LiveKit rooms, or{" "}
           <code>WebSocketConnector</code> for a compatible raw-audio WebSocket.
           For an agent callable in the same Python process, use{" "}
-          <code>CallbackVoiceConnector</code>.
+          <code>CallbackVoiceConnector</code>. For an agent behind a phone
+          number, subclass <code>LiveKitConnector</code> and dial through your
+          own SIP trunk (see{" "}
+          <a href="/docs/conversation-simulator-voice-connectors#phone-numbers">
+            Phone numbers
+          </a>
+          ).
         </>
       ),
     },

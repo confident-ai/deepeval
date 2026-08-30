@@ -80,7 +80,7 @@ The connector in `VoiceConfig` determines how `deepeval` reaches your agent. The
 ::::
 
 ::::note
-Voice mode requires `async_mode=True` (the default), and conversations run one at a time regardless of `max_concurrent` — a connector holds a single live call, and concurrent conversations would interleave audio on the same session.
+Voice mode requires `async_mode=True` (the default). Conversations run in parallel up to `max_concurrent`, and each one gets its own live call: the simulator clones the `connector` you pass for every conversation, or, if you pass a zero-argument function instead of a connector, calls it once per conversation. Leave `LiveKitConnector(room_name=...)` unset when running more than one conversation at a time so each call gets its own room.
 ::::
 
 ## TTS and STT Models
@@ -216,13 +216,14 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
       ),
     },
     {
-      question: "Why do voice simulations run one conversation at a time?",
+      question: "How do concurrent voice conversations share one connector?",
       answer: (
         <>
-          A connector holds a single live call, so running conversations
-          concurrently would interleave audio on the same session. The simulator
-          forces sequential execution in voice mode regardless of{" "}
-          <code>max_concurrent</code>.
+          They don't. A connector holds a single live call, so the simulator
+          gives every conversation its own: it clones the connector you pass (or
+          calls your connector factory) before each call and disconnects it
+          when the conversation ends. <code>max_concurrent</code> bounds how
+          many of those calls are live at once.
         </>
       ),
     },
