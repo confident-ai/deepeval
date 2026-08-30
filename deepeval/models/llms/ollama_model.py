@@ -201,22 +201,24 @@ class OllamaModel(DeepEvalBaseLLM):
         Executes a batch of prompts concurrently using a_generate.
         If a schema is provided, returns the instantiated Pydantic object.
         """
-        
+
         async def _run_batch():
             tasks = []
             for i, prompt in enumerate(prompts):
                 # retrieve schema if present for this prompt
                 schema = schemas[i] if schemas and i < len(schemas) else None
-                tasks.append(self.a_generate(prompt=prompt, schema=schema, **kwargs))
-            
+                tasks.append(
+                    self.a_generate(prompt=prompt, schema=schema, **kwargs)
+                )
+
             raw_results = await asyncio.gather(*tasks)
-            
+
             processed_results = []
             for i, res in enumerate(raw_results):
                 output = res[0] if isinstance(res, tuple) else res
-                
+
                 schema = schemas[i] if schemas and i < len(schemas) else None
-                
+
                 # if a schema was requested and we got a string/json response, parse it into the Pydantic model
                 if schema and isinstance(output, str):
                     try:
@@ -224,13 +226,19 @@ class OllamaModel(DeepEvalBaseLLM):
                         parsed_json = json.loads(output)
                         processed_results.append(schema(**parsed_json))
                     except Exception:
-                        cleaned_str = output.replace("```json", "").replace("```", "").strip()
+                        cleaned_str = (
+                            output.replace("```json", "")
+                            .replace("```", "")
+                            .strip()
+                        )
                         try:
                             parsed_json = json.loads(cleaned_str)
                             processed_results.append(schema(**parsed_json))
                         except Exception:
                             # if schema parsing fails, return fallback format with answer key
-                            processed_results.append(schema(answer=cleaned_str[:1]))
+                            processed_results.append(
+                                schema(answer=cleaned_str[:1])
+                            )
                 else:
                     processed_results.append(output)
 
@@ -244,6 +252,7 @@ class OllamaModel(DeepEvalBaseLLM):
 
         if loop and loop.is_running():
             import nest_asyncio
+
             nest_asyncio.apply()
             return loop.run_until_complete(_run_batch())
         else:
