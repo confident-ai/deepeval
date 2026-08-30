@@ -396,7 +396,7 @@ def check_llm_test_case_params(
     # (including empty multimodal outputs) as "missing params".
     if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
         actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
-        if isinstance(actual_output, str) and actual_output == "":
+        if isinstance(actual_output, str) and not actual_output.strip():
             error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
             metric.error = error_str
             raise MissingTestCaseParamsError(error_str)
