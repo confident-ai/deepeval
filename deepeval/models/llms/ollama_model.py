@@ -209,7 +209,6 @@ class OllamaModel(DeepEvalBaseLLM):
                 schema = schemas[i] if schemas and i < len(schemas) else None
                 tasks.append(self.a_generate(prompt=prompt, schema=schema, **kwargs))
             
-            print(f"[Step # 2] Received batch of {len(prompts)} prompts. Schemas present : {schemas is not None}")
             raw_results = await asyncio.gather(*tasks)
             
             processed_results = []
