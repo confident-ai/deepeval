@@ -5,6 +5,7 @@ import logging
 from typing import Any, List, Optional
 
 from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import render_timeline_wav
 
 logger = logging.getLogger(__name__)
@@ -88,8 +89,17 @@ def _write_turn_files(turns: List[Turn], folder: str) -> None:
             continue
         ext = _MIME_EXT.get(turn.audio.mimeType, "wav")
         filename = f"deepeval-turn-{turn_number}-{turn.role}.{ext}"
+        data = turn.audio.get_bytes()
+        if ext == "wav":
+            try:
+                pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(data)
+                data = audio_utils.pcm16_to_wav_bytes(
+                    audio_utils.downmix_to_mono(pcm, channels or 1), rate
+                )
+            except Exception:
+                pass
         with open(os.path.join(folder, filename), "wb") as f:
-            f.write(turn.audio.get_bytes())
+            f.write(data)
 
 
 def _write_combined_file(

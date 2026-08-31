@@ -134,6 +134,32 @@ class _VoiceRun:
         )
 
 
+def _has_speech_energy(audio, connector) -> bool:
+    """Whether the clip contains anything above the connector's silence floor.
+
+    Silence must never reach STT: models hallucinate words on silent audio,
+    and a phantom transcript makes a dead agent look alive to both the
+    hold timeout and the metrics.
+    """
+    from deepeval.voice.connectors import audio_utils
+
+    try:
+        pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(audio.get_bytes())
+    except Exception:
+        return True
+    pcm = audio_utils.downmix_to_mono(pcm, channels or 1)
+    threshold = getattr(
+        connector, "silence_threshold_rms", audio_utils.DEFAULT_SILENCE_RMS
+    )
+    frame_bytes = 2 * int(rate * audio_utils.DEFAULT_FRAME_MS / 1000)
+    for offset in range(0, len(pcm), frame_bytes):
+        if not audio_utils.is_silent(
+            pcm[offset : offset + frame_bytes], threshold
+        ):
+            return True
+    return False
+
+
 def _populate_audio_duration(audio) -> None:
     if audio is None or audio.duration is not None:
         return
@@ -1213,6 +1239,7 @@ class ConversationSimulator:
         has_audio = (
             conn_turn.audio is not None
             and len(conn_turn.audio.get_bytes()) > 44  # more than a WAV header
+            and _has_speech_energy(conn_turn.audio, session.connector)
         )
         if conn_turn.transcript:
             agent_text = conn_turn.transcript
@@ -1241,11 +1268,12 @@ class ConversationSimulator:
         # Half-duplex: leave Turn.interrupted unset. Provider interruption
         # events are often spurious when the next user turn arrives while
         # the previous reply is still playing server-side.
+        replied = has_audio or bool(conn_turn.transcript)
         return Turn(
             role="assistant",
             content=agent_text,
-            audio=conn_turn.audio,
-            latency_ms=conn_turn.latency_ms,
+            audio=conn_turn.audio if replied else None,
+            latency_ms=conn_turn.latency_ms if replied else None,
         )
 
     async def _voice_duplex_exchange(
