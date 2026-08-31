@@ -1,9 +1,15 @@
+import logging
 import time
 import asyncio
 from typing import Optional, Tuple, Union
 
-from deepeval.voice.connectors.audio_utils import is_silent, DEFAULT_SILENCE_RMS
+from deepeval.voice.connectors.audio_utils import (
+    DEFAULT_SILENCE_RMS,
+    rms_pcm16,
+)
 from deepeval.voice.connectors.types import AgentEvent
+
+logger = logging.getLogger(__name__)
 
 
 async def collect_agent_turn(
@@ -30,6 +36,7 @@ async def collect_agent_turn(
     """
     collected = bytearray()
     started = False
+    peak_rms = 0.0
     trailing_silence_ms = 0.0
     first_audio_at: Optional[float] = None
     deadline = time.perf_counter() + max_turn_timeout_s
@@ -76,7 +83,9 @@ async def collect_agent_turn(
             continue
 
         frame_ms = (len(pcm) / 2 / sample_rate) * 1000.0
-        silent = is_silent(pcm, silence_threshold_rms)
+        rms = rms_pcm16(pcm)
+        peak_rms = max(peak_rms, rms)
+        silent = rms < silence_threshold_rms
 
         if not started:
             if silent:
@@ -92,6 +101,13 @@ async def collect_agent_turn(
         else:
             trailing_silence_ms = 0.0
 
+    logger.debug(
+        "Agent turn collected: %.1fs of audio, peak_rms=%.0f, "
+        "silence_threshold_rms=%.0f",
+        len(collected) / 2 / sample_rate,
+        peak_rms,
+        silence_threshold_rms,
+    )
     return bytes(collected), first_audio_at
 
 
