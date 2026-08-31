@@ -310,8 +310,24 @@ def check_conversational_test_case_params(
         raise MissingTestCaseParamsError(error_str)
 
     if (
+        MultiTurnParams.EXPECTED_OUTCOME in test_case_params
+        and test_case.expected_outcome == ""
+    ):
+        error_str = f"'expected_outcome' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
         MultiTurnParams.SCENARIO in test_case_params
         and test_case.scenario is None
+    ):
+        error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
+        MultiTurnParams.SCENARIO in test_case_params
+        and test_case.scenario == ""
     ):
         error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str

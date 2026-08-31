@@ -171,3 +171,45 @@ def test_conversational_geval_requires_tags_when_selected():
             [MultiTurnParams.TAGS],
             DummyConversationalMetric(),
         )
+
+
+def test_conversational_geval_requires_expected_outcome_when_empty():
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")],
+        expected_outcome="",
+    )
+
+    with pytest.raises(MissingTestCaseParamsError):
+        check_conversational_test_case_params(
+            test_case,
+            [MultiTurnParams.EXPECTED_OUTCOME],
+            DummyConversationalMetric(),
+        )
+
+
+def test_conversational_geval_requires_scenario_when_empty():
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")],
+        scenario="",
+    )
+
+    with pytest.raises(MissingTestCaseParamsError):
+        check_conversational_test_case_params(
+            test_case,
+            [MultiTurnParams.SCENARIO],
+            DummyConversationalMetric(),
+        )
+
+
+def test_conversational_geval_accepts_non_empty_expected_outcome_and_scenario():
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")],
+        expected_outcome="the assistant should acknowledge the user",
+        scenario="a user greets the assistant",
+    )
+
+    check_conversational_test_case_params(
+        test_case,
+        [MultiTurnParams.EXPECTED_OUTCOME, MultiTurnParams.SCENARIO],
+        DummyConversationalMetric(),
+    )
