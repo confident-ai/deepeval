@@ -84,6 +84,42 @@ def _system_one_relevancy_verdict(
 ContextualRelevancyTemplate = make_template_class("ContextualRelevancyMetric")
 
 
+def _verdict_is_relevant(verdict: Optional[str]) -> bool:
+    """Normalize a verdict token and decide whether it is affirmative.
+
+    Scores and reasons must classify every verdict identically, otherwise a
+    corrupted token falls on opposite sides of the two branches and the metric
+    contradicts itself (e.g. ``"yes."`` dragged the score down while the reason
+    called the statements relevant). Normalizing surrounding whitespace and
+    trailing punctuation keeps ``yes.`` / ``Yes `` / ``YES!`` equivalent to
+    ``yes``; anything else (``no``, ``maybe``, ``yes<garbage>``) is treated as
+    not relevant by both paths.
+    """
+    if verdict is None:
+        return False
+    return verdict.strip().rstrip(".,;:!?").lower() == "yes"
+
+
+def _split_relevant_irrelevant(
+    verdicts_list: List[ContextualRelevancyVerdicts],
+) -> tuple:
+    """Partition statements by the shared verdict predicate.
+
+    ``_calculate_score`` and the reason generation both consume this same
+    classification, so a verdict can never be scored one way and reasoned about
+    the opposite way.
+    """
+    relevant_statements = []
+    irrelevant_statements = []
+    for verdicts in verdicts_list:
+        for verdict in verdicts.verdicts:
+            if _verdict_is_relevant(verdict.verdict):
+                relevant_statements.append(verdict.statement)
+            else:
+                irrelevant_statements.append(verdict.reason)
+    return relevant_statements, irrelevant_statements
+
+
 class ContextualRelevancyMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -217,14 +253,9 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevant_statements = []
-        relevant_statements = []
-        for verdicts in self.verdicts_list:
-            for verdict in verdicts.verdicts:
-                if verdict.verdict == Verdict.NO:
-                    irrelevant_statements.append(verdict.reason)
-                else:
-                    relevant_statements.append(verdict.statement)
+        relevant_statements, irrelevant_statements = _split_relevant_irrelevant(
+            self.verdicts_list
+        )
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -247,14 +278,9 @@ class ContextualRelevancyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        irrelevant_statements = []
-        relevant_statements = []
-        for verdicts in self.verdicts_list:
-            for verdict in verdicts.verdicts:
-                if verdict.verdict == Verdict.NO:
-                    irrelevant_statements.append(verdict.reason)
-                else:
-                    relevant_statements.append(verdict.statement)
+        relevant_statements, irrelevant_statements = _split_relevant_irrelevant(
+            self.verdicts_list
+        )
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -274,12 +300,19 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        return score_qag_verdicts(
-            self,
-            [v for verdicts in self.verdicts_list for v in verdicts.verdicts],
-            passing=(Verdict.YES,),
-            empty_score=0,
-        )
+        total_verdicts = 0
+        relevant_statements = 0
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                total_verdicts += 1
+                if _verdict_is_relevant(verdict.verdict):
+                    relevant_statements += 1
+
+        if total_verdicts == 0:
+            return 0
+
+        score = relevant_statements / total_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
