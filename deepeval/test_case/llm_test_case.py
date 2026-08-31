@@ -17,7 +17,7 @@ import mimetypes
 import base64
 import warnings
 from dataclasses import dataclass, field
-from urllib.parse import urlparse, unquote
+from urllib.parse import urlparse
 from deepeval.utils import make_model_config
 
 from deepeval.test_case.mcp import (
@@ -115,33 +115,16 @@ class MLLMImage:
 
     @staticmethod
     def process_url(url: str) -> str:
-        if os.path.exists(url):
-            return url
-        parsed = urlparse(url)
-        if parsed.scheme == "file":
-            raw_path = (
-                f"//{parsed.netloc}{parsed.path}"
-                if parsed.netloc
-                else parsed.path
-            )
-            path = unquote(raw_path)
-            return path
         return url
 
     @staticmethod
     def is_local_path(url: str) -> bool:
-        if os.path.exists(url):
-            return True
-        parsed = urlparse(url)
-        if parsed.scheme == "file":
-            raw_path = (
-                f"//{parsed.netloc}{parsed.path}"
-                if parsed.netloc
-                else parsed.path
-            )
-            path = unquote(raw_path)
-            return os.path.exists(path)
-        return False
+        # NOTE: ``file://`` URIs are intentionally NOT treated as local paths.
+        # A ``file://`` reference is a classic local-file-inclusion vector when
+        # the URL originates from untrusted content, and it has no legitimate
+        # use for referencing an image to send to an LLM. Local images should be
+        # passed as ordinary filesystem paths by trusted (developer) code.
+        return os.path.exists(url)
 
     def parse_multimodal_string(s: str):
         pattern = r"\[DEEPEVAL:(?:IMAGE|PDF):(.*?)\]"
