@@ -425,8 +425,6 @@ class Scorer:
             return 0  # Return score as 0 in case of any exception
 
     def pass_at_k(self, n, c, k):
-        import numpy as np
-
         """
         :param n: total number of samples
         :param c: number of correct samples
@@ -451,6 +449,9 @@ class Scorer:
             raise ValueError(f"'k' in pass@k must be at least 1, got {k}.")
         if n - c < k:
             return 1.0
+
+        import numpy as np
+
         return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
 
     def squad_score(

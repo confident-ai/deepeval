@@ -7,11 +7,21 @@ they must now raise an explicit TypeError/ValueError, while all valid inputs
 keep returning exactly the same scores as before.
 """
 
+import importlib.util
+
 import pytest
 
 from deepeval.scorer import Scorer
 
 scorer = Scorer()
+
+# numpy is an optional dependency (dev/integrations groups only), so the
+# metric CI job installs the package without it. Argument validation must
+# work regardless of numpy; only the score-computation assertions need it.
+requires_numpy = pytest.mark.skipif(
+    importlib.util.find_spec("numpy") is None,
+    reason="numpy is not installed in this environment",
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -19,6 +29,7 @@ scorer = Scorer()
 # --------------------------------------------------------------------------- #
 
 
+@requires_numpy
 def test_pass_at_k_returns_previous_values_for_valid_inputs():
     # These are the values produced before the validation was added; the fix
     # must not change any of them.
@@ -28,17 +39,20 @@ def test_pass_at_k_returns_previous_values_for_valid_inputs():
     assert scorer.pass_at_k(200, 100, 2) == pytest.approx(0.7512562814070352)
 
 
+@requires_numpy
 def test_pass_at_k_is_monotonic_in_c():
     # More correct samples can never lower the score.
     assert scorer.pass_at_k(200, 50, 1) >= scorer.pass_at_k(200, 20, 1)
     assert scorer.pass_at_k(200, 150, 1) >= scorer.pass_at_k(200, 50, 1)
 
 
+@requires_numpy
 def test_pass_at_k_is_monotonic_in_k():
     # A larger k can never lower the score.
     assert scorer.pass_at_k(200, 50, 2) >= scorer.pass_at_k(200, 50, 1)
 
 
+@requires_numpy
 def test_pass_at_k_perfect_score_is_exactly_one():
     assert scorer.pass_at_k(200, 200, 1) == 1.0
 
