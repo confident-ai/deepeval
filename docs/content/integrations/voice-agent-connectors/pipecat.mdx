@@ -6,38 +6,18 @@ languages: [python]
 
 In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against a Pipecat pipeline. The pipeline is yours and self-hosted, so the connector takes the URL its WebSocket transport is listening on, connects the way any other client would, plays the simulated user's audio into it, and captures the spoken reply along with how long it took to start.
 
-No credentials are involved, and `pipecat-ai` isn't required on the machine running the simulation — `deepeval` speaks the [protobuf frames](https://docs.pipecat.ai/server/utilities/serializers/introduction) that Pipecat's WebSocket transports serialize by default.
-
-### Serving Your Pipeline
-
-The connector needs a pipeline behind a [`WebsocketServerTransport`](https://docs.pipecat.ai/server/services/transport/websocket-server) or [`FastAPIWebsocketTransport`](https://docs.pipecat.ai/server/services/transport/fastapi-websocket), which is the same setup a browser client would connect to:
-
-```python
-from pipecat.serializers.protobuf import ProtobufFrameSerializer
-from pipecat.transports.websocket.server import (
-    SingleClientWebsocketServerParams,
-    SingleClientWebsocketServerTransport,
-)
-
-transport = SingleClientWebsocketServerTransport(
-    host="localhost",
-    port=8765,
-    params=SingleClientWebsocketServerParams(
-        audio_in_enabled=True,
-        audio_out_enabled=True,
-        serializer=ProtobufFrameSerializer(),
-    ),
-)
-```
+:::info
+Since `deepeval` speaks the [protobuf frames](https://docs.pipecat.ai/server/utilities/serializers/introduction) that Pipecat's WebSocket transports serialize by default, no credentials are involved, and `pipecat-ai` isn't required on the machine running the simulation.
+:::
 
 ### In Code
 
-Pass a `PipecatConnector` to `VoiceConfig`, pointing at that server:
+Start your pipeline as you normally would, then pass its URL to a `PipecatConnector`:
 
 ```python
 from deepeval.voice import PipecatConnector, VoiceConfig
 
-connector = PipecatConnector(url="ws://localhost:8765/ws")
+connector = PipecatConnector(url="ws://localhost:8765")
 voice_config = VoiceConfig(
     connector=connector,
     ...,
@@ -53,6 +33,10 @@ There are **ONE** mandatory and **THREE** optional parameters when creating a `P
 - [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"balanced"`.
 
 The reply's sample rate is read from the frames your pipeline sends, so `audio_out_sample_rate` needs no configuring here.
+
+:::tip
+The URL is wherever your pipeline's transport is listening — the same address a browser client would connect to. A [`WebsocketServerTransport`](https://docs.pipecat.ai/server/services/transport/websocket-server) serves on the `host` and `port` you gave it, so `port=8765` is `ws://localhost:8765`; a [`FastAPIWebsocketTransport`](https://docs.pipecat.ai/server/services/transport/fastapi-websocket) serves on the route you mounted its endpoint on, such as `ws://localhost:8000/ws`.
+:::
 
 ### Turn Detection and Transcripts
 
@@ -75,6 +59,8 @@ Some pipelines hold their greeting — or their audio input — until the client
 
 ### Pipelines on Other Transports
 
-A Pipecat pipeline served over WebRTC is reached through the connector for that service rather than this one: a pipeline on LiveKit is a LiveKit room, so [`LiveKitConnector`](/integrations/voice-agent-connectors/livekit) joins it. Pipelines on a telephony serializer such as `TwilioFrameSerializer` are the agent taking a real phone call, which the simulator can't place — run the same pipeline behind a WebSocket transport to test it.
+A Pipecat pipeline served over WebRTC is reached through the connector for that service rather than this one: a pipeline on LiveKit is a LiveKit room, so [`LiveKitConnector`](/integrations/voice-agent-connectors/livekit) joins it.
+
+`PipecatConnector` also expects your transport's default serializer, which puts protobuf frames on the wire. Pipecat's other [serializers](https://docs.pipecat.ai/server/utilities/serializers/introduction) exist to speak the audio dialects of telephony providers like Twilio and Plivo, so a pipeline using one is an agent taking a real phone call — which the simulator can't place. Run that same pipeline behind a plain WebSocket transport to test it.
 
 For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).

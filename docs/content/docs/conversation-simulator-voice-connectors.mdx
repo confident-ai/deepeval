@@ -8,7 +8,35 @@ beta: true
 
 A connector is how `deepeval` reaches your voice agent. In [voice mode](/docs/conversation-simulator-voice-mode) it opens a live session, plays the simulated user's audio, captures the spoken reply, and times how long that reply took to start.
 
-You won't need to write one. Pick whichever matches where your agent runs, tell it how to find the agent, and pass it to `VoiceConfig`:
+## Why Agent Connectors?
+
+Every voice platform is reached differently — Vapi mints a call over REST before any audio moves, ElevenLabs takes base64 audio in JSON, Pipecat takes protobuf frames, LiveKit is a WebRTC track in a room. A connector holds all of that, so the simulator asks the same thing of every agent:
+
+```mermaid
+sequenceDiagram
+    participant Simulator as ConversationSimulator
+    participant Connector as connector
+    participant Agent as Your Voice Agent
+
+    Simulator->>Connector: exchange_turn(user audio)
+    Note over Connector,Agent: Auth, session setup, audio format, framing
+    Connector->>Agent: user audio over the live session
+    Agent-->>Connector: spoken reply
+    Note over Connector,Agent: End-of-turn signal, or silence when there is none
+    Connector-->>Simulator: ConnectorTurn(audio, transcript, latency_ms)
+```
+
+Switching platforms is therefore a different connector and nothing else — your goldens, metrics, and simulation config don't change.
+
+## Setup Agent Connector
+
+Each connector needs only enough to find your agent — an id, a URL, or credentials — and everything else is shared:
+
+<include cwd>snippets/voice/connector-tabs.mdx</include>
+
+A connector is not a tracing callback: it joins the call from outside and owns the live session — auth, transport, teardown — while `deepeval` layers the turn-taking on top.
+
+Here are the connectors available on `deepeval` so far:
 
 | Connector                | Transport  | Use it for                                                           |
 | ------------------------ | ---------- | -------------------------------------------------------------------- |
@@ -19,19 +47,28 @@ You won't need to write one. Pick whichever matches where your agent runs, tell 
 | `WebSocketConnector`     | WebSocket  | Custom agents that speak raw audio over a WebSocket.                 |
 | `CallbackVoiceConnector` | In-process | A Python callable, no network — handy for testing your own pipeline. |
 
-A connector is not a tracing callback. A callback watches an agent run inside your app, while a simulation has to join the call from outside and trade audio with a deployed agent. So the connector owns that live session — auth, transport, teardown — and `deepeval` layers the turn-taking on top: when a turn ended, whether an interruption landed, how long the agent took to answer.
-
-See [Voice concepts](/docs/evaluation-voice#transports-and-connectors) for where this sits in the evaluation loop, and [Interruptions](/docs/conversation-simulator-voice-interruptions) for what barge-in needs.
-
-::::note
+:::note
 Provider not listed? If your agent exposes a raw-audio WebSocket, `WebSocketConnector` needs only the URL and the message shape. If it's callable in the same Python process, use `CallbackVoiceConnector`. Subclass `BaseVoiceConnector` only for a transport the others can't express.
-::::
-
-<include cwd>snippets/voice/connector-tabs.mdx</include>
+:::
 
 ## Generic WebSocket
 
 For custom agents that accept and emit raw audio over a WebSocket, `WebSocketConnector` lets you describe your agent's message shape — which JSON keys carry audio in and out, whether frames are binary, and what marks the end of a turn.
+
+```python
+from deepeval.voice import VoiceConfig, WebSocketConnector
+
+connector = WebSocketConnector(
+    url="wss://your-agent.example.com/audio",
+    send_key="audio",
+    receive_audio_key="audio",
+    turn_complete_type="turn_end",
+)
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
 
 There are **ONE** mandatory and **TWELVE** optional parameters when creating a `WebSocketConnector`:
 
@@ -52,6 +89,16 @@ There are **ONE** mandatory and **TWELVE** optional parameters when creating a `
 ## Callback
 
 Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
+
+```python
+from deepeval.voice import CallbackVoiceConnector, VoiceConfig
+
+connector = CallbackVoiceConnector(my_agent)
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
 
 There are **ONE** mandatory and **THREE** optional parameters when creating a `CallbackVoiceConnector`:
 
@@ -110,11 +157,11 @@ async def my_agent(user_audio) -> ConnectorTurn:
 
 Nothing in an audio stream announces that your agent has finished speaking, so the end of its turn is inferred from silence. Every connector takes a `turn_detection` preset controlling how long that silence has to last, along with the hard ceiling that stops an agent which never goes quiet from hanging the simulation:
 
-| `turn_detection` | Waits through pauses of | Gives up after | Use it when                                                              |
-| ------------------ | ------------------------- | ---------------- | -------------------------------------------------------------------------- |
-| `"eager"`          | 500ms                     | 20s              | Your agent answers in one breath and you want the floor back quickly.      |
-| `"balanced"`       | 800ms                     | 30s              | Default. Suits most agents.                                                |
-| `"patient"`        | 2.5s                      | 120s             | Your agent pauses mid-reply — to think, call a tool, or look something up. |
+| `turn_detection` | Waits through pauses of | Gives up after | Use it when                                                                |
+| ---------------- | ----------------------- | -------------- | -------------------------------------------------------------------------- |
+| `"eager"`        | 500ms                   | 20s            | Your agent answers in one breath and you want the floor back quickly.      |
+| `"balanced"`     | 800ms                   | 30s            | Default. Suits most agents.                                                |
+| `"patient"`      | 2.5s                    | 120s           | Your agent pauses mid-reply — to think, call a tool, or look something up. |
 
 ```python
 connector = CallbackVoiceConnector(my_agent, turn_detection="patient")
