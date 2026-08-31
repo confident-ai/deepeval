@@ -26,21 +26,44 @@ class ARC(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 5, "ARC only supports n_shots <= 5"
+        # Validate arguments explicitly instead of with bare `assert` (which is
+        # stripped under `python -O` and raises AssertionError). `n_shots` may be
+        # 0 (zero-shot). `n_problems` must be >= 1: evaluate() divides the
+        # number of correct predictions by it, so 0 would crash with a
+        # ZeroDivisionError.
+        if type(n_shots) is not int:
+            raise TypeError(
+                f"'n_shots' must be an integer, got {type(n_shots).__name__}."
+            )
+        if not 0 <= n_shots <= 5:
+            raise ValueError(
+                f"'n_shots' must be between 0 and 5 (ARC only supports "
+                f"n_shots <= 5), got {n_shots}."
+            )
         super().__init__(**kwargs)
         self.mode: ARCMode = mode
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         if mode == ARCMode.EASY:
-            self.n_problems: int = 2376 if n_problems is None else n_problems
-            assert (
-                self.n_problems <= 2376
-            ), "ARC-Easy only supports n_problems <= 2376"
+            max_problems = 2376
+            mode_label = "ARC-Easy"
         else:
-            self.n_problems: int = 1172 if n_problems is None else n_problems
-            assert (
-                self.n_problems <= 1172
-            ), "ARC-Challenge only supports n_problems <= 1172"
+            max_problems = 1172
+            mode_label = "ARC-Challenge"
+        self.n_problems: int = (
+            max_problems if n_problems is None else n_problems
+        )
+        if type(self.n_problems) is not int:
+            raise TypeError(
+                f"'n_problems' must be an integer, got "
+                f"{type(self.n_problems).__name__}."
+            )
+        if not 1 <= self.n_problems <= max_problems:
+            raise ValueError(
+                f"'n_problems' must be between 1 and {max_problems} "
+                f"({mode_label} only supports n_problems <= {max_problems}), "
+                f"got {self.n_problems}."
+            )
         self.predictions: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
         self.verbose_mode = verbose_mode
