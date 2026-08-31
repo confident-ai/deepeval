@@ -36,8 +36,11 @@ class Scorer:
         """
         try:
             from rouge_score import rouge_scorer
-        except:
-            pass
+        except ImportError:
+            raise ImportError(
+                "The 'rouge-score' package is required to use rouge_score. "
+                "Install it with: pip install rouge-score"
+            ) from None
 
         assert score_type in [
             "rouge1",
@@ -71,8 +74,11 @@ class Scorer:
         try:
             from nltk.tokenize import word_tokenize
             from nltk.translate.bleu_score import sentence_bleu
-        except ModuleNotFoundError as e:
-            print("Please install nltk module. Command: pip install nltk")
+        except ImportError:
+            raise ImportError(
+                "The 'nltk' package is required to use sentence_bleu_score. "
+                "Install it with: pip install nltk"
+            ) from None
 
         assert bleu_type in [
             "bleu1",
