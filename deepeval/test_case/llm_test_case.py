@@ -61,7 +61,16 @@ class MLLMImage:
         else:
             is_local = self.is_local_path(self.url)
             if self.local is not None:
-                assert self.local == is_local, "Local path mismatch"
+                # Reject a caller-provided `local` that contradicts the URL
+                # with a clear ValueError instead of a bare assert, which is
+                # stripped under `python -O` and only raises AssertionError.
+                if self.local != is_local:
+                    kind = "local" if is_local else "remote"
+                    raise ValueError(
+                        f"Local path mismatch: '{self.url}' resolves to a "
+                        f"{kind} path, but 'local' was explicitly set to "
+                        f"{self.local}."
+                    )
             else:
                 self.local = is_local
 
