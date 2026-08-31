@@ -186,6 +186,10 @@ def convert_turn_to_dict(
 
 
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
+    if window_size < 1:
+        raise ValueError(
+            f"`window_size` must be a positive integer, got {window_size}."
+        )
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
 

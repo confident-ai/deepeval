@@ -1,5 +1,9 @@
 from deepeval.test_case import Turn
-from deepeval.metrics.utils import get_unit_interactions
+from deepeval.metrics.utils import (
+    get_unit_interactions,
+    get_turns_in_sliding_window,
+)
+import pytest
 
 
 def make_turns(seq):
@@ -71,3 +75,53 @@ class TestGetUnitInteractions:
         assert [
             [(t.role, t.content) for t in unit] for unit in result
         ] == expected
+
+
+def roles(result):
+    """Flatten a sliding-window result to (role, content) lists."""
+    return [[(t.role, t.content) for t in window] for window in result]
+
+
+class TestGetTurnsInSlidingWindow:
+    def test_zero_window_size_raises(self):
+        with pytest.raises(ValueError, match="positive integer"):
+            list(get_turns_in_sliding_window(make_turns([("user", "u1")]), 0))
+
+    def test_negative_window_size_raises(self):
+        with pytest.raises(ValueError, match="positive integer"):
+            list(get_turns_in_sliding_window(make_turns([("user", "u1")]), -3))
+
+    def test_window_size_one_yields_single_turn_windows(self):
+        seq = [("user", "u1"), ("assistant", "a1"), ("user", "u2")]
+        expected = [
+            [("user", "u1")],
+            [("assistant", "a1")],
+            [("user", "u2")],
+        ]
+        assert (
+            roles(get_turns_in_sliding_window(make_turns(seq), 1)) == expected
+        )
+
+    def test_window_size_two_slides_forward(self):
+        seq = [("user", "u1"), ("assistant", "a1"), ("user", "u2")]
+        expected = [
+            [("user", "u1")],
+            [("user", "u1"), ("assistant", "a1")],
+            [("assistant", "a1"), ("user", "u2")],
+        ]
+        assert (
+            roles(get_turns_in_sliding_window(make_turns(seq), 2)) == expected
+        )
+
+    def test_window_size_larger_than_turns_returns_full_window(self):
+        seq = [("user", "u1"), ("assistant", "a1")]
+        expected = [
+            [("user", "u1")],
+            [("user", "u1"), ("assistant", "a1")],
+        ]
+        assert (
+            roles(get_turns_in_sliding_window(make_turns(seq), 10)) == expected
+        )
+
+    def test_empty_turns_with_valid_window_size(self):
+        assert list(get_turns_in_sliding_window([], 2)) == []
