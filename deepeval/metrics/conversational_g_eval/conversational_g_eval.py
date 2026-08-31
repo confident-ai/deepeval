@@ -11,7 +11,10 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
+    get_score_range,
+    is_integral_rubric_scale,
     no_log_prob_support,
+    normalize_score,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
@@ -39,7 +42,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.templates import make_template_class
-
 
 ConversationalGEvalTemplate = make_template_class("ConversationalGEval")
 
@@ -80,6 +82,9 @@ class ConversationalGEval(BaseConversationalMetric):
             validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
+        self.score_range_is_integral = is_integral_rubric_scale(self.rubric)
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
@@ -136,7 +141,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 )
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
-                self.score = float(g_score) / 10
+                self.score = normalize_score(g_score, self.score_range)
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
@@ -188,7 +193,7 @@ class ConversationalGEval(BaseConversationalMetric):
             )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
-            self.score = float(g_score) / 10
+            self.score = normalize_score(g_score, self.score_range)
             self.score = (
                 0
                 if self.strict_mode and self.score < self.threshold
@@ -267,6 +272,8 @@ class ConversationalGEval(BaseConversationalMetric):
             ],
             parameters=g_eval_params_str,
             rubric=rubric_str,
+            score_range=self.score_range,
+            score_range_is_integral=self.score_range_is_integral,
         )
         try:
             if no_log_prob_support(self.model):
@@ -283,6 +290,12 @@ class ConversationalGEval(BaseConversationalMetric):
             reason = data["reason"]
             score = data["score"]
             if self.strict_mode:
+                return score, reason
+
+            # Log-prob weighting locates the score's own token and averages the
+            # integer candidates around it, so it only applies to an integer
+            # scale. A fractional rubric keeps the raw score as-is.
+            if not self.score_range_is_integral:
                 return score, reason
 
             try:
@@ -323,6 +336,8 @@ class ConversationalGEval(BaseConversationalMetric):
             ],
             parameters=g_eval_params_str,
             rubric=rubric_str,
+            score_range=self.score_range,
+            score_range_is_integral=self.score_range_is_integral,
         )
         try:
             if no_log_prob_support(self.model):
@@ -338,6 +353,12 @@ class ConversationalGEval(BaseConversationalMetric):
             reason = data["reason"]
             score = data["score"]
             if self.strict_mode:
+                return score, reason
+
+            # Log-prob weighting locates the score's own token and averages the
+            # integer candidates around it, so it only applies to an integer
+            # scale. A fractional rubric keeps the raw score as-is.
+            if not self.score_range_is_integral:
                 return score, reason
 
             try:
@@ -470,6 +491,10 @@ class ConversationalGEval(BaseConversationalMetric):
             if data.rubric
             else None
         )
+
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
+        self.score_range_is_integral = is_integral_rubric_scale(self.rubric)
 
         ensure_required_params(
             self.evaluation_params, self.criteria, self.evaluation_steps

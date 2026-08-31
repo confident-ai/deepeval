@@ -9,7 +9,6 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import ConversationalTestCase
 
-
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
 
 

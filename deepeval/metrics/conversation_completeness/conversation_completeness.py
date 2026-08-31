@@ -23,7 +23,6 @@ from deepeval.metrics.conversation_completeness.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 ConversationCompletenessTemplate = make_template_class(
     "ConversationCompletenessMetric"
 )

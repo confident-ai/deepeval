@@ -26,7 +26,6 @@ from deepeval.metrics.tool_use.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 ToolUseTemplate = make_template_class("ToolUseMetric")
 
 

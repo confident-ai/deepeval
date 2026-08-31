@@ -33,7 +33,6 @@ from deepeval.metrics.summarization.schema import (
 from deepeval.metrics.faithfulness.schema import Truths, Claims
 from deepeval.templates import make_template_class
 
-
 SummarizationTemplate = make_template_class("SummarizationMetric")
 
 
