@@ -1,4 +1,5 @@
 from typing import List, Optional, Union, Type
+import re
 from pydantic import BaseModel, ValidationError
 
 from deepeval.test_case import (
@@ -20,6 +21,20 @@ from deepeval.utils import get_or_create_event_loop, serialize_to_json
 from deepeval.templates import make_template_class
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
+
+
+def _strip_code_fence(text: str) -> str:
+    """Strip a surrounding markdown code fence so the inner JSON reaches pydantic.
+
+    LLM eval outputs very frequently wrap JSON in a fenced code block
+    (````` ```json ... ``` `````). Feeding that whole string to
+    ``model_validate_json`` fails even though the contained JSON is perfectly
+    valid, a false negative. We only alter the input when the *entire* string
+    is a fence, so plain JSON and non-JSON text pass through unchanged
+    (backward compatible).
+    """
+    match = re.fullmatch(r"\s*```(?:json)?\s*([\s\S]*?)\s*```\s*", text)
+    return match.group(1) if match else text
 
 
 JsonCorrectnessTemplate = make_template_class("JsonCorrectnessMetric")
@@ -93,7 +108,7 @@ class JsonCorrectnessMetric(BaseMetric):
                 valid_json = True
                 try:
                     self.expected_schema.model_validate_json(
-                        test_case.actual_output
+                        _strip_code_fence(test_case.actual_output)
                     )
                 except ValidationError:
                     valid_json = False
@@ -142,7 +157,7 @@ class JsonCorrectnessMetric(BaseMetric):
             valid_json = True
             try:
                 self.expected_schema.model_validate_json(
-                    test_case.actual_output
+                    _strip_code_fence(test_case.actual_output)
                 )
             except ValidationError:
                 valid_json = False
