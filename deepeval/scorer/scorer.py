@@ -432,6 +432,23 @@ class Scorer:
         :param c: number of correct samples
         :param k: k in pass@$k$
         """
+        for name, value in (("n", n), ("c", c), ("k", k)):
+            if type(value) is not int:
+                raise TypeError(
+                    f"'{name}' must be an integer to compute pass@k, "
+                    f"got {type(value).__name__}."
+                )
+        if n < 1:
+            raise ValueError(
+                f"'n' (total number of samples) must be at least 1, got {n}."
+            )
+        if not 0 <= c <= n:
+            raise ValueError(
+                f"'c' (number of correct samples) must satisfy "
+                f"0 <= c <= n ({n}), got {c}."
+            )
+        if k < 1:
+            raise ValueError(f"'k' in pass@k must be at least 1, got {k}.")
         if n - c < k:
             return 1.0
         return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
