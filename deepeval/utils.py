@@ -12,10 +12,20 @@ import uuid
 import math
 import logging
 
-from contextvars import ContextVar
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar, copy_context
 from enum import Enum
 from importlib import import_module
-from typing import Any, Dict, List, Optional, Protocol, Sequence, Union
+from typing import (
+    Any,
+    Coroutine,
+    Dict,
+    List,
+    Optional,
+    Protocol,
+    Sequence,
+    Union,
+)
 from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
 from pydantic import BaseModel
@@ -218,6 +228,43 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
     return loop
+
+
+def run_async(coro: Coroutine) -> Any:
+    """Drive ``coro`` to completion and return its result without depending on
+    ``nest_asyncio`` or re-entering an already-running event loop.
+
+    - When called from a synchronous context (no running loop), the coroutine
+      runs on a fresh event loop via :func:`asyncio.run`, which cancels leftover
+      tasks and closes the loop on exit. This avoids reusing a stale/shared loop
+      returned by the deprecated ``asyncio.get_event_loop()``.
+    - When called from within a running event loop (Jupyter/IPython, an async
+      web server, or any ``async def``), the coroutine runs on a dedicated worker
+      thread with its own fresh event loop. This replaces the fragile pattern of
+      calling ``loop.run_until_complete`` re-entrantly after monkeypatching the
+      running loop with ``nest_asyncio.apply()`` — a known source of scheduling
+      deadlocks on Python 3.12.
+
+    The public behaviour is identical to the old
+    ``get_or_create_event_loop().run_until_complete(coro)`` for synchronous
+    callers, but it never mutates the caller's event loop.
+    """
+    try:
+        asyncio.get_running_loop()
+        loop_already_running = True
+    except RuntimeError:
+        loop_already_running = False
+
+    if not loop_already_running:
+        return asyncio.run(coro)
+
+    # A loop is already running in this thread: execute the coroutine on a
+    # separate thread with its own event loop so we never re-enter the caller's
+    # loop. copy_context() preserves any contextvars set by the caller.
+    ctx = copy_context()
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(ctx.run, asyncio.run, coro)
+        return future.result()
 
 
 def get_or_create_general_event_loop() -> asyncio.AbstractEventLoop:
