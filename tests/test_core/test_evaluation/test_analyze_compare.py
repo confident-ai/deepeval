@@ -206,11 +206,23 @@ class TestAnalyzeValidation:
         with pytest.raises(ValueError):
             analyze_compare_results(["A"], "A", "B", alpha=1.0)
 
-    def test_unknown_winner_token_rejected(self):
-        # A typo'd contestant name must fail loudly, not silently become a
-        # tie and quietly erase wins.
-        with pytest.raises(ValueError, match="neither model_a nor model_b"):
-            analyze_compare_results(["A", "Ae", "B"], "A", "B")
+    def test_unknown_winner_token_treated_as_other_win(self):
+        # A contestant outside (model_a, model_b) used to raise ValueError,
+        # but that made the API non-composable over multi-way arenas where a
+        # third contestant can legitimately win rounds. The new semantics
+        # folds third-party wins into n_other_wins and counts them as
+        # non-decisive ties for the analysed pair; callers can audit the
+        # n_other_wins field to spot real typos.
+        sig = analyze_compare_results(["A", "Ae", "B"], "A", "B")
+        # "Ae" is a third-party win for this pair.
+        assert sig.n_other_wins == 1
+        assert sig.n_decided == 2
+        assert sig.n_wins_a == 1
+        assert sig.n_wins_b == 1
+        # 1-1 split over 2 decided => not significant.
+        assert sig.significant is False
+        # A genuine typo can still be detected: if N_other_wins is large
+        # relative to N_decided the user knows something is off.
 
 
 # ---------------------------------------------------------------------------
