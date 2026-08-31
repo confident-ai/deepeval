@@ -536,14 +536,26 @@ class EvaluationDataset:
             df, expected_output_col_name, default=None
         )
 
-        def parse_tools(value, delimiter: str):
+        def parse_tools(value, delimiter: str, field: str):
             if not value:
                 return []
             try:
                 return [ToolCall(**tool) for tool in trimAndLoadJson(value)]
-            except (ValueError, json.JSONDecodeError):
-                # Fallback to simple split on delimiter
-                return value.split(delimiter)
+            except (ValueError, json.JSONDecodeError) as e:
+                # A cell that opens like JSON but does not parse is malformed
+                # input, not a delimited list of tool names.
+                if value.lstrip().startswith(("[", "{")):
+                    raise ValueError(f"Error processing {field}: {e}")
+                # Otherwise the cell is a delimiter-separated list of tool
+                # names, which is what the *_col_delimiter arguments are for.
+                # ToolCall requires a name, so build one per entry.
+                return [
+                    ToolCall(name=name)
+                    for name in (
+                        part.strip() for part in value.split(delimiter)
+                    )
+                    if name
+                ]
 
         contexts = _parse_column(
             df,
@@ -564,12 +576,16 @@ class EvaluationDataset:
         tools_called = _parse_column(
             df,
             tools_called_col_name,
-            lambda value: parse_tools(value, tools_called_col_delimiter),
+            lambda value: parse_tools(
+                value, tools_called_col_delimiter, "tools_called"
+            ),
         )
         expected_tools = _parse_column(
             df,
             expected_tools_col_name,
-            lambda value: parse_tools(value, expected_tools_col_delimiter),
+            lambda value: parse_tools(
+                value, expected_tools_col_delimiter, "expected_tools"
+            ),
         )
 
         comments = get_column_data(df, comments_key_name)
