@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Dict, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from deepeval.metrics.dag.nodes import (
     BaseNode,
@@ -47,6 +47,11 @@ class _DeepAcyclicGraphRunner:
         self.outputs: Dict[Node, Any] = {}
         self.verdicts: Dict[Node, Any] = {}
         self.depth: Dict[Node, int] = {}
+        # Every fired scoring verdict/child metric contributes a (score, reason)
+        # pair; the final metric score is resolved deterministically at the end
+        # instead of "last write wins" (which depended on node order and on the
+        # sync vs async traversal).
+        self.scores: List[Tuple[float, Optional[str]]] = []
         self._verbose_log = (
             _mt_verbose_log if graph.multiturn else _st_verbose_log
         )
@@ -75,17 +80,35 @@ class _DeepAcyclicGraphRunner:
             self._verbose_log(node, depth, child_metric)
         )
         metric.score = child_metric.score
-        if metric.include_reason:
-            metric.reason = child_metric.reason
+        reason = child_metric.reason if metric.include_reason else None
+        self.scores.append((child_metric.score, reason))
         metric._accrue_cost(child_metric.evaluation_cost)
         metric._accrue_tokens(
             child_metric.input_tokens, child_metric.output_tokens
         )
 
+    def _finalize_score(self, metric: Metric) -> None:
+        """Resolve the final metric score deterministically.
+
+        Every fired scoring verdict/child metric contributes a (score, reason)
+        pair. The score is picked with a conservative ``min`` aggregation so
+        the result no longer depends on node declaration order or on whether
+        the graph ran in sync or async mode. A DAG with a single scoring
+        path is unaffected.
+        """
+        scored = [(s, r) for s, r in self.scores if s is not None]
+        if not scored:
+            return
+        score, reason = min(scored, key=lambda item: item[0])
+        metric.score = score
+        if metric.include_reason and reason is not None:
+            metric.reason = reason
+
     # ------------------------------------------------------------------ sync
     def run(self, metric: Metric, test_case: TestCase) -> None:
         for root in self.graph.root_nodes:
             self._visit(root, metric, test_case, 0)
+        self._finalize_score(metric)
 
     def _visit(
         self, node: Node, metric: Metric, test_case: TestCase, depth: int
@@ -123,8 +146,12 @@ class _DeepAcyclicGraphRunner:
         if child is None:
             metric._verbose_steps.append(self._verbose_log(node, depth))
             metric.score = node.score / 10
-            if metric.include_reason:
-                metric.reason = node._generate_reason(metric=metric)
+            reason = (
+                node._generate_reason(metric=metric)
+                if metric.include_reason
+                else None
+            )
+            self.scores.append((metric.score, reason))
         elif isinstance(child, _NODE):
             self._visit(child, metric, test_case, depth)
         else:
@@ -138,6 +165,7 @@ class _DeepAcyclicGraphRunner:
                 for root in self.graph.root_nodes
             )
         )
+        self._finalize_score(metric)
 
     async def _a_visit(
         self, node: Node, metric: Metric, test_case: TestCase, depth: int
@@ -179,8 +207,12 @@ class _DeepAcyclicGraphRunner:
         if child is None:
             metric._verbose_steps.append(self._verbose_log(node, depth))
             metric.score = node.score / 10
-            if metric.include_reason:
-                metric.reason = await node._a_generate_reason(metric=metric)
+            reason = (
+                await node._a_generate_reason(metric=metric)
+                if metric.include_reason
+                else None
+            )
+            self.scores.append((metric.score, reason))
         elif isinstance(child, _NODE):
             await self._a_visit(child, metric, test_case, depth)
         else:
