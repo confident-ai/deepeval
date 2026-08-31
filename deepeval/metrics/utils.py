@@ -130,18 +130,37 @@ def copy_metrics(
         metric_class = type(metric)
         args = vars(metric)
 
+        # Gather every parameter the constructor can accept from the whole MRO,
+        # so configuration a base class ``__init__`` stored on the instance is
+        # replayed onto the copy too.
         superclasses = metric_class.__mro__
-
-        valid_params = []
-
+        valid_params = set()
         for superclass in superclasses:
-            signature = inspect.signature(superclass.__init__)
-            superclass_params = signature.parameters.keys()
-            valid_params.extend(superclass_params)
-        valid_params = set(valid_params)
+            valid_params.update(
+                inspect.signature(superclass.__init__).parameters
+            )
         valid_args = {key: args[key] for key in valid_params if key in args}
 
-        copied_metrics.append(metric_class(**valid_args))
+        target_params = inspect.signature(metric_class.__init__).parameters
+        accepts_var_keyword = any(
+            param.kind == inspect.Parameter.VAR_KEYWORD
+            for param in target_params.values()
+        )
+        # The leaf constructor accepts every collected kwarg (directly or via
+        # ``**kwargs``): replay them unchanged, exactly as before.
+        if accepts_var_keyword or valid_args.keys() <= set(target_params):
+            copied_metrics.append(metric_class(**valid_args))
+            continue
+
+        # A subclass may deliberately narrow its ``__init__`` signature — the
+        # documented way to pre-configure a built-in metric (e.g. a GEval
+        # subclass that hard-codes ``name``/``criteria``). Replaying parent-only
+        # kwargs into that constructor raised a ``TypeError`` that aborted the
+        # whole async ``evaluate()`` run (#3037). Fall back to the params the
+        # leaf constructor accepts; its ``__init__`` re-applies the pre-set
+        # values itself, so no configuration is lost.
+        narrowed_args = {key: args[key] for key in target_params if key in args}
+        copied_metrics.append(metric_class(**narrowed_args))
     return copied_metrics
 
 
