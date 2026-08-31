@@ -18,7 +18,7 @@ The above-mentioned hyperparameters are common for almost any LLM application. H
 
 ## Pulling Datasets
 
-In the previous section, we've seen [how to create datasets](/tutorials/summarization-agent/tutorial-summarization-evaluation#creating-dataset) and store them in the cloud. We can now pull that dataset and use it as many times as we need to generate test cases and evaluate our summarization agent.
+In the previous section, we've seen [how to create datasets](/tutorials/summarization-agent/evaluation#creating-dataset) and store them in the cloud. We can now pull that dataset and use it as many times as we need to generate test cases and evaluate our summarization agent.
 
 Here's how we can pull datasets from the cloud:
 
@@ -234,7 +234,7 @@ From these results, we can see that `gpt-4o` and `gpt-4-turbo` perform well but 
 
 This raises an issue of which model to choose among the both as they each excel at their own tasks.
 
-In this situation, you can either use more test cases to run evaluations to get more data or use `deepeval`'s latest `ArenaGEval` to test which model is better among them by evaluating arena test cases. You can learn more about it [here](docs/metrics-arena-g-eval).
+In this situation, you can either use more test cases to run evaluations to get more data or use `deepeval`'s latest `ArenaGEval` to test which model is better among them by evaluating arena test cases. You can learn more about it [here](/docs/metrics-arena-g-eval).
 
 **OR** alternatively, you can update your `MeetingSummarizer` to to use two different models for different tasks. Here's how you can do that:
 
