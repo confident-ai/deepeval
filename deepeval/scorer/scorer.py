@@ -391,22 +391,25 @@ class Scorer:
             prediction (str): The predicted string from the LLM, representing the guessed answers.
 
         Returns:
-            int: The number of correct answers identified.
+            int: The percentage of correct answers identified, rounded to the
+                nearest integer (0-100).
         """
         try:
             if not prediction or not target:
                 return 0  # Return score as 0 if prediction or target is empty
 
-            # Convert strings to sorted lists of integers
+            # Convert strings to sorted lists of integers, de-duplicating so a
+            # repeated index in either list cannot inflate the percentage past
+            # 100% (e.g. target "1,2" vs prediction "1,1,1,2" must be 100, not 200).
             target_list = sorted(
-                [int(item) for item in target.strip("[]").split(",") if item]
+                {int(item) for item in target.strip("[]").split(",") if item}
             )
             prediction_list = sorted(
-                [
+                {
                     int(item)
                     for item in prediction.strip("[]").split(",")
                     if item
-                ]
+                }
             )
 
             if not target_list:
