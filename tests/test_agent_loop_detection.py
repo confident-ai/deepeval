@@ -370,3 +370,82 @@ def test_reordered_stagnation_detected():
 
     # SequenceMatcher should push the similarity above 0.75
     assert metric.score_breakdown["reasoning_stagnation"] < 1.0
+
+
+# ---------------------------------------------------------------------------
+# Tool-argument signature canonicalization (order-insensitive)
+# ---------------------------------------------------------------------------
+
+
+def test_args_signature_is_key_order_insensitive():
+    """Two nested dicts with the same keys in a different order must produce
+    the same repetition signature. The old implementation stringified nested
+    dicts (which preserves insertion order), so semantically-identical tool
+    calls with a different argument key order were counted as *different*
+    calls and real repetition was silently missed."""
+    metric = AgentLoopDetectionMetric()
+    sig1 = metric._args_signature({"b": 1, "a": {"y": 2, "x": 1}})
+    sig2 = metric._args_signature({"a": {"x": 1, "y": 2}, "b": 1})
+    assert sig1 == sig2
+
+
+def test_args_signature_still_distinguishes_semantic_differences():
+    """The canonicalization must NOT collapse genuinely different arguments:
+    different values, or different *list* order (which is significant), must
+    keep distinct signatures. This guards against over-normalisation."""
+    metric = AgentLoopDetectionMetric()
+    assert metric._args_signature({"a": 1, "b": 2}) != metric._args_signature(
+        {"a": 2, "b": 1}
+    )
+    # Lists are order-significant — reordering must change the signature.
+    assert metric._args_signature(
+        {"items": [1, 2, 3]}
+    ) != metric._args_signature({"items": [3, 2, 1]})
+
+
+def test_args_signature_none_and_string_inputs():
+    """`None`, plain strings, and stringified JSON blobs should all remain
+    well-defined. A JSON *string* argument is canonicalized like a dict, so a
+    reordered-key JSON string and the equivalent dict share a signature."""
+    metric = AgentLoopDetectionMetric()
+    assert metric._args_signature(None) == ("",)
+    assert metric._args_signature("plain text") == ("plain text",)
+    assert metric._args_signature('{"b":1,"a":2}') == metric._args_signature(
+        {"a": 2, "b": 1}
+    )
+
+
+def test_reordered_nested_args_detected_as_repetition():
+    """Measure-level check: four tool calls that are identical apart from the
+    key order of their *nested* argument dicts must be treated as a single
+    repeated call (count >= repetition_threshold). The pre-fix implementation
+    split them into two groups of two and reported no repetition."""
+    trace = _make_agent_span(
+        "looping_agent",
+        [
+            _make_tool_span(
+                "search_web", {"query": {"city": "Paris", "unit": "celsius"}}
+            ),
+            _make_tool_span(
+                "search_web", {"query": {"unit": "celsius", "city": "Paris"}}
+            ),
+            # Repeat the same pair again → 4 calls, only key order differs.
+            _make_tool_span(
+                "search_web", {"query": {"city": "Paris", "unit": "celsius"}}
+            ),
+            _make_tool_span(
+                "search_web", {"query": {"unit": "celsius", "city": "Paris"}}
+            ),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        threshold=0.7,
+        repetition_threshold=3,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] <= 0.5
+    assert metric.success is False
