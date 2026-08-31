@@ -221,7 +221,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict == Verdict.NO:
+                if verdict.verdict.strip().lower() == "no":
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -251,7 +251,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict == Verdict.NO:
+                if verdict.verdict.strip().lower() == "no":
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -274,12 +274,19 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        return score_qag_verdicts(
-            self,
-            [v for verdicts in self.verdicts_list for v in verdicts.verdicts],
-            passing=(Verdict.YES,),
-            empty_score=0,
-        )
+        total_verdicts = 0
+        relevant_statements = 0
+        for verdicts in self.verdicts_list:
+            for verdict in verdicts.verdicts:
+                total_verdicts += 1
+                if verdict.verdict.strip().lower() == "yes":
+                    relevant_statements += 1
+
+        if total_verdicts == 0:
+            return 0
+
+        score = relevant_statements / total_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
