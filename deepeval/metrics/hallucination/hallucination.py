@@ -38,6 +38,22 @@ from deepeval.templates import make_template_class
 HallucinationTemplate = make_template_class("HallucinationMetric")
 
 
+def _is_contradiction(verdict: Optional[str]) -> bool:
+    """Return whether a (possibly malformed) verdict marks a contradiction.
+
+    The judge's raw completion is pulled with regex-based extraction that does
+    not round-trip through the ``Literal["yes", "no"]`` validation, so verdict
+    strings can arrive with surrounding whitespace or trailing punctuation
+    (e.g. ``"no."``, ``" no "``). The score and the reason must classify every
+    verdict identically; sharing one predicate guarantees they cannot disagree.
+    A normalized ``"no"`` is a contradiction; anything else (``"yes."``,
+    ``None``) is not.
+    """
+    if verdict is None:
+        return False
+    return verdict.strip().rstrip(".,;:!?").lower() == "no"
+
+
 class HallucinationMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -166,10 +182,10 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
-                factual_alignments.append(verdict.reason)
-            else:
+            if _is_contradiction(verdict.verdict):
                 contradictions.append(verdict.reason)
+            else:
+                factual_alignments.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -193,10 +209,10 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
-                factual_alignments.append(verdict.reason)
-            else:
+            if _is_contradiction(verdict.verdict):
                 contradictions.append(verdict.reason)
+            else:
+                factual_alignments.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -281,11 +297,17 @@ class HallucinationMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        return score_qag_verdicts(
-            self,
-            self.verdicts,
-            passing=(Verdict.YES,),
-        )
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 1
+
+        factually_aligned_count = 0
+        for verdict in self.verdicts:
+            if not _is_contradiction(verdict.verdict):
+                factually_aligned_count += 1
+
+        score = factually_aligned_count / number_of_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     @property
     def __name__(self):
