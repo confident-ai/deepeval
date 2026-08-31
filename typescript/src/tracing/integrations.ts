@@ -1,21 +1,36 @@
-// Canonical integration and provider strings for tracing payloads. Port of
-// `deepeval/tracing/integrations.py`; the values are shared with Confident AI
-// and with telemetry, so they must match Python exactly.
+export const Integration = {
+  LANGCHAIN: "LangChain",
+  CREW_AI: "CrewAI",
+  LLAMA_INDEX: "LlamaIndex",
+  OPENAI_AGENTS: "OpenAI Agents",
+  OPEN_AI: "OpenAI",
+  ANTHROPIC: "Anthropic",
+  OPEN_ROUTER: "OpenRouter",
+  PYDANTIC_AI: "PydanticAI",
+  GOOGLE_ADK: "Google ADK",
+  STRANDS: "Strands",
+  OTEL: "OpenTelemetry",
+  OPEN_INFERENCE: "OpenInference",
+  AGENTCORE: "AgentCore",
+  AI_SDK: "AI SDK",
+  MASTRA: "Mastra",
+} as const;
+export type Integration = (typeof Integration)[keyof typeof Integration];
 
-export enum Integration {
-  LANGCHAIN = "LangChain",
-  CREW_AI = "CrewAI",
-  LLAMA_INDEX = "LlamaIndex",
-  OPENAI_AGENTS = "OpenAI Agents",
-  OPEN_AI = "OpenAI",
-  ANTHROPIC = "Anthropic",
-  PYDANTIC_AI = "PydanticAI",
-  GOOGLE_ADK = "Google ADK",
-  STRANDS = "Strands",
-  OTEL = "OpenTelemetry",
-  OPEN_INFERENCE = "OpenInference",
-  AGENTCORE = "AgentCore",
-  // Only this SDK ships these two, but the vocabulary is shared.
-  AI_SDK = "AI SDK",
-  MASTRA = "Mastra",
-}
+export const Provider = {
+  OPEN_AI: "OpenAI",
+  ANTHROPIC: "Anthropic",
+  GEMINI: "Gemini",
+  X_AI: "XAI",
+  DEEP_SEEK: "DeepSeek",
+  MISTRAL: "Mistral",
+  PERPLEXITY: "Perplexity",
+  BEDROCK: "Bedrock",
+  VERTEX_AI: "VertexAI",
+  AZURE: "Azure",
+  OPEN_ROUTER: "OpenRouter",
+  PORTKEY: "Portkey",
+  TRUE_FOUNDRY: "TrueFoundry",
+  MOONSHOT: "Moonshot",
+} as const;
+export type Provider = (typeof Provider)[keyof typeof Provider];

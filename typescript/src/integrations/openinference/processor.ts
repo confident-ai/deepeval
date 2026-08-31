@@ -10,6 +10,11 @@ import {
   ToolSpan,
   TraceSpanStatus,
 } from "@/tracing/tracing";
+import { Integration } from "@/tracing/integrations";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "@/tracing/utils";
 import {
   applyPendingToSpan,
   pendingToOtelAttributes,
@@ -326,6 +331,10 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
     }
 
     // Span-type attribute
+    span.setAttribute(
+      ConfidentAttr.SPAN_INTEGRATION,
+      this.options.integration || Integration.OPEN_INFERENCE,
+    );
     span.setAttribute(ConfidentAttr.SPAN_TYPE, spanType!);
 
     // Per-type enrichment
@@ -492,6 +501,15 @@ export class OpenInferenceSpanProcessor implements SpanProcessor {
         ConfidentAttr.LLM_MODEL,
         String(model),
       );
+    }
+    if (spanType === SpanType.LLM && !attributes[ConfidentAttr.SPAN_PROVIDER]) {
+      const rawProvider =
+        attributes["llm.provider"] ??
+        (model ? inferProviderFromModel(String(model)) : undefined);
+      const provider = normalizeSpanProviderForPlatform(rawProvider);
+      if (provider) {
+        attributes[ConfidentAttr.SPAN_PROVIDER] = provider;
+      }
     }
 
     // Tool calls (agent, llm, and tool spans can all carry tool call info)

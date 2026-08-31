@@ -108,6 +108,7 @@ export class DeepEvalTracingProcessor {
       status: TraceSpanStatus.IN_PROGRESS,
       type: spanType,
       metricCollection,
+      integration: Integration.OPENAI_AGENTS,
     };
 
     // Natively instantiate the specific Span classes

@@ -6,24 +6,40 @@ import {
   safeExtractOutputParameters,
 } from "@/openai/extractor";
 import { getLlmContext } from "@/tracing/trace-context";
+import { normalizeSpanProviderForPlatform } from "@/tracing/utils";
 import {
   getCurrentTrace,
   observe,
   updateCurrentSpan,
   updateLlmSpan,
 } from "@/tracing";
+import { Integration, Provider } from "@/tracing/integrations";
+import {
+  getCurrentSpan,
+  LlmSpan,
+  SpanType,
+  traceManager,
+} from "@/tracing/tracing";
 import { InputParameters, OutputParameters } from "@/openai/types";
+import {
+  detectProviderFromBaseUrl,
+  extractOpenRouterMetadata,
+  mergeOpenRouterMetadata,
+} from "@/openrouter/utils";
 import { ToolCall } from "@/test-case";
 
 type AnyFunction = (...args: any[]) => any;
 
 const _ORIGINAL_METHODS: Record<string, AnyFunction> = {};
 let _OPENAI_PATCHED = false;
+let _DETECTED_PROVIDER: string | undefined;
 
 export function patchOpenAI(client: OpenAI) {
   if (_OPENAI_PATCHED) {
     return;
   }
+
+  _DETECTED_PROVIDER = detectProviderFromBaseUrl(client.baseURL);
 
   // Patch chat.completions.create
   const completions = client.chat.completions;
@@ -128,21 +144,53 @@ function patchAsyncOpenAIClientMethod(
           inputParameters,
         );
 
-        if (llmContext && typeof updateAllAttributes === "function") {
-          updateAllAttributes(
-            inputParameters,
-            outputParameters,
-            llmContext.expectedTools ?? [],
-            llmContext.expectedOutput ?? "",
-            llmContext.context ?? [],
-            llmContext.retrievalContext ?? [],
-          );
+        const activeSpan = getCurrentSpan();
+        if (activeSpan) {
+          activeSpan.integration = Integration.OPEN_AI;
+          if (activeSpan.type === SpanType.LLM) {
+            (activeSpan as LlmSpan).provider = resolveProvider(llmContext);
+          }
+          if (activeSpan.parentUuid) {
+            const parentSpan = traceManager.getSpanByUuid(
+              activeSpan.parentUuid,
+            );
+            if (parentSpan && !parentSpan.integration) {
+              parentSpan.integration = Integration.OPEN_AI;
+            }
+          }
+        }
+
+        // Runs whether or not an `llmSpanContext` is in scope: input, output
+        // and token counts are properties of the call itself, and a bare call
+        // with no context is still worth recording.
+        updateAllAttributes(
+          inputParameters,
+          outputParameters,
+          llmContext?.expectedTools ?? [],
+          llmContext?.expectedOutput ?? "",
+          llmContext?.context ?? [],
+          llmContext?.retrievalContext ?? [],
+        );
+
+        // Which response fields are worth reading is decided by the detected
+        // host, not by the label: relabelling a span must not cost the user
+        // OpenRouter's cost and routing data.
+        if (_DETECTED_PROVIDER === Provider.OPEN_ROUTER) {
+          mergeOpenRouterMetadata(extractOpenRouterMetadata(response));
         }
 
         return response;
       },
     })(...args);
   };
+}
+
+function resolveProvider(llmContext: ReturnType<typeof getLlmContext>): string {
+  return (
+    normalizeSpanProviderForPlatform(
+      llmContext?.provider ?? _DETECTED_PROVIDER,
+    ) ?? Provider.OPEN_AI
+  );
 }
 
 function updateAllAttributes(
@@ -163,22 +211,17 @@ function updateAllAttributes(
     retrievalContext: retrievalContext,
   });
 
-  const llmContext = getLlmContext();
-  if (llmContext) {
-    updateLlmSpan({
-      inputTokenCount: outputParameters.promptTokens,
-      outputTokenCount: outputParameters.completionTokens,
-      prompt: llmContext.prompt,
-    });
+  updateLlmSpan({
+    inputTokenCount: outputParameters.promptTokens,
+    outputTokenCount: outputParameters.completionTokens,
+    prompt: getLlmContext()?.prompt,
+  });
 
-    if (outputParameters.toolsCalled) {
-      createChildToolSpans(outputParameters);
-    }
-
-    updateInputAndOutputOfCurrentTrace(inputParameters, outputParameters);
-  } else {
-    console.log(`[updateAllAttributes]: getLlmContext() returned undefined`);
+  if (outputParameters.toolsCalled) {
+    createChildToolSpans(outputParameters);
   }
+
+  updateInputAndOutputOfCurrentTrace(inputParameters, outputParameters);
 }
 
 function updateInputAndOutputOfCurrentTrace(
@@ -228,5 +271,6 @@ export function unpatchOpenAI(client: OpenAI) {
     delete _ORIGINAL_METHODS[key];
   }
 
+  _DETECTED_PROVIDER = undefined;
   _OPENAI_PATCHED = false;
 }

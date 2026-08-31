@@ -50,3 +50,10 @@ export {
   evaluateTrace,
   evaluateSpan,
 } from "@/tracing/offline-evals";
+
+export {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "@/tracing/utils";
+
+export { Integration, Provider } from "@/tracing/integrations";
