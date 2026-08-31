@@ -258,6 +258,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_multimodal=False,
             supports_structured_outputs=True,
             supports_json=False,
+            supports_temperature=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
         ),
@@ -275,6 +276,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_multimodal=False,
             supports_structured_outputs=False,
             supports_json=False,
+            supports_temperature=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
         ),
@@ -386,11 +388,16 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=0.05 / 1e6,
             output_price=0.40 / 1e6,
         ),
+        # Non-reasoning chat variant: unlike the o-series / gpt-5 reasoning
+        # models in this block, it accepts a custom temperature. Set the flag
+        # explicitly (it defaults to True) so the omission is not mistaken for
+        # a bug and "fixed" to False.
         "gpt-5-chat-latest": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
             supports_structured_outputs=False,
             supports_json=False,
+            supports_temperature=True,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
         ),
