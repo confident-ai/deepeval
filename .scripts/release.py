@@ -77,7 +77,8 @@ class Target:
     json_key: str  # key in sdk-versions.json
     publish_commands: List[str]  # printed at the end, never run
     paths: List[str]  # what shipping this SDK covers, for "did it change?"
-    single_digit: bool  # cap x.y.z at 9 and carry left, rather than plain semver
+    # cap x.y.z at 9 and carry left, rather than plain semver
+    single_digit: bool
 
 
 TARGETS: Dict[str, Target] = {
