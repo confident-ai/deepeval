@@ -19,6 +19,7 @@ from deepeval.voice.connectors.transports.websocket import (
 )
 from deepeval.voice.connectors.types import ConnectorTurn
 from deepeval.voice.streaming import collect_pcm_chunks
+from deepeval.simulator.conversation_simulator import _VoiceSession
 
 _RATE = 24000
 # 40ms of a constant tone: two whole 20ms wire frames, so nothing is padded.
@@ -259,7 +260,10 @@ async def test_an_utterance_is_timed_from_its_first_frame_not_from_synthesis():
 
     began = time.perf_counter()
     audio, first_frame_at = await simulator._send_user_utterance(
-        "Where is my order?", None, trailing_silence=False
+        _VoiceSession(connector=wire, persona=None),
+        "Where is my order?",
+        None,
+        trailing_silence=False,
     )
 
     assert first_frame_at - began >= 0.1
@@ -301,7 +305,10 @@ async def test_an_utterance_is_timed_from_when_the_transport_sent_it():
             _StreamingTTS(first_frame_delay=0.05, frame_delay=0.1, frames=3),
         )
         _, first_frame_at = await simulator._send_user_utterance(
-            "Where is my order?", None, trailing_silence=False
+            _VoiceSession(connector=connector, persona=None),
+            "Where is my order?",
+            None,
+            trailing_silence=False,
         )
     finally:
         await connector.disconnect()
@@ -316,7 +323,10 @@ async def test_a_speech_model_that_cannot_stream_still_sends_whole_utterances():
     simulator = _voice_simulator(wire, _BufferedTTS())
 
     audio, _ = await simulator._send_user_utterance(
-        "Where is my order?", None, trailing_silence=False
+        _VoiceSession(connector=wire, persona=None),
+        "Where is my order?",
+        None,
+        trailing_silence=False,
     )
 
     assert b"".join(wire.sent) == _FRAME

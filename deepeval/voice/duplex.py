@@ -603,7 +603,9 @@ class DuplexExchange:
                     connector_transcript_seen = True
 
                 if event.audio:
-                    silent = audio_utils.is_silent(event.audio)
+                    silent = audio_utils.is_silent(
+                        event.audio, self.connector.silence_threshold_rms
+                    )
                     frame_ms = (
                         len(event.audio) / 2 / self.sample_rate
                     ) * 1000.0

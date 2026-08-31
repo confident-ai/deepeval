@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -7,13 +7,15 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
 )
-from deepeval.test_case import ConversationalTestCase
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
 
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
 
 
 class BaseVoiceMetric(BaseConversationalMetric):
+    _required_test_case_params: List[MultiTurnParams] = []
+
     def __init__(
         self,
         *,

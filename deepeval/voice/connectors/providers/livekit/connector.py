@@ -62,6 +62,7 @@ class LiveKitConnector(BaseVoiceConnector):
         agent_name: Optional[str] = None,
         agent_identity: Optional[str] = None,
         turn_detection: TurnDetection = "balanced",
+        silence_threshold_rms: float = audio_utils.DEFAULT_SILENCE_RMS,
         connect_timeout_s: float = 15.0,
         input_sample_rate: int = 24000,
         livekit_sample_rate: int = 48000,
@@ -96,6 +97,7 @@ class LiveKitConnector(BaseVoiceConnector):
         timing = turn_detection_timing(turn_detection)
         self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
         self.max_turn_timeout_s = timing.max_turn_timeout_s
+        self.silence_threshold_rms = silence_threshold_rms
         self.connect_timeout_s = connect_timeout_s
         self.input_sample_rate = input_sample_rate
         self.livekit_sample_rate = livekit_sample_rate
@@ -529,6 +531,7 @@ class LiveKitConnector(BaseVoiceConnector):
             end_of_turn_silence_ms=self.end_of_turn_silence_ms,
             frame_gap_timeout_s=self._frame_gap_timeout_s,
             max_turn_timeout_s=self.max_turn_timeout_s,
+            silence_threshold_rms=self.silence_threshold_rms,
         )
         await self._await_transcript(bool(agent_pcm))
 

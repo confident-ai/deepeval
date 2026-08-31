@@ -481,6 +481,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             end_of_turn_silence_ms=self.end_of_turn_silence_ms,
             frame_gap_timeout_s=self._frame_gap_timeout_s,
             max_turn_timeout_s=self.max_turn_timeout_s,
+            silence_threshold_rms=self.silence_threshold_rms,
             hold_event=self._tool_hold,
         )
 

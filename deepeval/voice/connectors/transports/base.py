@@ -13,6 +13,7 @@ from typing import (
 )
 
 from deepeval.test_case import Audio, AudioChunk
+from deepeval.voice.connectors.audio_utils import DEFAULT_SILENCE_RMS
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.streaming import (
@@ -92,6 +93,7 @@ class BaseVoiceConnector(ABC):
     # Transports that select a `turn_detection` preset overwrite them.
     end_of_turn_silence_ms: int = 800
     max_turn_timeout_s: float = 30.0
+    silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
