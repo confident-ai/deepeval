@@ -91,6 +91,12 @@ class HumanEval(DeepEvalBaseBenchmark):
         verbose_mode: bool = False,
         **kwargs,
     ):
+        if type(n) is not int or n < 1:
+            raise ValueError(
+                f"'n' (number of samples per task) must be a positive "
+                f"integer, got {n}."
+            )
+
         from deepeval.scorer import Scorer
         import pandas as pd
 
@@ -113,8 +119,17 @@ class HumanEval(DeepEvalBaseBenchmark):
     ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
+        if type(k) is not int or k < 1:
+            raise ValueError(
+                f"'k' in pass@k must be a positive integer, got {k}."
+            )
+        if self.n < k:
+            raise ValueError(
+                f"HumanEval 'n' ({self.n}) must be greater than or equal "
+                f"to 'k' ({k})."
+            )
+
         with capture_benchmark_run("HumanEval", len(self.tasks)):
-            assert self.n >= k
             overall_correct_predictions = 0
             overall_total_predictions = 0
             predictions_row = []
