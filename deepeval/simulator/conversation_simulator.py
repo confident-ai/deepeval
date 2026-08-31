@@ -20,6 +20,8 @@ import time
 import uuid
 import warnings
 
+from deepeval.models.llms.utils import safe_asyncio_run
+
 from deepeval.utils import (
     get_or_create_event_loop,
     update_pbar,
@@ -471,7 +473,7 @@ class ConversationSimulator:
 
             # Generate turn from assistant
             if self.is_callback_async:
-                assistant_turn = asyncio.run(
+                assistant_turn = safe_asyncio_run(
                     self.a_generate_turn_from_callback(
                         user_input,
                         model_callback=self.model_callback,
