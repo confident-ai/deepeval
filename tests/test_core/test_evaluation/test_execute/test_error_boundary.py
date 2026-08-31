@@ -860,3 +860,62 @@ async def test_trace_errored_skips_trace_metrics(
         getattr(m, "name", "<noname>") for m in record_measure_calls["metrics"]
     }
     assert "tm" not in names_called
+
+
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
+def test_exception_propagates_when_loop_closed_in_cleanup(monkeypatch):
+    """A RuntimeError raised while the event loop is already closed must
+    propagate out of the iterator instead of being suppressed by a bare
+    `return` inside the cleanup ``finally`` block.
+
+    The never-awaited coroutine warning is expected here: closing the loop
+    makes run_until_complete raise before it can await the created tasks.
+    """
+    # Don't execute real metrics
+    monkeypatch.setattr(
+        _agentic_mod,
+        "measure_metrics_with_indicator",
+        lambda *a, **k: None,
+        raising=True,
+    )
+
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+
+        goldens = [Golden(input="x")]
+        results = []
+        it = exec_mod.a_execute_agentic_test_cases_from_loop(
+            goldens=goldens,
+            trace_metrics=[_DummyMetric()],
+            test_results=results,
+            loop=loop,
+            display_config=DisplayConfig(show_indicator=False),
+            async_config=AsyncConfig(run_async=True),
+            error_config=ErrorConfig(
+                ignore_errors=True, skip_on_missing_params=True
+            ),
+        )
+        golden = next(it)
+
+        async def sleeper(_):
+            await asyncio.sleep(5)
+
+        task = asyncio.create_task(sleeper(golden.input))
+
+        # Close the loop before the iterator awaits its tasks, so the
+        # run_until_complete call raises RuntimeError while loop.is_closed()
+        # is True. The cleanup finally must not swallow that exception.
+        loop.close()
+
+        with pytest.raises(RuntimeError):
+            try:
+                it.send(task)
+            except StopIteration:
+                pass
+            for _ in it:
+                pass
+    finally:
+        asyncio.set_event_loop(None)
+        if not loop.is_closed():
+            loop.close()
