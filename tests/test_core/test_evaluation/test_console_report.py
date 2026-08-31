@@ -38,7 +38,7 @@ def test_evaluation_console_report_exports(tmp_path: Path):
     )
     html_files = list(tmp_path.glob("test_eval_*.html"))
     assert len(html_files) == 1
-    html_content = html_files[0].read_text()
+    html_content = html_files[0].read_text(encoding="utf-8")
     assert "DeepEval Evaluation Results" in html_content
     assert "demo" in html_content
     assert "Answer Relevancy" in html_content
@@ -50,7 +50,7 @@ def test_evaluation_console_report_exports(tmp_path: Path):
     )
     md_files = list(tmp_path.glob("test_eval_*.md"))
     assert len(md_files) == 1
-    md_content = md_files[0].read_text()
+    md_content = md_files[0].read_text(encoding="utf-8")
     assert "DeepEval Evaluation Results" in md_content
     assert "demo" in md_content
     assert "Answer Relevancy" in md_content
