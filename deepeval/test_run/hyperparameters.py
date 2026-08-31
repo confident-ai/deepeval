@@ -58,25 +58,53 @@ def process_hyperparameters(
     return processed_hyperparameters
 
 
-def log_hyperparameters(func):
+def log_hyperparameters(func=None, **hyperparameter_kwargs):
+    """Log hyperparameters for the current test run.
+
+    Supports all three documented decorator forms:
+
+    * ``@log_hyperparameters``
+    * ``@log_hyperparameters()``
+    * ``@log_hyperparameters(model="gpt-4", prompt_template="...")``
+
+    The decorated function may return a dict of extra hyperparameters, which
+    are merged with any explicitly passed keyword arguments. The returned
+    wrapper keeps the decorated function callable.
+    """
     test_run = global_test_run_manager.get_test_run()
 
-    def modified_hyperparameters():
-        base_hyperparameters = func()
-        return base_hyperparameters
+    def decorator(decorated_func):
+        base_hyperparameters = decorated_func()
+        if base_hyperparameters is None:
+            base_hyperparameters = {}
+        if not isinstance(base_hyperparameters, dict):
+            raise TypeError("Hyperparameters must be a dictionary or None")
 
-    hyperparameters = process_hyperparameters(modified_hyperparameters())
-    test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+        merged_hyperparameters = {
+            **hyperparameter_kwargs,
+            **base_hyperparameters,
+        }
+        hyperparameters = process_hyperparameters(
+            merged_hyperparameters or None
+        )
+        test_run.hyperparameters = hyperparameters
+        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-    # Define the wrapper function that will be the actual decorator
-    def wrapper(*args, **kwargs):
-        # Optional: You can decide if you want to do something else here
-        # every time the decorated function is called
-        return func(*args, **kwargs)
+        # Define the wrapper function that will be the actual decorator
+        def wrapper(*args, **kwargs):
+            # Optional: You can decide if you want to do something else here
+            # every time the decorated function is called
+            return decorated_func(*args, **kwargs)
 
-    # Return the wrapper function to be used as the decorator
-    return wrapper
+        # Return the wrapper function to be used as the decorator
+        return wrapper
+
+    if func is not None:
+        # Bare form: @log_hyperparameters
+        return decorator(func)
+
+    # Called form: @log_hyperparameters() or @log_hyperparameters(**kwargs)
+    return decorator
 
 
 def process_prompts(
