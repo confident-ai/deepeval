@@ -433,6 +433,11 @@ def check_arena_test_case_params(
             f"Expected ArenaTestCase, got {type(arena_test_case).__name__}"
         )
 
+    if len(arena_test_case.contestants) < 2:
+        raise ValueError(
+            "ArenaTestCase requires at least two contestants to compare."
+        )
+
     cases = [contestant.test_case for contestant in arena_test_case.contestants]
     ref_input = cases[0].input
     for case in cases[1:]:
