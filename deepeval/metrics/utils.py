@@ -397,7 +397,27 @@ def check_llm_test_case_params(
     if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
         actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
         if isinstance(actual_output, str) and actual_output == "":
-            error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
+            error_str = (
+                f"'actual_output' cannot be empty for the "
+                f"'{metric.__name__}' metric"
+            )
+            metric.error = error_str
+            raise MissingTestCaseParamsError(error_str)
+
+    # Symmetric to actual_output: a metric that declares EXPECTED_OUTPUT as a
+    # required param treats an empty reference answer as a configuration bug
+    # rather than a genuine "expected nothing" test. This is most noticeable on
+    # deterministic metrics (e.g. ExactMatchMetric) where an empty expected
+    # string can never yield a meaningful pass.
+    if SingleTurnParams.EXPECTED_OUTPUT in test_case_params:
+        expected_output = getattr(
+            test_case, SingleTurnParams.EXPECTED_OUTPUT.value
+        )
+        if isinstance(expected_output, str) and expected_output == "":
+            error_str = (
+                f"'expected_output' cannot be empty for the "
+                f"'{metric.__name__}' metric"
+            )
             metric.error = error_str
             raise MissingTestCaseParamsError(error_str)
 
