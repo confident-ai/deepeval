@@ -39,11 +39,10 @@ class Scorer:
         except:
             pass
 
-        assert score_type in [
-            "rouge1",
-            "rouge2",
-            "rougeL",
-        ], "score_type can be either rouge1, rouge2 or rougeL"
+        if score_type not in ["rouge1", "rouge2", "rougeL"]:
+            raise ValueError(
+                "score_type can be either rouge1, rouge2 or rougeL"
+            )
         scorer = rouge_scorer.RougeScorer([score_type], use_stemmer=True)
         scores = scorer.score(target, prediction)
         return scores[score_type].fmeasure
@@ -74,12 +73,10 @@ class Scorer:
         except ModuleNotFoundError as e:
             print("Please install nltk module. Command: pip install nltk")
 
-        assert bleu_type in [
-            "bleu1",
-            "bleu2",
-            "bleu3",
-            "bleu4",
-        ], "Invalid bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
+        if bleu_type not in ["bleu1", "bleu2", "bleu3", "bleu4"]:
+            raise ValueError(
+                "Invalid bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
+            )
         targets = [references] if isinstance(references, str) else references
         tokenized_targets = [word_tokenize(target) for target in targets]
         tokenized_prediction = word_tokenize(prediction)
@@ -337,18 +334,21 @@ class Scorer:
         except Exception as e:
             print(f"Unable to load AnswerRelevancyModel model.\n{e}")
 
-        if model_type is not None:
-            assert model_type in [
-                "self_encoder",
-                "cross_encoder",
-            ], "model_type can be either 'self_encoder' or 'cross_encoder'"
+        if model_type is not None and model_type not in [
+            "self_encoder",
+            "cross_encoder",
+        ]:
+            raise ValueError(
+                "model_type can be either 'self_encoder' or 'cross_encoder'"
+            )
 
         model_type = "cross_encoder" if model_type is None else model_type
 
         if model_type == "cross_encoder":
-            assert isinstance(
-                predictions, str
-            ), "When model_type is 'cross_encoder', you can compare with one prediction and one target."
+            if not isinstance(predictions, str):
+                raise TypeError(
+                    "When model_type is 'cross_encoder', you can compare with one prediction and one target."
+                )
             answer_relevancy_model = CrossEncoderAnswerRelevancyModel(
                 model_name=model_name
             )
