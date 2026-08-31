@@ -470,3 +470,6 @@ deepeval test run test_chatbot.py
 # 开源许可证
 
 DeepEval 遵循 Apache 2.0 开源许可证 - 详情参阅 [LICENSE.md](https://github.com/confident-ai/deepeval/blob/main/LICENSE.md)。
+---
+
+> 💡 **文档维护说明**：本中文文档由社区志愿者（@JasonYeYuhe）翻译维护，最后同步更新于 2026年8月31日。如发现内容与官方英文原版存在差异或新特性滞后，欢迎提交 PR 共同完善！
