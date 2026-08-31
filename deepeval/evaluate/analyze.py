@@ -39,18 +39,54 @@ _Z_95 = 1.9599639845400545  # two-tailed 5% critical value of the normal.
 
 
 def _normal_cdf(z: float) -> float:
-    """Standard normal CDF via the library ``math.erf``."""
-    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+    """Standard normal CDF, numerically stable across a wide z-range.
+
+    For ``|z|`` below ~``5`` the textbook ``0.5 * (1 + erf(z/√2))`` is fine.
+    For large negative ``z`` however ``erf`` saturates to ``-1`` and the
+    expression collapses to exactly zero, even though the true CDF can
+    easily be as small as ``~1e-308`` within the float64 dynamic range. We
+    therefore use ``erfc`` for negative arguments (``Φ(z) = ½·erfc(−z/√2)``)
+    which stays accurate right down to float underflow.
+    """
+    root_half = 0.7071067811865476
+    if z >= 0:
+        return 0.5 * (1.0 + math.erf(z * root_half))
+    return 0.5 * math.erfc(-z * root_half)
+
+
+# Sample-size ceiling at which we still run the exact combinatorial sum.
+# Beyond this the sign test switches to a normal approximation with
+# continuity correction — for n ≫ 1 both agree to 4+ decimals, while the
+# exact code path becomes prohibitively slow (sum of O(n) huge-integer
+# binomial coefficients).
+_EXACT_BINOMIAL_CEILING = 2000
 
 
 def _two_sided_binomial_exact_p(n: int, k: int) -> float:
-    """Exact two-sided p-value for the sign test.
+    """Two-sided p-value for the sign test.
 
     Tests H0 ``p = 0.5`` against a two-sided alternative. We define the
     two-tailed p-value the way the binomial sign test usually is: take the
     smaller of the two one-sided tails ``P(X <= k)`` and ``P(X >= k)`` and
-    double it, capping at 1.0. Using the exact binomial mass keeps the result
-    valid at tiny ``n`` where a normal approximation would be misleading.
+    double it, capping at 1.0.
+
+    For **small** ``n`` (``n <= _EXACT_BINOMIAL_CEILING``) the result is
+    computed via exact combinatorial summation. We use a multiplicative
+    recurrence
+
+        P(X = i+1) = P(X = i) * (n - i) / (i + 1)
+
+    (seed ``P(X = 0) = 0.5^n``) so the inner loop stays in float arithmetic
+    and avoids materializing ``math.comb(n, i)`` as a possibly-huge Python
+    int whose float conversion can overflow for n as low as ~1800 at the
+    peak of the mass function.
+
+    For **large** ``n`` we switch to a continuity-corrected normal
+    approximation. Under H0 with ``p = 0.5`` the binomial has mean
+    ``mu = n/2`` and variance ``sigma^2 = n/4``; the z-score uses the
+    standard ±0.5 continuity correction. This keeps the call O(1) and
+    avoids blowing up ``math.comb(n, n/2)`` (a ~0.3n-digit integer) for
+    arena sizes in the tens of thousands.
 
     Only valid for ``0 <= k <= n`` and ``n >= 1``.
     """
@@ -59,13 +95,53 @@ def _two_sided_binomial_exact_p(n: int, k: int) -> float:
     if not 0 <= k <= n:
         raise ValueError("k must satisfy 0 <= k <= n.")
 
-    def lower_tail(kk: int) -> float:
-        return sum(math.comb(n, i) for i in range(kk + 1)) * (0.5**n)
+    if n <= _EXACT_BINOMIAL_CEILING:
+        half_pow = 0.5**n
+        # If the seed itself underflows to zero (can happen near the top of
+        # the exact ceiling because float64 min-denorm ~ 5e-324 ≈ 0.5^1074),
+        # the recurrence will trivially stay zero and give a nonsense p=0.
+        # Fall through to the normal approximation — at those n it's
+        # essentially exact for the symmetric p=0.5 case anyway.
+        if half_pow > 0.0:
+            # -- Exact path (float recurrence, no big ints) ----------------
+            def tail_le(kk: int) -> float:
+                """P(X <= kk) via the ratio recurrence."""
+                if kk < 0:
+                    return 0.0
+                if kk >= n:
+                    return 1.0
+                p_i = half_pow  # P(X = 0)
+                total = p_i
+                for i in range(kk):
+                    p_i = p_i * (n - i) / (i + 1.0)
+                    total += p_i
+                return total
 
-    def upper_tail(kk: int) -> float:
-        return sum(math.comb(n, i) for i in range(kk, n + 1)) * (0.5**n)
+            def tail_ge(kk: int) -> float:
+                """P(X >= kk) = 1 - P(X <= kk-1)."""
+                if kk <= 0:
+                    return 1.0
+                if kk > n:
+                    return 0.0
+                return 1.0 - tail_le(kk - 1)
 
-    return min(1.0, 2.0 * min(lower_tail(k), upper_tail(k)))
+            return min(1.0, 2.0 * min(tail_le(k), tail_ge(k)))
+
+    # -- Normal-approximation path --------------------------------------
+    # Bin(n, 0.5) has mu = n/2, sigma = sqrt(n)/2.
+    # The ±0.5 continuity correction accounts for approximating a discrete
+    # distribution with a continuous one.
+    mu = n / 2.0
+    sigma = math.sqrt(n) / 2.0
+    # Pick the tail that puts the observation on the "outside" of mu,
+    # mirroring the exact-path logic of min(lower, upper) then doubling.
+    if k <= mu:
+        corrected = k + 0.5  # move right toward mu for P(X <= k)
+    else:
+        corrected = k - 0.5  # move left  toward mu for P(X >= k)
+    z = (corrected - mu) / sigma
+    # Two-sided: 2 * Phi(-|z|)  (symmetry around z=0)
+    return min(1.0, 2.0 * _normal_cdf(-abs(z)))
 
 
 def _wilson_score_interval(
@@ -133,6 +209,11 @@ class CompareSignificance:
     # Summary sentence for direct logging / terminal display.
     interpretation: str
 
+    # Rounds won by a contestant outside the (A,B) pair being analysed.
+    # These are collapsed into "tie" for the sign test but surfaced here
+    # so callers can audit multi-way results without double-counting.
+    n_other_wins: int = 0
+
 
 def analyze_compare_results(
     winners: List[Optional[str]],
@@ -198,21 +279,33 @@ def analyze_compare_results(
     wins_a_real = sum(1 for w in winners if w == model_a)
     wins_b_real = sum(1 for w in winners if w == model_b)
 
-    # Reject tokens that match neither side. Silently treating them as
-    # ties would let a typo'd contestant name (or feeding in compare()'s
-    # output keyed by non-matching aliases) quietly zero out wins and flip
-    # the verdict — the exact thing a significance check exists to prevent.
-    unknown = {
-        w for w in winners if w is not None and w != model_a and w != model_b
-    }
-    if unknown:
-        raise ValueError(
-            "winners contains names that are neither model_a nor model_b: "
-            f"{sorted(unknown)!r}. Every non-tie winner must be one of the "
-            "two compared models."
-        )
+    # Winners that match *neither* side come from two valid scenarios and
+    # are both treated the same way: as if that round had no winner for
+    # this particular A vs B comparison.
+    #
+    #   (a) A three (or more)-way arena: when contestant C wins a round,
+    #       the A↔B pair has no directional information in that round.
+    #   (b) A genuine typo in the caller's model name. We can't reliably
+    #       tell (a) and (b) apart without the full compare() context, so
+    #       we surface the "silently drop third-party wins" behaviour and
+    #       record them via `n_other_wins` for users who want to audit.
+    #
+    # This is strictly less strict than the old "raise on unknown" logic
+    # and makes `.analyze(model_a=X, model_b=Y)` on a multi-way ArenaResult
+    # behave the way users intuitively expect it to.
+    other_wins = 0
+    normalized: List[Optional[str]] = []
+    for w in winners:
+        if w is None or (w != model_a and w != model_b):
+            normalized.append(None)
+            if w is not None:
+                other_wins += 1
+        else:
+            normalized.append(w)
 
-    decided = [w for w in winners if w is not None]
+    ties += other_wins
+
+    decided = [w for w in normalized if w is not None]
 
     if tie_strategy == "split":
         n_decided = n_cases
@@ -242,6 +335,7 @@ def analyze_compare_results(
             odds_ratio=None,
             log_odds_ratio=None,
             confidence_interval=(float("nan"), float("nan")),
+            n_other_wins=other_wins,
             interpretation=(
                 f"Every round between {model_a!r} and {model_b!r} was a tie; "
                 "there is no decisive signal to test."
@@ -309,5 +403,6 @@ def analyze_compare_results(
         odds_ratio=odds_ratio,
         log_odds_ratio=log_odds_ratio,
         confidence_interval=ci,
+        n_other_wins=other_wins,
         interpretation=sentence,
     )
