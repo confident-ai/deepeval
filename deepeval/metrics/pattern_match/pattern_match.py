@@ -20,19 +20,30 @@ class PatternMatchMetric(BaseMetric):
         self,
         pattern: str,
         ignore_case: bool = False,
+        regex: bool = True,
         threshold: Optional[float] = 1.0,
         verbose_mode: bool = False,
         flaky: bool = False,
     ):
+        if not isinstance(pattern, str):
+            raise TypeError(
+                f"`pattern` must be a string for the 'Pattern Match' metric, "
+                f"got {type(pattern).__name__}."
+            )
         self.pattern = pattern.strip()
         self.ignore_case = ignore_case
+        self.regex = regex
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.threshold = threshold
 
         flags = re.IGNORECASE if ignore_case else 0
+        # In literal mode (`regex=False`) every regex metacharacter is inert,
+        # so `re.escape` turns e.g. "C++" into "C\+\+" and the pattern matches
+        # plain text exactly. `ignore_case` still applies.
+        compiled_pattern = self.pattern if regex else re.escape(self.pattern)
         try:
-            self._compiled_pattern = re.compile(self.pattern, flags)
+            self._compiled_pattern = re.compile(compiled_pattern, flags)
         except re.error as e:
             raise ValueError(f"Invalid regex pattern: {pattern} — {e}")
 
@@ -71,6 +82,7 @@ class PatternMatchMetric(BaseMetric):
                     self,
                     steps=[
                         f"Pattern: {self.pattern}",
+                        f"Mode: {'regex' if self.regex else 'literal (regex disabled)'}",
                         f"Actual: {actual}",
                         f"Score: {self.score:.2f}",
                         f"Reason: {self.reason}",
