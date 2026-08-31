@@ -117,7 +117,15 @@ class Scorer:
         return 1 if normalize_text(target) == normalize_text(prediction) else 0
 
     @classmethod
-    def quasi_contains_score(cls, targets: List[str], prediction: str) -> int:
+    def quasi_contains_score(
+        cls, targets: Union[str, List[str]], prediction: str
+    ) -> int:
+        # Accept a single string as `targets` and treat it as a one-element
+        # list. Iterating over a bare string would otherwise split it into
+        # single characters and silently produce nonsense scores (e.g. an exact
+        # match scoring 0).
+        if isinstance(targets, str):
+            targets = [targets]
         normalized_targets = [normalize_text(t) for t in targets]
         if not prediction:
             return 0
