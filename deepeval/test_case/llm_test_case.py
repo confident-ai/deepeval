@@ -736,12 +736,20 @@ class Audio:
         self.dataBase64 = base64.b64encode(raw).decode("ascii")
 
     def get_bytes(self) -> bytes:
-        """Return the raw audio bytes (local files are loaded in __post_init__)."""
+        """Return the raw audio bytes (local files are loaded in __post_init__,
+        remote URLs are downloaded and cached on first access)."""
         if self.dataBase64 is None:
-            raise ValueError(
-                "No audio bytes available; this Audio is a remote URL. "
-                "Fetch it before calling get_bytes()."
-            )
+            if not self.url or self.local is not False:
+                raise ValueError(
+                    "No audio bytes available; this Audio has neither bytes "
+                    "nor a remote URL to fetch them from."
+                )
+            import requests
+
+            response = requests.get(self.url, timeout=60)
+            response.raise_for_status()
+            self.dataBase64 = base64.b64encode(response.content).decode("ascii")
+            return response.content
         return base64.b64decode(self.dataBase64)
 
     @classmethod
