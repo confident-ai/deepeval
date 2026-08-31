@@ -75,6 +75,7 @@ def test_stochastic_scores_straddle_threshold_produce_distribution_not_canonical
 
 def test_threshold_inside_spread_flag():
     """Helper logic for the future opt-in n-runs reporting."""
+
     def threshold_inside_spread(scores, threshold):
         return min(scores) < threshold < max(scores)
 
@@ -107,8 +108,14 @@ def test_cache_bypass_required_for_true_re_measurement():
     assert cfg.use_cache is False
     assert cfg.write_cache is True
     # Docstring must clarify the replay vs re-measurement distinction
-    assert "replays" in CacheConfig.__doc__ or "replay" in CacheConfig.__doc__.lower()
-    assert "stochastic" in CacheConfig.__doc__.lower() or "measurement" in CacheConfig.__doc__.lower()
+    assert (
+        "replays" in CacheConfig.__doc__
+        or "replay" in CacheConfig.__doc__.lower()
+    )
+    assert (
+        "stochastic" in CacheConfig.__doc__.lower()
+        or "measurement" in CacheConfig.__doc__.lower()
+    )
 
 
 def test_case_verdict_is_and_fold_not_canonical_merge():
