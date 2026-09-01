@@ -1,3 +1,4 @@
+import base64
 import os
 import tempfile
 import time
@@ -8,6 +9,25 @@ from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 
 _CHANNELS = ("user", "agent")
+
+
+def _chunk_pcm(chunk, default_rate: int):
+    if isinstance(chunk, (bytes, bytearray)):
+        return bytes(chunk), default_rate
+    data_base64 = getattr(chunk, "dataBase64", None)
+    if not data_base64:
+        return b"", default_rate
+    data = base64.b64decode(data_base64)
+    rate = getattr(chunk, "sampleRate", None) or default_rate
+    mime_type = getattr(chunk, "mimeType", "") or ""
+    encoding = getattr(chunk, "encoding", "") or ""
+    if "wav" in mime_type or encoding == "wav":
+        try:
+            pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(data)
+        except Exception:
+            return b"", default_rate
+        return audio_utils.downmix_to_mono(pcm, channels or 1), rate
+    return data, rate
 
 
 class CallRecorder:
@@ -43,9 +63,7 @@ class CallRecorder:
         if self._origin is None:
             self._origin = at
         if sample_rate != self.sample_rate:
-            pcm = audio_utils.resample_pcm16(
-                pcm, sample_rate, self.sample_rate
-            )
+            pcm = audio_utils.resample_pcm16(pcm, sample_rate, self.sample_rate)
         spool = self._spools[channel]
         target = int(max(at - self._origin, 0.0) * self.sample_rate)
         if target > spool["samples"]:
@@ -174,15 +192,15 @@ class RecordingConnector:
                 self._recorder.add("user", pcm[:sent_bytes], rate, started)
 
     async def stream_uplink_chunks(self, frames, **kwargs):
-        rate = getattr(
+        default_rate = getattr(
             self._inner, "input_sample_rate", self._recorder.sample_rate
         )
 
         async def tapped():
             async for chunk in frames:
-                self._recorder.add(
-                    "user", bytes(chunk), rate, time.perf_counter()
-                )
+                pcm, rate = _chunk_pcm(chunk, default_rate)
+                if pcm:
+                    self._recorder.add("user", pcm, rate, time.perf_counter())
                 yield chunk
 
         return await self._inner.stream_uplink_chunks(tapped(), **kwargs)
