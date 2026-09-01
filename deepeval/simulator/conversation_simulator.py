@@ -87,8 +87,15 @@ class _VoiceSession:
 
     @property
     def is_duplex(self) -> bool:
-        """Whether this conversation's caller talks over the agent."""
-        return self.policy is not None
+        """Whether this conversation runs the duplex exchange.
+
+        A barge policy always does; so does a full-duplex transport even
+        without one, since only the duplex exchange keeps what the agent says
+        while the caller is speaking or thinking.
+        """
+        return self.policy is not None or getattr(
+            self.connector, "supports_duplex", False
+        )
 
 
 class _AgentTranscriber:
@@ -1125,7 +1132,8 @@ class ConversationSimulator:
         """Build this conversation's barge-in policy and floor controller.
 
         The golden's persona wins; `VoiceConfig.interruption_settings` is the
-        deprecated run-wide fallback. Returns `(None, None)` for half-duplex.
+        deprecated run-wide fallback. Returns `(None, None)` when nobody
+        barges; a full-duplex transport still runs the duplex exchange then.
         """
         from deepeval.voice.floor_control import FloorController
         from deepeval.voice.interruption import interruption_policy
@@ -1315,8 +1323,8 @@ class ConversationSimulator:
     ) -> Turn:
         """Half-duplex voice callback: TTS → exchange_turn → STT.
 
-        Used when the persona has no `interruption_behavior`. Duplex barge-in
-        goes through `_voice_duplex_exchange` instead.
+        The fallback for transports that cannot carry both voices at once;
+        everything else goes through `_voice_duplex_exchange`.
         """
         voice = self._voice
         if voice.tts_model.supports_streaming():
@@ -1544,8 +1552,11 @@ class ConversationSimulator:
         import time
 
         from deepeval.voice.duplex import DuplexExchange
+        from deepeval.voice.floor_control import FloorController
 
         voice = self._voice
+        if session.floor is None:
+            session.floor = FloorController()
         call_started_at = session.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True

@@ -496,6 +496,10 @@ class LiveKitConnector(BaseVoiceConnector):
         if self._uplink is not None:
             await self._uplink.stop()
 
+    @property
+    def supports_duplex(self) -> bool:
+        return True
+
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
         if self._out_frames is None:
             raise DeepEvalError(

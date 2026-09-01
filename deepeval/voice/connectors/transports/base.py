@@ -217,6 +217,18 @@ class BaseVoiceConnector(ABC):
         return await self.exchange_turn(pcm_to_audio(pcm, sample_rate))
 
     @property
+    def supports_duplex(self) -> bool:
+        """Whether this transport carries both voices at once.
+
+        On a full-duplex line the agent can be heard while the caller is
+        speaking or thinking, so the simulator prefers the duplex exchange on
+        it even when nobody is configured to interrupt: a strict
+        speak-then-listen exchange on such a line loses whatever the agent
+        said out of turn.
+        """
+        return False
+
+    @property
     def signals_turn_complete(self) -> bool:
         """Whether the transport says outright when the agent's turn is over.
 
