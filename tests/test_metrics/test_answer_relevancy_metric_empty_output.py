@@ -30,7 +30,9 @@ def make_metric(*, async_mode: bool = False) -> AnswerRelevancyMetric:
         )
 
 
-def make_metric_with_expected_output(*, async_mode: bool = False) -> AnswerRelevancyMetric:
+def make_metric_with_expected_output(
+    *, async_mode: bool = False
+) -> AnswerRelevancyMetric:
     """Create AnswerRelevancyMetric that requires expected_output."""
     with patch(
         "deepeval.metrics.answer_relevancy.answer_relevancy.initialize_model"
@@ -73,7 +75,9 @@ def test_answer_relevancy_empty_actual_output_raises_sync():
 def test_answer_relevancy_whitespace_actual_output_raises_sync():
     """Whitespace-only actual_output should raise MissingTestCaseParamsError (sync)."""
     metric = make_metric(async_mode=False)
-    tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="   ")
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?", actual_output="   "
+    )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
         check_llm_test_case_params(
@@ -108,7 +112,7 @@ def test_answer_relevancy_empty_expected_output_raises_sync():
     tc = LLMTestCase(
         input="What if these shoes don't fit?",
         actual_output="hello",
-        expected_output=""
+        expected_output="",
     )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
@@ -124,7 +128,7 @@ def test_answer_relevancy_whitespace_expected_output_raises_sync():
     tc = LLMTestCase(
         input="What if these shoes don't fit?",
         actual_output="hello",
-        expected_output="   "
+        expected_output="   ",
     )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
@@ -148,7 +152,7 @@ def test_answer_relevancy_both_whitespace_strings_raises_sync():
     tc = LLMTestCase(
         input="What if these shoes don't fit?",
         actual_output="   ",
-        expected_output="\n\t"
+        expected_output="\n\t",
     )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
@@ -164,4 +168,6 @@ def test_answer_relevancy_both_whitespace_strings_raises_sync():
 
     # Should fail on actual_output first (based on order in check_llm_test_case_params)
     msg = str(exc_info.value).lower()
-    assert "cannot be empty" in msg and ("actual_output" in msg or "expected_output" in msg)
+    assert "cannot be empty" in msg and (
+        "actual_output" in msg or "expected_output" in msg
+    )
