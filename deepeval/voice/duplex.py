@@ -233,6 +233,12 @@ class DuplexExchange:
         # exchange: it describes the transport, not this reply.
         connector_transcript_seen = False
         eot_silence = self.connector.end_of_turn_silence_ms
+        # A partial can trail the audio by one stride, and the last stride of
+        # every turn is the silence that ended it, so a stride no longer than
+        # the end-of-turn window keeps the speech itself covered.
+        stt_stride_bytes = int(
+            self.sample_rate * 2 * min(1.0, max(eot_silence, 200.0) / 1000.0)
+        )
         deadline = time.perf_counter() + self.connector.max_turn_timeout_s
         exchange_done = False
         last_uplink_at = sent_at
@@ -646,7 +652,7 @@ class DuplexExchange:
                         not utterance.transcript
                         and not connector_transcript_seen
                         and len(utterance.pcm) - utterance.last_stt_pcm_len
-                        > self.sample_rate * 2  # ~1s of new audio
+                        > stt_stride_bytes
                         and (stt_task is None or stt_task.done())
                     ):
                         utterance.last_stt_pcm_len = len(utterance.pcm)
