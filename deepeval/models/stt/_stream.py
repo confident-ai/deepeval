@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import AsyncGenerator, AsyncIterable, Optional
+from typing import AsyncGenerator, AsyncIterable, Callable, Optional
 
 from deepeval.test_case import Audio, AudioChunk
 from deepeval.voice.connectors import audio_utils
@@ -37,6 +37,7 @@ class BufferedTranscribeMixin:
         *args,
         language: Optional[str] = None,
         partial_every_seconds: float = 1.0,
+        on_cost: Optional[Callable[[float], None]] = None,
         **kwargs,
     ) -> AsyncGenerator[str, None]:
         pcm = bytearray()
@@ -61,9 +62,11 @@ class BufferedTranscribeMixin:
                 sampleRate=sample_rate,
                 encoding="wav",
             )
-            text, _ = await self.a_transcribe(
+            text, cost = await self.a_transcribe(
                 audio, language=language, **kwargs
             )
+            if cost is not None and on_cost is not None:
+                on_cost(cost)
             if text and text != last_text:
                 last_text = text
                 yield text
