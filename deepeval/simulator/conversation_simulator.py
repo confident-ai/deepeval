@@ -226,17 +226,13 @@ class _ReplySpeculation:
         )
 
         simulator = self._simulator
-        provisional = list(self._turns) + [
-            Turn(role="assistant", content=text)
-        ]
+        provisional = list(self._turns) + [Turn(role="assistant", content=text)]
         # The graph runner charges a visit as it runs, so speculation works
         # on a copy; `adopt` replays the charge on the real state.
         cloned = _GraphConversationState(
             current=self._state.current, visits=dict(self._state.visits)
         )
-        logger.debug(
-            "Speculating on partial agent reply: %d chars", len(text)
-        )
+        logger.debug("Speculating on partial agent reply: %d chars", len(text))
         self._stop_task = asyncio.create_task(
             simulator.stopping_controller.a_run(
                 turns=provisional,

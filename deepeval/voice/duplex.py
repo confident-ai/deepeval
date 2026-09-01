@@ -733,8 +733,7 @@ class DuplexExchange:
                     # words rather than a stride-old prefix.
                     if _stt_snapshot_due(stt_stride_bytes) or (
                         utterance.started
-                        and utterance.trailing_silence_ms
-                        >= _STT_ON_SILENCE_MS
+                        and utterance.trailing_silence_ms >= _STT_ON_SILENCE_MS
                         and utterance.last_stt_pcm_len
                         < utterance.speech_pcm_len
                         and _stt_snapshot_due(0)
