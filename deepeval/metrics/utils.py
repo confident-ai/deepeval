@@ -292,17 +292,20 @@ def check_conversational_test_case_params(
                         model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
+                model_list_str = ", ".join(valid_multimodal_models)
                 msg = (
                     f"The evaluation model {model.name} does not support multimodal evaluations. "
                     f"Available multi-modal models for {model.__class__.__name__}: "
-                    f"{', '.join(valid_multimodal_models)}."
+                    f"{model_list_str}."
                 )
                 raise ValueError(msg)
             else:
+                supported_model_names = [cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()]
+                supported_model_list_str = ", ".join(supported_model_names)
                 error_msg = (
                     f"The evaluation model {model.name} does not support multimodal inputs. "
                     f"Please use one of: "
-                    f"{', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                    f"{supported_model_list_str}"
                 )
                 raise ValueError(error_msg)
 
@@ -389,16 +392,19 @@ def check_llm_test_case_params(
                         model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
+                model_list_str = ", ".join(valid_multimodal_models)
                 raise ValueError(
                     f"Model {model.name} doesn't support multimodal evals. "
                     f"Available for {model.__class__.__name__}: "
-                    f"{', '.join(valid_multimodal_models)}."
+                    f"{model_list_str}."
                 )
             else:
+                supported_model_names = [cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()]
+                supported_model_list_str = ", ".join(supported_model_names)
                 raise ValueError(
                     f"Model {model.name} doesn't support multimodal inputs. "
                     f"Please use one of: "
-                    f"{', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                    f"{supported_model_list_str}"
                 )
 
         if input_image_count:
