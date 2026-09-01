@@ -141,20 +141,6 @@ class BaseVoiceConnector(ABC):
     async def disconnect(self) -> None:
         pass
 
-    _agent_frame_sink: Optional[Callable[[bytes, int], None]] = None
-
-    def set_agent_frame_sink(
-        self, sink: Optional[Callable[[bytes, int], None]]
-    ) -> None:
-        """Receive the agent's PCM frames as a turn is being collected.
-
-        Lets a caller listen along while the reply is still being spoken —
-        live transcription, most usefully — instead of first seeing the audio
-        when the turn is over. Transports that buffer a whole reply before
-        returning it never call the sink.
-        """
-        self._agent_frame_sink = sink
-
     async def stream_uplink(
         self, audio: Audio, *, trailing_silence: bool = True
     ) -> None:
@@ -199,22 +185,6 @@ class BaseVoiceConnector(ABC):
             on_first_frame(sent_at)
         await self.stream_uplink(audio, trailing_silence=trailing_silence)
         return UplinkResult(audio=audio, first_frame_at=sent_at)
-
-    async def exchange_turn_stream(
-        self, chunks: AsyncIterable[AudioChunk]
-    ) -> ConnectorTurn:
-        """Exchange a turn whose user audio arrives as it is synthesized.
-
-        Waiting for a whole utterance to be synthesized before any of it is
-        sent puts the entire synthesis time in front of the first word the
-        agent hears. The default buffers the stream and hands the finished
-        utterance to `exchange_turn`, which is all a transport whose agent
-        needs the clip whole can do with it; transports that can forward
-        frames override this so the agent hears the opening words while the
-        rest is still being made.
-        """
-        pcm, sample_rate = await collect_pcm_chunks(chunks)
-        return await self.exchange_turn(pcm_to_audio(pcm, sample_rate))
 
     @property
     def supports_duplex(self) -> bool:

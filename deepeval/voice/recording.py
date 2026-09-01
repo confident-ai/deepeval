@@ -180,30 +180,6 @@ class RecordingConnector:
                 self._recorder.add("agent", reply_pcm, reply_rate, reply_at)
         return result
 
-    async def exchange_turn_stream(self, frames):
-        default_rate = getattr(
-            self._inner, "input_sample_rate", self._recorder.sample_rate
-        )
-
-        async def tapped():
-            async for chunk in frames:
-                pcm, rate = _chunk_pcm(chunk, default_rate)
-                if pcm:
-                    self._recorder.add("user", pcm, rate, time.perf_counter())
-                yield chunk
-
-        result = await self._inner.exchange_turn_stream(tapped())
-        if result.audio is not None:
-            reply_pcm, reply_rate = self._decode(result.audio)
-            if reply_pcm:
-                reply_at = result.audio_started_at
-                if reply_at is None:
-                    reply_at = (
-                        result.input_audio_ended_at or time.perf_counter()
-                    ) + (result.latency_ms or 0.0) / 1000.0
-                self._recorder.add("agent", reply_pcm, reply_rate, reply_at)
-        return result
-
     async def stream_uplink(self, audio: Audio, **kwargs):
         started = time.perf_counter()
         try:

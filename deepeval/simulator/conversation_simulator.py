@@ -60,7 +60,6 @@ if TYPE_CHECKING:
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
-    from deepeval.voice.connectors.types import ConnectorTurn
     from deepeval.voice.config import VoiceConfig
     from deepeval.voice.floor_control import FloorController
     from deepeval.voice.interruption import InterruptionPolicy
@@ -96,78 +95,6 @@ class _VoiceSession:
         return self.policy is not None or getattr(
             self.connector, "supports_duplex", False
         )
-
-
-class _AgentTranscriber:
-    """Transcribes the agent's reply while it is still being spoken.
-
-    Batch STT puts its whole latency between the agent's last word and the
-    caller's reply. Fed the downlink frames as they arrive, the STT model has
-    already written most of the transcript by the time the turn ends, leaving
-    at most one partial in the reply gap. The last `partial_every_seconds` of
-    audio a partial can miss is no longer than the silence window that ended
-    the turn, so the speech itself is always covered.
-    """
-
-    def __init__(
-        self,
-        stt_model: "DeepEvalBaseSTT",
-        stt_kwargs: dict,
-        partial_every_seconds: float,
-        on_cost: Callable[[float], None],
-    ):
-        self._queue: asyncio.Queue = asyncio.Queue()
-        self._closed = False
-        self.text: Optional[str] = None
-        self._task = asyncio.create_task(
-            self._consume(stt_model, stt_kwargs, partial_every_seconds, on_cost)
-        )
-
-    def sink(self, pcm: bytes, sample_rate: int) -> None:
-        from deepeval.test_case import AudioChunk
-
-        if self._closed:
-            return
-        self._queue.put_nowait(
-            AudioChunk.from_bytes(
-                pcm, "audio/pcm", sampleRate=sample_rate, encoding="pcm"
-            )
-        )
-
-    async def _chunks(self):
-        while True:
-            chunk = await self._queue.get()
-            if chunk is None:
-                return
-            yield chunk
-
-    async def _consume(
-        self, stt_model, stt_kwargs, partial_every_seconds, on_cost
-    ) -> None:
-        async for text in stt_model.a_transcribe_stream(
-            self._chunks(),
-            partial_every_seconds=partial_every_seconds,
-            on_cost=on_cost,
-            **stt_kwargs,
-        ):
-            self.text = text
-
-    def close(self) -> None:
-        if not self._closed:
-            self._closed = True
-            self._queue.put_nowait(None)
-
-    async def finish(self) -> Optional[str]:
-        self.close()
-        try:
-            await self._task
-        except Exception:
-            logger.warning(
-                "Streaming transcription failed; falling back to batch STT",
-                exc_info=True,
-            )
-            return None
-        return self.text
 
 
 def _swallow_speculative_result(task: asyncio.Task) -> None:
@@ -1484,8 +1411,6 @@ class ConversationSimulator:
         everything else goes through `_voice_duplex_exchange`.
         """
         voice = self._voice
-        if voice.tts_model.supports_streaming():
-            return await self._voice_exchange_stream(session, input, turns)
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
         user_audio, tts_cost = await voice.tts_model.a_synthesize(
@@ -1505,96 +1430,6 @@ class ConversationSimulator:
 
         return await self._voice_exchange(session, user_audio, turns)
 
-    def _start_agent_transcriber(
-        self, session: _VoiceSession
-    ) -> Optional[_AgentTranscriber]:
-        voice = self._voice
-        if voice is None or not voice.stt_model.supports_streaming():
-            return None
-        eot_ms = (
-            getattr(session.connector, "end_of_turn_silence_ms", None) or 800.0
-        )
-
-        def _add_cost(cost: float) -> None:
-            voice.stt_cost += cost
-
-        transcriber = _AgentTranscriber(
-            voice.stt_model,
-            self._stt_kwargs(session),
-            partial_every_seconds=max(0.5, eot_ms / 1000.0),
-            on_cost=_add_cost,
-        )
-        session.connector.set_agent_frame_sink(transcriber.sink)
-        return transcriber
-
-    async def _exchange_transcribing(
-        self,
-        session: _VoiceSession,
-        exchange: Callable[[], Awaitable["ConnectorTurn"]],
-    ) -> "ConnectorTurn":
-        """Run one connector exchange, transcribing the agent live."""
-        transcriber = self._start_agent_transcriber(session)
-        if transcriber is None:
-            return await exchange()
-        try:
-            conn_turn = await exchange()
-        finally:
-            session.connector.set_agent_frame_sink(None)
-            transcriber.close()
-        streamed = await transcriber.finish()
-        if streamed and not conn_turn.transcript:
-            conn_turn.transcript = streamed
-            logger.debug("Agent transcribed while speaking; batch STT skipped")
-        return conn_turn
-
-    async def _voice_exchange_stream(
-        self, session: _VoiceSession, input: str, turns: List[Turn]
-    ) -> Turn:
-        """Half-duplex exchange that puts TTS on the line as it is made.
-
-        Synthesizing the whole utterance before sending any of it stacks the
-        full synthesis time onto the agent's silence between turns. When the
-        TTS model can stream, frames go to the connector as they arrive, so
-        the agent starts hearing the caller almost as soon as synthesis does.
-        """
-        from deepeval.voice.background import BackgroundMixer
-        from deepeval.voice.streaming import PcmRecorder
-
-        voice = self._voice
-        persona = session.persona
-        mixer = BackgroundMixer(
-            persona.background_noise if persona is not None else None
-        )
-        recorder = PcmRecorder()
-
-        async def _frames():
-            async for chunk in voice.tts_model.a_synthesize_stream(
-                input, **self._persona_tts_kwargs(persona)
-            ):
-                mixed = mixer.mix_chunk(chunk)
-                recorder.add(mixed)
-                yield mixed
-
-        connector_started = time.perf_counter()
-        logger.debug(
-            "Streaming connector exchange started: %s characters=%d",
-            type(session.connector).__name__,
-            len(input),
-        )
-        conn_turn = await self._exchange_transcribing(
-            session, lambda: session.connector.exchange_turn_stream(_frames())
-        )
-        tts_cost = voice.tts_model.synthesis_cost(input)
-        if tts_cost is not None:
-            voice.tts_cost += tts_cost
-        user_audio = recorder.to_audio()
-        _populate_audio_duration(user_audio)
-        if turns and turns[-1].role == "user":
-            turns[-1].audio = user_audio
-        return await self._finish_voice_exchange(
-            session, user_audio, conn_turn, connector_started, turns
-        )
-
     async def _voice_exchange(
         self, session: _VoiceSession, user_audio: "Audio", turns: List[Turn]
     ) -> Turn:
@@ -1603,28 +1438,13 @@ class ConversationSimulator:
         Shared by the half-duplex callback and by silence-only exchanges (a
         muted caller, or waiting out an agent that speaks first).
         """
+        voice = self._voice
         connector_started = time.perf_counter()
         logger.debug(
             "Connector exchange started: %s",
             type(session.connector).__name__,
         )
-        conn_turn = await self._exchange_transcribing(
-            session, lambda: session.connector.exchange_turn(user_audio)
-        )
-        return await self._finish_voice_exchange(
-            session, user_audio, conn_turn, connector_started, turns
-        )
-
-    async def _finish_voice_exchange(
-        self,
-        session: _VoiceSession,
-        user_audio: "Audio",
-        conn_turn: "ConnectorTurn",
-        connector_started: float,
-        turns: List[Turn],
-    ) -> Turn:
-        """Stamp the exchange onto the call and transcribe the reply."""
-        voice = self._voice
+        conn_turn = await session.connector.exchange_turn(user_audio)
         _populate_audio_duration(conn_turn.audio)
         call_started_at = session.started_at or connector_started
         user_audio.start_time = max(
@@ -1707,8 +1527,6 @@ class ConversationSimulator:
         Appends barge user turns and assistant turns onto `turns` in place.
         Returns the last assistant turn for simulation-graph routing.
         """
-        import time
-
         call_started_at = session.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
@@ -1747,8 +1565,6 @@ class ConversationSimulator:
         Returns the assistant turn the engine recorded, or None when the
         agent said nothing.
         """
-        import time
-
         from deepeval.voice.duplex import DuplexExchange
         from deepeval.voice.floor_control import FloorController
 
@@ -1790,8 +1606,6 @@ class ConversationSimulator:
         the connector's full silence window. Bounded so a call nobody answers
         with a greeting hands the floor to the caller instead of hanging.
         """
-        import time
-
         persona = session.persona
         timeout = (
             persona.hold_timeout

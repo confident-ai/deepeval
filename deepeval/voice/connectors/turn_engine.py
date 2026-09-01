@@ -1,7 +1,7 @@
 import logging
 import time
 import asyncio
-from typing import Callable, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 from deepeval.voice.connectors.audio_utils import (
     DEFAULT_SILENCE_RMS,
@@ -22,7 +22,6 @@ async def collect_agent_turn(
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS,
     cancel_event: Optional[asyncio.Event] = None,
     hold_event: Optional[asyncio.Event] = None,
-    frame_sink: Optional[Callable[[bytes, int], None]] = None,
 ) -> Tuple[bytes, Optional[float]]:
     """Buffer agent audio until end-of-turn, optional cancel, or timeout.
 
@@ -95,8 +94,6 @@ async def collect_agent_turn(
             first_audio_at = time.perf_counter()
 
         collected.extend(pcm)
-        if frame_sink is not None:
-            frame_sink(pcm, sample_rate)
         if silent:
             trailing_silence_ms += frame_ms
             if trailing_silence_ms >= end_of_turn_silence_ms and not holding:
