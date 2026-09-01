@@ -38,6 +38,30 @@ _EVENT_POLL_S = 0.05
 # matters, and hearing slightly less than was said is what interrupting is like.
 _AGENT_CHARS_PER_SECOND = 13.0
 
+# Semantic endpointing: with a transcript that reads as a finished thought and
+# covers all the speech, this much silence ends the agent's turn instead of
+# the connector's full window. The full window stays the ceiling for replies
+# that trail off mid-sentence, where silence is the only evidence there is.
+_SEMANTIC_EOT_SILENCE_MS = 500.0
+
+# How much silence prompts one extra STT snapshot, so the semantic check and
+# the speculator see the final words instead of a stride-old partial.
+_STT_ON_SILENCE_MS = 200.0
+
+
+def _looks_complete(text: str) -> bool:
+    """Whether a partial transcript reads as a finished thought.
+
+    Punctuation is the transcriber's own judgement of the speech it heard, so
+    a terminal mark is evidence the sentence closed; anything else means the
+    agent may only be pausing. Models that never punctuate simply fail this
+    forever and fall back to the full silence window.
+    """
+    text = (text or "").strip()
+    if not text or text.endswith("..."):
+        return False
+    return text[-1] in ".!?…"
+
 
 @dataclass
 class _Barge:
@@ -89,6 +113,9 @@ class _AgentUtterance:
     barges: int = 0
     last_judged_len: int = 0
     last_stt_pcm_len: int = 0
+    # How much of `pcm` is speech rather than trailing silence, so partial
+    # transcripts can be judged fresh against the words alone.
+    speech_pcm_len: int = 0
 
     def reset(
         self, *, index: int, sent_at: float, awaiting_end_signal: bool
@@ -104,6 +131,7 @@ class _AgentUtterance:
         self.barges = 0
         self.last_judged_len = 0
         self.last_stt_pcm_len = 0
+        self.speech_pcm_len = 0
 
 
 @dataclass
@@ -260,6 +288,48 @@ class DuplexExchange:
                 else 0.0
             )
             return _spoken_prefix(utterance.transcript, heard_s)
+
+        def _semantic_ready() -> bool:
+            """Whether the reply already reads as finished.
+
+            A transcript can only stand in for the audio when it covers all of
+            it; connector transcripts run ahead of the speech, STT partials
+            trail it, so each is judged accordingly.
+            """
+            text = _heard_transcript()
+            if not _looks_complete(text):
+                return False
+            if connector_transcript_seen:
+                return True
+            return (
+                bool(utterance.transcript)
+                and utterance.last_stt_pcm_len >= utterance.speech_pcm_len
+            )
+
+        def _silence_needed_ms() -> float:
+            if _semantic_ready():
+                return min(_SEMANTIC_EOT_SILENCE_MS, eot_silence)
+            return eot_silence
+
+        def _start_stt_snapshot() -> None:
+            nonlocal stt_task
+            utterance.last_stt_pcm_len = len(utterance.pcm)
+            snap = bytes(utterance.pcm)
+
+            async def _stt_partial(pcm=snap):
+                audio = _pcm_to_audio(pcm, self.sample_rate)
+                text, cost = await self.stt_model.a_transcribe(audio)
+                return text, cost
+
+            stt_task = asyncio.create_task(_stt_partial())
+
+        def _stt_snapshot_due(new_bytes_needed: int) -> bool:
+            return (
+                not connector_transcript_seen
+                and (stt_task is None or stt_task.done())
+                and len(utterance.pcm) - utterance.last_stt_pcm_len
+                > new_bytes_needed
+            )
 
         async def _maybe_stop_uplink() -> None:
             """Stop sending the caller's speech, keeping whatever went out.
@@ -485,7 +555,7 @@ class DuplexExchange:
             """
             if self.floor.agent_speaking:
                 utterance.trailing_silence_ms += elapsed_ms
-                if utterance.trailing_silence_ms < eot_silence:
+                if utterance.trailing_silence_ms < _silence_needed_ms():
                     return False
                 if (
                     utterance.awaiting_end_signal
@@ -497,7 +567,7 @@ class DuplexExchange:
                     return False
 
             if (
-                utterance.trailing_silence_ms >= eot_silence
+                utterance.trailing_silence_ms >= _silence_needed_ms()
                 and utterance.started
                 and not utterance.awaiting_end_signal
                 and not self.floor.agent_speaking
@@ -641,31 +711,26 @@ class DuplexExchange:
                         if utterance.first_audio_at is None:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
+                        utterance.speech_pcm_len = len(utterance.pcm)
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
                             continue
                         utterance.pcm.extend(event.audio)
 
-                    # Streaming STT fallback when no platform transcript.
-                    if (
-                        not utterance.transcript
-                        and not connector_transcript_seen
-                        and len(utterance.pcm) - utterance.last_stt_pcm_len
-                        > stt_stride_bytes
-                        and (stt_task is None or stt_task.done())
+                    # Streaming STT when no platform transcript: one partial
+                    # per stride while the agent talks, plus one the moment it
+                    # goes quiet so the end-of-turn decision reads the final
+                    # words rather than a stride-old prefix.
+                    if _stt_snapshot_due(stt_stride_bytes) or (
+                        utterance.started
+                        and utterance.trailing_silence_ms
+                        >= _STT_ON_SILENCE_MS
+                        and utterance.last_stt_pcm_len
+                        < utterance.speech_pcm_len
+                        and _stt_snapshot_due(0)
                     ):
-                        utterance.last_stt_pcm_len = len(utterance.pcm)
-                        snap = bytes(utterance.pcm)
-
-                        async def _stt_partial(pcm=snap):
-                            audio = _pcm_to_audio(pcm, self.sample_rate)
-                            text, cost = await self.stt_model.a_transcribe(
-                                audio
-                            )
-                            return text, cost
-
-                        stt_task = asyncio.create_task(_stt_partial())
+                        _start_stt_snapshot()
 
                 if stt_task is not None and stt_task.done():
                     try:
