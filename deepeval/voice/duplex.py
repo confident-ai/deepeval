@@ -164,7 +164,12 @@ def _spoken_prefix(transcript: str, heard_seconds: float) -> str:
 
 
 class DuplexExchange:
-    """Runs one duplex listen/barge cycle after the initial user audio is sent."""
+    """Runs one duplex listen/barge cycle after the initial user audio is sent.
+
+    With `policy=None` the caller never barges: the exchange just listens on
+    the open line until the agent's turn ends, which keeps everything the
+    agent says without changing who speaks when.
+    """
 
     def __init__(
         self,
@@ -172,7 +177,7 @@ class DuplexExchange:
         connector: "BaseVoiceConnector",
         tts_model: "DeepEvalBaseTTS",
         stt_model: "DeepEvalBaseSTT",
-        policy: InterruptionPolicy,
+        policy: Optional[InterruptionPolicy],
         floor: FloorController,
         golden: ConversationalGolden,
         language: str,
@@ -412,8 +417,12 @@ class DuplexExchange:
                     if unfinished:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
+            # Backlogged speech can predate the uplink it now answers — the
+            # agent was already talking — which is a wait of zero, not a
+            # negative one.
             latency_ms = (
-                (utterance.first_audio_at - utterance.sent_at) * 1000.0
+                max(0.0, (utterance.first_audio_at - utterance.sent_at))
+                * 1000.0
                 if utterance.first_audio_at is not None
                 else None
             )
@@ -563,6 +572,7 @@ class DuplexExchange:
                     await _restart_after_barge()
                 if (
                     action.retry_barge
+                    and self.policy is not None
                     and self.floor.frustrated
                     and barge is None
                 ):
@@ -689,7 +699,8 @@ class DuplexExchange:
                 # Schedule interrupt judge when listening to agent speech.
                 heard = _heard_transcript()
                 if (
-                    self.floor.can_run_judge
+                    self.policy is not None
+                    and self.floor.can_run_judge
                     and heard
                     and judge_task is None
                     and should_poll_judge(
