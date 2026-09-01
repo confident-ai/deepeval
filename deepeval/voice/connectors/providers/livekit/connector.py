@@ -547,7 +547,10 @@ class LiveKitConnector(BaseVoiceConnector):
                 "agent worker running and dispatched to the room?"
             )
 
-        self.drain_downlink()
+        # The downlink queue is deliberately not drained: anything in it is
+        # speech the agent produced while the caller was talking or thinking,
+        # and a strict speak-then-listen exchange would otherwise lose it. The
+        # collector skips the queued leading silence on its own.
         self._current_transcript = None
         self._transcript_ready.clear()
 

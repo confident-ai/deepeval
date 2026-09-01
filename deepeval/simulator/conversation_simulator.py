@@ -1546,9 +1546,6 @@ class ConversationSimulator:
         from deepeval.voice.duplex import DuplexExchange
 
         voice = self._voice
-        # Drain stale downlink before the new user utterance.
-        session.connector.drain_downlink()
-
         call_started_at = session.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
