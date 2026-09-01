@@ -300,7 +300,9 @@ def check_conversational_test_case_params(
                 )
                 raise ValueError(msg)
             else:
-                supported_model_names = [cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()]
+                supported_model_names = [
+                    cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()
+                ]
                 supported_model_list_str = ", ".join(supported_model_names)
                 error_msg = (
                     f"The evaluation model {model.name} does not support multimodal inputs. "
@@ -399,7 +401,9 @@ def check_llm_test_case_params(
                     f"{model_list_str}."
                 )
             else:
-                supported_model_names = [cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()]
+                supported_model_names = [
+                    cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()
+                ]
                 supported_model_list_str = ", ".join(supported_model_names)
                 raise ValueError(
                     f"Model {model.name} doesn't support multimodal inputs. "
@@ -449,7 +453,9 @@ def check_llm_test_case_params(
             raise MissingTestCaseParamsError(error_str)
 
     if SingleTurnParams.EXPECTED_OUTPUT in test_case_params:
-        expected_output = getattr(test_case, SingleTurnParams.EXPECTED_OUTPUT.value)
+        expected_output = getattr(
+            test_case, SingleTurnParams.EXPECTED_OUTPUT.value
+        )
         if isinstance(expected_output, str) and expected_output.strip() == "":
             error_str = f"'expected_output' cannot be empty for the '{metric.__name__}' metric"
             metric.error = error_str
@@ -511,7 +517,9 @@ def trimAndLoadJson(
     metric: Optional[BaseMetric] = None,
 ) -> Any:
     if input_string is None:
-        error_str = "Invalid JSON from LLM. Please use a better evaluation model."
+        error_str = (
+            "Invalid JSON from LLM. Please use a better evaluation model."
+        )
         if metric is not None:
             metric.error = error_str
         raise ValueError(error_str)
@@ -534,7 +542,9 @@ def trimAndLoadJson(
         try:
             return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
         except json.JSONDecodeError:
-            error_str = "Invalid JSON from LLM. Please use a better evaluation model."
+            error_str = (
+                "Invalid JSON from LLM. Please use a better evaluation model."
+            )
             if metric is not None:
                 metric.error = error_str
             raise ValueError(error_str)
