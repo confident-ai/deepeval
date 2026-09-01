@@ -851,6 +851,8 @@ class ConversationSimulator:
                     break
 
         update_pbar(progress, pbar_id)
+        if voice is not None:
+            self._log_voice_latency(turns, index)
         call_recording_path = (
             session.recorder.finish()
             if session is not None and session.recorder is not None
@@ -984,6 +986,56 @@ class ConversationSimulator:
             sampleRate=sample_rate,
             encoding="wav",
             duration=seconds,
+        )
+
+    @staticmethod
+    def _log_voice_latency(turns: List[Turn], index: int) -> None:
+        """One line on the dead air in the finished conversation.
+
+        Two silences make up the gap between turns: the agent thinking after
+        the caller stops, and the caller thinking after the agent stops (the
+        stopping check, the next line, and its synthesis). The second one is
+        the simulator's own doing, so it is the one worth watching.
+        """
+        agent_waits = [
+            turn.latency_ms / 1000.0
+            for turn in turns
+            if turn.role == "assistant" and turn.latency_ms is not None
+        ]
+        caller_waits = []
+        for prev, turn in zip(turns, turns[1:]):
+            if prev.role != "assistant" or turn.role != "user":
+                continue
+            if prev.audio is None or turn.audio is None:
+                continue
+            if (
+                prev.audio.start_time is None
+                or prev.audio.duration is None
+                or turn.audio.start_time is None
+            ):
+                continue
+            caller_waits.append(
+                turn.audio.start_time
+                - (prev.audio.start_time + prev.audio.duration)
+            )
+        if not agent_waits and not caller_waits:
+            return
+
+        def _describe(waits: List[float]) -> str:
+            if not waits:
+                return "n/a"
+            return "avg %.2fs, max %.2fs over %d turns" % (
+                sum(waits) / len(waits),
+                max(waits),
+                len(waits),
+            )
+
+        logger.info(
+            "Conversation %d voice latency: agent replied after %s; "
+            "caller replied after %s",
+            index,
+            _describe(agent_waits),
+            _describe(caller_waits),
         )
 
     async def _voice_listen(
