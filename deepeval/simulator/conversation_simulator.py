@@ -170,6 +170,127 @@ class _AgentTranscriber:
         return self.text
 
 
+def _swallow_speculative_result(task: asyncio.Task) -> None:
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        logger.debug("Speculative task failed: %r", exc)
+
+
+class _ReplySpeculation:
+    """A stop-check and next user line started while the agent still talks.
+
+    The duplex engine hands over the reply's partial transcript the moment
+    the agent goes quiet, so both LLM calls run during the same silence the
+    end-of-turn decision is waiting out. The work is adopted only when the
+    reply the conversation actually recorded matches what was speculated on
+    — same turns, same graph node, same text — and discarded otherwise: a
+    wrong guess costs a wasted call, never a wrong conversation.
+    """
+
+    def __init__(
+        self,
+        simulator: "ConversationSimulator",
+        *,
+        turns: List[Turn],
+        golden: ConversationalGolden,
+        graph_state,
+        thread_id: str,
+        index: Optional[int],
+        simulation_counter: int,
+        max_user_simulations: int,
+    ):
+        self._simulator = simulator
+        self._turns = turns
+        self._snap_len = len(turns)
+        self._golden = golden
+        self._state = graph_state
+        self._node = graph_state.current
+        self._thread_id = thread_id
+        self._index = index
+        self._counter = simulation_counter
+        self._max = max_user_simulations
+        self._text: Optional[str] = None
+        self._stop_task: Optional[asyncio.Task] = None
+        self._emission_task: Optional[asyncio.Task] = None
+
+    def start(self, text: str) -> None:
+        text = (text or "").strip()
+        if not text or text == self._text:
+            return
+        self.cancel()
+        self._text = text
+        from deepeval.simulator.simulation_graph.runner import (
+            _GraphConversationState,
+        )
+
+        simulator = self._simulator
+        provisional = list(self._turns) + [
+            Turn(role="assistant", content=text)
+        ]
+        # The graph runner charges a visit as it runs, so speculation works
+        # on a copy; `adopt` replays the charge on the real state.
+        cloned = _GraphConversationState(
+            current=self._state.current, visits=dict(self._state.visits)
+        )
+        logger.debug(
+            "Speculating on partial agent reply: %d chars", len(text)
+        )
+        self._stop_task = asyncio.create_task(
+            simulator.stopping_controller.a_run(
+                turns=provisional,
+                golden=self._golden,
+                index=self._index if self._index is not None else 0,
+                thread_id=self._thread_id,
+                simulation_counter=self._counter,
+                max_user_simulations=self._max,
+            )
+        )
+        self._emission_task = asyncio.create_task(
+            simulator._graph_runner.a_run(
+                simulator,
+                cloned,
+                provisional,
+                self._golden,
+                self._thread_id,
+                simulator.language,
+            )
+        )
+
+    def cancel(self) -> None:
+        for task in (self._stop_task, self._emission_task):
+            if task is None:
+                continue
+            if not task.done():
+                task.cancel()
+            task.add_done_callback(_swallow_speculative_result)
+        self._stop_task = None
+        self._emission_task = None
+        self._text = None
+
+    def matches(self, turns: List[Turn], graph_state, counter: int) -> bool:
+        return (
+            self._stop_task is not None
+            and self._emission_task is not None
+            and turns is self._turns
+            and counter == self._counter
+            and graph_state.current is self._node
+            and len(turns) == self._snap_len + 1
+            and turns[-1].role == "assistant"
+            and (turns[-1].content or "").strip() == self._text
+        )
+
+    def adopt(self, graph_state):
+        """Hand over the running tasks and charge the graph visit for real."""
+        node_id = id(graph_state.current)
+        graph_state.visits[node_id] = graph_state.visits.get(node_id, 0) + 1
+        stop_task, emission_task = self._stop_task, self._emission_task
+        self._stop_task = None
+        self._emission_task = None
+        return stop_task, emission_task
+
+
 @dataclass
 class _VoiceRun:
     """A simulator's voice mode: the speech models and the spend.
@@ -737,6 +858,7 @@ class ConversationSimulator:
             muted = voice_mode and persona is not None and persona.muted
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
+            pending_speculation: Optional[_ReplySpeculation] = None
 
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
@@ -766,12 +888,27 @@ class ConversationSimulator:
                 # delay costs only wall time, which is not worth a generation
                 # thrown away on every conversation.
                 emission_task: Optional[asyncio.Task] = None
+                stop_task: Optional[asyncio.Task] = None
+                if pending_speculation is not None:
+                    if pending_speculation.matches(
+                        turns, graph_state, simulation_counter
+                    ):
+                        logger.debug(
+                            "Adopting the turn speculated during agent speech"
+                        )
+                        user_started = time.perf_counter()
+                        stop_task, emission_task = pending_speculation.adopt(
+                            graph_state
+                        )
+                    else:
+                        pending_speculation.cancel()
+                    pending_speculation = None
                 speculating = (
                     voice_mode
                     and not muted
                     and not (turns and turns[-1].role == "user")
                 )
-                if speculating:
+                if speculating and emission_task is None:
                     user_started = time.perf_counter()
                     logger.debug("Simulated user generation started")
                     emission_task = asyncio.create_task(
@@ -788,16 +925,21 @@ class ConversationSimulator:
                 # Stop conversation if needed
                 controller_started = time.perf_counter()
                 logger.debug("Stopping controller started")
-                should_stop_simulation = await self.stopping_controller.a_run(
-                    turns=turns,
-                    golden=golden,
-                    index=index if index is not None else 0,
-                    thread_id=thread_id,
-                    simulation_counter=simulation_counter,
-                    max_user_simulations=max_user_simulations,
-                    progress=progress,
-                    pbar_turns_id=pbar_max_user_simluations_id,
-                )
+                if stop_task is not None:
+                    should_stop_simulation = await stop_task
+                else:
+                    should_stop_simulation = (
+                        await self.stopping_controller.a_run(
+                            turns=turns,
+                            golden=golden,
+                            index=index if index is not None else 0,
+                            thread_id=thread_id,
+                            simulation_counter=simulation_counter,
+                            max_user_simulations=max_user_simulations,
+                            progress=progress,
+                            pbar_turns_id=pbar_max_user_simluations_id,
+                        )
+                    )
                 logger.debug(
                     "Stopping controller finished after %.2fs: should_stop=%s",
                     time.perf_counter() - controller_started,
@@ -860,8 +1002,22 @@ class ConversationSimulator:
                     user_turns_before = sum(
                         1 for turn in turns if turn.role == "user"
                     )
+                    pending_speculation = _ReplySpeculation(
+                        self,
+                        turns=turns,
+                        golden=golden,
+                        graph_state=graph_state,
+                        thread_id=thread_id,
+                        index=index,
+                        simulation_counter=simulation_counter,
+                        max_user_simulations=max_user_simulations,
+                    )
                     assistant_turn = await self._voice_duplex_exchange(
-                        session, user_input, turns, golden
+                        session,
+                        user_input,
+                        turns,
+                        golden,
+                        speculation=pending_speculation,
                     )
                     simulation_counter += (
                         sum(1 for turn in turns if turn.role == "user")
@@ -929,6 +1085,8 @@ class ConversationSimulator:
                 if emission_end:
                     break
 
+        if pending_speculation is not None:
+            pending_speculation.cancel()
         update_pbar(progress, pbar_id)
         if voice is not None:
             self._log_voice_latency(turns, index)
@@ -1543,6 +1701,7 @@ class ConversationSimulator:
         input: str,
         turns: List[Turn],
         golden: ConversationalGolden,
+        speculation: Optional[_ReplySpeculation] = None,
     ) -> Turn:
         """Duplex voice exchange with mid-speech barge-in and floor control.
 
@@ -1580,6 +1739,7 @@ class ConversationSimulator:
             language=self.language,
             a_generate_schema=self.a_generate_schema,
             call_started_at=call_started_at,
+            speculator=speculation,
         )
         result = await exchange.run(
             turns=turns,

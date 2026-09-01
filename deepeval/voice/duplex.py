@@ -48,6 +48,9 @@ _SEMANTIC_EOT_SILENCE_MS = 500.0
 # the speculator see the final words instead of a stride-old partial.
 _STT_ON_SILENCE_MS = 200.0
 
+# How much silence before the reply-so-far is handed to the speculator.
+_SPECULATE_SILENCE_MS = 300.0
+
 
 def _looks_complete(text: str) -> bool:
     """Whether a partial transcript reads as a finished thought.
@@ -211,6 +214,7 @@ class DuplexExchange:
         language: str,
         a_generate_schema,
         call_started_at: float,
+        speculator=None,
     ):
         self.connector = connector
         self.tts_model = tts_model
@@ -220,6 +224,7 @@ class DuplexExchange:
         self.golden = golden
         self.language = language
         self.a_generate_schema = a_generate_schema
+        self.speculator = speculator
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
         self.tts_kwargs = (
@@ -534,6 +539,8 @@ class DuplexExchange:
             already partway to expiring.
             """
             await _finalize_assistant(interrupted=True)
+            if self.speculator is not None:
+                self.speculator.cancel()
             self.floor.reset_turn()
 
         async def _advance_end_of_turn(elapsed_ms: float, now: float) -> bool:
@@ -712,6 +719,8 @@ class DuplexExchange:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
                         utterance.speech_pcm_len = len(utterance.pcm)
+                        if self.speculator is not None:
+                            self.speculator.cancel()
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
@@ -742,6 +751,16 @@ class DuplexExchange:
                     except Exception:
                         logger.exception("Partial STT failed")
                     stt_task = None
+
+                # The agent has gone quiet: hand the reply-so-far to the
+                # speculator so the next user line is being written during
+                # the same silence the end-of-turn decision is waiting out.
+                if (
+                    self.speculator is not None
+                    and utterance.started
+                    and utterance.trailing_silence_ms >= _SPECULATE_SILENCE_MS
+                ):
+                    self.speculator.start(_heard_transcript())
 
                 if event.turn_complete:
                     # The agent has spoken for itself; silence is no longer
