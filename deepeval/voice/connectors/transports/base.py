@@ -141,6 +141,20 @@ class BaseVoiceConnector(ABC):
     async def disconnect(self) -> None:
         pass
 
+    _agent_frame_sink: Optional[Callable[[bytes, int], None]] = None
+
+    def set_agent_frame_sink(
+        self, sink: Optional[Callable[[bytes, int], None]]
+    ) -> None:
+        """Receive the agent's PCM frames as a turn is being collected.
+
+        Lets a caller listen along while the reply is still being spoken —
+        live transcription, most usefully — instead of first seeing the audio
+        when the turn is over. Transports that buffer a whole reply before
+        returning it never call the sink.
+        """
+        self._agent_frame_sink = sink
+
     async def stream_uplink(
         self, audio: Audio, *, trailing_silence: bool = True
     ) -> None:

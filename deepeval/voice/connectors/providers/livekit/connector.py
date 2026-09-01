@@ -561,6 +561,7 @@ class LiveKitConnector(BaseVoiceConnector):
             frame_gap_timeout_s=self._frame_gap_timeout_s,
             max_turn_timeout_s=self.max_turn_timeout_s,
             silence_threshold_rms=self.silence_threshold_rms,
+            frame_sink=self._agent_frame_sink,
         )
         await self._await_transcript(bool(agent_pcm))
 
