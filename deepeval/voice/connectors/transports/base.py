@@ -186,6 +186,22 @@ class BaseVoiceConnector(ABC):
         await self.stream_uplink(audio, trailing_silence=trailing_silence)
         return UplinkResult(audio=audio, first_frame_at=sent_at)
 
+    async def exchange_turn_stream(
+        self, chunks: AsyncIterable[AudioChunk]
+    ) -> ConnectorTurn:
+        """Exchange a turn whose user audio arrives as it is synthesized.
+
+        Waiting for a whole utterance to be synthesized before any of it is
+        sent puts the entire synthesis time in front of the first word the
+        agent hears. The default buffers the stream and hands the finished
+        utterance to `exchange_turn`, which is all a transport whose agent
+        needs the clip whole can do with it; transports that can forward
+        frames override this so the agent hears the opening words while the
+        rest is still being made.
+        """
+        pcm, sample_rate = await collect_pcm_chunks(chunks)
+        return await self.exchange_turn(pcm_to_audio(pcm, sample_rate))
+
     @property
     def signals_turn_complete(self) -> bool:
         """Whether the transport says outright when the agent's turn is over.
