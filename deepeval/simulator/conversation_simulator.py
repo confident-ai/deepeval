@@ -52,6 +52,7 @@ from deepeval.simulator.simulation_graph.runner import (
     _GraphConversationState,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
+from deepeval.voice.recording import CallRecorder, RecordingConnector
 from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
@@ -81,6 +82,7 @@ class _VoiceSession:
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
     barges: int = 0
+    recorder: Optional[CallRecorder] = None
 
     @property
     def is_duplex(self) -> bool:
@@ -120,11 +122,17 @@ class _VoiceRun:
         policy: Optional["InterruptionPolicy"],
         floor: Optional["FloorController"],
     ) -> _VoiceSession:
+        connector = self.config.make_connector()
+        recorder = None
+        if self.config.record_call:
+            recorder = CallRecorder()
+            connector = RecordingConnector(connector, recorder)
         return _VoiceSession(
-            connector=self.config.make_connector(),
+            connector=connector,
             persona=persona,
             policy=policy,
             floor=floor,
+            recorder=recorder,
         )
 
     @property
@@ -842,6 +850,11 @@ class ConversationSimulator:
                     break
 
         update_pbar(progress, pbar_id)
+        call_recording_path = (
+            session.recorder.finish()
+            if session is not None and session.recorder is not None
+            else None
+        )
         conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
@@ -858,6 +871,7 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        conversational_test_case.call_recording_path = call_recording_path
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
             logger.debug("Saving voice audio to %s", voice.config.output_dir)
