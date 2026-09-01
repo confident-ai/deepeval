@@ -119,6 +119,10 @@ class _AgentUtterance:
     # How much of `pcm` is speech rather than trailing silence, so partial
     # transcripts can be judged fresh against the words alone.
     speech_pcm_len: int = 0
+    # How much of `pcm` the transcript actually describes. Snapshots are
+    # requested at one length and land later; freshness is about what came
+    # back, not what was asked for.
+    transcribed_pcm_len: int = 0
 
     def reset(
         self, *, index: int, sent_at: float, awaiting_end_signal: bool
@@ -135,6 +139,7 @@ class _AgentUtterance:
         self.last_judged_len = 0
         self.last_stt_pcm_len = 0
         self.speech_pcm_len = 0
+        self.transcribed_pcm_len = 0
 
 
 @dataclass
@@ -308,7 +313,7 @@ class DuplexExchange:
                 return True
             return (
                 bool(utterance.transcript)
-                and utterance.last_stt_pcm_len >= utterance.speech_pcm_len
+                and utterance.transcribed_pcm_len >= utterance.speech_pcm_len
             )
 
         def _silence_needed_ms() -> float:
@@ -318,13 +323,14 @@ class DuplexExchange:
 
         def _start_stt_snapshot() -> None:
             nonlocal stt_task
-            utterance.last_stt_pcm_len = len(utterance.pcm)
+            covered = len(utterance.pcm)
+            utterance.last_stt_pcm_len = covered
             snap = bytes(utterance.pcm)
 
-            async def _stt_partial(pcm=snap):
+            async def _stt_partial(pcm=snap, covered=covered):
                 audio = _pcm_to_audio(pcm, self.sample_rate)
                 text, cost = await self.stt_model.a_transcribe(audio)
-                return text, cost
+                return text, cost, covered
 
             stt_task = asyncio.create_task(_stt_partial())
 
@@ -742,9 +748,12 @@ class DuplexExchange:
 
                 if stt_task is not None and stt_task.done():
                     try:
-                        text, cost = stt_task.result()
+                        text, cost, covered = stt_task.result()
                         if text:
                             utterance.transcript = text
+                            utterance.transcribed_pcm_len = max(
+                                utterance.transcribed_pcm_len, covered
+                            )
                         if cost is not None:
                             result.stt_cost += cost
                     except Exception:
