@@ -196,3 +196,35 @@ def test_reply_speculation_adopts_only_matching_replies():
     assert isinstance(should_stop, bool)
     assert emission.turn is not None and emission.turn.role == "user"
     assert graph_state.visits == {id(graph_state.current): 1}
+
+
+def test_duplex_listen_captures_the_greeting():
+    simulator = ConversationSimulator(
+        simulator_model=StaticSimulatorModel(),
+        voice_config=VoiceConfig(
+            connector=CallbackVoiceConnector(EchoAgent()),
+            tts_model=StubTTS(),
+            stt_model=_SentenceSTT("Hi, this is Riley. How can I help?"),
+            output_dir=None,
+            combine_audio_files=False,
+        ),
+    )
+    from deepeval.simulator.conversation_simulator import _VoiceSession
+
+    async def run():
+        connector = _QuietAfterSentence()
+        session = _VoiceSession(connector=connector, persona=None)
+        turns = []
+        async with connector:
+            await asyncio.wait_for(
+                simulator._voice_duplex_listen(
+                    session, turns, ConversationalGolden(scenario="Test")
+                ),
+                timeout=5,
+            )
+        return turns
+
+    turns = asyncio.run(run())
+    assert len(turns) == 1
+    assert turns[0].role == "assistant"
+    assert turns[0].content == "Hi, this is Riley. How can I help?"

@@ -858,7 +858,10 @@ class ConversationSimulator:
 
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
-                turns.append(await self._voice_listen(session, turns))
+                if session.is_duplex:
+                    await self._voice_duplex_listen(session, turns, golden)
+                else:
+                    turns.append(await self._voice_listen(session, turns))
                 await _dispatch_on_turn(on_turn, turns, index)
 
             while True:
@@ -1706,12 +1709,6 @@ class ConversationSimulator:
         """
         import time
 
-        from deepeval.voice.duplex import DuplexExchange
-        from deepeval.voice.floor_control import FloorController
-
-        voice = self._voice
-        if session.floor is None:
-            session.floor = FloorController()
         call_started_at = session.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
@@ -1725,6 +1722,39 @@ class ConversationSimulator:
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
+        assistant_turn = await self._run_duplex(
+            session, golden, turns, sent_at, speculation=speculation
+        )
+        if assistant_turn is not None:
+            return assistant_turn
+        logger.warning(
+            "Duplex exchange produced no assistant turn; inserting empty reply."
+        )
+        empty = Turn(role="assistant", content="")
+        turns.append(empty)
+        return empty
+
+    async def _run_duplex(
+        self,
+        session: _VoiceSession,
+        golden: ConversationalGolden,
+        turns: List[Turn],
+        sent_at: float,
+        speculation: Optional[_ReplySpeculation] = None,
+    ) -> Optional[Turn]:
+        """Listen on the open line until the agent's turn ends.
+
+        Returns the assistant turn the engine recorded, or None when the
+        agent said nothing.
+        """
+        import time
+
+        from deepeval.voice.duplex import DuplexExchange
+        from deepeval.voice.floor_control import FloorController
+
+        voice = self._voice
+        if session.floor is None:
+            session.floor = FloorController()
         exchange = DuplexExchange(
             connector=session.connector,
             tts_model=voice.tts_model,
@@ -1734,7 +1764,7 @@ class ConversationSimulator:
             golden=golden,
             language=self.language,
             a_generate_schema=self.a_generate_schema,
-            call_started_at=call_started_at,
+            call_started_at=session.started_at or time.perf_counter(),
             speculator=speculation,
         )
         result = await exchange.run(
@@ -1745,16 +1775,36 @@ class ConversationSimulator:
         session.barges += result.barges
         voice.tts_cost += result.tts_cost
         voice.stt_cost += result.stt_cost
-
         for turn in reversed(result.turns):
             if turn.role == "assistant":
                 return turn
-        logger.warning(
-            "Duplex exchange produced no assistant turn; inserting empty reply."
+        return None
+
+    async def _voice_duplex_listen(
+        self, session: _VoiceSession, turns: List[Turn], golden
+    ) -> None:
+        """Wait out the agent's greeting on the open line.
+
+        The duplex engine collects it like any reply, so semantic endpointing
+        ends the wait as soon as the greeting reads finished instead of after
+        the connector's full silence window. Bounded so a call nobody answers
+        with a greeting hands the floor to the caller instead of hanging.
+        """
+        import time
+
+        persona = session.persona
+        timeout = (
+            persona.hold_timeout
+            if persona is not None and persona.hold_timeout
+            else 15.0
         )
-        empty = Turn(role="assistant", content="")
-        turns.append(empty)
-        return empty
+        try:
+            await asyncio.wait_for(
+                self._run_duplex(session, golden, turns, time.perf_counter()),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError:
+            logger.debug("No greeting heard; the caller speaks first")
 
     ############################################
     ### Invoke Model Callback ##################
