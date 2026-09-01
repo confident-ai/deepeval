@@ -394,6 +394,18 @@ class LLMTestCase(BaseModel):
         serialization_alias="tokenCost",
         validation_alias=AliasChoices("tokenCost", "token_cost"),
     )
+    input_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="inputTokenCount",
+        validation_alias=AliasChoices("inputTokenCount", "input_token_count"),
+    )
+    output_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="outputTokenCount",
+        validation_alias=AliasChoices(
+            "outputTokenCount", "output_token_count"
+        ),
+    )
     completion_time: Optional[float] = Field(
         default=None,
         serialization_alias="completionTime",
