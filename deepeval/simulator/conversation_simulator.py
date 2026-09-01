@@ -60,6 +60,7 @@ if TYPE_CHECKING:
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+    from deepeval.voice.connectors.types import ConnectorTurn
     from deepeval.voice.config import VoiceConfig
     from deepeval.voice.floor_control import FloorController
     from deepeval.voice.interruption import InterruptionPolicy
@@ -1194,6 +1195,8 @@ class ConversationSimulator:
         goes through `_voice_duplex_exchange` instead.
         """
         voice = self._voice
+        if voice.tts_model.supports_streaming():
+            return await self._voice_exchange_stream(session, input, turns)
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
         user_audio, tts_cost = await voice.tts_model.a_synthesize(
@@ -1213,6 +1216,52 @@ class ConversationSimulator:
 
         return await self._voice_exchange(session, user_audio, turns)
 
+    async def _voice_exchange_stream(
+        self, session: _VoiceSession, input: str, turns: List[Turn]
+    ) -> Turn:
+        """Half-duplex exchange that puts TTS on the line as it is made.
+
+        Synthesizing the whole utterance before sending any of it stacks the
+        full synthesis time onto the agent's silence between turns. When the
+        TTS model can stream, frames go to the connector as they arrive, so
+        the agent starts hearing the caller almost as soon as synthesis does.
+        """
+        from deepeval.voice.background import BackgroundMixer
+        from deepeval.voice.streaming import PcmRecorder
+
+        voice = self._voice
+        persona = session.persona
+        mixer = BackgroundMixer(
+            persona.background_noise if persona is not None else None
+        )
+        recorder = PcmRecorder()
+
+        async def _frames():
+            async for chunk in voice.tts_model.a_synthesize_stream(
+                input, **self._persona_tts_kwargs(persona)
+            ):
+                mixed = mixer.mix_chunk(chunk)
+                recorder.add(mixed)
+                yield mixed
+
+        connector_started = time.perf_counter()
+        logger.debug(
+            "Streaming connector exchange started: %s characters=%d",
+            type(session.connector).__name__,
+            len(input),
+        )
+        conn_turn = await session.connector.exchange_turn_stream(_frames())
+        tts_cost = voice.tts_model.synthesis_cost(input)
+        if tts_cost is not None:
+            voice.tts_cost += tts_cost
+        user_audio = recorder.to_audio()
+        _populate_audio_duration(user_audio)
+        if turns and turns[-1].role == "user":
+            turns[-1].audio = user_audio
+        return await self._finish_voice_exchange(
+            session, user_audio, conn_turn, connector_started, turns
+        )
+
     async def _voice_exchange(
         self, session: _VoiceSession, user_audio: "Audio", turns: List[Turn]
     ) -> Turn:
@@ -1221,13 +1270,26 @@ class ConversationSimulator:
         Shared by the half-duplex callback and by silence-only exchanges (a
         muted caller, or waiting out an agent that speaks first).
         """
-        voice = self._voice
         connector_started = time.perf_counter()
         logger.debug(
             "Connector exchange started: %s",
             type(session.connector).__name__,
         )
         conn_turn = await session.connector.exchange_turn(user_audio)
+        return await self._finish_voice_exchange(
+            session, user_audio, conn_turn, connector_started, turns
+        )
+
+    async def _finish_voice_exchange(
+        self,
+        session: _VoiceSession,
+        user_audio: "Audio",
+        conn_turn: "ConnectorTurn",
+        connector_started: float,
+        turns: List[Turn],
+    ) -> Turn:
+        """Stamp the exchange onto the call and transcribe the reply."""
+        voice = self._voice
         _populate_audio_duration(conn_turn.audio)
         call_started_at = session.started_at or connector_started
         user_audio.start_time = max(

@@ -57,6 +57,9 @@ class _Agent:
 
 
 class _TTS:
+    def supports_streaming(self) -> bool:
+        return False
+
     async def a_synthesize(self, text: str, **kwargs):
         return _wav_audio(), None
 

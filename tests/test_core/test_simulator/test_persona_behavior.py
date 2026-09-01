@@ -35,6 +35,9 @@ class RecordingTTS:
     def __init__(self):
         self.calls: List[dict] = []
 
+    def supports_streaming(self) -> bool:
+        return False
+
     async def a_synthesize(self, text: str, **kwargs):
         self.calls.append({"text": text, **kwargs})
         return _wav_audio(), None
