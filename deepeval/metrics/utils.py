@@ -392,14 +392,21 @@ def check_llm_test_case_params(
         metric.error = error_str
         raise ValueError(error_str)
 
-    # Centralized: if a metric requires actual_output, reject empty/whitespace
-    # (including empty multimodal outputs) as "missing params".
-    if SingleTurnParams.ACTUAL_OUTPUT in test_case_params:
-        actual_output = getattr(test_case, SingleTurnParams.ACTUAL_OUTPUT.value)
-        if isinstance(actual_output, str) and actual_output == "":
-            error_str = f"'actual_output' cannot be empty for the '{metric.__name__}' metric"
-            metric.error = error_str
-            raise MissingTestCaseParamsError(error_str)
+    # Centralized: if a metric requires actual or expected output, reject empty
+    # or whitespace-only text as "missing params".
+    for param in (
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.EXPECTED_OUTPUT,
+    ):
+        if param in test_case_params:
+            value = getattr(test_case, param.value)
+            if isinstance(value, str) and value.strip() == "":
+                error_str = (
+                    f"'{param.value}' cannot be empty for the "
+                    f"'{metric.__name__}' metric"
+                )
+                metric.error = error_str
+                raise MissingTestCaseParamsError(error_str)
 
     missing_params = []
     for param in test_case_params:
