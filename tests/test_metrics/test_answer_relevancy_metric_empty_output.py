@@ -9,8 +9,9 @@ when actual_output or expected_output is missing/empty:
 These tests use DummyModel and do not require OPENAI_API_KEY.
 """
 
-import pytest
 from unittest.mock import patch
+import pytest
+
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.metrics.utils import check_llm_test_case_params
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -37,7 +38,7 @@ def make_metric_with_expected_output(*, async_mode: bool = False) -> AnswerRelev
         mock_init.return_value = (DummyModel(), True)
         metric = AnswerRelevancyMetric(async_mode=async_mode)
         # Override required params to include expected_output
-        metric._required_params = [
+        metric._required_params = [  # pylint: disable=protected-access
             SingleTurnParams.INPUT,
             SingleTurnParams.ACTUAL_OUTPUT,
             SingleTurnParams.EXPECTED_OUTPUT,
@@ -46,6 +47,7 @@ def make_metric_with_expected_output(*, async_mode: bool = False) -> AnswerRelev
 
 
 def test_answer_relevancy_none_actual_output_raises_sync():
+    """Test None actual_output raises MissingTestCaseParamsError."""
     metric = make_metric(async_mode=False)
     tc = LLMTestCase(input="hi", actual_output=None)
 
@@ -76,7 +78,7 @@ def test_answer_relevancy_whitespace_actual_output_raises_sync():
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
         check_llm_test_case_params(
             test_case=tc,
-            test_case_params=metric._required_params,
+            test_case_params=metric._required_params,  # pylint: disable=protected-access
             input_image_count=None,
             actual_output_image_count=None,
             metric=metric,
@@ -103,7 +105,11 @@ def test_answer_relevancy_none_expected_output_raises_sync():
 def test_answer_relevancy_empty_expected_output_raises_sync():
     """Empty string expected_output should raise MissingTestCaseParamsError (sync)."""
     metric = make_metric_with_expected_output(async_mode=False)
-    tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="hello", expected_output="")
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?",
+        actual_output="hello",
+        expected_output=""
+    )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
         metric.measure(tc, _show_indicator=False)
@@ -115,12 +121,16 @@ def test_answer_relevancy_empty_expected_output_raises_sync():
 def test_answer_relevancy_whitespace_expected_output_raises_sync():
     """Whitespace-only expected_output should raise MissingTestCaseParamsError (sync)."""
     metric = make_metric_with_expected_output(async_mode=False)
-    tc = LLMTestCase(input="What if these shoes don't fit?", actual_output="hello", expected_output="   ")
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?",
+        actual_output="hello",
+        expected_output="   "
+    )
 
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
         check_llm_test_case_params(
             test_case=tc,
-            test_case_params=metric._required_params,
+            test_case_params=metric._required_params,  # pylint: disable=protected-access
             input_image_count=None,
             actual_output_image_count=None,
             metric=metric,
@@ -133,7 +143,7 @@ def test_answer_relevancy_whitespace_expected_output_raises_sync():
 
 
 def test_answer_relevancy_both_whitespace_strings_raises_sync():
-    """Both actual_output and expected_output being whitespace-only should raise MissingTestCaseParamsError."""
+    """Test whitespace-only actual_output and expected_output."""
     metric = make_metric_with_expected_output(async_mode=False)
     tc = LLMTestCase(
         input="What if these shoes don't fit?",
@@ -144,7 +154,7 @@ def test_answer_relevancy_both_whitespace_strings_raises_sync():
     with pytest.raises(MissingTestCaseParamsError) as exc_info:
         check_llm_test_case_params(
             test_case=tc,
-            test_case_params=metric._required_params,
+            test_case_params=metric._required_params,  # pylint: disable=protected-access
             input_image_count=None,
             actual_output_image_count=None,
             metric=metric,

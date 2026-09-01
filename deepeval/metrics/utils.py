@@ -1,3 +1,7 @@
+"""
+Utility functions for deepeval metrics.
+"""
+
 import inspect
 import json
 import re
@@ -150,12 +154,12 @@ def format_turns(
 ) -> List[Dict[str, Union[str, List[str]]]]:
     res = []
     for llm_test_case in llm_test_cases:
-        dict = {}
+        turn_dict = {}
         for param in test_case_params:
             value = getattr(llm_test_case, param.value)
             if value:
-                dict[param.value] = value
-        res.append(dict)
+                turn_dict[param.value] = value
+        res.append(turn_dict)
     return res
 
 
@@ -288,16 +292,25 @@ def check_conversational_test_case_params(
                         model_data = model_data()
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
-                raise ValueError(
-                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(valid_multimodal_models)}."
+                msg = (
+                    f"The evaluation model {model.name} does not support multimodal evaluations. "
+                    f"Available multi-modal models for {model.__class__.__name__}: "
+                    f"{', '.join(valid_multimodal_models)}."
                 )
+                raise ValueError(msg)
             else:
-                raise ValueError(
-                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                error_msg = (
+                    f"The evaluation model {model.name} does not support multimodal inputs. "
+                    f"Please use one of: "
+                    f"{', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
                 )
+                raise ValueError(error_msg)
 
     if isinstance(test_case, ConversationalTestCase) is False:
-        error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
+        error_str = (
+            f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' "
+            f"using the conversational '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise ValueError(error_str)
 
@@ -305,7 +318,10 @@ def check_conversational_test_case_params(
         MultiTurnParams.EXPECTED_OUTCOME in test_case_params
         and test_case.expected_outcome is None
     ):
-        error_str = f"'expected_outcome' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        error_str = (
+            f"'expected_outcome' in a conversational test case cannot be empty "
+            f"for the '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -313,7 +329,10 @@ def check_conversational_test_case_params(
         MultiTurnParams.SCENARIO in test_case_params
         and test_case.scenario is None
     ):
-        error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        error_str = (
+            f"'scenario' in a conversational test case cannot be empty "
+            f"for the '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -321,17 +340,26 @@ def check_conversational_test_case_params(
         MultiTurnParams.METADATA in test_case_params
         and test_case.metadata is None
     ):
-        error_str = f"'metadata' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        error_str = (
+            f"'metadata' in a conversational test case cannot be empty "
+            f"for the '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
     if MultiTurnParams.TAGS in test_case_params and test_case.tags is None:
-        error_str = f"'tags' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        error_str = (
+            f"'tags' in a conversational test case cannot be empty "
+            f"for the '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
     if require_chatbot_role and test_case.chatbot_role is None:
-        error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        error_str = (
+            f"'chatbot_role' in a conversational test case cannot be empty "
+            f"for the '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -362,11 +390,15 @@ def check_llm_test_case_params(
                     if model_data.supports_multimodal:
                         valid_multimodal_models.append(model_name)
                 raise ValueError(
-                    f"The evaluation model {model.name} does not support multimodal evaluations at the moment. Available multi-modal models for the {model.__class__.__name__} provider includes {', '.join(valid_multimodal_models)}."
+                    f"Model {model.name} doesn't support multimodal evals. "
+                    f"Available for {model.__class__.__name__}: "
+                    f"{', '.join(valid_multimodal_models)}."
                 )
             else:
                 raise ValueError(
-                    f"The evaluation model {model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
+                    f"Model {model.name} doesn't support multimodal inputs. "
+                    f"Please use one of: "
+                    f"{', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS.keys()])}"
                 )
 
         if input_image_count:
@@ -375,7 +407,10 @@ def check_llm_test_case_params(
                 if isinstance(ele, MLLMImage):
                     count += 1
             if count != input_image_count:
-                error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
+                error_str = (
+                    f"Can only eval test cases with '{input_image_count}' input images "
+                    f"using '{metric.__name__}': {count} found."
+                )
                 raise ValueError(error_str)
 
         if actual_output_image_count:
@@ -384,11 +419,17 @@ def check_llm_test_case_params(
                 if isinstance(ele, MLLMImage):
                     count += 1
             if count != actual_output_image_count:
-                error_str = f"Can only evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+                error_str = (
+                    f"Can only eval test cases with '{actual_output_image_count}' output images "
+                    f"using '{metric.__name__}': {count} found."
+                )
                 raise ValueError(error_str)
 
-    if isinstance(test_case, LLMTestCase) is False:
-        error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
+    if not isinstance(test_case, LLMTestCase):
+        error_str = (
+            f"Unable to evaluate test cases that are not of type 'LLMTestCase' "
+            f"using the non-conversational '{metric.__name__}' metric."
+        )
         metric.error = error_str
         raise ValueError(error_str)
 
@@ -464,7 +505,7 @@ def trimAndLoadJson(
     metric: Optional[BaseMetric] = None,
 ) -> Any:
     if input_string is None:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+        error_str = "Invalid JSON from LLM. Please use a better evaluation model."
         if metric is not None:
             metric.error = error_str
         raise ValueError(error_str)
@@ -487,7 +528,7 @@ def trimAndLoadJson(
         try:
             return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
         except json.JSONDecodeError:
-            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+            error_str = "Invalid JSON from LLM. Please use a better evaluation model."
             if metric is not None:
                 metric.error = error_str
             raise ValueError(error_str)
@@ -745,7 +786,9 @@ def initialize_model(
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
+        f"Unsupported type for model: {type(model)}. "
+        f"Expected None, str, DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel, "
+        f"LiteLLMModel, OllamaModel, LocalModel."
     )
 
 
@@ -817,5 +860,7 @@ def initialize_embedding_model(
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for embedding model: {type(model)}. Expected None, str, DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, AzureOpenAIEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
+        f"Unsupported type for embedding model: {type(model)}. "
+        f"Expected None, str, DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, "
+        f"AzureOpenAIEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
     )
