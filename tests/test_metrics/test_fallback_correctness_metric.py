@@ -128,6 +128,36 @@ def test_partial_score_and_custom_threshold():
     assert metric.is_successful() is True
 
 
+def test_unsupported_claims_failure_is_a_hard_gate():
+    judge = FakeJudge(
+        verdict(
+            avoids_unsupported_claims=False,
+            reasoning="The response invents an unsupported delivery status.",
+        )
+    )
+    metric = FallbackCorrectnessMetric(
+        model=judge,
+        async_mode=False,
+        threshold=0.6,
+    )
+
+    score = metric.measure(
+        make_test_case(
+            "The lookup timed out, but order 123 will arrive tomorrow. "
+            "Please try again later."
+        ),
+        _show_indicator=False,
+    )
+
+    assert score == 0
+    assert metric.is_successful() is False
+    assert metric.score_breakdown == {
+        "acknowledges_limitation": 1.0,
+        "avoids_unsupported_claims": 0.0,
+        "recovery_action_appropriate": 1.0,
+    }
+
+
 def test_strict_mode_zeroes_partial_score():
     judge = FakeJudge(verdict(recovery_action_appropriate=False))
     metric = FallbackCorrectnessMetric(

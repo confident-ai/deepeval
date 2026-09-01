@@ -32,8 +32,11 @@ class FallbackCorrectnessMetric(BaseMetric):
     2. avoids unsupported claims or a false success claim, and
     3. takes an appropriate recovery action.
 
-    Each satisfied criterion contributes one third of the score. The default
-    threshold of ``1.0`` therefore requires all three criteria to pass.
+    Each satisfied criterion contributes one third of the score. Because
+    unsupported claims invalidate a fallback response, a failed
+    ``avoids_unsupported_claims`` verdict forces the final score to ``0``.
+    The default threshold of ``1.0`` therefore requires all three criteria to
+    pass.
     """
 
     _required_params: List[SingleTurnParams] = [
@@ -126,7 +129,12 @@ class FallbackCorrectnessMetric(BaseMetric):
     def _set_result(self) -> None:
         self.score_breakdown = self._get_score_breakdown()
         score = sum(self.score_breakdown.values()) / len(self.score_breakdown)
-        self.score = 0 if self.strict_mode and score < self.threshold else score
+        if self.verdict.avoids_unsupported_claims is False:
+            self.score = 0
+        elif self.strict_mode and score < self.threshold:
+            self.score = 0
+        else:
+            self.score = score
         self.reason = self._generate_reason()
         self.success = self.is_successful()
         self.verbose_logs = construct_verbose_logs(

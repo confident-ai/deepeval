@@ -59,7 +59,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 There are seven optional parameters when creating a `FallbackCorrectnessMetric`:
 
-- [Optional] `threshold`: the minimum passing score. Set it to `None` for [score-only mode](/docs/metrics-introduction#metric-thresholds). The default is `1.0`, which requires all three fallback criteria to pass.
+- [Optional] `threshold`: the minimum passing score. Set it to `None` for [score-only mode](/docs/metrics-introduction#metric-thresholds). The default is `1.0`, which requires all three fallback criteria to pass. Regardless of the configured threshold, failing the **Avoids unsupported claims** criterion forces the final score to `0`.
 - [Optional] `model`: a string specifying which model to use, or [a custom LLM](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaults to <DefaultLLMModel />.
 - [Optional] `include_reason`: whether to include the judge's reason for the score. Defaulted to `True`.
 - [Optional] `async_mode`: whether to enable [concurrent execution within `measure()`](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
@@ -75,4 +75,4 @@ The judge evaluates three independent criteria:
 2. **Avoids unsupported claims**: the response does not invent facts or tool results, hide a material failure, or falsely claim task completion.
 3. **Appropriate recovery action**: the response takes a useful and safe next step, such as asking for required information, suggesting a retry, offering a supported alternative, providing a qualified partial result, or stopping when proceeding would be unsafe.
 
-Each criterion contributes one third of the final score. `score_breakdown` exposes the individual criterion scores for debugging and failure analysis.
+Each criterion contributes one third of the preliminary score. Because inventing facts or falsely claiming task completion invalidates a fallback response, failing **Avoids unsupported claims** is a hard gate that forces the final score to `0`, regardless of the configured threshold. `score_breakdown` still exposes the individual criterion scores for debugging and failure analysis.
