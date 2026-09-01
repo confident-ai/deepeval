@@ -91,6 +91,78 @@ class _VoiceSession:
         return self.policy is not None
 
 
+class _AgentTranscriber:
+    """Transcribes the agent's reply while it is still being spoken.
+
+    Batch STT puts its whole latency between the agent's last word and the
+    caller's reply. Fed the downlink frames as they arrive, the STT model has
+    already written most of the transcript by the time the turn ends, leaving
+    at most one partial in the reply gap. The last `partial_every_seconds` of
+    audio a partial can miss is no longer than the silence window that ended
+    the turn, so the speech itself is always covered.
+    """
+
+    def __init__(
+        self,
+        stt_model: "DeepEvalBaseSTT",
+        stt_kwargs: dict,
+        partial_every_seconds: float,
+        on_cost: Callable[[float], None],
+    ):
+        self._queue: asyncio.Queue = asyncio.Queue()
+        self._closed = False
+        self.text: Optional[str] = None
+        self._task = asyncio.create_task(
+            self._consume(stt_model, stt_kwargs, partial_every_seconds, on_cost)
+        )
+
+    def sink(self, pcm: bytes, sample_rate: int) -> None:
+        from deepeval.test_case import AudioChunk
+
+        if self._closed:
+            return
+        self._queue.put_nowait(
+            AudioChunk.from_bytes(
+                pcm, "audio/pcm", sampleRate=sample_rate, encoding="pcm"
+            )
+        )
+
+    async def _chunks(self):
+        while True:
+            chunk = await self._queue.get()
+            if chunk is None:
+                return
+            yield chunk
+
+    async def _consume(
+        self, stt_model, stt_kwargs, partial_every_seconds, on_cost
+    ) -> None:
+        async for text in stt_model.a_transcribe_stream(
+            self._chunks(),
+            partial_every_seconds=partial_every_seconds,
+            on_cost=on_cost,
+            **stt_kwargs,
+        ):
+            self.text = text
+
+    def close(self) -> None:
+        if not self._closed:
+            self._closed = True
+            self._queue.put_nowait(None)
+
+    async def finish(self) -> Optional[str]:
+        self.close()
+        try:
+            await self._task
+        except Exception:
+            logger.warning(
+                "Streaming transcription failed; falling back to batch STT",
+                exc_info=True,
+            )
+            return None
+        return self.text
+
+
 @dataclass
 class _VoiceRun:
     """A simulator's voice mode: the speech models and the spend.
@@ -1268,6 +1340,48 @@ class ConversationSimulator:
 
         return await self._voice_exchange(session, user_audio, turns)
 
+    def _start_agent_transcriber(
+        self, session: _VoiceSession
+    ) -> Optional[_AgentTranscriber]:
+        voice = self._voice
+        if voice is None or not voice.stt_model.supports_streaming():
+            return None
+        eot_ms = (
+            getattr(session.connector, "end_of_turn_silence_ms", None) or 800.0
+        )
+
+        def _add_cost(cost: float) -> None:
+            voice.stt_cost += cost
+
+        transcriber = _AgentTranscriber(
+            voice.stt_model,
+            self._stt_kwargs(session),
+            partial_every_seconds=max(0.5, eot_ms / 1000.0),
+            on_cost=_add_cost,
+        )
+        session.connector.set_agent_frame_sink(transcriber.sink)
+        return transcriber
+
+    async def _exchange_transcribing(
+        self,
+        session: _VoiceSession,
+        exchange: Callable[[], Awaitable["ConnectorTurn"]],
+    ) -> "ConnectorTurn":
+        """Run one connector exchange, transcribing the agent live."""
+        transcriber = self._start_agent_transcriber(session)
+        if transcriber is None:
+            return await exchange()
+        try:
+            conn_turn = await exchange()
+        finally:
+            session.connector.set_agent_frame_sink(None)
+            transcriber.close()
+        streamed = await transcriber.finish()
+        if streamed and not conn_turn.transcript:
+            conn_turn.transcript = streamed
+            logger.debug("Agent transcribed while speaking; batch STT skipped")
+        return conn_turn
+
     async def _voice_exchange_stream(
         self, session: _VoiceSession, input: str, turns: List[Turn]
     ) -> Turn:
@@ -1302,7 +1416,9 @@ class ConversationSimulator:
             type(session.connector).__name__,
             len(input),
         )
-        conn_turn = await session.connector.exchange_turn_stream(_frames())
+        conn_turn = await self._exchange_transcribing(
+            session, lambda: session.connector.exchange_turn_stream(_frames())
+        )
         tts_cost = voice.tts_model.synthesis_cost(input)
         if tts_cost is not None:
             voice.tts_cost += tts_cost
@@ -1327,7 +1443,9 @@ class ConversationSimulator:
             "Connector exchange started: %s",
             type(session.connector).__name__,
         )
-        conn_turn = await session.connector.exchange_turn(user_audio)
+        conn_turn = await self._exchange_transcribing(
+            session, lambda: session.connector.exchange_turn(user_audio)
+        )
         return await self._finish_voice_exchange(
             session, user_audio, conn_turn, connector_started, turns
         )

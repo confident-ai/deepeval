@@ -44,6 +44,9 @@ class RecordingTTS:
 
 
 class RecordingSTT:
+    def supports_streaming(self) -> bool:
+        return False
+
     def __init__(self, transcripts: Optional[List[str]] = None):
         self.calls: List[dict] = []
         self.transcripts = list(transcripts or [])
