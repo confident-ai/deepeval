@@ -505,6 +505,38 @@ class LiveKitConnector(BaseVoiceConnector):
             yield event
 
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
+        await self._prepare_exchange()
+
+        input_audio_started_at = time.perf_counter()
+        for frame in self._make_input_frames(audio):
+            await self._source.capture_frame(frame)
+        await self._source.wait_for_playout()
+
+        return await self._collect_reply(
+            input_audio_started_at, time.perf_counter()
+        )
+
+    async def exchange_turn_stream(
+        self, chunks: AsyncIterable[AudioChunk]
+    ) -> ConnectorTurn:
+        """Exchange a turn while the caller's speech is still being made.
+
+        Frames go onto the track as they arrive from synthesis, so the agent's
+        turn detection starts on the opening words instead of after the whole
+        utterance has been synthesized. The reply is collected exactly as in
+        `exchange_turn`.
+        """
+        await self._prepare_exchange()
+
+        result = await self.stream_uplink_chunks(chunks)
+        await self._source.wait_for_playout()
+
+        sent_at = time.perf_counter()
+        return await self._collect_reply(
+            result.first_frame_at or sent_at, sent_at
+        )
+
+    async def _prepare_exchange(self) -> None:
         try:
             await asyncio.wait_for(
                 self._agent_track_ready.wait(), timeout=self.max_turn_timeout_s
@@ -519,12 +551,9 @@ class LiveKitConnector(BaseVoiceConnector):
         self._current_transcript = None
         self._transcript_ready.clear()
 
-        input_audio_started_at = time.perf_counter()
-        for frame in self._make_input_frames(audio):
-            await self._source.capture_frame(frame)
-        await self._source.wait_for_playout()
-
-        sent_at = time.perf_counter()
+    async def _collect_reply(
+        self, input_audio_started_at: float, sent_at: float
+    ) -> ConnectorTurn:
         agent_pcm, first_audio_at = await collect_agent_turn(
             self._out_frames,
             sample_rate=self.livekit_sample_rate,
