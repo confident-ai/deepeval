@@ -769,8 +769,15 @@ class ConversationSimulator:
                     assistant_turn = await self._voice_listen(session, turns)
                     turns.append(assistant_turn)
                 elif session is not None and session.is_duplex:
+                    user_turns_before = sum(
+                        1 for turn in turns if turn.role == "user"
+                    )
                     assistant_turn = await self._voice_duplex_exchange(
                         session, user_input, turns, golden
+                    )
+                    simulation_counter += (
+                        sum(1 for turn in turns if turn.role == "user")
+                        - user_turns_before
                     )
                 elif session is not None:
                     assistant_turn = await self._voice_model_callback(
