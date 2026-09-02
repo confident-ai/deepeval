@@ -50,7 +50,7 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
     <section className={styles.hero}>
       <div className={styles.main}>
         <h1 className={styles.title}>
-          Standardize evals across your organization with DeepEval enterprise.
+          Standardize evals across your organization.
         </h1>
 
         <p className={styles.description}>
