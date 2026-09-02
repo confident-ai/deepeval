@@ -1,0 +1,82 @@
+---
+id: metrics-named-reference-attribution
+title: Named Reference Attribution
+sidebar_label: Named Reference Attribution
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
+
+The named reference attribution metric uses LLM-as-a-judge to check whether references in your RAG pipeline's `actual_output` to a document's own structural labels — "Table 3", "Section 4.2", "footnote 4", and similar names that exist in the source document itself — are attributed to the right label. `deepeval`'s named reference attribution metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `NamedReferenceAttributionMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This is a sibling to [`CitationFaithfulnessMetric`](/docs/metrics-citation-faithfulness), not a replacement. `CitationFaithfulnessMetric` checks `[N]` citation markers that the metric itself assigns to `retrieval_context` passages. `NamedReferenceAttributionMetric` instead checks a document's own native labels, which a model may cite by name (e.g. "According to Table 3...") without ever emitting a `[N]` marker. It's also stricter than [`FaithfulnessMetric`](/docs/metrics-faithfulness): faithfulness asks whether a claim is supported by the retrieval context _somewhere_, while named reference attribution additionally checks that the content under the exact label cited supports the claim — catching a model that states a true fact but attributes it to the wrong table, section, or footnote.
+:::
+
+## Required Arguments
+
+To use the `NamedReferenceAttributionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+For this metric to be useful, `retrieval_context` passages should preserve the document's own structural labels in their text (e.g. a passage starting with "Table 3:" or "Section 4.2:"), since the judge looks up a cited label directly in the retrieved content.
+
+## Usage
+
+The `NamedReferenceAttributionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import NamedReferenceAttributionMetric
+
+# Replace this with the actual output from your LLM application.
+# The revenue figure is attributed to Table 3, but it actually appears
+# under Table 2.
+actual_output = "According to Table 3, EMEA revenue was $12M."
+
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = [
+    "Table 2: Revenue by region, 2025. EMEA revenue was $12M.",
+    "Table 3: Revenue by region, 2026. EMEA revenue was $15M.",
+]
+
+metric = NamedReferenceAttributionMetric()
+test_case = LLMTestCase(
+    input="What does Table 3 say about EMEA revenue?",
+    actual_output=actual_output,
+    retrieval_context=retrieval_context,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+In the example above, `FaithfulnessMetric` would pass the answer, because $12M is a true figure found somewhere in the retrieval context. `NamedReferenceAttributionMetric` fails it, because the content under "Table 3" is actually $15M — the $12M figure belongs to "Table 2".
+
+There are seven optional parameters when creating a `NamedReferenceAttributionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `0` for perfection, `1` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `NamedReferenceAttributionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Named Reference Attribution} = \frac{\text{Number of Correctly Attributed References}}{\text{Total Number of Named References}}" />
+
+An LLM judge first extracts every reference in `actual_output` to a named structural label (e.g. "Table 3", "Section 4.2", "footnote 4") along with the claim attached to it. For each reference, a second judgment call checks whether the content that actually appears under that exact label in `retrieval_context` supports the claim. If `actual_output` makes no named references, the score defaults to `1`.
