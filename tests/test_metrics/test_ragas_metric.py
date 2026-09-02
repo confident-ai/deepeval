@@ -51,6 +51,12 @@ def ragas_scores(monkeypatch):
     monkeypatch.setitem(sys.modules, "ragas", ragas)
     monkeypatch.setitem(sys.modules, "ragas.metrics", ragas_metrics)
     monkeypatch.setitem(sys.modules, "datasets", datasets)
+    # The constructors gate on langchain_core being importable, which is an
+    # optional dependency. The tests never reach langchain, so satisfy the gate
+    # rather than requiring the package to be installed.
+    monkeypatch.setattr(
+        "deepeval.metrics.ragas.langchain_available", True, raising=False
+    )
     return scores
 
 
