@@ -44,8 +44,10 @@ const EnterpriseComparisonTable: React.FC = () => {
       aria-label="DeepEval and Confident AI comparison"
     >
       <div className={styles.header} role="row">
-        <div role="columnheader">Confident AI</div>
-        <div role="columnheader">DeepEval</div>
+        <div role="columnheader">
+          DeepEval Enterprise (available on Confident AI Evals)
+        </div>
+        <div role="columnheader">DeepEval OS</div>
       </div>
       <div className={styles.body}>
         {ROWS.map((row) => (
