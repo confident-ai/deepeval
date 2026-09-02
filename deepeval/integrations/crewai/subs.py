@@ -6,13 +6,23 @@ from deepeval.metrics.base_metric import BaseMetric
 try:
     from crewai import Crew, Agent, LLM
 
-    is_crewai_installed = True
+    crewai_installed = True
 except ImportError:
-    is_crewai_installed = False
+    crewai_installed = False
+    # Fallbacks so the factory calls at the bottom of this module do not raise a
+    # NameError at import time when crewai is absent. `Crew`/`Agent` are used as
+    # base classes (must be classes); `LLM` is only invoked lazily inside the
+    # factory wrapper, after the is_crewai_installed() guard has run.
+    Crew = Agent = object
+    LLM = None
 
 
 def is_crewai_installed():
-    if not is_crewai_installed:
+    # NOTE: this must check the `crewai_installed` flag, not a name that shadows
+    # this function. Previously the flag was also named `is_crewai_installed`,
+    # so `not is_crewai_installed` tested this function object (always truthy)
+    # and the ImportError was never raised.
+    if not crewai_installed:
         raise ImportError(
             "CrewAI is not installed. Please install it with `pip install crewai`."
         )
