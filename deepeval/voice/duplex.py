@@ -38,32 +38,14 @@ _EVENT_POLL_S = 0.05
 # matters, and hearing slightly less than was said is what interrupting is like.
 _AGENT_CHARS_PER_SECOND = 13.0
 
-# Semantic endpointing: with a transcript that reads as a finished thought and
-# covers all the speech, this much silence ends the agent's turn instead of
-# the connector's full window. The full window stays the ceiling for replies
-# that trail off mid-sentence, where silence is the only evidence there is.
 _SEMANTIC_EOT_SILENCE_MS = 500.0
-
-# How much silence prompts one extra STT snapshot, so the semantic check and
-# the speculator see the final words instead of a stride-old partial.
 _STT_ON_SILENCE_MS = 200.0
-
-# How much silence before the reply-so-far is handed to the speculator.
-_SPECULATE_SILENCE_MS = 300.0
 
 
 def _looks_complete(text: str) -> bool:
-    """Whether a partial transcript reads as a finished thought.
-
-    Punctuation is the transcriber's own judgement of the speech it heard, so
-    a terminal mark is evidence the sentence closed; anything else means the
-    agent may only be pausing. Models that never punctuate simply fail this
-    forever and fall back to the full silence window.
-    """
+    """Terminal punctuation is the transcriber saying the sentence closed."""
     text = (text or "").strip()
-    if not text or text.endswith("..."):
-        return False
-    return text[-1] in ".!?…"
+    return bool(text) and not text.endswith("...") and text[-1] in ".!?…"
 
 
 @dataclass
@@ -116,12 +98,7 @@ class _AgentUtterance:
     barges: int = 0
     last_judged_len: int = 0
     last_stt_pcm_len: int = 0
-    # How much of `pcm` is speech rather than trailing silence, so partial
-    # transcripts can be judged fresh against the words alone.
     speech_pcm_len: int = 0
-    # How much of `pcm` the transcript actually describes. Snapshots are
-    # requested at one length and land later; freshness is about what came
-    # back, not what was asked for.
     transcribed_pcm_len: int = 0
 
     def reset(
@@ -202,9 +179,7 @@ def _spoken_prefix(transcript: str, heard_seconds: float) -> str:
 class DuplexExchange:
     """Runs one duplex listen/barge cycle after the initial user audio is sent.
 
-    With `policy=None` the caller never barges: the exchange just listens on
-    the open line until the agent's turn ends, which keeps everything the
-    agent says without changing who speaks when.
+    Without a `policy` the caller never barges and the exchange only listens.
     """
 
     def __init__(
@@ -219,7 +194,6 @@ class DuplexExchange:
         language: str,
         a_generate_schema,
         call_started_at: float,
-        speculator=None,
     ):
         self.connector = connector
         self.tts_model = tts_model
@@ -229,7 +203,6 @@ class DuplexExchange:
         self.golden = golden
         self.language = language
         self.a_generate_schema = a_generate_schema
-        self.speculator = speculator
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
         self.tts_kwargs = (
@@ -271,9 +244,6 @@ class DuplexExchange:
         # exchange: it describes the transport, not this reply.
         connector_transcript_seen = False
         eot_silence = self.connector.end_of_turn_silence_ms
-        # A partial can trail the audio by one stride, and the last stride of
-        # every turn is the silence that ended it, so a stride no longer than
-        # the end-of-turn window keeps the speech itself covered.
         stt_stride_bytes = int(
             self.sample_rate * 2 * min(1.0, max(eot_silence, 200.0) / 1000.0)
         )
@@ -299,25 +269,17 @@ class DuplexExchange:
             )
             return _spoken_prefix(utterance.transcript, heard_s)
 
-        def _semantic_ready() -> bool:
-            """Whether the reply already reads as finished.
-
-            A transcript can only stand in for the audio when it covers all of
-            it; connector transcripts run ahead of the speech, STT partials
-            trail it, so each is judged accordingly.
-            """
-            text = _heard_transcript()
-            if not _looks_complete(text):
+        def _reads_finished() -> bool:
+            """A finished-looking transcript that covers all speech so far."""
+            if not _looks_complete(_heard_transcript()):
                 return False
-            if connector_transcript_seen:
-                return True
-            return (
+            return connector_transcript_seen or (
                 bool(utterance.transcript)
                 and utterance.transcribed_pcm_len >= utterance.speech_pcm_len
             )
 
         def _silence_needed_ms() -> float:
-            if _semantic_ready():
+            if _reads_finished():
                 return min(_SEMANTIC_EOT_SILENCE_MS, eot_silence)
             return eot_silence
 
@@ -333,14 +295,6 @@ class DuplexExchange:
                 return text, cost, covered
 
             stt_task = asyncio.create_task(_stt_partial())
-
-        def _stt_snapshot_due(new_bytes_needed: int) -> bool:
-            return (
-                not connector_transcript_seen
-                and (stt_task is None or stt_task.done())
-                and len(utterance.pcm) - utterance.last_stt_pcm_len
-                > new_bytes_needed
-            )
 
         async def _maybe_stop_uplink() -> None:
             """Stop sending the caller's speech, keeping whatever went out.
@@ -504,9 +458,6 @@ class DuplexExchange:
                     if unfinished:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
-            # Backlogged speech can predate the uplink it now answers — the
-            # agent was already talking — which is a wait of zero, not a
-            # negative one.
             latency_ms = (
                 max(0.0, (utterance.first_audio_at - utterance.sent_at))
                 * 1000.0
@@ -545,8 +496,6 @@ class DuplexExchange:
             already partway to expiring.
             """
             await _finalize_assistant(interrupted=True)
-            if self.speculator is not None:
-                self.speculator.cancel()
             self.floor.reset_turn()
 
         async def _advance_end_of_turn(elapsed_ms: float, now: float) -> bool:
@@ -725,24 +674,23 @@ class DuplexExchange:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
                         utterance.speech_pcm_len = len(utterance.pcm)
-                        if self.speculator is not None:
-                            self.speculator.cancel()
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
                             continue
                         utterance.pcm.extend(event.audio)
 
-                    # Streaming STT when no platform transcript: one partial
-                    # per stride while the agent talks, plus one the moment it
-                    # goes quiet so the end-of-turn decision reads the final
-                    # words rather than a stride-old prefix.
-                    if _stt_snapshot_due(stt_stride_bytes) or (
-                        utterance.started
-                        and utterance.trailing_silence_ms >= _STT_ON_SILENCE_MS
+                    # Streaming STT fallback when no platform transcript.
+                    quiet = (
+                        utterance.trailing_silence_ms >= _STT_ON_SILENCE_MS
                         and utterance.last_stt_pcm_len
                         < utterance.speech_pcm_len
-                        and _stt_snapshot_due(0)
+                    )
+                    if (
+                        not connector_transcript_seen
+                        and (stt_task is None or stt_task.done())
+                        and len(utterance.pcm) - utterance.last_stt_pcm_len
+                        > (0 if quiet else stt_stride_bytes)
                     ):
                         _start_stt_snapshot()
 
@@ -759,16 +707,6 @@ class DuplexExchange:
                     except Exception:
                         logger.exception("Partial STT failed")
                     stt_task = None
-
-                # The agent has gone quiet: hand the reply-so-far to the
-                # speculator so the next user line is being written during
-                # the same silence the end-of-turn decision is waiting out.
-                if (
-                    self.speculator is not None
-                    and utterance.started
-                    and utterance.trailing_silence_ms >= _SPECULATE_SILENCE_MS
-                ):
-                    self.speculator.start(_heard_transcript())
 
                 if event.turn_complete:
                     # The agent has spoken for itself; silence is no longer

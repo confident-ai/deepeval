@@ -70,6 +70,7 @@ _MISSING = object()
 
 # Length of the silent uplink used to hear the agent out without speaking.
 _SILENCE_PROBE_SECONDS = 1.0
+_GREETING_TIMEOUT_S = 15.0
 
 
 @dataclass
@@ -86,132 +87,8 @@ class _VoiceSession:
 
     @property
     def is_duplex(self) -> bool:
-        """Whether this conversation runs the duplex exchange.
-
-        A barge policy always does; so does a full-duplex transport even
-        without one, since only the duplex exchange keeps what the agent says
-        while the caller is speaking or thinking.
-        """
-        return self.policy is not None or getattr(
-            self.connector, "supports_duplex", False
-        )
-
-
-def _swallow_speculative_result(task: asyncio.Task) -> None:
-    if task.cancelled():
-        return
-    exc = task.exception()
-    if exc is not None:
-        logger.debug("Speculative task failed: %r", exc)
-
-
-class _ReplySpeculation:
-    """A stop-check and next user line started while the agent still talks.
-
-    The duplex engine hands over the reply's partial transcript the moment
-    the agent goes quiet, so both LLM calls run during the same silence the
-    end-of-turn decision is waiting out. The work is adopted only when the
-    reply the conversation actually recorded matches what was speculated on
-    — same turns, same graph node, same text — and discarded otherwise: a
-    wrong guess costs a wasted call, never a wrong conversation.
-    """
-
-    def __init__(
-        self,
-        simulator: "ConversationSimulator",
-        *,
-        turns: List[Turn],
-        golden: ConversationalGolden,
-        graph_state,
-        thread_id: str,
-        index: Optional[int],
-        simulation_counter: int,
-        max_user_simulations: int,
-    ):
-        self._simulator = simulator
-        self._turns = turns
-        self._snap_len = len(turns)
-        self._golden = golden
-        self._state = graph_state
-        self._node = graph_state.current
-        self._thread_id = thread_id
-        self._index = index
-        self._counter = simulation_counter
-        self._max = max_user_simulations
-        self._text: Optional[str] = None
-        self._stop_task: Optional[asyncio.Task] = None
-        self._emission_task: Optional[asyncio.Task] = None
-
-    def start(self, text: str) -> None:
-        text = (text or "").strip()
-        if not text or text == self._text:
-            return
-        self.cancel()
-        self._text = text
-        from deepeval.simulator.simulation_graph.runner import (
-            _GraphConversationState,
-        )
-
-        simulator = self._simulator
-        provisional = list(self._turns) + [Turn(role="assistant", content=text)]
-        # The graph runner charges a visit as it runs, so speculation works
-        # on a copy; `adopt` replays the charge on the real state.
-        cloned = _GraphConversationState(
-            current=self._state.current, visits=dict(self._state.visits)
-        )
-        logger.debug("Speculating on partial agent reply: %d chars", len(text))
-        self._stop_task = asyncio.create_task(
-            simulator.stopping_controller.a_run(
-                turns=provisional,
-                golden=self._golden,
-                index=self._index if self._index is not None else 0,
-                thread_id=self._thread_id,
-                simulation_counter=self._counter,
-                max_user_simulations=self._max,
-            )
-        )
-        self._emission_task = asyncio.create_task(
-            simulator._graph_runner.a_run(
-                simulator,
-                cloned,
-                provisional,
-                self._golden,
-                self._thread_id,
-                simulator.language,
-            )
-        )
-
-    def cancel(self) -> None:
-        for task in (self._stop_task, self._emission_task):
-            if task is None:
-                continue
-            if not task.done():
-                task.cancel()
-            task.add_done_callback(_swallow_speculative_result)
-        self._stop_task = None
-        self._emission_task = None
-        self._text = None
-
-    def matches(self, turns: List[Turn], graph_state, counter: int) -> bool:
-        return (
-            self._stop_task is not None
-            and self._emission_task is not None
-            and turns is self._turns
-            and counter == self._counter
-            and graph_state.current is self._node
-            and len(turns) == self._snap_len + 1
-            and turns[-1].role == "assistant"
-            and (turns[-1].content or "").strip() == self._text
-        )
-
-    def adopt(self, graph_state):
-        """Hand over the running tasks and charge the graph visit for real."""
-        node_id = id(graph_state.current)
-        graph_state.visits[node_id] = graph_state.visits.get(node_id, 0) + 1
-        stop_task, emission_task = self._stop_task, self._emission_task
-        self._stop_task = None
-        self._emission_task = None
-        return stop_task, emission_task
+        """A barge policy or a full-duplex line both take the duplex path."""
+        return self.policy is not None or self.connector.supports_duplex
 
 
 @dataclass
@@ -246,16 +123,17 @@ class _VoiceRun:
         policy: Optional["InterruptionPolicy"],
         floor: Optional["FloorController"],
     ) -> _VoiceSession:
+        from deepeval.voice.floor_control import FloorController
+
         connector = self.config.make_connector()
-        recorder = None
-        if self.config.record_call:
-            recorder = CallRecorder()
+        recorder = CallRecorder() if self.config.record_call else None
+        if recorder is not None:
             connector = RecordingConnector(connector, recorder)
         return _VoiceSession(
             connector=connector,
             persona=persona,
             policy=policy,
-            floor=floor,
+            floor=floor or FloorController(),
             recorder=recorder,
         )
 
@@ -781,7 +659,6 @@ class ConversationSimulator:
             muted = voice_mode and persona is not None and persona.muted
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
-            pending_speculation: Optional[_ReplySpeculation] = None
 
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
@@ -814,27 +691,12 @@ class ConversationSimulator:
                 # delay costs only wall time, which is not worth a generation
                 # thrown away on every conversation.
                 emission_task: Optional[asyncio.Task] = None
-                stop_task: Optional[asyncio.Task] = None
-                if pending_speculation is not None:
-                    if pending_speculation.matches(
-                        turns, graph_state, simulation_counter
-                    ):
-                        logger.debug(
-                            "Adopting the turn speculated during agent speech"
-                        )
-                        user_started = time.perf_counter()
-                        stop_task, emission_task = pending_speculation.adopt(
-                            graph_state
-                        )
-                    else:
-                        pending_speculation.cancel()
-                    pending_speculation = None
                 speculating = (
                     voice_mode
                     and not muted
                     and not (turns and turns[-1].role == "user")
                 )
-                if speculating and emission_task is None:
+                if speculating:
                     user_started = time.perf_counter()
                     logger.debug("Simulated user generation started")
                     emission_task = asyncio.create_task(
@@ -851,21 +713,16 @@ class ConversationSimulator:
                 # Stop conversation if needed
                 controller_started = time.perf_counter()
                 logger.debug("Stopping controller started")
-                if stop_task is not None:
-                    should_stop_simulation = await stop_task
-                else:
-                    should_stop_simulation = (
-                        await self.stopping_controller.a_run(
-                            turns=turns,
-                            golden=golden,
-                            index=index if index is not None else 0,
-                            thread_id=thread_id,
-                            simulation_counter=simulation_counter,
-                            max_user_simulations=max_user_simulations,
-                            progress=progress,
-                            pbar_turns_id=pbar_max_user_simluations_id,
-                        )
-                    )
+                should_stop_simulation = await self.stopping_controller.a_run(
+                    turns=turns,
+                    golden=golden,
+                    index=index if index is not None else 0,
+                    thread_id=thread_id,
+                    simulation_counter=simulation_counter,
+                    max_user_simulations=max_user_simulations,
+                    progress=progress,
+                    pbar_turns_id=pbar_max_user_simluations_id,
+                )
                 logger.debug(
                     "Stopping controller finished after %.2fs: should_stop=%s",
                     time.perf_counter() - controller_started,
@@ -928,22 +785,8 @@ class ConversationSimulator:
                     user_turns_before = sum(
                         1 for turn in turns if turn.role == "user"
                     )
-                    pending_speculation = _ReplySpeculation(
-                        self,
-                        turns=turns,
-                        golden=golden,
-                        graph_state=graph_state,
-                        thread_id=thread_id,
-                        index=index,
-                        simulation_counter=simulation_counter,
-                        max_user_simulations=max_user_simulations,
-                    )
                     assistant_turn = await self._voice_duplex_exchange(
-                        session,
-                        user_input,
-                        turns,
-                        golden,
-                        speculation=pending_speculation,
+                        session, user_input, turns, golden
                     )
                     simulation_counter += (
                         sum(1 for turn in turns if turn.role == "user")
@@ -1011,8 +854,6 @@ class ConversationSimulator:
                 if emission_end:
                     break
 
-        if pending_speculation is not None:
-            pending_speculation.cancel()
         update_pbar(progress, pbar_id)
         if voice is not None:
             self._log_voice_latency(turns, index)
@@ -1153,38 +994,24 @@ class ConversationSimulator:
 
     @staticmethod
     def _log_voice_latency(turns: List[Turn], index: int) -> None:
-        """One line on the dead air in the finished conversation.
+        """Log each side's reply time; the caller's is the simulator's own."""
+        from deepeval.voice.timeline import build_audio_timeline
 
-        Two silences make up the gap between turns: the agent thinking after
-        the caller stops, and the caller thinking after the agent stops (the
-        stopping check, the next line, and its synthesis). The second one is
-        the simulator's own doing, so it is the one worth watching.
-        """
         agent_waits = [
             turn.latency_ms / 1000.0
             for turn in turns
             if turn.role == "assistant" and turn.latency_ms is not None
         ]
-        caller_waits = []
-        for prev, turn in zip(turns, turns[1:]):
-            if prev.role != "assistant" or turn.role != "user":
-                continue
-            if prev.audio is None or turn.audio is None:
-                continue
-            if (
-                prev.audio.start_time is None
-                or prev.audio.duration is None
-                or turn.audio.start_time is None
-            ):
-                continue
-            caller_waits.append(
-                turn.audio.start_time
-                - (prev.audio.start_time + prev.audio.duration)
-            )
+        timeline = build_audio_timeline(turns)
+        caller_waits = [
+            following.start_time - current.end_time
+            for current, following in zip(timeline, timeline[1:])
+            if current.role == "assistant" and following.role == "user"
+        ]
         if not agent_waits and not caller_waits:
             return
 
-        def _describe(waits: List[float]) -> str:
+        def describe(waits: List[float]) -> str:
             if not waits:
                 return "n/a"
             return "avg %.2fs, max %.2fs over %d turns" % (
@@ -1197,8 +1024,8 @@ class ConversationSimulator:
             "Conversation %d voice latency: agent replied after %s; "
             "caller replied after %s",
             index,
-            _describe(agent_waits),
-            _describe(caller_waits),
+            describe(agent_waits),
+            describe(caller_waits),
         )
 
     async def _voice_listen(
@@ -1520,7 +1347,6 @@ class ConversationSimulator:
         input: str,
         turns: List[Turn],
         golden: ConversationalGolden,
-        speculation: Optional[_ReplySpeculation] = None,
     ) -> Turn:
         """Duplex voice exchange with mid-speech barge-in and floor control.
 
@@ -1540,9 +1366,7 @@ class ConversationSimulator:
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
-        assistant_turn = await self._run_duplex(
-            session, golden, turns, sent_at, speculation=speculation
-        )
+        assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:
             return assistant_turn
         logger.warning(
@@ -1558,19 +1382,11 @@ class ConversationSimulator:
         golden: ConversationalGolden,
         turns: List[Turn],
         sent_at: float,
-        speculation: Optional[_ReplySpeculation] = None,
     ) -> Optional[Turn]:
-        """Listen on the open line until the agent's turn ends.
-
-        Returns the assistant turn the engine recorded, or None when the
-        agent said nothing.
-        """
+        """Listen until the agent's turn ends; None if it never spoke."""
         from deepeval.voice.duplex import DuplexExchange
-        from deepeval.voice.floor_control import FloorController
 
         voice = self._voice
-        if session.floor is None:
-            session.floor = FloorController()
         exchange = DuplexExchange(
             connector=session.connector,
             tts_model=voice.tts_model,
@@ -1581,7 +1397,6 @@ class ConversationSimulator:
             language=self.language,
             a_generate_schema=self.a_generate_schema,
             call_started_at=session.started_at or time.perf_counter(),
-            speculator=speculation,
         )
         result = await exchange.run(
             turns=turns,
@@ -1591,26 +1406,27 @@ class ConversationSimulator:
         session.barges += result.barges
         voice.tts_cost += result.tts_cost
         voice.stt_cost += result.stt_cost
-        for turn in reversed(result.turns):
-            if turn.role == "assistant":
-                return turn
-        return None
+        return next(
+            (
+                turn
+                for turn in reversed(result.turns)
+                if turn.role == "assistant"
+            ),
+            None,
+        )
 
     async def _voice_duplex_listen(
-        self, session: _VoiceSession, turns: List[Turn], golden
+        self,
+        session: _VoiceSession,
+        turns: List[Turn],
+        golden: ConversationalGolden,
     ) -> None:
-        """Wait out the agent's greeting on the open line.
-
-        The duplex engine collects it like any reply, so semantic endpointing
-        ends the wait as soon as the greeting reads finished instead of after
-        the connector's full silence window. Bounded so a call nobody answers
-        with a greeting hands the floor to the caller instead of hanging.
-        """
+        """Wait out the greeting, or give the caller the floor if none comes."""
         persona = session.persona
         timeout = (
             persona.hold_timeout
             if persona is not None and persona.hold_timeout
-            else 15.0
+            else _GREETING_TIMEOUT_S
         )
         try:
             await asyncio.wait_for(

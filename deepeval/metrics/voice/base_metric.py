@@ -25,8 +25,6 @@ def _rounded(value: Any) -> Any:
 
 
 def _format_breakdown(breakdown: Dict) -> str:
-    """The breakdown as indented JSON, so verbose logs read as a report
-    rather than a repr of the underlying dict."""
     try:
         return json.dumps(_rounded(breakdown), indent=2, default=str)
     except (TypeError, ValueError):

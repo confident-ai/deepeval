@@ -5,7 +5,6 @@ import pytest
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator import ConversationSimulator
-from deepeval.simulator.conversation_simulator import _ReplySpeculation
 from deepeval.test_case import Audio, Turn
 from deepeval.voice import CallbackVoiceConnector, VoiceConfig
 from deepeval.voice.connectors import audio_utils
@@ -83,7 +82,7 @@ class _QuietAfterSentence(BaseVoiceConnector):
             yield AgentEvent(audio=_QUIET, received_at=time.perf_counter())
 
 
-def _run_exchange(connector, stt_model, speculator=None):
+def _run_exchange(connector, stt_model):
     exchange = DuplexExchange(
         connector=connector,
         tts_model=object(),
@@ -94,7 +93,6 @@ def _run_exchange(connector, stt_model, speculator=None):
         language="English",
         a_generate_schema=None,
         call_started_at=time.perf_counter(),
-        speculator=speculator,
     )
 
     async def run():
@@ -129,75 +127,6 @@ def test_an_unfinished_thought_waits_out_the_full_window():
     assert result.turns[0].content == "I can help with,"
 
 
-class _SpeculatorSpy:
-    def __init__(self):
-        self.started = []
-        self.cancels = 0
-
-    def start(self, text):
-        self.started.append(text)
-
-    def cancel(self):
-        self.cancels += 1
-
-
-def test_the_engine_hands_quiet_partials_to_the_speculator():
-    spy = _SpeculatorSpy()
-    _run_exchange(
-        _QuietAfterSentence(), _SentenceSTT("I can help with that."), spy
-    )
-    assert spy.started
-    assert spy.started[-1] == "I can help with that."
-    assert spy.cancels >= 1
-
-
-def test_reply_speculation_adopts_only_matching_replies():
-    simulator = ConversationSimulator(
-        simulator_model=StaticSimulatorModel(),
-        voice_config=VoiceConfig(
-            connector=CallbackVoiceConnector(EchoAgent()),
-            tts_model=StubTTS(),
-            stt_model=StubSTT(),
-            output_dir=None,
-            combine_audio_files=False,
-        ),
-    )
-
-    async def run():
-        graph_state = simulator._graph_runner.new_conversation_state()
-        turns = [Turn(role="user", content="Hello")]
-        speculation = _ReplySpeculation(
-            simulator,
-            turns=turns,
-            golden=ConversationalGolden(
-                scenario="Refund", expected_outcome="Done."
-            ),
-            graph_state=graph_state,
-            thread_id="thread",
-            index=0,
-            simulation_counter=0,
-            max_user_simulations=5,
-        )
-        speculation.start("How can I help?")
-
-        turns.append(Turn(role="assistant", content="Something else"))
-        assert not speculation.matches(turns, graph_state, 0)
-        turns[-1] = Turn(role="assistant", content="How can I help?")
-        assert not speculation.matches(turns, graph_state, 1)
-        assert speculation.matches(turns, graph_state, 0)
-        assert graph_state.visits == {}
-
-        stop_task, emission_task = speculation.adopt(graph_state)
-        should_stop = await stop_task
-        emission = await emission_task
-        return should_stop, emission, graph_state
-
-    should_stop, emission, graph_state = asyncio.run(run())
-    assert isinstance(should_stop, bool)
-    assert emission.turn is not None and emission.turn.role == "user"
-    assert graph_state.visits == {id(graph_state.current): 1}
-
-
 def test_duplex_listen_captures_the_greeting():
     simulator = ConversationSimulator(
         simulator_model=StaticSimulatorModel(),
@@ -213,7 +142,9 @@ def test_duplex_listen_captures_the_greeting():
 
     async def run():
         connector = _QuietAfterSentence()
-        session = _VoiceSession(connector=connector, persona=None)
+        session = _VoiceSession(
+            connector=connector, persona=None, floor=FloorController()
+        )
         turns = []
         async with connector:
             await asyncio.wait_for(

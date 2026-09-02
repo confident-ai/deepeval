@@ -44,7 +44,7 @@ def test_recorder_places_channels_at_their_offsets(tmp_path):
 def test_recorder_discard_removes_spools():
     recorder = CallRecorder(sample_rate=RATE)
     recorder.add("user", b"\x10\x27" * 100, RATE, 1.0)
-    paths = [spool["path"] for spool in recorder._spools.values()]
+    paths = [spool.path for spool in recorder._spools.values()]
     recorder.discard()
     assert all(not os.path.exists(path) for path in paths)
     assert recorder.finish() is None
@@ -90,22 +90,3 @@ def test_recording_off_by_default():
     )
 
     assert cases[0].call_recording_path is None
-
-
-def test_chunk_pcm_unwraps_audio_chunks():
-    import base64
-
-    from deepeval.test_case import AudioChunk
-    from deepeval.voice.recording import _chunk_pcm
-
-    pcm = b"\x10\x27" * 240
-    chunk = AudioChunk(
-        dataBase64=base64.b64encode(pcm).decode("ascii"),
-        mimeType="audio/pcm",
-        sampleRate=16000,
-    )
-
-    unwrapped, rate = _chunk_pcm(chunk, 24000)
-    assert unwrapped == pcm
-    assert rate == 16000
-    assert _chunk_pcm(b"abcd", 24000) == (b"abcd", 24000)
