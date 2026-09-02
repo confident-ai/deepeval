@@ -115,6 +115,9 @@ def convert_test_cases_to_goldens(
             "retrieval_context": test_case.retrieval_context,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
+            "token_cost": test_case.token_cost,
+            "input_token_count": test_case.input_token_count,
+            "output_token_count": test_case.output_token_count,
             "additional_metadata": test_case.metadata,
         }
         goldens.append(Golden(**golden))
@@ -136,6 +139,9 @@ def convert_goldens_to_test_cases(
             retrieval_context=golden.retrieval_context,
             tools_called=golden.tools_called,
             expected_tools=golden.expected_tools,
+            token_cost=golden.token_cost,
+            input_token_count=golden.input_token_count,
+            output_token_count=golden.output_token_count,
             name=golden.name,
             comments=golden.comments,
             metadata=golden.additional_metadata,
