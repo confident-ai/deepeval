@@ -8,13 +8,13 @@ download, or API key required.
 
 import pytest
 
-from deepeval.scorer.scorer import Scorer
-from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
-from deepeval.benchmarks.drop.template import DROPTemplate
-from deepeval.benchmarks.drop.drop import DELIMITER
 from deepeval.benchmarks.big_bench_hard.big_bench_hard import BigBenchHard
+from deepeval.benchmarks.drop.drop import DELIMITER
+from deepeval.benchmarks.drop.template import DROPTemplate
+from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
 from deepeval.benchmarks.tasks import BigBenchHardTask
 from deepeval.dataset import Golden
+from deepeval.scorer.scorer import Scorer
 
 # --------------------------------------------------------------------------- #
 # MathQA: the answer schema must be able to represent option "e"
@@ -101,3 +101,24 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# TruthfulQA: repeated answer indices must not inflate percentage scores
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.parametrize(
+    ("target", "prediction", "expected"),
+    [
+        pytest.param("1,2", "1,1,1,2", 100, id="duplicate-predictions"),
+        pytest.param("1,3,4", "[1, 1, 3, 4]", 100, id="bracketed-duplicates"),
+        pytest.param("1,1,2", "1,2", 100, id="duplicate-targets"),
+        pytest.param("1,2", "3,3,3", 0, id="repeated-wrong-answer"),
+        pytest.param("1,2,3", "1,3", 67, id="unique-inputs-unchanged"),
+    ],
+)
+def test_truth_identification_counts_each_index_once(
+    target, prediction, expected
+):
+    assert Scorer.truth_identification_score(target, prediction) == expected
