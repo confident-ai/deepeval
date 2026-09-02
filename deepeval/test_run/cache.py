@@ -2,6 +2,8 @@ import logging
 import sys
 import json
 import os
+import hashlib
+import inspect
 from typing import List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -53,6 +55,179 @@ class MetricConfiguration(BaseModel):
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
     ] = None
+
+    ##### Cache identity fields #####
+    # Fully qualified metric class name (module + qualname). Used to make
+    # sure we never compare hashes across metric families.
+    metric_class: Optional[str] = None
+    # Deterministic SHA-256 digest over the configuration payload (for
+    # built-ins) or over configuration + the metric's custom evaluation
+    # method source code (for third-party metrics). When either the params
+    # or the implementation changes the hash changes, so the cache entry
+    # correctly invalidates.
+    metric_hash: Optional[str] = None
+
+
+_DEEPEVAL_METRICS_MODULE = "deepeval.metrics"
+_HASH_VERSION = b"v1"
+
+
+def _is_builtin_metric(metric_class: type) -> bool:
+    """A metric is considered "built-in" when its implementation lives
+    under the public `deepeval.metrics` package. For those we can rely on
+    field-level config equality: the eval logic only changes when the
+    package itself is re-installed (i.e. outside cache scope). For user
+    subclasses or community metrics we need to hash the implementation
+    source so edits to `measure()`/`a_measure()` immediately invalidate
+    stale entries.
+    """
+    try:
+        module = metric_class.__module__ or ""
+    except AttributeError:
+        return False
+    return module.startswith(_DEEPEVAL_METRICS_MODULE)
+
+
+def _hashable_repr(value) -> bytes:
+    """
+    Serialize arbitrary metric-config values into a stable byte string.
+
+    We don't need round-tripping — only determinism across objects that
+    compare equal. dicts/lists/tuples are walked recursively; `None` is
+    encoded explicitly so "field absent" and "field = None" don't collide
+    with "empty list". The payload is JSON-ish but we keep nesting marks
+    explicit because JSON alone would collapse ``[None, [None]]`` into
+    something that re-serializes the same as ``[[]]`` once fields move —
+    we want ordering and nesting to affect the digest.
+    """
+    if value is None:
+        return b"n"
+    if isinstance(value, bool):
+        # bools are ints; check BEFORE int so True != "1" vs "0".
+        return b"t" if value else b"f"
+    if isinstance(value, (int, float)):
+        return ("n:" + repr(value)).encode("utf-8")
+    if isinstance(value, str):
+        return ("s:" + value).encode("utf-8")
+    if isinstance(value, Enum):
+        return ("e:" + type(value).__qualname__ + "." + value.name).encode(
+            "utf-8"
+        )
+    if isinstance(value, bytes):
+        return b"b:" + value
+    if isinstance(value, (list, tuple)):
+        parts = [b"L" if isinstance(value, list) else b"T"]
+        for item in value:
+            r = _hashable_repr(item)
+            parts.append(len(r).to_bytes(4, "little"))
+            parts.append(r)
+        return b"".join(parts)
+    if isinstance(value, dict):
+        parts = [b"D"]
+        # key order must be deterministic for cross-process stability.
+        # Sort by str(key) to be safe (keys aren't guaranteed comparable).
+        items = sorted(value.items(), key=lambda kv: str(kv[0]))
+        for k, v in items:
+            kr = _hashable_repr(k)
+            vr = _hashable_repr(v)
+            parts.append(len(kr).to_bytes(4, "little"))
+            parts.append(kr)
+            parts.append(len(vr).to_bytes(4, "little"))
+            parts.append(vr)
+        return b"".join(parts)
+    if isinstance(value, BaseModel):
+        # model_dump(mode="json") gives a plain dict with no pydantic
+        # types leaking through, and the field order is declared order.
+        try:
+            return _hashable_repr(value.model_dump(mode="json"))
+        except Exception:
+            return _hashable_repr(dict(value))
+    if hasattr(value, "__class__") and hasattr(value, "__dict__"):
+        # Fall back to class name + sorted attribute dict for plain
+        # objects. Values like embeddings class names (strings above)
+        # won't hit this branch, but for arbitrary user-provided
+        # config objects we at least don't silently ignore structure.
+        return _hashable_repr(
+            {
+                "__class__": (
+                    getattr(type(value), "__module__", ""),
+                    type(value).__qualname__,
+                ),
+                **{
+                    k: v
+                    for k, v in vars(value).items()
+                    if not k.startswith("_")
+                },
+            }
+        )
+    # str() is the last resort; it's better than crashing.
+    return ("x:" + str(value)).encode("utf-8")
+
+
+def _compute_metric_hash(
+    metric: BaseMetric, configuration_payload: Dict
+) -> Optional[str]:
+    """Compute the deterministic SHA-256 digest for a metric instance.
+
+    The hash covers:
+      * a per-class identifier (module + qualname, not `__name__` so
+        nested community classes still differ),
+      * the full configuration payload (threshold, model, strict_mode,
+        steps, params, criteria, ...),
+      * for non-built-in metrics, the source code of
+        ``measure`` and ``a_measure`` as reported by ``inspect.getsource``.
+
+    Returns ``None`` on systems where ``inspect.getsource`` can't locate
+    the source (e.g. frozen REPL / embedded eval). Callers then fall back
+    to the legacy field-by-field comparison so caching still works.
+    """
+    metric_class = type(metric)
+    class_parts = (
+        getattr(metric_class, "__module__", ""),
+        metric_class.__qualname__,
+    )
+    class_bytes = _hashable_repr(class_parts)
+
+    payload_bytes = _hashable_repr(configuration_payload)
+
+    builtin = _is_builtin_metric(metric_class)
+    source_bytes = b""
+    if not builtin:
+        sources: List[bytes] = []
+        for method_name in ("measure", "a_measure"):
+            method = getattr(metric_class, method_name, None)
+            if method is None:
+                continue
+            try:
+                src = inspect.getsource(method)
+            except (OSError, TypeError):
+                # REPL / packaged .so / py-less distributions can't give us
+                # source. Signal "unhashable source" by returning None from
+                # the outer call so the legacy compare path kicks in.
+                return None
+            sources.append(method_name.encode("utf-8"))
+            sources.append(src.encode("utf-8"))
+        source_bytes = b"".join(sources)
+
+    hasher = hashlib.sha256()
+    hasher.update(_HASH_VERSION)
+    hasher.update(b"cls")
+    hasher.update(len(class_bytes).to_bytes(4, "little"))
+    hasher.update(class_bytes)
+    hasher.update(b"cfg")
+    hasher.update(len(payload_bytes).to_bytes(4, "little"))
+    hasher.update(payload_bytes)
+    if not builtin:
+        hasher.update(b"src")
+        hasher.update(len(source_bytes).to_bytes(4, "little"))
+        hasher.update(source_bytes)
+    return hasher.hexdigest()
+
+
+def _qualified_metric_class_name(metric_class: type) -> str:
+    return (
+        f"{getattr(metric_class, '__module__', '')}:{metric_class.__qualname__}"
+    )
 
 
 class CachedMetricData(BaseModel):
@@ -333,6 +508,51 @@ class Cache:
         metric: BaseMetric,
         metric_configuration: MetricConfiguration,
     ) -> bool:
+        metric_class = type(metric)
+        cached_hash = metric_configuration.metric_hash
+        cached_class = metric_configuration.metric_class
+        # --- Fast path: both sides carry the new identity fields. A
+        # single hash comparison is O(1) and implicitly covers every
+        # configurable field, so we never again drift between what
+        # create_metric_configuration stores and what we compare.
+        if cached_hash is not None and cached_class is not None:
+            if cached_class != _qualified_metric_class_name(metric_class):
+                return False
+            # Build the exact same payload used when writing the cache so
+            # hashes are bit-identical. This deliberately duplicates the
+            # field set from create_metric_configuration — if the pair
+            # ever drifts, the hash won't match and tests will catch it.
+            config_fields = [
+                "threshold",
+                "evaluation_model",
+                "strict_mode",
+                "include_reason",
+                "n",
+                "criteria",
+                "language",
+                "embeddings",
+                "evaluation_steps",
+                "evaluation_params",
+                "assessment_questions",
+            ]
+            payload = {}
+            for field in config_fields:
+                value = getattr(metric, field, None)
+                if field == "embeddings" and value is not None:
+                    value = value.__class__.__name__
+                payload[field] = value
+            current_hash = _compute_metric_hash(metric, payload)
+            if current_hash is None:
+                # Source couldn't be retrieved (REPL / packaged module).
+                # Fall through to the field-level check — safe because
+                # the legacy comparison at least covers parameters.
+                pass
+            else:
+                return current_hash == cached_hash
+
+        # --- Backward-compatible fallback for caches written before the
+        # identity fields were added. Preserves the old behaviour so
+        # users don't lose their whole cache on upgrade.
         config_fields = [
             "threshold",
             "evaluation_model",
@@ -350,7 +570,6 @@ class Cache:
             metric_value = getattr(metric, field, None)
             cached_value = getattr(metric_configuration, field, None)
 
-            # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
                 if metric_value is not None:
                     if metric_value == cached_value:
@@ -400,5 +619,16 @@ class Cache:
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
             config_kwargs[field] = value
+
+        metric_class = type(metric)
+        metric_hash = _compute_metric_hash(metric, config_kwargs.copy())
+        # Identity fields must NOT be part of the hashed payload (they
+        # exist only to short-circuit the comparison). Inject them AFTER
+        # computing the digest so `same_metric_configs` — which rebuilds
+        # the payload from scratch — lands on the same byte stream.
+        config_kwargs["metric_class"] = _qualified_metric_class_name(
+            metric_class
+        )
+        config_kwargs["metric_hash"] = metric_hash
 
         return MetricConfiguration(**config_kwargs)
