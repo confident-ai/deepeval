@@ -37,7 +37,7 @@ const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
 ];
 
 const DEFAULT_LOGO_GRID_LABEL =
-  "Trusted by teams that took evals to production.";
+  "Trusted by teams that standardized how evals are done.";
 
 const BOOK_DEMO_HREF =
   "https://calendly.com/d/d3m7-g99-8ct/deepeval-enterprise-intro-call";
