@@ -287,6 +287,14 @@ There are **TWO** optional parameters:
 
 Results are keyed by test case content plus metric configuration, so a cached result is only reused when both are unchanged. The <Term py="write_cache" ts="writeCache"/> parameter writes to disk and so you should disable it if that is causing any errors in your environment.
 
+:::caution[Cache files are not a public API]
+The JSON files in `.deepeval` that back caching and CLI workflows are internal
+implementation details. Their names and serialized shape can change between
+releases, so do not parse them in application integrations. In Python, read
+per-case metric values from the `EvaluationResult` returned by `evaluate()`,
+using `evaluation_result.test_results` and each test result's `metrics_data`.
+:::
+
 ## Hyperparameters
 
 Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination.
