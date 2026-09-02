@@ -8,11 +8,17 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import get_confident_api_key
+from deepeval.integrations.otel_instrumentation.utils import (
+    bridge_otel_root_to_deepeval_parent,
+    finalize_span_placeholder,
+    pop_implicit_trace_context,
+    push_implicit_trace_context,
+    serialize_trace_context_to_otel_attrs,
+)
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.tracing.context import (
     apply_pending_to_span,
     current_span_context,
-    current_trace_context,
     pop_pending_for,
 )
 from deepeval.tracing.otel.attributes import ConfidentAttr
@@ -20,9 +26,7 @@ from deepeval.tracing.otel.context_aware_processor import (
     ContextAwareSpanProcessor,
 )
 from deepeval.tracing.otel.utils import (
-    serialize_placeholder_to_otel_attrs,
     set_span_attribute_post_end,
-    stash_pending_metrics,
     to_hex_string,
 )
 from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
@@ -40,7 +44,6 @@ from deepeval.tracing.utils import (
     infer_provider_from_model,
     normalize_span_provider_for_platform,
 )
-from deepeval.utils import serialize_to_json
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -318,7 +321,9 @@ class SpanInterceptor(SpanProcessor):
         # opt into REST). Mutations are picked up automatically by the
         # existing per-span ``_serialize_trace_context_to_otel_attrs`` since
         # it reads from ``current_trace_context`` at every ``on_end``.
-        self._maybe_push_implicit_trace_context(span)
+        push_implicit_trace_context(
+            span, self._trace_tokens, self._trace_placeholders
+        )
 
         # ----- bridge OTel root span to enclosing deepeval span -----
         # When an OTel root span starts inside a deepeval-managed span (the
@@ -328,7 +333,9 @@ class SpanInterceptor(SpanProcessor):
         # enclosing deepeval span's UUID as a logical-parent override so the
         # exporter can re-parent the OTel root onto it. Only fires for OTel
         # roots; child OTel spans keep their native parent_uuid.
-        self._maybe_bridge_otel_root_to_deepeval_parent(span)
+        bridge_otel_root_to_deepeval_parent(
+            span, integration=Integration.PYDANTIC_AI.value
+        )
 
         # ----- per-span classification (no settings dependency) -----
         # Span classification (agent / llm / tool) happens at on_start
@@ -370,7 +377,7 @@ class SpanInterceptor(SpanProcessor):
         # the SDK has already set ``_end_time`` by the time on_end fires,
         # which makes ``span.set_attribute`` a silent no-op.
         try:
-            self._serialize_trace_context_to_otel_attrs(span)
+            serialize_trace_context_to_otel_attrs(span, self.settings)
         except Exception as exc:
             logger.debug(
                 "Failed to serialize trace context for span_id=%s: %s",
@@ -379,42 +386,7 @@ class SpanInterceptor(SpanProcessor):
             )
 
         # ----- pop current_span_context and serialize user mutations -----
-        placeholder = self._placeholders.pop(sid, None)
-        token = self._tokens.pop(sid, None)
-        if token is not None:
-            try:
-                current_span_context.reset(token)
-            except Exception as exc:
-                logger.debug(
-                    "Failed to reset current_span_context for span_id=%s: %s",
-                    sid,
-                    exc,
-                )
-        if placeholder is not None:
-            try:
-                serialize_placeholder_to_otel_attrs(span, placeholder)
-            except Exception as exc:
-                logger.debug(
-                    "Failed to serialize span placeholder for span_id=%s: %s",
-                    sid,
-                    exc,
-                )
-            # ``BaseMetric`` instances can't ride in OTel attrs (primitives
-            # only), so hand them to the in-process overlay for the exporter
-            # to re-attach. Eval-mode gate prevents the registry from growing
-            # in prod paths where the OTLP collector lives in another process
-            # and the reader never fires.
-            try:
-                if placeholder.metrics and trace_manager.is_evaluating:
-                    stash_pending_metrics(
-                        to_hex_string(sid, 16), placeholder.metrics
-                    )
-            except Exception as exc:
-                logger.debug(
-                    "Failed to stash pending metrics for span_id=%s: %s",
-                    sid,
-                    exc,
-                )
+        finalize_span_placeholder(span, self._tokens, self._placeholders)
 
         # ----- catch any agent spans that weren't classified at on_start -----
         already_processed = span.attributes.get(ConfidentAttr.SPAN_TYPE) in {
@@ -434,7 +406,7 @@ class SpanInterceptor(SpanProcessor):
 
         attrs = span.attributes or {}
         if not attrs.get(ConfidentAttr.SPAN_INTEGRATION):
-            self._set_attr_post_end(
+            set_span_attribute_post_end(
                 span,
                 ConfidentAttr.SPAN_INTEGRATION,
                 Integration.PYDANTIC_AI.value,
@@ -450,7 +422,7 @@ class SpanInterceptor(SpanProcessor):
             provider = infer_provider_from_model(str(model)) if model else None
             if provider:
                 provider = normalize_span_provider_for_platform(provider)
-                self._set_attr_post_end(
+                set_span_attribute_post_end(
                     span, ConfidentAttr.SPAN_PROVIDER, provider
                 )
 
@@ -460,7 +432,9 @@ class SpanInterceptor(SpanProcessor):
         # Only the root span pushed, so only the root span pops; child
         # spans see the placeholder via inherited contextvars but never
         # touch the token.
-        self._maybe_pop_implicit_trace_context(span)
+        pop_implicit_trace_context(
+            span, self._trace_tokens, self._trace_placeholders
+        )
 
     def _push_span_context(
         self,
@@ -490,7 +464,7 @@ class SpanInterceptor(SpanProcessor):
                 status=TraceSpanStatus.IN_PROGRESS,
                 start_time=start_time,
             )
-            if span_type == SpanType.AGENT.value:
+            if span_type == SpanType.AGENT:
                 placeholder = AgentSpan(
                     name=(
                         span.attributes.get(ConfidentAttr.SPAN_NAME)
@@ -499,7 +473,7 @@ class SpanInterceptor(SpanProcessor):
                     ),
                     **kwargs,
                 )
-            elif span_type == SpanType.LLM.value:
+            elif span_type == SpanType.LLM:
                 placeholder = LlmSpan(**kwargs)
             else:
                 placeholder = BaseSpan(**kwargs)
@@ -525,215 +499,14 @@ class SpanInterceptor(SpanProcessor):
                 "Failed to push current_span_context placeholder: %s", exc
             )
 
-    def _maybe_push_implicit_trace_context(self, span) -> None:
-        """Push an implicit ``Trace`` placeholder for bare ``agent.run`` callers.
-
-        Symmetric to ``_push_span_context``, but at the trace level. Only
-        fires for the OTel root span AND only when the caller hasn't
-        already pushed their own trace context (via ``@observe`` / ``with
-        trace(...)``). The placeholder exists solely so that
-        ``update_current_trace(...)`` from inside tools / nested helpers
-        has a target to mutate; mutations are picked up automatically by
-        the existing per-span ``_serialize_trace_context_to_otel_attrs``.
-
-        Tagged ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
-        knows NOT to switch routing to REST — bare callers expect OTLP.
-        ``_is_otel_implicit`` is a Pydantic ``PrivateAttr``, so it must be
-        set after construction (it's not a constructor kwarg).
-        """
-        if current_trace_context.get() is not None:
-            return  # user already owns the trace context; don't touch it
-        # Only the OTel root span pushes; child spans inherit the placeholder
-        # via contextvars and never need their own.
-        if getattr(span, "parent", None) is not None:
-            return
-        try:
-            sid = span.get_span_context().span_id
-            tid = span.get_span_context().trace_id
-            start_time = (
-                peb.epoch_nanos_to_perf_seconds(span.start_time)
-                if span.start_time
-                else perf_counter()
-            )
-            implicit = Trace(
-                uuid=to_hex_string(tid, 32),
-                root_spans=[],
-                status=TraceSpanStatus.IN_PROGRESS,
-                start_time=start_time,
-            )
-            implicit._is_otel_implicit = True
-            token = current_trace_context.set(implicit)
-            self._trace_tokens[sid] = token
-            self._trace_placeholders[sid] = implicit
-        except Exception as exc:
-            logger.debug(
-                "Failed to push implicit current_trace_context: %s", exc
-            )
-
-    def _maybe_bridge_otel_root_to_deepeval_parent(self, span) -> None:
-        """Re-parent an OTel root span onto its enclosing deepeval span.
-
-        When ``@observe(type="agent")`` (or any deepeval-managed span) wraps
-        a bare ``agent.run(...)`` call, the deepeval span is created off-OTel
-        and pushed onto ``current_span_context``, but no OTel parent context
-        is established. Pydantic AI then opens an OTel root span (no native
-        parent), and the exporter would otherwise emit it as a second trace
-        root sibling to the ``@observe`` span — visually the two appear as
-        two separate agent spans rather than parent → child.
-
-        We close that gap by stamping the deepeval span's UUID onto the OTel
-        root as ``confident.span.parent_uuid``. ``ConfidentSpanExporter``
-        prefers this override iff the OTel span has no native parent, so the
-        re-parenting only affects the dual-root case and never overrides a
-        real OTel parent_id for nested OTel spans.
-        """
-        # Only OTel roots need bridging; child OTel spans already have a
-        # real parent_id pointing into the same OTel trace.
-        if getattr(span, "parent", None) is not None:
-            return
-        parent_span = current_span_context.get()
-        if parent_span is None:
-            return
-        parent_uuid = getattr(parent_span, "uuid", None)
-        if not parent_uuid:
-            return
-        if not getattr(parent_span, "integration", None):
-            try:
-                parent_span.integration = Integration.PYDANTIC_AI.value
-            except Exception:
-                pass
-        try:
-            self._set_attr_post_end(
-                span, ConfidentAttr.SPAN_PARENT_UUID, parent_uuid
-            )
-        except Exception as exc:
-            logger.debug(
-                "Failed to bridge OTel root span to deepeval parent "
-                "(parent_uuid=%s): %s",
-                parent_uuid,
-                exc,
-            )
-
-    def _maybe_pop_implicit_trace_context(self, span) -> None:
-        """Pop the implicit trace placeholder pushed at ``on_start``.
-
-        No-op for spans that didn't push (children, or roots that found a
-        user-owned context already in place).
-        """
-        try:
-            sid = span.get_span_context().span_id
-        except Exception:
-            return
-        token = self._trace_tokens.pop(sid, None)
-        self._trace_placeholders.pop(sid, None)
-        if token is None:
-            return
-        try:
-            current_trace_context.reset(token)
-        except Exception as exc:
-            logger.debug(
-                "Failed to reset implicit current_trace_context for "
-                "span_id=%s: %s",
-                sid,
-                exc,
-            )
-
-    @staticmethod
-    def _set_attr_post_end(span, key: str, value: Any) -> None:
-        """Write an attribute onto a span that may already have ended.
-
-        ``Span.set_attribute`` becomes a silent no-op once ``Span.end()`` has
-        been called, and ``on_end`` receives a ``ReadableSpan`` that has no
-        such method — so the write goes through the span's ``_attributes``
-        mapping, which every processor in the chain shares by reference.
-        opentelemetry-sdk 1.43.0 made that mapping immutable before dispatching
-        ``on_end`` — see ``set_span_attribute_post_end``.
-        """
-        set_span_attribute_post_end(span, key, value)
-
-    def _serialize_trace_context_to_otel_attrs(self, span) -> None:
-        """Resolve trace-level attrs FRESH and write to ``confident.trace.*``.
-
-        Reads from ``current_trace_context`` (so ``update_current_trace(...)``
-        from anywhere in the call stack lands on every OTel span) with
-        ``DeepEvalInstrumentationSettings`` trace defaults (``name``,
-        ``thread_id``, ``user_id``, ``tags``, ``metadata``,
-        ``metric_collection``, ``test_case_id``, ``turn_id``) as
-        fallback. Metadata merges settings as base + runtime context on
-        top.
-
-        Called at ``on_end`` (not ``on_start``) so the latest values are
-        captured rather than a stale snapshot. Goes through
-        ``_set_attr_post_end`` so it works after the SDK has finalized the
-        span's ``_end_time``.
-        """
-        trace_ctx = current_trace_context.get()
-
-        _name = (trace_ctx.name if trace_ctx else None) or self.settings.name
-        _thread_id = (
-            trace_ctx.thread_id if trace_ctx else None
-        ) or self.settings.thread_id
-        _user_id = (
-            trace_ctx.user_id if trace_ctx else None
-        ) or self.settings.user_id
-        _tags = (trace_ctx.tags if trace_ctx else None) or self.settings.tags
-        _test_case_id = (
-            trace_ctx.test_case_id if trace_ctx else None
-        ) or self.settings.test_case_id
-        _turn_id = (
-            trace_ctx.turn_id if trace_ctx else None
-        ) or self.settings.turn_id
-        _trace_metric_collection = (
-            trace_ctx.metric_collection if trace_ctx else None
-        ) or self.settings.metric_collection
-        _metadata = {
-            **(self.settings.metadata or {}),
-            **((trace_ctx.metadata or {}) if trace_ctx else {}),
-        }
-
-        if _name:
-            self._set_attr_post_end(span, ConfidentAttr.TRACE_NAME, _name)
-        if _thread_id:
-            self._set_attr_post_end(
-                span, ConfidentAttr.TRACE_THREAD_ID, _thread_id
-            )
-        if _user_id:
-            self._set_attr_post_end(span, ConfidentAttr.TRACE_USER_ID, _user_id)
-        if _tags:
-            self._set_attr_post_end(span, ConfidentAttr.TRACE_TAGS, _tags)
-        if _metadata:
-            self._set_attr_post_end(
-                span,
-                ConfidentAttr.TRACE_METADATA,
-                serialize_to_json(_metadata),
-            )
-        if _trace_metric_collection:
-            self._set_attr_post_end(
-                span,
-                ConfidentAttr.TRACE_METRIC_COLLECTION,
-                _trace_metric_collection,
-            )
-        if _test_case_id:
-            self._set_attr_post_end(
-                span, ConfidentAttr.TRACE_TEST_CASE_ID, _test_case_id
-            )
-        if _turn_id:
-            self._set_attr_post_end(span, ConfidentAttr.TRACE_TURN_ID, _turn_id)
-        if self.settings.environment:
-            self._set_attr_post_end(
-                span,
-                ConfidentAttr.TRACE_ENVIRONMENT,
-                self.settings.environment,
-            )
-
     def _add_agent_span(self, span, name):
         # Uses the post-end-safe writer because this is called from BOTH
         # ``on_start`` (where set_attribute would also work) and ``on_end``
         # (where it wouldn't, since the SDK has already set ``_end_time``).
         # ``_set_attr_post_end`` writes through the underlying mutable
         # ``_attributes`` mapping in either case.
-        self._set_attr_post_end(span, ConfidentAttr.SPAN_TYPE, "agent")
-        self._set_attr_post_end(span, ConfidentAttr.SPAN_NAME, name)
+        set_span_attribute_post_end(span, ConfidentAttr.SPAN_TYPE, "agent")
+        set_span_attribute_post_end(span, ConfidentAttr.SPAN_NAME, name)
 
     def _is_agent_span(self, operation_name: Optional[str]) -> bool:
         return operation_name == "invoke_agent"

@@ -34,7 +34,7 @@ class TraceWorkerStatus(Enum):
     WARNING = "warning"
 
 
-class SpanType(Enum):
+class SpanType(str, Enum):
     AGENT = "agent"
     LLM = "llm"
     RETRIEVER = "retriever"

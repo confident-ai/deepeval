@@ -61,6 +61,16 @@ GoogleADKInstrumentor().instrument()
 
 AgentCore, Strands, and Pydantic AI do NOT delegate here — they have their own SpanInterceptors (`AgentCoreSpanInterceptor`, `StrandsSpanInterceptor`, `PydanticAISpanInterceptor`). AgentCore and Strands both read OTel GenAI semconv (`gen_ai.*`) attributes — Strands emits these natively, and AgentCore picks them up from the Strands runtime AWS Bedrock typically runs under, plus Traceloop / AWS Bedrock fallbacks; Pydantic AI uses its own logfire-shaped attrs. All four interceptors share the same processor wiring and the same `ContextAwareSpanProcessor` for routing.
 
+### Shared OTel plumbing — `deepeval/integrations/otel_instrumentation/`
+
+Everything the four OTel-mode interceptors have in common lives here, so a new OTel integration only writes its framework-specific half:
+
+- **`base_instrumentation.py`** — the setup path an `instrument_*()` entry point walks: `BaseInstrumentationSettings` (trace-level defaults, environment resolution, rejection of span-level kwargs removed in the OTel migration) and `attach_span_interceptor(...)`, the idempotent `TracerProvider` registration that installs the interceptor ahead of `ContextAwareSpanProcessor`.
+- **`utils.py`** — the interceptor's runtime helpers: the optional-import shim for the OTel SDK, the trace/span placeholder lifecycle (`push_implicit_trace_context`, `pop_implicit_trace_context`, `finalize_span_placeholder`), the `@observe` parent bridge (`bridge_otel_root_to_deepeval_parent`), and trace-attr resolution (`serialize_trace_context_to_otel_attrs`).
+- **`genai_attributes.py`** — OTel GenAI semconv (`gen_ai.*`) and Traceloop attribute readers: span classification, message / tool-call extraction. Shared by AgentCore and Strands; anything reading standard `gen_ai.*` attrs belongs here rather than in a new copy.
+
+What stays in each integration's own `instrumentator.py`: framework-specific span classification, framework attribute extraction (`_serialize_framework_attrs`), and its `on_start` / `on_end` orchestration.
+
 ## Mixing OTel-mode with `@observe`
 
 When an OTel-mode integration runs inside an active `@observe` / `with trace(...)` context, the OTel span interceptor synchronizes the trace UUID (`current_trace_context.uuid = OTel trace_id`) so both transports land on the same trace server-side.
