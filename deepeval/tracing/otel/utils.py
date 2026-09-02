@@ -338,7 +338,10 @@ def check_llm_input_from_gen_ai_attributes(
     except Exception:
         pass
 
-    if input is None and output is None:
+    # `input` is initialized to [] (system_instructions + input_messages),
+    # so `is None` never fires for a v1 span; treat empty as absent so the
+    # v1 `events` fallback below actually runs.
+    if not input and not output:
         try:
             input = json.loads(span.attributes.get("events"))
             if input and isinstance(input, list):
@@ -615,6 +618,78 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
 
+def _events_to_normalized_messages(events: list) -> list:
+    """Convert v1 `events` attribute entries to the v2 {role, parts} shape.
+
+    pydantic-ai < 1.0.0 (default instrumentation version=1) emits each
+    message as an OTel event entry in the span `events` attribute, either
+    nested as {"name": ..., "body": {...}} (as produced by
+    messages_to_otel_events and stored by the OTel SDK) or flattened with
+    "event.name" (as exposed by some exporters):
+      - gen_ai.user.message:      body {"content", "role": "user"}
+      - gen_ai.assistant.message: body {"role": "assistant", "tool_calls": [
+          {"id", "type": "function", "function": {"name", "arguments"}}]}
+      - gen_ai.tool.message:      body {"content", "role": "tool", "id", "name"}
+    Map them to the v2 parts shape (text / tool_call / tool_call_response)
+    so the shared parsing code below treats both instrumentation versions
+    identically.
+    """
+    normalized = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        name = event.get("name") or event.get("event.name")
+        body = event.get("body")
+        if isinstance(body, dict):
+            # Nested OTel event form: {"name", "body"}; merge for the
+            # field lookups below (body fields win over top-level ones).
+            payload = {**event, **body}
+        else:
+            payload = event
+        if name == "gen_ai.user.message":
+            content = payload.get("content")
+            if content is not None:
+                normalized.append(
+                    {
+                        "role": "user",
+                        "parts": [{"type": "text", "content": content}],
+                    }
+                )
+        elif name == "gen_ai.assistant.message":
+            tool_calls = payload.get("tool_calls")
+            if isinstance(tool_calls, list):
+                parts = []
+                for tc in tool_calls:
+                    if not isinstance(tc, dict):
+                        continue
+                    fn = tc.get("function") or {}
+                    parts.append(
+                        {
+                            "type": "tool_call",
+                            "id": tc.get("id"),
+                            "name": fn.get("name"),
+                            "arguments": fn.get("arguments"),
+                        }
+                    )
+                if parts:
+                    normalized.append({"role": "assistant", "parts": parts})
+        elif name == "gen_ai.tool.message":
+            normalized.append(
+                {
+                    "role": "tool",
+                    "parts": [
+                        {
+                            "type": "tool_call_response",
+                            "id": payload.get("id"),
+                            "name": payload.get("name"),
+                            "result": payload.get("content"),
+                        }
+                    ],
+                }
+            )
+    return normalized
+
+
 def normalize_pydantic_ai_messages(span: ReadableSpan) -> list:
     """Normalize PydanticAI message attributes across instrumentation versions."""
 
@@ -653,7 +728,30 @@ def normalize_pydantic_ai_messages(span: ReadableSpan) -> list:
         output_messages = _normalize_messages(
             span.attributes.get("gen_ai.output.messages")
         )
-        return input_messages + output_messages
+        if input_messages or output_messages:
+            return input_messages + output_messages
+
+        # pydantic-ai < 1.0.0 (default instrumentation version=1) writes
+        # message data as span `events` attribute entries
+        # (gen_ai.user.message / gen_ai.assistant.message /
+        # gen_ai.tool.message) instead of the gen_ai.*.messages attributes.
+        # Convert them to the same {role, parts} shape so downstream parsing
+        # (e.g. check_pydantic_ai_tools_called) sees tool calls and results.
+        events_raw = span.attributes.get("events")
+        if events_raw is None:
+            events_raw = span.attributes.get("all_messages_events")
+        if events_raw:
+            try:
+                events = (
+                    json.loads(events_raw)
+                    if isinstance(events_raw, str)
+                    else events_raw
+                )
+                if isinstance(events, list):
+                    return _events_to_normalized_messages(events)
+            except Exception:
+                pass
+        return []
     except Exception:
         return []
 
