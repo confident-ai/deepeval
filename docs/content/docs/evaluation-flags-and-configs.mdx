@@ -287,6 +287,28 @@ There are **TWO** optional parameters:
 
 Results are keyed by test case content plus metric configuration, so a cached result is only reused when both are unchanged. The <Term py="write_cache" ts="writeCache"/> parameter writes to disk and so you should disable it if that is causing any errors in your environment.
 
+:::caution[Cache replays a prior measurement — it is not a re-measurement]
+With <Term py="use_cache=True" ts="useCache: true"/> and an unchanged metric configuration, `evaluate()` reuses the cached `MetricData` and skips `_execute_metric` entirely. Three runs with caching enabled can therefore be **one measurement replayed three times**, not three independent samples. To collect genuine repeated measurements of the same case (for example to estimate variance of a stochastic judge), disable the cache (`CacheConfig(use_cache=False)` or omit `-c` / `--use-cache`). Use caching for cost saving, not for variance estimation.
+:::
+
+## Measurement semantics for stochastic judges
+
+LLM judges (for example `GEval` with logprob-weighted scoring) are stochastic: re-running the **same unchanged test case** can move the score across the threshold. With threshold `0.6`, scores `0.62 / 0.58 / 0.61` give two passes and one fail for the same case.
+
+deepeval's contract for this situation is explicit:
+
+- **One run = one measurement.** A case's verdict (`success`) is computed inside a single run as a logical AND over its non-flaky metrics (`LLMApiTestCase.update_metric_data` in `deepeval/test_run/api.py`). There is no cross-run holder on `TestRun` — fields such as `test_cases`, `metrics_scores`, `identifier`, `hyperparameters` and `test_passed / test_failed` describe only that run.
+- **Re-runs are new measurements, not reconciled versions of one verdict.** There is no canonical "first run" or "latest run" verdict across runs. Each `TestRun` (`test_run_<YYYYMMDD_HHMMSS>.json` or `.deepeval/.latest_run_full.json`) is self-contained. If you need variance, treat the set of runs as a distribution, not as noise to be collapsed silently.
+- **Storage.** By default `TestRunManager.save_test_run_locally` keeps a rolling snapshot at `.deepeval/.latest_run_full.json`; the next run overwrites it. Set `results_folder` / `DEEPEVAL_RESULTS_FOLDER` to retain timestamped `test_run_*.json` files per run, so per-case variance can be audited after the fact rather than re-litigated from memory.
+- **Vocabulary: `flaky` is a declaration, not an observation.** `BaseMetric.flaky` / `BaseConversationalMetric.flaky` means "this metric must not decide pass/fail" and is checked in `update_metric_data` and `metrics/utils.py:check_at_least_one_metric_has_threshold`. It does **not** mean "this case was observed to be unstable". A future stability signal needs distinct terminology.
+- **Auditability.** Judge traces (`MetricData.score`, `reason`, and logprobs where `GEval` uses them) are retained per run inside each `TestRun` artifact. Keeping them — at minimum for cases whose runs disagree across the threshold — is what lets a flaky CI gate be diagnosed after the fact.
+
+**Future opt-in n-runs reporting (not yet implemented).** The intended additive shape, if added, will stay out of the single-run path:
+
+- For each case, run the thresholded metric *n* times as real measurements (cache bypassed) and record pass rate, score mean and spread (std, min/max), and a flag when the threshold falls inside the observed spread.
+- Summarize each case as one of three states — `always-passed`, `always-failed`, `mixed` — rather than collapsing `mixed` implicitly. The chosen collapse rule for `mixed` (for example `mixed → fail` for deliverability vs `mixed → pass` for capability ceiling) will be written into the run artifact so `deepeval compare` and `--fail-on-regression` gates are checkable.
+- A pass rate over small *n* has its own uncertainty: `2/3` is not meaningfully different from `1/3` or `3/3`. The honest levers for a stable gate are more runs or an explicit margin around the threshold, not a single re-run.
+
 ## Hyperparameters
 
 Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination.
