@@ -274,6 +274,33 @@ class TestSaveAndLoad:
                     "owner": "platform"
                 }, fmt
 
+    def test_save_as_round_trips_token_usage_fields(self):
+        """save_as rebuilds each golden field by field, so a field the loaders
+        read but that rebuild omits is written back as null."""
+        golden = Golden(
+            input="q",
+            actual_output="a",
+            token_cost=0.0123,
+            input_token_count=42,
+            output_token_count=7,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for fmt, loader in (
+                ("json", "add_goldens_from_json_file"),
+                ("csv", "add_goldens_from_csv_file"),
+                ("jsonl", "add_goldens_from_jsonl_file"),
+            ):
+                path = EvaluationDataset([golden]).save_as(
+                    fmt, directory=tmpdir, file_name=f"token_usage_{fmt}"
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                loaded = reloaded.goldens[0]
+                assert loaded.token_cost == 0.0123, fmt
+                assert loaded.input_token_count == 42, fmt
+                assert loaded.output_token_count == 7, fmt
+
     def test_save_as_round_trips_retrieval_context_data(self):
         """save_as serializes a RetrievedContextData (a type-allowed member of
         Golden.retrieval_context that used to crash the save) as a namespaced,
