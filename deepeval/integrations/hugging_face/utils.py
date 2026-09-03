@@ -51,6 +51,6 @@ def generate_test_cases(
 
     test_cases = convert_goldens_to_test_cases(
         goldens=evaluation_dataset.goldens,
-        dataset_alias=evaluation_dataset.alias,
+        _alias=evaluation_dataset._alias,
     )
     return test_cases
