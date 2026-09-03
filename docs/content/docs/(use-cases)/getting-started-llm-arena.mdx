@@ -442,6 +442,59 @@ Track prompts and model configurations to understand which hyperparameters lead 
 </Tab>
 </Tabs>
 
+## Is the win statistically significant?
+
+`compare()` reports raw win counts (`{contestant: wins}`), but a 30/50 tally
+carries no information about whether that margin is real or just noise. When
+you need to decide "should I ship Version 2?", use `analyze_compare_results`
+to run an exact sign test on the per-case winners. It returns a p-value, a
+95% Wilson confidence interval on the win rate, and a log-odds-ratio effect
+size — with no new runtime dependency.
+
+<Switch>
+
+<Case id="python">
+
+```python title="main.py"
+from deepeval.evaluate import analyze_compare_results
+
+# Per-case winners from your arena run (None = a tie / no winner).
+winners = ["Version 2"] * 38 + ["Version 1"] * 12
+
+result = analyze_compare_results(
+    winners=winners,
+    model_a="Version 2",
+    model_b="Version 1",
+)
+
+print(result.significant)        # True
+print(result.p_value)            # 0.00031
+print(result.win_rate_a)         # 0.76
+print(result.confidence_interval)  # (0.626, 0.857) — 95% Wilson CI
+print(result.odds_ratio)         # 3.17 — Version 2 wins 3:1
+print(result.interpretation)     # 'Version 2' is significantly better than 'Version 1' ...
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts"
+// The significance analysis is a Python-only helper currently.
+// Collect the raw winner list here and call the Python API above.
+```
+
+</Case>
+
+</Switch>
+
+Ties get a deliberate treatment because they carry no direction: pass
+`tie_strategy="drop"` (ignore tied rounds — the conservative default) or
+`tie_strategy="split"` (count each tie as half a win — only when a tie really
+is half a win for your decision). The p-value uses the exact binomial tail, so
+it stays trustworthy even at small sample sizes where a normal approximation
+would mislead.
+
 Now that you have run your first Arena evals, you should:
 
 1. **Customize your metrics**: You can change the criteria of your metric to be more specific to your use-case.
