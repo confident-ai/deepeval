@@ -52,6 +52,7 @@ from deepeval.simulator.simulation_graph.runner import (
     _GraphConversationState,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
+from deepeval.voice.recording import CallRecorder, RecordingConnector
 from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
@@ -69,6 +70,7 @@ _MISSING = object()
 
 # Length of the silent uplink used to hear the agent out without speaking.
 _SILENCE_PROBE_SECONDS = 1.0
+_GREETING_TIMEOUT_S = 15.0
 
 
 @dataclass
@@ -81,11 +83,12 @@ class _VoiceSession:
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
     barges: int = 0
+    recorder: Optional[CallRecorder] = None
 
     @property
     def is_duplex(self) -> bool:
-        """Whether this conversation's caller talks over the agent."""
-        return self.policy is not None
+        """A barge policy or a full-duplex line both take the duplex path."""
+        return self.policy is not None or self.connector.supports_duplex
 
 
 @dataclass
@@ -120,11 +123,18 @@ class _VoiceRun:
         policy: Optional["InterruptionPolicy"],
         floor: Optional["FloorController"],
     ) -> _VoiceSession:
+        from deepeval.voice.floor_control import FloorController
+
+        connector = self.config.make_connector()
+        recorder = CallRecorder() if self.config.record_call else None
+        if recorder is not None:
+            connector = RecordingConnector(connector, recorder)
         return _VoiceSession(
-            connector=self.config.make_connector(),
+            connector=connector,
             persona=persona,
             policy=policy,
-            floor=floor,
+            floor=floor or FloorController(),
+            recorder=recorder,
         )
 
     @property
@@ -132,6 +142,32 @@ class _VoiceRun:
         return "simulation-{}".format(
             self.run_timestamp or datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         )
+
+
+def _has_speech_energy(audio, connector) -> bool:
+    """Whether the clip contains anything above the connector's silence floor.
+
+    Silence must never reach STT: models hallucinate words on silent audio,
+    and a phantom transcript makes a dead agent look alive to both the
+    hold timeout and the metrics.
+    """
+    from deepeval.voice.connectors import audio_utils
+
+    try:
+        pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(audio.get_bytes())
+    except Exception:
+        return True
+    pcm = audio_utils.downmix_to_mono(pcm, channels or 1)
+    threshold = getattr(
+        connector, "silence_threshold_rms", audio_utils.DEFAULT_SILENCE_RMS
+    )
+    frame_bytes = 2 * int(rate * audio_utils.DEFAULT_FRAME_MS / 1000)
+    for offset in range(0, len(pcm), frame_bytes):
+        if not audio_utils.is_silent(
+            pcm[offset : offset + frame_bytes], threshold
+        ):
+            return True
+    return False
 
 
 def _populate_audio_duration(audio) -> None:
@@ -626,7 +662,10 @@ class ConversationSimulator:
 
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
-                turns.append(await self._voice_listen(session, turns))
+                if session.is_duplex:
+                    await self._voice_duplex_listen(session, turns, golden)
+                else:
+                    turns.append(await self._voice_listen(session, turns))
                 await _dispatch_on_turn(on_turn, turns, index)
 
             while True:
@@ -743,8 +782,15 @@ class ConversationSimulator:
                     assistant_turn = await self._voice_listen(session, turns)
                     turns.append(assistant_turn)
                 elif session is not None and session.is_duplex:
+                    user_turns_before = sum(
+                        1 for turn in turns if turn.role == "user"
+                    )
                     assistant_turn = await self._voice_duplex_exchange(
                         session, user_input, turns, golden
+                    )
+                    simulation_counter += (
+                        sum(1 for turn in turns if turn.role == "user")
+                        - user_turns_before
                     )
                 elif session is not None:
                     assistant_turn = await self._voice_model_callback(
@@ -809,6 +855,13 @@ class ConversationSimulator:
                     break
 
         update_pbar(progress, pbar_id)
+        if voice is not None:
+            self._log_voice_latency(turns, index)
+        call_recording_path = (
+            session.recorder.finish()
+            if session is not None and session.recorder is not None
+            else None
+        )
         conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
@@ -825,6 +878,7 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        conversational_test_case.call_recording_path = call_recording_path
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
             logger.debug("Saving voice audio to %s", voice.config.output_dir)
@@ -938,6 +992,42 @@ class ConversationSimulator:
             duration=seconds,
         )
 
+    @staticmethod
+    def _log_voice_latency(turns: List[Turn], index: int) -> None:
+        """Log each side's reply time; the caller's is the simulator's own."""
+        from deepeval.voice.timeline import build_audio_timeline
+
+        agent_waits = [
+            turn.latency_ms / 1000.0
+            for turn in turns
+            if turn.role == "assistant" and turn.latency_ms is not None
+        ]
+        timeline = build_audio_timeline(turns)
+        caller_waits = [
+            following.start_time - current.end_time
+            for current, following in zip(timeline, timeline[1:])
+            if current.role == "assistant" and following.role == "user"
+        ]
+        if not agent_waits and not caller_waits:
+            return
+
+        def describe(waits: List[float]) -> str:
+            if not waits:
+                return "n/a"
+            return "avg %.2fs, max %.2fs over %d turns" % (
+                sum(waits) / len(waits),
+                max(waits),
+                len(waits),
+            )
+
+        logger.info(
+            "Conversation %d voice latency: agent replied after %s; "
+            "caller replied after %s",
+            index,
+            describe(agent_waits),
+            describe(caller_waits),
+        )
+
     async def _voice_listen(
         self, session: _VoiceSession, turns: List[Turn]
     ) -> Turn:
@@ -953,7 +1043,8 @@ class ConversationSimulator:
         """Build this conversation's barge-in policy and floor controller.
 
         The golden's persona wins; `VoiceConfig.interruption_settings` is the
-        deprecated run-wide fallback. Returns `(None, None)` for half-duplex.
+        deprecated run-wide fallback. Returns `(None, None)` when nobody
+        barges; a full-duplex transport still runs the duplex exchange then.
         """
         from deepeval.voice.floor_control import FloorController
         from deepeval.voice.interruption import interruption_policy
@@ -1143,8 +1234,8 @@ class ConversationSimulator:
     ) -> Turn:
         """Half-duplex voice callback: TTS → exchange_turn → STT.
 
-        Used when the persona has no `interruption_behavior`. Duplex barge-in
-        goes through `_voice_duplex_exchange` instead.
+        The fallback for transports that cannot carry both voices at once;
+        everything else goes through `_voice_duplex_exchange`.
         """
         voice = self._voice
         tts_started = time.perf_counter()
@@ -1213,6 +1304,7 @@ class ConversationSimulator:
         has_audio = (
             conn_turn.audio is not None
             and len(conn_turn.audio.get_bytes()) > 44  # more than a WAV header
+            and _has_speech_energy(conn_turn.audio, session.connector)
         )
         if conn_turn.transcript:
             agent_text = conn_turn.transcript
@@ -1241,11 +1333,12 @@ class ConversationSimulator:
         # Half-duplex: leave Turn.interrupted unset. Provider interruption
         # events are often spurious when the next user turn arrives while
         # the previous reply is still playing server-side.
+        replied = has_audio or bool(conn_turn.transcript)
         return Turn(
             role="assistant",
             content=agent_text,
-            audio=conn_turn.audio,
-            latency_ms=conn_turn.latency_ms,
+            audio=conn_turn.audio if replied else None,
+            latency_ms=conn_turn.latency_ms if replied else None,
         )
 
     async def _voice_duplex_exchange(
@@ -1260,14 +1353,6 @@ class ConversationSimulator:
         Appends barge user turns and assistant turns onto `turns` in place.
         Returns the last assistant turn for simulation-graph routing.
         """
-        import time
-
-        from deepeval.voice.duplex import DuplexExchange
-
-        voice = self._voice
-        # Drain stale downlink before the new user utterance.
-        session.connector.drain_downlink()
-
         call_started_at = session.started_at or time.perf_counter()
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
@@ -1281,6 +1366,27 @@ class ConversationSimulator:
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
+        assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
+        if assistant_turn is not None:
+            return assistant_turn
+        logger.warning(
+            "Duplex exchange produced no assistant turn; inserting empty reply."
+        )
+        empty = Turn(role="assistant", content="")
+        turns.append(empty)
+        return empty
+
+    async def _run_duplex(
+        self,
+        session: _VoiceSession,
+        golden: ConversationalGolden,
+        turns: List[Turn],
+        sent_at: float,
+    ) -> Optional[Turn]:
+        """Listen until the agent's turn ends; None if it never spoke."""
+        from deepeval.voice.duplex import DuplexExchange
+
+        voice = self._voice
         exchange = DuplexExchange(
             connector=session.connector,
             tts_model=voice.tts_model,
@@ -1290,7 +1396,7 @@ class ConversationSimulator:
             golden=golden,
             language=self.language,
             a_generate_schema=self.a_generate_schema,
-            call_started_at=call_started_at,
+            call_started_at=session.started_at or time.perf_counter(),
         )
         result = await exchange.run(
             turns=turns,
@@ -1300,16 +1406,35 @@ class ConversationSimulator:
         session.barges += result.barges
         voice.tts_cost += result.tts_cost
         voice.stt_cost += result.stt_cost
-
-        for turn in reversed(result.turns):
-            if turn.role == "assistant":
-                return turn
-        logger.warning(
-            "Duplex exchange produced no assistant turn; inserting empty reply."
+        return next(
+            (
+                turn
+                for turn in reversed(result.turns)
+                if turn.role == "assistant"
+            ),
+            None,
         )
-        empty = Turn(role="assistant", content="")
-        turns.append(empty)
-        return empty
+
+    async def _voice_duplex_listen(
+        self,
+        session: _VoiceSession,
+        turns: List[Turn],
+        golden: ConversationalGolden,
+    ) -> None:
+        """Wait out the greeting, or give the caller the floor if none comes."""
+        persona = session.persona
+        timeout = (
+            persona.hold_timeout
+            if persona is not None and persona.hold_timeout
+            else _GREETING_TIMEOUT_S
+        )
+        try:
+            await asyncio.wait_for(
+                self._run_duplex(session, golden, turns, time.perf_counter()),
+                timeout=timeout,
+            )
+        except asyncio.TimeoutError:
+            logger.debug("No greeting heard; the caller speaks first")
 
     ############################################
     ### Invoke Model Callback ##################

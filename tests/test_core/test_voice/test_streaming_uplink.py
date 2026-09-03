@@ -227,6 +227,9 @@ class _BufferedTTS:
 
 
 class _STT:
+    def supports_streaming(self) -> bool:
+        return False
+
     truncated_audio_pad_seconds = 0.0
 
     async def a_transcribe(self, audio, **kwargs):

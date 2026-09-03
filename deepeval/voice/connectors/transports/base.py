@@ -187,6 +187,11 @@ class BaseVoiceConnector(ABC):
         return UplinkResult(audio=audio, first_frame_at=sent_at)
 
     @property
+    def supports_duplex(self) -> bool:
+        """Whether the agent can be heard while the caller is speaking."""
+        return False
+
+    @property
     def signals_turn_complete(self) -> bool:
         """Whether the transport says outright when the agent's turn is over.
 
