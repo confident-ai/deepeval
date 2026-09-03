@@ -14,6 +14,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_no_verdict,
 )
 from deepeval.metrics.pii_leakage.schema import (
     PIILeakageVerdict,
@@ -158,7 +159,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -181,7 +182,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -273,7 +274,7 @@ class PIILeakageMetric(BaseMetric):
 
         no_privacy_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if is_no_verdict(verdict.verdict):
                 no_privacy_count += 1
 
         score = no_privacy_count / number_of_verdicts

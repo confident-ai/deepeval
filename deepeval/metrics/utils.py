@@ -511,6 +511,32 @@ def accrue_token_usage(
         metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
 
 
+def normalize_verdict(value: str) -> str:
+    """Canonical form of a judge's verdict token: stripped and lower-cased."""
+    return value.strip().lower()
+
+
+def is_yes_verdict(value: str) -> bool:
+    """True only for an explicit "yes" verdict.
+
+    The shared classifier for verdict tokens. A metric's score and reason must
+    both key on this (or ``is_no_verdict`` / ``is_idk_verdict``) so a verdict
+    that is neither token lands on the same side in both places, instead of
+    lowering the score while the reason ignores it.
+    """
+    return normalize_verdict(value) == "yes"
+
+
+def is_no_verdict(value: str) -> bool:
+    """True only for an explicit "no" verdict; see ``is_yes_verdict``."""
+    return normalize_verdict(value) == "no"
+
+
+def is_idk_verdict(value: str) -> bool:
+    """True only for an explicit "idk" verdict; see ``is_yes_verdict``."""
+    return normalize_verdict(value) == "idk"
+
+
 def verdict_from_json(
     data: Dict,
     verdict_cls: Type[SchemaType],
