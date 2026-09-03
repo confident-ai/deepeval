@@ -391,7 +391,6 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
         or attrs.get("traceloop.entity.input")
         or "{}"
     )
-
     try:
         input_params = (
             json.loads(args_raw) if isinstance(args_raw, str) else args_raw
