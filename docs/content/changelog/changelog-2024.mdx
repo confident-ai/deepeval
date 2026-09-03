@@ -26,7 +26,7 @@ First things first, DeepEval exists because of everyone who opened issues, revie
 
 December delivered the 2.0 major release with refreshed packaging, updated dependency pins, `langchain-community` added, broader Python support up to &lt;3.13, and smoother installs including automatic `nest_asyncio`. Documentation saw a significant polish pass, with expanded dataset tutorials and clearer navigation across dataset synthesis, LLM app, metrics, guardrails, and getting started guidance including Windows notes for `DEEPEVAL_RESULTS_FOLDER`. Red Teaming 2.0 landed with broader vulnerability coverage, improved evaluation prompts, and new IP and competitor checks while retiring older politics and religion graders and updating baseline attack generation. The month also improved extens-
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v2.0.1
 - Bump the package version to 2.0 for the new major release. ([#1191](https://github.com/confident-ai/deepeval/pull/1191)) {/* pr:1191 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -148,7 +148,7 @@ November focused on polish, reliability, and a major expansion of learning resou
 
 October focused on making evaluations more reliable and scalable, with stronger concurrency controls for async LLM calls and new limits like `limit_count` and `truths_extraction_limit` to curb token runaway and improve faithfulness/summarization stability on large RAG inputs. The evaluation surface was refined with cleaner defaults, a new `EvaluationResult` return type, more consistent tool-calling fields, and end-to-end improvements to `KnowledgeRetentionMetric`, plus broader metric coverage including role adherence and dedicated multimodal image metrics. RAG and synthesizer workflows saw notable expansion through improved golden generation APIs, higher-quality context selection, richer RAG
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v1.4.2
 - Fix red-teaming vulnerability handling by mapping vulnerabilities to stable API codes and updating renamed vulnerability enums. This prevents incorrect attack generation for unaligned/remote categories and keeps grading and reporting consistent across the full vulnerability set. ([#1101](https://github.com/confident-ai/deepeval/pull/1101)) {/* pr:1101 */} ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -279,7 +279,7 @@ October focused on making evaluations more reliable and scalable, with stronger 
 September focused on smoother installs, richer telemetry, and big Synthesizer quality-of-life upgrades. Dependency constraints were relaxed (notably around `opentelemetry`, `grpcio`, and `opentelemetry-sdk`) alongside several version bumps, improving compatibility when used as a downstream dependency. Red-teaming and evaluation gained deeper observability and robustness, with span-based tracking, packaging/import cleanups, improved result handling, and new multimodal support via `MLLMTestCase` and VIEScore. The Synthesizer saw faster document-based context generation with async chunking and caching, better progress visibility with optional `tqdm`, quality scoring and filtering via `critic
 't
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v1.3.2
 - Add a `critic_model` option to the Synthesizer for quality filtering, and update generation to handle LLMs that return a single value. Document a required chromadb 0.5.3 install for faster chunk indexing and retrieval when generating from documents. ([#1039](https://github.com/confident-ai/deepeval/pull/1039)) {/* pr:1039 */} ([Kritin Vongthongsri](https://github.com/kritinv))
@@ -389,7 +389,7 @@ September focused on smoother installs, richer telemetry, and big Synthesizer qu
 
 August focused on a major stabilization and API-polish push, culminating in the 1.0.0 release and subsequent rapid version updates. Observability and feedback workflows were streamlined with `monitor()` as the primary logging API (standardizing on `response_id`) and clearer guides for monitoring, tracing, and reviewer/user feedback via `send_feedback()`. Evaluation gained stronger multi-turn support and richer metrics, including new conversational messages, `ConversationCompletenessMetric`, improved tool correctness (exact and ordered matching), standardized `metrics_data` reporting, and parameter naming cleanups like `tools_used`/`tools_called`. Reliability and schema enforcement also saw a
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v1.1.4
 - Rename `tools_used` to `tools_called` across LLM test cases and the tool correctness metric, aligning parameter names in evaluation, API payloads, and documentation. ([#989](https://github.com/confident-ai/deepeval/pull/989)) {/* pr:989 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -502,7 +502,7 @@ August focused on a major stabilization and API-polish push, culminating in the 
 
 July focused on more reliable evaluation and tracing across LangChain and LlamaIndex, with new one-line integration helpers and more consistent, structured input/output capture to reduce missing fields. Synthetic data and red-teaming workflows saw a major usability pass, including new dataset helpers, async generation options, schema-enforced outputs via `schema=`, and clearer docs and renamed APIs around attacks, vulnerabilities, and evolution settings. Metrics and tooling improved with Pydantic-backed JSON outputs, better verbose logging via `verboseLogs`, the new `ToolCorrectnessMetric`, and prompt refinements for benchmarks like GSM8K and HumanEval. The release also included a steady set
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.21.66
 - Simplify feedback submission by removing the `provider` argument and returning less data from `send_feedback`, while still sending the same feedback payload. ([#879](https://github.com/confident-ai/deepeval/pull/879)) {/* pr:879 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -733,7 +733,7 @@ June focused on making evaluations and synthetic data generation more robust, co
 
 May focused on making evaluations more observable, faster, and easier to analyze, with major work around tracing, richer event metadata, and clearer reporting across datasets. The release added OpenTelemetry-style tracing for evaluation runs, improved metadata serialization and retrieval/reranking trace details, and introduced conveniences like aggregated pass-rate summaries, optional batch scoring via `batch_size`, and `hyperparameters` logging for reproducible runs. Dataset and CLI usability improved as well, including better golden generation with `include_expected_output`, saving paths from `EvaluationDataset.save_as`, Azure embedding deployment configuration, and more reliable large run
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.21.38
 - Constrain `send_feedback` ratings to the 0–5 range and raise a clear error for out-of-range values. Documentation now reflects the updated rating scale. ([#752](https://github.com/confident-ai/deepeval/pull/752)) {/* pr:752 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -837,7 +837,7 @@ May focused on making evaluations more observable, faster, and easier to analyze
 
 April focused on making evaluations more resilient, reproducible, and easier to understand, with richer metadata and clearer results output. Reliability improved through Tenacity-based retries for rate limits, `--ignore-errors` to keep runs going when a metric fails, stable dataset ordering, and better conversational test case support across evaluation, datasets, and API posting. The tool also expanded and refined benchmark capabilities and docs around GSM8K, HumanEval, and DROP, while adding cost tracking with total USD display and more configurable model initialization via `GPTModel`. The month included multiple version bumps, dependency compatibility tweaks, documentation cleanups, and a削
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.21.31
 - Remove the `LatencyMetric`, `CostMetric`, and `JudgementalGPT` metrics and their documentation to reduce unused surface area. Imports from `deepeval.metrics` no longer include these metrics. ([#706](https://github.com/confident-ai/deepeval/pull/706)) {/* pr:706 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -999,7 +999,7 @@ April focused on making evaluations more resilient, reproducible, and easier to 
 
 March focused on making evaluations faster, clearer, and easier to automate, with major work on async execution, event-loop compatibility in notebooks, and more reliable concurrency controls via the `run_async` flag. Evaluation UX improved with a new progress indicator (and better toggles), richer and more consistent score metadata, and caching that reuses prior results safely without trampling metric configuration. The synthesizer and dataset tooling expanded significantly with new APIs for generating and exporting synthetic `Golden` test cases from contexts and documents, plus prompt evolution for more diverse inputs and improved reproducibility through saved prompt templates and hyperper-
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.20.79
 - Rename the hyperparameter decorator from `set_hyperparameters` to `log_hyperparameters` and update public exports and docs accordingly. ([#557](https://github.com/confident-ai/deepeval/pull/557)) {/* pr:557 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -1205,7 +1205,7 @@ March focused on making evaluations faster, clearer, and easier to automate, wit
 
 February focused on making evaluations more reliable, faster, and easier to integrate as the metrics and template layout was reorganized into clearer per-metric modules while preserving key imports like `HallucinationMetric`. Multiple core metrics saw meaningful upgrades, including improved faithfulness, answer relevancy, hallucination, summarization, and knowledge retention with better prompt parsing, clearer verdict rules, optional multithreading, and more consistent reasoning outputs. Integrations and tooling were refined with safer defaults and compatibility updates for Hugging Face, LlamaIndex, and RAGAS, alongside stricter type validation, improved JSON error messages, and a more CI-vi
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.20.65
 - Improve custom LLM support in metrics by switching the expected base type from `DeepEvalBaseModel` to `DeepEvalBaseLLM`, and update docs accordingly. ([#478](https://github.com/confident-ai/deepeval/pull/478)) {/* pr:478 */} ([Jeffrey Ip](https://github.com/penguine-ip))
@@ -1365,7 +1365,7 @@ February focused on making evaluations more reliable, faster, and easier to inte
 
 January focused on making evaluations faster, clearer, and easier to integrate across common LLM stacks. Event tracking now runs in the background by default with a synchronous option when needed, while telemetry and CLI output were refined with safer Sentry setup and transient spinner-based progress on stderr. Metrics and results reporting saw major consistency upgrades, including dynamic per-metric thresholds, explicit `success` flags, evaluation-model metadata in outputs, and new performance assertions via `LatencyMetric` and `CostMetric`. Integrations and APIs matured with improved LangChain and Azure OpenAI compatibility, expanded LlamaIndex tracing and evaluator wrappers, Hugging Face/
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v0.20.50
 - Rename bias and toxicity metrics to `BiasMetric` and `ToxicityMetric`, and simplify their usage to score `actual_output` directly with a maximum threshold. Update imports and examples to match the new metric names. ([#423](https://github.com/confident-ai/deepeval/pull/423)) {/* pr:423 */} ([Jeffrey Ip](https://github.com/penguine-ip))

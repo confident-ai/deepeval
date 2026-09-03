@@ -35,8 +35,11 @@ REPO = "deepeval"
 START_MARKER = "{/* DeepEval release notes start */}"
 LEGACY_START_MARKER = "<!-- DeepEval release notes start -->"
 
+# Monorepo releases are tagged per SDK; legacy releases used a bare "v*".
+TAG_PREFIXES = ("python-v", "typescript-v")
+
 CATEGORY_ORDER = [
-    "Backward Incompatible Change",
+    "Breaking Change",
     "New Feature",
     "Experimental Feature",
     "Improvement",
@@ -181,10 +184,13 @@ def sh(cmd: List[str]) -> str:
 
 def git_tag_date_ymd(tag: str) -> str:
     if tag not in tag_to_date:
-        try:
-            date_value = sh(["git", "log", "-1", "--format=%cs", tag])
-            tag_to_date[tag] = date_value
-        except subprocess.CalledProcessError:
+        for ref in tag_ref_candidates(tag):
+            try:
+                tag_to_date[tag] = sh(["git", "log", "-1", "--format=%cs", ref])
+                break
+            except subprocess.CalledProcessError:
+                continue
+        else:
             import datetime
 
             tag_to_date[tag] = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -198,10 +204,34 @@ def tag_match_pattern(tag: str) -> str:
     legacy releases use ``v*``. This keeps the previous-tag lookup within the
     same scheme so a Python release diffs against the prior Python release.
     """
-    for prefix in ("python-v", "typescript-v"):
+    for prefix in TAG_PREFIXES:
         if tag.startswith(prefix):
             return f"{prefix}*"
     return "v*"
+
+
+def display_version(tag: str) -> str:
+    """Strip the SDK prefix so a heading reads ``v4.1.10``, not ``python-v4.1.10``.
+
+    Releases are tagged per SDK, but the changelog is a single page whose older
+    entries predate the monorepo split, so every version renders bare.
+    """
+    for prefix in TAG_PREFIXES:
+        if tag.startswith(prefix):
+            return f"v{tag[len(prefix):]}"
+    return tag
+
+
+def tag_ref_candidates(version: str) -> List[str]:
+    """Return the git tags a rendered version could have come from.
+
+    ``display_version`` erases the scheme, so reading a heading back off disk
+    leaves a bare ``v4.1.10`` that no longer names a tag. Try it as-is first,
+    then re-apply each SDK prefix.
+    """
+    if version.startswith(TAG_PREFIXES):
+        return [version]
+    return [version] + [f"{p}{version.lstrip('v')}" for p in TAG_PREFIXES]
 
 
 def get_prev_tag(tag: str) -> str:
@@ -292,11 +322,12 @@ def latest_tag() -> str:
 
 def commits_in_range(base: str, head: str) -> List[Commit]:
     # get sha and subject for commit subjects in range
+    # No --first-parent: release tags often sit on a fork-sync merge whose first
+    # parent leaves the range immediately, which hides every PR merge behind it.
     raw = sh(
         [
             "git",
             "log",
-            "--first-parent",
             "--merges",
             "--format=%H%x00%s",
             f"{base}..{head}",
@@ -490,7 +521,7 @@ If the PR is unclear, write the safest high-level improvement without guessing d
 IMPORTANT: Output only valid JSON with no code fences or comments.
 
 Allowed categories:
-- Backward Incompatible Change
+- Breaking Change
 - New Feature
 - Experimental Feature
 - Improvement
@@ -712,7 +743,7 @@ def classify(title: str, body: str) -> str:
             "breaking change",
         ]
     ):
-        return "Backward Incompatible Change"
+        return "Breaking Change"
     if any(
         key_word in title_lower or key_word in body_lower
         for key_word in ["security", "vuln", "cve"]
@@ -932,7 +963,7 @@ def render_changelog_body(
     version_date: Dict[str, str],
     *,
     use_ai: bool = False,
-    ai_model: str = "gpt-5.2",
+    ai_model: str = "gpt-4.1",
 ) -> str:
     """
     Render an ChangelogIndex into an MDX/Markdown changelog body.
@@ -1040,10 +1071,10 @@ def build_release_entries(
     tag: str,
     use_github: bool,
     use_ai: bool = False,
-    ai_model: str = "gpt-5.2",
+    ai_model: str = "gpt-4.1",
     sleep_s: float = 0.0,
     ignore_prs: Optional[set[int]] = None,
-    existing_keys: Optional[set[tuple[str, int]]] = None,
+    existing_keys: Optional[set[int]] = None,
     overwrite_existing: bool = False,
     status_cb: Optional[Callable[[str], None]] = None,
     tick_cb: Optional[Callable[[], None]] = None,
@@ -1061,7 +1092,8 @@ def build_release_entries(
 
     # collect entries for this tag into an index shape
     idx: ChangelogIndex = {month: {}}
-    version_date = {tag: tag_date}
+    version = display_version(tag)
+    version_date = {version: tag_date}
     ai = None
     ai_cache: dict[int, AiReleaseNote] = {}
     ai_total_cost = 0.0
@@ -1078,8 +1110,11 @@ def build_release_entries(
 
     for pr_num, commit in sorted(pr_map.items(), key=lambda kv: kv[0]):
         _status(f"[{tag}] PR #{pr_num}: preparing…")
-        key = (tag, pr_num)
-        if existing_keys and (key in existing_keys) and not overwrite_existing:
+        if (
+            existing_keys
+            and (pr_num in existing_keys)
+            and not overwrite_existing
+        ):
             _status(f"[{tag}] PR #{pr_num}: skipping (already present)")
             _tick()
             # Preserve manual edits/moves and avoid useless LLM calls
@@ -1176,7 +1211,7 @@ def build_release_entries(
                 title_out += "."
             category = classify(title, body)
 
-        idx[month].setdefault(category, {}).setdefault(tag, {})
+        idx[month].setdefault(category, {}).setdefault(version, {})
         author = ""
         if user_display:
             if user_profile_url:
@@ -1187,19 +1222,24 @@ def build_release_entries(
             f"- {title_out} ([#{pr_num}](https://github.com/{OWNER}/{REPO}/pull/{pr_num})) "
             f"{{/* pr:{pr_num} */}}{author}"
         )
-        idx[month][category][tag][pr_num] = line
+        idx[month][category][version][pr_num] = line
         _status(f"[{tag}] PR #{pr_num}: done")
         _tick()
     return year, month, idx, version_date, ai_total_cost
 
 
-def collect_existing_keys(idx: ChangelogIndex) -> set[tuple[str, int]]:
-    out: set[tuple[str, int]] = set()
+def collect_existing_keys(idx: ChangelogIndex) -> set[int]:
+    """Return every PR already recorded anywhere in the index.
+
+    Keyed on the PR alone, not on (version, PR): without --first-parent a PR
+    can fall inside more than one tag range, and it should stay under the first
+    release that shipped it rather than being repeated under each.
+    """
+    out: set[int] = set()
     for _month, categories in idx.items():
         for _category, versions in categories.items():
-            for version, prs in versions.items():
-                for pr in prs.keys():
-                    out.add((version, pr))
+            for _version, prs in versions.items():
+                out.update(prs.keys())
     return out
 
 
@@ -1441,7 +1481,15 @@ def run_with_overall_progress(
 def main() -> int:
     ap = argparse.ArgumentParser()
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--tag", help="Release tag like v3.7.6")
+    g.add_argument(
+        "--tag",
+        nargs="+",
+        metavar="TAG",
+        help=(
+            "One or more release tags like v3.7.6, oldest first. Accepts tags "
+            "from different release schemes, which --range cannot span."
+        ),
+    )
     g.add_argument(
         "--latest", action="store_true", help="Generate for latest tag only"
     )
@@ -1472,7 +1520,7 @@ def main() -> int:
         action="store_true",
         help="Use an LLM to generate release-note bullets",
     )
-    ap.add_argument("--ai-model", default="gpt-5.2", help="Model name for --ai")
+    ap.add_argument("--ai-model", default="gpt-4.1", help="Model name for --ai")
     ap.add_argument(
         "--overwrite-existing",
         action="store_true",
@@ -1496,7 +1544,7 @@ def main() -> int:
     if args.latest:
         tags = [latest_tag()]
     elif args.tag:
-        tags = [args.tag]
+        tags = args.tag
     elif args.year is not None:
         tags = list_tags_for_year(args.year)
     else:

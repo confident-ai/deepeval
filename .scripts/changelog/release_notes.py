@@ -39,7 +39,7 @@ HEADER = "New to `deepeval`? Get started [here](https://deepeval.com/docs/introd
 FOOTER = "A huge thank you to everyone who contributed to this release ❤️"
 
 CATEGORY_EMOJI = {
-    "Backward Incompatible Change": "💥",
+    "Breaking Change": "💥",
     "New Feature": "✨",
     "Experimental Feature": "🧪",
     "Improvement": "⚡",
@@ -72,7 +72,7 @@ class CleanedItem(BaseModel):
     pr_number: int
     entry: str = Field(..., min_length=1, max_length=500)
     category: Literal[
-        "Backward Incompatible Change",
+        "Breaking Change",
         "New Feature",
         "Experimental Feature",
         "Improvement",
@@ -83,6 +83,11 @@ class CleanedItem(BaseModel):
     @field_validator("category", mode="before")
     @classmethod
     def _coerce_category(cls, value):
+        # The category was called this until Aug 2026, and a model prompted on
+        # older notes still answers with it. Mapping it beats the "Improvement"
+        # fallback below, which would quietly demote a breaking change.
+        if value == "Backward Incompatible Change":
+            return "Breaking Change"
         return value if value in CATEGORY_ORDER else "Improvement"
 
 
@@ -210,7 +215,7 @@ For EACH pr_number, produce one item with:
 Return exactly one item per input pr_number. Do not invent pr_numbers.
 
 Allowed categories:
-- Backward Incompatible Change
+- Breaking Change
 - New Feature
 - Experimental Feature
 - Improvement
@@ -290,7 +295,7 @@ def parse_args() -> argparse.Namespace:
         description="Clean up and SDK-scope GitHub release notes from stdin."
     )
     ap.add_argument("--sdk", required=True, choices=["python", "typescript"])
-    ap.add_argument("--ai-model", default="gpt-5.2")
+    ap.add_argument("--ai-model", default="gpt-4.1")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-ai", action="store_true")
     ap.add_argument("--silent", action="store_true")

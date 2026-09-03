@@ -1,0 +1,61 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "DeepEval",
+    "identifier": "did:web:deepeval.com"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:deepeval.com:docs:llms-txt",
+      "displayName": "DeepEval documentation index (llms.txt)",
+      "type": "text/markdown",
+      "url": "https://deepeval.com/llms.txt",
+      "representativeQueries": [
+        "How do I evaluate an LLM application with DeepEval?",
+        "What metrics does DeepEval support for RAG pipelines?",
+        "How do I run deepeval test run in CI?"
+      ]
+    },
+    {
+      "identifier": "urn:air:deepeval.com:docs:llms-full",
+      "displayName": "DeepEval full documentation (llms-full.txt)",
+      "type": "text/markdown",
+      "url": "https://deepeval.com/llms-full.txt",
+      "representativeQueries": [
+        "Show me the complete DeepEval documentation as one file",
+        "How do I write a custom G-Eval metric in DeepEval?"
+      ]
+    },
+    {
+      "identifier": "urn:air:deepeval.com:api:catalog",
+      "displayName": "Confident AI API catalog (RFC 9727 linkset)",
+      "type": "application/linkset+json",
+      "url": "https://deepeval.com/.well-known/api-catalog",
+      "representativeQueries": [
+        "What HTTP APIs can my agent use with DeepEval results?",
+        "Where is the OpenAPI spec for the Confident AI API?"
+      ]
+    },
+    {
+      "identifier": "urn:air:deepeval.com:mcp:confident-ai",
+      "displayName": "Confident AI MCP server card",
+      "type": "application/mcp-server-card+json",
+      "url": "https://www.confident-ai.com/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "Connect my coding agent to Confident AI over MCP",
+        "Which MCP server exposes DeepEval evaluation results?"
+      ]
+    },
+    {
+      "identifier": "urn:air:deepeval.com:skills:index",
+      "displayName": "DeepEval agent skills index",
+      "type": "application/json",
+      "url": "https://deepeval.com/.well-known/agent-skills/index.json",
+      "representativeQueries": [
+        "Which agent skills does DeepEval publish?",
+        "Give my coding agent a skill to add DeepEval evals to my app",
+        "How do I instrument my agent with DeepEval tracing?"
+      ]
+    }
+  ]
+}

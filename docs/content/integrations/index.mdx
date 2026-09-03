@@ -238,6 +238,70 @@ Evaluation model integrations configure the LLM provider DeepEval uses for LLM-a
 
 <Only id="python">
 
+## Speech Models
+
+Speech model integrations configure the text-to-speech and speech-to-text providers DeepEval uses for [voice simulation](/docs/conversation-simulator-voice-mode). Every provider apart from OpenAI is reached over plain HTTP, so none of them need a package beyond `deepeval` itself.
+
+### Speech-To-Text (STT)
+
+STT transcribes your agent's spoken replies into the `Turn.content` your metrics judge, so its accuracy bounds how faithfully every multi-turn metric sees the conversation.
+
+<Cards className="md:grid-cols-3">
+  <Card title="OpenAI" href="/integrations/stt/openai" />
+  <Card title="Deepgram" href="/integrations/stt/deepgram" />
+  <Card title="AssemblyAI" href="/integrations/stt/assemblyai" />
+  <Card title="ElevenLabs" href="/integrations/stt/elevenlabs" />
+  <Card title="Cartesia" href="/integrations/stt/cartesia" />
+</Cards>
+
+### Text-To-Speech (TTS)
+
+TTS speaks the simulated user's messages to your agent, so its clarity is what your agent's own speech recognition has to work with.
+
+<Cards className="md:grid-cols-3">
+  <Card title="OpenAI" href="/integrations/tts/openai" />
+  <Card title="ElevenLabs" href="/integrations/tts/elevenlabs" />
+  <Card title="Cartesia" href="/integrations/tts/cartesia" />
+  <Card title="Deepgram" href="/integrations/tts/deepgram" />
+</Cards>
+
+</Only>
+
+<Only id="python">
+
+## Voice Agent Connectors
+
+Voice agent connectors are how DeepEval reaches the agent under test during a [voice simulation](/docs/conversation-simulator-voice-mode): they open a live session, play the simulated user's audio, and capture the spoken reply. Pick the one matching where your agent runs.
+
+<Cards className="md:grid-cols-3">
+  <Card
+    title="Vapi"
+    href="/integrations/voice-agent-connectors/vapi"
+    description="Call a Vapi assistant over their WebSocket transport."
+  />
+  <Card
+    title="ElevenLabs"
+    href="/integrations/voice-agent-connectors/elevenlabs"
+    description="Simulate against a conversational agent in your ElevenLabs dashboard."
+  />
+  <Card
+    title="LiveKit"
+    href="/integrations/voice-agent-connectors/livekit"
+    description="Join your agent's LiveKit room and trade audio over WebRTC."
+  />
+  <Card
+    title="Pipecat"
+    href="/integrations/voice-agent-connectors/pipecat"
+    description="Connect to your self-hosted Pipecat pipeline over its WebSocket transport."
+  />
+</Cards>
+
+Custom agents are covered by `WebSocketConnector` and `CallbackVoiceConnector` — see [Voice Connectors](/docs/conversation-simulator-voice-connectors).
+
+</Only>
+
+<Only id="python">
+
 ## Vector DBs
 
 Vector database integrations show how to connect retrieval systems to DeepEval so RAG metrics can evaluate the context your application actually retrieves. Use these examples to benchmark retrieval quality and end-to-end RAG behavior.

@@ -91,10 +91,10 @@ There are **SIX** optional parameters when creating a `ToxicityMetric`:
 
 </Switch>
 
-- [Optional] `threshold`: a number representing the maximum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
-- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
 - <Only id="python">
     [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
   </Only>
@@ -102,7 +102,7 @@ There are **SIX** optional parameters when creating a `ToxicityMetric`:
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 
 :::note
-Similar to the `BiasMetric`, the `threshold` in toxicity is a maximum threshold.
+The score is the share of opinions that are **not** toxic, so 1 means nothing toxic was found and the `threshold` is a minimum, as it is for every other `deepeval` metric.
 :::
 
 ### Within components
@@ -211,7 +211,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `ToxicityMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Toxicity} = \frac{\text{Number of Toxic Opinions}}{\text{Total Number of Opinions}}" />
+<Equation formula="\text{Toxicity} = \frac{\text{Number of Non-Toxic Opinions}}{\text{Total Number of Opinions}}" />
 
 The `ToxicityMetric` first uses an LLM to extract all opinions found in the <Term py="actual_output" ts="actualOutput"/>, before using the same LLM to classify whether each opinion is toxic or not.
 
@@ -251,10 +251,10 @@ The definition of an opinion is outlined in the [`BiasMetric` section](/docs/met
       question: "Is a higher or lower Toxicity score safer?",
       answer: (
         <>
-          <strong>Lower is safer.</strong> The <code>threshold</code> (default
-          0.5) is a <strong>maximum</strong>, so a case passes only when the
-          score is at or below it. 0 means no toxic opinions; 1 means every
-          opinion was flagged.
+          <strong>Higher is safer.</strong> The score is the share of opinions
+          that are <em>not</em> toxic, and the <code>threshold</code> (default
+          0.5) is a <strong>minimum</strong>. 1 means no toxic opinions; 0 means
+          every opinion was flagged.
         </>
       ),
     },
@@ -279,7 +279,7 @@ The definition of an opinion is outlined in the [`BiasMetric` section](/docs/met
       answer: (
         <>
           Toxicity targets personal attacks, mockery, hate, dismissiveness, and
-          threats — not direct disagreement. Raise the <code>threshold</code> so
+          threats — not direct disagreement. Lower the <code>threshold</code> so
           one flagged opinion doesn't sink a mostly-benign output, and use{" "}
           <Term py="include_reason" ts="includeReason"/> to see <em>why</em> something was marked
           toxic.

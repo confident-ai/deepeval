@@ -1,7 +1,13 @@
 import re
 import warnings
 from dataclasses import dataclass
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    Field,
+    PrivateAttr,
+    model_validator,
+)
 from typing import Literal, Optional, Dict, List, Tuple
 from typing import Union
 from deepeval.test_case import ToolCall, Turn, MLLMImage, RetrievedContextData
@@ -182,6 +188,23 @@ class Golden(BaseModel):
     )
     expected_tools: Optional[List[ToolCall]] = Field(
         default=None, serialization_alias="expectedTools"
+    )
+    token_cost: Optional[float] = Field(
+        default=None,
+        serialization_alias="tokenCost",
+        validation_alias=AliasChoices("tokenCost", "token_cost"),
+    )
+    input_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="inputTokenCount",
+        validation_alias=AliasChoices("inputTokenCount", "input_token_count"),
+    )
+    output_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="outputTokenCount",
+        validation_alias=AliasChoices(
+            "outputTokenCount", "output_token_count"
+        ),
     )
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"

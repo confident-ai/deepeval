@@ -74,6 +74,20 @@ model = LiteLLMModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LiteLLMModel`:
+
+- [Optional] `model`: A string specifying the provider and model name (e.g. `openai/gpt-3.5-turbo`, `anthropic/claude-3-opus`). Defaults to `LITELLM_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying the API key for the model. If not passed, `deepeval` attempts (in order) `LITELLM_API_KEY`, `LITELLM_PROXY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, then `GOOGLE_API_KEY`. If none are set, the key is left unset and the underlying LiteLLM/provider behavior applies.
+- [Optional] `base_url`: A string specifying the base URL for the model API. Defaults to `LITELLM_API_BASE`, then `LITELLM_PROXY_API_BASE` if not passed.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `None` if not passed; when unset, the cost is taken from LiteLLM's response if it reports one, otherwise reported as unknown.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `None` if not passed; when unset, the cost is taken from LiteLLM's response if it reports one, otherwise reported as unknown.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to LiteLLM's `completion(...)` / `acompletion(...)` call.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.litellm.ai/docs/providers/custom_llm_server).
+:::
+
 </Tab>
 <Tab value="ENV">
 
@@ -91,20 +105,6 @@ You should also set the other necessary vars like `LITELLM_API_KEY` to be able t
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `LiteLLMModel`:
-
-- [Optional] `model`: A string specifying the provider and model name (e.g. `openai/gpt-3.5-turbo`, `anthropic/claude-3-opus`). Defaults to `LITELLM_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying the API key for the model. If not passed, `deepeval` attempts (in order) `LITELLM_API_KEY`, `LITELLM_PROXY_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, then `GOOGLE_API_KEY`. If none are set, the key is left unset and the underlying LiteLLM/provider behavior applies.
-- [Optional] `base_url`: A string specifying the base URL for the model API. Defaults to `LITELLM_API_BASE`, then `LITELLM_PROXY_API_BASE` if not passed.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `None` if not passed; when unset, the cost is taken from LiteLLM's response if it reports one, otherwise reported as unknown.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `None` if not passed; when unset, the cost is taken from LiteLLM's response if it reports one, otherwise reported as unknown.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to LiteLLM's `completion(...)` / `acompletion(...)` call.
-
-:::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.litellm.ai/docs/providers/custom_llm_server).
-:::
 
 ### Available Models
 

@@ -42,6 +42,12 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     PORTKEY = "portkey"
+    # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
+    # to carry a retry policy, not as selectable LLM providers.
+    ASSEMBLYAI = "assemblyai"
+    CARTESIA = "cartesia"
+    DEEPGRAM = "deepgram"
+    ELEVENLABS = "elevenlabs"
 
 
 def slugify(value: Union[str, ProviderSlug]) -> str:

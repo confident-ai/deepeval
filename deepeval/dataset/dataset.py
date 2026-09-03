@@ -496,6 +496,9 @@ class EvaluationDataset:
         tools_called_col_delimiter: str = TOOLS_DELIMITER,
         expected_tools_col_name: Optional[str] = "expected_tools",
         expected_tools_col_delimiter: str = TOOLS_DELIMITER,
+        token_cost_col_name: Optional[str] = "token_cost",
+        input_token_count_col_name: Optional[str] = "input_token_count",
+        output_token_count_col_name: Optional[str] = "output_token_count",
         comments_key_name: str = "comments",
         name_key_name: str = "name",
         source_file_col_name: Optional[str] = "source_file",
@@ -571,6 +574,9 @@ class EvaluationDataset:
             expected_tools_col_name,
             lambda value: parse_tools(value, expected_tools_col_delimiter),
         )
+        token_costs = get_column_data(df, token_cost_col_name)
+        input_token_counts = get_column_data(df, input_token_count_col_name)
+        output_token_counts = get_column_data(df, output_token_count_col_name)
 
         comments = get_column_data(df, comments_key_name)
         name = get_column_data(df, name_key_name)
@@ -604,6 +610,9 @@ class EvaluationDataset:
             retrieval_context,
             tools_called,
             expected_tools,
+            token_cost,
+            input_token_count,
+            output_token_count,
             comments,
             name,
             source_file,
@@ -621,6 +630,9 @@ class EvaluationDataset:
             retrieval_contexts,
             tools_called,
             expected_tools,
+            token_costs,
+            input_token_counts,
+            output_token_counts,
             comments,
             name,
             source_files,
@@ -656,6 +668,9 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
+                        token_cost=token_cost,
+                        input_token_count=input_token_count,
+                        output_token_count=output_token_count,
                         additional_metadata=metadata,
                         custom_column_key_values=custom_columns,
                         source_file=source_file,
@@ -674,6 +689,9 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = "retrieval_context",
         tools_called_key_name: Optional[str] = "tools_called",
         expected_tools_key_name: Optional[str] = "expected_tools",
+        token_cost_key_name: Optional[str] = "token_cost",
+        input_token_count_key_name: Optional[str] = "input_token_count",
+        output_token_count_key_name: Optional[str] = "output_token_count",
         comments_key_name: str = "comments",
         name_key_name: str = "name",
         source_file_key_name: Optional[str] = "source_file",
@@ -734,6 +752,9 @@ class EvaluationDataset:
                 )
                 tools_called = json_obj.get(tools_called_key_name)
                 expected_tools = json_obj.get(expected_tools_key_name)
+                token_cost = json_obj.get(token_cost_key_name)
+                input_token_count = json_obj.get(input_token_count_key_name)
+                output_token_count = json_obj.get(output_token_count_key_name)
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
@@ -749,6 +770,9 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
+                        token_cost=token_cost,
+                        input_token_count=input_token_count,
+                        output_token_count=output_token_count,
                         additional_metadata=metadata,
                         custom_column_key_values=custom_columns,
                         comments=comments,
@@ -769,6 +793,9 @@ class EvaluationDataset:
         retrieval_context_col_delimiter: str = DELIMITER,
         tools_called_key_name: Optional[str] = "tools_called",
         expected_tools_key_name: Optional[str] = "expected_tools",
+        token_cost_key_name: Optional[str] = "token_cost",
+        input_token_count_key_name: Optional[str] = "input_token_count",
+        output_token_count_key_name: Optional[str] = "output_token_count",
         comments_key_name: str = "comments",
         name_key_name: str = "name",
         source_file_key_name: Optional[str] = "source_file",
@@ -867,6 +894,9 @@ class EvaluationDataset:
                 expected_tools = parse_tools(
                     json_obj.get(expected_tools_key_name)
                 )
+                token_cost = json_obj.get(token_cost_key_name)
+                input_token_count = json_obj.get(input_token_count_key_name)
+                output_token_count = json_obj.get(output_token_count_key_name)
                 comments = json_obj.get(comments_key_name)
                 name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
@@ -884,6 +914,9 @@ class EvaluationDataset:
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
                         expected_tools=expected_tools,
+                        token_cost=token_cost,
+                        input_token_count=input_token_count,
+                        output_token_count=output_token_count,
                         additional_metadata=metadata,
                         custom_column_key_values=custom_column_key_values,
                         comments=comments,
@@ -1096,6 +1129,60 @@ class EvaluationDataset:
         console = Console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
 
+    def update_golden(
+        self,
+        golden: Union[Golden, ConversationalGolden],
+        finalized: bool = True,
+        alias: Optional[str] = None,
+    ):
+        dataset_alias = alias if alias is not None else self._alias
+        if not golden.id or not dataset_alias:
+            raise ValueError(
+                "Cannot update a golden without an id and alias. Pull the dataset first "
+                "so it carries alias and golden ids assigned by Confident AI, or pass "
+                "the alias and golden id directly."
+            )
+        api = Api(api_key=self.confident_api_key)
+
+        golden._prepare_for_api()
+        try:
+            golden_body = golden.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            golden_body = golden.dict(by_alias=True, exclude_none=True)
+        golden_body["finalized"] = finalized
+
+        api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
+            body=golden_body,
+            url_params={"goldenId": golden.id, "alias": dataset_alias},
+        )
+        console = Console()
+        console.print("✅ Golden successfully updated on Confident AI!")
+
+    def delete_golden(
+        self,
+        golden: Union[Golden, ConversationalGolden, str],
+        alias: Optional[str] = None,
+    ):
+        golden_id = golden if isinstance(golden, str) else golden.id
+        dataset_alias = alias if alias is not None else self._alias
+        if not golden_id or not dataset_alias:
+            raise ValueError(
+                "Cannot delete a golden without an id and alias. Pull the dataset first "
+                "so it carries alias and golden ids assigned by Confident AI, or pass "
+                "the alias and golden id directly."
+            )
+        api = Api(api_key=self.confident_api_key)
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.GOLDEN_ENDPOINT,
+            url_params={"goldenId": golden_id, "alias": dataset_alias},
+        )
+        console = Console()
+        console.print("✅ Golden successfully deleted from Confident AI!")
+
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],
@@ -1304,6 +1391,9 @@ class EvaluationDataset:
                                 "expected_tools": _dump_tools(
                                     golden.expected_tools
                                 ),
+                                "token_cost": golden.token_cost,
+                                "input_token_count": golden.input_token_count,
+                                "output_token_count": golden.output_token_count,
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
                             }
@@ -1376,6 +1466,9 @@ class EvaluationDataset:
                             "source_file",
                             "tools_called",
                             "expected_tools",
+                            "token_cost",
+                            "input_token_count",
+                            "output_token_count",
                             "additional_metadata",
                             "custom_column_key_values",
                         ]
@@ -1435,6 +1528,9 @@ class EvaluationDataset:
                                 golden.source_file,
                                 tools_called,
                                 expected_tools,
+                                golden.token_cost,
+                                golden.input_token_count,
+                                golden.output_token_count,
                                 additional_metadata,
                                 custom_cols,
                             ]
@@ -1499,6 +1595,9 @@ class EvaluationDataset:
                             "expected_tools": _dump_tools(
                                 golden.expected_tools
                             ),
+                            "token_cost": golden.token_cost,
+                            "input_token_count": golden.input_token_count,
+                            "output_token_count": golden.output_token_count,
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
                         }

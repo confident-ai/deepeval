@@ -56,6 +56,21 @@ model = GeminiModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `GeminiModel`:
+
+- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost per input token for the provided model. Defaults to `GEMINI_COST_PER_INPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost per output token for the provided model. Defaults to `GEMINI_COST_PER_OUTPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Gemini API `generate_content(...)` call.
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-gemini) for the Gemini-related environment variables.
+
+:::note
+At runtime, you must provide an API key (via `api_key` or `GOOGLE_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
+:::
+
 </Tab>
 <Tab value="ENV">
 
@@ -73,21 +88,6 @@ You should also set the other necessary vars like `GOOGLE_API_KEY` to be able to
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SIX** optional parameters when creating a `GeminiModel`:
-
-- [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY` if not passed; raises an error at runtime if unset.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost per input token for the provided model. Defaults to `GEMINI_COST_PER_INPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
-- [Optional] `cost_per_output_token`: A float specifying the cost per output token for the provided model. Defaults to `GEMINI_COST_PER_OUTPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Gemini API `generate_content(...)` call.
-
-Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-gemini) for the Gemini-related environment variables.
-
-:::note
-At runtime, you must provide an API key (via `api_key` or `GOOGLE_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
-:::
 
 </Case>
 
@@ -113,23 +113,6 @@ const model = new GeminiModel({
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
-</Tab>
-<Tab value="ENV">
-
-Every option is backed by an environment variable, so you can set `GEMINI_MODEL_NAME` and `GOOGLE_API_KEY` in your `env` and construct the model with no arguments:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { GeminiModel } from "deepeval/models";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: new GeminiModel(),
-});
-```
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `GeminiModel`:
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
@@ -154,6 +137,23 @@ const model = new GeminiModel({
 :::note
 At runtime, you must provide an API key (via `apiKey`, `GOOGLE_API_KEY`, or `GEMINI_API_KEY`) unless you’re using Vertex AI. See [Vertex AI](/docs/integrations/models/vertex-ai).
 :::
+
+</Tab>
+<Tab value="ENV">
+
+Every option is backed by an environment variable, so you can set `GEMINI_MODEL_NAME` and `GOOGLE_API_KEY` in your `env` and construct the model with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { GeminiModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new GeminiModel(),
+});
+```
+
+</Tab>
+</Tabs>
 
 </Case>
 
