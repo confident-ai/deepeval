@@ -128,3 +128,32 @@ class TestToolCorrectnessMetricType:
         metric.measure(test_case, _show_indicator=False)
 
         assert metric.score == 1.0
+
+
+class TestToolCorrectnessMetricDuplicates:
+    """Repeated tool calls must not be under-scored (regression for #3141)."""
+
+    def test_duplicate_expected_calls_all_made_score_one(self):
+        metric = ToolCorrectnessMetric(async_mode=False)
+        test_case = LLMTestCase(
+            input="Search twice",
+            actual_output="search(); search()",
+            tools_called=[ToolCall(name="search"), ToolCall(name="search")],
+            expected_tools=[ToolCall(name="search"), ToolCall(name="search")],
+        )
+        metric.measure(test_case, _show_indicator=False)
+
+        assert metric.score == 1.0
+        assert metric.success is True
+
+    def test_duplicate_expected_but_only_one_made_scores_partial(self):
+        metric = ToolCorrectnessMetric(async_mode=False)
+        test_case = LLMTestCase(
+            input="Search twice",
+            actual_output="search()",
+            tools_called=[ToolCall(name="search")],
+            expected_tools=[ToolCall(name="search"), ToolCall(name="search")],
+        )
+        metric.measure(test_case, _show_indicator=False)
+
+        assert metric.score == 0.5
