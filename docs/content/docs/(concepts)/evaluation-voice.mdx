@@ -61,7 +61,7 @@ Step 4 is skipped when the platform already provides a transcript: some connecto
 :::warning
 Steps 2–4 are where the pipeline can distort what you measure. Know the trade-offs:
 
-- **Half-duplex by default (no interruptions; each side takes a turn)** — the simulated user finishes speaking and waits for the agent, so barge-in isn't exercised. See [Interruptions](#interruptions) for the duplex model.
+- **No interruptions by default** — the simulated caller waits for the agent to finish before replying, so barge-in isn't exercised unless the persona asks for it. See [Interruptions](#interruptions).
 - **An idealized caller by default** — TTS speech is clean and studio-quality: no background noise, muffled mics, or hesitations. A [persona](/docs/conversation-simulator-voice-personas) can add ambient noise and a different voice, but passing still proves conversational competence more than audio robustness.
 - **STT errors look like agent errors** — transcription accuracy is the ceiling on evaluation accuracy, so the STT model is the most quality-critical choice in the pipeline.
 - **End-of-turn is a heuristic** — silence thresholds can clip long pauses and pad `latency_ms`, which is why latencies only compare within a protocol.
@@ -108,9 +108,12 @@ This makes STT the more quality-critical of the two — transcription accuracy d
 
 ## Interruptions
 
-A voice simulation starts in **half-duplex (no interruptions; each side takes a turn)**. The simulated caller finishes speaking, then waits until the agent has finished before continuing. This is the simplest way to evaluate the conversation, but it does not test overlap or barge-in.
+By default the simulated caller never interrupts: it finishes speaking, then waits until the agent has finished before continuing. This is the simplest way to evaluate the conversation, but it does not test overlap or barge-in.
 
-Enable **duplex** behavior when interruptions are part of what you need to evaluate. In duplex mode, audio can flow in both directions at once: the simulated caller can speak while the agent is still talking, and either side can yield when speech overlaps. This changes how the connector is driven, but it does not require a different connector.
+Two separate things decide what happens on the line:
+
+- **The connector** decides whether audio can flow both ways at once. A full-duplex connector like `LiveKitConnector` lets the caller listen while it speaks; one that can't, like `CallbackVoiceConnector`, takes turns.
+- **The persona** decides whether the caller uses that to barge in. Enable interruptions and the caller can speak over the agent, with either side yielding when speech overlaps.
 
 Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because interruption frequency and overlap behavior are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
 

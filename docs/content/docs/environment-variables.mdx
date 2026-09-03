@@ -437,4 +437,29 @@ Azure reuses `OPENAI_COST_PER_INPUT_TOKEN` and `OPENAI_COST_PER_OUTPUT_TOKEN` fo
 
 </details>
 
+<details>
+<summary>Speech models (TTS/STT)</summary>
+
+Text-to-speech and speech-to-text are two independent families used by [voice simulation](/docs/multi-turn-conversation-simulation). One `USE_*_TTS` flag and one `USE_*_STT` flag can be on at the same time, and each family falls back to OpenAI when no flag is set. Set them with [`deepeval set-tts`](/docs/command-line-interface#model-provider-configs) and `deepeval set-stt`.
+
+| Variable               | Values            | Effect                                                                                     |
+| ---------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
+| `USE_OPENAI_TTS`       | `1` / `0` / unset | Prefer OpenAI for text-to-speech.                                                          |
+| `USE_ELEVENLABS_TTS`   | `1` / `0` / unset | Prefer ElevenLabs for text-to-speech.                                                      |
+| `USE_CARTESIA_TTS`     | `1` / `0` / unset | Prefer Cartesia for text-to-speech.                                                        |
+| `USE_DEEPGRAM_TTS`     | `1` / `0` / unset | Prefer Deepgram for text-to-speech.                                                        |
+| `DEEPEVAL_TTS_MODEL`   | `string` / unset  | Model name for the selected TTS provider (defaults to that provider's own default model).  |
+| `USE_OPENAI_STT`       | `1` / `0` / unset | Prefer OpenAI for speech-to-text.                                                          |
+| `USE_ELEVENLABS_STT`   | `1` / `0` / unset | Prefer ElevenLabs for speech-to-text.                                                      |
+| `USE_CARTESIA_STT`     | `1` / `0` / unset | Prefer Cartesia for speech-to-text.                                                        |
+| `USE_DEEPGRAM_STT`     | `1` / `0` / unset | Prefer Deepgram for speech-to-text.                                                        |
+| `USE_ASSEMBLYAI_STT`   | `1` / `0` / unset | Prefer AssemblyAI for speech-to-text.                                                      |
+| `DEEPEVAL_STT_MODEL`   | `string` / unset  | Model name for the selected STT provider (defaults to that provider's own default model).  |
+| `ELEVENLABS_API_KEY`   | `string` / unset  | ElevenLabs API key.                                                                        |
+| `CARTESIA_API_KEY`     | `string` / unset  | Cartesia API key.                                                                          |
+| `DEEPGRAM_API_KEY`     | `string` / unset  | Deepgram API key.                                                                          |
+| `ASSEMBLYAI_API_KEY`   | `string` / unset  | AssemblyAI API key.                                                                        |
+
+</details>
+
 </Only>

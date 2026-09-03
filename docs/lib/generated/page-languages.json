@@ -87,6 +87,18 @@
   "/docs/conversation-simulator-stopping-logic": [
     "python"
   ],
+  "/docs/conversation-simulator-voice-connectors": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-interruptions": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-mode": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-personas": [
+    "python"
+  ],
   "/docs/data-privacy": [
     "python",
     "typescript"
@@ -134,9 +146,16 @@
   "/docs/evaluation-prompts": [
     "python"
   ],
+  "/docs/evaluation-trajectory-based-llm-evals": [
+    "python",
+    "typescript"
+  ],
   "/docs/evaluation-unit-testing-in-ci-cd": [
     "python",
     "typescript"
+  ],
+  "/docs/evaluation-voice": [
+    "python"
   ],
   "/docs/faq": [
     "python",
@@ -184,6 +203,9 @@
   "/docs/metrics-agent-loop-detection": [
     "python"
   ],
+  "/docs/metrics-agent-responsiveness": [
+    "python"
+  ],
   "/docs/metrics-answer-relevancy": [
     "python",
     "typescript"
@@ -195,6 +217,9 @@
   "/docs/metrics-argument-correctness": [
     "python",
     "typescript"
+  ],
+  "/docs/metrics-audio-integrity": [
+    "python"
   ],
   "/docs/metrics-bias": [
     "python",
@@ -317,6 +342,9 @@
     "python",
     "typescript"
   ],
+  "/docs/metrics-speech-intelligibility": [
+    "python"
+  ],
   "/docs/metrics-step-efficiency": [
     "python",
     "typescript"
@@ -367,6 +395,18 @@
   "/docs/metrics-turn-relevancy": [
     "python",
     "typescript"
+  ],
+  "/docs/metrics-turn-taking-naturalness": [
+    "python"
+  ],
+  "/docs/metrics-voice-consistency": [
+    "python"
+  ],
+  "/docs/metrics-voice-naturalness": [
+    "python"
+  ],
+  "/docs/metrics-voice-reliability": [
+    "python"
   ],
   "/docs/miscellaneous": [
     "python"
@@ -517,7 +557,8 @@
     "typescript"
   ],
   "/integrations/frameworks/langgraph": [
-    "python"
+    "python",
+    "typescript"
   ],
   "/integrations/frameworks/llamaindex": [
     "python"
@@ -526,7 +567,8 @@
     "typescript"
   ],
   "/integrations/frameworks/openai": [
-    "python"
+    "python",
+    "typescript"
   ],
   "/integrations/frameworks/openai-agents": [
     "python",
@@ -600,6 +642,33 @@
     "python",
     "typescript"
   ],
+  "/integrations/stt/assemblyai": [
+    "python"
+  ],
+  "/integrations/stt/cartesia": [
+    "python"
+  ],
+  "/integrations/stt/deepgram": [
+    "python"
+  ],
+  "/integrations/stt/elevenlabs": [
+    "python"
+  ],
+  "/integrations/stt/openai": [
+    "python"
+  ],
+  "/integrations/tts/cartesia": [
+    "python"
+  ],
+  "/integrations/tts/deepgram": [
+    "python"
+  ],
+  "/integrations/tts/elevenlabs": [
+    "python"
+  ],
+  "/integrations/tts/openai": [
+    "python"
+  ],
   "/integrations/vector-databases/chroma": [
     "python"
   ],
@@ -616,6 +685,18 @@
     "python"
   ],
   "/integrations/vector-databases/weaviate": [
+    "python"
+  ],
+  "/integrations/voice-agent-connectors/elevenlabs": [
+    "python"
+  ],
+  "/integrations/voice-agent-connectors/livekit": [
+    "python"
+  ],
+  "/integrations/voice-agent-connectors/pipecat": [
+    "python"
+  ],
+  "/integrations/voice-agent-connectors/vapi": [
     "python"
   ],
   "/tutorials/medical-chatbot/development": [
