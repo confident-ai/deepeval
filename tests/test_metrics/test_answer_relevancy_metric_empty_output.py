@@ -4,9 +4,7 @@ These tests verify that AnswerRelevancyMetric raises MissingTestCaseParamsError
 when actual_output is missing/empty:
   - None (missing param)
   - "" (empty string)
-
-Whitespace-only strings are intentionally not validated because we can't make assumptions
-about the value of the actual_output beyond its existence or emptiness.
+  - whitespace-only strings
 
 These tests use DummyModel and do not require OPENAI_API_KEY.
 """
@@ -18,6 +16,11 @@ from deepeval.metrics.utils import check_llm_test_case_params
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.errors import MissingTestCaseParamsError
 from tests.test_core.stubs import DummyModel
+
+
+class DummyMetric:
+    __name__ = "DummyMetric"
+    error = None
 
 
 def make_metric(*, async_mode: bool = False) -> AnswerRelevancyMetric:
@@ -54,21 +57,44 @@ def test_answer_relevancy_empty_actual_output_raises_sync():
     assert "cannot be empty" in msg or "actual_output" in msg
 
 
-def test_answer_relevancy_whitespace_actual_output_does_not_raise_validation():
-    """Whitespace-only actual_output should NOT raise MissingTestCaseParamsError."""
+def test_answer_relevancy_whitespace_actual_output_raises_validation():
+    """Whitespace-only actual_output should raise MissingTestCaseParamsError."""
     metric = make_metric(async_mode=False)
     tc = LLMTestCase(
         input="What if these shoes don't fit?", actual_output="   "
     )
 
-    # Only validate inputs here. Running the full metric would require a real
-    # model that supports generate_with_schema.
-    check_llm_test_case_params(
-        test_case=tc,
-        test_case_params=metric._required_params,
-        input_image_count=None,
-        actual_output_image_count=None,
-        metric=metric,
-        model=metric.model,
-        multimodal=tc.multimodal,
+    with pytest.raises(MissingTestCaseParamsError) as exc_info:
+        check_llm_test_case_params(
+            test_case=tc,
+            test_case_params=metric._required_params,
+            input_image_count=None,
+            actual_output_image_count=None,
+            metric=metric,
+            model=metric.model,
+            multimodal=tc.multimodal,
+        )
+
+    assert "actual_output" in str(exc_info.value)
+
+
+def test_expected_output_whitespace_raises_when_required():
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?",
+        actual_output="A response",
+        expected_output=" \n\t ",
     )
+
+    with pytest.raises(MissingTestCaseParamsError) as exc_info:
+        check_llm_test_case_params(
+            test_case=tc,
+            test_case_params=[
+                SingleTurnParams.ACTUAL_OUTPUT,
+                SingleTurnParams.EXPECTED_OUTPUT,
+            ],
+            input_image_count=None,
+            actual_output_image_count=None,
+            metric=DummyMetric(),
+        )
+
+    assert "expected_output" in str(exc_info.value)
