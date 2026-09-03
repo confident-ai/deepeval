@@ -41,7 +41,7 @@ There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Pe
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
 - [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
-- [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that enables duplex barge-in, or `None` for half-duplex. Defaulted to `None`.
+- [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
 - [Optional] `muted`: a boolean which when set to `True` makes the caller stay completely silent for the whole call. Defaulted to `False`.
 - [Optional] `background_noise`: a [`BackgroundNoiseSettings`](#background-noise) that loops ambient audio underneath the caller's speech. Defaulted to `None`.
@@ -129,6 +129,10 @@ persona = Persona(
 )
 ```
 
+How the greeting is collected depends on the connector. On a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) the greeting goes through the duplex engine, so [semantic end-of-turn](/docs/conversation-simulator-voice-connectors#semantic-end-of-turn) applies and a greeting that ends on a finished sentence hands the floor over quickly. The wait is bounded: the caller holds for [`hold_timeout`](#hanging-up-on-hold-music) seconds when set, or 15 seconds otherwise, and then takes the floor and speaks first anyway. An agent that never greets is therefore not a stuck simulation — it is a conversation with no opening assistant turn.
+
+On other connectors the caller sends a short silent probe through `exchange_turn` and records whatever comes back, bounded by the connector's [turn detection](/docs/conversation-simulator-voice-connectors#turn-detection) ceiling.
+
 ### Silent Callers
 
 `muted=True` makes the caller never speak at all — every user turn is empty and only silence goes up the wire. Use it to test how your agent handles dead air: does it re-prompt, escalate, or hang up?
@@ -156,7 +160,7 @@ By default the caller "hears" your agent in whatever language your `stt_model` i
 
 ### Interruptions
 
-`interruption_behavior` turns the call **duplex**: instead of politely waiting for each reply, the caller can cut in mid-sentence while the agent is still speaking.
+`interruption_behavior` gives the caller permission to **barge in**: instead of politely waiting for each reply, they can cut in mid-sentence while the agent is still speaking.
 
 ```python
 from deepeval.dataset import Persona, InterruptionBehavior
@@ -167,7 +171,9 @@ persona = Persona(
 )
 ```
 
-`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` keeps the conversation half-duplex.
+`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once.
+
+Leaving `interruption_behavior` as `None` does **not** make the call half-duplex. On a full-duplex connector the caller still hears everything the agent says while they talk — it just never cuts in. Whether both voices can be on the line at once is a property of the [connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors); whether the caller uses that to interrupt is a property of the persona.
 
 ::::tip
 Barge-in is a whole simulation mode of its own — how the judge decides to interrupt, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).

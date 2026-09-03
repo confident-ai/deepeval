@@ -42,7 +42,12 @@ sequenceDiagram
     STT-->>Simulator: assistant transcript
 ```
 
-By default this loop is **half-duplex (no interruptions; each side takes a turn)**. To exercise barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
+The diagram shows the loop as a **speak-then-listen** exchange (`exchange_turn`): the caller finishes speaking, then the connector waits for the reply. Which loop actually runs depends on the connector:
+
+- On a **full-duplex** connector — one that can carry both voices at once, such as `LiveKitConnector` for LiveKit rooms and SIP calls — the caller always listens while it speaks, whether or not the persona interrupts. Anything the agent says while the caller is talking or thinking is heard and recorded; nothing is lost between turns.
+- On a connector that **cannot** carry both voices at once, such as `CallbackVoiceConnector`, the speak-then-listen exchange above is used instead.
+
+Neither loop makes the caller interrupt. To exercise barge-in, give the persona an `interruption_behavior` — see [Interruptions](/docs/conversation-simulator-voice-interruptions).
 
 Who does the talking on the simulated side — their voice, their temperament, the noise around them — comes from the golden's [`Persona`](/docs/conversation-simulator-voice-personas).
 
@@ -67,13 +72,14 @@ voice_config = VoiceConfig(
 simulator = ConversationSimulator(voice_config=voice_config)
 ```
 
-There are **ONE** mandatory and **FOUR** optional parameters when creating a `VoiceConfig`:
+There are **ONE** mandatory and **FIVE** optional parameters when creating a `VoiceConfig`:
 
 - `connector`: a [`BaseVoiceConnector`](/docs/conversation-simulator-voice-connectors) that carries audio to and from your voice agent.
 - [Optional] `tts_model`: a [`DeepEvalBaseTTS`](#tts-and-stt-models) that speaks the simulated user's messages. Defaulted to `OpenAITTSModel`.
 - [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
 - [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Left unset, it falls back to the `DEEPEVAL_VOICE_FOLDER` [environment variable](/docs/environment-variables) and then to `".deepeval-voice-simulations"`.
 - [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
+- [Optional] `record_call`: a boolean which when set to `True`, records the whole call as it happened — both sides, in real time — and exposes it as [`call_recording_path`](#what-a-voice-simulation-produces) on each `ConversationalTestCase`. Defaulted to `False`.
 
 ::::tip
 The connector in `VoiceConfig` determines how `deepeval` reaches your agent. The [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` determines who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
@@ -152,8 +158,9 @@ Each simulated conversation is returned as a regular `ConversationalTestCase`, e
 - Every user `Turn` carries the synthesized `audio` that was played to your agent.
 - Every assistant `Turn` carries your agent's reply `audio`, the transcript as `content`, and the measured response time in `latency_ms`.
 - When [interruptions](/docs/conversation-simulator-voice-interruptions) are enabled, an assistant turn cut short by a barge-in gets `interrupted=True`. Frustrated barges can also surface on user turns via `metadata`.
+- When `record_call=True`, `call_recording_path` points to a stereo WAV of the **entire call** — the caller on the left channel, your agent on the right. Each side is placed by wall-clock time, so the overlaps and silences you hear are the ones that actually happened, not a stitch of per-turn clips. It is `None` when recording is off or nothing was heard.
 
-Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`:
+Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`, plus the full-call recording as `deepeval-call-recording.wav` when `record_call=True`:
 
 ```text
 .deepeval-voice-simulations/
@@ -162,10 +169,21 @@ Unless `output_dir` is `None`, the audio is also written to disk — one file pe
     ├── deepeval-turn-1-assistant.wav
     ├── deepeval-turn-2-user.wav
     ├── deepeval-turn-2-assistant.wav
-    └── deepeval-conversation.wav
+    ├── deepeval-conversation.wav
+    └── deepeval-call-recording.wav
 ```
 
 When simulating multiple goldens in one run, each conversation gets its own sub-folder named after the golden's `name` (or `conversation-<index>` when unnamed).
+
+`deepeval-conversation.wav` and `deepeval-call-recording.wav` answer different questions. The first is stitched from the turn clips and is the cleanest way to hear what was said. The second is the tape of the call: if a metric flags an awkward pause or double-talk, this is the file to listen to.
+
+Every conversation also ends with one `INFO` log line from the `deepeval.simulator` logger summarizing reply times on both sides:
+
+```text
+Conversation 0 voice latency: agent replied after avg 1.42s, max 2.87s over 6 turns; caller replied after avg 0.91s, max 1.30s over 6 turns
+```
+
+The agent's figure is your agent's `latency_ms` averaged across the conversation. The caller's figure is the simulator's own reply time — TTS synthesis plus turn generation — and is worth reading alongside it: a slow caller stretches the whole call and makes the agent look more patient than it is. This log line is the quickest way to read latency without opening every `Turn`.
 
 Set `DEEPEVAL_VOICE_FOLDER` to keep recordings somewhere else — a scratch disk, or a path outside the repo — without changing code. An explicit `VoiceConfig(output_dir=...)` overrides it, and `DEEPEVAL_FILE_SYSTEM=READ_ONLY` overrides both, writing nothing at all.
 
@@ -223,6 +241,19 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
           concurrently would interleave audio on the same session. The simulator
           forces sequential execution in voice mode regardless of{" "}
           <code>max_concurrent</code>.
+        </>
+      ),
+    },
+    {
+      question: "Do interruptions count toward the turn limit?",
+      answer: (
+        <>
+          Yes. Every user turn the simulated caller produces counts against{" "}
+          <code>max_user_simulations</code>, including barge turns made by an
+          interrupting persona. A caller who cuts in three times spends three
+          turns of the budget doing it, so a{" "}
+          <code>&quot;frequent&quot;</code> interrupter may reach the limit in
+          fewer exchanges than a polite one.
         </>
       ),
     },
