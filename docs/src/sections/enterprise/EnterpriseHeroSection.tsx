@@ -37,9 +37,10 @@ const DEFAULT_LOGO_ITEMS: EnterpriseLogoItem[] = [
 ];
 
 const DEFAULT_LOGO_GRID_LABEL =
-  "Trusted by teams that took evals to production.";
+  "Trusted by teams that standardized how evals are done.";
 
-const BOOK_DEMO_HREF = "https://www.confident-ai.com/book-a-demo";
+const BOOK_DEMO_HREF =
+  "https://calendly.com/d/d3m7-g99-8ct/deepeval-enterprise-intro-call";
 
 const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
   logoItems = DEFAULT_LOGO_ITEMS,
@@ -49,12 +50,12 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
     <section className={styles.hero}>
       <div className={styles.main}>
         <h1 className={styles.title}>
-          Scale DeepEval with the platform built for the whole team.
+          Standardize evals across your organization.
         </h1>
 
         <p className={styles.description}>
-          Production tracing, eval monitoring, and a workflow your engineers,
-          PMs, and QA can use together — not just developers in a terminal.
+          AI governance and eval workflows for your engineers, PMs, and QA to
+          use together — not just developers in a terminal.
         </p>
 
         <div className={styles.actions}>
@@ -62,7 +63,6 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
             href={BOOK_DEMO_HREF}
             target="_blank"
             rel={externalRelForOutboundHref(BOOK_DEMO_HREF)}
-            data-utm-content="enterprise_hero_demo"
             endIcon={<ArrowUpRight aria-hidden />}
           >
             Book a Demo
