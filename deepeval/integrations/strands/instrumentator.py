@@ -386,16 +386,11 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
         return None
 
     attrs = span.attributes or {}
-    args_raw = attrs.get("gen_ai.tool.call.arguments") or attrs.get(
-        "traceloop.entity.input"
+    args_raw = (
+        attrs.get("gen_ai.tool.call.arguments")
+        or attrs.get("traceloop.entity.input")
+        or "{}"
     )
-
-    if not args_raw:
-        for event in getattr(span, "events", []):
-            if (event.name or "") == "gen_ai.tool.message":
-                args_raw = (event.attributes or {}).get("content")
-                if args_raw:
-                    break
 
     try:
         input_params = (
