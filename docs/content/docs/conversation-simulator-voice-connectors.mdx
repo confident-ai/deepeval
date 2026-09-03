@@ -155,7 +155,7 @@ async def my_agent(user_audio) -> ConnectorTurn:
 
 ## Full-Duplex Custom Connectors
 
-`WebSocketConnector` and `CallbackVoiceConnector` both default to the speak-then-listen exchange: the caller finishes, `exchange_turn` runs, the reply comes back. That is the right default when your transport can't carry both voices at once — but if it can, you can tell the simulator so by subclassing and overriding `supports_duplex`:
+`WebSocketConnector` and `CallbackVoiceConnector` take turns by default. If your transport can carry both voices at once, override `supports_duplex` and the simulator will keep listening while the caller speaks, even without an `interruption_behavior`:
 
 ```python
 from deepeval.voice import WebSocketConnector
@@ -166,9 +166,7 @@ class MyDuplexConnector(WebSocketConnector):
         return True
 ```
 
-Returning `True` makes the simulator run the [duplex exchange](/docs/conversation-simulator-voice-interruptions#how-it-works) on that connector for every conversation, even when the persona has no `interruption_behavior`. The caller then listens while it speaks, so speech your agent produces mid-turn — a greeting that overlaps the caller's opener, an "mm-hm" while they're still talking — is heard instead of dropped, and [semantic end-of-turn](#semantic-end-of-turn) applies.
-
-The duplex exchange drives the connector through `stream_uplink`, `iter_agent_events`, and `stop_uplink` rather than `exchange_turn`, so all three must work on your connector before you return `True`. `LiveKitConnector` already does; a bare `BaseVoiceConnector` subclass that only implements `exchange_turn` must leave it at the default `False`.
+Returning `True` requires `stream_uplink`, `iter_agent_events`, and `stop_uplink` to work on your connector, since the duplex path uses those instead of `exchange_turn`.
 
 Nothing in an audio stream announces that your agent has finished speaking, so the end of its turn is inferred from silence. Every connector takes a `turn_detection` preset controlling how long that silence has to last, along with the hard ceiling that stops an agent which never goes quiet from hanging the simulation:
 
@@ -184,15 +182,7 @@ connector = CallbackVoiceConnector(my_agent, turn_detection="patient")
 
 Pick by listening to your agent's longest natural pause. Too eager and its turn ends at that pause, cutting the reply short and discarding the rest of it; too patient and the simulator sits through dead air before responding, which inflates the gaps in the recording and slows the run.
 
-### Semantic End Of Turn
-
-On the duplex path — a full-duplex connector, or any connector once the persona interrupts — the preset's pause is a **ceiling, not the wait**. While the agent speaks, the simulator keeps a running transcript of what has been heard so far. When that transcript reads as a finished sentence _and_ covers all the speech heard so far, the turn ends after **500ms** of silence regardless of preset. A reply that trails off mid-sentence — "let me just check your…" — still waits the full window, because the pause may be a pause and not the end.
-
-This is what lets `"patient"` be safe as a default for agents that think out loud: the 2.5s window only costs you time when the reply is genuinely unfinished. It does not apply to `exchange_turn`, where there is no running transcript to read.
-
-:::note
-A finished-looking sentence is judged from the text, so a connector that supplies its own transcript (ElevenLabs, Vapi) is read as-is, while everything else is judged from partial STT of the audio delivered so far — which is why the transcript must also have caught up with the audio before the shorter wait kicks in.
-:::
+On the duplex path the preset is a ceiling, not the wait: when the running transcript reads as a finished sentence and covers all speech heard so far, the turn ends after 500ms of silence, while a reply that trails off mid-sentence still waits the full window.
 
 When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `VapiConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies.
 

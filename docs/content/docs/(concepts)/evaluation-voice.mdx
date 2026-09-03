@@ -79,13 +79,6 @@ Voice metrics follow the same three-part model as the test case:
 
 All seven voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation.
 
-When a voice metric scores low, two artifacts from the simulation tell you whether the metric is right:
-
-- **The full-call recording.** With [`VoiceConfig(record_call=True)`](/docs/conversation-simulator-voice-mode#setup-voice-mode), each `ConversationalTestCase` carries a `call_recording_path` — a stereo WAV with the caller on the left and your agent on the right, laid out in real time. A pause `TurnTakingNaturalnessMetric` flagged, or a clipped word `AudioIntegrityMetric` caught, is something you can scrub to and hear rather than infer from per-turn clips.
-- **The per-conversation latency log.** Every voice simulation ends with one `INFO` line from `deepeval.simulator` giving the agent's average and worst reply time alongside the caller's. If `AgentResponsivenessMetric` is unhappy, this is the fastest way to see whether the agent was slow throughout or on one outlier turn — and whether the simulator's own caller was dragging the call out.
-
-Both are described under [What A Voice Simulation Produces](/docs/conversation-simulator-voice-mode#what-a-voice-simulation-produces).
-
 The metrics use different parts of the same `ConversationalTestCase`:
 
 - `VoiceNaturalnessMetric`, `SpeechIntelligibilityMetric`, and `AudioIntegrityMetric` analyze each assistant `Turn.audio`.
@@ -117,7 +110,10 @@ This makes STT the more quality-critical of the two — transcription accuracy d
 
 By default the simulated caller never interrupts: it finishes speaking, then waits until the agent has finished before continuing. This is the simplest way to evaluate the conversation, but it does not test overlap or barge-in.
 
-Whether audio can flow in both directions at once is a property of the **connector**. A full-duplex connector such as `LiveKitConnector` always lets the caller listen while it speaks, so nothing the agent says mid-turn is lost; a connector that cannot carry both voices at once, such as `CallbackVoiceConnector`, takes the speak-then-listen exchange described [below](#transports-and-connectors). Whether the caller _uses_ a duplex line to barge in is a property of the **persona**: enable interruptions when overlap is part of what you need to evaluate, and the simulated caller can speak while the agent is still talking, with either side yielding when speech overlaps.
+Two separate things decide what happens on the line:
+
+- **The connector** decides whether audio can flow both ways at once. A full-duplex connector like `LiveKitConnector` lets the caller listen while it speaks; one that can't, like `CallbackVoiceConnector`, takes turns.
+- **The persona** decides whether the caller uses that to barge in. Enable interruptions and the caller can speak over the agent, with either side yielding when speech overlaps.
 
 Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because interruption frequency and overlap behavior are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
 

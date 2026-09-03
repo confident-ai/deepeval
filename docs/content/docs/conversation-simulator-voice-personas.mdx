@@ -129,9 +129,7 @@ persona = Persona(
 )
 ```
 
-How the greeting is collected depends on the connector. On a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) the greeting goes through the duplex engine, so [semantic end-of-turn](/docs/conversation-simulator-voice-connectors#semantic-end-of-turn) applies and a greeting that ends on a finished sentence hands the floor over quickly. The wait is bounded: the caller holds for [`hold_timeout`](#hanging-up-on-hold-music) seconds when set, or 15 seconds otherwise, and then takes the floor and speaks first anyway. An agent that never greets is therefore not a stuck simulation — it is a conversation with no opening assistant turn.
-
-On other connectors the caller sends a short silent probe through `exchange_turn` and records whatever comes back, bounded by the connector's [turn detection](/docs/conversation-simulator-voice-connectors#turn-detection) ceiling.
+On a full-duplex connector the caller waits [`hold_timeout`](#hanging-up-on-hold-music) seconds for the greeting (15 when unset), then speaks first anyway.
 
 ### Silent Callers
 
@@ -171,9 +169,7 @@ persona = Persona(
 )
 ```
 
-`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once.
-
-Leaving `interruption_behavior` as `None` does **not** make the call half-duplex. On a full-duplex connector the caller still hears everything the agent says while they talk — it just never cuts in. Whether both voices can be on the line at once is a property of the [connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors); whether the caller uses that to interrupt is a property of the persona.
+`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` means the caller never cuts in — on a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) it still hears everything the agent says while it talks.
 
 ::::tip
 Barge-in is a whole simulation mode of its own — how the judge decides to interrupt, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).

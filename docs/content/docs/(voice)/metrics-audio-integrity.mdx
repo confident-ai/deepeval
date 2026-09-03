@@ -55,7 +55,7 @@ There are **FIVE** optional parameters when creating an `AudioIntegrityMetric`:
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
-Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run. In verbose logs the breakdown is printed as indented JSON with floats rounded to three decimal places, so it reads the same as the dictionary below:
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
 
 ```python
 metric.measure(test_cases[0])
