@@ -910,8 +910,7 @@ class StrandsSpanInterceptor(SpanProcessor):
                         serialize_to_json(tc.input_parameters),
                     )
 
-            # ``output_text`` already holds the ``gen_ai.choice`` end-event
-            # payload (default semconv); attrs cover the opt-in/Traceloop paths.
+            # Extract tool outputs from genai conventions (best effort)
             tool_output = output_text or _get_attr(
                 span,
                 "traceloop.entity.output",
