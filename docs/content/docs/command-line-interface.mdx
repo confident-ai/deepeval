@@ -685,17 +685,21 @@ This switches the active provider **within its family**:
 - It sets that provider's `USE_*` flag, such as `USE_ANTHROPIC_MODEL`, and
 - Turns off the other `USE_*` flags in the same family, so only one provider per family is enabled at a time.
 
-<Only id="python">
+<Switch>
+
+<Case id="python">
 
 The four families are the LLM judge, embeddings, text-to-speech and speech-to-text. They are independent, so `deepeval set-openai` leaves a configured embedding or speech provider exactly as it was, and each family falls back to OpenAI when none of its flags are set.
 
-</Only>
+</Case>
 
-<Only id="typescript">
+<Case id="typescript">
 
 Every `USE_*` flag here belongs to the LLM family, so setting one provider turns off all the others. With none set, `deepeval` falls back to OpenAI.
 
-</Only>
+</Case>
+
+</Switch>
 
 When you **unset** a provider, it disables only that provider’s `USE_*` flag and leaves all others untouched. If you manually set env vars (or edit dotenv files) it’s possible to end up with multiple `USE_*` flags enabled within one family.
 
