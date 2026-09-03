@@ -212,7 +212,11 @@ class KeyFileHandler:
         os.makedirs(HIDDEN_DIR, exist_ok=True)
 
     def write_key(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues], value
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
+        value,
     ):
         """Appends or updates data in the hidden file"""
 
@@ -246,7 +250,10 @@ class KeyFileHandler:
             json.dump(self.data, f)
 
     def fetch_data(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues]
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
     ):
         """Fetches the data from the hidden file.
         NOTE: secrets in this file are deprecated; prefer env/.env."""
@@ -281,7 +288,10 @@ class KeyFileHandler:
         return value
 
     def remove_key(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues]
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
     ):
         """Removes the specified key from the data."""
         try:

@@ -206,9 +206,13 @@ class ElevenLabsConnector(BaseWebSocketConnector):
                 )
             else:
                 result, is_error = await self._invoke_tool(
-                    handler, tool_name, {"tool_call_id": tool_call_id, **parameters}
+                    handler,
+                    tool_name,
+                    {"tool_call_id": tool_call_id, **parameters},
                 )
-            await self._send_tool_result(tool_name, tool_call_id, result, is_error)
+            await self._send_tool_result(
+                tool_name, tool_call_id, result, is_error
+            )
         except Exception:
             logger.exception(
                 "Failed to answer ElevenLabs client tool %r; the agent may "
@@ -220,7 +224,10 @@ class ElevenLabsConnector(BaseWebSocketConnector):
             self._hold_turn(False)
 
     async def _invoke_tool(
-        self, handler: ClientToolHandler, tool_name: Optional[str], parameters: dict
+        self,
+        handler: ClientToolHandler,
+        tool_name: Optional[str],
+        parameters: dict,
     ):
         try:
             if inspect.iscoroutinefunction(handler):

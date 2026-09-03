@@ -665,9 +665,7 @@ SPEECH_PROVIDER_CASES: List[_ProviderCase] = [
 ]
 
 
-@pytest.mark.parametrize(
-    "case", SPEECH_PROVIDER_CASES, ids=lambda c: c.set_cmd
-)
+@pytest.mark.parametrize("case", SPEECH_PROVIDER_CASES, ids=lambda c: c.set_cmd)
 def test_set_unset_speech_provider_roundtrip(
     case: _ProviderCase,
     hidden_store_dir: Path,

@@ -167,7 +167,12 @@ def _merge_legacy_keyfile_into_env() -> None:
 
     # Map JSON keys (enum .value) -> env keys (enum .name)
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.value] = member.name
 
