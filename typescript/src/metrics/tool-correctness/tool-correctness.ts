@@ -3,6 +3,7 @@ import {
   LLMTestCase,
   SingleTurnParams,
   ToolCallParams,
+  ToolCallType,
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
@@ -53,6 +54,10 @@ function toolCallEquals(a: ToolCall, b: ToolCall): boolean {
     deepEqual(a.inputParameters, b.inputParameters) &&
     deepEqual(a.output, b.output)
   );
+}
+
+function toolCallType(tool: ToolCall): ToolCallType {
+  return tool.type ?? ToolCallType.FUNCTION;
 }
 
 /** Dedup a list of names, preserving Python `set()`-style membership. */
@@ -199,6 +204,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       const called = this.toolsCalled[i];
       const expected = this.expectedTools[i];
       if (called.name !== expected.name) return 0;
+      if (toolCallType(called) !== toolCallType(expected)) return 0;
       if (
         this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS) &&
         !deepEqual(called.inputParameters, expected.inputParameters)
@@ -225,6 +231,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (matchedCalled.has(j)) continue;
         const called = this.toolsCalled[j];
         if (expected.name !== called.name) continue;
+        if (toolCallType(expected) !== toolCallType(called)) continue;
         let matchScore = 1;
         if (this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS)) {
           matchScore *= this.compareDicts(
@@ -266,7 +273,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       for (let j = 1; j <= n; j++) {
         const e = expected[i - 1];
         const c = called[j - 1];
-        if (e.name !== c.name) {
+        if (e.name !== c.name || toolCallType(e) !== toolCallType(c)) {
           dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
           continue;
         }
@@ -343,15 +350,36 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   // --- deterministic tool-calling reason ---
 
+  private getTypeMismatches(): string[] {
+    const mismatches: string[] = [];
+    for (const expected of this.expectedTools) {
+      const called = this.toolsCalled.find(
+        (c) =>
+          c.name === expected.name &&
+          toolCallType(c) !== toolCallType(expected),
+      );
+      if (called) {
+        mismatches.push(
+          `${expected.name} (expected ${toolCallType(expected)}, called ${toolCallType(called)})`,
+        );
+      }
+    }
+    return mismatches;
+  }
+
   private generateReason(): string {
     const calledNames = this.toolsCalled.map((t) => t.name);
     const expectedNames = this.expectedTools.map((t) => t.name);
+    const typeMismatches = this.getTypeMismatches();
 
     if (this.shouldExactMatch) {
       const label = this.calculateExactMatchScore()
         ? "Exact match"
         : "Not an exact match";
-      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See details above.`;
+      const mismatchClause = typeMismatches.length
+        ? ` Tool type mismatches: ${JSON.stringify(typeMismatches)}.`
+        : "";
+      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}.${mismatchClause} See details above.`;
     }
 
     if (this.shouldConsiderOrdering) {
@@ -375,6 +403,8 @@ export class ToolCorrectnessMetric extends BaseMetric {
         issues.push(`missing tools ${JSON.stringify(missing)}`);
       if (outOfOrder.length)
         issues.push(`out-of-order tools ${JSON.stringify(outOfOrder)}`);
+      if (typeMismatches.length)
+        issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
       return `Incorrect tool usage: ${issues.join(" and ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
     }
 
@@ -384,7 +414,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
     const missing = this.expectedTools
       .filter((e) => !this.toolsCalled.some((c) => toolCallEquals(c, e)))
       .map((t) => t.name);
-    return `Incomplete tool usage: missing tools ${JSON.stringify(missing)}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
+    const issues: string[] = [];
+    if (missing.length || !typeMismatches.length)
+      issues.push(`missing tools ${JSON.stringify(missing)}`);
+    if (typeMismatches.length)
+      issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
+    return `Incomplete tool usage: ${issues.join("; ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
   }
 
   private constructFinalReason(

@@ -492,15 +492,17 @@ class ToolCall(BaseModel):
     description: Optional[str] = None
     reasoning: Optional[str] = None
     output: Optional[Any] = None
+    type: ToolCallType = ToolCallType.FUNCTION
     input_parameters: Optional[Dict[str, Any]] = None
 ```
 
-A `ToolCall` object accepts 1 mandatory and 4 optional parameters:
+A `ToolCall` object accepts 1 mandatory and 5 optional parameters:
 
 - `name`: a string representing the **name** of the tool.
 - [Optional] `description`: a string describing the **tool's purpose**.
 - [Optional] `reasoning`: A string explaining the **agent's reasoning** to use the tool.
 - [Optional] `output`: The tool's **output**, which can be of any data type.
+- [Optional] `type`: a `ToolCallType` representing **how the tool was called**, either `ToolCallType.FUNCTION` or `ToolCallType.MCP`. Use `ToolCallType.MCP` for tools invoked through an [MCP](/docs/evaluation-mcp) server. Defaulted to `ToolCallType.FUNCTION`.
 - [Optional] <Term py="input_parameters" ts="inputParameters"/>: A dictionary with string keys representing the **input parameters** (and respective values) passed into the tool function.
 
 <Switch>

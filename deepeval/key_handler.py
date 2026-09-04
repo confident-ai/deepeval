@@ -180,6 +180,30 @@ class EmbeddingKeyValues(Enum):
     LOCAL_EMBEDDING_API_KEY = ("LOCAL_EMBEDDING_API_KEY",)
 
 
+class SpeechKeyValues(Enum):
+    # TTS
+    USE_OPENAI_TTS = "USE_OPENAI_TTS"
+    USE_ELEVENLABS_TTS = "USE_ELEVENLABS_TTS"
+    USE_CARTESIA_TTS = "USE_CARTESIA_TTS"
+    USE_DEEPGRAM_TTS = "USE_DEEPGRAM_TTS"
+    DEEPEVAL_TTS_MODEL = "DEEPEVAL_TTS_MODEL"
+
+    # STT
+    USE_OPENAI_STT = "USE_OPENAI_STT"
+    USE_ELEVENLABS_STT = "USE_ELEVENLABS_STT"
+    USE_CARTESIA_STT = "USE_CARTESIA_STT"
+    USE_DEEPGRAM_STT = "USE_DEEPGRAM_STT"
+    USE_ASSEMBLYAI_STT = "USE_ASSEMBLYAI_STT"
+    DEEPEVAL_STT_MODEL = "DEEPEVAL_STT_MODEL"
+
+    # Provider API keys. `write_key` refuses secrets, so these never reach the
+    # JSON store; they are here so the CLI can name them in one place.
+    ASSEMBLYAI_API_KEY = "ASSEMBLYAI_API_KEY"
+    CARTESIA_API_KEY = "CARTESIA_API_KEY"
+    DEEPGRAM_API_KEY = "DEEPGRAM_API_KEY"
+    ELEVENLABS_API_KEY = "ELEVENLABS_API_KEY"
+
+
 class KeyFileHandler:
     def __init__(self):
         self.data = {}
@@ -188,7 +212,11 @@ class KeyFileHandler:
         os.makedirs(HIDDEN_DIR, exist_ok=True)
 
     def write_key(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues], value
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
+        value,
     ):
         """Appends or updates data in the hidden file"""
 
@@ -222,7 +250,10 @@ class KeyFileHandler:
             json.dump(self.data, f)
 
     def fetch_data(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
     ):
         """Fetches the data from the hidden file.
         NOTE: secrets in this file are deprecated; prefer env/.env."""
@@ -257,7 +288,10 @@ class KeyFileHandler:
         return value
 
     def remove_key(
-        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
+        self,
+        key: Union[
+            KeyValues, ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues
+        ],
     ):
         """Removes the specified key from the data."""
         try:

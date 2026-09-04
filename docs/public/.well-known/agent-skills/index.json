@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "deepeval",
+      "type": "skill-md",
+      "description": "DeepEval evaluation workflow for AI agents and LLM applications. TRIGGER when the user wants to evaluate or improve an AI agent, tool-using workflow, multi-turn chatbot, RAG pipeline, or LLM app; add evals; generate datasets or goldens; use deepeval generate; use deepeval test run; send results to Confident AI; monitor production; run online evals; inspect traces; or iterate on prompts, tools, retrieval, or agent behavior from eval failures. AI agents are the primary use case. Covers Python SDK, pytest eval suites, CLI generation, traced evals, Confident AI reporting, and agent-driven improvement loops. DO NOT TRIGGER for unrelated generic pytest, non-AI test setup, or non-DeepEval observability work unless the user asks to compare or migrate to DeepEval; for instrumenting an app with DeepEval tracing, @observe, or framework integrations (use the `deepeval-tracing` skill); or for raw OpenTelemetry / OTLP export without the deepeval package (use the `deepeval-otel` skill).",
+      "url": "https://deepeval.com/.well-known/agent-skills/deepeval/SKILL.md",
+      "digest": "sha256:f2da979b6bda814c8a36adb16a848109a714e448f5df56e410311c5444ae68bd"
+    },
+    {
+      "name": "deepeval-otel",
+      "type": "skill-md",
+      "description": "Export raw OpenTelemetry traces from an AI application to Confident AI's Observatory. TRIGGER when the user wants to send OpenTelemetry or OTLP traces/spans from an LLM app, agent, RAG pipeline, or chatbot to Confident AI; configure the Confident AI OTLP endpoint; set confident.span.* or confident.trace.* attributes; export AI-app traces without the deepeval Python package; wire an OTLPSpanExporter, OpenTelemetry Collector, or vendor-neutral OTel SDK to Confident AI; or pick the US vs EU OTLP endpoint. Language-agnostic: the mechanism is OTLP attribute keys plus an exporter endpoint. DO NOT TRIGGER for building DeepEval pytest eval suites, datasets, goldens, metrics, or deepeval test run (use the `deepeval` skill); for instrumenting with the DeepEval SDK's @observe decorator or framework integrations (use the `deepeval-tracing` skill); or for non-AI software such as web servers, CRUD backends, or infrastructure: the confident.* attributes describe AI components only.",
+      "url": "https://deepeval.com/.well-known/agent-skills/deepeval-otel/SKILL.md",
+      "digest": "sha256:9e95202077975af1bd663ede79e6408c857ed20cf5b0e93d95139a213e029535"
+    },
+    {
+      "name": "deepeval-tracing",
+      "type": "skill-md",
+      "description": "Instrument an AI application with DeepEval's native tracing so its behavior is visible in Confident AI. TRIGGER when the user wants to add DeepEval tracing or @observe to an LLM app, agent, RAG pipeline, or chatbot; wire a framework, model-provider, or vector-database integration (LangGraph, LangChain, OpenAI Agents, LlamaIndex, Pydantic AI, CrewAI, and others); choose between a native integration and manual instrumentation; set span types, tags, or metadata; or send DeepEval-SDK traces to Confident AI's Observatory. DO NOT TRIGGER for building DeepEval pytest eval suites, datasets, goldens, metrics, or deepeval test run (use the `deepeval` skill), or for raw OpenTelemetry / OTLP export without the deepeval package (use the `deepeval-otel` skill). This skill is purely DeepEval-SDK instrumentation — producing well-formed traces, not running evals.",
+      "url": "https://deepeval.com/.well-known/agent-skills/deepeval-tracing/SKILL.md",
+      "digest": "sha256:57ccb0207cc77a8467c12d8ccc0e8444832e665565ed348ddee3a79d2a49f2d3"
+    }
+  ]
+}

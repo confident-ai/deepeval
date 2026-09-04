@@ -40,6 +40,7 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     KeyValues,
     ModelKeyValues,
+    SpeechKeyValues,
 )
 
 # Friendly provider labels for the model classes `initialize_model` /
@@ -63,6 +64,15 @@ _PROVIDER_BY_CLASS = {
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",
     "LocalEmbeddingModel": "Local model",
+    "OpenAITTSModel": "OpenAI",
+    "ElevenLabsTTSModel": "ElevenLabs",
+    "CartesiaTTSModel": "Cartesia",
+    "DeepgramTTSModel": "Deepgram",
+    "OpenAISTTModel": "OpenAI",
+    "ElevenLabsSTTModel": "ElevenLabs",
+    "CartesiaSTTModel": "Cartesia",
+    "DeepgramSTTModel": "Deepgram",
+    "AssemblyAISTTModel": "AssemblyAI",
 }
 
 # Settings fields worth showing in the "configured settings" table when set.
@@ -77,6 +87,9 @@ _RELEVANT_MARKERS = (
     "TEMPERATURE",
     "DEEPEVAL_DEFAULT_SAVE",
     "DEEPEVAL_RESULTS_FOLDER",
+    "DEEPEVAL_VOICE_FOLDER",
+    "DEEPEVAL_TTS_MODEL",
+    "DEEPEVAL_STT_MODEL",
 )
 
 
@@ -120,7 +133,12 @@ def _legacy_keystore() -> Tuple[Path, Dict[str, Any]]:
 
 def _env_key_to_json_key() -> Dict[str, str]:
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.name] = member.value
     return mapping
@@ -178,6 +196,7 @@ def resolve_setting_source(env_key: str) -> Optional[str]:
 _REGION_SOURCE_LABELS = {
     "custom_base_url": "custom CONFIDENT_BASE_URL overrides region",
     "explicit_region": "explicitly set",
+    "keystore_region": "explicitly set (legacy .deepeval keystore)",
     "api_key_prefix": "inferred from API key prefix",
     "default": "default",
 }
@@ -185,7 +204,6 @@ _REGION_SOURCE_LABELS = {
 _OTEL_HOST_REGION = {
     "otel.confident-ai.com": "US",
     "eu.otel.confident-ai.com": "EU",
-    "au.otel.confident-ai.com": "AU",
 }
 _OTEL_URL_BY_REGION = {
     region: f"https://{host}" for host, region in _OTEL_HOST_REGION.items()
@@ -209,7 +227,7 @@ def _region_warnings(
 
     key_region = _infer_region_from_api_key(api_key)
     if key_region and key_region != region:
-        article = "an" if key_region in ("EU", "AU") else "a"
+        article = "an" if key_region == "EU" else "a"
         warnings.append(
             f"Your API key prefix looks like {article} {key_region} key, but the "
             f"resolved data region is {region} ({region_source}). API calls "
@@ -310,6 +328,22 @@ def _models_section() -> Dict[str, Any]:
         "synthesizer context construction only "
         "(override with embedder=... in ContextConstructionConfig)"
     )
+
+    # Reported from the selection alone: those constructors need an API key.
+    from deepeval.models.speech_selection import (
+        describe_stt_selection,
+        describe_tts_selection,
+    )
+
+    for key, (class_name, model_name) in (
+        ("tts", describe_tts_selection()),
+        ("stt", describe_stt_selection()),
+    ):
+        result[key] = {
+            "provider": _PROVIDER_BY_CLASS.get(class_name, class_name),
+            "model": model_name or "provider default",
+            "used_by": "voice simulations",
+        }
 
     return result
 
@@ -439,7 +473,12 @@ def diagnose_command(
     # Default models (global, overridable per class)
     models = report["default_models"]
     table = _kv_table("Default models")
-    for label, key in (("LLM", "llm"), ("Embeddings", "embeddings")):
+    for label, key in (
+        ("LLM", "llm"),
+        ("Embeddings", "embeddings"),
+        ("TTS", "tts"),
+        ("STT", "stt"),
+    ):
         info = models[key]
         if "error" in info:
             value = f"[red]⚠ unusable until fixed: {info['error']}[/red]"

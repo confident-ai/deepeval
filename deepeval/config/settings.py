@@ -35,6 +35,7 @@ from typing import (
     Any,
     Dict,
     List,
+    Literal,
     Optional,
     Union,
     NamedTuple,
@@ -49,7 +50,12 @@ from deepeval.config.utils import (
     parse_bool,
     read_dotenv_file,
 )
-from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
+from deepeval.constants import (
+    CONFIDENT_REGIONS,
+    SUPPORTED_CONFIDENT_REGIONS,
+    SUPPORTED_PROVIDER_SLUGS,
+    slugify,
+)
 
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
@@ -68,14 +74,31 @@ _DEPRECATED_TO_OVERRIDE = {
 _LEGACY_KEYFILE_SECRET_WARNED: set[str] = set()
 
 
+def _family_of_use_flag(env_key: str) -> str:
+    """The provider family a USE_* flag belongs to.
+
+    Families are mutually exclusive within themselves but independent of each
+    other, so selecting an LLM provider leaves the embedding, TTS and STT
+    selections alone.
+    """
+    if env_key.endswith("_TTS"):
+        return "tts"
+    if env_key.endswith("_STT"):
+        return "stt"
+    if "EMBEDDING" in env_key:
+        return "embedding"
+    return "llm"
+
+
 def _find_legacy_enum(env_key: str):
     from deepeval.key_handler import (
         ModelKeyValues,
         EmbeddingKeyValues,
+        SpeechKeyValues,
         KeyValues,
     )
 
-    enums = (ModelKeyValues, EmbeddingKeyValues, KeyValues)
+    enums = (ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues, KeyValues)
 
     for enum in enums:
         try:
@@ -123,6 +146,7 @@ def _merge_legacy_keyfile_into_env() -> None:
         KeyValues,
         ModelKeyValues,
         EmbeddingKeyValues,
+        SpeechKeyValues,
     )
 
     key_path = Path(HIDDEN_DIR) / KEY_FILE
@@ -143,7 +167,12 @@ def _merge_legacy_keyfile_into_env() -> None:
 
     # Map JSON keys (enum .value) -> env keys (enum .name)
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.value] = member.name
 
@@ -294,9 +323,9 @@ class Settings(BaseSettings):
         ".",
         description="Extra PYTHONPATH used by the CLI runner (default: current project '.').",
     )
-    CONFIDENT_REGION: Optional[str] = Field(
+    CONFIDENT_REGION: Optional[CONFIDENT_REGIONS] = Field(
         None,
-        description="Optional Confident AI region hint (uppercased).",
+        description="Confident AI data region (US or EU).",
     )
     CONFIDENT_OPEN_BROWSER: Optional[bool] = Field(
         True,
@@ -342,6 +371,14 @@ class Settings(BaseSettings):
     DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
         ".deepeval",
         description="Path to the directory used by DeepEval to store cache files. If set, this overrides the default cache location. The directory will be created if it does not exist.",
+    )
+
+    # Where simulated voice conversations write their audio. Unlike the cache,
+    # these are recordings the user listens to, so they are kept out of the
+    # cache folder and survive clearing it.
+    DEEPEVAL_VOICE_FOLDER: Optional[Path] = Field(
+        None,
+        description="Directory that voice simulations write conversation audio into (created if missing). Overridden by an explicit `VoiceConfig(output_dir=...)`. Defaults to `.deepeval-voice-simulations` in the current working directory.",
     )
 
     # Display / Truncation
@@ -423,6 +460,10 @@ class Settings(BaseSettings):
         None,
         description="Global default model temperature (0–2). Model-specific constructors may override.",
     )
+    DEEPEVAL_MODEL_THINKING: Optional[bool] = Field(
+        None,
+        description="Let models that expose a thinking/reasoning parameter think before answering. Off unless set, so judges spend their token budget on the verdict.",
+    )
 
     # Anthropic
     USE_ANTHROPIC_MODEL: Optional[bool] = Field(
@@ -471,7 +512,8 @@ class Settings(BaseSettings):
         None, description="Bedrock input token cost (used for cost reporting)."
     )
     AWS_BEDROCK_COST_PER_OUTPUT_TOKEN: Optional[PositiveFloat] = Field(
-        None, description="Bedrock output token cost (used for cost reporting)."
+        None,
+        description="Bedrock output token cost (used for cost reporting).",
     )
     # Azure Open AI
     USE_AZURE_OPENAI: Optional[bool] = Field(
@@ -513,7 +555,8 @@ class Settings(BaseSettings):
         None, description="DeepSeek model name."
     )
     DEEPSEEK_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="DeepSeek input token cost (used for cost reporting)."
+        None,
+        description="DeepSeek input token cost (used for cost reporting).",
     )
     DEEPSEEK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -626,7 +669,8 @@ class Settings(BaseSettings):
         None, description="Moonshot model name."
     )
     MOONSHOT_COST_PER_INPUT_TOKEN: Optional[float] = Field(
-        None, description="Moonshot input token cost (used for cost reporting)."
+        None,
+        description="Moonshot input token cost (used for cost reporting).",
     )
     MOONSHOT_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
@@ -689,6 +733,69 @@ class Settings(BaseSettings):
         None, description="vLLM API key (if required by your vLLM gateway)."
     )
     VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
+
+    #
+    # Speech Keys (TTS/STT)
+    #
+    # TTS and STT are two independent families: a USE_*_TTS flag and a
+    # USE_*_STT flag can both be on, and each family's model name comes from
+    # DEEPEVAL_TTS_MODEL / DEEPEVAL_STT_MODEL. With no flag set, voice mode
+    # falls back to OpenAI, the same way `initialize_model()` does for LLMs.
+
+    # TTS
+    USE_OPENAI_TTS: Optional[bool] = Field(
+        None, description="Use OpenAI for text-to-speech."
+    )
+    USE_ELEVENLABS_TTS: Optional[bool] = Field(
+        None, description="Use ElevenLabs for text-to-speech."
+    )
+    USE_CARTESIA_TTS: Optional[bool] = Field(
+        None, description="Use Cartesia for text-to-speech."
+    )
+    USE_DEEPGRAM_TTS: Optional[bool] = Field(
+        None, description="Use Deepgram for text-to-speech."
+    )
+    DEEPEVAL_TTS_MODEL: Optional[str] = Field(
+        None,
+        description="Model name for the selected TTS provider (defaults to that provider's own default).",
+    )
+
+    # STT
+    USE_OPENAI_STT: Optional[bool] = Field(
+        None, description="Use OpenAI for speech-to-text."
+    )
+    USE_ELEVENLABS_STT: Optional[bool] = Field(
+        None, description="Use ElevenLabs for speech-to-text."
+    )
+    USE_CARTESIA_STT: Optional[bool] = Field(
+        None, description="Use Cartesia for speech-to-text."
+    )
+    USE_DEEPGRAM_STT: Optional[bool] = Field(
+        None, description="Use Deepgram for speech-to-text."
+    )
+    USE_ASSEMBLYAI_STT: Optional[bool] = Field(
+        None, description="Use AssemblyAI for speech-to-text."
+    )
+    DEEPEVAL_STT_MODEL: Optional[str] = Field(
+        None,
+        description="Model name for the selected STT provider (defaults to that provider's own default).",
+    )
+
+    ASSEMBLYAI_API_KEY: Optional[SecretStr] = Field(
+        None, description="AssemblyAI API key (speech-to-text)."
+    )
+    CARTESIA_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Cartesia API key (text-to-speech and speech-to-text).",
+    )
+    DEEPGRAM_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Deepgram API key (text-to-speech and speech-to-text).",
+    )
+    ELEVENLABS_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="ElevenLabs API key (text-to-speech and speech-to-text).",
+    )
 
     #
     # Embedding Keys
@@ -802,7 +909,8 @@ class Settings(BaseSettings):
         None, description="Enable verbose logging and additional warnings."
     )
     DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = Field(
-        None, description="Include stack traces in certain DeepEval error logs."
+        None,
+        description="Include stack traces in certain DeepEval error logs.",
     )
     ENABLE_DEEPEVAL_CACHE: Optional[bool] = Field(
         None,
@@ -1021,6 +1129,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_DISABLE_DOTENV",
         "DEEPEVAL_TELEMETRY_OPT_OUT",
         "DEEPEVAL_TELEMETRY_ENABLED",
+        "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
         "GOOGLE_GENAI_USE_VERTEXAI",
@@ -1040,6 +1149,15 @@ class Settings(BaseSettings):
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
         "USE_PORTKEY_MODEL",
+        "USE_OPENAI_TTS",
+        "USE_ELEVENLABS_TTS",
+        "USE_CARTESIA_TTS",
+        "USE_DEEPGRAM_TTS",
+        "USE_OPENAI_STT",
+        "USE_ELEVENLABS_STT",
+        "USE_CARTESIA_STT",
+        "USE_DEEPGRAM_STT",
+        "USE_ASSEMBLYAI_STT",
         mode="before",
     )
     @classmethod
@@ -1050,6 +1168,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_RESULTS_FOLDER",
         "ENV_DIR_PATH",
         "DEEPEVAL_CACHE_FOLDER",
+        "DEEPEVAL_VOICE_FOLDER",
         mode="before",
     )
     @classmethod
@@ -1136,7 +1255,13 @@ class Settings(BaseSettings):
         s = str(v).strip()
         if not s:
             return None
-        return s.upper()
+        s = s.upper()
+        if s not in SUPPORTED_CONFIDENT_REGIONS:
+            allowed = ", ".join(sorted(SUPPORTED_CONFIDENT_REGIONS))
+            raise ValueError(
+                f"CONFIDENT_REGION must be one of {allowed} (case-insensitive), got {s!r}."
+            )
+        return s
 
     @field_validator("AWS_BEDROCK_REGION", mode="before")
     @classmethod
@@ -1490,22 +1615,19 @@ class Settings(BaseSettings):
 
         def switch_model_provider(self, target) -> None:
             """
-            Flip USE_* settings within the target's provider family (LLM vs embeddings).
+            Flip USE_* settings within the target's provider family
+            (LLM, embeddings, TTS or STT).
             """
             from deepeval.key_handler import KEY_FILE_HANDLER
 
             target_key = getattr(target, "value", str(target))
-
-            def _is_embedding_flag(k: str) -> bool:
-                return "EMBEDDING" in k
-
-            target_is_embedding = _is_embedding_flag(target_key)
+            target_family = _family_of_use_flag(target_key)
 
             use_fields = [
                 field
                 for field in type(self._s).model_fields
                 if field.startswith("USE_")
-                and _is_embedding_flag(field) == target_is_embedding
+                and _family_of_use_flag(field) == target_family
             ]
 
             if target_key not in use_fields:

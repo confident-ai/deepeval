@@ -5,6 +5,33 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        // RFC 8288 Link headers on the homepage so agents can discover
+        // the docs, the llms.txt index, and the API catalog without
+        // parsing HTML. (`Vary: Accept` for the negotiated routes is set in
+        // `proxy.ts`, which can append to Next's own `Vary` instead of
+        // replacing it.)
+        source: '/',
+        headers: [
+          {
+            key: 'Link',
+            value:
+              '</.well-known/api-catalog>; rel="api-catalog", </docs>; rel="service-doc", </llms.txt>; rel="describedby"',
+          },
+        ],
+      },
+      {
+        // Discovery manifests (ARD ai-catalog.json, agent-skills index)
+        // are meant to be fetched cross-origin by agents and registries.
+        source: '/.well-known/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

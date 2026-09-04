@@ -60,37 +60,19 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.models import AmazonBedrockModel
 
 model = AmazonBedrockModel(
-    model="anthropic.claude-3-opus-20240229-v1:0",
+    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
     region="us-east-1",
     generation_kwargs={"temperature": 0},
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-</Tab>
-<Tab value="ENV">
-
-To use any Amazon Bedrock model directly in `deepeval`, set the `USE_AWS_BEDROCK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-
-answer_relevancy = AnswerRelevancyMetric(
-    model="anthropic.claude-3-opus-20240229-v1:0",
-)
-```
-
-You should also set the other necessary vars like `AWS_ACCESS_KEY_ID`, `AWS_SESSION_TOKEN`, ..etc. to be able to use the Amazon Bedrock models as shown above.
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`:
 
-- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION` if not passed; raises an error at runtime if unset.
-- [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
-- [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `aws_access_key_id`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `aws_secret_access_key`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `cost_per_input_token`: A float specifying the per-input-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `cost_per_output_token`: A float specifying the per-output-token cost in USD. Defaults to `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of generation parameters that will be sent to Bedrock as `inferenceConfig`. Available keys may vary by the Bedrock model you choose. See the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
@@ -102,6 +84,24 @@ Pass generation parameters like `temperature`, `topP`, or `maxTokens` via `gener
 
 Extra `**kwargs` passed to `AmazonBedrockModel(...)` are forwarded to the underlying Bedrock client (aiobotocore/botocore) and are **not** treated as generation parameters.
 :::
+
+</Tab>
+<Tab value="ENV">
+
+To use any Amazon Bedrock model directly in `deepeval`, set the `USE_AWS_BEDROCK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
+)
+```
+
+You should also set the other necessary vars like `AWS_ACCESS_KEY_ID`, `AWS_SESSION_TOKEN`, ..etc. to be able to use the Amazon Bedrock models as shown above.
+
+</Tab>
+</Tabs>
 
 </Case>
 
@@ -117,12 +117,35 @@ import { AnswerRelevancyMetric } from "deepeval/metrics";
 import { AmazonBedrockModel } from "deepeval/models";
 
 const model = new AmazonBedrockModel({
-  model: "anthropic.claude-3-opus-20240229-v1:0",
+  model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
   region: "us-east-1",
   temperature: 0,
 });
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AmazonBedrockModel`:
+
+- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION`, then `AWS_REGION`, if not passed; falls back to `us-east-1` if unset.
+- [Optional] `awsAccessKeyId`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `awsSecretAccessKey`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
+- [Optional] `awsSessionToken`: A string specifying your AWS session token for temporary credentials. Defaults to `AWS_SESSION_TOKEN` if not passed.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `costPerInputToken`: A number specifying the per-input-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the per-output-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is sent to Bedrock as `inferenceConfig`, so generation parameters go inline alongside the rest:
+
+```typescript
+const model = new AmazonBedrockModel({
+  model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
+  topP: 0.9,
+  maxTokens: 512,
+});
+```
+
+Available keys vary by the Bedrock model you choose — see the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
 
 </Tab>
 <Tab value="ENV">
@@ -141,29 +164,6 @@ const answerRelevancy = new AnswerRelevancyMetric({
 </Tab>
 </Tabs>
 
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AmazonBedrockModel`:
-
-- [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `region`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`). Defaults to `AWS_BEDROCK_REGION`, then `AWS_REGION`, if not passed; falls back to `us-east-1` if unset.
-- [Optional] `awsAccessKeyId`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
-- [Optional] `awsSecretAccessKey`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
-- [Optional] `awsSessionToken`: A string specifying your AWS session token for temporary credentials. Defaults to `AWS_SESSION_TOKEN` if not passed.
-- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
-- [Optional] `costPerInputToken`: A number specifying the per-input-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `costPerOutputToken`: A number specifying the per-output-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-
-Any other key you pass is sent to Bedrock as `inferenceConfig`, so generation parameters go inline alongside the rest:
-
-```typescript
-const model = new AmazonBedrockModel({
-  model: "anthropic.claude-3-opus-20240229-v1:0",
-  topP: 0.9,
-  maxTokens: 512,
-});
-```
-
-Available keys vary by the Bedrock model you choose — see the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
-
 </Case>
 
 </Switch>
@@ -176,8 +176,6 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Amazon Bedrock foundation models:
 
-- `anthropic.claude-3-opus-20240229-v1:0`
-- `anthropic.claude-3-sonnet-20240229-v1:0`
 - `anthropic.claude-opus-4-20250514-v1:0`
 - `anthropic.claude-opus-4-1-20250805-v1:0`
 - `anthropic.claude-sonnet-4-20250514-v1:0`

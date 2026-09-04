@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Literal, Union, get_args
 import os
 
 KEY_FILE: str = ".deepeval"
@@ -22,6 +22,11 @@ CONFIDENT_TRACE_INTERNAL = "CONFIDENT_TRACE_INTERNAL"
 CONFIDENT_OPEN_BROWSER = "CONFIDENT_OPEN_BROWSER"
 CONFIDENT_TEST_CASE_BATCH_SIZE = "CONFIDENT_TEST_CASE_BATCH_SIZE"
 
+# Data regions the Python SDK can route to. The TypeScript SDK additionally
+# supports AU; keep the two in sync when that changes here.
+CONFIDENT_REGIONS = Literal["US", "EU"]
+SUPPORTED_CONFIDENT_REGIONS = frozenset(get_args(CONFIDENT_REGIONS))
+
 
 class ProviderSlug(str, Enum):
     OPENAI = "openai"
@@ -37,6 +42,12 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     PORTKEY = "portkey"
+    # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
+    # to carry a retry policy, not as selectable LLM providers.
+    ASSEMBLYAI = "assemblyai"
+    CARTESIA = "cartesia"
+    DEEPGRAM = "deepgram"
+    ELEVENLABS = "elevenlabs"
 
 
 def slugify(value: Union[str, ProviderSlug]) -> str:

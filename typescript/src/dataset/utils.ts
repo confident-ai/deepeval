@@ -1,4 +1,5 @@
 import { Golden, ConversationalGolden } from "@/dataset/golden";
+import { Persona, personaFromRecord } from "@/dataset/persona";
 import {
   LLMTestCase,
   ConversationalTestCase,
@@ -10,6 +11,13 @@ import {
   ToolCallType,
 } from "@/test-case";
 import { Turn, resolveRetrievalContext } from "@/test-case";
+
+/**
+ * Single source of truth for how a list-valued cell is flattened into a single
+ * csv/jsonl cell. Every save path joins on it and every load path splits on it,
+ * so a save/load round-trip is lossless. Matches Python's `DELIMITER`.
+ */
+export const DELIMITER = "|";
 
 export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
   const goldens: Golden[] = [];
@@ -24,6 +32,9 @@ export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
         retrievalContext: resolveRetrievalContext(llmTestCase.retrievalContext),
         toolsCalled: llmTestCase.toolsCalled,
         expectedTools: llmTestCase.expectedTools,
+        tokenCost: llmTestCase.tokenCost,
+        inputTokenCount: llmTestCase.inputTokenCount,
+        outputTokenCount: llmTestCase.outputTokenCount,
         additionalMetadata: llmTestCase.additionalMetadata,
       }),
     );
@@ -46,6 +57,9 @@ export function convertGoldensToTestCases(
       additionalMetadata: golden.additionalMetadata,
       toolsCalled: golden.toolsCalled,
       expectedTools: golden.expectedTools,
+      tokenCost: golden.tokenCost,
+      inputTokenCount: golden.inputTokenCount,
+      outputTokenCount: golden.outputTokenCount,
       name: golden.name,
       comments: golden.comments,
       _datasetRank: index,
@@ -68,7 +82,11 @@ export function convertConvoTestCasesToConvoGoldens(
       scenario: testCase.scenario,
       turns: testCase.turns,
       expectedOutcome: testCase.expectedOutcome,
-      userDescription: testCase.userDescription,
+      // A test case only carries the flattened text, so rebuild it as a
+      // persona rather than tripping the `userDescription` deprecation.
+      persona: testCase.userDescription
+        ? new Persona({ characteristics: testCase.userDescription })
+        : undefined,
       context: testCase.context,
       additionalMetadata: testCase.additionalMetadata,
     });
@@ -109,6 +127,8 @@ function createLLMTestCase(params: {
   comments?: string;
   reasoning?: string;
   tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   completionTime?: number;
   name?: string;
   _datasetRank?: number;
@@ -170,7 +190,7 @@ export function stripPrivateFields(obj: any): any {
 
 export const parseDelimited = (
   str: string | null | undefined,
-  delimiter = ";",
+  delimiter = DELIMITER,
 ): string[] => {
   if (!str) return [];
   return str
@@ -207,9 +227,17 @@ export function serializeRetrievalContext(
 /** For a csv or jsonl cell, which holds one string rather than a list. */
 export function joinRetrievalContext(
   retrievalContext: (string | RetrievedContextData)[] | undefined,
-  delimiter = "|",
+  delimiter = DELIMITER,
 ): string | undefined {
   return serializeRetrievalContext(retrievalContext)?.join(delimiter);
+}
+
+/** For a csv or jsonl cell, which holds one string rather than a list. */
+export function joinContext(
+  context: string[] | undefined,
+  delimiter = DELIMITER,
+): string | undefined {
+  return context?.join(delimiter);
 }
 
 /** Drops unset fields, as Python's `exclude_none` model dump does. */
@@ -276,6 +304,26 @@ function parseStringList(
   throw new TypeError(
     "Expected a context field to be an array, a delimited string, or null.",
   );
+}
+
+function parseOptionalNumber(
+  value: unknown,
+  wholeNumber = false,
+): number | undefined {
+  if (value == null || value === "") return undefined;
+  const parsed = Number(value);
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < 0 ||
+    (wholeNumber && !Number.isInteger(parsed))
+  ) {
+    throw new TypeError(
+      wholeNumber
+        ? "Expected a non-negative whole number."
+        : "Expected a non-negative number.",
+    );
+  }
+  return parsed;
 }
 
 export function parseToolCalls(value: unknown): ToolCall[] | undefined {
@@ -376,6 +424,9 @@ export interface GoldenKeyNames {
   retrievalContext: string;
   toolsCalled: string;
   expectedTools: string;
+  tokenCost?: string;
+  inputTokenCount?: string;
+  outputTokenCount?: string;
   comments: string;
   name: string;
   sourceFile: string;
@@ -385,6 +436,7 @@ export interface GoldenKeyNames {
   turns: string;
   expectedOutcome: string;
   userDescription: string;
+  persona: string;
 }
 
 export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
@@ -395,6 +447,9 @@ export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
   retrievalContext: "retrieval_context",
   toolsCalled: "tools_called",
   expectedTools: "expected_tools",
+  tokenCost: "token_cost",
+  inputTokenCount: "input_token_count",
+  outputTokenCount: "output_token_count",
   comments: "comments",
   name: "name",
   sourceFile: "source_file",
@@ -404,6 +459,7 @@ export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
   turns: "turns",
   expectedOutcome: "expected_outcome",
   userDescription: "user_description",
+  persona: "persona",
 };
 
 /** A record carrying a truthy `scenario` becomes a `ConversationalGolden`. */
@@ -428,15 +484,17 @@ export function goldenFromRecord(
   const scenario = pickKey(record, keys.scenario);
   if (scenario) {
     const turns = pickKey(record, keys.turns);
+    const persona = personaFromRecord(pickKey(record, keys.persona));
     return new ConversationalGolden({
       scenario: String(scenario),
       turns: turns ? parseTurns(turns) : [],
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
         | string
         | undefined,
-      userDescription: pickKey(record, keys.userDescription) as
-        | string
-        | undefined,
+      persona,
+      userDescription: persona
+        ? undefined
+        : (pickKey(record, keys.userDescription) as string | undefined),
       context,
       comments,
       name,
@@ -458,6 +516,21 @@ export function goldenFromRecord(
     ),
     toolsCalled: parseToolCalls(pickKey(record, keys.toolsCalled)),
     expectedTools: parseToolCalls(pickKey(record, keys.expectedTools)),
+    tokenCost: parseOptionalNumber(
+      keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
+    ),
+    inputTokenCount: parseOptionalNumber(
+      keys.inputTokenCount
+        ? pickKey(record, keys.inputTokenCount)
+        : undefined,
+      true,
+    ),
+    outputTokenCount: parseOptionalNumber(
+      keys.outputTokenCount
+        ? pickKey(record, keys.outputTokenCount)
+        : undefined,
+      true,
+    ),
     additionalMetadata,
     customColumnKeyValues,
     comments,

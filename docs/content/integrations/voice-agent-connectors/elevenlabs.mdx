@@ -1,0 +1,101 @@
+---
+title: ElevenLabs Agents
+sidebar_label: ElevenLabs
+languages: [python]
+---
+
+In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against a conversational agent hosted on ElevenLabs. The connector opens a live session with your agent, plays the simulated user's audio into it, and captures the spoken reply along with how long it took to start.
+
+:::caution
+This is unrelated to [`ElevenLabsTTSModel`](/integrations/tts/elevenlabs) and [`ElevenLabsSTTModel`](/integrations/stt/elevenlabs), which synthesize and transcribe audio for the simulation. This page is about reaching an agent that lives in your ElevenLabs dashboard, and it works no matter which speech models you run the simulation with.
+:::
+
+Your agent is addressed over ElevenLabs' WebSocket API directly, so the `elevenlabs` package isn't required.
+
+### Setting Up Your API Key
+
+Public agents can be dialed without credentials. Private ones need an API key, which `deepeval` autoloads from `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `ELEVENLABS_API_KEY` in a cell:
+
+```bash
+%env ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+### In Code
+
+Pass an `ElevenLabsConnector` to `VoiceConfig` to simulate against your dashboard agent:
+
+```python
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+connector = ElevenLabsConnector(agent_id="your-agent-id")
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
+
+There are **ONE** mandatory and **SEVEN** optional parameters when creating an `ElevenLabsConnector`:
+
+- `agent_id`: A string identifying the ElevenLabs conversational agent.
+- [Optional] `api_key`: A string specifying your ElevenLabs API key. Defaults to `ELEVENLABS_API_KEY` if not passed, and is required for private agents.
+- [Optional] `region`: A string naming an ElevenLabs [data residency](https://elevenlabs.io/docs/overview/administration/data-residency) region — one of `"us"`, `"eu"`, `"in"`, or `"sg"`. Any other value raises. Defaulted to `None`, which uses the global host.
+- [Optional] `client_tools`: A dictionary mapping [client tool](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools) names to the functions that run them. Defaulted to `None`.
+- [Optional] `dynamic_variables`: A dictionary of [dynamic variables](https://elevenlabs.io/docs/eleven-agents/customization/personalization/dynamic-variables) for this conversation. Defaulted to `None`.
+- [Optional] `conversation_config_override`: A dictionary of [overrides](https://elevenlabs.io/docs/eleven-agents/customization/personalization/overrides) for this conversation, such as prompt, first message, language, or voice. Defaulted to `None`.
+- [Optional] `client_tool_timeout_s`: A float number of seconds to wait for one of your tool functions before answering the agent with an error. Defaulted to `30.0`.
+- [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"balanced"`.
+
+:::tip
+ElevenLabs sends an explicit `agent_response_complete` message at the end of each turn, and `deepeval` reads it off the wire, so end-of-turn is known rather than inferred from silence. `turn_detection` only sets the ceiling that stops an agent which never stops talking from hanging the run.
+:::
+
+### Client Tools
+
+If your agent calls client tools, give the connector a function for each one. Declare the tool in the ElevenLabs dashboard as usual, then match its name here:
+
+```python
+async def get_customer_details(parameters):
+    return {"name": "Alice", "subscription": "Pro"}
+
+connector = ElevenLabsConnector(
+    agent_id="your-agent-id",
+    client_tools={"getCustomerDetails": get_customer_details},
+)
+```
+
+Handlers can be `async def` or plain functions, and each receives one dictionary of the tool's parameters plus `tool_call_id`. Whatever a handler returns is given to the agent as context, so realistic return values are what keep the rest of the conversation realistic. Time spent inside your handler is excluded from the reported latency, and a handler that raises or times out is answered with an error result rather than leaving the agent hanging.
+
+### Personalizing a Run
+
+`dynamic_variables` and `conversation_config_override` are sent per conversation, so one dashboard agent can be simulated as many different callers — a different customer, tier, or language per golden:
+
+```python
+connector = ElevenLabsConnector(
+    agent_id="your-agent-id",
+    dynamic_variables={"customer_name": "Alice", "tier": "enterprise"},
+    conversation_config_override={"agent": {"language": "fr"}},
+)
+```
+
+:::note
+Overrides only take effect if you've enabled the matching fields on the agent in ElevenLabs first. Left disabled, they're ignored rather than rejected, which looks like the override silently doing nothing.
+:::
+
+For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).

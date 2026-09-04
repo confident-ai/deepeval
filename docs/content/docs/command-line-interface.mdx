@@ -372,7 +372,7 @@ npx deepeval diagnose
 The report shows:
 
 - **Versions**: deepeval and the runtime it's running on.
-- **Evaluation model**: the model deepeval will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, with what each is used by.</Only>
+- **Evaluation model**: the model deepeval will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, and the selected text-to-speech and speech-to-text models below those, with what each is used by.</Only>
 - **Configuration sources**: the precedence order every variable is resolved against, independently (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults), which dotenv files were loaded, and where the keystore lives.
 - **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
 - **Confident AI**: login status, masked API key, data region, and the API endpoint.<Only id="python"> The OTEL endpoint is shown too, with warnings if either endpoint looks like it belongs to a different region than your API key.</Only>
@@ -436,7 +436,7 @@ npx deepeval set-confident-region EU --save=dotenv
 
 | Option          | Description                                                          |
 | --------------- | -------------------------------------------------------------------- |
-| `REGION`        | Positional argument. One of `US`, `EU`, or `AU`.                     |
+| `REGION`        | Positional argument. <Switch><Case id="python">One of `US` or `EU`.</Case><Case id="typescript">One of `US`, `EU`, or `AU`.</Case></Switch> |
 | `--save`, `-s`  | Persist `CONFIDENT_REGION` to a dotenv file. Usage: `dotenv[:path]`. |
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                   |
 
@@ -680,12 +680,28 @@ All provider commands come in pairs:
 
 </Switch>
 
-This switches the active provider:
+This switches the active provider **within its family**:
 
-- It sets `USE_<PROVIDER>_MODEL = True` for the chosen provider, and
-- Turns all other `USE_*` flags off so that only one provider is enabled at a time.
+- It sets that provider's `USE_*` flag, such as `USE_ANTHROPIC_MODEL`, and
+- Turns off the other `USE_*` flags in the same family, so only one provider per family is enabled at a time.
 
-When you **set** a provider, the CLI enables that provider’s `USE_<PROVIDER>_MODEL` flag and disables all other `USE_*` flags. When you **unset** a provider, it disables only that provider’s `USE_*` flag and leaves all others untouched. If you manually set env vars (or edit dotenv files) it’s possible to end up with multiple `USE_*` flags enabled.
+<Switch>
+
+<Case id="python">
+
+The four families are the LLM judge, embeddings, text-to-speech and speech-to-text. They are independent, so `deepeval set-openai` leaves a configured embedding or speech provider exactly as it was, and each family falls back to OpenAI when none of its flags are set.
+
+</Case>
+
+<Case id="typescript">
+
+Every `USE_*` flag here belongs to the LLM family, so setting one provider turns off all the others. With none set, `deepeval` falls back to OpenAI.
+
+</Case>
+
+</Switch>
+
+When you **unset** a provider, it disables only that provider’s `USE_*` flag and leaves all others untouched. If you manually set env vars (or edit dotenv files) it’s possible to end up with multiple `USE_*` flags enabled within one family.
 
 :::caution
 Because of how `deepeval` manages your model related environment variables, **using the CLI is 100% the recommended way to configure evaluation models in `deepeval`.** It handles all the necessary environment variables for you, ensuring consistent and correct setup across different providers.
@@ -723,6 +739,21 @@ If you want to see what environment variables `deepeval` manages under the hood,
 | Local (HTTP)          | `set-local-embeddings`       | `unset-local-embeddings`       |
 | Ollama                | `set-ollama-embeddings`      | `unset-ollama-embeddings`      |
 
+**Speech (voice simulation):**
+
+Speech takes the provider as an argument instead of a command per provider, and text-to-speech and speech-to-text are selected independently of each other and of the LLM:
+
+| Family         | Set                                                            | Unset        |
+| -------------- | -------------------------------------------------------------- | ------------ |
+| Text-to-speech | `set-tts <openai\|elevenlabs\|cartesia\|deepgram>`              | `unset-tts`  |
+| Speech-to-text | `set-stt <openai\|elevenlabs\|cartesia\|deepgram\|assemblyai>`  | `unset-stt`  |
+
+```bash
+deepeval set-stt deepgram --model nova-3
+```
+
+The model name is optional and defaults to that provider's own default. `unset-tts` and `unset-stt` clear their whole family rather than one provider, since the provider is an argument rather than part of the command name.
+
 </Case>
 
 <Case id="typescript">
@@ -755,7 +786,7 @@ For provider-specific flags, run any of the `set-*` commands above with `--help`
 ## Common Issues
 
 - **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean exit with no output often means you are passing the `--quiet` / `-q` flag.
-- **Provider still active after unsetting?** Unsetting turns off that provider's `USE_*` flag only; if another provider's flag is still on, it becomes the active provider. With no `USE_*` flag enabled, deepeval falls back to OpenAI. To force a provider, run the corresponding `set-<provider>` command.
+- **Provider still active after unsetting?** Unsetting turns off that provider's `USE_*` flag only; if another provider in the same family still has its flag on, it becomes the active one for that family. With no flag enabled in a family, deepeval falls back to OpenAI for it. To force a provider, run the corresponding `set-<provider>` command.
 - **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your process runs in that context.
 
 If you’re still stuck, the dedicated [Troubleshooting](/docs/troubleshooting) page covers deeper debugging (TLS errors, logging, timeouts, dotenv loading, and config caching).

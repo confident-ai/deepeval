@@ -8,6 +8,8 @@ from .llm_test_case import (
     ToolCallType,
     MLLMImage,
     RetrievedContextData,
+    Audio,
+    AudioChunk,
 )
 from .conversational_test_case import (
     ConversationalTestCase,
@@ -40,6 +42,8 @@ __all__ = [
     "get_available_mcp_tool_names",
     "normalize_mcp_servers",
     "MLLMImage",
+    "Audio",
+    "AudioChunk",
     "RetrievedContextData",
     "ArenaTestCase",
     "Contestant",

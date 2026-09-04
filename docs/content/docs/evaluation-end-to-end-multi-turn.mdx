@@ -149,7 +149,7 @@ The simulator exposes additional configuration beyond what fits here — see [st
 <details>
 <summary>Click to view an example simulated test case</summary>
 
-The simulator carries `scenario`, <Term py="expected_outcome" ts="expectedOutcome"/>, and <Term py="user_description" ts="userDescription"/> over from the golden, and fills in `turns`:
+The simulator carries `scenario` and <Term py="expected_outcome" ts="expectedOutcome"/> over from the golden, and fills in `turns`:
 
 <Switch>
 
@@ -159,7 +159,6 @@ The simulator carries `scenario`, <Term py="expected_outcome" ts="expectedOutcom
 ConversationalTestCase(
     scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
     expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
     turns=[
         Turn(role="user", content="Hi, I'd like to buy a VIP ticket for the Coldplay show."),
         Turn(role="assistant", content="Sure — which date and city are you looking for?"),
@@ -178,7 +177,6 @@ ConversationalTestCase(
 new ConversationalTestCase({
   scenario: "Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
   expectedOutcome: "Successful purchase of a ticket.",
-  userDescription: "Andy Byron is the CEO of Astronomer.",
   turns: [
     new Turn({ role: "user", content: "Hi, I'd like to buy a VIP ticket for the Coldplay show." }),
     new Turn({ role: "assistant", content: "Sure — which date and city are you looking for?" }),
@@ -434,8 +432,8 @@ See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for assertio
       question: "Do I have to script every conversation by hand?",
       answer: (
         <>
-          No. You define <code>ConversationalGolden</code>s with a scenario and
-          user description, then let <code>ConversationSimulator.simulate()</code>{" "}
+          No. You define <code>ConversationalGolden</code>s with a scenario and a
+          user persona, then let <code>ConversationSimulator.simulate()</code>{" "}
           generate the turns, up to a limit you set on the number of simulated
           user turns.
         </>

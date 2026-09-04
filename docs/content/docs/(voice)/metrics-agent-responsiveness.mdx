@@ -1,0 +1,146 @@
+---
+id: metrics-agent-responsiveness
+title: Agent Responsiveness
+sidebar_label: Agent Responsiveness
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+
+The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It walks the conversation in order looking for turns the caller had to repeat, replies that never came, and calls that ended badly, returning a score between 0 and 1.
+
+:::note
+This is the one voice metric that reads the conversation's shape rather than its audio content. A caller who has to say "hello? are you there?" is the failure it is built to catch — the kind that a transcript-based metric scores as a perfectly relevant exchange.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AgentResponsivenessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks a question that requires the agent to look up an account.",
+    expected_outcome="The agent answers without the user having to repeat themselves.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AgentResponsivenessMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating an `AgentResponsivenessMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+For `AgentResponsivenessMetric` the breakdown is a list of the events that were detected:
+
+```python
+{
+    "critical_failure": False,
+    "events": [
+        {"type": "user_reprompted", "turn": 2, "critical": False},
+    ],
+}
+```
+
+`turn` is the zero-based position of the offending turn in the conversation. An empty `events` list means the agent answered every time it was addressed.
+
+## How Is It Calculated?
+
+`AgentResponsivenessMetric` looks at each user turn that **owed a reply**, and checks what came next. A user turn that reads as a sign-off — one ending in "bye", "goodbye", "thanks", "thank you", or "that's all" — owes nothing, so a call that ends on a pleasantry is not marked as a failure.
+
+Each remaining user turn produces one of these outcomes:
+
+| Event                     | Detected when                                                  | Critical |
+| ------------------------- | --------------------------------------------------------------- | -------- |
+| `agent_failed_to_respond` | The user turn is the last turn of the call.                    | Yes      |
+| `assistant_audio_missing` | The agent replied, but that turn carries no audio.             | Yes      |
+| `user_reprompted`         | The next turn is another user turn — the caller spoke twice.   | No       |
+| `unexpected_end`          | The call's `end_reason` metadata is a hangup, error, or timeout. | Yes      |
+
+Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so four reprompts in a single call reach 0:
+
+<Equation formula="\text{Agent Responsiveness} = \max \left( 0,\ 1 - 0.25 \times \text{reprompts} \right)" />
+
+:::tip
+`unexpected_end` is read from the test case's `metadata`, under `end_reason` or `endReason`, and fires on `AGENT_HANGUP`, `ERROR`, and `IDLE_TIMEOUT`. Set it yourself when you assemble test cases from production calls and your platform reports why the call ended.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does this metric measure response latency?",
+      answer: (
+        <>
+          No — it measures whether a response happened at all. Latency is scored
+          by{" "}
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>
+          , which reads the timing of each clip; the raw number is on each
+          assistant turn's <code>latency_ms</code>.
+        </>
+      ),
+    },
+    {
+      question: "My agent pauses to call a tool and gets marked unresponsive.",
+      answer: (
+        <>
+          That is end-of-turn detection cutting the reply short, not the metric
+          misreading it. Use{" "}
+          <code>turn_detection="patient"</code> on your connector so the
+          simulator waits through mid-reply pauses instead of reclaiming the
+          floor and re-prompting.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and reads the ordered turns, so it has
+          no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it need audio at all?",
+      answer: (
+        <>
+          Yes. Reprompts and missing replies are read from turn order and
+          content, but an assistant turn with no audio is itself a critical
+          failure — so running this on a text-only conversation scores 0 rather
+          than grading its turn-taking.
+        </>
+      ),
+    },
+  ]}
+/>

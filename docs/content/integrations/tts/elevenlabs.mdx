@@ -1,0 +1,140 @@
+---
+title: ElevenLabs TTS
+sidebar_label: ElevenLabs
+languages: [python]
+---
+
+In `deepeval`, you can use ElevenLabs to convert text into speech when running [voice simulations](/docs/conversation-simulator-voice-mode). Synthesis is what speaks the simulated user's messages to your agent, so its clarity is what your agent's own speech recognition has to work with.
+
+ElevenLabs is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+
+:::note
+This is unrelated to [`ElevenLabsConnector`](/integrations/voice-agent-connectors/elevenlabs), which bridges to a voice agent hosted on ElevenLabs. This page is about the model that speaks the simulated user's side of the conversation, and it can be pointed at an agent on any platform.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `ELEVENLABS_API_KEY` in a cell:
+
+```bash
+%env ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+### Command Line
+
+To speak with ElevenLabs in every voice simulation, run:
+
+```bash
+deepeval set-tts elevenlabs --model=eleven_flash_v2_5
+```
+
+`--model` is optional and defaults to ElevenLabs's own default model.
+
+:::info
+The command above sets ElevenLabs as the default text-to-speech provider, unless overridden in Python code. To use a different one, run `deepeval set-tts` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-tts
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass an `ElevenLabsTTSModel` to `VoiceConfig` to synthesize with ElevenLabs instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import ElevenLabsTTSModel
+from deepeval.voice import VoiceConfig
+
+tts_model = ElevenLabsTTSModel(
+    model="eleven_flash_v2_5",
+    voice="JBFqnCBsd6RMkjVDRZzb",
+)
+voice_config = VoiceConfig(
+    tts_model=tts_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **TEN** optional parameters when creating an `ElevenLabsTTSModel`:
+
+- [Optional] `model`: A string specifying the name of the speech model to use. Defaulted to `eleven_flash_v2_5`.
+- [Optional] `api_key`: A string specifying your ElevenLabs API key. Defaults to `ELEVENLABS_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the ElevenLabs API through. Defaulted to `https://api.elevenlabs.io`.
+- [Optional] `voice`: A string voice ID from the Voice Library or your own account. Defaulted to `JBFqnCBsd6RMkjVDRZzb` (George).
+- [Optional] `sample_rate`: An integer sample rate to synthesize at — one of `8000`, `16000`, `22050`, `24000`, `32000`, `44100`, or `48000`. Anything else raises immediately. Defaulted to `24000`.
+- [Optional] `language_code`: A string [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) code enforcing the language spoken. Defaulted to `None`.
+- [Optional] `voice_settings`: A dictionary of ElevenLabs voice settings such as `stability`, `similarity_boost`, and `speed`. Defaulted to `None`.
+- [Optional] `cost_per_1m_chars`: A float overriding the per-character price used for cost accounting. Defaults to the built-in price for the model.
+- [Optional] `generation_kwargs`: A dictionary of additional parameters forwarded to ElevenLabs' text-to-speech request body.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+
+:::tip
+Any ElevenLabs parameter `deepeval` has no field for — `seed`, `previous_text`, `apply_text_normalization` — can be passed through `generation_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select ElevenLabs as the speech provider:
+
+```bash
+# .env.local
+ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+USE_ELEVENLABS_TTS=1
+DEEPEVAL_TTS_MODEL=eleven_flash_v2_5
+```
+
+`deepeval set-tts elevenlabs --model eleven_flash_v2_5` writes those same variables for you. `DEEPEVAL_TTS_MODEL` is optional: leave it out and synthesis runs on `eleven_flash_v2_5` anyway, since that is ElevenLabs' default here.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_TTS_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    tts_model="eleven_flash_v2_5",
+    ...,
+)
+```
+
+With `USE_ELEVENLABS_TTS` set, a bare model name is shorthand for `ElevenLabsTTSModel(model=...)`, which speaks in the default George voice. Pass the model object itself to pick another voice or change the sample rate.
+
+</Tab>
+</Tabs>
+
+### Available ElevenLabs Models
+
+- `eleven_flash_v2_5` (default)
+- `eleven_flash_v2`
+- `eleven_turbo_v2_5`
+- `eleven_turbo_v2`
+- `eleven_multilingual_v2`
+- `eleven_v3`
+- `eleven_v3_conversational`
