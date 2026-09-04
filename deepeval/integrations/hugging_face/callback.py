@@ -89,7 +89,6 @@ try:
             Aggregate metric scores using the specified method.
 
             Args:
-                aggregation_method (str): Method for aggregating scores.
                 scores (Dict[str, List[float]]): Metric scores for each test case.
 
             Returns:
@@ -102,7 +101,7 @@ try:
             }
             if self.aggregation_method not in aggregation_functions:
                 raise ValueError(
-                    "Incorrect 'aggregation_method', only accepts ['avg', 'min, 'max']"
+                    "Incorrect 'aggregation_method', only accepts ['avg', 'min', 'max']"
                 )
             return {
                 key: aggregation_functions[self.aggregation_method](value)
