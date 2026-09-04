@@ -30,6 +30,7 @@ def test_accepts_remote_url_marked_as_remote():
 
     assert image.local is False
 
+
 def test_auto_detects_remote_url():
     image = MLLMImage(
         url="https://example.com/image.jpg",
