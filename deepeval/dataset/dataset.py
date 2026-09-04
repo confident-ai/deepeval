@@ -1,6 +1,7 @@
 from asyncio import Task
+from contextlib import nullcontext
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union, Literal
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -59,6 +60,7 @@ from deepeval.utils import (
     convert_keys_to_snake_case,
     get_or_create_event_loop,
     open_browser,
+    suppress_evaluation_output,
 )
 from deepeval.test_run import (
     global_test_run_manager,
@@ -76,6 +78,31 @@ if TYPE_CHECKING:
 
 
 valid_file_types = ["csv", "json", "jsonl"]
+
+
+def _iterate_with_output_control(iterator: Iterator, print_results: bool):
+    """Advance DeepEval's iterator quietly without muting caller code.
+
+    ``evals_iterator`` yields control to user application code between items.
+    A suppression context spanning that yield would leak into the caller, so
+    enter it only while advancing or closing the internal iterator.
+    """
+    output_context = (
+        nullcontext if print_results else suppress_evaluation_output
+    )
+    try:
+        while True:
+            with output_context():
+                try:
+                    item = next(iterator)
+                except StopIteration:
+                    return
+            yield item
+    finally:
+        close = getattr(iterator, "close", None)
+        if close is not None:
+            with output_context():
+                close()
 
 
 def _parse_column(df, col_name, parse):
@@ -1645,6 +1672,12 @@ class EvaluationDataset:
         if async_config is None:
             async_config: AsyncConfig = AsyncConfig()
 
+        if not display_config.print_results:
+            display_config = replace(
+                display_config,
+                show_indicator=False,
+            )
+
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
         goldens = self.goldens
@@ -1655,7 +1688,7 @@ class EvaluationDataset:
 
             if async_config.run_async:
                 loop = get_or_create_event_loop()
-                for golden in a_execute_agentic_test_cases_from_loop(
+                internal_iterator = a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     identifier=identifier,
                     loop=loop,
@@ -1665,11 +1698,9 @@ class EvaluationDataset:
                     cache_config=cache_config,
                     error_config=error_config,
                     async_config=async_config,
-                ):
-                    yield golden
-
+                )
             else:
-                for golden in execute_agentic_test_cases_from_loop(
+                internal_iterator = execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     trace_metrics=metrics,
                     display_config=display_config,
@@ -1677,9 +1708,13 @@ class EvaluationDataset:
                     error_config=error_config,
                     test_results=test_results,
                     identifier=identifier,
-                ):
-                    yield golden
+                )
 
+            for golden in _iterate_with_output_control(
+                iter(internal_iterator),
+                print_results=display_config.print_results,
+            ):
+                yield golden
             end_time = time.perf_counter()
             run_duration = end_time - start_time
             if display_config.print_results:
@@ -1706,7 +1741,12 @@ class EvaluationDataset:
                             f"Invalid file type: {display_config.file_type}"
                         )
 
-            test_run = global_test_run_manager.get_test_run()
+            with (
+                suppress_evaluation_output()
+                if not display_config.print_results
+                else nullcontext()
+            ):
+                test_run = global_test_run_manager.get_test_run()
             if hyperparameters is not None or test_run.hyperparameters is None:
                 test_run.hyperparameters = process_hyperparameters(
                     hyperparameters
@@ -1720,9 +1760,15 @@ class EvaluationDataset:
             # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-            res = global_test_run_manager.wrap_up_test_run(
-                run_duration, display_table=False
-            )
+            with (
+                suppress_evaluation_output()
+                if not display_config.print_results
+                else nullcontext()
+            ):
+                res = global_test_run_manager.wrap_up_test_run(
+                    run_duration,
+                    display_table=False,
+                )
             if isinstance(res, tuple):
                 confident_link, test_run_id = res
             else:

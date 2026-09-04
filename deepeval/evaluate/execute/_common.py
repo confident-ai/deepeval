@@ -22,6 +22,7 @@ from deepeval.utils import (
     format_error_text,
     are_timeouts_disabled,
     get_gather_timeout_seconds,
+    should_print_evaluation_output,
 )
 from deepeval.metrics import (
     BaseMetric,
@@ -71,6 +72,8 @@ def _log_gather_timeout(
     exc: Optional[BaseException] = None,
     pending: Optional[int] = None,
 ) -> None:
+    if not should_print_evaluation_output():
+        return
     settings = get_settings()
     if are_timeouts_disabled():
         logger.warning(

@@ -66,16 +66,14 @@ from deepeval.evaluate.utils import (
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
-
-logger = logging.getLogger(__name__)
-
-
 from deepeval.evaluate.execute._common import (
     _await_with_outer_deadline,
     _execute_metric,
     _log_gather_timeout,
     _timeout_msg,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def execute_test_cases(
@@ -543,7 +541,6 @@ async def _a_execute_llm_test_cases(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
-    logger.info("in _a_execute_llm_test_cases")
     pbar_test_case_id = add_pbar(
         progress,
         f"    🎯 Evaluating test case #{count}",

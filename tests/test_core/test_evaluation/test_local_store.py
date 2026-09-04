@@ -1,6 +1,7 @@
 """Unit + integration tests for deepeval/evaluate/local_store.py."""
 
 import json
+import importlib
 import re
 import threading
 from pathlib import Path
@@ -18,6 +19,9 @@ from deepeval.test_run.test_run import (
     TestRun as _TestRun,
     TestRunManager as _TestRunManager,
 )
+
+
+_local_store_module = importlib.import_module("deepeval.evaluate.local_store")
 
 
 FILENAME_RE = re.compile(r"^test_run_\d{8}_\d{6}(?:_(\d+))?\.json$")
@@ -190,6 +194,38 @@ class TestTestRunManagerLocalStoreIntegration:
 
         files = list(tmp_path.glob("test_run_*.json"))
         assert len(files) == 1
+
+    def test_quiet_save_still_writes_without_output(
+        self, tmp_path: Path, capsys
+    ):
+        mgr = _TestRunManager()
+        mgr.set_test_run(_make_test_run(hyperparameters={"t": 0}))
+        mgr.configure_local_store(results_folder=str(tmp_path))
+
+        mgr.save_test_run_locally(print_results=False)
+
+        assert len(list(tmp_path.glob("test_run_*.json"))) == 1
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == ""
+
+    def test_quiet_save_suppresses_rolling_snapshot_error(
+        self, monkeypatch, capsys
+    ):
+        mgr = _TestRunManager()
+        mgr.set_test_run(_make_test_run(hyperparameters={"t": 0}))
+        monkeypatch.delenv("DEEPEVAL_RESULTS_FOLDER", raising=False)
+
+        def fail_dump(*args, **kwargs):
+            raise OSError("read-only test path")
+
+        monkeypatch.setattr(_local_store_module, "_dump", fail_dump)
+
+        mgr.save_test_run_locally(print_results=False)
+
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert captured.err == ""
 
     def test_subfolder_nests(self, tmp_path: Path):
         mgr = _TestRunManager()

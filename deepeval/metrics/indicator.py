@@ -16,7 +16,7 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import record_metric
-from deepeval.utils import update_pbar
+from deepeval.utils import update_pbar, should_print_evaluation_output
 from deepeval.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
@@ -255,7 +255,8 @@ async def safe_a_measure(
         update_pbar(progress, pbar_eval_id)
 
     except asyncio.CancelledError:
-        logger.info("caught asyncio.CancelledError")
+        if should_print_evaluation_output():
+            logger.info("caught asyncio.CancelledError")
 
         # treat cancellation as a timeout so we still emit a MetricData
         metric.error = (
@@ -298,6 +299,7 @@ async def safe_a_measure(
         if ignore_errors:
             metric.error = str(e)
             metric.success = False  # Assuming you want to set success to False
-            logger.info("a metric was marked as errored")
+            if should_print_evaluation_output():
+                logger.info("a metric was marked as errored")
         else:
             raise

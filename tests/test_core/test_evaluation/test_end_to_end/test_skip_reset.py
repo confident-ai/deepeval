@@ -141,6 +141,9 @@ class TestSkipResetTrue:
                 async_config=_QUIET_ASYNC,
             )
             mock_wrap_up.assert_called_once()
+            args, kwargs = mock_wrap_up.call_args
+            assert len(args) == 1
+            assert kwargs == {"display_table": False}
 
     def test_skip_reset_true_returns_no_confident_link(self):
         result = evaluate(
