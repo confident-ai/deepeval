@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Optional, Tuple
 from functools import wraps
 
 
@@ -7,6 +7,11 @@ from deepeval.openai.extractors import (
     safe_extract_input_parameters,
     InputParameters,
     OutputParameters,
+)
+from deepeval.model_integrations.utils import (
+    OPENROUTER_METADATA_KEY,
+    detect_provider_from_base_url,
+    extract_openrouter_metadata,
 )
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import (
@@ -92,14 +97,28 @@ def patch_openai_classes():
     _OPENAI_PATCHED = True
 
 
+def _resolve_provider(resource) -> Tuple[str, Optional[str]]:
+    base_url = getattr(getattr(resource, "_client", None), "base_url", None)
+    detected = detect_provider_from_base_url(base_url)
+
+    llm_context = current_llm_context.get()
+    override = llm_context.provider if llm_context else None
+
+    return (override or detected or Provider.OPEN_AI.value), detected
+
+
 def _create_sync_wrapper(original_method, is_completion_method: bool):
     """Create a wrapper for sync methods - called ONCE during patching."""
 
     @wraps(original_method)
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
+        provider, detected = _resolve_provider(self)
         patched = _patch_sync_openai_client_method(
-            orig_method=bound_method, is_completion_method=is_completion_method
+            orig_method=bound_method,
+            is_completion_method=is_completion_method,
+            provider=provider,
+            detected_provider=detected,
         )
         return patched(*args, **kwargs)
 
@@ -112,8 +131,12 @@ def _create_async_wrapper(original_method, is_completion_method: bool):
     @wraps(original_method)
     async def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
+        provider, detected = _resolve_provider(self)
         patched = _patch_async_openai_client_method(
-            orig_method=bound_method, is_completion_method=is_completion_method
+            orig_method=bound_method,
+            is_completion_method=is_completion_method,
+            provider=provider,
+            detected_provider=detected,
         )
         return await patched(*args, **kwargs)
 
@@ -123,6 +146,8 @@ def _create_async_wrapper(original_method, is_completion_method: bool):
 def _patch_async_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
+    provider: str = Provider.OPEN_AI.value,
+    detected_provider: Optional[str] = None,
 ):
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
@@ -143,6 +168,10 @@ def _patch_async_openai_client_method(
             output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
+            if detected_provider == Provider.OPEN_ROUTER.value:
+                output_parameters.metadata = extract_openrouter_metadata(
+                    response
+                )
             _update_all_attributes(
                 input_parameters,
                 output_parameters,
@@ -150,6 +179,7 @@ def _patch_async_openai_client_method(
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                provider,
             )
 
             return response
@@ -162,6 +192,8 @@ def _patch_async_openai_client_method(
 def _patch_sync_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
+    provider: str = Provider.OPEN_AI.value,
+    detected_provider: Optional[str] = None,
 ):
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
@@ -182,6 +214,10 @@ def _patch_sync_openai_client_method(
             output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
+            if detected_provider == Provider.OPEN_ROUTER.value:
+                output_parameters.metadata = extract_openrouter_metadata(
+                    response
+                )
             _update_all_attributes(
                 input_parameters,
                 output_parameters,
@@ -189,6 +225,7 @@ def _patch_sync_openai_client_method(
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                provider,
             )
 
             return response
@@ -205,6 +242,7 @@ def _update_all_attributes(
     expected_output: str,
     context: List[str],
     retrieval_context: List[str],
+    provider: str = Provider.OPEN_AI.value,
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
@@ -227,8 +265,19 @@ def _update_all_attributes(
     )
     current_span = current_span_context.get()
     if isinstance(current_span, LlmSpan):
+        # The integration is the SDK we instrumented; the provider is whoever
+        # served the request. They differ whenever the OpenAI SDK is pointed at
+        # a gateway.
         current_span.integration = Integration.OPEN_AI.value
-        current_span.provider = Provider.OPEN_AI.value
+        current_span.provider = provider
+        if output_parameters.metadata:
+            # Merge rather than assign — `update_current_span(metadata=...)`
+            # replaces the dict wholesale, so a user who set their own metadata
+            # inside this call would otherwise lose it (or lose ours).
+            current_span.metadata = {
+                **(current_span.metadata or {}),
+                OPENROUTER_METADATA_KEY: output_parameters.metadata,
+            }
         if current_span.parent_uuid:
             parent_span = trace_manager.get_span_by_uuid(
                 current_span.parent_uuid
