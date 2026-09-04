@@ -61,7 +61,8 @@ class MLLMImage:
         else:
             is_local = self.is_local_path(self.url)
             if self.local is not None:
-                assert self.local == is_local, "Local path mismatch"
+                if self.local != is_local:
+                    raise ValueError("Local path mismatch")
             else:
                 self.local = is_local
 
