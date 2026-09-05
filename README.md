@@ -620,7 +620,9 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) is the enterprise AI evals and observability platform. Product teams can evaluate AI applications before launch and monitor them in production, while platform teams define and enforce a consistent organization-wide standard. Log in from the CLI to get started:
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) — the AI observability and evaluation platform for production LLM systems. Trace agent executions, run online evals on live traffic, alert on quality regressions, and let PMs, QA, and domain experts review outputs without writing code. DeepEval traces stream to it with no code changes.
+
+Log in from the CLI to get started:
 
 ```bash
 deepeval login

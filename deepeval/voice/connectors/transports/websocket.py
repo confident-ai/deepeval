@@ -141,6 +141,12 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._interrupted: bool = False
         self._uplink: Optional[UplinkStream] = None
 
+        # Set while deepeval is running something on the agent's behalf, so the
+        # turn engine knows the resulting silence is not the agent finishing.
+        self._tool_hold: Optional[asyncio.Event] = None
+        self._tools_running: int = 0
+        self._tool_spans: List[Tuple[float, float]] = []
+
     @property
     def audio_format(self) -> Tuple[int, str]:
         return (self.sample_rate, "wav")
@@ -176,6 +182,9 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._uplink = UplinkStream()
         self._current_transcript = None
         self._interrupted = False
+        self._tool_hold = asyncio.Event()
+        self._tools_running = 0
+        self._tool_spans = []
 
         self._session = aiohttp.ClientSession()
         url = await self._open_session()
@@ -208,6 +217,32 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             await self._ws.send_bytes(message)
         else:
             await self._ws.send_str(message)
+
+    def _hold_turn(self, active: bool) -> None:
+        """Mark the start or end of work the agent is waiting on.
+
+        Counted rather than a plain flag, because an agent may have more than
+        one tool call outstanding and the turn stays held until the last one
+        answers.
+        """
+        if self._tool_hold is None:
+            return
+        if active:
+            self._tools_running += 1
+            self._tool_hold.set()
+        else:
+            self._tools_running = max(0, self._tools_running - 1)
+            if self._tools_running == 0:
+                self._tool_hold.clear()
+
+    def _tool_time_between(self, start: float, end: float) -> float:
+        """Wall time spent running tools within `[start, end]`."""
+        total = 0.0
+        for began, ended in self._tool_spans:
+            overlap = min(ended, end) - max(began, start)
+            if overlap > 0:
+                total += overlap
+        return total
 
     async def _reader_loop(self) -> None:
         try:
@@ -426,6 +461,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self.drain_downlink()
         self._current_transcript = None
         self._interrupted = False
+        self._tool_spans = []
 
         pcm = self._prepare_outbound_pcm(audio, trailing_silence=True)
         sent_chunks = 0
@@ -445,6 +481,8 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             end_of_turn_silence_ms=self.end_of_turn_silence_ms,
             frame_gap_timeout_s=self._frame_gap_timeout_s,
             max_turn_timeout_s=self.max_turn_timeout_s,
+            silence_threshold_rms=self.silence_threshold_rms,
+            hold_event=self._tool_hold,
         )
 
         pcm24 = audio_utils.resample_pcm16(
@@ -461,11 +499,15 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                 else None
             ),
         )
-        latency_ms = (
-            (first_audio_at - sent_at) * 1000.0
-            if first_audio_at is not None
-            else None
-        )
+        latency_ms = None
+        if first_audio_at is not None:
+            # Time the agent spent blocked on one of its client tools is our
+            # handler's, not the agent's, so it is not charged to its response
+            # time.
+            elapsed = (first_audio_at - sent_at) - self._tool_time_between(
+                sent_at, first_audio_at
+            )
+            latency_ms = max(elapsed, 0.0) * 1000.0
         if not agent_pcm and not self._current_transcript:
             logger.warning(
                 "%s: agent returned no audio and no transcript this turn "

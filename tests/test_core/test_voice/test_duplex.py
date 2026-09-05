@@ -18,6 +18,9 @@ from deepeval.voice.timeline import audio_duration
 
 
 class FailIfCalledSTT:
+    def supports_streaming(self) -> bool:
+        return False
+
     async def a_transcribe(self, audio):
         raise AssertionError(
             "STT should be skipped when transcript is supplied"
@@ -344,6 +347,9 @@ class _SlowTTS:
 
 
 class _StubSTT:
+    def supports_streaming(self) -> bool:
+        return False
+
     truncated_audio_pad_seconds = 0.0
 
     async def a_transcribe(self, audio):

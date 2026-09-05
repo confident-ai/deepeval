@@ -74,14 +74,31 @@ _DEPRECATED_TO_OVERRIDE = {
 _LEGACY_KEYFILE_SECRET_WARNED: set[str] = set()
 
 
+def _family_of_use_flag(env_key: str) -> str:
+    """The provider family a USE_* flag belongs to.
+
+    Families are mutually exclusive within themselves but independent of each
+    other, so selecting an LLM provider leaves the embedding, TTS and STT
+    selections alone.
+    """
+    if env_key.endswith("_TTS"):
+        return "tts"
+    if env_key.endswith("_STT"):
+        return "stt"
+    if "EMBEDDING" in env_key:
+        return "embedding"
+    return "llm"
+
+
 def _find_legacy_enum(env_key: str):
     from deepeval.key_handler import (
         ModelKeyValues,
         EmbeddingKeyValues,
+        SpeechKeyValues,
         KeyValues,
     )
 
-    enums = (ModelKeyValues, EmbeddingKeyValues, KeyValues)
+    enums = (ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues, KeyValues)
 
     for enum in enums:
         try:
@@ -129,6 +146,7 @@ def _merge_legacy_keyfile_into_env() -> None:
         KeyValues,
         ModelKeyValues,
         EmbeddingKeyValues,
+        SpeechKeyValues,
     )
 
     key_path = Path(HIDDEN_DIR) / KEY_FILE
@@ -149,7 +167,12 @@ def _merge_legacy_keyfile_into_env() -> None:
 
     # Map JSON keys (enum .value) -> env keys (enum .name)
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.value] = member.name
 
@@ -712,6 +735,69 @@ class Settings(BaseSettings):
     VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
 
     #
+    # Speech Keys (TTS/STT)
+    #
+    # TTS and STT are two independent families: a USE_*_TTS flag and a
+    # USE_*_STT flag can both be on, and each family's model name comes from
+    # DEEPEVAL_TTS_MODEL / DEEPEVAL_STT_MODEL. With no flag set, voice mode
+    # falls back to OpenAI, the same way `initialize_model()` does for LLMs.
+
+    # TTS
+    USE_OPENAI_TTS: Optional[bool] = Field(
+        None, description="Use OpenAI for text-to-speech."
+    )
+    USE_ELEVENLABS_TTS: Optional[bool] = Field(
+        None, description="Use ElevenLabs for text-to-speech."
+    )
+    USE_CARTESIA_TTS: Optional[bool] = Field(
+        None, description="Use Cartesia for text-to-speech."
+    )
+    USE_DEEPGRAM_TTS: Optional[bool] = Field(
+        None, description="Use Deepgram for text-to-speech."
+    )
+    DEEPEVAL_TTS_MODEL: Optional[str] = Field(
+        None,
+        description="Model name for the selected TTS provider (defaults to that provider's own default).",
+    )
+
+    # STT
+    USE_OPENAI_STT: Optional[bool] = Field(
+        None, description="Use OpenAI for speech-to-text."
+    )
+    USE_ELEVENLABS_STT: Optional[bool] = Field(
+        None, description="Use ElevenLabs for speech-to-text."
+    )
+    USE_CARTESIA_STT: Optional[bool] = Field(
+        None, description="Use Cartesia for speech-to-text."
+    )
+    USE_DEEPGRAM_STT: Optional[bool] = Field(
+        None, description="Use Deepgram for speech-to-text."
+    )
+    USE_ASSEMBLYAI_STT: Optional[bool] = Field(
+        None, description="Use AssemblyAI for speech-to-text."
+    )
+    DEEPEVAL_STT_MODEL: Optional[str] = Field(
+        None,
+        description="Model name for the selected STT provider (defaults to that provider's own default).",
+    )
+
+    ASSEMBLYAI_API_KEY: Optional[SecretStr] = Field(
+        None, description="AssemblyAI API key (speech-to-text)."
+    )
+    CARTESIA_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Cartesia API key (text-to-speech and speech-to-text).",
+    )
+    DEEPGRAM_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="Deepgram API key (text-to-speech and speech-to-text).",
+    )
+    ELEVENLABS_API_KEY: Optional[SecretStr] = Field(
+        None,
+        description="ElevenLabs API key (text-to-speech and speech-to-text).",
+    )
+
+    #
     # Embedding Keys
     #
 
@@ -1063,6 +1149,15 @@ class Settings(BaseSettings):
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
         "USE_PORTKEY_MODEL",
+        "USE_OPENAI_TTS",
+        "USE_ELEVENLABS_TTS",
+        "USE_CARTESIA_TTS",
+        "USE_DEEPGRAM_TTS",
+        "USE_OPENAI_STT",
+        "USE_ELEVENLABS_STT",
+        "USE_CARTESIA_STT",
+        "USE_DEEPGRAM_STT",
+        "USE_ASSEMBLYAI_STT",
         mode="before",
     )
     @classmethod
@@ -1520,22 +1615,19 @@ class Settings(BaseSettings):
 
         def switch_model_provider(self, target) -> None:
             """
-            Flip USE_* settings within the target's provider family (LLM vs embeddings).
+            Flip USE_* settings within the target's provider family
+            (LLM, embeddings, TTS or STT).
             """
             from deepeval.key_handler import KEY_FILE_HANDLER
 
             target_key = getattr(target, "value", str(target))
-
-            def _is_embedding_flag(k: str) -> bool:
-                return "EMBEDDING" in k
-
-            target_is_embedding = _is_embedding_flag(target_key)
+            target_family = _family_of_use_flag(target_key)
 
             use_fields = [
                 field
                 for field in type(self._s).model_fields
                 if field.startswith("USE_")
-                and _is_embedding_flag(field) == target_is_embedding
+                and _family_of_use_flag(field) == target_family
             ]
 
             if target_key not in use_fields:

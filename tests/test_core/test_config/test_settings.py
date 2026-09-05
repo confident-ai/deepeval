@@ -5,6 +5,7 @@ from pathlib import Path
 
 from deepeval.config.utils import parse_bool
 from deepeval.config.settings import (
+    _family_of_use_flag,
     autoload_dotenv,
     get_settings,
     reset_settings,
@@ -309,50 +310,37 @@ def test_sample_rate_invalid_raises(monkeypatch, val):
 
 
 def test_switch_model_provider_flips_use_flags_within_family_only(settings):
-    # Split USE_* flags into "llm family" vs "embedding family"
+    # Split USE_* flags into their provider families: llm, embedding, tts, stt
     all_use = [
         field
         for field in type(settings).model_fields
         if field.startswith("USE_")
     ]
-    llm_flags = [field for field in all_use if "EMBEDDING" not in field]
-    emb_flags = [field for field in all_use if "EMBEDDING" in field]
+    families: dict[str, list[str]] = {}
+    for field in all_use:
+        families.setdefault(_family_of_use_flag(field), []).append(field)
 
-    # Assert both families exist
-    assert llm_flags, "No LLM USE_* flags found on Settings"
-    assert emb_flags, "No embedding USE_* flags found on Settings"
-
-    target_llm = llm_flags[0]
-    target_emb = emb_flags[0]
+    assert set(families) == {"llm", "embedding", "tts", "stt"}
 
     with settings.edit(persist=False) as ctx:
-        # Seed all flags to True so we can observe which ones get flipped
-        for field in all_use:
-            setattr(settings, field, True)
+        for family, flags in families.items():
+            target = flags[0]
 
-        # Flip LLM family only
-        ctx.switch_model_provider(target_llm)
+            # Seed all flags to True so we can observe which ones get flipped
+            for field in all_use:
+                setattr(settings, field, True)
 
-        for field in llm_flags:
-            expected = True if field == target_llm else None
-            assert getattr(settings, field) is expected
-        for field in emb_flags:
-            # Embeddings should be untouched by LLM switch (remain True)
-            assert getattr(settings, field) is True
+            ctx.switch_model_provider(target)
 
-        # Reset everything to True again
-        for field in all_use:
-            setattr(settings, field, True)
-
-        # Flip embedding family only
-        ctx.switch_model_provider(target_emb)
-
-        for field in emb_flags:
-            expected = True if field == target_emb else None
-            assert getattr(settings, field) is expected
-        for field in llm_flags:
-            # LLMs should be untouched by embedding switch (remain True)
-            assert getattr(settings, field) is True
+            for field in flags:
+                expected = True if field == target else None
+                assert getattr(settings, field) is expected
+            for other_family, other_flags in families.items():
+                if other_family == family:
+                    continue
+                for field in other_flags:
+                    # Other families are untouched by this switch
+                    assert getattr(settings, field) is True
 
 
 ############################################################

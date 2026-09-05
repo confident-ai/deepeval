@@ -42,7 +42,7 @@ sequenceDiagram
     STT-->>Simulator: assistant transcript
 ```
 
-By default this loop is **half-duplex** (`exchange_turn`). To exercise barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
+On a **full-duplex** connector such as `LiveKitConnector`, the caller keeps listening while it speaks, so nothing the agent says mid-turn is lost; on connectors that can't carry both voices at once, such as `CallbackVoiceConnector`, each side takes a turn. Neither makes the caller interrupt — for barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
 
 Who does the talking on the simulated side — their voice, their temperament, the noise around them — comes from the golden's [`Persona`](/docs/conversation-simulator-voice-personas).
 
@@ -51,6 +51,10 @@ Everything else about the simulation — scenario-driven user turns, [stopping l
 ## Setup Voice Mode
 
 In `deepeval`'s `ConversationSimulator`, `voice_config` and `model_callback` are mutually exclusive: provide exactly one.
+
+Start by choosing the connector that matches your deployed voice agent. `deepeval` provides connectors for ElevenLabs conversational agents, LiveKit agents, compatible raw-audio WebSockets, and in-process Python callables. You only need to implement a custom connector when none of these can reach your agent; see [Voice Connectors](/docs/conversation-simulator-voice-connectors).
+
+The example below connects to an existing **ElevenLabs conversational agent**. `ElevenLabsConnector` is the bridge to that agent — it is not the TTS or STT model used by the simulator.
 
 ```python
 from deepeval.voice import VoiceConfig, ElevenLabsConnector
@@ -70,10 +74,14 @@ There are **ONE** mandatory and **FIVE** optional parameters when creating a `Vo
 - [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
 - [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Left unset, it falls back to the `DEEPEVAL_VOICE_FOLDER` [environment variable](/docs/environment-variables) and then to `".deepeval-voice-simulations"`.
 - [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
-- [Optional] `interruption_settings`: **deprecated** — set [`Persona(interruption_behavior=...)`](/docs/conversation-simulator-voice-personas#interruptions) on the golden instead. Defaulted to `None`.
+- [Optional] `record_call`: a boolean which when set to `True`, records the whole call as it happened — both sides, in real time — and exposes it as [`call_recording_path`](#what-a-voice-simulation-produces) on each `ConversationalTestCase`. Defaulted to `False`.
+
+:::info
+`combine_audio_files` stitches the clips attached to each `Turn`, so it contains exactly what the metrics see. `record_call` tapes every frame that crossed the wire — including agent speech that never became a turn and only the part of a barge the caller actually sent — with the caller on the left channel and your agent on the right.
+:::
 
 ::::tip
-`VoiceConfig` is how you reach your agent; the [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` is who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
+The connector in `VoiceConfig` determines how `deepeval` reaches your agent. The [`Persona`](/docs/conversation-simulator-voice-personas) on each `ConversationalGolden` determines who calls it — their voice, background noise, whether they interrupt, whether they speak first, and when they hang up.
 ::::
 
 ::::note
@@ -89,10 +97,9 @@ Voice mode introduces two speech models that sit on opposite sides of the connec
 | `tts_model`  | `DeepEvalBaseTTS` | Speaks the **simulated user's** messages to your agent          | `OpenAITTSModel` (`gpt-4o-mini-tts`, `alloy`) | What your agent hears. Unclear or unnatural speech degrades your agent's own speech recognition and skews the whole simulation. |
 | `stt_model`  | `DeepEvalBaseSTT` | Transcribes **your agent's** spoken replies into `Turn.content` | `OpenAISTTModel` (`gpt-4o-transcribe`)        | Transcript fidelity. Every multi-turn metric judges this transcript, so STT accuracy directly bounds evaluation quality.        |
 
-Two details worth knowing:
+STT is skipped when the connector already carries a transcript. Some platforms, including ElevenLabs, send the agent's transcript alongside its audio. When present, it becomes `Turn.content` directly and the `stt_model` is not called for that turn.
 
-- **STT is skipped when the connector already carries a transcript.** Some platforms (like ElevenLabs) send the agent's own transcript alongside its audio; when present, it becomes `Turn.content` directly and your `stt_model` is never called for that turn.
-- **Speech costs are tracked separately** from the simulator model's LLM cost: after a run, `simulator.tts_cost` and `simulator.stt_cost` hold the accumulated TTS and STT spend.
+Speech costs are tracked separately from the simulator model's LLM cost. After a run, `simulator.tts_cost` and `simulator.stt_cost` contain the accumulated TTS and STT spend.
 
 ### Using Custom Speech Models
 
@@ -150,8 +157,9 @@ Each simulated conversation is returned as a regular `ConversationalTestCase`, e
 - Every user `Turn` carries the synthesized `audio` that was played to your agent.
 - Every assistant `Turn` carries your agent's reply `audio`, the transcript as `content`, and the measured response time in `latency_ms`.
 - When [interruptions](/docs/conversation-simulator-voice-interruptions) are enabled, an assistant turn cut short by a barge-in gets `interrupted=True`. Frustrated barges can also surface on user turns via `metadata`.
+- When `record_call=True`, `call_recording_path` points to a stereo WAV of the entire call — caller on the left channel, your agent on the right.
 
-Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`:
+Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`, plus the full-call recording as `deepeval-call-recording.wav` when `record_call=True`:
 
 ```text
 .deepeval-voice-simulations/
@@ -160,10 +168,13 @@ Unless `output_dir` is `None`, the audio is also written to disk — one file pe
     ├── deepeval-turn-1-assistant.wav
     ├── deepeval-turn-2-user.wav
     ├── deepeval-turn-2-assistant.wav
-    └── deepeval-conversation.wav
+    ├── deepeval-conversation.wav
+    └── deepeval-call-recording.wav
 ```
 
 When simulating multiple goldens in one run, each conversation gets its own sub-folder named after the golden's `name` (or `conversation-<index>` when unnamed).
+
+Each conversation also logs one `INFO` line from `deepeval.simulator` with the agent's and the caller's average and worst reply times, so you can read latency without opening every `Turn`.
 
 Set `DEEPEVAL_VOICE_FOLDER` to keep recordings somewhere else — a scratch disk, or a path outside the repo — without changing code. An explicit `VoiceConfig(output_dir=...)` overrides it, and `DEEPEVAL_FILE_SYSTEM=READ_ONLY` overrides both, writing nothing at all.
 
@@ -221,6 +232,16 @@ Because the output is a standard `ConversationalTestCase`, you can evaluate simu
           concurrently would interleave audio on the same session. The simulator
           forces sequential execution in voice mode regardless of{" "}
           <code>max_concurrent</code>.
+        </>
+      ),
+    },
+    {
+      question: "Do interruptions count toward the turn limit?",
+      answer: (
+        <>
+          Yes. Every user turn counts against{" "}
+          <code>max_user_simulations</code>, including barge turns, so an
+          interrupting persona reaches the limit in fewer exchanges.
         </>
       ),
     },

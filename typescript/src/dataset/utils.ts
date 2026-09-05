@@ -32,6 +32,9 @@ export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
         retrievalContext: resolveRetrievalContext(llmTestCase.retrievalContext),
         toolsCalled: llmTestCase.toolsCalled,
         expectedTools: llmTestCase.expectedTools,
+        tokenCost: llmTestCase.tokenCost,
+        inputTokenCount: llmTestCase.inputTokenCount,
+        outputTokenCount: llmTestCase.outputTokenCount,
         additionalMetadata: llmTestCase.additionalMetadata,
       }),
     );
@@ -54,6 +57,9 @@ export function convertGoldensToTestCases(
       additionalMetadata: golden.additionalMetadata,
       toolsCalled: golden.toolsCalled,
       expectedTools: golden.expectedTools,
+      tokenCost: golden.tokenCost,
+      inputTokenCount: golden.inputTokenCount,
+      outputTokenCount: golden.outputTokenCount,
       name: golden.name,
       comments: golden.comments,
       _datasetRank: index,
@@ -121,6 +127,8 @@ function createLLMTestCase(params: {
   comments?: string;
   reasoning?: string;
   tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   completionTime?: number;
   name?: string;
   _datasetRank?: number;
@@ -298,6 +306,26 @@ function parseStringList(
   );
 }
 
+function parseOptionalNumber(
+  value: unknown,
+  wholeNumber = false,
+): number | undefined {
+  if (value == null || value === "") return undefined;
+  const parsed = Number(value);
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < 0 ||
+    (wholeNumber && !Number.isInteger(parsed))
+  ) {
+    throw new TypeError(
+      wholeNumber
+        ? "Expected a non-negative whole number."
+        : "Expected a non-negative number.",
+    );
+  }
+  return parsed;
+}
+
 export function parseToolCalls(value: unknown): ToolCall[] | undefined {
   if (value == null) return undefined;
   const raw = typeof value === "string" ? trimAndLoadJson(value) : value;
@@ -396,6 +424,9 @@ export interface GoldenKeyNames {
   retrievalContext: string;
   toolsCalled: string;
   expectedTools: string;
+  tokenCost?: string;
+  inputTokenCount?: string;
+  outputTokenCount?: string;
   comments: string;
   name: string;
   sourceFile: string;
@@ -416,6 +447,9 @@ export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
   retrievalContext: "retrieval_context",
   toolsCalled: "tools_called",
   expectedTools: "expected_tools",
+  tokenCost: "token_cost",
+  inputTokenCount: "input_token_count",
+  outputTokenCount: "output_token_count",
   comments: "comments",
   name: "name",
   sourceFile: "source_file",
@@ -482,6 +516,21 @@ export function goldenFromRecord(
     ),
     toolsCalled: parseToolCalls(pickKey(record, keys.toolsCalled)),
     expectedTools: parseToolCalls(pickKey(record, keys.expectedTools)),
+    tokenCost: parseOptionalNumber(
+      keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
+    ),
+    inputTokenCount: parseOptionalNumber(
+      keys.inputTokenCount
+        ? pickKey(record, keys.inputTokenCount)
+        : undefined,
+      true,
+    ),
+    outputTokenCount: parseOptionalNumber(
+      keys.outputTokenCount
+        ? pickKey(record, keys.outputTokenCount)
+        : undefined,
+      true,
+    ),
     additionalMetadata,
     customColumnKeyValues,
     comments,

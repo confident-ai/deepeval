@@ -92,6 +92,9 @@ const SINGLE_TURN_COLUMNS = [
   "source_file",
   "tools_called",
   "expected_tools",
+  "token_cost",
+  "input_token_count",
+  "output_token_count",
   "additional_metadata",
   "custom_column_key_values",
 ];
@@ -142,6 +145,9 @@ function singleTurnRecord(
     source_file: golden.sourceFile ?? null,
     tools_called: serializeModels(golden.toolsCalled) ?? null,
     expected_tools: serializeModels(golden.expectedTools) ?? null,
+    token_cost: golden.tokenCost ?? null,
+    input_token_count: golden.inputTokenCount ?? null,
+    output_token_count: golden.outputTokenCount ?? null,
     additional_metadata: golden.additionalMetadata ?? null,
     custom_column_key_values: golden.customColumnKeyValues ?? null,
   };
@@ -176,6 +182,9 @@ function singleTurnCsvRow(golden: Golden): (string | null)[] {
     golden.sourceFile ?? null,
     asJsonCell(serializeModels(golden.toolsCalled)),
     asJsonCell(serializeModels(golden.expectedTools)),
+    golden.tokenCost == null ? null : String(golden.tokenCost),
+    golden.inputTokenCount == null ? null : String(golden.inputTokenCount),
+    golden.outputTokenCount == null ? null : String(golden.outputTokenCount),
     asJsonCell(golden.additionalMetadata),
     asJsonCell(golden.customColumnKeyValues),
   ];

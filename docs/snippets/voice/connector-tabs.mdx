@@ -1,0 +1,94 @@
+<Tabs items={["ElevenLabs", "Vapi", "LiveKit", "Pipecat", "Custom WebSocket", "Callback"]}>
+<Tab value="ElevenLabs">
+
+Your agent lives in the ElevenLabs dashboard, so the connector only needs its `agent_id`. It speaks ElevenLabs' WebSocket API directly, so the `elevenlabs` package isn't required. Private agents also need an API key.
+
+```python
+from deepeval.voice import ElevenLabsConnector
+
+connector = ElevenLabsConnector(agent_id="your-agent-id")
+```
+
+Client tools, per-conversation overrides, and every parameter are on the [ElevenLabs integration page](/integrations/voice-agent-connectors/elevenlabs).
+
+</Tab>
+<Tab value="Vapi">
+
+Your assistant lives in Vapi, so the connector needs its `assistant_id` and an API key to create the call with. Phone parameters are rejected on Vapi's WebSocket transport, so the simulator is the only caller and no Vapi SDK is required.
+
+```python
+from deepeval.voice import VapiConnector
+
+connector = VapiConnector(assistant_id="your-assistant-id")
+```
+
+Per-call overrides and every parameter are on the [Vapi integration page](/integrations/voice-agent-connectors/vapi).
+
+</Tab>
+<Tab value="LiveKit">
+
+A LiveKit agent has no id to dial — it's a worker dispatched into a room. So you give the connector credentials, and it mints a token, creates a room, and joins as another participant. This one needs LiveKit's SDKs:
+
+```bash
+pip install livekit livekit-api
+```
+
+```python
+from deepeval.voice import LiveKitConnector
+
+connector = LiveKitConnector(
+    url="wss://your-project.livekit.cloud",
+    api_key="your-api-key",
+    api_secret="your-api-secret",
+    agent_name="restaurant-agent",
+)
+```
+
+Bringing your own room, transcripts, and every parameter are on the [LiveKit integration page](/integrations/voice-agent-connectors/livekit).
+
+</Tab>
+<Tab value="Pipecat">
+
+Your pipeline is self-hosted, so the connector needs the URL its WebSocket transport is serving on and nothing else. It speaks the protobuf frames Pipecat serializes by default, so `pipecat-ai` isn't required to run the simulation.
+
+```python
+from deepeval.voice import PipecatConnector
+
+connector = PipecatConnector(url="ws://localhost:8765/ws")
+```
+
+Serving your pipeline, RTVI turn signals, and every parameter are on the [Pipecat integration page](/integrations/voice-agent-connectors/pipecat).
+
+</Tab>
+<Tab value="Custom WebSocket">
+
+For a custom agent that accepts and emits raw audio over a WebSocket, describe its message shape — which JSON keys carry audio in and out, whether frames are binary, and what marks the end of a turn.
+
+```python
+from deepeval.voice import WebSocketConnector
+
+connector = WebSocketConnector(
+    url="wss://your-agent.example.com/audio",
+    send_key="audio",
+    receive_audio_key="audio",
+    turn_complete_type="turn_end",
+)
+```
+
+Every parameter is under [Generic WebSocket](#generic-websocket) below.
+
+</Tab>
+<Tab value="Callback">
+
+Wraps an in-process Python callable, so you can exercise the full TTS to agent to STT pipeline with no network transport at all.
+
+```python
+from deepeval.voice import CallbackVoiceConnector
+
+connector = CallbackVoiceConnector(my_agent)
+```
+
+What your callable may return is under [Callback](#callback) below.
+
+</Tab>
+</Tabs>

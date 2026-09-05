@@ -4,7 +4,7 @@ from typing import List
 
 import pytest
 
-from deepeval.models.tts_models.openai_tts import (
+from deepeval.models.tts.openai.openai import (
     _STREAM_FRAME_BYTES,
     OpenAITTSModel,
 )
