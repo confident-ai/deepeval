@@ -202,9 +202,7 @@ class Golden(BaseModel):
     output_token_count: Optional[int] = Field(
         default=None,
         serialization_alias="outputTokenCount",
-        validation_alias=AliasChoices(
-            "outputTokenCount", "output_token_count"
-        ),
+        validation_alias=AliasChoices("outputTokenCount", "output_token_count"),
     )
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
