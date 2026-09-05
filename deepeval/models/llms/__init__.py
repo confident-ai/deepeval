@@ -10,6 +10,7 @@ from .kimi_model import KimiModel
 from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
 from .portkey_model import PortkeyModel
+from .thegrid_model import TheGridModel
 from .openrouter_model import OpenRouterModel
 
 __all__ = [
@@ -25,6 +26,7 @@ __all__ = [
     "GrokModel",
     "DeepSeekModel",
     "PortkeyModel",
+    "TheGridModel",
     "OpenRouterModel",
 ]
 
