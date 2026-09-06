@@ -18,7 +18,7 @@ class SimulatorControllerTemplate:
             IMPORTANT: The output must be formatted as a JSON object with two keys:
             `is_complete` (a boolean) and `reason` (a string).
 
-            Example Expected Outcome: "The user has succesfully reset their password."
+            Example Expected Outcome: "The user has successfully reset their password."
             Example Conversation History:
             [
                 {{"role": "user", "content": "I forgot my password and need to reset it."}},
@@ -27,7 +27,7 @@ class SimulatorControllerTemplate:
             Example JSON Output:
             {{
                 "is_complete": false,
-                "reason": "The assistant explained how to forget password but ahas not confirmed that the user successfully set a new password."
+                "reason": "The assistant explained how to forget password but has not confirmed that the user successfully set a new password."
             }}
 
             Expected Outcome: "{expected_outcome}"

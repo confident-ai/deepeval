@@ -26,7 +26,7 @@
     <p>
         <a href="https://deepeval.com/docs/getting-started?utm_source=GitHub">Documentation</a> |
         <a href="#-metrics-and-features">Metrics and Features</a> |
-        <a href="#-quickstart">Getting Started</a> |
+        <a href="#-vibe-coder-quickstart">Getting Started</a> |
         <a href="#-integrations">Integrations</a> |
         <a href="https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=header_nav&ref_page=github/readme">Confident AI</a>
     <p>
