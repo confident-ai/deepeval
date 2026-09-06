@@ -1,0 +1,58 @@
+---
+title: The Grid
+---
+
+[The Grid](https://thegrid.ai) is an inference marketplace that serves models from several labs behind one OpenAI-compatible API. It is reached through the OpenAI SDK, so generation, structured outputs, retries and cost accounting all behave like any other gateway provider in DeepEval.
+
+Instrument names are **capability tiers** rather than a specific lab's model name — `text-standard`, `code-prime` and `agent-max` each route to a current model for that tier. `GET https://api.thegrid.ai/v1/models` returns the current list.
+
+### Command Line
+
+```bash
+deepeval set-thegrid --model text-standard
+```
+
+The API key is read from `THEGRID_API_KEY`. To be prompted for it instead of exporting it:
+
+```bash
+deepeval set-thegrid --model text-standard --prompt-api-key
+```
+
+To revert back to OpenAI:
+
+```bash
+deepeval unset-thegrid
+```
+
+### Python
+
+```python
+from deepeval.models import TheGridModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = TheGridModel(
+    model="text-standard",
+    api_key="your-api-key",
+)
+
+metric = AnswerRelevancyMetric(model=model)
+```
+
+### Available Parameters
+
+| Parameter | Description |
+| --- | --- |
+| `model` | The instrument to use, e.g. `text-standard`, `code-prime`, `agent-max`. Required — there is no default tier. |
+| `api_key` | Your The Grid API key. Falls back to `THEGRID_API_KEY`. |
+| `base_url` | Overrides the endpoint. Defaults to `https://api.thegrid.ai/v1`. |
+| `temperature` | Sampling temperature. Defaults to `0.0`. |
+| `cost_per_input_token` | Optional. See the note on cost below. |
+| `cost_per_output_token` | Optional. See the note on cost below. |
+
+### A note on cost
+
+The Grid is market-priced and does not publish a per-token rate through its API, so DeepEval reports cost as unknown unless you supply `cost_per_input_token` and `cost_per_output_token` yourself. This is the same contract as the other gateway providers.
+
+### A note on reasoning tokens
+
+Instruments reason before answering, and reasoning tokens are billed and count toward the output budget while never appearing in the response. If replies come back truncated, raise the token limit rather than lowering it.
