@@ -21,7 +21,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 
@@ -335,6 +334,20 @@ class ToolCorrectnessMetric(BaseMetric):
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
     def _get_type_mismatches(self) -> List[str]:
+        if self.should_exact_match:
+            mismatches = []
+            for expected_tool, called_tool in zip(
+                self.expected_tools, self.tools_called
+            ):
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type != called_tool.type
+                ):
+                    mismatches.append(
+                        f"{expected_tool.name} (expected {expected_tool.type.value}, called {called_tool.type.value})"
+                    )
+            return mismatches
+
         mismatches = []
         for expected_tool in self.expected_tools:
             for called_tool in self.tools_called:

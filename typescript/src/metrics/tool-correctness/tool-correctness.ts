@@ -351,6 +351,24 @@ export class ToolCorrectnessMetric extends BaseMetric {
   // --- deterministic tool-calling reason ---
 
   private getTypeMismatches(): string[] {
+    if (this.shouldExactMatch) {
+      const mismatches: string[] = [];
+      const len = Math.min(this.expectedTools.length, this.toolsCalled.length);
+      for (let i = 0; i < len; i++) {
+        const expected = this.expectedTools[i];
+        const called = this.toolsCalled[i];
+        if (
+          expected.name === called.name &&
+          toolCallType(expected) !== toolCallType(called)
+        ) {
+          mismatches.push(
+            `${expected.name} (expected ${toolCallType(expected)}, called ${toolCallType(called)})`,
+          );
+        }
+      }
+      return mismatches;
+    }
+
     const mismatches: string[] = [];
     for (const expected of this.expectedTools) {
       const called = this.toolsCalled.find(
