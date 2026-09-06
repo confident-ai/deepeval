@@ -14,7 +14,7 @@ from deepeval.metrics.dag import (
 )
 from deepeval.metrics.g_eval.g_eval import GEvalTemplate
 from deepeval.metrics.g_eval.utils import Rubric
-from deepeval.models import DeepEvalBaseLLM, OllamaModel
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
@@ -486,7 +486,6 @@ class TestDeepAcyclicGraph:
 
 
 class TestTopDownBuilder:
-
     def test_top_down_build_emits_no_deprecation_warning(self):
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -1219,11 +1218,8 @@ class TestGEvalLeaf:
     def test_child_metric_keeps_its_own_settings_and_the_dag_judge(self):
         """Only the judge is the DAG's; the rest belongs to the leaf."""
         dag_model = GEvalLeafModel("dag-judge")
-        # OllamaModel is a native model this repo builds without an API
-        # key, which is what makes 'using_native_model' differ between the
-        # leaf and the DAG's judge.
         leaf = build_geval_leaf(
-            OllamaModel(model="llama3"),
+            GEvalLeafModel("leaf-judge"),
             strict_mode=True,
             top_logprobs=5,
             async_mode=False,
@@ -1232,7 +1228,10 @@ class TestGEvalLeaf:
             _include_g_eval_suffix=False,
             evaluation_template=GEvalLeafTemplate,
         )
-        assert leaf.using_native_model is True
+        # A custom judge is never native, so flip the flag by hand to stand in for
+        # a leaf that carries a native one. Building a real native model here would
+        # drag in an optional provider package that CI does not install.
+        leaf.using_native_model = True
 
         copied = self._copy_leaf(leaf, dag_model)
 
@@ -1267,7 +1266,6 @@ class TestGEvalLeaf:
 
 @requires_openai
 class TestDAGMetric:
-
     @staticmethod
     def _build_dag() -> DeepAcyclicGraph:
         extract = TaskNode(
