@@ -1,3 +1,4 @@
+from numbers import Integral
 from typing import Union, List, Optional, Any
 import textwrap
 
@@ -425,16 +426,28 @@ class Scorer:
             return 0  # Return score as 0 in case of any exception
 
     def pass_at_k(self, n, c, k):
-        import numpy as np
+        from math import prod
 
         """
         :param n: total number of samples
         :param c: number of correct samples
         :param k: k in pass@$k$
         """
+        if any(
+            isinstance(value, bool) or not isinstance(value, Integral)
+            for value in (n, c, k)
+        ):
+            raise TypeError("n, c, and k must be integers")
+        if n < 1:
+            raise ValueError("n must be at least 1")
+        if c < 0 or c > n:
+            raise ValueError("c must be between 0 and n")
+        if k < 1:
+            raise ValueError("k must be at least 1")
+
         if n - c < k:
             return 1.0
-        return 1.0 - np.prod(1.0 - k / np.arange(n - c + 1, n + 1))
+        return 1.0 - prod(1.0 - k / i for i in range(n - c + 1, n + 1))
 
     def squad_score(
         self,
