@@ -225,6 +225,11 @@ export function checkArenaTestCaseParams(
   requiredParams: SingleTurnParams[],
   metric: BaseMetricCore,
 ): void {
+  if (!arenaTestCase.contestants || arenaTestCase.contestants.length < 2) {
+    throw new TypeError(
+      "An arena test case must have at least two contestants.",
+    );
+  }
   const cases = arenaTestCase.contestants.map((c) => c.testCase);
   const refInput = cases[0].input;
   if (cases.slice(1).some((c) => c.input !== refInput)) {

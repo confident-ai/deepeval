@@ -22,6 +22,11 @@ class ArenaTestCase:
     multimodal: bool = field(default=False)
 
     def __post_init__(self):
+        if not self.contestants or len(self.contestants) < 2:
+            raise ValueError(
+                "An arena test case must have at least two contestants."
+            )
+
         contestant_names = [contestant.name for contestant in self.contestants]
         if len(contestant_names) != len(set(contestant_names)):
             raise ValueError("All contestant names must be unique.")
