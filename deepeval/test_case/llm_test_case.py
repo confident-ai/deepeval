@@ -402,9 +402,7 @@ class LLMTestCase(BaseModel):
     output_token_count: Optional[int] = Field(
         default=None,
         serialization_alias="outputTokenCount",
-        validation_alias=AliasChoices(
-            "outputTokenCount", "output_token_count"
-        ),
+        validation_alias=AliasChoices("outputTokenCount", "output_token_count"),
     )
     completion_time: Optional[float] = Field(
         default=None,

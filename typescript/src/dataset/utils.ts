@@ -349,8 +349,7 @@ export function parseToolCalls(value: unknown): ToolCall[] | undefined {
       reasoning: t.reasoning as string | undefined,
       output: t.output,
       inputParameters: pickKey(t, "input_parameters") as
-        | Record<string, any>
-        | undefined,
+        Record<string, any> | undefined,
     });
   });
 }
@@ -410,8 +409,7 @@ export function parseTurns(value: unknown): Turn[] {
         (c) => new MCPPromptCall(c),
       ),
       additionalMetadata: (t.metadata ?? pickKey(t, "additional_metadata")) as
-        | Record<string, any>
-        | undefined,
+        Record<string, any> | undefined,
     });
   });
 }
@@ -475,11 +473,9 @@ export function goldenFromRecord(
   const comments = pickKey(record, keys.comments) as string | undefined;
   const name = pickKey(record, keys.name) as string | undefined;
   const additionalMetadata = pickKey(record, keys.additionalMetadata) as
-    | Record<string, any>
-    | undefined;
+    Record<string, any> | undefined;
   const customColumnKeyValues = pickKey(record, keys.customColumnKeyValues) as
-    | Record<string, string>
-    | undefined;
+    Record<string, string> | undefined;
 
   const scenario = pickKey(record, keys.scenario);
   if (scenario) {
@@ -489,8 +485,7 @@ export function goldenFromRecord(
       scenario: String(scenario),
       turns: turns ? parseTurns(turns) : [],
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
-        | string
-        | undefined,
+        string | undefined,
       persona,
       userDescription: persona
         ? undefined
@@ -520,9 +515,7 @@ export function goldenFromRecord(
       keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
     ),
     inputTokenCount: parseOptionalNumber(
-      keys.inputTokenCount
-        ? pickKey(record, keys.inputTokenCount)
-        : undefined,
+      keys.inputTokenCount ? pickKey(record, keys.inputTokenCount) : undefined,
       true,
     ),
     outputTokenCount: parseOptionalNumber(
