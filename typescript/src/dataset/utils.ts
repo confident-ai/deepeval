@@ -520,7 +520,9 @@ export function goldenFromRecord(
       keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
     ),
     inputTokenCount: parseOptionalNumber(
-      keys.inputTokenCount ? pickKey(record, keys.inputTokenCount) : undefined,
+      keys.inputTokenCount
+        ? pickKey(record, keys.inputTokenCount)
+        : undefined,
       true,
     ),
     outputTokenCount: parseOptionalNumber(
