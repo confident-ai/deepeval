@@ -336,8 +336,13 @@ class ToolCorrectnessMetric(BaseMetric):
 
     def _get_type_mismatches(self) -> List[str]:
         mismatches = []
-        for expected_tool in self.expected_tools:
-            for called_tool in self.tools_called:
+        for index, expected_tool in enumerate(self.expected_tools):
+            called_tools = (
+                self.tools_called[index : index + 1]
+                if self.should_exact_match
+                else self.tools_called
+            )
+            for called_tool in called_tools:
                 if (
                     expected_tool.name == called_tool.name
                     and expected_tool.type != called_tool.type
