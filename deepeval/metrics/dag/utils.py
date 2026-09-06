@@ -6,6 +6,7 @@ import inspect
 
 from deepeval.metrics.dag import (
     BaseNode,
+    CustomNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
     VerdictNode,
@@ -80,7 +81,7 @@ def is_valid_dag(
     stack.add(node)
     if not multiturn:
         if (
-            isinstance(node, TaskNode)
+            isinstance(node, (TaskNode, CustomNode))
             or isinstance(node, BinaryJudgementNode)
             or isinstance(node, NonBinaryJudgementNode)
         ):
@@ -114,11 +115,11 @@ def extract_required_params(
     for node in nodes:
         if not multiturn:
             if (
-                isinstance(node, TaskNode)
+                isinstance(node, (TaskNode, CustomNode))
                 or isinstance(node, BinaryJudgementNode)
                 or isinstance(node, NonBinaryJudgementNode)
             ):
-                if node.evaluation_params is not None:
+                if getattr(node, "evaluation_params", None) is not None:
                     required_params.update(node.evaluation_params)
                 extract_required_params(
                     node.children, multiturn, required_params
@@ -177,7 +178,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
         }
         if not original_dag.multiturn:
             if (
-                isinstance(node, TaskNode)
+                isinstance(node, (TaskNode, CustomNode))
                 or isinstance(node, BinaryJudgementNode)
                 or isinstance(node, NonBinaryJudgementNode)
             ):

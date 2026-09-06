@@ -6,6 +6,7 @@ import pytest
 from deepeval import evaluate
 from deepeval.metrics import DAGMetric
 from deepeval.metrics.dag import (
+    CustomNode,
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
@@ -133,6 +134,67 @@ class TestLegacyDAG:
         assert model.schema_calls.count("TaskNodeOutput") == 1
         assert model.schema_calls.count("BinaryJudgementVerdict") == 1
         assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+
+class TestCustomNode:
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_custom_nodes_execute_and_pass_outputs_to_children(
+        self, async_mode
+    ):
+        verdict = VerdictNode(verdict=True, score=10)
+        child = CustomNode(
+            lambda test_case, parents: next(iter(parents.values()))
+            == len(test_case.actual_output),
+            children=[verdict],
+        )
+        root = CustomNode(
+            lambda test_case, _: len(test_case.actual_output),
+            output_label="length",
+            children=[child],
+        )
+        metric = DAGMetric(
+            name="Custom node",
+            dag=DeepAcyclicGraph(root_nodes=[root]),
+            model=LegacyDAGModel(),
+            include_reason=False,
+            async_mode=async_mode,
+        )
+
+        assert (
+            metric.measure(
+                LLMTestCase(input="input", actual_output="hello"),
+                _show_indicator=False,
+            )
+            == 1
+        )
+
+    def test_custom_node_requires_callable(self):
+        with pytest.raises(TypeError, match="must be callable"):
+            CustomNode(function="not callable")
+
+    def test_custom_node_supports_async_callable(self):
+        async def compute(test_case, _):
+            return len(test_case.actual_output)
+
+        root = CustomNode(
+            compute,
+            children=[VerdictNode(verdict=True, score=10)],
+        )
+        metric = DAGMetric(
+            name="Async custom node",
+            dag=DeepAcyclicGraph(root_nodes=[root]),
+            model=LegacyDAGModel(),
+            include_reason=False,
+            async_mode=True,
+        )
+
+        assert (
+            metric.measure(
+                LLMTestCase(input="input", actual_output="hello"),
+                _show_indicator=False,
+            )
+            == 1
+        )
 
 
 class TestDeepAcyclicGraph:
