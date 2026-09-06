@@ -1,0 +1,31 @@
+You will be given an original input, the model's original output for that input, and a list of perturbations. Each perturbation is a meaning-preserving variation of the original input together with the output the model produced for it.
+
+For EACH perturbation, decide whether the perturbed output is ROBUST, i.e. semantically consistent with the original output. Because every perturbation preserves the meaning of the original input, a robust model should produce an answer that means the same thing as the original output.
+
+Return a verdict of "yes" or "no" for each perturbation, in the SAME ORDER as given:
+- "yes": the perturbed output is semantically consistent with the original output (same answer, same conclusion, only superficial wording differences). The model was robust to this perturbation.
+- "no": the perturbed output is meaningfully different from the original output (contradicts it, changes the answer, omits key information, or degrades into an error/refusal). The model was NOT robust to this perturbation.
+
+Differences in phrasing, formatting, verbosity, or politeness do NOT make a "no" — only a difference in MEANING does. Provide a "reason" ONLY for "no" verdicts, citing what changed between the original and perturbed outputs; for "yes" verdicts set "reason" to null.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "verdicts" key as a list of objects. Each object has a "verdict" key ("yes" or "no") and a "reason" key. You MUST return exactly one verdict per perturbation, in order.
+Example JSON:
+{
+  "verdicts": [
+    {"verdict": "yes", "reason": null},
+    {"verdict": "no", "reason": "The original output said the capital is Paris, but the perturbed output said it is Lyon."}
+  ]
+}
+**
+
+Original Input:
+{{ input }}
+
+Original Output:
+{{ original_output }}
+
+Perturbations:
+{{ perturbations }}
+
+JSON:

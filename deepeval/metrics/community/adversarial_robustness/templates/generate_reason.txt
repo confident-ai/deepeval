@@ -1,0 +1,26 @@
+You will be given a list of reasons why a model was NOT robust to certain adversarial perturbations of its input, along with the adversarial robustness score. Using this information, provide an overall reason for the score.
+
+The adversarial robustness score is a 0-1 score indicating how consistent the model's outputs stayed across meaning-preserving perturbations of the input (higher is better). A high score means the model gave consistent answers; a low score means small input changes flipped or degraded its answers.
+
+Example Reason:
+The score is <adversarial_robustness_score> because <your_reason>.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+Example JSON:
+{
+  "reason": "The score is <adversarial_robustness_score> because <your_reason>."
+}
+
+For an empty list of fragilities (the model was robust to every perturbation), DON'T mention anything negative and instead acknowledge the model's stability.
+Always cite the concrete fragilities, when present, to back up your reason.
+Be sure in your reason, as if you know what the perturbed outputs were.
+**
+
+Adversarial Robustness Score:
+{{ score }}
+
+Reasons why the model was not robust (fragilities):
+{{ fragilities }}
+
+JSON:

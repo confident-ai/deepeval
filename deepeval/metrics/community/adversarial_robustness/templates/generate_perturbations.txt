@@ -1,0 +1,28 @@
+You will be given an input that is sent to a language model. Generate a list of ADVERSARIAL PERTURBATIONS of this input.
+
+A perturbation is a small, MEANING-PRESERVING modification of the original input. The goal is to test whether a model gives consistent answers when the input is slightly altered. A perturbation MUST preserve the original intent and the answer it expects: a human who could answer the original input should give the same answer to the perturbation.
+
+Use ONLY the following perturbation types:
+{% for perturbation_type in perturbation_types %}- {{ perturbation_type }}{% if perturbation_type == "semantic" %}: rephrase the input by swapping words for synonyms or lightly restructuring the sentence, without changing the meaning.{% elif perturbation_type == "orthographic" %}: introduce a few realistic, human-like typos (character swaps, insertions, deletions, or keyboard-adjacent mistakes) while keeping the input readable.{% endif %}
+{% endfor %}
+Generate up to {{ num_perturbations }} perturbations, spread across the allowed perturbation types. Each perturbation MUST be different from the original input and from the other perturbations. Do NOT change the underlying question, task, or expected answer.
+
+Example Input:
+"What is the capital of France?"
+
+Example JSON:
+{
+  "perturbations": [
+    {"perturbed_input": "What's the capital city of France?", "perturbation_type": "semantic"},
+    {"perturbed_input": "What is the captial of Frnace?", "perturbation_type": "orthographic"}
+  ]
+}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "perturbations" key as a list of objects, each with a "perturbed_input" string and a "perturbation_type" that is one of {{ perturbation_types }}. No words or explanation is needed.
+**
+
+Input:
+{{ input }}
+
+JSON:
