@@ -65,6 +65,7 @@ describe("postExperiment hyperparameters", () => {
     const testCase = new ArenaTestCase({
       contestants: [
         contestant("Version 1", "Paris", { temperature: 0, stream: false }),
+        contestant("Version 2", "Paris is the capital."),
       ],
     });
 
@@ -84,7 +85,10 @@ describe("postExperiment hyperparameters", () => {
     (prompt as unknown as { _type: string })._type = "TEXT";
 
     const testCase = new ArenaTestCase({
-      contestants: [contestant("Version 1", "Paris", { prompt })],
+      contestants: [
+        contestant("Version 1", "Paris", { prompt }),
+        contestant("Version 2", "Paris is the capital."),
+      ],
     });
 
     await postExperiment([result(testCase, "Version 1")], "Friendly", "run");

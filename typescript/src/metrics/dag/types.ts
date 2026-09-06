@@ -4,10 +4,7 @@ import type { SingleTurnParams, MultiTurnParams } from "@/test-case";
 export type EvalParam = SingleTurnParams | MultiTurnParams;
 
 export type NodeKind =
-  | "task"
-  | "binaryJudgement"
-  | "nonBinaryJudgement"
-  | "verdict";
+  "task" | "binaryJudgement" | "nonBinaryJudgement" | "verdict";
 
 /** A metric that can host a DAG: the base metric plus the traversal log. */
 export type DagHostMetric = BaseMetricCore & { verboseSteps: string[] };
