@@ -291,6 +291,26 @@ class AgentLoopDetectionMetric(BaseMetric):
         traverse(trace_dict)
         return spans
 
+    @staticmethod
+    def _args_signature(input_val) -> str:
+        """Return a canonical, order-insensitive serialization of tool arguments.
+
+        Serializes dicts and lists using json.dumps(sort_keys=True) so that nested
+        dict key order is normalized while list ordering is preserved.
+        """
+        if isinstance(input_val, str):
+            try:
+                input_val = json.loads(input_val)
+            except Exception:
+                pass
+
+        if isinstance(input_val, (dict, list)):
+            try:
+                return json.dumps(input_val, sort_keys=True, default=str)
+            except Exception:
+                return str(input_val)
+        return str(input_val)
+
     def _score_tool_repetition(self, tool_spans: list) -> Tuple[float, str]:
         if not tool_spans:
             return 1.0, "No tool spans found."
@@ -298,22 +318,8 @@ class AgentLoopDetectionMetric(BaseMetric):
         tool_counts = {}
         for span in tool_spans:
             name = span.get("name", "")
-
             input_val = span.get("input", {})
-            if isinstance(input_val, str):
-                try:
-                    input_val = json.loads(input_val)
-                except Exception:
-                    pass
-
-            if isinstance(input_val, dict):
-                args_tuple = tuple(
-                    sorted((str(k), str(v)) for k, v in input_val.items())
-                )
-            else:
-                args_tuple = (str(input_val),)
-
-            call_hash = (name, args_tuple)
+            call_hash = (name, self._args_signature(input_val))
             tool_counts[call_hash] = tool_counts.get(call_hash, 0) + 1
 
         max_reps = max(tool_counts.values()) if tool_counts else 0
