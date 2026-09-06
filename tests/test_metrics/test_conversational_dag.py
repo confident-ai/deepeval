@@ -4,7 +4,7 @@ import warnings
 
 import pytest
 from deepeval import evaluate
-from deepeval.metrics import ConversationalDAGMetric
+from deepeval.metrics import ConversationalDAGMetric, ConversationalGEval
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
 )
@@ -14,7 +14,11 @@ from deepeval.metrics.conversational_dag import (
     ConversationalNonBinaryJudgementNode,
     ConversationalVerdictNode,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
+    ConversationalGEvalTemplate,
+)
+from deepeval.metrics.g_eval.utils import Rubric
+from deepeval.models import DeepEvalBaseLLM, OllamaModel
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
@@ -620,3 +624,178 @@ class TestConversationalExclusiveVerdictSharedNode:
         metric.measure(self._conversation(), _show_indicator=False)
         assert metric.score == 1.0
         assert model.schema_calls.count("NonBinaryJudgementVerdict") == 1
+
+
+CONVERSATIONAL_LEAF_RUBRIC = [
+    Rubric(score_range=(1, 1), expected_outcome="Rude."),
+    Rubric(score_range=(5, 5), expected_outcome="Excellent."),
+]
+
+
+class ConversationalGEvalLeafTemplate(ConversationalGEvalTemplate):
+    """Marker template, only here to be recognised on the copied leaf."""
+
+
+class ConversationalGEvalLeafModel(DeepEvalBaseLLM):
+    """Deterministic judge that scores on the rubric it was shown.
+
+    ``ConversationalGEval`` has no ``score_range``, always divides by 10,
+    and asks for a 0-to-10 score whether or not there is a rubric. The
+    rubric only adds or removes the Rubric block in the prompt, so it can
+    move the score only by moving the judge: this one answers 5 when it is
+    shown the 1-to-5 rubric and 10 when it is not.
+    """
+
+    def __init__(self, name: str = "conversational-geval-leaf-model"):
+        self.schema_calls = []
+        super().__init__(model=name)
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="mocked")
+        if schema.__name__ == "ReasonScore":
+            saw_rubric = "Excellent." in prompt
+            return schema(score=5 if saw_rubric else 10, reason="mocked")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        await asyncio.sleep(0)
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return self.name
+
+
+def build_conversational_geval_leaf(
+    model: DeepEvalBaseLLM, **kwargs
+) -> ConversationalGEval:
+    return ConversationalGEval(
+        name="Tone",
+        evaluation_params=[MultiTurnParams.CONTENT],
+        evaluation_steps=["Score the tone against the rubric."],
+        rubric=CONVERSATIONAL_LEAF_RUBRIC,
+        model=model,
+        **kwargs,
+    )
+
+
+class TestConversationalGEvalLeaf:
+    """A ConversationalGEval leaf must keep its own configuration."""
+
+    @staticmethod
+    def _conversation() -> ConversationalTestCase:
+        return ConversationalTestCase(
+            turns=[
+                Turn(role="user", content="Can you help me?"),
+                Turn(role="assistant", content="Of course, happy to help."),
+            ],
+        )
+
+    @staticmethod
+    def _build_metric(
+        leaf: ConversationalGEval, model, async_mode: bool
+    ) -> ConversationalDAGMetric:
+        judge = ConversationalBinaryJudgementNode(
+            criteria="Did the assistant reply at all?",
+            evaluation_params=[MultiTurnParams.CONTENT],
+        )
+        judge.add_verdict(True, then=leaf)
+        judge.add_verdict(False, score=0)
+        return ConversationalDAGMetric(
+            name="Tone",
+            dag=DeepAcyclicGraph(root_nodes=[judge]),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+
+    @classmethod
+    def _copy_leaf(
+        cls, leaf: ConversationalGEval, dag_model
+    ) -> ConversationalGEval:
+        metric = cls._build_metric(leaf, dag_model, async_mode=False)
+        verdict_node = next(
+            child
+            for child in metric.dag.root_nodes[0].children
+            if child.verdict is True
+        )
+        return verdict_node._build_child_metric(metric)
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_rubric_scores_the_same_inside_the_dag(self, async_mode):
+        """The rubric reaches the judge standalone, so it must in the DAG."""
+        standalone = build_conversational_geval_leaf(
+            ConversationalGEvalLeafModel(), async_mode=async_mode
+        )
+        standalone_score = standalone.measure(
+            self._conversation(), _show_indicator=False
+        )
+        assert standalone_score == 0.5
+
+        model = ConversationalGEvalLeafModel()
+        metric = self._build_metric(
+            build_conversational_geval_leaf(model, async_mode=async_mode),
+            model,
+            async_mode=async_mode,
+        )
+        dag_score = metric.measure(self._conversation(), _show_indicator=False)
+
+        assert dag_score == standalone_score
+
+    def test_child_metric_keeps_its_own_settings_and_the_dag_judge(self):
+        """Only the judge is the DAG's; the rest belongs to the leaf."""
+        dag_model = ConversationalGEvalLeafModel("dag-judge")
+        # OllamaModel is a native model this repo builds without an API
+        # key, which is what makes 'using_native_model' differ between the
+        # leaf and the DAG's judge.
+        leaf = build_conversational_geval_leaf(
+            OllamaModel(model="llama3"),
+            strict_mode=True,
+            top_logprobs=5,
+            async_mode=False,
+            flaky=True,
+            verbose_mode=True,
+            _include_g_eval_suffix=False,
+            evaluation_template=ConversationalGEvalLeafTemplate,
+        )
+        assert leaf.using_native_model is True
+
+        copied = self._copy_leaf(leaf, dag_model)
+
+        assert copied.rubric == CONVERSATIONAL_LEAF_RUBRIC
+        assert copied.strict_mode is True
+        assert copied.top_logprobs == 5
+        assert copied.async_mode is False
+        assert copied.flaky is True
+        assert copied._include_g_eval_suffix is False
+        assert copied.evaluation_template is ConversationalGEvalLeafTemplate
+        # The leaf asked to be verbose; the DAG silences it on purpose.
+        assert copied.verbose_mode is False
+        # The DAG's judge replaces the leaf's own model and 'using_native_model'
+        # is re-derived from it. Overriding an *explicit* model is a known
+        # defect that this fix deliberately leaves alone, not behaviour worth
+        # wanting; the assertions stay because they are the only thing pinning
+        # the injection a leaf without a model of its own depends on.
+        assert copied.model is dag_model
+        assert copied.evaluation_model == "dag-judge"
+        assert copied.using_native_model is False
+
+    def test_child_metric_keeps_a_threshold_strict_mode_did_not_set(self):
+        """'threshold' has to survive the copy on its own, not via strict_mode."""
+        leaf = build_conversational_geval_leaf(
+            ConversationalGEvalLeafModel("leaf-judge"), threshold=0.9
+        )
+
+        copied = self._copy_leaf(
+            leaf, ConversationalGEvalLeafModel("dag-judge")
+        )
+
+        assert copied.strict_mode is False
+        assert copied.threshold == 0.9
