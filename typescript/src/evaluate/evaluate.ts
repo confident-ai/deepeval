@@ -39,7 +39,11 @@ import {
   type Hyperparameters,
 } from "@/evaluate/hyperparameters";
 import { mapWithConcurrency, shouldUseCache } from "@/env-flags";
-import { Entrypoint, captureEvaluationRun, recordTestCase } from "@/telemetry";
+import {
+  Entrypoint,
+  captureEvaluationRun,
+  recordTestCase,
+} from "@/telemetry";
 import {
   cacheMetricData,
   ensureCacheFlushedOnExit,

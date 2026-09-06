@@ -34,10 +34,8 @@ export class ArenaTestCase {
   }
 
   private validate(): void {
-    if (!this.contestants || this.contestants.length < 2) {
-      throw new TypeError(
-        "An arena test case must have at least two contestants.",
-      );
+    if (!this.contestants || this.contestants.length === 0) {
+      throw new TypeError("'contestants' must not be empty");
     }
     const names = this.contestants.map((c) => c.name);
     if (new Set(names).size !== names.length) {
