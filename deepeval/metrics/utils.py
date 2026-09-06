@@ -1,4 +1,3 @@
-import inspect
 import json
 import re
 import sys
@@ -126,24 +125,7 @@ def check_at_least_one_metric_has_threshold(
 def copy_metrics(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
 ) -> List[Union[BaseMetric, BaseConversationalMetric]]:
-    copied_metrics = []
-    for metric in metrics:
-        metric_class = type(metric)
-        args = vars(metric)
-
-        superclasses = metric_class.__mro__
-
-        valid_params = []
-
-        for superclass in superclasses:
-            signature = inspect.signature(superclass.__init__)
-            superclass_params = signature.parameters.keys()
-            valid_params.extend(superclass_params)
-        valid_params = set(valid_params)
-        valid_args = {key: args[key] for key in valid_params if key in args}
-
-        copied_metrics.append(metric_class(**valid_args))
-    return copied_metrics
+    return [metric.clone() for metric in metrics]
 
 
 def format_turns(

@@ -6,6 +6,7 @@ from deepeval.metrics import (
     BaseConversationalMetric,
     BaseMetric,
     ExactMatchMetric,
+    ToolPermissionMetric,
 )
 from deepeval.metrics.utils import (
     check_at_least_one_metric_has_threshold,
@@ -27,6 +28,39 @@ class StubMetric(BaseMetric):
 
 class StubConversationalMetric(BaseConversationalMetric):
     threshold = 0.5
+
+    def measure(self, test_case, *args, **kwargs):
+        return 1
+
+    async def a_measure(self, test_case, *args, **kwargs):
+        return 1
+
+
+class NarrowToolPermissionMetric(ToolPermissionMetric):
+    def __init__(self, threshold=1.0):
+        super().__init__(denied_tools=["shell"], threshold=threshold)
+
+
+class KwargsExactMatchMetric(ExactMatchMetric):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+class NarrowConversationalMetric(BaseConversationalMetric):
+    def __init__(self, threshold=0.5):
+        self.threshold = threshold
+        self.custom_config = {"labels": ["conversation"]}
+
+    def measure(self, test_case, *args, **kwargs):
+        return 1
+
+    async def a_measure(self, test_case, *args, **kwargs):
+        return 1
+
+
+class FixedThresholdMetric(BaseMetric):
+    def __init__(self):
+        self.threshold = 0.8
 
     def measure(self, test_case, *args, **kwargs):
         return 1
@@ -69,6 +103,54 @@ def test_copy_metrics_preserves_flaky():
     copied_metric = copy_metrics([metric])[0]
 
     assert copied_metric.flaky is True
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        NarrowToolPermissionMetric(),
+        KwargsExactMatchMetric(threshold=0.8),
+        NarrowConversationalMetric(),
+        FixedThresholdMetric(),
+    ],
+)
+def test_copy_metrics_clones_custom_metrics_without_reconstructing(
+    metric,
+):
+    metric.custom_config = ["custom"]
+    metric.model = object()
+    metric.score = 0.25
+    metric.reason = "old reason"
+    metric.success = False
+    metric.error = "old error"
+    metric.verdicts = ["old verdict"]
+    metric.skipped = True
+    metric.evaluation_cost = 3.0
+    metric.input_tokens = 4
+    metric.output_tokens = 5
+    metric.verbose_logs = "old logs"
+
+    copied_metric = copy_metrics([metric])[0]
+
+    assert type(copied_metric) is type(metric)
+    assert copied_metric is not metric
+    assert copied_metric.custom_config == metric.custom_config
+    assert copied_metric.custom_config is not metric.custom_config
+    assert copied_metric.model is metric.model
+    assert copied_metric.threshold == metric.threshold
+    for field in (
+        "score",
+        "reason",
+        "success",
+        "error",
+        "verdicts",
+        "skipped",
+        "evaluation_cost",
+        "input_tokens",
+        "output_tokens",
+        "verbose_logs",
+    ):
+        assert getattr(copied_metric, field) is None
 
 
 @pytest.mark.parametrize("metric_class", [StubMetric, StubConversationalMetric])
