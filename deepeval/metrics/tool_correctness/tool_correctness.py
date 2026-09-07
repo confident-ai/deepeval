@@ -452,11 +452,18 @@ class ToolCorrectnessMetric(BaseMetric):
     # Non exact matching score
     def _calculate_non_exact_match_score(self) -> float:
         total_score = 0.0
-        matched_called_tools = set()
+        # Track matched calls by their position in ``tools_called`` rather than
+        # by value. ``ToolCall.__eq__``/``__hash__`` are value-based (name +
+        # input_parameters + output), so two *distinct* calls of the same tool
+        # compare equal. Deduplicating by value would then drop every call after
+        # the first, under-scoring any expected call of that tool from the second
+        # one on (e.g. 2 identical expected tools / 2 made -> 0.5 instead of 1.0).
+        matched_called_indices = set()
         for expected_tool in self.expected_tools:
             best_score = 0.0
-            for called_tool in self.tools_called:
-                if called_tool in matched_called_tools:
+            best_called_index = None
+            for called_index, called_tool in enumerate(self.tools_called):
+                if called_index in matched_called_indices:
                     continue
                 if (
                     expected_tool.name == called_tool.name
@@ -478,10 +485,10 @@ class ToolCorrectnessMetric(BaseMetric):
                         match_score = 0.0
                     if match_score > best_score:
                         best_score = match_score
-                        best_called_tool = called_tool
+                        best_called_index = called_index
             if best_score > 0:
                 total_score += best_score
-                matched_called_tools.add(best_called_tool)
+                matched_called_indices.add(best_called_index)
         return (
             1.0
             if not self.expected_tools and not self.tools_called
