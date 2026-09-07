@@ -138,6 +138,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=2.50 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=1.25 / 1e6,
         ),
         "gpt-4": make_model_data(
             supports_log_probs=True,
@@ -154,6 +155,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=2.50 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=1.25 / 1e6,
         ),
         "gpt-4o-2024-08-06": make_model_data(
             supports_log_probs=True,
@@ -162,6 +164,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=2.50 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=1.25 / 1e6,
         ),
         "gpt-4o-2024-11-20": make_model_data(
             supports_log_probs=True,
@@ -170,6 +173,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=2.50 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=1.25 / 1e6,
         ),
         "gpt-4o-mini": make_model_data(
             supports_log_probs=True,
@@ -178,6 +182,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=0.150 / 1e6,
             output_price=0.600 / 1e6,
+            cache_read_input_price=0.075 / 1e6,
         ),
         "gpt-4o-mini-2024-07-18": make_model_data(
             supports_log_probs=True,
@@ -186,6 +191,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=0.150 / 1e6,
             output_price=0.600 / 1e6,
+            cache_read_input_price=0.075 / 1e6,
         ),
         "gpt-4-32k": make_model_data(
             supports_log_probs=True,
@@ -210,6 +216,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=2.00 / 1e6,
             output_price=8.00 / 1e6,
+            cache_read_input_price=0.50 / 1e6,
         ),
         "gpt-4.1-mini": make_model_data(
             supports_log_probs=True,
@@ -218,6 +225,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=0.4 / 1e6,
             output_price=1.60 / 1e6,
+            cache_read_input_price=0.10 / 1e6,
         ),
         "gpt-4.1-nano": make_model_data(
             supports_log_probs=True,
@@ -226,6 +234,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=0.1 / 1e6,
             output_price=0.4 / 1e6,
+            cache_read_input_price=0.025 / 1e6,
         ),
         "gpt-4.5-preview": make_model_data(
             supports_log_probs=False,
@@ -252,6 +261,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
+            cache_read_input_price=7.50 / 1e6,
         ),
         "o1-preview": make_model_data(
             supports_log_probs=False,
@@ -260,6 +270,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
+            cache_read_input_price=7.50 / 1e6,
         ),
         "o1-2024-12-17": make_model_data(
             supports_log_probs=False,
@@ -269,6 +280,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
+            cache_read_input_price=7.50 / 1e6,
         ),
         "o1-preview-2024-09-12": make_model_data(
             supports_log_probs=False,
@@ -277,6 +289,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=15.00 / 1e6,
             output_price=60.00 / 1e6,
+            cache_read_input_price=7.50 / 1e6,
         ),
         "o1-mini": make_model_data(
             supports_log_probs=False,
@@ -304,6 +317,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.10 / 1e6,
             output_price=4.40 / 1e6,
+            cache_read_input_price=0.55 / 1e6,
         ),
         "o3-mini-2025-01-31": make_model_data(
             supports_log_probs=False,
@@ -313,6 +327,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.10 / 1e6,
             output_price=4.40 / 1e6,
+            cache_read_input_price=0.55 / 1e6,
         ),
         "o4-mini": make_model_data(
             supports_log_probs=False,
@@ -322,6 +337,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.10 / 1e6,
             output_price=4.40 / 1e6,
+            cache_read_input_price=0.275 / 1e6,
         ),
         "o4-mini-2025-04-16": make_model_data(
             supports_log_probs=False,
@@ -331,6 +347,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.10 / 1e6,
             output_price=4.40 / 1e6,
+            cache_read_input_price=0.275 / 1e6,
         ),
         "gpt-5": make_model_data(
             supports_log_probs=False,
@@ -340,6 +357,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=0.125 / 1e6,
         ),
         "gpt-5-2025-08-07": make_model_data(
             supports_log_probs=False,
@@ -349,6 +367,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=0.125 / 1e6,
         ),
         "gpt-5-mini": make_model_data(
             supports_log_probs=False,
@@ -358,6 +377,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=0.25 / 1e6,
             output_price=2.00 / 1e6,
+            cache_read_input_price=0.025 / 1e6,
         ),
         "gpt-5-mini-2025-08-07": make_model_data(
             supports_log_probs=False,
@@ -367,6 +387,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=0.25 / 1e6,
             output_price=2.00 / 1e6,
+            cache_read_input_price=0.025 / 1e6,
         ),
         "gpt-5-nano": make_model_data(
             supports_log_probs=False,
@@ -376,6 +397,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=0.05 / 1e6,
             output_price=0.40 / 1e6,
+            cache_read_input_price=0.005 / 1e6,
         ),
         "gpt-5-nano-2025-08-07": make_model_data(
             supports_log_probs=False,
@@ -385,6 +407,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=0.05 / 1e6,
             output_price=0.40 / 1e6,
+            cache_read_input_price=0.005 / 1e6,
         ),
         "gpt-5-chat-latest": make_model_data(
             supports_log_probs=False,
@@ -393,6 +416,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_json=False,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=0.125 / 1e6,
         ),
         "gpt-5.1": make_model_data(
             supports_log_probs=False,
@@ -402,6 +426,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=0.125 / 1e6,
         ),
         "gpt-5.2": make_model_data(
             supports_log_probs=False,
@@ -411,6 +436,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=1.75 / 1e6,
             output_price=14.00 / 1e6,
+            cache_read_input_price=0.175 / 1e6,
         ),
         "gpt-5.4": make_model_data(
             supports_log_probs=True,
@@ -421,6 +447,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=2.50 / 1e6,
             output_price=15.00 / 1e6,
+            cache_read_input_price=0.25 / 1e6,
         ),
         "gpt-5.4-2026-03-05": make_model_data(
             supports_log_probs=True,
@@ -431,6 +458,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=2.50 / 1e6,
             output_price=15.00 / 1e6,
+            cache_read_input_price=0.25 / 1e6,
         ),
         "gpt-5.4-mini": make_model_data(
             supports_log_probs=False,
@@ -440,6 +468,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=0.75 / 1e6,
             output_price=4.50 / 1e6,
+            cache_read_input_price=0.075 / 1e6,
         ),
         "gpt-5.5": make_model_data(
             supports_log_probs=False,
@@ -449,6 +478,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=5.00 / 1e6,
             output_price=30.00 / 1e6,
+            cache_read_input_price=0.50 / 1e6,
         ),
         "gpt-5.5-2026-04-23": make_model_data(
             supports_log_probs=False,
@@ -458,6 +488,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=5.00 / 1e6,
             output_price=30.00 / 1e6,
+            cache_read_input_price=0.50 / 1e6,
         ),
     }
 )
