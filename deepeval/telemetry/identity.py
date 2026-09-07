@@ -16,6 +16,7 @@ from typing import Dict, List, Optional, Set
 from deepeval.constants import HIDDEN_DIR
 from deepeval.telemetry.events import Feature
 from deepeval.telemetry.properties import TelemetryKey, UserStatus
+from deepeval.utils import is_read_only_env
 
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
 
@@ -109,7 +110,7 @@ def _load() -> Dict[str, str]:
 def _persist(data: Dict[str, str]) -> None:
     from deepeval.telemetry.client import telemetry_opt_out
 
-    if telemetry_opt_out():
+    if telemetry_opt_out() or is_read_only_env():
         return
     try:
         path = telemetry_path()

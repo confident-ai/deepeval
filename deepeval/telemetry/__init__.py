@@ -85,11 +85,12 @@ from deepeval.telemetry.properties import (
     UserStatus,
 )
 from deepeval.telemetry.runtime import detect_runtime
+from deepeval.utils import is_read_only_env
 
 
 def _migrate_project_files() -> None:
     """Move stray project files into the hidden dir. Predates this package."""
-    if telemetry_opt_out():
+    if telemetry_opt_out() or is_read_only_env():
         return
     try:
         if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
