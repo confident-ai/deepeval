@@ -17,6 +17,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_no_verdict,
 )
 from deepeval.metrics.non_advice.schema import (
     NonAdviceVerdict,
@@ -175,7 +176,7 @@ class NonAdviceMetric(BaseMetric):
 
         non_advice_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 non_advice_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -197,7 +198,7 @@ class NonAdviceMetric(BaseMetric):
 
         non_advice_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 non_advice_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -298,7 +299,7 @@ class NonAdviceMetric(BaseMetric):
 
         appropriate_advice_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if is_no_verdict(verdict.verdict):
                 appropriate_advice_count += 1
 
         score = appropriate_advice_count / number_of_verdicts
