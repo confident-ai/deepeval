@@ -131,7 +131,7 @@ class GEval(BaseMetric):
                     _additional_context=_additional_context,
                 )
                 settings = get_settings()
-                loop.run_until_complete(
+                return loop.run_until_complete(
                     asyncio.wait_for(
                         coro,
                         timeout=(

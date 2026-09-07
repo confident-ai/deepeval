@@ -86,7 +86,7 @@ class ArenaGEval(BaseArenaMetric):
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
                 loop = get_or_create_event_loop()
-                loop.run_until_complete(
+                return loop.run_until_complete(
                     self.a_measure(
                         test_case,
                         _show_indicator=False,
