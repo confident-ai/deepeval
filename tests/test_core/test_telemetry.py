@@ -1,5 +1,8 @@
 import json
+import os
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -121,6 +124,141 @@ class TestIdentity:
 
         assert backend.only()["feature.status"] == UserStatus.OLD.value
         assert "DEEPEVAL_EVALUATION_STATUS" not in store.read_text()
+
+
+class TestReadOnlyFilesystem:
+    @pytest.mark.parametrize("mode", ["READ_ONLY", "read-only", "ro"])
+    def test_identity_and_events_stay_in_memory(
+        self, backend, tmp_path, monkeypatch, mode
+    ):
+        monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", mode)
+
+        unique_id = telemetry.get_unique_id()
+        telemetry.set_logged_in_with("someone@example.com")
+        with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+            telemetry.record_test_case()
+
+        assert unique_id != identity_mod.OPTED_OUT_ID
+        assert telemetry.get_unique_id() == unique_id
+        assert telemetry.get_logged_in_with() == "someone@example.com"
+        assert telemetry.get_feature_status(telemetry.Feature.EVALUATION) is (
+            UserStatus.OLD
+        )
+        assert backend.only()["eval.test_case_count"] == 1
+        assert backend.events[0][0] == unique_id
+        assert not (tmp_path / "home").exists()
+
+    @pytest.mark.parametrize("location", ["home", "legacy_dir", "legacy_cwd"])
+    def test_existing_identity_is_read_without_rewriting_or_migrating_it(
+        self, backend, tmp_path, monkeypatch, location
+    ):
+        directories = {
+            "home": tmp_path / "home",
+            "legacy_dir": tmp_path / ".deepeval",
+            "legacy_cwd": tmp_path,
+        }
+        directory = directories[location]
+        directory.mkdir(parents=True, exist_ok=True)
+        store = directory / telemetry.TELEMETRY_DATA_FILE
+        original = (
+            f"{TelemetryKey.ID.value}=existing-id\n"
+            "DEEPEVAL_EVALUATION_STATUS=old\n"
+        )
+        store.write_text(original)
+        monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+
+        assert telemetry.get_unique_id() == "existing-id"
+        assert telemetry.get_identity().status is UserStatus.OLD
+        assert telemetry.get_feature_status(telemetry.Feature.EVALUATION) is (
+            UserStatus.OLD
+        )
+        telemetry.set_logged_in_with("someone@example.com")
+
+        assert telemetry.get_logged_in_with() == "someone@example.com"
+        assert store.read_text() == original
+        if location != "home":
+            assert not (tmp_path / "home").exists()
+
+    @pytest.mark.parametrize("read_only", [False, True])
+    @pytest.mark.parametrize("legacy_files", [False, True])
+    def test_project_file_migration_respects_filesystem_mode(
+        self, backend, tmp_path, monkeypatch, read_only, legacy_files
+    ):
+        project = tmp_path / "project"
+        project.mkdir()
+        monkeypatch.chdir(project)
+        # Keep this migration fixture separate from Settings' live key store.
+        monkeypatch.setattr(telemetry, "KEY_FILE", "legacy-key.json")
+        if read_only:
+            monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+        files = {
+            "legacy-key.json": '{"last_test_run_link": "saved-link"}',
+            ".deepeval-cache.json": '{"cached": true}',
+            ".temp_test_run_data.json": '{"test_cases": []}',
+        }
+        if legacy_files:
+            for name, content in files.items():
+                (project / name).write_text(content)
+
+        telemetry._migrate_project_files()
+
+        if read_only:
+            assert sorted(p.name for p in project.iterdir()) == (
+                sorted(files) if legacy_files else []
+            )
+            if legacy_files:
+                for name, content in files.items():
+                    assert (project / name).read_text() == content
+        else:
+            assert (project / ".deepeval").is_dir()
+            if legacy_files:
+                for name, content in files.items():
+                    assert (project / ".deepeval" / name).read_text() == content
+
+    @pytest.mark.parametrize("legacy_files", [False, True])
+    def test_fresh_import_does_not_write_files(self, tmp_path, legacy_files):
+        project = tmp_path / "project"
+        project.mkdir()
+        files = {
+            ".deepeval-cache.json": '{"cached": true}',
+            ".temp_test_run_data.json": '{"test_cases": []}',
+        }
+        if legacy_files:
+            for name, content in files.items():
+                (project / name).write_text(content)
+        env = os.environ.copy()
+        repo = str(Path(__file__).resolve().parents[2])
+        env.update(
+            DEEPEVAL_FILE_SYSTEM="READ_ONLY",
+            DEEPEVAL_TELEMETRY_OPT_OUT="0",
+            DEEPEVAL_DISABLE_DOTENV="1",
+            DEEPEVAL_HOME=str(tmp_path / "home"),
+            DEEPEVAL_CACHE_FOLDER=".deepeval",
+            PYTHONDONTWRITEBYTECODE="1",
+            PYTHONPATH=os.pathsep.join([repo, env.get("PYTHONPATH", "")]),
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "import deepeval.telemetry as telemetry; "
+                "telemetry.get_unique_id()",
+            ],
+            cwd=project,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+
+        assert result.returncode == 0, result.stderr
+        assert sorted(p.name for p in project.iterdir()) == (
+            sorted(files) if legacy_files else []
+        )
+        if legacy_files:
+            for name, content in files.items():
+                assert (project / name).read_text() == content
+        assert not (tmp_path / "home").exists()
 
 
 class TestEvaluationEvent:
