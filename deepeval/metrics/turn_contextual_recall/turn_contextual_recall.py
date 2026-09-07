@@ -403,7 +403,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -440,7 +440,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
