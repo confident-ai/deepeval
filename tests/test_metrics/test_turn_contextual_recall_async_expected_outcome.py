@@ -15,7 +15,7 @@ from unittest.mock import patch, AsyncMock
 
 from deepeval.metrics import TurnContextualRecallMetric
 from deepeval.test_case import ConversationalTestCase, Turn
-from tests.test_core.stubs import DummyModel
+from ..test_core.stubs import DummyModel
 
 
 def make_metric() -> TurnContextualRecallMetric:
