@@ -47,7 +47,7 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
         )
         empty_context_instruction = (
             "\nIf provided context contains no actual content or statements then: "
-            'give "no" as a "verdict",\nput context into "statement", and '
+            'give `false` as a "verdict",\nput context into "statement", and '
             '"No statements found in provided context." into "reason".'
         )
     return {
@@ -390,7 +390,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
 
         relevant_count = 0
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict:
                 relevant_count += 1
 
         score = relevant_count / number_of_verdicts
@@ -411,7 +411,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict:
                 relevant_statements.append(verdict.statement)
             else:
                 irrelevant_statements.append(
@@ -450,7 +450,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict:
                 relevant_statements.append(verdict.statement)
             else:
                 # Include the reason for irrelevance

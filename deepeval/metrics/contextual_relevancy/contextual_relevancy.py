@@ -46,7 +46,7 @@ def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
         )
         empty_context_instruction = (
             "\nIf provided context contains no actual content or statements then: "
-            'give "no" as a "verdict",\nput context into "statement", and '
+            'give `false` as a "verdict",\nput context into "statement", and '
             '"No statements found in provided context." into "reason".'
         )
     return {
@@ -204,10 +204,10 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
-                    irrelevant_statements.append(verdict.reason)
-                else:
+                if verdict.verdict:
                     relevant_statements.append(verdict.statement)
+                else:
+                    irrelevant_statements.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -234,10 +234,10 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
-                    irrelevant_statements.append(verdict.reason)
-                else:
+                if verdict.verdict:
                     relevant_statements.append(verdict.statement)
+                else:
+                    irrelevant_statements.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
             "generate_reason",
@@ -262,7 +262,7 @@ class ContextualRelevancyMetric(BaseMetric):
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
                 total_verdicts += 1
-                if verdict.verdict.lower() == "yes":
+                if verdict.verdict:
                     relevant_statements += 1
 
         if total_verdicts == 0:
