@@ -1147,3 +1147,113 @@ class TestDAGMetric:
     def test_dag_metric_via_evaluate(self):
         metric = DAGMetric(name="Refund Period", dag=self._build_dag())
         evaluate([self._test_case()], [metric])
+
+
+#############################################################
+# Multiple reachable scoring verdicts (issue #3025)         #
+#############################################################
+
+
+def build_two_scoring_branches_dag(deep_first: bool) -> DeepAcyclicGraph:
+    """Two independent scoring branches, both reachable.
+
+    ``deep`` is two judgements down and scores 10; ``shallow`` is one
+    judgement down and scores 5.
+    """
+    extract = TaskNode(
+        instructions="Extract the headings",
+        output_label="Headings",
+        evaluation_params=SHARED_NODE_PARAMS,
+    )
+    deep = BinaryJudgementNode(criteria="All three headings present?")
+    inner = BinaryJudgementNode(criteria="Headings in the right order?")
+    shallow = BinaryJudgementNode(criteria="Summary under 100 words?")
+
+    if deep_first:
+        extract.add_node(deep)
+        extract.add_node(shallow)
+    else:
+        extract.add_node(shallow)
+        extract.add_node(deep)
+
+    deep.add_verdict(True, then=inner)
+    deep.add_verdict(False, score=0)
+    inner.add_verdict(True, score=10)
+    inner.add_verdict(False, score=0)
+    shallow.add_verdict(True, score=5)
+    shallow.add_verdict(False, score=0)
+    return DeepAcyclicGraph(root_nodes=[extract])
+
+
+class ReasoningSharedNodeModel(SharedNodeModel):
+    """`SharedNodeModel` that can also produce a `MetricScoreReason`."""
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        if schema.__name__ == "MetricScoreReason":
+            self.schema_calls.append(schema.__name__)
+            return schema(reason="mocked reason")
+        return super().generate(prompt, schema=schema, **kwargs)
+
+
+class TestMultipleScoringVerdicts:
+    """When two scoring verdicts can both fire, the score used to be whichever
+    one was assigned last -- which depended on node declaration order and on
+    sync vs async, since ``asyncio.gather`` changes completion order.
+    """
+
+    @pytest.mark.parametrize("deep_first", [True, False])
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_score_is_the_same_in_every_configuration(
+        self, deep_first, async_mode
+    ):
+        metric = measure_shared_node(
+            build_two_scoring_branches_dag(deep_first),
+            SharedNodeModel(binary_verdict=True),
+            async_mode,
+        )
+        # The lower of the two reachable scores (5/10), not whichever branch
+        # happened to finish last.
+        assert metric.score == 0.5
+
+    def test_sync_and_async_agree(self):
+        scores = {
+            (deep_first, async_mode): measure_shared_node(
+                build_two_scoring_branches_dag(deep_first),
+                SharedNodeModel(binary_verdict=True),
+                async_mode,
+            ).score
+            for deep_first in (True, False)
+            for async_mode in (False, True)
+        }
+        assert len(set(scores.values())) == 1, scores
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_single_scoring_verdict_is_unchanged(self, async_mode):
+        """One reachable scoring verdict must still produce its own score."""
+        order = _order_node()
+        metric = measure_shared_node(
+            DeepAcyclicGraph(root_nodes=[order]),
+            SharedNodeModel(non_binary_verdict="Yes"),
+            async_mode,
+        )
+        assert metric.score == 1.0
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_reason_belongs_to_the_winning_verdict(self, async_mode):
+        """The reason must describe the score that was kept, and be generated
+        once rather than once per scoring branch."""
+        dag = build_two_scoring_branches_dag(deep_first=True)
+        model = ReasoningSharedNodeModel(binary_verdict=True)
+        metric = DAGMetric(
+            name="Shared Node",
+            dag=dag,
+            model=model,
+            include_reason=True,
+            async_mode=async_mode,
+        )
+        metric.measure(shared_node_test_case(), _show_indicator=False)
+
+        assert metric.score == 0.5
+        assert metric.reason is not None
+        assert model.schema_calls.count("MetricScoreReason") == 1
