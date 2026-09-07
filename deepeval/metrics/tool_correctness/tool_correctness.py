@@ -96,6 +96,11 @@ class ToolCorrectnessMetric(BaseMetric):
                         _in_component=_in_component,
                     )
                 )
+                # a_measure populates ``self.score``, so the default (async)
+                # path must return it too; otherwise ``measure()`` silently
+                # returns None and breaks callers that consume the return value
+                # (e.g. ``float(metric.measure(tc))`` in the prompt optimizer).
+                return self.score
             else:
                 self.tools_called: List[ToolCall] = test_case.tools_called
                 self.expected_tools: List[ToolCall] = test_case.expected_tools
