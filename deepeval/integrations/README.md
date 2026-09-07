@@ -2,7 +2,7 @@
 
 Contributor reference for the framework integrations. Each integration plugs deepeval's tracing / evaluation into a third-party framework using one of four mechanisms.
 
-> Note: `deepeval.openai`, `deepeval.anthropic`, and `deepeval.openai_agents` live at the top level of the `deepeval` package, not under this folder. They're listed here so the matrix is complete.
+> Note: `deepeval.openai`, `deepeval.anthropic`, `deepeval.openrouter`, and `deepeval.openai_agents` live at the top level of the `deepeval` package, not under this folder. They're listed here so the matrix is complete.
 
 ## Integration matrix
 
@@ -17,6 +17,7 @@ Capability columns:
 | ------------- | --------------------------------- | ------------------------------------------------- | :--: | :-------------------------: | :--------------: | :-----------------: | ------------------------------------ |
 | OpenAI        | Native client wrapper             | `from deepeval.openai import OpenAI`              | Yes  | Yes                         | Yes              | Yes                 | `deepeval/openai/`                   |
 | Anthropic     | Native client wrapper             | `from deepeval.anthropic import Anthropic`        | Yes  | Yes                         | Yes              | Yes                 | `deepeval/anthropic/`                |
+| OpenRouter    | Native client wrapper             | `from deepeval.openrouter import OpenRouter`      | Yes  | Yes                         | Yes              | Yes                 | `deepeval/openrouter/`               |
 | LangChain     | Callback handler                  | `CallbackHandler()`                               | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/langchain/`   |
 | LangGraph     | Callback handler (LangChain's)    | `CallbackHandler()`                               | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/langchain/`   |
 | LlamaIndex    | Event handler                     | `instrument_llama_index()`                        | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/llama_index/` |
@@ -37,6 +38,23 @@ Capability columns:
 - **Callback handler / event listener** — registers with the framework's own callback or event API (LangChain `BaseCallbackHandler`, LlamaIndex `BaseEventHandler`, CrewAI `BaseEventListener`, etc.). Spans are built directly via `trace_manager`. Covers all calls the framework dispatches through that surface — no need to swap clients.
 - **Trace processor** — for frameworks that already have their own tracing pipeline (OpenAI Agents SDK), we plug into it as a processor and translate events into deepeval spans.
 - **OpenTelemetry** — registers an OTel `SpanProcessor` against the global `TracerProvider`. The framework (or a community-maintained instrumentor like `openinference-instrumentation-google-adk`) emits OTel spans; deepeval translates them into Confident span attributes and ships them via OTLP.
+
+## Provider vs. integration on LLM spans
+
+Two distinct fields, and they are not interchangeable:
+
+- **`integration`** — the SDK deepeval instrumented (`Integration`).
+- **`provider`** — who actually served the request (`Provider`).
+
+They diverge whenever an SDK is pointed at a gateway. The OpenAI SDK is the standard way to reach OpenAI-compatible gateways, so the class being patched says nothing about the provider — only the client's base URL does. `deepeval.openai` therefore resolves the provider per call, in this order:
+
+1. An explicit `LlmSpanContext(provider=...)` set by the user.
+2. A recognized gateway host, from `_GATEWAYS_BY_HOST` in `deepeval/model_integrations/gateways.py` (`openrouter.ai` today).
+3. `Provider.OPEN_AI`.
+
+So a call to `anthropic/claude-sonnet-4.5` routed through OpenRouter records `integration="OpenAI"`, `provider="OpenRouter"`. Teach `deepeval.openai` about another gateway by adding a `Gateway` to that table; users can always label an unrecognized one themselves via `LlmSpanContext(provider=...)`.
+
+Gateway-specific response detail that has no first-class span field is merged into the span's `metadata` dict under the gateway's own `metadata_key` rather than assigned, so it never clobbers metadata the user set. OpenRouter writes `metadata["openrouter"]` with the generation id, cost, cached/reasoning token counts and (native SDK only) routing detail.
 
 ## Transport reference
 

@@ -10,6 +10,7 @@ class Integration(str, Enum):
     OPENAI_AGENTS = "OpenAI Agents"
     OPEN_AI = "OpenAI"
     ANTHROPIC = "Anthropic"
+    OPEN_ROUTER = "OpenRouter"
     PYDANTIC_AI = "PydanticAI"
     GOOGLE_ADK = "Google ADK"
     STRANDS = "Strands"

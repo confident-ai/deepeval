@@ -21,6 +21,7 @@ class LlmSpanContext:
     expected_tools: Optional[List[ToolCall]] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
+    provider: Optional[str] = None
 
 
 @dataclass

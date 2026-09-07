@@ -1,0 +1,58 @@
+{
+  "uuid": "97d60450-0412-41eb-9f3a-de6bedec6cc9",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "8fbd4ec9-ab88-4db5-b571-db885f13e93f",
+      "name": "OpenRouter LLM Call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "97d60450-0412-41eb-9f3a-de6bedec6cc9",
+      "startTime": "2026-09-06T18:10:01.870Z",
+      "endTime": "2026-09-06T18:10:02.665Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "What's the capital of France?"
+        }
+      ],
+      "output": "The capital of France is Paris.",
+      "metricCollection": "llm-span-evals",
+      "expectedOutput": "Paris",
+      "retrievalContext": [
+        "Paris is the capital of France."
+      ],
+      "context": [],
+      "expectedTools": [],
+      "model": "openai/gpt-4o-mini",
+      "inputTokenCount": 13,
+      "outputTokenCount": 7,
+      "promptAlias": "openrouter-metric-collection-test",
+      "promptCommitHash": "bab04ec",
+      "promptLabel": "production",
+      "promptVersion": "01.00.00",
+      "metadata": {
+        "openrouter": {
+          "provider": "OpenRouter",
+          "generationId": "gen-1788718201-k7l3sloaXDghBmlByQbb",
+          "cost": 0,
+          "costDetails": {
+            "upstreamInferenceCompletionsCost": 0.0000042,
+            "upstreamInferenceCost": 0.00000615,
+            "upstreamInferencePromptCost": 0.00000195
+          },
+          "isByok": true
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-09-06T18:10:01.869Z",
+  "endTime": "2026-09-06T18:10:02.665Z",
+  "environment": "testing",
+  "input": "What's the capital of France?",
+  "output": "The capital of France is Paris.",
+  "status": "SUCCESS"
+}

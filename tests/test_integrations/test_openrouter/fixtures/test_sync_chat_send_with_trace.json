@@ -1,0 +1,55 @@
+{
+  "uuid": "71acd475-3ae8-41c6-bbed-66b29b691909",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "043f39b4-6b28-41b1-8b7b-7e5c28e62858",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2026-08-19T04:20:14.060Z",
+      "endTime": "2026-08-19T04:20:15.520Z",
+      "metadata": {
+        "openrouter": {
+          "generation_id": "gen-1787113214-reee7YD1jcBqytsD9uQ2",
+          "cost": 0.0,
+          "cost_details": {
+            "upstream_inference_completions_cost": 1.8e-05,
+            "upstream_inference_prompt_cost": 1.95e-06,
+            "upstream_inference_cost": 1.995e-05
+          },
+          "is_byok": true
+        }
+      },
+      "input": "Hello, how are you?",
+      "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+      "integration": "OpenRouter",
+      "model": "openai/gpt-4o-mini",
+      "provider": "OpenRouter",
+      "inputTokenCount": 13.0,
+      "outputTokenCount": 30.0,
+      "metricCollection": "test_collection_1",
+      "promptAlias": "asd",
+      "promptVersion": "00.00.01",
+      "promptCommitHash": "5acd530"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-08-19T04:20:14.060Z",
+  "endTime": "2026-08-19T04:20:15.520Z",
+  "name": "test_name_1",
+  "metadata": {
+    "test_metadata_1": "test_value_1"
+  },
+  "tags": [
+    "test_tag_1"
+  ],
+  "environment": "development",
+  "threadId": "test_thread_id_1",
+  "userId": "test_user_id_1",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+  "status": "SUCCESS"
+}

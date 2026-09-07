@@ -13,17 +13,29 @@ import {
   updateLlmSpan,
 } from "@/tracing";
 import { InputParameters, OutputParameters } from "@/openai/types";
+import {
+  detectProviderFromBaseUrl,
+  extractOpenRouterMetadata,
+  mergeOpenRouterMetadata,
+  OPENROUTER_PROVIDER,
+} from "@/openrouter/metadata";
 import { ToolCall } from "@/test-case";
 
 type AnyFunction = (...args: any[]) => any;
 
 const _ORIGINAL_METHODS: Record<string, AnyFunction> = {};
 let _OPENAI_PATCHED = false;
+let _DETECTED_PROVIDER: string | undefined;
 
 export function patchOpenAI(client: OpenAI) {
   if (_OPENAI_PATCHED) {
     return;
   }
+
+  // The OpenAI SDK is the standard way to reach OpenAI-compatible gateways, so
+  // the methods being patched say nothing about who actually serves the
+  // request — only this client's base URL does.
+  _DETECTED_PROVIDER = detectProviderFromBaseUrl(client.baseURL);
 
   // Patch chat.completions.create
   const completions = client.chat.completions;
@@ -128,14 +140,22 @@ function patchAsyncOpenAIClientMethod(
           inputParameters,
         );
 
-        if (llmContext && typeof updateAllAttributes === "function") {
-          updateAllAttributes(
-            inputParameters,
-            outputParameters,
-            llmContext.expectedTools ?? [],
-            llmContext.expectedOutput ?? "",
-            llmContext.context ?? [],
-            llmContext.retrievalContext ?? [],
+        updateAllAttributes(
+          inputParameters,
+          outputParameters,
+          llmContext?.expectedTools ?? [],
+          llmContext?.expectedOutput ?? "",
+          llmContext?.context ?? [],
+          llmContext?.retrievalContext ?? [],
+        );
+
+        // Which response fields are worth reading is decided by the detected host.
+        if (_DETECTED_PROVIDER === OPENROUTER_PROVIDER) {
+          mergeOpenRouterMetadata(
+            extractOpenRouterMetadata(
+              response,
+              llmContext?.provider ?? OPENROUTER_PROVIDER,
+            ),
           );
         }
 
@@ -163,22 +183,17 @@ function updateAllAttributes(
     retrievalContext: retrievalContext,
   });
 
-  const llmContext = getLlmContext();
-  if (llmContext) {
-    updateLlmSpan({
-      inputTokenCount: outputParameters.promptTokens,
-      outputTokenCount: outputParameters.completionTokens,
-      prompt: llmContext.prompt,
-    });
+  updateLlmSpan({
+    inputTokenCount: outputParameters.promptTokens,
+    outputTokenCount: outputParameters.completionTokens,
+    prompt: getLlmContext()?.prompt,
+  });
 
-    if (outputParameters.toolsCalled) {
-      createChildToolSpans(outputParameters);
-    }
-
-    updateInputAndOutputOfCurrentTrace(inputParameters, outputParameters);
-  } else {
-    console.log(`[updateAllAttributes]: getLlmContext() returned undefined`);
+  if (outputParameters.toolsCalled) {
+    createChildToolSpans(outputParameters);
   }
+
+  updateInputAndOutputOfCurrentTrace(inputParameters, outputParameters);
 }
 
 function updateInputAndOutputOfCurrentTrace(
@@ -228,5 +243,6 @@ export function unpatchOpenAI(client: OpenAI) {
     delete _ORIGINAL_METHODS[key];
   }
 
+  _DETECTED_PROVIDER = undefined;
   _OPENAI_PATCHED = false;
 }

@@ -1,0 +1,50 @@
+{
+  "uuid": "79bcec35-9cc2-40e0-8e08-cdb756df28e8",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "9d8eed7d-7a58-4a52-99ee-21f398453c38",
+      "name": "OpenRouter LLM Call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "79bcec35-9cc2-40e0-8e08-cdb756df28e8",
+      "startTime": "2026-09-06T18:09:57.433Z",
+      "endTime": "2026-09-06T18:09:59.241Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "output": "Hello!",
+      "retrievalContext": [],
+      "context": [],
+      "expectedTools": [],
+      "model": "openai/gpt-4o-mini",
+      "inputTokenCount": 14,
+      "outputTokenCount": 2,
+      "metadata": {
+        "openrouter": {
+          "provider": "OpenRouter",
+          "generationId": "gen-1788718197-gCIASPez6vF1efBVxLUQ",
+          "cost": 0,
+          "costDetails": {
+            "upstreamInferenceCompletionsCost": 0.0000012,
+            "upstreamInferenceCost": 0.0000033,
+            "upstreamInferencePromptCost": 0.0000021
+          },
+          "isByok": true
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-09-06T18:09:57.434Z",
+  "endTime": "2026-09-06T18:09:59.241Z",
+  "environment": "testing",
+  "input": "Say hello in one short sentence.",
+  "output": "Hello!",
+  "status": "SUCCESS"
+}

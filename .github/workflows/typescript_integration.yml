@@ -113,3 +113,19 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_TRACE_VERBOSE: 0
         run: npx jest -c jest.mastra.config.cjs
+
+  openrouter:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - name: Run OpenRouter tests
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CONFIDENT_TRACE_VERBOSE: 0
+        run: npx jest -c jest.openrouter.config.cjs

@@ -1,0 +1,189 @@
+{
+  "uuid": "8d49042f-b938-460c-aa96-91cf5acf12ba",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "83125051-9e23-475e-960e-affa3ae59790",
+      "name": "openrouter-tool-agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "8d49042f-b938-460c-aa96-91cf5acf12ba",
+      "startTime": "2026-09-06T18:09:59.244Z",
+      "endTime": "2026-09-06T18:10:01.019Z",
+      "input": {
+        "args": [
+          "What's the weather in Paris? Use the tool."
+        ]
+      },
+      "output": {
+        "choices": [
+          {
+            "finishReason": "stop",
+            "index": 0,
+            "logprobs": null,
+            "message": {
+              "content": "The weather in Paris is currently 18°C and partly cloudy.",
+              "reasoning": null,
+              "refusal": null,
+              "role": "assistant"
+            }
+          }
+        ],
+        "created": 1788718200,
+        "id": "gen-1788718200-Aqd7hUNdPQoVtzmEAJ2G",
+        "model": "openai/gpt-4o-mini",
+        "object": "chat.completion",
+        "serviceTier": null,
+        "systemFingerprint": "fp_4ce87c02f6",
+        "usage": {
+          "completionTokens": 14,
+          "completionTokensDetails": {
+            "audioTokens": 0,
+            "reasoningTokens": 0
+          },
+          "cost": 0,
+          "costDetails": {
+            "upstreamInferenceCompletionsCost": 0.0000084,
+            "upstreamInferenceCost": 0.00002295,
+            "upstreamInferencePromptCost": 0.00001455
+          },
+          "isByok": true,
+          "promptTokens": 97,
+          "promptTokensDetails": {
+            "audioTokens": 0,
+            "cacheWriteTokens": 0,
+            "cachedTokens": 0,
+            "videoTokens": 0
+          },
+          "totalTokens": 111
+        }
+      },
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c5df2d5f-9331-4159-9ebd-ea988d6dd0a5",
+      "name": "OpenRouter LLM Call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "8d49042f-b938-460c-aa96-91cf5acf12ba",
+      "parentUuid": "83125051-9e23-475e-960e-affa3ae59790",
+      "startTime": "2026-09-06T18:09:59.244Z",
+      "endTime": "2026-09-06T18:10:00.082Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "What's the weather in Paris? Use the tool."
+        }
+      ],
+      "output": [
+        {
+          "name": "get_weather",
+          "description": "Look up the current weather for a city.",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "retrievalContext": [],
+      "context": [],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "description": "Look up the current weather for a city.",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "expectedTools": [],
+      "model": "openai/gpt-4o-mini",
+      "inputTokenCount": 56,
+      "outputTokenCount": 14,
+      "metadata": {
+        "openrouter": {
+          "provider": "OpenRouter",
+          "generationId": "gen-1788718199-PE6e60S98wzaYMLdl1k2",
+          "cost": 0,
+          "costDetails": {
+            "upstreamInferenceCompletionsCost": 0.0000084,
+            "upstreamInferenceCost": 0.0000168,
+            "upstreamInferencePromptCost": 0.0000084
+          },
+          "isByok": true
+        }
+      }
+    },
+    {
+      "uuid": "865fdd9f-9831-45c7-9793-8b196c95c0bd",
+      "name": "OpenRouter LLM Call",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "8d49042f-b938-460c-aa96-91cf5acf12ba",
+      "parentUuid": "83125051-9e23-475e-960e-affa3ae59790",
+      "startTime": "2026-09-06T18:10:00.083Z",
+      "endTime": "2026-09-06T18:10:01.019Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "What's the weather in Paris? Use the tool."
+        },
+        {
+          "id": "call_WMIxCELcDRF0NvwIVhtfdNno",
+          "callId": "call_WMIxCELcDRF0NvwIVhtfdNno",
+          "name": "get_weather",
+          "type": "function",
+          "arguments": {
+            "city": "Paris"
+          }
+        },
+        {
+          "callId": "call_WMIxCELcDRF0NvwIVhtfdNno",
+          "type": "tool",
+          "output": "{\"city\":\"Paris\",\"temperature\":18,\"unit\":\"C\",\"condition\":\"partly cloudy\"}"
+        }
+      ],
+      "output": "The weather in Paris is currently 18°C and partly cloudy.",
+      "retrievalContext": [],
+      "context": [],
+      "expectedTools": [],
+      "model": "openai/gpt-4o-mini",
+      "inputTokenCount": 97,
+      "outputTokenCount": 14,
+      "metadata": {
+        "openrouter": {
+          "provider": "OpenRouter",
+          "generationId": "gen-1788718200-Aqd7hUNdPQoVtzmEAJ2G",
+          "cost": 0,
+          "costDetails": {
+            "upstreamInferenceCompletionsCost": 0.0000084,
+            "upstreamInferenceCost": 0.00002295,
+            "upstreamInferencePromptCost": 0.00001455
+          },
+          "isByok": true
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-09-06T18:09:59.244Z",
+  "endTime": "2026-09-06T18:10:01.019Z",
+  "environment": "testing",
+  "input": "What's the weather in Paris? Use the tool.",
+  "output": [
+    {
+      "name": "get_weather",
+      "description": "Look up the current weather for a city.",
+      "type": "FUNCTION",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}

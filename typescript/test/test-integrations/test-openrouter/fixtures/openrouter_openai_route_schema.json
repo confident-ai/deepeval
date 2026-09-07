@@ -1,0 +1,51 @@
+{
+  "uuid": "3a27d112-6f5f-42ba-8f35-b2fb673273c9",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "dbaffac7-fb63-4977-b6b1-a2d8bd757920",
+      "name": "create",
+      "status": "SUCCESS",
+      "type": "llm",
+      "traceUuid": "3a27d112-6f5f-42ba-8f35-b2fb673273c9",
+      "startTime": "2026-09-06T18:10:02.668Z",
+      "endTime": "2026-09-06T18:10:03.456Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Say hello in one short sentence."
+        }
+      ],
+      "output": "Hello!",
+      "retrievalContext": [],
+      "context": [],
+      "expectedTools": [],
+      "model": "openai/gpt-4o-mini",
+      "inputTokenCount": 14,
+      "outputTokenCount": 2,
+      "metadata": {
+        "openrouter": {
+          "provider": "OpenRouter",
+          "generationId": "gen-1788718202-ALHULCfK2qOEYaigKYK5",
+          "upstreamProvider": "OpenAI",
+          "cost": 0,
+          "costDetails": {
+            "upstream_inference_cost": 0.0000033,
+            "upstream_inference_prompt_cost": 0.0000021,
+            "upstream_inference_completions_cost": 0.0000012
+          },
+          "isByok": true
+        }
+      }
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2026-09-06T18:10:02.668Z",
+  "endTime": "2026-09-06T18:10:03.456Z",
+  "environment": "testing",
+  "input": "Say hello in one short sentence.",
+  "output": "Hello!",
+  "status": "SUCCESS"
+}

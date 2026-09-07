@@ -8,6 +8,7 @@ from deepeval.anthropic.extractors import (
 )
 from deepeval.model_integrations.utils import _update_all_attributes
 from deepeval.tracing import observe
+from deepeval.tracing.integrations import Integration, Provider
 from deepeval.tracing.trace_context import current_llm_context
 
 _ORIGINAL_METHODS = {}
@@ -100,6 +101,8 @@ def _patch_sync_anthropic_client_method(original_method: Callable):
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                Integration.ANTHROPIC.value,
+                llm_context.provider or Provider.ANTHROPIC.value,
             )
             return messages_api_response
 
@@ -134,6 +137,8 @@ def _patch_async_anthropic_client_method(original_method: Callable):
                 llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
+                Integration.ANTHROPIC.value,
+                llm_context.provider or Provider.ANTHROPIC.value,
             )
             return messages_api_response
 
