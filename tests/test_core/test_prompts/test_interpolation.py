@@ -452,7 +452,7 @@ class TestInterpolateDollarBrackets:
 
 
 class TestInterpolateJinja:
-    """Tests for Jinja2 format - uses Jinja2 library directly"""
+    """Tests for Jinja2 format - uses a sandboxed Jinja2 environment"""
 
     def test_simple_variable(self):
         text = "Hello {{ name }}"
@@ -492,6 +492,48 @@ class TestInterpolateJinja:
         text = '{{ name }} data: {"key": "value"}'
         result = interpolate_jinja(text, name="User")
         assert result == 'User data: {"key": "value"}'
+
+
+class TestInterpolateJinjaSandbox:
+    """Jinja templates can come from untrusted sources (cloud/shared/file prompts),
+    so interpolate_jinja must run in a sandbox that blocks Server-Side Template
+    Injection while still supporting normal templating."""
+
+    # Payloads that reach Python internals -> would be RCE without a sandbox.
+    SSTI_PAYLOADS = [
+        "{{ ''.__class__.__mro__[1].__subclasses__() }}",
+        "{{ ''.__class__.__mro__ }}",
+        "{{ cycler.__init__.__globals__ }}",
+        "{{ self.__init__.__globals__ }}",
+        "{{ ''.__class__.__base__.__subclasses__() }}",
+    ]
+
+    def test_ssti_payloads_are_blocked(self):
+        from jinja2.exceptions import SecurityError
+
+        for payload in self.SSTI_PAYLOADS:
+            with pytest.raises(SecurityError):
+                interpolate_jinja(payload)
+
+    def test_sandbox_does_not_leak_class_internals(self):
+        # Even if rendering were to succeed, it must not expose subclass gadgets.
+        from jinja2.exceptions import SecurityError
+
+        with pytest.raises(SecurityError):
+            interpolate_jinja("{{ ().__class__.__bases__[0].__subclasses__() }}")
+
+    def test_legitimate_templating_still_works(self):
+        # The sandbox must not break normal, benign templating.
+        assert interpolate_jinja("Hello {{ name }}", name="Alice") == "Hello Alice"
+        assert interpolate_jinja("{{ n|upper }}", n="bob") == "BOB"
+        assert (
+            interpolate_jinja(
+                "{% for x in items %}{{ x }}{% if not loop.last %},{% endif %}{% endfor %}",
+                items=["a", "b", "c"],
+            )
+            == "a,b,c"
+        )
+        assert interpolate_jinja("{{ val }}", val=42) == "42"
 
 
 class TestEdgeCasesAcrossAllFormats:
