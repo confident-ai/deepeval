@@ -151,35 +151,22 @@ class LocalModel(DeepEvalBaseLLM):
                 # For local servers, use data URIs for both remote and local images
                 # Most local servers don't support fetching external URLs
                 if element.url and not element.local:
-                    import requests
                     import base64
+                    from deepeval.models.media_fetch import fetch_remote_media
 
                     settings = get_settings()
-                    try:
-                        response = requests.get(
-                            element.url,
-                            timeout=(
-                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                            ),
-                        )
-                        response.raise_for_status()
-
-                        # Get mime type from response
-                        mime_type = response.headers.get(
-                            "content-type", element.mimeType or "image/jpeg"
-                        )
-
-                        # Encode to base64
-                        b64_data = base64.b64encode(response.content).decode(
-                            "utf-8"
-                        )
-                        data_uri = f"data:{mime_type};base64,{b64_data}"
-
-                    except Exception as e:
-                        raise ValueError(
-                            f"Failed to fetch remote image {element.url}: {e}"
-                        )
+                    # SSRF-safe fetch (blocks internal/link-local targets and
+                    # pins the connection to the validated IP; see media_fetch).
+                    content, content_type = fetch_remote_media(
+                        element.url,
+                        connect_timeout=settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                        read_timeout=settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                    )
+                    mime_type = (
+                        content_type or element.mimeType or "image/jpeg"
+                    )
+                    b64_data = base64.b64encode(content).decode("utf-8")
+                    data_uri = f"data:{mime_type};base64,{b64_data}"
                 else:
                     element.ensure_images_loaded()
                     mime_type = element.mimeType or "image/jpeg"
