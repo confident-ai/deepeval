@@ -108,8 +108,7 @@ def is_dependency_installed() -> bool:
     if not dependency_installed:
         raise ImportError(
             "Dependencies are not installed. Please install it with "
-            "`pip install pydantic-ai opentelemetry-sdk "
-            "opentelemetry-exporter-otlp-proto-http`."
+            '`pip install pydantic-ai "deepeval[otel]"`.'
         )
     return True
 

@@ -99,7 +99,7 @@ jobs:
           poetry run pip install -U "pydantic-ai-slim[openai]"
 
       - name: Install Project
-        run: poetry install --no-interaction --only main
+        run: poetry install --no-interaction --only main --extras otel
 
       - name: Run CrewAI Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
@@ -136,7 +136,7 @@ jobs:
       - name: Install Dependencies (Pydantic AI)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with integrations --extras otel
           # Pin to pydantic-ai-slim[openai] to avoid the meta-package's
           # mistral extra (mistralai is currently quarantined on PyPI;
           # see comment in pyproject.toml integrations group).
@@ -177,7 +177,7 @@ jobs:
       - name: Install Dependencies (LlamaIndex)
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry install --with integrations
+          poetry install --with integrations --extras otel
           poetry run pip install -U llama-index
 
       - name: Run LlamaIndex Tests
@@ -295,7 +295,7 @@ jobs:
           poetry run pip install -U bedrock-agentcore strands-agents strands-agents-tools
 
       - name: Install Project
-        run: poetry install --no-interaction --only main
+        run: poetry install --no-interaction --only main --extras otel
 
       - name: Run AgentCore Tests
         if: ${{ env.OPENAI_API_KEY != '' }}
@@ -338,7 +338,7 @@ jobs:
           poetry run pip install -U strands-agents
 
       - name: Install Project
-        run: poetry install --no-interaction --only main
+        run: poetry install --no-interaction --only main --extras otel
 
       - name: Run Strands Tests
         if: ${{ env.OPENAI_API_KEY != '' }}

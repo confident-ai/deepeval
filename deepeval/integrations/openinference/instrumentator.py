@@ -97,7 +97,7 @@ def is_dependency_installed() -> bool:
     if not dependency_installed:
         raise ImportError(
             "Dependencies are not installed. Please install them with "
-            "`pip install opentelemetry-sdk opentelemetry-exporter-otlp-proto-http`."
+            '`pip install "deepeval[otel]"`.'
         )
     return True
 
