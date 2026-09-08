@@ -2,6 +2,7 @@
   "title": "Available Benchmarks",
   "pages": [
     "benchmarks-mmlu",
+    "benchmarks-mmlu-pro",
     "benchmarks-hellaswag",
     "benchmarks-big-bench-hard",
     "benchmarks-drop",
