@@ -81,7 +81,6 @@ def update_current_span(
     if not current_span:
         return
     if test_case:
-
         current_span.input = test_case.input
         current_span.output = test_case.actual_output
         current_span.expected_output = test_case.expected_output
@@ -702,3 +701,15 @@ def apply_pending_to_span(span: BaseSpan, payload: Dict[str, Any]) -> None:
         except Exception:
             # Pydantic validation errors / locked fields → skip silently.
             continue
+
+
+def prune_otel_context():
+    """Drop ended OTEL placeholders left in a different task/thread's context."""
+    current = current_span_context.get()
+    while current is not None and current.end_time is not None:
+        current = current._otel_parent
+    if current is not current_span_context.get():
+        current_span_context.set(current)
+    trace = current_trace_context.get()
+    if trace is not None and trace.end_time is not None:
+        current_trace_context.set(None)

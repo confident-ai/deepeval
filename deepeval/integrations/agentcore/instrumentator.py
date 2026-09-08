@@ -18,21 +18,16 @@ from __future__ import annotations
 import contextvars
 import json
 import logging
-from time import perf_counter
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from deepeval.config.settings import get_settings
-from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.tracing.context import (
-    apply_pending_to_span,
     current_span_context,
     current_trace_context,
-    pop_pending_for,
 )
 from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.otel.utils import (
     serialize_placeholder_to_otel_attrs,
-    set_span_attribute_post_end,
     stash_pending_metrics,
     to_hex_string,
 )
@@ -45,12 +40,9 @@ from deepeval.tracing.utils import (
 )
 from deepeval.utils import serialize_to_json
 from deepeval.tracing.types import (
-    AgentSpan,
     BaseSpan,
-    LlmSpan,
     SpanType,
     Trace,
-    TraceSpanStatus,
     ToolCall,
 )
 
@@ -471,8 +463,10 @@ class AgentCoreInstrumentationSettings:
 # ``@observe``, ``next_*_span`` consumption, and framework-attr extraction.
 
 
-class AgentCoreSpanInterceptor(SpanProcessor):
+from deepeval.tracing.otel.live_context import LiveSpanContext
 
+
+class AgentCoreSpanInterceptor(LiveSpanContext, SpanProcessor):
     def __init__(self, settings_instance: AgentCoreInstrumentationSettings):
         self.settings = settings_instance
         # Per-OTel-span state keyed by span_id (unique within a process).
@@ -526,8 +520,8 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 exc,
             )
 
-        placeholder = self._placeholders.pop(sid, None)
-        token = self._tokens.pop(sid, None)
+        placeholder = self._placeholders.pop(self._span_key(span), None)
+        token = self._tokens.pop(self._span_key(span), None)
         if token is not None:
             try:
                 current_span_context.reset(token)
@@ -547,7 +541,11 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                     exc,
                 )
             try:
-                if placeholder.metrics and trace_manager.is_evaluating:
+                if (
+                    placeholder.metrics
+                    and trace_manager.is_evaluating
+                    and not placeholder._otel_bridge
+                ):
                     stash_pending_metrics(
                         to_hex_string(sid, 16), placeholder.metrics
                     )
@@ -572,89 +570,6 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         # Must run AFTER trace serialization so the implicit placeholder's
         # mutations land on this root's attrs.
         self._maybe_pop_implicit_trace_context(span)
-
-    def _push_span_context(self, span, span_type: Optional[str]) -> None:
-        """Push a typed placeholder span onto the contextvar.
-
-        Consumes ``next_*_span(...)`` defaults BEFORE the push so user code
-        sees the staged values.
-        """
-        try:
-            sid = span.get_span_context().span_id
-            tid = span.get_span_context().trace_id
-            start_time = (
-                peb.epoch_nanos_to_perf_seconds(span.start_time)
-                if span.start_time
-                else perf_counter()
-            )
-            kwargs: Dict[str, Any] = dict(
-                uuid=to_hex_string(sid, 16),
-                trace_uuid=to_hex_string(tid, 32),
-                status=TraceSpanStatus.IN_PROGRESS,
-                start_time=start_time,
-            )
-            if span_type == SpanType.AGENT.value:
-                # Reuse the on_start-stamped name to skip a duplicate lookup.
-                attrs = span.attributes or {}
-                placeholder = AgentSpan(
-                    name=(
-                        attrs.get(ConfidentAttr.SPAN_NAME)
-                        or _get_agent_name(span)
-                        or "agent"
-                    ),
-                    **kwargs,
-                )
-            elif span_type == SpanType.LLM.value:
-                placeholder = LlmSpan(**kwargs)
-            else:
-                placeholder = BaseSpan(**kwargs)
-
-            pending = pop_pending_for(span_type)
-            if pending:
-                apply_pending_to_span(placeholder, pending)
-
-            token = current_span_context.set(placeholder)
-            self._tokens[sid] = token
-            self._placeholders[sid] = placeholder
-        except Exception as exc:
-            logger.debug(
-                "Failed to push current_span_context placeholder: %s", exc
-            )
-
-    def _maybe_push_implicit_trace_context(self, span) -> None:
-        """Push an implicit ``Trace`` for OTel roots without enclosing context.
-
-        Tagged ``_is_otel_implicit=True`` so ``ContextAwareSpanProcessor``
-        still routes to OTLP. ``_is_otel_implicit`` is a Pydantic
-        ``PrivateAttr``, so it must be set after construction (it's not a
-        constructor kwarg).
-        """
-        if current_trace_context.get() is not None:
-            return
-        if getattr(span, "parent", None) is not None:
-            return
-        try:
-            sid = span.get_span_context().span_id
-            tid = span.get_span_context().trace_id
-            start_time = (
-                peb.epoch_nanos_to_perf_seconds(span.start_time)
-                if span.start_time
-                else perf_counter()
-            )
-            implicit = Trace(
-                uuid=to_hex_string(tid, 32),
-                root_spans=[],
-                status=TraceSpanStatus.IN_PROGRESS,
-                start_time=start_time,
-            )
-            implicit._is_otel_implicit = True
-            token = current_trace_context.set(implicit)
-            self._trace_tokens[sid] = token
-            self._trace_placeholders[sid] = implicit
-        except Exception as exc:
-            logger.debug(
-                "Failed to push implicit current_trace_context: %s", exc
-            )
 
     def _maybe_bridge_otel_root_to_deepeval_parent(self, span) -> None:
         """Re-parent OTel roots onto an enclosing ``@observe`` deepeval span.
@@ -682,36 +597,6 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                 parent_uuid,
                 exc,
             )
-
-    def _maybe_pop_implicit_trace_context(self, span) -> None:
-        try:
-            sid = span.get_span_context().span_id
-        except Exception:
-            return
-        token = self._trace_tokens.pop(sid, None)
-        self._trace_placeholders.pop(sid, None)
-        if token is None:
-            return
-        try:
-            current_trace_context.reset(token)
-        except Exception as exc:
-            logger.debug(
-                "Failed to reset implicit current_trace_context for "
-                "span_id=%s: %s",
-                sid,
-                exc,
-            )
-
-    @staticmethod
-    def _set_attr_post_end(span, key: str, value: Any) -> None:
-        """Write to a span that may have ended.
-
-        ``Span.set_attribute`` is a no-op after ``Span.end()`` and ``on_end``
-        receives a ``ReadableSpan`` that has no such method, so the write goes
-        through the span's ``_attributes`` mapping — see
-        ``set_span_attribute_post_end``.
-        """
-        set_span_attribute_post_end(span, key, value)
 
     def _serialize_trace_context_to_otel_attrs(self, span) -> None:
         """Resolve trace attrs FRESH and write to ``confident.trace.*``.
@@ -829,14 +714,16 @@ class AgentCoreSpanInterceptor(SpanProcessor):
         output_tokens = attrs.get("gen_ai.usage.output_tokens") or attrs.get(
             "gen_ai.usage.completion_tokens"
         )
-        if input_tokens is not None and not attrs.get(
-            ConfidentAttr.LLM_INPUT_TOKEN_COUNT
+        if (
+            input_tokens is not None
+            and attrs.get(ConfidentAttr.LLM_INPUT_TOKEN_COUNT) is None
         ):
             self._set_attr_post_end(
                 span, ConfidentAttr.LLM_INPUT_TOKEN_COUNT, int(input_tokens)
             )
-        if output_tokens is not None and not attrs.get(
-            ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT
+        if (
+            output_tokens is not None
+            and attrs.get(ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT) is None
         ):
             self._set_attr_post_end(
                 span, ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT, int(output_tokens)

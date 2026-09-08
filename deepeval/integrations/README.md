@@ -2,6 +2,16 @@
 
 Contributor reference for the framework integrations. Each integration plugs deepeval's tracing / evaluation into a third-party framework using one of four mechanisms.
 
+On `migration/tracing`, all tracing integrations share the optional confident-trace
+bridge beneath their existing entry points. Native OTEL adapters use synchronous
+span capture directly; callback and client integrations use the private framework
+attachment when the unpublished source is available, and retain their existing
+implementation otherwise. Evaluation ownership is fixed at span start, including
+`evals_iterator`. See [bridge development notes](../tracing/otel/README.md) for
+architecture, source-checkout setup, compatibility details, and offline tests.
+The matrix below describes the public enablement mechanisms.
+
+
 > Note: `deepeval.openai`, `deepeval.anthropic`, and `deepeval.openai_agents` live at the top level of the `deepeval` package, not under this folder. They're listed here so the matrix is complete.
 
 ## Integration matrix
