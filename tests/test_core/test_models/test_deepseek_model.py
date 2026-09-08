@@ -2,7 +2,7 @@
 
 import deepeval.models.llms.deepseek_model as deepseek_mod
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from pydantic import BaseModel, SecretStr
 
@@ -227,6 +227,57 @@ def test_deepseek_calculate_cost_with_zero_tokens():
     model.model_data.output_price = 0.002
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+##############################
+# temperature forwarding      #
+##############################
+
+
+def _mock_completion(text: str) -> Mock:
+    """Build a completion object shaped the way DeepSeekModel expects."""
+    completion = Mock()
+    choice = Mock()
+    choice.message.content = text
+    completion.choices = [choice]
+    completion.usage.prompt_tokens = 10
+    completion.usage.completion_tokens = 5
+    return completion
+
+
+@patch("deepeval.models.llms.deepseek_model.OpenAI")
+def test_generate_forwards_temperature_without_schema(mock_openai):
+    """generate() must send the configured temperature on the no-schema path."""
+    mock_client = Mock()
+    mock_client.chat.completions.create.return_value = _mock_completion("hi")
+    mock_openai.return_value = mock_client
+
+    model = DeepSeekModel(
+        api_key="test-key", model="deepseek-chat", temperature=0.3
+    )
+    model.generate("hello there")
+
+    _, kwargs = mock_client.chat.completions.create.call_args
+    assert kwargs["temperature"] == 0.3
+
+
+async def test_a_generate_forwards_temperature_without_schema(monkeypatch):
+    """a_generate() must send the configured temperature on the no-schema path."""
+    mock_client = Mock()
+    mock_client.chat.completions.create = AsyncMock(
+        return_value=_mock_completion("hi")
+    )
+    monkeypatch.setattr(
+        deepseek_mod, "AsyncOpenAI", lambda *a, **k: mock_client, raising=True
+    )
+
+    model = DeepSeekModel(
+        api_key="test-key", model="deepseek-chat", temperature=0.3
+    )
+    await model.a_generate("hello there")
+
+    _, kwargs = mock_client.chat.completions.create.call_args
+    assert kwargs["temperature"] == 0.3
 
 
 if __name__ == "__main__":
