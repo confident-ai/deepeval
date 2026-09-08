@@ -42,7 +42,7 @@ from deepeval.telemetry import (
 )
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.evaluate.utils import create_arena_metric_data
-from deepeval.evaluate.types import PostExperimentRequest
+from deepeval.evaluate.types import PostExperimentRequest, ArenaResult
 
 
 def compare(
@@ -53,18 +53,18 @@ def compare(
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     error_config: Optional[ErrorConfig] = ErrorConfig(),
-) -> Dict[str, int]:
+) -> ArenaResult:
+
+    # Preserve contestant order of first appearance for stable .contestants.
+    seen_contestants: List[str] = []
+    for test_case in test_cases:
+        for contestant in test_case.contestants:
+            if contestant.name not in seen_contestants:
+                seen_contestants.append(contestant.name)
 
     # Prepare test run map
-    unique_contestant_names = set(
-        [
-            contestant.name
-            for test_case in test_cases
-            for contestant in test_case.contestants
-        ]
-    )
     test_run_map: Dict[str, TestRun] = {}
-    for contestant_name in unique_contestant_names:
+    for contestant_name in seen_contestants:
         test_run = TestRun(
             identifier=contestant_name,
             test_passed=0,
@@ -111,7 +111,7 @@ def compare(
     end_time = time.time()
     run_duration = end_time - start_time
 
-    # Aggregate winners
+    # Aggregate winners — preserve order of .winners (matches test_case order).
     winner_counts = Counter()
     for winner in winners:
         if winner:
@@ -124,7 +124,14 @@ def compare(
         winner_counts=winner_counts,
         run_duration=run_duration,
     )
-    return dict(winner_counts)
+
+    return ArenaResult(
+        winners=winners,
+        _counts=winner_counts,
+        contestants=seen_contestants,
+        n_cases=len(test_cases),
+        run_duration=run_duration,
+    )
 
 
 async def a_execute_arena_test_cases(
@@ -137,14 +144,18 @@ async def a_execute_arena_test_cases(
     skip_on_missing_params: bool,
     max_concurrent: int,
     test_run_map: Dict[str, TestRun],
-) -> List[str]:
+) -> List[Optional[str]]:
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
 
-    winners = []
+    # NOTE: we no longer share a `winners` list across tasks. Instead, each
+    # `evaluate_single_test_case` returns its winner, and `asyncio.gather`
+    # assembles results in the *task-creation order* (which matches the
+    # input `test_cases` order). This fixes the historical race where
+    # winners were appended in task-completion order (see #1034).
     semaphore = asyncio.Semaphore(max_concurrent)
 
     async def evaluate_single_test_case(
@@ -152,7 +163,7 @@ async def a_execute_arena_test_cases(
         index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
-    ):
+    ) -> Optional[str]:
         pbar_test_case_id = add_pbar(
             progress,
             f"    🧐 Picking a winner (#{index + 1})",
@@ -184,9 +195,6 @@ async def a_execute_arena_test_cases(
         end_time = time.perf_counter()
         run_duration = end_time - start_time
 
-        if winner:
-            winners.append(winner)
-
         update_pbar(progress, pbar_id)
         update_test_run_map(
             test_case=test_case,
@@ -196,6 +204,7 @@ async def a_execute_arena_test_cases(
             winner=winner,
             run_duration=run_duration,
         )
+        return winner
 
     # Create tasks for all test cases
     if show_indicator:
@@ -224,9 +233,23 @@ async def a_execute_arena_test_cases(
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
 
-            await asyncio.gather(*tasks)
+            # Gather preserves task-creation order even if tasks finish
+            # out of order. This is the key invariant: the returned list
+            # lines up index-by-index with the input `test_cases`.
+            results = await asyncio.gather(*tasks)
+            return list(results)
 
-    return winners
+    # No progress-bar path (still ordered).
+    tasks = []
+    for i, test_case in enumerate(test_cases):
+        task = execute_with_semaphore(
+            func=evaluate_single_test_case,
+            test_case=test_case,
+            index=i,
+        )
+        tasks.append(asyncio.create_task(task))
+        await asyncio.sleep(throttle_value)
+    return list(await asyncio.gather(*tasks))
 
 
 def execute_arena_test_cases(
@@ -237,11 +260,14 @@ def execute_arena_test_cases(
     show_indicator: bool,
     verbose_mode: Optional[bool] = None,
     test_run_map: Optional[Dict[str, TestRun]] = None,
-) -> List[str]:
+) -> List[Optional[str]]:
     """
     Non-async version of comparing arena test cases.
+
+    Returns one entry per input test case (in input order). An entry is
+    ``None`` when that case was a tie / no winner could be decided.
     """
-    winners = []
+    winners: List[Optional[str]] = []
 
     # TODO: doesn't work
     def evaluate_test_cases(progress=None, pbar_id=None):
@@ -277,8 +303,7 @@ def execute_arena_test_cases(
             end_time = time.perf_counter()
             run_duration = end_time - start_time
 
-            if winner:
-                winners.append(winner)
+            winners.append(winner)
 
             update_pbar(progress, pbar_id)
             update_test_run_map(
