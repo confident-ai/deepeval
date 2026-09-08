@@ -79,7 +79,9 @@ def resolve_test_run_path(target_dir: Path) -> Path:
         n += 1
 
 
-def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
+def write_rolling_test_run(
+    test_run: TestRun, print_results: bool = True
+) -> Optional[Path]:
     """Overwrite `.deepeval/.latest_run_full.json` with `test_run`.
 
     Returns `None` (silently) on read-only env or write failure so a failed
@@ -96,10 +98,11 @@ def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
         _dump(test_run, path)
         return path
     except Exception as e:
-        print(
-            f"Warning: failed to write rolling snapshot to {path}: {e}",
-            file=sys.stderr,
-        )
+        if print_results:
+            print(
+                f"Warning: failed to write rolling snapshot to {path}: {e}",
+                file=sys.stderr,
+            )
         return None
 
 

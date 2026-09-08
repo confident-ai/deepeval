@@ -30,6 +30,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.utils import (
     format_error_text,
     get_gather_timeout,
+    should_print_evaluation_output,
 )
 from deepeval.metrics import (
     BaseMetric,
@@ -59,16 +60,14 @@ from deepeval.utils import add_pbar, update_pbar
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
-
-logger = logging.getLogger(__name__)
-
-
 from deepeval.evaluate.execute._common import (
     _skip_metrics_for_error,
     _trace_error,
     filter_duplicate_results,
     log_prompt,
 )
+
+logger = logging.getLogger(__name__)
 
 
 async def _a_execute_agentic_test_case(
@@ -213,6 +212,7 @@ async def _a_execute_agentic_test_case(
             if (
                 logger.isEnabledFor(logging.DEBUG)
                 and get_settings().DEEPEVAL_VERBOSE_MODE
+                and should_print_evaluation_output()
             ):
                 logger.debug(
                     "Skipping DFS: empty trace or no root spans (trace=%s)",

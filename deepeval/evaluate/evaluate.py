@@ -1,4 +1,6 @@
 import warnings
+from contextlib import nullcontext
+from dataclasses import replace
 from typing import (
     TYPE_CHECKING,
     List,
@@ -41,6 +43,7 @@ from deepeval.utils import (
     should_skip_on_missing_params,
     should_use_cache,
     should_verbose_print,
+    suppress_evaluation_output,
     get_identifier,
 )
 from deepeval.telemetry import Entrypoint, capture_evaluation_run
@@ -206,6 +209,18 @@ def evaluate(
     )
     check_valid_test_cases_type(test_cases)
 
+    if display_config is None:
+        display_config = DisplayConfig()
+
+    # ``print_results=False`` is the master switch for user-facing output.
+    # Keep the caller's config immutable while disabling progress indicators
+    # in the derived config passed through the execution stack.
+    if not display_config.print_results:
+        display_config = replace(
+            display_config,
+            show_indicator=False,
+        )
+
     if mcp_servers is not None:
         mcp_servers = normalize_mcp_servers(mcp_servers)
         validate_mcp_servers(mcp_servers)
@@ -228,30 +243,35 @@ def evaluate(
                     )
                 )
 
-        with capture_evaluation_run(Entrypoint.EVALUATE):
-            if async_config.run_async:
-                loop = get_or_create_event_loop()
-                test_results = loop.run_until_complete(
-                    a_execute_test_cases(
+        evaluation_output_context = (
+            suppress_evaluation_output()
+            if not display_config.print_results
+            else nullcontext()
+        )
+        with evaluation_output_context:
+            with capture_evaluation_run(Entrypoint.EVALUATE):
+                if async_config.run_async:
+                    loop = get_or_create_event_loop()
+                    test_results = loop.run_until_complete(
+                        a_execute_test_cases(
+                            test_cases,
+                            metrics,
+                            identifier=identifier,
+                            error_config=error_config,
+                            display_config=display_config,
+                            cache_config=cache_config,
+                            async_config=async_config,
+                        )
+                    )
+                else:
+                    test_results = execute_test_cases(
                         test_cases,
                         metrics,
                         identifier=identifier,
                         error_config=error_config,
                         display_config=display_config,
                         cache_config=cache_config,
-                        async_config=async_config,
                     )
-                )
-            else:
-                test_results = execute_test_cases(
-                    test_cases,
-                    metrics,
-                    identifier=identifier,
-                    error_config=error_config,
-                    display_config=display_config,
-                    cache_config=cache_config,
-                )
-
         end_time = time.perf_counter()
         run_duration = end_time - start_time
         if display_config.print_results:
@@ -279,7 +299,12 @@ def evaluate(
                         f"Invalid file type: {display_config.file_type}"
                     )
 
-        test_run = global_test_run_manager.get_test_run()
+        with (
+            suppress_evaluation_output()
+            if not display_config.print_results
+            else nullcontext()
+        ):
+            test_run = global_test_run_manager.get_test_run()
         if hyperparameters is not None or test_run.hyperparameters is None:
             test_run.hyperparameters = process_hyperparameters(hyperparameters)
             test_run.prompts = process_prompts(hyperparameters)
@@ -312,9 +337,15 @@ def evaluate(
                 test_run_id=None,
             )
 
-        res = global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=False
-        )
+        with (
+            suppress_evaluation_output()
+            if not display_config.print_results
+            else nullcontext()
+        ):
+            res = global_test_run_manager.wrap_up_test_run(
+                run_duration,
+                display_table=False,
+            )
         if isinstance(res, tuple):
             confident_link, test_run_id = res
         else:
@@ -358,9 +389,10 @@ def evaluate(
             body=body,
         )
         if link:
-            console = Console()
-            console.print(
-                "✅ Evaluation successfully pushed to Confident AI! View at "
-                f"[link={link}]{link}[/link]"
-            )
+            if display_config.print_results:
+                console = Console()
+                console.print(
+                    "✅ Evaluation successfully pushed to Confident AI! View at "
+                    f"[link={link}]{link}[/link]"
+                )
             open_browser(link)

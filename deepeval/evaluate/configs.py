@@ -19,7 +19,9 @@ class AsyncConfig:
 
 @dataclass
 class DisplayConfig:
+    # Progress indicators are shown only while print_results is enabled.
     show_indicator: bool = True
+    # Master switch for evaluate()/evals_iterator() terminal output.
     print_results: bool = True
     verbose_mode: Optional[bool] = None
     display_option: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL

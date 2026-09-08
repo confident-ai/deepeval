@@ -14,6 +14,7 @@ from deepeval.utils import (
     delete_file_if_exists,
     is_read_only_env,
     serialize,
+    should_print_evaluation_output,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
@@ -193,19 +194,21 @@ class TestRunCacheManager:
                         file
                     )
             except Exception as e:
-                print(
-                    f"In save_cached_test_run, temp={to_temp}, Error saving test run to disk {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"In save_cached_test_run, temp={to_temp}, Error saving test run to disk {e}",
+                        file=sys.stderr,
+                    )
         else:
             try:
                 with portalocker.Lock(self.cache_file_name, mode="w") as file:
                     self.cached_test_run = self.cached_test_run.save(file)
             except Exception as e:
-                print(
-                    f"In save_cached_test_run, temp={to_temp}, Error saving test run to disk {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"In save_cached_test_run, temp={to_temp}, Error saving test run to disk {e}",
+                        file=sys.stderr,
+                    )
 
     def create_cached_test_run(self, temp: bool = False):
         if self.disable_write_cache or portalocker is None:
@@ -242,10 +245,11 @@ class TestRunCacheManager:
                     except Exception:
                         should_create_cached_test_run = True
             except portalocker.exceptions.LockException as e:
-                print(
-                    f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
+                        file=sys.stderr,
+                    )
 
             if should_create_cached_test_run:
                 self.create_cached_test_run(temp=from_temp)
@@ -272,10 +276,11 @@ class TestRunCacheManager:
                         should_create_cached_test_run = True
 
             except portalocker.exceptions.LockException as e:
-                print(
-                    f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
-                    file=sys.stderr,
-                )
+                if should_print_evaluation_output():
+                    print(
+                        f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
+                        file=sys.stderr,
+                    )
 
             if should_create_cached_test_run:
                 self.create_cached_test_run(temp=from_temp)
@@ -297,10 +302,11 @@ class TestRunCacheManager:
             with portalocker.Lock(self.cache_file_name, mode="w") as file:
                 self.temp_cached_test_run = self.temp_cached_test_run.save(file)
         except Exception as e:
-            print(
-                f"In wrap_up_cached_test_run, Error saving test run to disk, {e}",
-                file=sys.stderr,
-            )
+            if should_print_evaluation_output():
+                print(
+                    f"In wrap_up_cached_test_run, Error saving test run to disk, {e}",
+                    file=sys.stderr,
+                )
         finally:
             delete_file_if_exists(self.temp_cache_file_name)
 

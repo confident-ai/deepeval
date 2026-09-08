@@ -2,17 +2,19 @@
 
 Gated so it never fires unexpectedly. The prompt only appears when ALL of:
 
-    1. ``DisplayConfig.inspect_after_run`` is True (the default; set False
+    1. ``DisplayConfig.print_results`` is True. A quiet evaluation must not
+       print or block on an interactive prompt.
+    2. ``DisplayConfig.inspect_after_run`` is True (the default; set False
        to disable for a single call).
-    2. The ``DEEPEVAL_NO_INSPECT_PROMPT`` env var is not truthy
+    3. The ``DEEPEVAL_NO_INSPECT_PROMPT`` env var is not truthy
        (escape hatch for CI / non-interactive scripts that own their own
        stdin and shouldn't be hijacked).
-    3. ``sys.stdout.isatty()`` — skip in pipes, file redirects, and most
+    4. ``sys.stdout.isatty()`` — skip in pipes, file redirects, and most
        CI runners. A no-TTY ``input()`` would block forever or raise
        EOFError when the parent process exits.
-    4. ``TestRunManager.last_saved_path`` points to an existing file
+    5. ``TestRunManager.last_saved_path`` points to an existing file
        (defends against read-only envs and hidden-dir write failures).
-    5. The run has at least one ``LLMApiTestCase.trace`` set.
+    6. The run has at least one ``LLMApiTestCase.trace`` set.
        ``deepeval inspect`` is a trace-tree TUI; runs that only produced
        metric scores would render an empty viewer (and ``load_test_run``
        raises ``NoTracesError`` in that case anyway).
@@ -107,6 +109,8 @@ def _should_prompt(
     test_run_manager: "TestRunManager",
     display_config: "DisplayConfig",
 ) -> bool:
+    if not getattr(display_config, "print_results", True):
+        return False
     if not getattr(display_config, "inspect_after_run", True):
         return False
     if os.environ.get(_DISABLE_ENV_VAR, "").strip().lower() in _TRUTHY:

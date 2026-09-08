@@ -2,11 +2,15 @@ import os
 import portalocker
 
 import deepeval.test_run.test_run as tr_mod
+import deepeval.test_run.cache as cache_mod
+import deepeval.utils as utils_mod
 
 from types import SimpleNamespace
 
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run.test_run import TestRunManager, LLMApiTestCase
+from deepeval.test_run.cache import CachedTestRun
+from deepeval.utils import suppress_evaluation_output
 from tests.test_core.helpers import _make_fake_portalocker
 from tests.test_core.stubs import RecordingPortalockerLock
 
@@ -150,3 +154,141 @@ def test_save_test_run_with_save_under_key_flushes_and_syncs(
         fsync_calls
     ), "save_test_run(..., save_under_key=...) should call os.fsync(file.fileno())"
     assert fsync_calls[-1] == f.fileno()
+
+
+def test_post_test_run_quiet_mode_uploads_without_output(monkeypatch, capsys):
+    class FakeApi:
+        def send_request(self, **kwargs):
+            return {"id": "run-123"}, "https://example.test/runs/run-123"
+
+    manager = TestRunManager()
+    test_run = tr_mod.TestRun(
+        testCases=[
+            LLMApiTestCase(
+                name="quiet-upload",
+                input="input",
+                actualOutput="output",
+                success=True,
+                metricsData=[],
+            )
+        ]
+    )
+    saved_links = []
+    opened_links = []
+    monkeypatch.setattr(tr_mod, "Api", FakeApi)
+    monkeypatch.setattr(manager, "save_final_test_run_link", saved_links.append)
+    monkeypatch.setattr(tr_mod, "open_browser", opened_links.append)
+
+    result = manager.post_test_run(test_run, print_results=False)
+
+    assert result == ("https://example.test/runs/run-123", "run-123")
+    assert saved_links == ["https://example.test/runs/run-123"]
+    assert opened_links == ["https://example.test/runs/run-123"]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_quiet_wrap_up_supports_legacy_manager_override_signatures(
+    monkeypatch, capsys
+):
+    class LegacyManager(TestRunManager):
+        def __init__(self):
+            super().__init__()
+            self.calls = []
+
+        def save_test_run_locally(self):
+            self.calls.append("save")
+
+        def post_test_run(self, test_run):
+            self.calls.append("post")
+            return "https://example.test/runs/legacy", "legacy-run"
+
+    manager = LegacyManager()
+    manager.set_test_run(
+        tr_mod.TestRun(
+            testCases=[
+                LLMApiTestCase(
+                    name="legacy-override",
+                    input="input",
+                    actualOutput="output",
+                    success=True,
+                    metricsData=[],
+                )
+            ]
+        )
+    )
+    monkeypatch.setattr(tr_mod, "is_confident", lambda: True)
+    monkeypatch.setattr(tr_mod, "delete_file_if_exists", lambda path: None)
+    monkeypatch.setattr(
+        tr_mod.global_test_run_cache_manager,
+        "wrap_up_cached_test_run",
+        lambda: None,
+    )
+
+    result = manager.wrap_up_test_run(
+        0.1, display_table=False, print_results=False
+    )
+
+    assert result == ("https://example.test/runs/legacy", "legacy-run")
+    assert manager.calls == ["save", "post"]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
+def test_quiet_wrap_up_suppresses_temp_file_delete_error(
+    tmp_path, monkeypatch, capsys
+):
+    temp_path = tmp_path / "temp-run.json"
+    temp_path.write_text("{}", encoding="utf-8")
+    manager = TestRunManager()
+    manager.temp_file_path = str(temp_path)
+    manager.set_test_run(tr_mod.TestRun())
+
+    def fail_to_remove(path):
+        raise OSError("simulated delete failure")
+
+    monkeypatch.setattr(utils_mod.os, "remove", fail_to_remove)
+
+    manager.wrap_up_test_run(0.1, display_table=False, print_results=False)
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+    utils_mod.delete_file_if_exists(temp_path)
+    assert "simulated delete failure" in capsys.readouterr().out
+
+
+def test_evaluation_output_context_suppresses_cache_io_error(
+    monkeypatch, capsys
+):
+    class FailingLock:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            raise OSError("simulated cache failure")
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+    manager = cache_mod.TestRunCacheManager()
+    manager.disable_write_cache = False
+    manager.cached_test_run = CachedTestRun()
+    monkeypatch.setattr(
+        cache_mod,
+        "portalocker",
+        SimpleNamespace(Lock=FailingLock),
+    )
+
+    with suppress_evaluation_output():
+        manager.save_cached_test_run()
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+    manager.save_cached_test_run()
+    assert "simulated cache failure" in capsys.readouterr().err

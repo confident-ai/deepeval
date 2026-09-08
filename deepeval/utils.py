@@ -11,7 +11,9 @@ import nest_asyncio
 import uuid
 import math
 import logging
+import pydantic
 
+from contextlib import contextmanager
 from contextvars import ContextVar
 from enum import Enum
 from importlib import import_module
@@ -29,11 +31,29 @@ from deepeval.config.utils import (
     set_env_bool,
 )
 
+
+_evaluation_output_suppressed: ContextVar[bool] = ContextVar(
+    "deepeval_evaluation_output_suppressed", default=False
+)
+
+
+@contextmanager
+def suppress_evaluation_output():
+    """Temporarily suppress terminal output owned by an evaluation run."""
+    token = _evaluation_output_suppressed.set(True)
+    try:
+        yield
+    finally:
+        _evaluation_output_suppressed.reset(token)
+
+
+def should_print_evaluation_output() -> bool:
+    return not _evaluation_output_suppressed.get()
+
+
 #####################
 # Pydantic Compat   #
 #####################
-
-import pydantic
 
 PYDANTIC_V2 = pydantic.VERSION.startswith("2")
 
@@ -482,7 +502,8 @@ def delete_file_if_exists(file_path):
         if os.path.exists(file_path):
             os.remove(file_path)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        if should_print_evaluation_output():
+            print(f"An error occurred: {e}")
 
 
 def softmax(x):

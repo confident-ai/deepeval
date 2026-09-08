@@ -83,7 +83,7 @@ Metrics for a given test case are dispatched concurrently up to `maxConcurrent`,
 
 ### Display Configs
 
-The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()`.
+The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()` and `evals_iterator()`.
 
 <Switch>
 
@@ -101,7 +101,7 @@ There are **TEN** optional parameters when creating a `DisplayConfig`:
 - [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
 - [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
-- [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
+- [Optional] `print_results`: the master switch for user-facing terminal output. Set it to `False` to suppress result tables, progress indicators, metric verbose logs, completion messages, and the interactive inspect prompt. Persistence, uploads, and other non-terminal side effects still run. Defaulted to `True`.
 - [Optional] `results_folder`: a string path to a directory where each call to `evaluate()` (or `evals_iterator()`) will be persisted as a `test_run_<YYYYMMDD_HHMMSS>.json` file. Defaulted to `None` (no local save). See [Saving test runs locally](#saving-test-runs-locally) below.
 - [Optional] `results_subfolder`: an optional string that, when set together with `results_folder`, nests the `test_run_*.json` files under `results_folder/results_subfolder/`. Defaulted to `None` (flat layout).
 - [Optional] `truncate_passing_cases`: a boolean which when set to `True`, truncates the terminal output of passing test cases. Defaulted to `True`.
