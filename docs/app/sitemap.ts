@@ -44,5 +44,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  return [{ url: `${siteUrl}/`, lastModified: new Date() }, ...entries];
+  return [
+    { url: `${siteUrl}/`, lastModified: new Date() },
+    { url: `${siteUrl}/enterprise` },
+    ...entries,
+  ];
 }
