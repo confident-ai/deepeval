@@ -1,0 +1,77 @@
+---
+id: metrics-abstention
+title: Abstention
+sidebar_label: Abstention
+---
+<MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
+
+The abstention metric uses LLM-as-a-judge to check whether your RAG pipeline made the right decision about **whether to answer at all**. It rewards an `actual_output` that answers when the `retrieval_context` supports one and abstains (says "I don't know" / "the context doesn't cover this") when it does not — penalising both over-refusal and answering a question the context cannot support. `deepeval`'s abstention metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `AbstentionMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+Where the [`FaithfulnessMetric`](/docs/metrics-faithfulness) and [`HallucinationMetric`](/docs/metrics-hallucination) grade the _content_ of an answer, the `AbstentionMetric` grades the _decision to answer or decline_. A system that confidently answers a question its context cannot support will fail here even if every claim it makes is internally consistent, and a system that needlessly refuses an answerable question (over-refusal) will fail too.
+:::
+
+## Required Arguments
+
+To use the `AbstentionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+## Usage
+
+The `AbstentionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import AbstentionMetric
+
+# Replace this with the actual output from your LLM application.
+# The context does not contain the visitor capacity, and the answer correctly declines.
+actual_output = "The retrieved context doesn't state the Eiffel Tower's daily visitor capacity."
+
+# Replace this with the actual retrieved context from your RAG pipeline
+retrieval_context = [
+    "The Eiffel Tower stands 330 metres tall in Paris.",
+    "The Eiffel Tower was completed in 1889 for the World Fair.",
+]
+
+metric = AbstentionMetric()
+test_case = LLMTestCase(
+    input="What is the Eiffel Tower's daily visitor capacity?",
+    actual_output=actual_output,
+    retrieval_context=retrieval_context,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+In the example above the answer **passes**, because the context genuinely does not contain the visitor capacity and the system correctly abstained. Had the system instead answered with a specific number, it would **fail** — that is an unsupported answer. Conversely, if the context _had_ contained the figure but the system still declined, it would fail as an over-refusal.
+
+There are six optional parameters when creating an `AbstentionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing score, defaulted to `0.5`. The score is `1.0` for a correct answer-vs-abstain decision and `0.0` for an incorrect one, so the default requires a correct decision to pass.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `1` for a correct decision, `0` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+
+## How Is It Calculated?
+
+A single LLM judge reads the question, the numbered passages, and the answer, then makes two boolean determinations in one call:
+
+- `context_supports_answer`: whether the passages contain enough information to answer the question.
+- `output_abstained`: whether the answer declined to answer rather than giving a substantive response.
+
+The decision is **correct** (score `1.0`) when `context_supports_answer` equals `not output_abstained` — that is, the system answered a supported question or abstained on an unsupported one. Otherwise the decision is **incorrect** (score `0.0`): either an over-refusal (context supports an answer but the system abstained) or an unsupported answer (context does not support one but the system answered).
