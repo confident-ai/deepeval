@@ -1,8 +1,8 @@
 You are given a set of {% if rubric %}Evaluation Steps and Rubric{% else %}Evaluation Steps{% endif %} that describe how to assess a conversation between a user and an LLM chatbot. Your task is to return a JSON object with exactly two fields:
 
-1. `"score"`: An integer from 0 to 10 (inclusive), where:
-- 10 = The conversation *fully* meets the criteria described in the Evaluation Steps
-- 0 = The conversation *completely fails* to meet the criteria
+1. `"score"`: An integer from {{ score_range[0] }} to {{ score_range[1] }} (inclusive), where:
+- {{ score_range[1] }} = The conversation *fully* meets the criteria described in the Evaluation Steps
+- {{ score_range[0] }} = The conversation *completely fails* to meet the criteria
 - All other scores represent varying degrees of partial fulfillment,
 {% if rubric %}based on how well the conversation follows the rubric and evaluation steps{% else %}based on how well the conversation follows the evaluation steps{% endif %}.
 
@@ -30,7 +30,7 @@ IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"
 Example JSON:
 {
   "reason": "Your concise and informative reason here.",
-  "score": 0
+  "score": {{ score_range[0] }}
 }
 
 JSON:
