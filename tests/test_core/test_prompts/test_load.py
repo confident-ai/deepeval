@@ -1,4 +1,5 @@
 import pytest
+import json
 import os
 import tempfile
 from deepeval.prompt.prompt import Prompt
@@ -245,5 +246,65 @@ class TestPromptLoad:
             assert len(prompt.messages_template) == 1
             assert prompt.messages_template[0].role == "system"
             assert prompt.messages_template[0].content == "Test"
+        finally:
+            os.unlink(temp_file_path)
+
+    def test_load_utf8_text_file(self):
+        prompt = Prompt()
+        content = "Don’t guess — answer in 中文 (你好)."
+        with tempfile.NamedTemporaryFile(
+            suffix=".txt", delete=False
+        ) as temp_file:
+            temp_file.write(content.encode("utf-8"))
+            temp_file_path = temp_file.name
+
+        try:
+            prompt.load(temp_file_path)
+            assert prompt.text_template == content
+        finally:
+            os.unlink(temp_file_path)
+
+    def test_load_utf8_json_list_format(self):
+        prompt = Prompt()
+        system_content = "You are a helpful assistant — be concise."
+        user_content = "你好, “what’s the weather”?"
+        json_content = json.dumps(
+            [
+                {"role": "system", "content": system_content},
+                {"role": "user", "content": user_content},
+            ],
+            ensure_ascii=False,
+        )
+        with tempfile.NamedTemporaryFile(
+            suffix=".json", delete=False
+        ) as temp_file:
+            temp_file.write(json_content.encode("utf-8"))
+            temp_file_path = temp_file.name
+
+        try:
+            prompt.load(temp_file_path)
+            assert prompt.messages_template is not None
+            assert prompt.messages_template[0].content == system_content
+            assert prompt.messages_template[1].content == user_content
+        finally:
+            os.unlink(temp_file_path)
+
+    def test_load_utf8_json_dict_format(self):
+        prompt = Prompt()
+        content = "한국어 — “quoted”"
+        json_content = json.dumps(
+            {"messages": [{"role": "system", "content": content}]},
+            ensure_ascii=False,
+        )
+        with tempfile.NamedTemporaryFile(
+            suffix=".json", delete=False
+        ) as temp_file:
+            temp_file.write(json_content.encode("utf-8"))
+            temp_file_path = temp_file.name
+
+        try:
+            prompt.load(temp_file_path, messages_key="messages")
+            assert prompt.messages_template is not None
+            assert prompt.messages_template[0].content == content
         finally:
             os.unlink(temp_file_path)
