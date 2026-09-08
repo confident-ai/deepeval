@@ -220,7 +220,7 @@ class MathQA(DeepEvalBaseBenchmark):
             ]
             predictions = model.batch_generate(prompts)
 
-        if len(predictions) is not len(goldens):
+        if len(predictions) != len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
             )
