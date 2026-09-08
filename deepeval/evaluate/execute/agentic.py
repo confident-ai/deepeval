@@ -508,9 +508,7 @@ async def _a_execute_trace_test_case(
     if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
-        test_case._trace_dict = trace_manager.create_nested_spans_dict(
-            trace.root_spans[0]
-        )
+        test_case._trace_dict = trace_manager.create_trace_metric_dict(trace)
 
     for metric in metrics:
         metric.skipped = False

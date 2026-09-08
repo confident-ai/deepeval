@@ -132,6 +132,9 @@ def instrument_openinference(
             "NoOpTracerProvider",
         ):
             tracer_provider = TracerProvider()
+            from deepeval.tracing.otel.provider import configure_owned_sampling
+
+            configure_owned_sampling(tracer_provider)
             try:
                 trace.set_tracer_provider(tracer_provider)
                 logger.debug("Created and registered a new TracerProvider.")
@@ -153,6 +156,7 @@ def instrument_openinference(
             # trace-level config without layering another processor.
             interceptor, _casp = existing
             interceptor.settings = openinference_settings
+            _casp.reconfigure_api_key(api_key)
             logger.debug(
                 "OpenInference telemetry re-configured (env=%s).",
                 openinference_settings.environment,
@@ -163,8 +167,9 @@ def instrument_openinference(
         # before CASP routes the span (OTel runs processors in order on on_end).
         interceptor = OpenInferenceSpanInterceptor(openinference_settings)
         casp = ContextAwareSpanProcessor(api_key=api_key)
-        current_provider.add_span_processor(interceptor)
-        current_provider.add_span_processor(casp)
+        from deepeval.tracing.otel.provider import attach
+
+        attach(current_provider, "openinference", interceptor, casp)
         _attached_processors[id(current_provider)] = (interceptor, casp)
 
         logger.info(
