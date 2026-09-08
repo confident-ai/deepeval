@@ -13,6 +13,7 @@
     "benchmarks-math-qa",
     "benchmarks-logi-qa",
     "benchmarks-bool-q",
+    "benchmarks-pub-med-qa",
     "benchmarks-arc",
     "benchmarks-bbq",
     "benchmarks-lambada",
