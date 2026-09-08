@@ -18,6 +18,7 @@ import {
   isChatGeneration,
   parsePromptsToMessages,
   prepareToolCallInputParameters,
+  safeExtractProvider,
   safeExtractTokenUsage,
 } from "@/integrations/langchain/utils";
 import { RunHierarchyTracker } from "@/integrations/langchain/langgraph-utils";
@@ -26,6 +27,10 @@ import { traceManager } from "@/tracing";
 import { recordTracingIntegration } from "@/telemetry";
 import { Integration } from "@/tracing/integrations";
 import { BaseMetric } from "@/metrics/base-metrics";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "../../tracing/utils";
 
 let langchainInstalled: boolean | null = null;
 
@@ -146,6 +151,7 @@ export class DeepEvalCallbackHandler
 
       if (agentSpan) {
         this.hierarchy.recordSpan(uuidStr);
+        agentSpan.integration = Integration.LANGCHAIN;
         agentSpan.input = inputs;
 
         // Trace-level, not span-level: a metric on the root chain span would be
@@ -251,6 +257,11 @@ export class DeepEvalCallbackHandler
 
     llmSpan.input = inputMessages;
     llmSpan.model = modelName;
+    llmSpan.integration = Integration.LANGCHAIN;
+    llmSpan.provider = normalizeSpanProviderForPlatform(
+      safeExtractProvider(metadata, extraParams) ??
+        inferProviderFromModel(modelName),
+    );
 
     const metrics = metadata?.["metrics"];
     const metricCollection = metadata?.["metricCollection"];
@@ -280,7 +291,8 @@ export class DeepEvalCallbackHandler
     let llmOutput;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
-    let modelName;
+    let modelName: string | undefined;
+    let providerFromResponse: string | undefined;
 
     for (const generations of output.generations) {
       for (const generation of generations) {
@@ -298,6 +310,12 @@ export class DeepEvalCallbackHandler
               const extractedTokens = safeExtractTokenUsage(responseMetadata);
               totalInputTokens += extractedTokens.inputTokens;
               totalOutputTokens += extractedTokens.outputTokens;
+            }
+            if (
+              responseMetadata &&
+              responseMetadata["model_provider"] != null
+            ) {
+              providerFromResponse = String(responseMetadata["model_provider"]);
             }
           }
 
@@ -325,10 +343,19 @@ export class DeepEvalCallbackHandler
       }
     }
 
-    llmSpan.model = modelName;
+    if (modelName) {
+      llmSpan.model = modelName;
+    }
     llmSpan.output = llmOutput;
     llmSpan.inputTokenCount = totalInputTokens > 0 ? totalInputTokens : 0;
     llmSpan.outputTokenCount = totalOutputTokens > 0 ? totalOutputTokens : 0;
+    if (providerFromResponse) {
+      llmSpan.provider = normalizeSpanProviderForPlatform(providerFromResponse);
+    } else if (!llmSpan.provider) {
+      llmSpan.provider = normalizeSpanProviderForPlatform(
+        inferProviderFromModel(llmSpan.model),
+      );
+    }
 
     exitCurrentContext({ uuidStr: uuidStr });
     this.hierarchy.cleanupRun(uuidStr);
@@ -399,6 +426,7 @@ export class DeepEvalCallbackHandler
     });
     this.hierarchy.recordSpan(uuidStr);
 
+    toolSpan.integration = Integration.LANGCHAIN;
     toolSpan.input = input;
     if (
       tool &&
@@ -488,6 +516,7 @@ export class DeepEvalCallbackHandler
       },
     });
     this.hierarchy.recordSpan(uuidStr);
+    retrieverSpan.integration = Integration.LANGCHAIN;
     retrieverSpan.input = query;
   }
 

@@ -58,6 +58,11 @@
       "require": "./dist/openai/index.js",
       "types": "./dist/openai/index.d.ts"
     },
+    "./openrouter": {
+      "import": "./dist/openrouter/index.js",
+      "require": "./dist/openrouter/index.js",
+      "types": "./dist/openrouter/index.d.ts"
+    },
     "./integrations/ai-sdk": {
       "import": "./dist/integrations/ai-sdk/index.js",
       "require": "./dist/integrations/ai-sdk/index.js",
@@ -125,6 +130,9 @@
       ],
       "openai": [
         "dist/openai/index.d.ts"
+      ],
+      "openrouter": [
+        "dist/openrouter/index.d.ts"
       ],
       "integrations/ai-sdk": [
         "dist/integrations/ai-sdk/index.d.ts"
@@ -206,6 +214,7 @@
     "@mastra/core": "^1.51.0",
     "@mastra/observability": "^1.16.1",
     "@openai/agents": "^0.5.4",
+    "@openrouter/sdk": "^1.2.42",
     "@opentelemetry/core": "^2.6.0",
     "@types/cli-progress": "^3.11.0",
     "@types/jest": "^29.5.0",
@@ -243,6 +252,7 @@
     "@mastra/core": ">=1.16.0-0 <2.0.0-0",
     "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
     "@openai/agents": "^0.5.4",
+    "@openrouter/sdk": ">=1.0.0",
     "ai": ">=5.0.0",
     "ollama": ">=0.5.0",
     "vitest": ">=1.0.0"
@@ -267,6 +277,9 @@
       "optional": true
     },
     "@openai/agents": {
+      "optional": true
+    },
+    "@openrouter/sdk": {
       "optional": true
     },
     "ai": {

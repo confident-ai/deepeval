@@ -60,6 +60,7 @@ export interface BaseApiSpan {
 
   // llm
   model?: string;
+  provider?: string;
   inputTokenCount?: number;
   outputTokenCount?: number;
   costPerInputToken?: number;
@@ -78,6 +79,8 @@ export interface BaseApiSpan {
   // metadata
   metadata?: Record<string, any>;
   metricCollection?: string;
+
+  integration?: string;
 
   // additional test case params
   expectedOutput?: string;

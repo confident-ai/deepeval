@@ -8,7 +8,7 @@ for closing parity.
 ## Status at a glance
 
 - **Six modules, covering seven framework rows**: LangChain (LangGraph rides on the
-  same handler), OpenAI Agents, Mastra, AI SDK, OpenInference, plus `src/openai/` at
+  same handler), OpenAI Agents, Mastra, AI SDK, OpenInference, plus `src/openai/` and `src/openrouter/` at
   the top level mirroring Python's `deepeval.openai`. Two of them — Mastra and AI SDK
   — are TS-only with no Python counterpart, so only four rows are true ports.
 - **Seven of Python's rows have no TS equivalent**, listed under
@@ -47,12 +47,40 @@ Capability columns (same meaning as the Python README, minus `deepeval test run`
 | Integration   | Mode                  | Entry point                             | Bare | `observe()` nesting | `evalsIterator`      | Source                              |
 | ------------- | --------------------- | --------------------------------------- | :--: | :-----------------: | :------------------: | ----------------------------------- |
 | OpenAI        | Native client wrapper | `instrumentOpenAI(client)`              | Yes  | Yes                 | Yes                  | `src/openai/`                       |
+| OpenRouter    | Native client wrapper | `instrumentOpenRouter(client)`          | Yes  | Yes                 | Yes                  | `src/openrouter/`                   |
 | LangChain     | Callback handler      | `new DeepEvalCallbackHandler({})`       | Yes  | **No**              | Yes                  | `src/integrations/langchain/`       |
 | LangGraph     | LangChain's handler   | `new DeepEvalCallbackHandler({})`       | Yes  | **No**              | Yes                  | `src/integrations/langchain/`       |
 | OpenAI Agents | Trace processor       | `new DeepEvalTracingProcessor()`        | Yes  | Yes                 | Yes                  | `src/integrations/openai-agents/`   |
 | Mastra        | Exporter              | `new DeepEvalExporter(config)`          | Yes  | **No**              | Yes (sink conflict)   | `src/integrations/mastra/`          |
 | AI SDK        | OpenTelemetry         | `configureAiSdkTracing(options)`        | Yes  | **`isTestMode` only** | **`isTestMode` only** | `src/integrations/ai-sdk/`        |
 | OpenInference | OpenTelemetry         | `instrumentOpenInference(options)`      | Yes  | **`isTestMode` only** | **`isTestMode` only** | `src/integrations/openinference/` |
+
+### Provider labelling and gateway metadata
+
+Both SDKs record two separate fields on an LLM span: `integration` (the SDK
+deepeval instrumented) and `provider` (who actually served the request).
+
+OpenRouter is the case that makes this matter, because it is reachable two ways:
+
+- `instrumentOpenRouter(client)` — the official `@openrouter/sdk`.
+- `instrumentOpenAI(client)` with `baseURL: "https://openrouter.ai/api/v1"` —
+  the OpenAI SDK is the standard way to reach OpenAI-compatible gateways, so the
+  methods being patched say nothing about the provider. Only the client's base
+  URL does, and `patchOpenAI` reads it once at patch time.
+
+Either way the span records `provider = "OpenRouter"`, and gets a
+`metadata.openrouter` holding what only OpenRouter knows: generation id, credit
+cost, cached/reasoning token counts, the upstream that served it, and (native
+SDK only) routing detail. That metadata is merged onto `span.metadata` directly
+rather than through `updateCurrentSpan`, which replaces the metadata object
+wholesale and would clobber the user's own.
+
+Two wire-format quirks live in `src/openrouter/utils.ts`: the OpenAI SDK
+hands OpenRouter's extras through in their original **snake_case**, while the
+official SDK is Speakeasy-generated and **camelCases** everything, so every read
+tries both. Teach `instrumentOpenAI` about another gateway by adding a host to
+the table there; users can label an unrecognized one themselves with
+`setTracingContext({ llmSpanContext: { provider } })`.
 
 ### Not ported
 

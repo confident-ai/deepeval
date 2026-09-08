@@ -28,6 +28,11 @@ import {
 import { AiSdkInstrumentationOptions } from "@/integrations/ai-sdk/index";
 import { ToolCall } from "@/test-case";
 import { ConfidentAttr } from "@/tracing/attributes";
+import { Integration } from "../../tracing/integrations";
+import {
+  inferProviderFromModel,
+  normalizeSpanProviderForPlatform,
+} from "@/tracing/utils";
 
 export const ROOT_VERCEL_SPANS = new Set([
   "ai.generateText",
@@ -344,6 +349,7 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
   private setSpanAttributes(span: Span, spanName: string): void {
     const type = this.determineSpanType(spanName);
 
+    span.setAttribute(ConfidentAttr.SPAN_INTEGRATION, Integration.AI_SDK);
     span.setAttribute(ConfidentAttr.SPAN_TYPE, type);
 
     const llmContext = getLlmContext();
@@ -494,12 +500,26 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
         attributes["ai.model.id"] ||
         attributes["gen_ai.request.model"] ||
         attributes["gen_ai.response.model"];
-      if (model)
+      if (model) {
         setDefaultSpanAttribute(
           attributes,
           ConfidentAttr.LLM_MODEL,
           String(model),
         );
+      }
+      
+      const rawProvider =
+        attributes["ai.model.provider"] ||
+        (model ? inferProviderFromModel(String(model)) : undefined);
+      const provider = normalizeSpanProviderForPlatform(rawProvider);
+      
+      if (provider) {
+        setDefaultSpanAttribute(
+          attributes,
+          ConfidentAttr.SPAN_PROVIDER,
+          String(provider),
+        );
+      }
 
       let input = attributes["ai.prompt"];
       if (!input && attributes["ai.prompt.messages"]) {
@@ -831,6 +851,17 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
       deepEvalSpan.metadata = metadataObj;
     }
 
+    const integration = attributes[ConfidentAttr.SPAN_INTEGRATION];
+    if (integration) {
+      deepEvalSpan.integration = String(integration);
+      if (deepEvalSpan.parentUuid) {
+        const parentSpan = traceManager.getSpanByUuid(deepEvalSpan.parentUuid);
+        if (parentSpan && !parentSpan.integration) {
+          parentSpan.integration = String(integration);
+        }
+      }
+    }
+
     if (deepEvalSpan.type === SpanType.LLM) {
       const llmSpan = deepEvalSpan as LlmSpan;
       // The span is constructed with a placeholder model, so anything other
@@ -846,6 +877,10 @@ export class DeepEvalSpanProcessor implements SpanProcessor {
         llmSpan.outputTokenCount =
           attributes[ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT];
       }
+      if (attributes[ConfidentAttr.SPAN_PROVIDER])
+        llmSpan.provider = String(
+          attributes[ConfidentAttr.SPAN_PROVIDER]
+        );
       if (attributes[ConfidentAttr.SPAN_PROMPT_ALIAS])
         llmSpan.promptAlias = String(
           attributes[ConfidentAttr.SPAN_PROMPT_ALIAS],

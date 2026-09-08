@@ -23,6 +23,7 @@ export type LlmSpanContext = {
   expectedTools?: ToolCall[];
   context?: string[];
   retrievalContext?: string[];
+  provider?: string;
 };
 
 export type AgentSpanContext = {
