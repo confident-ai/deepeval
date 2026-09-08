@@ -41,6 +41,7 @@ class AnswerRelevancyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        penalize_ambiguous_statements: bool = False,
         flaky: bool = False,
         evaluation_template: Type[
             AnswerRelevancyTemplate
@@ -53,6 +54,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.penalize_ambiguous_statements = penalize_ambiguous_statements
         self.flaky = flaky
         self.evaluation_template = evaluation_template
 
@@ -168,8 +170,16 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            normalized_verdict = verdict.verdict.strip().lower()
+
+            if normalized_verdict == "no":
                 irrelevant_statements.append(verdict.reason)
+
+            if (
+                normalized_verdict == "idk"
+                and self.penalize_ambiguous_statements
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -193,8 +203,16 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            normalized_verdict = verdict.verdict.strip().lower()
+
+            if normalized_verdict == "no":
                 irrelevant_statements.append(verdict.reason)
+
+            if (
+                normalized_verdict == "idk"
+                and self.penalize_ambiguous_statements
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -307,8 +325,16 @@ class AnswerRelevancyMetric(BaseMetric):
 
         relevant_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
+            normalized_verdict = verdict.verdict.strip().lower()
+
+            if normalized_verdict != "no":
                 relevant_count += 1
+
+            if (
+                self.penalize_ambiguous_statements
+                and normalized_verdict == "idk"
+            ):
+                relevant_count -= 1
 
         score = relevant_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
