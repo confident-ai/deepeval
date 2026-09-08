@@ -126,6 +126,11 @@ class ContextualRecallMetric(BaseMetric):
                 expected_output = test_case.expected_output
                 retrieval_context = test_case.retrieval_context
 
+                if self._try_degenerate_short_circuit(
+                    expected_output, retrieval_context
+                ):
+                    return self.score
+
                 self.verdicts: List[VerdictWithExpectedOutput] = (
                     self._generate_verdicts(
                         expected_output, retrieval_context, multimodal
@@ -173,6 +178,11 @@ class ContextualRecallMetric(BaseMetric):
         ):
             expected_output = test_case.expected_output
             retrieval_context = test_case.retrieval_context
+
+            if self._try_degenerate_short_circuit(
+                expected_output, retrieval_context
+            ):
+                return self.score
 
             self.verdicts: List[VerdictWithExpectedOutput] = (
                 await self._a_generate_verdicts(
@@ -265,6 +275,58 @@ class ContextualRecallMetric(BaseMetric):
 
         score = justified_sentences / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
+
+    def _try_degenerate_short_circuit(
+        self, expected_output: Optional[str], retrieval_context: List[Any]
+    ) -> bool:
+        """Resolve degenerate inputs deterministically, skipping the LLM.
+
+        Contextual recall quantifies how well ``expected_output`` can be
+        attributed to ``retrieval_context``. When there is no context to recall
+        from, or no expected output to verify, the answer is trivially 0 — there
+        is nothing an LLM could inspect that would change a 0 verdict. Sending
+        these degenerate cases to the eval model wastes latency/cost and, worse,
+        produces non-deterministic results (an LLM may hallucinate a reason or
+        arbitrarily split/merge sentences). We short-circuit to a fixed,
+        explainable outcome instead.
+
+        Returns ``True`` if the case was handled (score/verdicts/reason set).
+        """
+        has_context = bool(retrieval_context)
+        has_expected = not (
+            isinstance(expected_output, str) and not expected_output.strip()
+        )
+
+        if has_context and has_expected:
+            return False
+
+        self.verdicts = []
+        self.score = 0
+        self.success = self.is_successful()
+        if self.include_reason:
+            if not has_context:
+                reason = (
+                    "Contextual recall could not be measured: the retrieval "
+                    "context is empty. There is no context the expected output "
+                    "could be attributed to, so the score is 0."
+                )
+            else:
+                reason = (
+                    "Contextual recall could not be measured: the expected "
+                    "output is empty. There are no expected claims to verify "
+                    "against the retrieval context, so the score is 0."
+                )
+        else:
+            reason = None
+        self.reason = reason
+        self.verbose_logs = construct_verbose_logs(
+            self,
+            steps=[
+                "Verdicts: []",
+                f"Score: 0\nReason: {reason}",
+            ],
+        )
+        return True
 
     async def _a_generate_verdicts(
         self,
