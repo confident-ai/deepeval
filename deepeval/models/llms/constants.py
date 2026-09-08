@@ -795,6 +795,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=1.25 / 1e6,
             output_price=5.00 / 1e6,
+            cache_read_input_price=0.3125 / 1e6,
         ),
         "gemini-1.5-pro-002": make_model_data(
             supports_log_probs=False,
@@ -803,6 +804,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=1.25 / 1e6,
             output_price=5.00 / 1e6,
+            cache_read_input_price=0.3125 / 1e6,
         ),
         "gemini-1.5-flash": make_model_data(
             supports_log_probs=False,
@@ -811,6 +813,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.075 / 1e6,
             output_price=0.30 / 1e6,
+            cache_read_input_price=0.01875 / 1e6,
         ),
         "gemini-1.5-flash-002": make_model_data(
             supports_log_probs=False,
@@ -819,6 +822,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.075 / 1e6,
             output_price=0.30 / 1e6,
+            cache_read_input_price=0.01875 / 1e6,
         ),
         "gemini-1.5-flash-8b": make_model_data(
             supports_log_probs=False,
@@ -827,6 +831,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.0375 / 1e6,
             output_price=0.15 / 1e6,
+            cache_read_input_price=0.01 / 1e6,
         ),
         "gemini-2.0-flash": make_model_data(
             supports_log_probs=False,
@@ -835,6 +840,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.15 / 1e6,
             output_price=0.60 / 1e6,
+            cache_read_input_price=0.0375 / 1e6,
         ),
         "gemini-2.0-flash-lite": make_model_data(
             supports_log_probs=False,
@@ -851,6 +857,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
+            cache_read_input_price=0.3125 / 1e6,
         ),
         "gemini-2.5-flash": make_model_data(
             supports_log_probs=False,
@@ -859,6 +866,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.15 / 1e6,
             output_price=0.60 / 1e6,
+            cache_read_input_price=0.0375 / 1e6,
         ),
         "gemini-2.5-flash-lite": make_model_data(
             supports_log_probs=False,
@@ -867,6 +875,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             input_price=0.075 / 1e6,
             output_price=0.30 / 1e6,
+            cache_read_input_price=0.01875 / 1e6,
         ),
         "gemini-3-pro": make_model_data(
             supports_log_probs=False,
