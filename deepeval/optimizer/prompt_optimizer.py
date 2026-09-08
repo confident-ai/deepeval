@@ -54,7 +54,7 @@ class PromptOptimizer:
         model_callback: ModelCallback,
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
         optimizer_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        algorithm: Union[GEPA, MIPROV2, COPRO, SIMBA] = GEPA(),
+        algorithm: Optional[Union[GEPA, MIPROV2, COPRO, SIMBA]] = None,
         async_config: Optional[AsyncConfig] = AsyncConfig(),
         display_config: Optional[DisplayConfig] = DisplayConfig(),
     ):
@@ -71,7 +71,10 @@ class PromptOptimizer:
 
         self.async_config = async_config
         self.display_config = display_config
-        self.algorithm = algorithm
+        # Defaulted here rather than in the signature: `_configure_algorithm`
+        # mutates the algorithm, so a default instance would be shared by every
+        # PromptOptimizer built without an explicit `algorithm`.
+        self.algorithm = algorithm if algorithm is not None else GEPA()
         self.optimization_report = None
         self._configure_algorithm()
 
