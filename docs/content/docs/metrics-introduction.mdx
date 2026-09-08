@@ -80,12 +80,12 @@ Multi-turn metrics evaluates conversations as a whole and takes prior context in
 
 Safety metrics concerns more on LLM security. They include:
 
-- Bias
-- Toxicity
-- Non-Advice
-- Misuse
-- PIILeakage
-- Role Violation
+- [Bias](/docs/metrics-bias)
+- [Toxicity](/docs/metrics-toxicity)
+- [Non-Advice](/docs/metrics-non-advice)
+- [Misuse](/docs/metrics-misuse)
+- [PII Leakage](/docs/metrics-pii-leakage)
+- [Role Violation](/docs/metrics-role-violation)
 
 For those looking for a full-blown LLM red teaming orchestration frameowork, checkout [DeepTeam](https://www.trydeepteam.com/). DeepTeam is `deepeval` but for red teaming LLMs specifically.
 
@@ -320,15 +320,15 @@ If you're looking for decision-tree based LLM-as-a-Judge, checkout the [Deep Acy
 
 **Trajectory metrics** evaluate how the full execution works together:
 
-- **Task Completion:** Assesses whether the agent successfully completed its task.
-- **Step Efficiency:** Assesses whether the agent completed the task without unnecessary or redundant steps.
-- **Plan Adherence:** Assesses whether the agent followed its generated plan during execution.
-- **Plan Quality:** Assesses whether the generated plan was logical, complete, and efficient.
+- **[Task Completion](/docs/metrics-task-completion):** Assesses whether the agent successfully completed its task.
+- **[Step Efficiency](/docs/metrics-step-efficiency):** Assesses whether the agent completed the task without unnecessary or redundant steps.
+- **[Plan Adherence](/docs/metrics-plan-adherence):** Assesses whether the agent followed its generated plan during execution.
+- **[Plan Quality](/docs/metrics-plan-quality):** Assesses whether the generated plan was logical, complete, and efficient.
 
 **Component-level action metrics** evaluate individual LLM tool-calling decisions:
 
-- **Tool Correctness:** Assesses whether the agent selected the correct tools.
-- **Argument Correctness:** Assesses whether the agent supplied the correct arguments to those tools.
+- **[Tool Correctness](/docs/metrics-tool-correctness):** Assesses whether the agent selected the correct tools.
+- **[Argument Correctness](/docs/metrics-argument-correctness):** Assesses whether the agent supplied the correct arguments to those tools.
 
 Trajectory metrics require [tracing](/docs/evaluation-llm-tracing) because they analyze the complete ordered trace. Pass them to <Term py="evals_iterator()" ts="evalsIterator()"/> when running the agent:
 
@@ -445,6 +445,8 @@ Chatbots require "conversational" (or multi-turn) metrics and they include:
 - **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
 - **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
 - **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
+
+Voice agents get seven more conversational metrics: [Voice Naturalness](/docs/metrics-voice-naturalness), [Voice Consistency](/docs/metrics-voice-consistency), [Voice Reliability](/docs/metrics-voice-reliability), [Speech Intelligibility](/docs/metrics-speech-intelligibility), [Audio Integrity](/docs/metrics-audio-integrity), [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness), and [Agent Responsiveness](/docs/metrics-agent-responsiveness). See [voice evaluation](/docs/evaluation-voice) for the setup.
 
 You'll need to also use [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)s instead of regular `LLMTestCase` for conversational metrics:
 
