@@ -3,6 +3,7 @@ import pytest
 import os
 
 from typing import List
+from pydantic import BaseModel
 
 from deepeval.synthesizer.synthesizer import Synthesizer
 from deepeval.synthesizer.config import (
@@ -477,3 +478,47 @@ async def test_a_generate_conversational_goldens_from_contexts_no_deadlock_when_
         ),
         timeout=0.5,
     )
+
+
+class _ExpectedAnswer(BaseModel):
+    answer: str
+    confidence: float
+
+
+@requires_openai_key
+def test_generate_goldens_from_contexts_with_expected_output_schema():
+    synthesizer = Synthesizer(async_mode=False)
+    goldens = synthesizer.generate_goldens_from_contexts(
+        contexts=[
+            ["The Eiffel Tower is located in Paris and was completed in 1889."]
+        ],
+        include_expected_output=True,
+        max_goldens_per_context=1,
+        expected_output_schema=_ExpectedAnswer,
+        _send_data=False,
+    )
+    assert len(goldens) >= 1
+    for g in goldens:
+        if g.expected_output:
+            # expected_output must be a JSON string that round-trips the schema
+            parsed = _ExpectedAnswer.model_validate_json(g.expected_output)
+            assert isinstance(parsed.answer, str)
+            assert isinstance(parsed.confidence, float)
+
+
+@requires_openai_key
+def test_expected_output_schema_none_is_unchanged():
+    synthesizer = Synthesizer(async_mode=False)
+    goldens = synthesizer.generate_goldens_from_contexts(
+        contexts=[
+            ["The Eiffel Tower is located in Paris and was completed in 1889."]
+        ],
+        include_expected_output=True,
+        max_goldens_per_context=1,
+        _send_data=False,
+    )
+    for g in goldens:
+        if g.expected_output:
+            # default path: plain text, NOT valid schema JSON
+            with pytest.raises(Exception):
+                _ExpectedAnswer.model_validate_json(g.expected_output)
