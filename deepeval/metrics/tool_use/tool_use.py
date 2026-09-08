@@ -122,11 +122,15 @@ class ToolUseMetric(BaseConversationalMetric):
                         multimodal=test_case.multimodal,
                     )
                 )
-                self.reason = str(
-                    "\n".join(
-                        [tool_selection_reason, argument_correctness_reason]
+                reasons = [
+                    reason
+                    for reason in (
+                        tool_selection_reason,
+                        argument_correctness_reason,
                     )
-                )
+                    if reason
+                ]
+                self.reason = "\n".join(reasons) if reasons else None
 
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -199,9 +203,15 @@ class ToolUseMetric(BaseConversationalMetric):
                     multimodal=test_case.multimodal,
                 )
             )
-            self.reason = str(
-                "\n".join([tool_selection_reason, argument_correctness_reason])
-            )
+            reasons = [
+                reason
+                for reason in (
+                    tool_selection_reason,
+                    argument_correctness_reason,
+                )
+                if reason
+            ]
+            self.reason = "\n".join(reasons) if reasons else None
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -372,6 +382,9 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        if self.include_reason is False:
+            return None
+
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
@@ -399,13 +412,16 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        if self.include_reason is False:
+            return None
+
         scores_and_reasons = ""
         for tool_use in argument_correctness_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
         prompt = self._get_prompt(
-            "get_tool_selection_final_reason",
+            "get_tool_argument_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,
             threshold=self.threshold,
@@ -422,6 +438,9 @@ class ToolUseMetric(BaseConversationalMetric):
     async def _a_generate_reason_for_tool_selection(
         self, tool_use_scores: List[ToolSelectionScore], *, multimodal: bool
     ):
+        if self.include_reason is False:
+            return None
+
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
@@ -448,13 +467,16 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        if self.include_reason is False:
+            return None
+
         scores_and_reasons = ""
         for tool_use in argument_correctness_scores:
             scores_and_reasons += (
                 f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
             )
         prompt = self._get_prompt(
-            "get_tool_selection_final_reason",
+            "get_tool_argument_final_reason",
             all_scores_and_reasons=scores_and_reasons,
             final_score=self.score,
             threshold=self.threshold,
