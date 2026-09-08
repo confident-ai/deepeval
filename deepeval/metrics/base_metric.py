@@ -69,6 +69,9 @@ class BaseMetric(PromptMixin):
     output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    # ``flaky`` is a user declaration that this metric must not decide
+    # pass/fail (checked in ``LLMApiTestCase.update_metric_data``). It is
+    # not an observed instability signal across repeated measurements.
     flaky: bool = False
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
@@ -141,6 +144,8 @@ class BaseConversationalMetric(PromptMixin):
     output_tokens: Optional[int] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    # ``flaky`` is a user declaration that this metric must not decide
+    # pass/fail. It is not an observed instability signal.
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
