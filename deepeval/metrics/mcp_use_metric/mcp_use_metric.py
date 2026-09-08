@@ -23,7 +23,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from .schema import MCPPrimitivesScore, MCPArgsScore
 from deepeval.templates import make_template_class
 
-
 MCPUseTemplate = make_template_class("MCPUseMetric")
 
 

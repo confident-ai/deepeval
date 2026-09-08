@@ -19,7 +19,6 @@ from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.templates import make_template_class
 
-
 RoleAdherenceTemplate = make_template_class("RoleAdherenceMetric")
 
 

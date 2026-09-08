@@ -21,7 +21,6 @@ from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.templates import make_template_class
 
-
 ImageEditingTemplate = make_template_class("ImageEditingMetric")
 
 

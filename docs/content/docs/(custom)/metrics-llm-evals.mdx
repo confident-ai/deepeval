@@ -274,10 +274,61 @@ const correctnessMetric = new GEval({
 
 </Switch>
 
-Note that <Term py="score_range" ts="scoreRange"/> ranges from **0 - 10, inclusive** and different `Rubric`s must not have overlapping <Term py="score_range" ts="scoreRange"/>s. You can also specify <Term py="score_range" ts="scoreRange"/>s where the start and end values are the same to represent a single score.
+A <Term py="score_range" ts="scoreRange"/> accepts **any finite numbers**, so you can put your rubric on whichever scale reads most naturally — the default 0 - 10, a 1 - 5 Likert scale, 0 - 100, or a 0 - 1 scale with decimals:
+
+<Switch>
+
+<Case id="python">
+
+```python
+correctness_metric = GEval(
+    name="Correctness",
+    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+    rubric=[
+        Rubric(score_range=(0.0, 0.2), expected_outcome="Factually incorrect."),
+        Rubric(score_range=(0.3, 0.6), expected_outcome="Mostly correct."),
+        Rubric(score_range=(0.7, 0.9), expected_outcome="Correct but missing minor details."),
+        Rubric(score_range=(1.0, 1.0), expected_outcome="100% correct."),
+    ]
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+const correctnessMetric = new GEval({
+  name: "Correctness",
+  criteria: "Determine whether the actual output is factually correct based on the expected output.",
+  evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+  rubric: [
+    { scoreRange: [0.0, 0.2], expectedOutcome: "Factually incorrect." },
+    { scoreRange: [0.3, 0.6], expectedOutcome: "Mostly correct." },
+    { scoreRange: [0.7, 0.9], expectedOutcome: "Correct but missing minor details." },
+    { scoreRange: [1.0, 1.0], expectedOutcome: "100% correct." },
+  ],
+});
+```
+
+</Case>
+
+</Switch>
+
+Whatever scale you choose, `metric.score` is always normalized to **0 - 1** using the rubric's overall span — the outer bounds of your first and last band. A 1 - 5 rubric scoring 3 gives `metric.score == 0.5`, and a score outside the rubric's bounds is clamped into 0 - 1.
+
+Keep two rules in mind:
+
+- Different `Rubric`s must not have overlapping <Term py="score_range" ts="scoreRange"/>s, and adjacent bands must not touch either — use `(0.0, 0.2)` then `(0.3, 0.6)`, not `(0.0, 0.3)` then `(0.3, 0.6)`.
+- You can specify a <Term py="score_range" ts="scoreRange"/> whose start and end values are the same to represent a single score.
 
 :::tip
 This is an optional improvement done by `deepeval` in addition to the original implementation in the `GEval` paper.
+:::
+
+:::note
+On a whole-numbered scale the evaluation LLM is asked for an integer, and its score is refined using the log probabilities of the alternative score tokens it considered (on models that report them). A decimal scale asks for a decimal instead, which that refinement cannot apply to — so prefer an integer scale unless you specifically want decimal bands.
 :::
 
 ### Within components
@@ -929,7 +980,8 @@ const metric = new GEval({
           Pass a list of <code>Rubric</code>s via the{" "}
           <a href="/docs/metrics-llm-evals#rubric">rubric</a> argument to confine
           the judge to specific score bands (non-overlapping{" "}
-          <Term py="score_range" ts="scoreRange"/>s within 0-10). For pass/fail, set{" "}
+          <Term py="score_range" ts="scoreRange"/>s on any scale you like). For
+          pass/fail, set{" "}
           <Term py="strict_mode=True" ts="strictMode: true"/> to force a binary 1 or 0.
         </>
       ),

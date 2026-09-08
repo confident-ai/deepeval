@@ -24,7 +24,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 from deepeval.templates import make_template_class
 
-
 PromptAlignmentTemplate = make_template_class("PromptAlignmentMetric")
 
 

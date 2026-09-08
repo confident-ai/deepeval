@@ -1,6 +1,6 @@
 You are an evaluator. Given the following {% if rubric %}evaluation steps and rubric{% else %}evaluation steps{% endif %}, assess the response below and return a JSON object with two fields:
 
-- `"score"`: an integer between {{ score_range[0] }} and {{ score_range[1] }}, {% if rubric %}based on the rubric provided{% else %}with {{ score_range[1] }} indicating strong alignment with the evaluation steps and {{ score_range[0] }} indicating no alignment{% endif %}.
+- `"score"`: {% if score_range_is_integral %}an integer{% else %}a number, decimals allowed,{% endif %} between {{ score_range[0] }} and {{ score_range[1] }}, {% if rubric %}based on the rubric provided{% else %}with {{ score_range[1] }} indicating strong alignment with the evaluation steps and {{ score_range[0] }} indicating no alignment{% endif %}.
 - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
 
 Your explanation should:

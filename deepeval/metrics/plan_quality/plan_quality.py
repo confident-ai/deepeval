@@ -23,7 +23,6 @@ from deepeval.metrics.plan_quality.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 PlanQualityTemplate = make_template_class("PlanQualityMetric")
 
 

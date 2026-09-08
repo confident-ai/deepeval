@@ -15,7 +15,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.schema import Task, EfficiencyVerdict
 from deepeval.templates import make_template_class
 
-
 StepEfficiencyTemplate = make_template_class("StepEfficiencyMetric")
 
 
