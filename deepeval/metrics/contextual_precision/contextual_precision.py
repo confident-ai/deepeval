@@ -117,6 +117,11 @@ class ContextualPrecisionMetric(BaseMetric):
                     test_case.retrieval_context
                 )
 
+                if self._try_degenerate_short_circuit(
+                    expected_output, grouped_retrieval_context
+                ):
+                    return self.score
+
                 self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
                         input,
@@ -170,6 +175,11 @@ class ContextualPrecisionMetric(BaseMetric):
             grouped_retrieval_context = self._group_retrieval_contexts(
                 test_case.retrieval_context
             )
+
+            if self._try_degenerate_short_circuit(
+                expected_output, grouped_retrieval_context
+            ):
+                return self.score
 
             self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
@@ -359,6 +369,59 @@ class ContextualPrecisionMetric(BaseMetric):
         # Calculate weighted cumulative precision
         score = sum_weighted_precision_at_k / relevant_nodes_count
         return 0 if self.strict_mode and score < self.threshold else score
+
+    def _try_degenerate_short_circuit(
+        self,
+        expected_output: Optional[str],
+        retrieval_context: List[str],
+    ) -> bool:
+        """Resolve degenerate inputs deterministically, skipping the LLM.
+
+        Contextual precision ranks how early *relevant* chunks appear in the
+        retrieval context. When there is no context to rank, or no expected
+        output to judge relevance against, there is nothing an LLM could
+        inspect that would change a 0 verdict. Sending these cases to the eval
+        model wastes latency/cost and produces non-deterministic results (the
+        LLM may invent relevance for empty input). We short-circuit to a fixed,
+        explainable outcome instead.
+
+        Returns ``True`` if the case was handled (score/verdicts/reason set).
+        """
+        has_context = bool(retrieval_context)
+        has_expected = not (
+            isinstance(expected_output, str) and not expected_output.strip()
+        )
+
+        if has_context and has_expected:
+            return False
+
+        self.verdicts = []
+        self.score = 0
+        self.success = self.is_successful()
+        if self.include_reason:
+            if not has_context:
+                reason = (
+                    "Contextual precision could not be measured: the retrieval "
+                    "context is empty. There are no chunks whose relevance "
+                    "should be ranked, so the score is 0."
+                )
+            else:
+                reason = (
+                    "Contextual precision could not be measured: the expected "
+                    "output is empty. There is no expected output to judge "
+                    "chunk relevance against, so the score is 0."
+                )
+        else:
+            reason = None
+        self.reason = reason
+        self.verbose_logs = construct_verbose_logs(
+            self,
+            steps=[
+                "Verdicts: []",
+                f"Score: 0\nReason: {reason}",
+            ],
+        )
+        return True
 
     @property
     def __name__(self):
