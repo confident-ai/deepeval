@@ -1,5 +1,6 @@
 import pytest
 import os
+import sys
 import uuid
 from contextlib import AbstractContextManager
 from rich import print
@@ -14,6 +15,7 @@ from deepeval.telemetry import (
     capture_evaluation_run,
 )
 from deepeval.test_run import global_test_run_manager
+from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import get_is_running_deepeval
 
 
@@ -126,3 +128,27 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
         if report.skipped:
             reason = report.longreprtext.split("\n")[-1]
             print(f"Test {report.nodeid} was skipped. Reason: {reason}")
+
+    # Under plain `pytest`, output capture swallows the stdout-rendered
+    # progress/report from evaluate(), so re-render the accumulated results
+    # table here at session end to keep evaluation results visible.
+    if not get_is_running_deepeval():
+        try:
+            test_run = global_test_run_manager.test_run
+            if test_run is not None and (
+                len(test_run.test_cases) > 0
+                or len(test_run.conversational_test_cases) > 0
+            ):
+                global_test_run_manager.display_results_table(
+                    test_run, TestRunResultDisplay.ALL
+                )
+        except Exception as e:
+            print(
+                f"Warning: could not display evaluation results: {e}",
+                file=sys.stderr,
+            )
+        finally:
+            # A plain-pytest session owns no test run: drop it so results
+            # accumulated in this session do not leak into the next one
+            # (e.g. a second `pytest.main` call in the same process).
+            global_test_run_manager.test_run = None
