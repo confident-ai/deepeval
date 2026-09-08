@@ -419,6 +419,30 @@ class TestOpenAIModelCompletionKwargs:
             ), f"Temperature should be 1 for {model_name}"
             assert model.generation_kwargs == {"reasoning_effort": "high"}
 
+    def test_o1_reasoning_models_auto_temperature_adjustment(self, settings):
+        """Reasoning models (o1 family, including o1-preview) must force
+        temperature to 1, since the OpenAI API rejects any other value for
+        them. o1-preview and o1-preview-2024-09-12 previously omitted
+        ``supports_temperature=False`` and leaked the caller's temperature,
+        causing a 400 error (see ArenaGEval issue #1820)."""
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+
+        reasoning_models = [
+            "o1",
+            "o1-preview",
+            "o1-preview-2024-09-12",
+            "o1-mini",
+            "o3-mini",
+            "o4-mini",
+        ]
+
+        for model_name in reasoning_models:
+            model = GPTModel(model=model_name, temperature=0)
+            assert (
+                model.temperature == 1
+            ), f"Temperature should be 1 for {model_name}"
+
     def test_empty_generation_kwargs(self, settings):
         with settings.edit(persist=False):
             settings.OPENAI_API_KEY = "test-key"
@@ -852,6 +876,17 @@ def test_gpt55_snapshot_model_data_matches_alias():
     snapshot = OPENAI_MODELS_DATA.get("gpt-5.5-2026-04-23")
 
     assert snapshot == alias
+
+
+def test_o1_preview_model_data_disables_temperature():
+    """o1-preview and its dated snapshot are reasoning models and must
+    advertise supports_temperature=False like every other entry in the
+    reasoning-models block (regression for #1820)."""
+    for model_name in ("o1-preview", "o1-preview-2024-09-12"):
+        model_data = OPENAI_MODELS_DATA.get(model_name)
+        assert (
+            model_data.supports_temperature is False
+        ), f"{model_name} must not support a custom temperature"
 
 
 ##############################

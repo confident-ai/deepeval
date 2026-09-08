@@ -613,6 +613,13 @@ class TestAzureModelTemperature:
         model = AzureOpenAIModel(model="o3-mini", **_AZURE_KWARGS)
         assert model.temperature is None
 
+    def test_o1_preview_temperature_is_none(self):
+        """o1-preview is a reasoning model; AzureOpenAIModel reads the same
+        OPENAI_MODELS_DATA registry, so temperature must be dropped to None
+        (regression for the o1-preview entries, related to #1820)."""
+        model = AzureOpenAIModel(model="o1-preview", **_AZURE_KWARGS)
+        assert model.temperature is None
+
     def test_standard_model_temperature_is_set(self):
         """gpt-4o supports temperature; it should default to 0.0."""
         model = AzureOpenAIModel(model="gpt-4o", **_AZURE_KWARGS)
