@@ -10,6 +10,7 @@ from rich.tree import Tree
 from rich.terminal_theme import TerminalTheme
 
 from deepeval.evaluate.types import TestResult
+from deepeval.evaluate.statistics import format_pass_rate_with_interval
 from deepeval.test_run.test_run import TestRunResultDisplay
 
 LIGHT_THEME = TerminalTheme(
@@ -52,9 +53,18 @@ def _natural_sort_key(s: str):
 
 
 def _format_pass_rate(agg: dict) -> str:
-    """Format pass rate with pass/fail counts, each with its flaky sub-count."""
+    """Format pass rate with pass/fail counts, each with its flaky sub-count.
+
+    The rate carries a 95% confidence interval so the reader can see what the
+    number of test cases actually supports: 4/5 is 80% but its interval runs
+    from 37.6% to 96.4%.
+    """
     verdicts = agg["passes"] + agg["fails"]
-    rate = f"{(agg['passes'] / verdicts) * 100:.2f}%" if verdicts > 0 else "N/A"
+    rate = (
+        format_pass_rate_with_interval(agg["passes"], verdicts)
+        if verdicts > 0
+        else "N/A"
+    )
     passed = f"passed={agg['passes']}"
     if agg["flaky_passes"] > 0:
         passed += f" (flaky={agg['flaky_passes']})"
