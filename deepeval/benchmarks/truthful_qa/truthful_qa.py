@@ -97,9 +97,8 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                         ):
                             prediction = prediction_dict["prediction"]
                             score = prediction_dict["score"]
-                            if score:
-                                task_correct_predictions += 1
-                                overall_correct_predictions += 1
+                            task_correct_predictions += score
+                            overall_correct_predictions += score
                             predictions_row.append(
                                 (
                                     task.value,
@@ -116,9 +115,8 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                         prediction, score = self.predict(
                             model, golden, self.mode
                         ).values()
-                        if score:
-                            task_correct_predictions += score
-                            overall_correct_predictions += score
+                        task_correct_predictions += score
+                        overall_correct_predictions += score
                         predictions_row.append(
                             (
                                 task.value,
@@ -336,7 +334,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         input: str,
         expected_output: str,
         prediction: str,
-        score: int,
+        score: float,
     ) -> str:
         steps = [
             f"Input:\n{input}",
