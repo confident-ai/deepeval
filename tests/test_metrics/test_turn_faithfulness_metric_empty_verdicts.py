@@ -1,14 +1,3 @@
-"""Regression tests for TurnFaithfulnessMetric's empty-verdicts code path.
-
-The score-and-reason helpers must always return a (float, str) tuple so that
-callers can unpack the result with `score, reason = ...`. Returning a bare int
-on the empty-verdicts branch crashed any conversation containing an assistant
-turn with no extractable factual claims (e.g. "Sure, happy to help!").
-
-These tests exercise the helpers directly with a stub model, so they run
-without an LLM provider API key.
-"""
-
 import asyncio
 
 import pytest
@@ -18,7 +7,6 @@ from deepeval.models.base_model import DeepEvalBaseLLM
 
 
 class _StubLLM(DeepEvalBaseLLM):
-    """Minimal DeepEvalBaseLLM that never calls out to a provider."""
 
     def load_model(self, *args, **kwargs):
         return None
@@ -41,7 +29,7 @@ def metric() -> TurnFaithfulnessMetric:
 def test_sync_empty_verdicts_returns_tuple(metric: TurnFaithfulnessMetric):
     result = metric._get_interaction_score_and_reason([], multimodal=False)
 
-    score, reason = result  # must be unpackable
+    score, reason = result
     assert score == 1.0
     assert isinstance(score, float)
     assert isinstance(reason, str) and reason
