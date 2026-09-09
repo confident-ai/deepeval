@@ -1296,6 +1296,9 @@ class EvaluationDataset:
                     source_file=golden.source_file,
                     tools_called=golden.tools_called,
                     expected_tools=golden.expected_tools,
+                    token_cost=golden.token_cost,
+                    input_token_count=golden.input_token_count,
+                    output_token_count=golden.output_token_count,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
                 )
