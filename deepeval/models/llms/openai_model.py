@@ -64,7 +64,7 @@ class OpenAIModel(DeepEvalBaseLLM):
             _ALIAS_MAP,
         )
 
-        # re-map depricated keywords to re-named positional args
+        # re-map deprecated keywords to re-named positional args
         if api_key is None and "api_key" in alias_values:
             api_key = alias_values["api_key"]
 
