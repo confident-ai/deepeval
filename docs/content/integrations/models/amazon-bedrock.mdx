@@ -67,24 +67,6 @@ model = AmazonBedrockModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-</Tab>
-<Tab value="ENV">
-
-To use any Amazon Bedrock model directly in `deepeval`, set the `USE_AWS_BEDROCK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-
-answer_relevancy = AnswerRelevancyMetric(
-    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
-)
-```
-
-You should also set the other necessary vars like `AWS_ACCESS_KEY_ID`, `AWS_SESSION_TOKEN`, ..etc. to be able to use the Amazon Bedrock models as shown above.
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `AmazonBedrockModel`:
 
 - [Optional] `model`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). Defaults to `AWS_BEDROCK_MODEL_NAME` if not passed; raises an error at runtime if unset.
@@ -102,6 +84,24 @@ Pass generation parameters like `temperature`, `topP`, or `maxTokens` via `gener
 
 Extra `**kwargs` passed to `AmazonBedrockModel(...)` are forwarded to the underlying Bedrock client (aiobotocore/botocore) and are **not** treated as generation parameters.
 :::
+
+</Tab>
+<Tab value="ENV">
+
+To use any Amazon Bedrock model directly in `deepeval`, set the `USE_AWS_BEDROCK_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="anthropic.claude-sonnet-4-5-20250929-v1:0",
+)
+```
+
+You should also set the other necessary vars like `AWS_ACCESS_KEY_ID`, `AWS_SESSION_TOKEN`, ..etc. to be able to use the Amazon Bedrock models as shown above.
+
+</Tab>
+</Tabs>
 
 </Case>
 
@@ -123,23 +123,6 @@ const model = new AmazonBedrockModel({
 });
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
-
-</Tab>
-<Tab value="ENV">
-
-Every option is backed by an environment variable, so you can set `AWS_BEDROCK_MODEL_NAME`, `AWS_BEDROCK_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` in your `env` and construct the model with no arguments:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { AmazonBedrockModel } from "deepeval/models";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: new AmazonBedrockModel(),
-});
-```
-
-</Tab>
-</Tabs>
 
 There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AmazonBedrockModel`:
 
@@ -163,6 +146,23 @@ const model = new AmazonBedrockModel({
 ```
 
 Available keys vary by the Bedrock model you choose — see the [AWS Bedrock inference parameters docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+
+</Tab>
+<Tab value="ENV">
+
+Every option is backed by an environment variable, so you can set `AWS_BEDROCK_MODEL_NAME`, `AWS_BEDROCK_REGION`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY` in your `env` and construct the model with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { AmazonBedrockModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new AmazonBedrockModel(),
+});
+```
+
+</Tab>
+</Tabs>
 
 </Case>
 

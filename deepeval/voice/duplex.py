@@ -38,6 +38,15 @@ _EVENT_POLL_S = 0.05
 # matters, and hearing slightly less than was said is what interrupting is like.
 _AGENT_CHARS_PER_SECOND = 13.0
 
+_SEMANTIC_EOT_SILENCE_MS = 500.0
+_STT_ON_SILENCE_MS = 200.0
+
+
+def _looks_complete(text: str) -> bool:
+    """Terminal punctuation is the transcriber saying the sentence closed."""
+    text = (text or "").strip()
+    return bool(text) and not text.endswith("...") and text[-1] in ".!?…"
+
 
 @dataclass
 class _Barge:
@@ -89,6 +98,8 @@ class _AgentUtterance:
     barges: int = 0
     last_judged_len: int = 0
     last_stt_pcm_len: int = 0
+    speech_pcm_len: int = 0
+    transcribed_pcm_len: int = 0
 
     def reset(
         self, *, index: int, sent_at: float, awaiting_end_signal: bool
@@ -104,6 +115,8 @@ class _AgentUtterance:
         self.barges = 0
         self.last_judged_len = 0
         self.last_stt_pcm_len = 0
+        self.speech_pcm_len = 0
+        self.transcribed_pcm_len = 0
 
 
 @dataclass
@@ -164,7 +177,10 @@ def _spoken_prefix(transcript: str, heard_seconds: float) -> str:
 
 
 class DuplexExchange:
-    """Runs one duplex listen/barge cycle after the initial user audio is sent."""
+    """Runs one duplex listen/barge cycle after the initial user audio is sent.
+
+    Without a `policy` the caller never barges and the exchange only listens.
+    """
 
     def __init__(
         self,
@@ -172,7 +188,7 @@ class DuplexExchange:
         connector: "BaseVoiceConnector",
         tts_model: "DeepEvalBaseTTS",
         stt_model: "DeepEvalBaseSTT",
-        policy: InterruptionPolicy,
+        policy: Optional[InterruptionPolicy],
         floor: FloorController,
         golden: ConversationalGolden,
         language: str,
@@ -228,6 +244,9 @@ class DuplexExchange:
         # exchange: it describes the transport, not this reply.
         connector_transcript_seen = False
         eot_silence = self.connector.end_of_turn_silence_ms
+        stt_stride_bytes = int(
+            self.sample_rate * 2 * min(1.0, max(eot_silence, 200.0) / 1000.0)
+        )
         deadline = time.perf_counter() + self.connector.max_turn_timeout_s
         exchange_done = False
         last_uplink_at = sent_at
@@ -249,6 +268,33 @@ class DuplexExchange:
                 else 0.0
             )
             return _spoken_prefix(utterance.transcript, heard_s)
+
+        def _reads_finished() -> bool:
+            """A finished-looking transcript that covers all speech so far."""
+            if not _looks_complete(_heard_transcript()):
+                return False
+            return connector_transcript_seen or (
+                bool(utterance.transcript)
+                and utterance.transcribed_pcm_len >= utterance.speech_pcm_len
+            )
+
+        def _silence_needed_ms() -> float:
+            if _reads_finished():
+                return min(_SEMANTIC_EOT_SILENCE_MS, eot_silence)
+            return eot_silence
+
+        def _start_stt_snapshot() -> None:
+            nonlocal stt_task
+            covered = len(utterance.pcm)
+            utterance.last_stt_pcm_len = covered
+            snap = bytes(utterance.pcm)
+
+            async def _stt_partial(pcm=snap, covered=covered):
+                audio = _pcm_to_audio(pcm, self.sample_rate)
+                text, cost = await self.stt_model.a_transcribe(audio)
+                return text, cost, covered
+
+            stt_task = asyncio.create_task(_stt_partial())
 
         async def _maybe_stop_uplink() -> None:
             """Stop sending the caller's speech, keeping whatever went out.
@@ -413,7 +459,8 @@ class DuplexExchange:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
             latency_ms = (
-                (utterance.first_audio_at - utterance.sent_at) * 1000.0
+                max(0.0, (utterance.first_audio_at - utterance.sent_at))
+                * 1000.0
                 if utterance.first_audio_at is not None
                 else None
             )
@@ -470,7 +517,7 @@ class DuplexExchange:
             """
             if self.floor.agent_speaking:
                 utterance.trailing_silence_ms += elapsed_ms
-                if utterance.trailing_silence_ms < eot_silence:
+                if utterance.trailing_silence_ms < _silence_needed_ms():
                     return False
                 if (
                     utterance.awaiting_end_signal
@@ -482,7 +529,7 @@ class DuplexExchange:
                     return False
 
             if (
-                utterance.trailing_silence_ms >= eot_silence
+                utterance.trailing_silence_ms >= _silence_needed_ms()
                 and utterance.started
                 and not utterance.awaiting_end_signal
                 and not self.floor.agent_speaking
@@ -563,6 +610,7 @@ class DuplexExchange:
                     await _restart_after_barge()
                 if (
                     action.retry_barge
+                    and self.policy is not None
                     and self.floor.frustrated
                     and barge is None
                 ):
@@ -603,7 +651,9 @@ class DuplexExchange:
                     connector_transcript_seen = True
 
                 if event.audio:
-                    silent = audio_utils.is_silent(event.audio)
+                    silent = audio_utils.is_silent(
+                        event.audio, self.connector.silence_threshold_rms
+                    )
                     frame_ms = (
                         len(event.audio) / 2 / self.sample_rate
                     ) * 1000.0
@@ -623,6 +673,7 @@ class DuplexExchange:
                         if utterance.first_audio_at is None:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
+                        utterance.speech_pcm_len = len(utterance.pcm)
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
@@ -630,30 +681,27 @@ class DuplexExchange:
                         utterance.pcm.extend(event.audio)
 
                     # Streaming STT fallback when no platform transcript.
+                    quiet = (
+                        utterance.trailing_silence_ms >= _STT_ON_SILENCE_MS
+                        and utterance.last_stt_pcm_len
+                        < utterance.speech_pcm_len
+                    )
                     if (
-                        not utterance.transcript
-                        and not connector_transcript_seen
-                        and len(utterance.pcm) - utterance.last_stt_pcm_len
-                        > self.sample_rate * 2  # ~1s of new audio
+                        not connector_transcript_seen
                         and (stt_task is None or stt_task.done())
+                        and len(utterance.pcm) - utterance.last_stt_pcm_len
+                        > (0 if quiet else stt_stride_bytes)
                     ):
-                        utterance.last_stt_pcm_len = len(utterance.pcm)
-                        snap = bytes(utterance.pcm)
-
-                        async def _stt_partial(pcm=snap):
-                            audio = _pcm_to_audio(pcm, self.sample_rate)
-                            text, cost = await self.stt_model.a_transcribe(
-                                audio
-                            )
-                            return text, cost
-
-                        stt_task = asyncio.create_task(_stt_partial())
+                        _start_stt_snapshot()
 
                 if stt_task is not None and stt_task.done():
                     try:
-                        text, cost = stt_task.result()
+                        text, cost, covered = stt_task.result()
                         if text:
                             utterance.transcript = text
+                            utterance.transcribed_pcm_len = max(
+                                utterance.transcribed_pcm_len, covered
+                            )
                         if cost is not None:
                             result.stt_cost += cost
                     except Exception:
@@ -687,7 +735,8 @@ class DuplexExchange:
                 # Schedule interrupt judge when listening to agent speech.
                 heard = _heard_transcript()
                 if (
-                    self.floor.can_run_judge
+                    self.policy is not None
+                    and self.floor.can_run_judge
                     and heard
                     and judge_task is None
                     and should_poll_judge(

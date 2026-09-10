@@ -51,7 +51,10 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {},
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

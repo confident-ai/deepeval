@@ -59,8 +59,8 @@ from contextlib import contextmanager
 from typing import Dict, List, Optional, Tuple
 
 from deepeval.models.llms import OpenAIModel
-from deepeval.models.stt_models import OpenAISTTModel
-from deepeval.models.tts_models import OpenAITTSModel
+from deepeval.models.stt import OpenAISTTModel
+from deepeval.models.tts import OpenAITTSModel
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 

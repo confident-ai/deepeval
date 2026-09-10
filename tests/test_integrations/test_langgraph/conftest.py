@@ -15,7 +15,8 @@ Field population sources (LLMApiTestCase schema from deepeval/test_run/api.py):
   - retrieval_context: None (not a RAG application, no retriever)
   - tools_called: trace_dict["toolsCalled"] or trace_dict["toolSpans"]
   - expected_tools: None (tests do not define expected tools)
-  - token_cost: sum of llmSpans[*].inputTokenCount + outputTokenCount (no cost rate)
+  - input_token_count / output_token_count: sums of llmSpans[*].inputTokenCount
+    and llmSpans[*].outputTokenCount (token_cost left None; no pricing info)
   - completion_time: (endTime - startTime) in seconds from trace_dict timestamps
   - tags: trace_dict["tags"] (from CallbackHandler tags parameter)
   - additional_metadata: trace correlation + environment info
@@ -395,21 +396,20 @@ def _extract_retrieval_context(
     return None
 
 
-def _extract_token_cost(trace_dict: Dict[str, Any]) -> Optional[float]:
-    """Extract total token count from trace.
+def _extract_token_counts(
+    trace_dict: Dict[str, Any],
+) -> tuple[Optional[int], Optional[int]]:
+    """Extract (input_token_count, output_token_count) from trace.
 
-    Source: Sum of llmSpans[*].inputTokenCount + llmSpans[*].outputTokenCount
-
-    NOTE: This returns total token COUNT, not dollar cost (we don't have pricing info).
-    The field is named "token_cost" but we populate it with total tokens as a proxy.
-    Returns None if no token info is available.
+    Source: Sums of llmSpans[*].inputTokenCount and llmSpans[*].outputTokenCount.
+    Each side is None if no span reported it.
     """
     llm_spans = trace_dict.get("llmSpans", [])
     if not llm_spans:
-        return None
+        return None, None
 
-    total_tokens = 0
-    has_token_data = False
+    input_total: Optional[int] = None
+    output_total: Optional[int] = None
 
     for span in llm_spans:
         if not isinstance(span, dict):
@@ -419,13 +419,11 @@ def _extract_token_cost(trace_dict: Dict[str, Any]) -> Optional[float]:
         output_tokens = span.get("outputTokenCount")
 
         if input_tokens is not None:
-            total_tokens += input_tokens
-            has_token_data = True
+            input_total = (input_total or 0) + int(input_tokens)
         if output_tokens is not None:
-            total_tokens += output_tokens
-            has_token_data = True
+            output_total = (output_total or 0) + int(output_tokens)
 
-    return float(total_tokens) if has_token_data else None
+    return input_total, output_total
 
 
 def _extract_completion_time(trace_dict: Dict[str, Any]) -> Optional[float]:
@@ -573,7 +571,7 @@ def _add_test_case_to_run(
     expected_tools = _extract_expected_tools(nodeid, item, trace_dict)
     context = _extract_context(nodeid, item, trace_dict)
     retrieval_context = _extract_retrieval_context(nodeid, item, trace_dict)
-    token_cost = _extract_token_cost(trace_dict)
+    input_token_count, output_token_count = _extract_token_counts(trace_dict)
     completion_time = _extract_completion_time(trace_dict)
     tags = _extract_tags(nodeid, item, trace_dict)
 
@@ -602,7 +600,9 @@ def _add_test_case_to_run(
         retrievalContext=retrieval_context,  # None - not a RAG app
         toolsCalled=tools_called,
         expectedTools=expected_tools,  # None unless test explicitly defines
-        tokenCost=token_cost,  # Total token count from llmSpans
+        tokenCost=None,  # No pricing info available from trace
+        inputTokenCount=input_token_count,  # Summed from llmSpans
+        outputTokenCount=output_token_count,  # Summed from llmSpans
         completionTime=completion_time,  # Duration in seconds from timestamps
         tags=tags,  # From CallbackHandler tags
         metadata=additional_metadata,
@@ -617,19 +617,25 @@ def _add_test_case_to_run(
     # Concise debug log showing which optional fields are populated
     _logger.debug(
         "added api_test_case fields: expectedOutput=%s expectedTools=%s context=%s "
-        "retrievalContext=%s tokenCost=%s completionTime=%s tags=%s",
+        "retrievalContext=%s inputTokenCount=%s outputTokenCount=%s "
+        "completionTime=%s tags=%s",
         expected_output is not None,
         expected_tools is not None,
         context is not None,
         retrieval_context is not None,
-        token_cost is not None,
+        input_token_count is not None,
+        output_token_count is not None,
         completion_time is not None,
         tags is not None,
     )
 
     # Print values when present
-    if token_cost is not None:
-        _logger.debug("tokenCost=%.1f (total tokens)", token_cost)
+    if input_token_count is not None or output_token_count is not None:
+        _logger.debug(
+            "inputTokenCount=%s outputTokenCount=%s",
+            input_token_count,
+            output_token_count,
+        )
     if completion_time is not None:
         _logger.debug("completionTime=%.3fs", completion_time)
     if tags:

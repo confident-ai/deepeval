@@ -40,6 +40,7 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     KeyValues,
     ModelKeyValues,
+    SpeechKeyValues,
 )
 
 # Friendly provider labels for the model classes `initialize_model` /
@@ -63,6 +64,15 @@ _PROVIDER_BY_CLASS = {
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",
     "LocalEmbeddingModel": "Local model",
+    "OpenAITTSModel": "OpenAI",
+    "ElevenLabsTTSModel": "ElevenLabs",
+    "CartesiaTTSModel": "Cartesia",
+    "DeepgramTTSModel": "Deepgram",
+    "OpenAISTTModel": "OpenAI",
+    "ElevenLabsSTTModel": "ElevenLabs",
+    "CartesiaSTTModel": "Cartesia",
+    "DeepgramSTTModel": "Deepgram",
+    "AssemblyAISTTModel": "AssemblyAI",
 }
 
 # Settings fields worth showing in the "configured settings" table when set.
@@ -78,6 +88,8 @@ _RELEVANT_MARKERS = (
     "DEEPEVAL_DEFAULT_SAVE",
     "DEEPEVAL_RESULTS_FOLDER",
     "DEEPEVAL_VOICE_FOLDER",
+    "DEEPEVAL_TTS_MODEL",
+    "DEEPEVAL_STT_MODEL",
 )
 
 
@@ -121,7 +133,12 @@ def _legacy_keystore() -> Tuple[Path, Dict[str, Any]]:
 
 def _env_key_to_json_key() -> Dict[str, str]:
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.name] = member.value
     return mapping
@@ -312,6 +329,22 @@ def _models_section() -> Dict[str, Any]:
         "(override with embedder=... in ContextConstructionConfig)"
     )
 
+    # Reported from the selection alone: those constructors need an API key.
+    from deepeval.models.speech_selection import (
+        describe_stt_selection,
+        describe_tts_selection,
+    )
+
+    for key, (class_name, model_name) in (
+        ("tts", describe_tts_selection()),
+        ("stt", describe_stt_selection()),
+    ):
+        result[key] = {
+            "provider": _PROVIDER_BY_CLASS.get(class_name, class_name),
+            "model": model_name or "provider default",
+            "used_by": "voice simulations",
+        }
+
     return result
 
 
@@ -440,7 +473,12 @@ def diagnose_command(
     # Default models (global, overridable per class)
     models = report["default_models"]
     table = _kv_table("Default models")
-    for label, key in (("LLM", "llm"), ("Embeddings", "embeddings")):
+    for label, key in (
+        ("LLM", "llm"),
+        ("Embeddings", "embeddings"),
+        ("TTS", "tts"),
+        ("STT", "stt"),
+    ):
         info = models[key]
         if "error" in info:
             value = f"[red]⚠ unusable until fixed: {info['error']}[/red]"

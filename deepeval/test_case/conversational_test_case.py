@@ -213,6 +213,7 @@ class Turn(BaseModel):
 class ConversationalTestCase(BaseModel):
     # Core
     turns: List[Turn]
+    call_recording_path: Optional[str] = Field(default=None, exclude=True)
     scenario: Optional[str] = Field(default=None)
     context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)

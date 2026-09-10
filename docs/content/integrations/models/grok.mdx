@@ -74,6 +74,15 @@ model = GrokModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **SIX** optional parameters when creating a `GrokModel`:
+
+- [Optional] `model`: A string specifying the name of the Grok model to use. Defaults to `GROK_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Grok API key for authentication. Defaults to `GROK_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `GROK_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `GROK_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the xAI SDK `client.chat.create(...)` call.
+
 </Tab>
 <Tab value="ENV">
 
@@ -91,15 +100,6 @@ You should also set the other necessary vars like `GROK_API_KEY` to be able to u
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SIX** optional parameters when creating a `GrokModel`:
-
-- [Optional] `model`: A string specifying the name of the Grok model to use. Defaults to `GROK_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying your Grok API key for authentication. Defaults to `GROK_API_KEY` if not passed; raises an error at runtime if unset.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `GROK_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `GROK_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the xAI SDK `client.chat.create(...)` call.
 
 </Case>
 
@@ -121,23 +121,6 @@ const model = new GrokModel({
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
-</Tab>
-<Tab value="ENV">
-
-To use any Grok model directly in `deepeval`, set `GROK_MODEL_NAME` and `GROK_API_KEY` in your `env` and create a `GrokModel` with no arguments:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { GrokModel } from "deepeval/models";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: new GrokModel(),
-});
-```
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating a `GrokModel`:
 
 - [Optional] `model`: A string specifying the name of the Grok model to use. Defaults to `GROK_MODEL_NAME` if not passed; falls back to `grok-3` if unset.
@@ -157,6 +140,23 @@ const model = new GrokModel({
   max_tokens: 512,
 });
 ```
+
+</Tab>
+<Tab value="ENV">
+
+To use any Grok model directly in `deepeval`, set `GROK_MODEL_NAME` and `GROK_API_KEY` in your `env` and create a `GrokModel` with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { GrokModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new GrokModel(),
+});
+```
+
+</Tab>
+</Tabs>
 
 </Case>
 

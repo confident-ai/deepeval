@@ -14,6 +14,7 @@ Uses deterministic settings (temperature=0) for reproducible traces.
 """
 
 from typing import Dict, List, Optional
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
@@ -42,7 +43,7 @@ def create_evals_agent(
     agent = Agent(
         "openai:gpt-4o-mini",
         system_prompt="You are a helpful assistant. Be concise.",
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="evals_agent",
     )
 

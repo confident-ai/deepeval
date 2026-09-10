@@ -13,6 +13,9 @@ export class Golden {
   name?: string;
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
+  tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   sourceFile?: string;
   customColumnKeyValues?: Record<string, string>;
   _datasetRank?: number;
@@ -28,6 +31,9 @@ export class Golden {
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
+    tokenCost?: number;
+    inputTokenCount?: number;
+    outputTokenCount?: number;
     additionalMetadata?: Record<string, any>;
     sourceFile?: string;
     customColumnKeyValues?: Record<string, string>;
@@ -45,6 +51,9 @@ export class Golden {
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
     this.expectedTools = params.expectedTools;
+    this.tokenCost = params.tokenCost;
+    this.inputTokenCount = params.inputTokenCount;
+    this.outputTokenCount = params.outputTokenCount;
     this.additionalMetadata = params.additionalMetadata;
     this.sourceFile = params.sourceFile;
     this.comments = params.comments;

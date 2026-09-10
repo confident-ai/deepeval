@@ -18,7 +18,25 @@
       "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
       "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Cloudy, 62F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "output": "8:00 AM CET",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
     }
   ],
   "llmSpans": [
@@ -106,7 +124,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               },
               {
                 "name": "get_time",
@@ -135,7 +155,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -146,7 +168,13 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "get_weather": "visible",
+              "get_time": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],
@@ -210,7 +238,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               },
               {
                 "name": "get_time",
@@ -239,7 +269,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -250,7 +282,13 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "get_weather": "visible",
+              "get_time": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

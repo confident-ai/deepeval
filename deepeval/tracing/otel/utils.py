@@ -138,6 +138,18 @@ def serialize_placeholder_to_otel_attrs(
             ConfidentAttr.SPAN_EXPECTED_OUTPUT,
             placeholder.expected_output,
         )
+    if placeholder.tools_called is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_TOOLS_CALLED,
+            [t.model_dump_json() for t in placeholder.tools_called],
+        )
+    if placeholder.expected_tools is not None:
+        set_span_attribute_post_end(
+            span,
+            ConfidentAttr.SPAN_EXPECTED_TOOLS,
+            [t.model_dump_json() for t in placeholder.expected_tools],
+        )
 
     existing = (
         getattr(span, "attributes", None)
@@ -439,7 +451,9 @@ def check_tool_input_parameters_from_gen_ai_attributes(
     span: ReadableSpan,
 ) -> Optional[dict]:
     try:
-        tool_arguments = span.attributes.get("tool_arguments")
+        tool_arguments = span.attributes.get("gen_ai.tool.call.arguments")
+        if tool_arguments is None:
+            tool_arguments = span.attributes.get("tool_arguments")
         if tool_arguments:
             return json.loads(tool_arguments)
     except Exception:
@@ -796,7 +810,10 @@ def check_pydantic_ai_tools_called(
 
 def check_tool_output(span: ReadableSpan):
     try:
-        return span.attributes.get("tool_response")
+        result = span.attributes.get("gen_ai.tool.call.result")
+        if result is None:
+            result = span.attributes.get("tool_response")
+        return result
     except Exception:
         pass
     return None

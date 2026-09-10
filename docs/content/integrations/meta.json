@@ -4,6 +4,9 @@
     "index",
     "frameworks",
     "models",
+    "stt",
+    "tts",
+    "voice-agent-connectors",
     "vector-databases",
     "others"
   ]

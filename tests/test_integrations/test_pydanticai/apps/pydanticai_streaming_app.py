@@ -5,6 +5,7 @@ Complexity: MEDIUM - Tests streaming functionality
 Uses deterministic settings (temperature=0) for reproducible traces.
 """
 
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 
@@ -28,7 +29,7 @@ def create_streaming_agent(
     return Agent(
         "openai:gpt-4o-mini",
         system_prompt="Be concise, reply with one short sentence only.",
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="streaming_agent",
     )
 

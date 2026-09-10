@@ -15,6 +15,13 @@ from deepeval.voice.connectors.transports.callback import (
 from deepeval.voice.output import DEFAULT_VOICE_FOLDER
 
 
+@pytest.fixture(autouse=True)
+def openai_api_key(monkeypatch):
+    # `VoiceConfig` resolves its speech models, which default to OpenAI and
+    # refuse to be constructed without a key. None of these tests speak.
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+
+
 @pytest.fixture
 def connector():
     async def agent(audio):

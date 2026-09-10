@@ -64,6 +64,22 @@ model = AzureOpenAIModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
+
+- [Optional] `model`: A string specifying the name of the Azure OpenAI model to use. Defaults to `AZURE_MODEL_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if `azure_ad_token` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token`: A string specifying your Azure Ad Token. Defaults to `AZURE_OPENAI_AD_TOKEN` if not passed; raises an error at runtime if `api_key` and `azure_ad_token_provider` are also unset.
+- [Optional] `azure_ad_token_provider`: A callback of either `AsyncAzureADTokenProvider` or `AzureADTokenProvider` that can be used for credentials [(see example usage)](https://github.com/openai/openai-python/blob/main/examples/azure_ad.py#L20). Raises an error at runtime if `api_key` and `azure_ad_token` are also unset.
+- [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `deployment_name`: A string specifying the name of your Azure OpenAI deployment. Defaults to `AZURE_DEPLOYMENT_NAME` if not passed; raises an error at runtime if unset.
+- [Optional] `api_version`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed; raises an error at runtime if unset.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
+
+Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-azure-openai) for the Azure OpenAI-related environment variables.
+
 </Tab>
 <Tab value="ENV">
 
@@ -81,22 +97,6 @@ You should also set the other necessary vars like `AZURE_OPENAI_API_KEY` to be a
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **NINE** optional parameters when creating an `AzureOpenAIModel`:
-
-- [Optional] `model`: A string specifying the name of the Azure OpenAI model to use. Defaults to `AZURE_MODEL_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_key`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if `azure_ad_token` and `azure_ad_token_provider` are also unset.
-- [Optional] `azure_ad_token`: A string specifying your Azure Ad Token. Defaults to `AZURE_OPENAI_AD_TOKEN` if not passed; raises an error at runtime if `api_key` and `azure_ad_token_provider` are also unset.
-- [Optional] `azure_ad_token_provider`: A callback of either `AsyncAzureADTokenProvider` or `AzureADTokenProvider` that can be used for credentials [(see example usage)](https://github.com/openai/openai-python/blob/main/examples/azure_ad.py#L20). Raises an error at runtime if `api_key` and `azure_ad_token` are also unset.
-- [Optional] `base_url`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error at runtime if unset.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `deployment_name`: A string specifying the name of your Azure OpenAI deployment. Defaults to `AZURE_DEPLOYMENT_NAME` if not passed; raises an error at runtime if unset.
-- [Optional] `api_version`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed; raises an error at runtime if unset.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Azure OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
-
-Parameters may be explicitly passed to the model at initialization time, or configured with optional settings. The **mandatory** parameters are required at runtime, but you can provide them either explicitly as constructor arguments, **or** via `deepeval` settings / environment variables (constructor args take precedence). See [Environment variables and settings](/docs/evaluation-flags-and-configs#model-settings-azure-openai) for the Azure OpenAI-related environment variables.
 
 </Case>
 
@@ -119,6 +119,27 @@ const model = new AzureOpenAIModel({
 });
 
 const answerRelevancy = new AnswerRelevancyMetric({ model });
+```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AzureOpenAIModel`:
+
+- [Optional] `model`: A string specifying the name of the Azure OpenAI model your deployment serves. Used to look up pricing and capabilities in `deepeval`'s model registry, and used as the deployment name when `deployment` is not passed.
+- [Optional] `deployment`: A string specifying the name of your Azure OpenAI deployment, which requests are routed by. Defaults to `model`, then `AZURE_DEPLOYMENT_NAME`, then `AZURE_MODEL_NAME` if not passed; raises an error if unset.
+- [Optional] `endpoint`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error if unset.
+- [Optional] `apiKey`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `apiVersion`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
+
+Any other key you pass is forwarded as-is to the Azure OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
+
+```typescript
+const model = new AzureOpenAIModel({
+  model: "gpt-4.1",
+  top_p: 0.9,
+  seed: 42,
+});
 ```
 
 </Tab>
@@ -148,27 +169,6 @@ const answerRelevancy = new AnswerRelevancyMetric({
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AzureOpenAIModel`:
-
-- [Optional] `model`: A string specifying the name of the Azure OpenAI model your deployment serves. Used to look up pricing and capabilities in `deepeval`'s model registry, and used as the deployment name when `deployment` is not passed.
-- [Optional] `deployment`: A string specifying the name of your Azure OpenAI deployment, which requests are routed by. Defaults to `model`, then `AZURE_DEPLOYMENT_NAME`, then `AZURE_MODEL_NAME` if not passed; raises an error if unset.
-- [Optional] `endpoint`: A string specifying your Azure OpenAI endpoint URL. Defaults to `AZURE_OPENAI_ENDPOINT` if not passed; raises an error if unset.
-- [Optional] `apiKey`: A string specifying your Azure OpenAI API key. Defaults to `AZURE_OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
-- [Optional] `apiVersion`: A string specifying the OpenAI API version used in your deployment. Defaults to `OPENAI_API_VERSION` if not passed.
-- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
-- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-- [Optional] `costPerOutputToken`: A number specifying the cost for each output token for the provided model. Defaults to the price in `deepeval`'s model cost registry, else `null`.
-
-Any other key you pass is forwarded as-is to the Azure OpenAI `chat.completions.create(...)` call, so generation parameters `deepeval` does not name go inline alongside the rest:
-
-```typescript
-const model = new AzureOpenAIModel({
-  model: "gpt-4.1",
-  top_p: 0.9,
-  seed: 42,
-});
-```
 
 </Case>
 

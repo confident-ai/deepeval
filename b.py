@@ -12,8 +12,8 @@ from deepeval.dataset import (
     Persona,
 )
 from deepeval.models.llms import OpenAIModel
-from deepeval.models.stt_models import OpenAISTTModel
-from deepeval.models.tts_models import OpenAITTSModel
+from deepeval.models.stt import OpenAISTTModel
+from deepeval.models.tts import OpenAITTSModel
 from deepeval.simulator import ConversationSimulator
 from deepeval.voice import CallbackVoiceConnector, VoiceConfig
 from deepeval.voice.timeline import build_audio_timeline

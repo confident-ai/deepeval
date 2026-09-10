@@ -57,11 +57,17 @@ class _Agent:
 
 
 class _TTS:
+    def supports_streaming(self) -> bool:
+        return False
+
     async def a_synthesize(self, text: str, **kwargs):
         return _wav_audio(), None
 
 
 class _STT:
+    def supports_streaming(self) -> bool:
+        return False
+
     truncated_audio_pad_seconds = 0.0
 
     async def a_transcribe(self, audio, **kwargs):

@@ -18,7 +18,17 @@
       "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
       "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Sunny, 72F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ]
     }
   ],
   "llmSpans": [
@@ -88,7 +98,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               },
               {
                 "name": "get_time",
@@ -117,7 +129,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -128,7 +142,13 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "get_weather": "visible",
+              "get_time": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],
@@ -192,7 +212,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               },
               {
                 "name": "get_time",
@@ -221,7 +243,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -232,7 +256,13 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "get_weather": "visible",
+              "get_time": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

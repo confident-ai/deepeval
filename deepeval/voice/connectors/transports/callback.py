@@ -9,6 +9,7 @@ from deepeval.models.base_model import DeepEvalBaseTTS, DeepEvalBaseSTT
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 from deepeval.voice.connectors import audio_utils
+from deepeval.voice.streaming import RealTimePacer
 from deepeval.voice.connectors.transports.base import (
     BaseVoiceConnector,
     UplinkStream,
@@ -21,6 +22,16 @@ from deepeval.voice.connectors.types import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _audio_seconds(audio: Audio) -> float:
+    if audio.duration is not None:
+        return max(audio.duration, 0.0)
+    try:
+        pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(audio.get_bytes())
+    except Exception:
+        return 0.0
+    return len(audio_utils.downmix_to_mono(pcm, channels or 1)) / 2 / rate
 
 
 async def _maybe_await(value):
@@ -92,13 +103,15 @@ class CallbackVoiceConnector(BaseVoiceConnector):
 
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         start = time.perf_counter()
-        input_ended_at = start + max(audio.duration or 0.0, 0.0)
+        input_seconds = max(audio.duration or _audio_seconds(audio), 0.0)
+        input_ended_at = start + input_seconds
         logger.debug(
             "Callback agent invocation started: input_bytes=%d",
             len(audio.get_bytes()),
         )
+        await asyncio.sleep(input_seconds)
         result = await _maybe_await(self.agent(audio))
-        latency_ms = (time.perf_counter() - start) * 1000.0
+        latency_ms = max(0.0, (time.perf_counter() - input_ended_at) * 1000.0)
         logger.debug(
             "Callback agent invocation finished after %.2fms: result_type=%s",
             latency_ms,
@@ -122,12 +135,14 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                 bool(result.transcript),
                 result.latency_ms,
             )
+            await asyncio.sleep(_audio_seconds(result.audio))
             return result
         logger.debug(
             "Callback connector audio: output_bytes=%d latency_ms=%.2f",
             len(result.get_bytes()),
             latency_ms,
         )
+        await asyncio.sleep(_audio_seconds(result))
         return ConnectorTurn(
             audio=result,
             latency_ms=latency_ms,
@@ -135,6 +150,20 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             input_audio_ended_at=input_ended_at,
             audio_started_at=max(time.perf_counter(), input_ended_at),
         )
+
+    async def _pace_uplink(self, audio: Audio) -> None:
+        try:
+            pcm, rate, channels = audio_utils.wav_bytes_to_pcm16(
+                audio.get_bytes()
+            )
+        except Exception:
+            return
+        pcm = audio_utils.downmix_to_mono(pcm, channels or 1)
+        pacer = RealTimePacer(rate)
+        for frame in audio_utils.iter_pcm16_frames(pcm, rate):
+            if self._uplink is None or self._uplink.cancelled:
+                return
+            await pacer.wait_to_send(frame)
 
     async def stream_uplink(
         self, audio: Audio, *, trailing_silence: bool = False
@@ -169,6 +198,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             # recorded as one turn whose audio and transcript disagree.
             await self._events.put(AgentEvent(turn_complete=True))
         self._uplink.begin()
+        await self._pace_uplink(audio)
 
         async def _produce_reply() -> None:
             result = await _maybe_await(self.agent(audio))

@@ -2,6 +2,7 @@ import asyncio
 import os
 import pytest
 from pydantic_ai import Agent
+from pydantic_ai.capabilities import Instrumentation
 from deepeval.integrations.pydantic_ai.instrumentator import (
     DeepEvalInstrumentationSettings,
 )
@@ -17,7 +18,7 @@ answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    instrument=DeepEvalInstrumentationSettings(),
+    capabilities=[Instrumentation(settings=DeepEvalInstrumentationSettings())],
 )
 
 

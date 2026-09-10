@@ -5,6 +5,7 @@ Complexity: MEDIUM - Tests multiple tool calling functionality
 Uses deterministic settings (temperature=0) for reproducible traces.
 """
 
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 
@@ -33,7 +34,7 @@ def create_multiple_tools_agent(
             "When asked about time, use the get_time tool. "
             "Be concise in your responses."
         ),
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="multiple_tools_agent",
     )
 

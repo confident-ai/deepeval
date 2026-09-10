@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ from typing import (
 )
 
 from deepeval.test_case import Audio, AudioChunk
+from deepeval.voice.connectors.audio_utils import DEFAULT_SILENCE_RMS
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.streaming import (
@@ -91,6 +93,7 @@ class BaseVoiceConnector(ABC):
     # Transports that select a `turn_detection` preset overwrite them.
     end_of_turn_silence_ms: int = 800
     max_turn_timeout_s: float = 30.0
+    silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -112,6 +115,19 @@ class BaseVoiceConnector(ABC):
                 "set to a VoiceProtocol member (e.g. "
                 "`protocol = VoiceProtocol.WEBRTC`)."
             )
+
+    def clone(self) -> "BaseVoiceConnector":
+        """A second connector with the same configuration, for a parallel call.
+
+        Concurrent conversations each need their own session, so the simulator
+        clones rather than sharing one connector. The copy is shallow, which
+        holds only because subclasses build their per-session state in
+        `connect()`; anything mutable created in `__init__` and not rebound in
+        `connect()` would be shared between two live calls. Override this when
+        a subclass holds a resource that cannot be, such as a connection or a
+        room the caller passed in.
+        """
+        return copy.copy(self)
 
     @abstractmethod
     async def connect(self) -> None:
@@ -169,6 +185,11 @@ class BaseVoiceConnector(ABC):
             on_first_frame(sent_at)
         await self.stream_uplink(audio, trailing_silence=trailing_silence)
         return UplinkResult(audio=audio, first_frame_at=sent_at)
+
+    @property
+    def supports_duplex(self) -> bool:
+        """Whether the agent can be heard while the caller is speaking."""
+        return False
 
     @property
     def signals_turn_complete(self) -> bool:

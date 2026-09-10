@@ -16,6 +16,8 @@ class LLMApiTestCase(BaseModel):
     tools_called: Optional[list] = Field(None, alias="toolsCalled")
     expected_tools: Optional[list] = Field(None, alias="expectedTools")
     token_cost: Optional[float] = Field(None, alias="tokenCost")
+    input_token_count: Optional[int] = Field(None, alias="inputTokenCount")
+    output_token_count: Optional[int] = Field(None, alias="outputTokenCount")
     completion_time: Optional[float] = Field(None, alias="completionTime")
     tags: Optional[List[str]] = Field(None)
     flaky: bool = False

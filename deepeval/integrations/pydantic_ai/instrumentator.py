@@ -135,7 +135,9 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
     Construction does the non-negotiable plumbing — creates a
     ``TracerProvider``, registers ``SpanInterceptor`` and
     ``ContextAwareSpanProcessor``, sets the global tracer provider, and
-    forwards itself to ``Agent(instrument=...)``. The constructor is
+    supplies settings for ``Instrumentation(settings=...)`` in an agent's
+    ``capabilities`` (Pydantic AI >=1.95). On older Pydantic AI 1.x, pass
+    these settings to ``Agent(instrument=...)``. The constructor is
     required for the integration to work; you cannot use the runtime
     helpers (``update_current_trace`` / ``update_current_span``) to
     bootstrap the OTel pipeline.

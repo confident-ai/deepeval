@@ -1,0 +1,135 @@
+---
+title: AssemblyAI STT
+sidebar_label: AssemblyAI
+languages: [python]
+---
+
+In `deepeval`, you can use AssemblyAI to transcribe speech into text when running [voice simulations](/docs/conversation-simulator-voice-mode). Transcription is what turns your agent's spoken replies into the `Turn.content` your multi-turn metrics judge, so its accuracy directly bounds how faithfully those metrics see the conversation.
+
+:::info
+AssemblyAI is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+ASSEMBLYAI_API_KEY=<your-assemblyai-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export ASSEMBLYAI_API_KEY=<your-assemblyai-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `ASSEMBLYAI_API_KEY` in a cell:
+
+```bash
+%env ASSEMBLYAI_API_KEY=<your-assemblyai-api-key>
+```
+
+### Command Line
+
+To transcribe with AssemblyAI in every voice simulation, run:
+
+```bash
+deepeval set-stt assemblyai --model=universal-3-5-pro
+```
+
+`--model` is optional and defaults to AssemblyAI's own default model.
+
+:::info
+The command above sets AssemblyAI as the default speech-to-text provider, unless overridden in Python code. To use a different one, run `deepeval set-stt` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-stt
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass an `AssemblyAISTTModel` to `VoiceConfig` to transcribe with AssemblyAI instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import AssemblyAISTTModel
+from deepeval.voice import VoiceConfig
+
+stt_model = AssemblyAISTTModel(
+    model="universal-3-5-pro",
+    language="en",
+)
+voice_config = VoiceConfig(
+    stt_model=stt_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating an `AssemblyAISTTModel`:
+
+- [Optional] `model`: A string specifying the name of the transcription model to use. Defaulted to `universal-3-5-pro`.
+- [Optional] `api_key`: A string specifying your AssemblyAI API key. Defaults to `ASSEMBLYAI_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the AssemblyAI API through. Defaulted to `https://api.assemblyai.com`.
+- [Optional] `language`: A string [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) code (e.g. `"en"`) pinning the spoken language. Pass `"auto"` to have AssemblyAI detect it instead. Defaulted to `None`.
+- [Optional] `cost_per_hour`: A float overriding the hourly price used for cost accounting. Defaults to the built-in price for whichever endpoint the clip took.
+- [Optional] `transcription_kwargs`: A dictionary of additional parameters forwarded to AssemblyAI's transcription request.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+- [Optional] `poll_interval_seconds`: A float number of seconds between status checks on the upload-and-poll path. Defaulted to `1.0`, and never consulted for clips short enough to take the synchronous endpoint.
+
+:::tip
+Any AssemblyAI parameter `deepeval` has no field for — `speaker_labels`, `keyterms_prompt`, `redact_pii` — can be passed through `transcription_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select AssemblyAI as the transcription provider:
+
+```bash
+# .env.local
+ASSEMBLYAI_API_KEY=<your-assemblyai-api-key>
+USE_ASSEMBLYAI_STT=1
+DEEPEVAL_STT_MODEL=universal-3-5-pro
+```
+
+`deepeval set-stt assemblyai --model universal-3-5-pro` writes those same variables for you. `DEEPEVAL_STT_MODEL` is optional: leave it out and transcription runs on `universal-3-5-pro` anyway, since that is AssemblyAI's default here.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_STT_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    stt_model="universal-3-5-pro",
+    ...,
+)
+```
+
+With `USE_ASSEMBLYAI_STT` set, a bare model name is shorthand for `AssemblyAISTTModel(model=...)`. Pass the model object itself to pin a language.
+
+</Tab>
+</Tabs>
+
+### Available AssemblyAI Models
+
+- `universal-3-5-pro` (default, replaces the deprecated `slam-1`)
+- `universal-2`
+
+:::info
+AssemblyAI has a synchronous endpoint that answers with a finished transcript in a single request, and an older upload-create-poll flow that takes three. `deepeval` prefers the synchronous one, which is dramatically faster and is what every conversation turn will use in practice. It caps clips at 120 seconds, so audio longer than that — or audio whose duration can't be measured — falls back to upload-and-poll automatically.
+:::
