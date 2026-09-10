@@ -156,7 +156,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsc-alias && npm run build:inspect-ui",
+    "build": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\" && tsc && tsc-alias && npm run build:inspect-ui",
     "build:inspect-ui": "tsc -p tsconfig.inspect.json && node scripts/mark-inspect-ui-esm.mjs",
     "prepublishOnly": "npm run build",
     "test": "jest",
