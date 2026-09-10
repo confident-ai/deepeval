@@ -30,27 +30,44 @@ class _BlockModules:
 
 def test_langchain_integration_imports_without_langchain():
     """`import deepeval.integrations.langchain` must not raise NameError when
-    langchain is not installed; using the integration raises a helpful
+    LangChain is not installed; using the integration raises a helpful
     ImportError instead.
 
     Previously the module referenced ``BaseCallbackHandler`` as a base class at
-    class-definition time, so importing without langchain crashed with
-    ``NameError: name 'BaseCallbackHandler' is not defined`` — which made the
+    class-definition time, so importing without LangChain crashed with
+    ``NameError: name 'BaseCallbackHandler' is not defined`` -- which made the
     ``is_langchain_installed()`` guard unreachable dead code.
     """
     module_name = "deepeval.integrations.langchain"
-    watch = ("langchain", module_name)
+    # The integration imports from `langchain_core`, not from `langchain`, so
+    # blocking only the latter leaves the dependency importable and the test
+    # would silently exercise the installed-LangChain path instead.
+    blocked = ("langchain", "langchain_core")
+    prefixes = blocked + (module_name,)
 
-    # Snapshot and clear anything cached so the import runs fresh under the block.
-    saved = {k: v for k, v in sys.modules.items() if k.startswith(watch)}
-    for key in list(sys.modules):
-        if key.startswith(watch):
-            del sys.modules[key]
+    def _matches(key):
+        return key in prefixes or key.startswith(
+            tuple(p + "." for p in prefixes)
+        )
 
-    finder = _BlockModules("langchain")
+    # Snapshot and clear anything cached so the import runs fresh under the
+    # block -- a cached module is served without ever reaching the finder.
+    saved = {k: v for k, v in sys.modules.items() if _matches(k)}
+    for key in saved:
+        del sys.modules[key]
+
+    finder = _BlockModules(*blocked)
     sys.meta_path.insert(0, finder)
     try:
         lc = importlib.import_module(module_name)
+
+        # Guard the simulation itself: if the integration ever starts importing
+        # a package not listed in `blocked`, fail loudly here rather than
+        # quietly asserting against the installed-LangChain path.
+        assert (
+            lc.callback.langchain_installed is False
+        ), "LangChain still importable under the block -- update `blocked`"
+
         assert hasattr(lc, "CallbackHandler")
         assert hasattr(lc, "tool")
 
@@ -62,6 +79,6 @@ def test_langchain_integration_imports_without_langchain():
     finally:
         sys.meta_path.remove(finder)
         for key in list(sys.modules):
-            if key.startswith(watch):
+            if _matches(key):
                 del sys.modules[key]
         sys.modules.update(saved)
