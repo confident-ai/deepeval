@@ -789,7 +789,9 @@ class TestToolSpanGenAiParity:
 
         interceptor._serialize_framework_attrs(span)
 
-        assert span.attributes.get(ConfidentAttr.SPAN_OUTPUT) == '{"status": "ok"}'
+        assert (
+            span.attributes.get(ConfidentAttr.SPAN_OUTPUT) == '{"status": "ok"}'
+        )
         raw = span.attributes.get(ConfidentAttr.SPAN_TOOLS_CALLED)
         assert raw
         first = json.loads(raw[0])
