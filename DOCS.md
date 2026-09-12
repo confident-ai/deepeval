@@ -33,3 +33,19 @@ Pointers only: where each code change on this branch needs a docs section, and w
 ## `docs/content/docs/(concepts)/evaluation-voice.mdx`
 
 - Cross-link the full-call recording and the per-conversation latency log as the two artifacts to inspect when a voice metric scores low.
+
+# Docs to update for `feat/voice/webrtc-connector`
+
+## `docs/content/docs/conversation-simulator-voice-connectors.mdx`
+
+- **New section, "Generic WebRTC"**, after Generic WebSocket: `WebRTCConnector` for agents reached over a raw peer connection (custom signaling, OpenAI Realtime WebRTC, WHIP-style endpoints). Follow the Generic WebSocket section's shape: a code sample, then the parameter list.
+  - One mandatory parameter: `signaling_url`. `http(s)://` means deepeval POSTs its SDP offer as `application/sdp` and reads the answer back (raw SDP, or JSON with an `sdp` field); `ws(s)://` means it sends `{"type": "offer", "sdp": ...}` and waits for `{"type": "answer", "sdp": ...}`, applying any `{"type": "candidate", ...}` messages it sees before or after.
+  - Optional: `headers` (sent on the signaling request or socket handshake), `data_channel` (label, default `"text"`; `None` opens none), `ice_servers` (`None` keeps aiortc's default STUN server, `[]` uses host candidates only, a list of `stun:`/`turn:` URLs replaces it), `turn_detection`, `connect_timeout_s` (default 15s, covers signaling, ICE and the agent's first audio track), `input_sample_rate`, `webrtc_sample_rate`, `trailing_silence_ms`, `transcript_grace_s`.
+  - Text: anything the agent sends on the data channel (a plain string, or JSON with `transcript` / `text` / `content` / `message`) is taken as its transcript for the turn instead of running STT. `send_text()` is available for callers that need to type at the agent.
+  - Video is neither requested nor published; an agent that also streams video keeps doing so, deepeval only negotiates audio.
+  - Requires `pip install aiortc` (pulls in PyAV); the connector raises with that hint when it is missing.
+- **Turn Detection**: add WebRTC to the list of duplex connectors the presets apply to.
+
+## `docs/content/docs/conversation-simulator-voice-mode/index.mdx`
+
+- **How It Works**: list peer connections (`WebRTCConnector`) with LiveKit rooms and SIP calls as a full-duplex transport.

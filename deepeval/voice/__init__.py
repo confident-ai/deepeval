@@ -12,6 +12,7 @@ from deepeval.voice.connectors import (
     BaseWebSocketConnector,
     ElevenLabsConnector,
     WebSocketConnector,
+    WebRTCConnector,
     PipecatConnector,
     VapiConnector,
 )
@@ -33,6 +34,7 @@ __all__ = [
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
+    "WebRTCConnector",
     "PipecatConnector",
     "VapiConnector",
 ]
