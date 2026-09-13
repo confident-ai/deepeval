@@ -1,4 +1,17 @@
 class ARCTemplate:
+    # ARC does not label its options consistently. Most items use "A"-"D", but a
+    # subset labels them "1"-"4", a few offer five options ("A"-"E"), and at
+    # least one offers only three. The gold `answerKey` uses whichever labelling
+    # that item happens to carry, so a numerically labelled item produced an
+    # `expected_output` of "3" — a value the answer schema cannot represent and
+    # the confinement instructions never mention. Those items scored 0 no matter
+    # what the model answered.
+    #
+    # Option labels are positionally aligned with `choices["text"]`, so both the
+    # rendered prompt and the gold answer are normalized to letters by position.
+    # This keeps the prompt and the expected answer in the same alphabet.
+    option_letters = ["A", "B", "C", "D", "E"]
+
     n_shot_examples = [
         {
             "id": "Mercury_7220990",
@@ -78,17 +91,36 @@ class ARCTemplate:
         return prompt
 
     @staticmethod
+    def normalize_label(data: dict, label: str) -> str:
+        """Map an item's own option label onto its positional letter.
+
+        Returns `label` unchanged when it is not one of the item's options, or
+        when the item has more options than there are letters, so an unexpected
+        dataset shape degrades to the previous behaviour instead of raising.
+        """
+        labels = data["choices"]["label"]
+        try:
+            index = labels.index(label)
+        except ValueError:
+            return label
+        if index >= len(ARCTemplate.option_letters):
+            return label
+        return ARCTemplate.option_letters[index]
+
+    @staticmethod
     def format_question(data: dict, include_answer: bool = True):
         prompt = data["question"]
         texts = data["choices"]["text"]
         labels = data["choices"]["label"]
         for i in range(len(labels)):
-            prompt += "\n{}. {}".format(labels[i], texts[i])
+            prompt += "\n{}. {}".format(
+                ARCTemplate.normalize_label(data, labels[i]), texts[i]
+            )
         prompt += "\nAnswer: "
         if include_answer:
-            prompt += " {}\n\n".format(data["answerKey"])
+            prompt += " {}\n\n".format(ARCTemplate.format_answer(data))
         return prompt
 
     @staticmethod
     def format_answer(data: dict):
-        return data["answerKey"]
+        return ARCTemplate.normalize_label(data, data["answerKey"])
