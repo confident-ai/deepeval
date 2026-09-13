@@ -229,7 +229,7 @@ On the duplex path the preset is a ceiling, not the wait: when the running trans
 
 When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `VapiConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies.
 
-The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` gets a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at. `PipecatConnector` falls on either side depending on your pipeline: it's believed over a pause once your pipeline has been seen to announce an end of turn, and reads silence until then.
+The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` and `WebRTCConnector` get a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at. `PipecatConnector` falls on either side depending on your pipeline: it's believed over a pause once your pipeline has been seen to announce an end of turn, and reads silence until then.
 
 ::::note
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
