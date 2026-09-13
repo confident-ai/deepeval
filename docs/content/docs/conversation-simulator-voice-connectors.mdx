@@ -103,13 +103,6 @@ voice_config = VoiceConfig(
 )
 ```
 
-The URL scheme picks the signaling contract:
-
-- `http://` or `https://`: `deepeval` POSTs its SDP offer with `Content-Type: application/sdp` and reads the answer from the response body, either the raw SDP or JSON with an `sdp` field (`{"type": "answer", "sdp": "..."}` or `{"answer": {"sdp": "..."}}`). This is what OpenAI Realtime, WHIP-style servers, and most custom backends expect.
-- `ws://` or `wss://`: `deepeval` sends `{"type": "offer", "sdp": "..."}` over the socket and waits for `{"type": "answer", "sdp": "..."}`. Any `{"type": "candidate", "candidate": ..., "sdpMid": ..., "sdpMLineIndex": ...}` messages are applied whether they arrive before or after the answer, and the socket stays open for the length of the call.
-
-`deepeval` gathers its ICE candidates before sending the offer, so your endpoint receives a complete offer and never has to trickle candidates back over HTTP.
-
 There are **ONE** mandatory and **NINE** optional parameters when creating a `WebRTCConnector`:
 
 - `signaling_url`: a string `http(s)://` or `ws(s)://` URL your agent negotiates WebRTC sessions on.
@@ -122,6 +115,13 @@ There are **ONE** mandatory and **NINE** optional parameters when creating a `We
 - [Optional] `webrtc_sample_rate`: an integer sample rate in Hz used on the wire. Defaulted to `48000`.
 - [Optional] `trailing_silence_ms`: an integer number of milliseconds of silence appended after each full user turn so the agent's VAD hears it end. Defaulted to `1500`.
 - [Optional] `transcript_grace_s`: a float number of seconds to wait for a data-channel transcript after the agent's audio ends before falling back to STT. Defaulted to `0.0`.
+
+The URL scheme picks the signaling contract:
+
+- `http://` or `https://`: `deepeval` POSTs its SDP offer with `Content-Type: application/sdp` and reads the answer from the response body, either the raw SDP or JSON with an `sdp` field (`{"type": "answer", "sdp": "..."}` or `{"answer": {"sdp": "..."}}`). This is what OpenAI Realtime, WHIP-style servers, and most custom backends expect.
+- `ws://` or `wss://`: `deepeval` sends `{"type": "offer", "sdp": "..."}` over the socket and waits for `{"type": "answer", "sdp": "..."}`. Any `{"type": "candidate", "candidate": ..., "sdpMid": ..., "sdpMLineIndex": ...}` messages are applied whether they arrive before or after the answer, and the socket stays open for the length of the call.
+
+`deepeval` gathers its ICE candidates before sending the offer, so your endpoint receives a complete offer and never has to trickle candidates back over HTTP.
 
 ::::note
 `WebRTCConnector` needs `aiortc`, which is not installed with `deepeval`. Install it with `pip install aiortc`; the connector raises with the same hint when it is missing.
