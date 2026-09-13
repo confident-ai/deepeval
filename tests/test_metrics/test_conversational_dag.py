@@ -362,6 +362,25 @@ class TestConversationalDeepAcyclicGraph:
         assert hasattr(order, "_verdict_schema")
         assert sorted(order._verdict_options) == ["A", "B"]
 
+    def test_nonbinary_verdict_options_follow_declaration_order(self):
+        """The options reach the prompt and the schema in declaration order.
+
+        Building them from a set left the order to string-hash
+        randomization, so the same DAG sent a different prompt every run.
+        Five verdicts make a spurious pass unlikely, and they are
+        deliberately not alphabetical so a sorted() regression fails here.
+        """
+        verdicts = ["Excellent", "Good", "Fair", "Poor", "Unusable"]
+        order = ConversationalNonBinaryJudgementNode(
+            criteria="How good was the tone?"
+        )
+        for score, verdict in enumerate(verdicts):
+            order.add_verdict(verdict, score=score)
+        DeepAcyclicGraph(root_nodes=[order])
+        assert order._verdict_options == verdicts
+        annotation = order._verdict_schema.model_fields["verdict"].annotation
+        assert list(annotation.__args__) == verdicts
+
 
 class TestConversationalTopDownBuilder:
 

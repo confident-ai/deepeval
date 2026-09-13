@@ -415,7 +415,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
                 )
             verdicts_set.add(child.verdict)
 
-        self._verdict_options = list(verdicts_set)
+        self._verdict_options = [child.verdict for child in self.children]
         self._verdict_schema = create_model(
             "NonBinaryJudgementVerdict",
             verdict=(Literal[tuple(self._verdict_options)], ...),
