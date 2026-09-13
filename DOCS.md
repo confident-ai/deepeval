@@ -33,13 +33,3 @@ Pointers only: where each code change on this branch needs a docs section, and w
 ## `docs/content/docs/(concepts)/evaluation-voice.mdx`
 
 - Cross-link the full-call recording and the per-conversation latency log as the two artifacts to inspect when a voice metric scores low.
-
-# Docs to update for `feat/voice/webrtc-connector`
-
-## `docs/content/docs/conversation-simulator-voice-connectors.mdx`
-
-- **Turn Detection**: add WebRTC to the list of duplex connectors the presets apply to.
-
-## `docs/content/docs/conversation-simulator-voice-mode/index.mdx`
-
-- **How It Works**: list peer connections (`WebRTCConnector`) with LiveKit rooms and SIP calls as a full-duplex transport.
