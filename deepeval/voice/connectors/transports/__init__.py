@@ -7,6 +7,7 @@ from deepeval.voice.connectors.transports.websocket import (
     InboundEvent,
     WebSocketConnector,
 )
+from deepeval.voice.connectors.transports.webrtc import WebRTCConnector
 
 __all__ = [
     "BaseVoiceConnector",
@@ -14,4 +15,5 @@ __all__ = [
     "BaseWebSocketConnector",
     "InboundEvent",
     "WebSocketConnector",
+    "WebRTCConnector",
 ]

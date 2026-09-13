@@ -86,6 +86,49 @@ There are **ONE** mandatory and **TWELVE** optional parameters when creating a `
 - [Optional] `ready_on`: when the session is considered ready — `"connect"` by default. Defaulted to `"connect"`.
 - [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking — `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
 
+## Generic WebRTC
+
+For agents reached over a raw peer connection rather than a vendor SDK, `WebRTCConnector` negotiates its own connection with your signaling endpoint, publishes the simulated user's microphone, and listens to the agent's audio track. It only negotiates audio: an agent that also streams video keeps doing so, and `deepeval` never requests or publishes a video track.
+
+```python
+from deepeval.voice import VoiceConfig, WebRTCConnector
+
+connector = WebRTCConnector(
+    signaling_url="https://your-agent.example.com/offer",
+    headers={"Authorization": "Bearer ..."},
+)
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
+
+There are **ONE** mandatory and **NINE** optional parameters when creating a `WebRTCConnector`:
+
+- `signaling_url`: a string `http(s)://` or `ws(s)://` URL your agent negotiates WebRTC sessions on.
+- [Optional] `headers`: a dictionary of HTTP headers sent with the signaling request or the socket handshake, such as an API key. Defaulted to `None`.
+- [Optional] `data_channel`: a string label for the data channel opened alongside the audio. Anything the agent sends on it, a plain string or JSON carrying `transcript`, `text`, `content`, or `message`, is used as its transcript for the turn instead of running STT. Pass `None` to open no channel. Defaulted to `"text"`.
+- [Optional] `ice_servers`: a list of `stun:` or `turn:` URLs. `None` keeps aiortc's default STUN server; an empty list uses host candidates only, which is what you want for an agent on the same network or machine. Defaulted to `None`.
+- [Optional] `turn_detection`: how long to wait before deciding your agent has finished speaking: `"eager"`, `"balanced"`, or `"patient"`. See [Turn Detection](#turn-detection). Defaulted to `"balanced"`.
+- [Optional] `connect_timeout_s`: a float number of seconds allowed for signaling, the connection reaching `connected`, and the agent's first audio track to arrive. Defaulted to `15.0`.
+- [Optional] `input_sample_rate`: an integer sample rate in Hz for the audio handed to the connector and for the replies it returns. Defaulted to `24000`.
+- [Optional] `webrtc_sample_rate`: an integer sample rate in Hz used on the wire. Defaulted to `48000`.
+- [Optional] `trailing_silence_ms`: an integer number of milliseconds of silence appended after each full user turn so the agent's VAD hears it end. Defaulted to `1500`.
+- [Optional] `transcript_grace_s`: a float number of seconds to wait for a data-channel transcript after the agent's audio ends before falling back to STT. Defaulted to `0.0`.
+
+The URL scheme picks the signaling contract:
+
+- `http://` or `https://`: `deepeval` POSTs its SDP offer with `Content-Type: application/sdp` and reads the answer from the response body, either the raw SDP or JSON with an `sdp` field (`{"type": "answer", "sdp": "..."}` or `{"answer": {"sdp": "..."}}`). This is what OpenAI Realtime, WHIP-style servers, and most custom backends expect.
+- `ws://` or `wss://`: `deepeval` sends `{"type": "offer", "sdp": "..."}` over the socket and waits for `{"type": "answer", "sdp": "..."}`. Any `{"type": "candidate", "candidate": ..., "sdpMid": ..., "sdpMLineIndex": ...}` messages are applied whether they arrive before or after the answer, and the socket stays open for the length of the call.
+
+`deepeval` gathers its ICE candidates before sending the offer, so your endpoint receives a complete offer and never has to trickle candidates back over HTTP.
+
+::::note
+`WebRTCConnector` needs `aiortc`, which is not installed with `deepeval`. Install it with `pip install aiortc`; the connector raises with the same hint when it is missing.
+::::
+
+The connector is full-duplex, so the simulator keeps listening while the caller speaks and a persona's [interruption behavior](/docs/conversation-simulator-voice-interruptions) applies. To type at the agent as well as speak, call `connector.send_text("...")` once connected; whatever your agent sends back on the channel becomes the transcript of its next turn.
+
 ## Callback
 
 Wraps an in-process Python callable, so you can exercise the full TTS → agent → STT pipeline without any network transport — useful for testing your simulation setup before pointing it at a deployed agent.
@@ -186,7 +229,7 @@ On the duplex path the preset is a ceiling, not the wait: when the running trans
 
 When your transport closes each turn explicitly, silence is only the fallback: `ElevenLabsConnector`, `VapiConnector`, `CallbackVoiceConnector`, and a `WebSocketConnector` given a `turn_complete_type` are all believed over a pause, so the reply is heard out in full however long your agent stops for. Only the ceiling still applies.
 
-The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` gets a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at. `PipecatConnector` falls on either side depending on your pipeline: it's believed over a pause once your pipeline has been seen to announce an end of turn, and reads silence until then.
+The preset matters more everywhere else, because silence is the only evidence there is. `LiveKitConnector` and `WebRTCConnector` get a bare audio track with nothing to say when a turn is over, and so does a `WebSocketConnector` whose agent sends no end-of-turn message to point at. `PipecatConnector` falls on either side depending on your pipeline: it's believed over a pause once your pipeline has been seen to announce an end of turn, and reads silence until then.
 
 ::::note
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
