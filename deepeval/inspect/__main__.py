@@ -23,9 +23,14 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if raw:
-            resolved = Path(raw)
-            if resolved.is_dir():
-                resolved = find_latest_test_run(resolved)
+            # `deepeval.db#<run_id>` is not a filesystem path; hand it to
+            # the loader untouched.
+            if "#" in raw:
+                resolved = raw
+            else:
+                resolved = Path(raw)
+                if resolved.is_dir():
+                    resolved = find_latest_test_run(resolved)
         else:
             resolved = find_latest_test_run("experiments")
         run_inspect(str(resolved))

@@ -23,6 +23,8 @@ export {
   readLatestTestRun,
   deleteLatestTestRun,
   exportTestRunJson,
+  exportTestRun,
+  type ExportedTestRun,
   type LocalTestRun,
 } from "@/evaluate/test-run/local";
 export {

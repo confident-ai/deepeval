@@ -367,6 +367,25 @@ class Settings(BaseSettings):
         description="If set, export a timestamped JSON of the latest test run into this folder (created if missing).",
     )
 
+    # Backend used to persist finished test runs locally. `json` (default)
+    # keeps the rolling `.latest_run_full.json` + timestamped
+    # `test_run_<ts>.json` exports; `sqlite` writes runs, test cases, traces,
+    # spans and metrics into `deepeval.db` (in DEEPEVAL_RESULTS_FOLDER when
+    # set, else the cache folder).
+    DEEPEVAL_LOCAL_STORE: Optional[Literal["json", "sqlite"]] = Field(
+        "json",
+        description="Local test run store backend: 'json' (default) or 'sqlite'. SQLite writes to deepeval.db inside DEEPEVAL_RESULTS_FOLDER (or the cache folder).",
+    )
+
+    # SQLite store only. When truthy, `test_cases`, `traces` and `spans` rows
+    # also store their full serialized object in `payload_json` (the
+    # `test_runs` row always does). Off by default: it roughly doubles the
+    # database footprint.
+    DEEPEVAL_SQLITE_INCLUDE_ROW_JSON: Optional[bool] = Field(
+        None,
+        description="SQLite store: also keep the full JSON object on every test case, trace and span row (payload_json). Larger database; off by default.",
+    )
+
     # When set, overrides the default DeepEval cache directory
     DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
         ".deepeval",
@@ -1132,6 +1151,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
+        "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
         "GOOGLE_GENAI_USE_VERTEXAI",
         "IGNORE_DEEPEVAL_ERRORS",
         "SKIP_DEEPEVAL_MISSING_PARAMS",
@@ -1245,6 +1265,20 @@ class Settings(BaseSettings):
             return "READ_ONLY"
         raise ValueError(
             "DEEPEVAL_FILE_SYSTEM must be READ_ONLY (case-insensitive)."
+        )
+
+    @field_validator("DEEPEVAL_LOCAL_STORE", mode="before")
+    @classmethod
+    def _normalize_local_store(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip().lower()
+        if not s:
+            return None
+        if s in {"json", "sqlite", "sqlite3", "db"}:
+            return "sqlite" if s != "json" else "json"
+        raise ValueError(
+            f"DEEPEVAL_LOCAL_STORE must be 'json' or 'sqlite' (case-insensitive), got {s!r}."
         )
 
     @field_validator("CONFIDENT_REGION", mode="before")

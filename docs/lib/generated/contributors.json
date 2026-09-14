@@ -898,7 +898,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 5
+      "commits": 7
     }
   ],
   "content/docs/(custom)/metrics-arena-g-eval.mdx": [
@@ -2390,7 +2390,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/(voice)/metrics-audio-integrity.mdx": [
@@ -2399,7 +2399,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/(voice)/metrics-speech-intelligibility.mdx": [
@@ -2408,7 +2408,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/(voice)/metrics-turn-taking-naturalness.mdx": [
@@ -2417,7 +2417,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/(voice)/metrics-voice-consistency.mdx": [
@@ -2426,7 +2426,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/(voice)/metrics-voice-naturalness.mdx": [
@@ -2435,7 +2435,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 2
+      "commits": 4
     }
   ],
   "content/docs/(voice)/metrics-voice-reliability.mdx": [
@@ -2444,7 +2444,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 1
+      "commits": 3
     }
   ],
   "content/docs/benchmarks-introduction.mdx": [
@@ -2490,7 +2490,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 14
+      "commits": 15
     },
     {
       "login": "BloggerBust",
@@ -2630,7 +2630,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 7
+      "commits": 9
     }
   ],
   "content/docs/conversation-simulator-voice-interruptions.mdx": [
@@ -2639,7 +2639,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 2
+      "commits": 4
     }
   ],
   "content/docs/conversation-simulator-voice-mode/index.mdx": [
@@ -2648,7 +2648,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 5
+      "commits": 7
     }
   ],
   "content/docs/conversation-simulator-voice-personas.mdx": [
@@ -2657,7 +2657,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 2
+      "commits": 4
     }
   ],
   "content/docs/data-privacy.mdx": [
@@ -4689,18 +4689,18 @@
   ],
   "content/integrations/frameworks/pydanticai.mdx": [
     {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 14
+    },
+    {
       "login": "spike-spiegel-21",
       "name": "Mayank Solanki",
       "avatarUrl": "https://avatars.githubusercontent.com/u/83648453?v=4",
       "url": "https://github.com/spike-spiegel-21",
       "commits": 14
-    },
-    {
-      "login": "penguine-ip",
-      "name": "Jeffrey Ip",
-      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
-      "url": "https://github.com/penguine-ip",
-      "commits": 11
     },
     {
       "login": "A-Vamshi",

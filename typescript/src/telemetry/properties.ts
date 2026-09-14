@@ -34,6 +34,7 @@ export enum Prop {
   ASYNC_MODE = "eval.async_mode",
   IN_COMPONENT = "eval.in_component",
   FLUSH_REASON = "eval.flush_reason",
+  LOCAL_STORE = "eval.local_store",
   // judge
   PROVIDER = "judge.provider",
   MODEL = "judge.model",
@@ -107,6 +108,16 @@ export enum TurnKind {
  * Why a standalone metric batch was sent. A threshold or interval flush is a
  * partial session, so `eval.metric_runs` must be summed, not counted.
  */
+/**
+ * Which local backend the run's results are written to. Read from
+ * configuration, never from the stored run, so it counts how many evaluations
+ * use each backend and nothing else.
+ */
+export enum LocalStore {
+  JSON = "json",
+  SQLITE = "sqlite",
+}
+
 export enum FlushReason {
   THRESHOLD = "threshold",
   INTERVAL = "interval",
@@ -178,6 +189,7 @@ export interface EventProperties {
   asyncMode?: boolean;
   inComponent?: boolean;
   flushReason?: FlushReason;
+  localStore?: LocalStore;
   // judge
   provider?: string;
   model?: string;
@@ -231,6 +243,7 @@ export const FIELD_TO_PROP: Record<keyof EventProperties, Prop> = {
   asyncMode: Prop.ASYNC_MODE,
   inComponent: Prop.IN_COMPONENT,
   flushReason: Prop.FLUSH_REASON,
+  localStore: Prop.LOCAL_STORE,
   provider: Prop.PROVIDER,
   model: Prop.MODEL,
   tracingEnabled: Prop.TRACING_ENABLED,

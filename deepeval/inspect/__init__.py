@@ -1,4 +1,8 @@
-"""TUI for inspecting `test_run_*.json` files. CLI entry: `deepeval inspect [PATH]`."""
+"""TUI for inspecting saved test runs. CLI entry: `deepeval inspect [PATH]`.
+
+`path` is either a `test_run_*.json` file or a SQLite source
+`<path>/deepeval.db[#<run_id>]` (see `deepeval.sqlite_store`).
+"""
 
 
 def run_inspect(path: str) -> None:

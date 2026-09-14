@@ -50,6 +50,8 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_DEFAULT_SAVE`      | `dotenv[:path]` / unset    | Default persistence target for <Term py="deepeval set-* --save" ts="npx deepeval set-* --save"/> when `--save` is omitted.                                     |
 | `DEEPEVAL_FILE_SYSTEM`       | `READ_ONLY` / unset        | Stop `deepeval` writing its own files: the keystore, dotenv persistence, the metric cache, the latest test run, and the results export.                       |
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
+| `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
+| `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
 | `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
 | `IGNORE_DEEPEVAL_ERRORS`     | `1` / `0` / unset          | Continue a run when a metric errors, instead of failing the test case.                                                                                        |
@@ -76,6 +78,89 @@ Under `DEEPEVAL_FILE_SYSTEM=READ_ONLY`, `deepeval` still creates a per-run tempo
 </Case>
 
 </Switch>
+
+#### SQLite local store
+
+By default every finished run is written as JSON. Set `DEEPEVAL_LOCAL_STORE=sqlite` (or run <Term py="deepeval set-local-store sqlite --save=dotenv" ts="npx deepeval set-local-store sqlite --save=dotenv"/>) to keep a queryable history of runs in a single SQLite database instead. A full comparison of the two backends, where each file lands, and how to export the database to other platforms is [here](/docs/evaluation-local-backend-storage).
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+deepeval test run test_llm_app.py
+# Test run saved to .deepeval/deepeval.db (run id 3)
+```
+
+The database lives at `deepeval.db` inside `DEEPEVAL_RESULTS_FOLDER` (or `DisplayConfig(results_folder=...)`) when set, otherwise inside the `.deepeval` cache folder. No JSON files are written in this mode, and nothing is uploaded — it is purely local storage.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+npx deepeval test run llm_app.test.ts
+# ✅ Test run saved to: .deepeval/deepeval.db (run id 3)
+```
+
+The database lives at `deepeval.db` inside `DEEPEVAL_RESULTS_FOLDER` when set, otherwise inside the `.deepeval` cache folder. The timestamped `test_run_*.json` export is skipped in this mode; `.deepeval/.latest_test_run.json` is still written because `npx deepeval view` uploads from it.
+
+:::caution[Node.js 24 or newer]
+The TypeScript store is built on the runtime's built-in `node:sqlite` module, which is only stable from Node 24. On an older Node, setting `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error telling you the version you are on and to either upgrade or switch back to `json` — `deepeval` never silently falls back, so your results are not quietly written somewhere else.
+:::
+
+</Case>
+
+</Switch>
+
+Each run is broken out into five tables — `test_runs`, `test_cases`, `traces`, `spans`, `metric_data` — so you can query across runs with plain SQL, while the `test_runs` row keeps the complete serialized run in `payload_json` (and, with `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1`, so does every test case, trace and span row). The exact `CREATE TABLE` statements are listed [here](/docs/evaluation-local-backend-storage#schema); the schema is identical in both SDKs, so a Python and a TypeScript project can share one `deepeval.db`.
+
+For example, to track a metric's average across every run:
+
+```bash
+sqlite3 .deepeval/deepeval.db \
+  "SELECT r.id, r.identifier, m.name, round(avg(m.score), 3)
+   FROM metric_data m JOIN test_runs r ON r.id = m.test_run_id
+   GROUP BY r.id, m.name ORDER BY r.id"
+```
+
+Stored runs can be listed and opened in the [<Term py="deepeval inspect" ts="npx deepeval inspect"/>](/docs/command-line-interface#inspect) TUI with the `--list` and `--run-id <id>` flags, or loaded back in code:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.sqlite_store import list_test_runs, load_test_run, resolve_db_path
+
+db = resolve_db_path()                 # honours DEEPEVAL_RESULTS_FOLDER
+runs = list_test_runs(db, limit=10)    # newest first, summary columns only
+run_id, test_run = load_test_run(db)   # latest run as a `TestRun`
+```
+
+The store uses only Python's built-in `sqlite3` module, so there is nothing extra to install and it works the same on macOS, Linux, Windows, and CI.
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { listTestRuns, loadTestRunPayload, resolveDbPath } from "deepeval/sqlite-store";
+
+const db = resolveDbPath();                    // honours DEEPEVAL_RESULTS_FOLDER
+const runs = listTestRuns(db, 10);             // newest first, summary columns only
+const { runId, payload } = loadTestRunPayload(db); // latest run
+```
+
+The store uses only Node's built-in `node:sqlite` module, so there is no native addon to compile and it works the same on macOS, Linux, Windows, and CI.
+
+</Case>
+
+</Switch>
+
+Writes are single transactions with a 30-second busy timeout, and any storage failure (read-only filesystem, locked database) is reported as a warning rather than failing the evaluation. `DEEPEVAL_FILE_SYSTEM=READ_ONLY` disables it entirely, like every other local write.
 
 ## Logging
 

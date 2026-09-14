@@ -119,10 +119,11 @@ export function createSection(config: SectionConfig) {
     const { nav, ...rest } = baseOptions();
     return (
       <>
-        <Banner id="docs-announcement" height="30px">
-          💥 BREAKING CHANGE: All metric scores are now HIGHER THE BETTER.{" "}
-          <Link href="/changelog/changelog-2026#breaking-change">
-            Read changelog →
+        <Banner id="docs-announcement-sqlite" height="30px">
+          🗄️ NEW: Persistent local storage with SQLite — keep every test run on
+          your machine.{" "}
+          <Link href="/blog/introducing-sqlite-local-storage">
+            Read the post →
           </Link>
         </Banner>
         <LanguageScopedDocsLayout

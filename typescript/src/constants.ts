@@ -14,6 +14,10 @@ export const DEEPEVAL_DISPLAY = "DEEPEVAL_DISPLAY";
 export const DEEPEVAL_MAX_CONCURRENT = "DEEPEVAL_MAX_CONCURRENT";
 export const ENABLE_DEEPEVAL_CACHE = "ENABLE_DEEPEVAL_CACHE";
 export const DEEPEVAL_RESULTS_FOLDER = "DEEPEVAL_RESULTS_FOLDER";
+/** `json` (default) or `sqlite`: backend for finished test runs. */
+export const DEEPEVAL_LOCAL_STORE = "DEEPEVAL_LOCAL_STORE";
+/** SQLite store: also keep the full JSON object on test case / trace / span rows. */
+export const DEEPEVAL_SQLITE_INCLUDE_ROW_JSON = "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON";
 export const DEEPEVAL_DISABLE_DOTENV = "DEEPEVAL_DISABLE_DOTENV";
 export const APP_ENV = "APP_ENV";
 export const ENV_DIR_PATH = "ENV_DIR_PATH";

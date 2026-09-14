@@ -14,6 +14,16 @@ import { getProvider, type ProviderSpec } from "@/cli/providers";
 import { selectProvider } from "@/models/provider-selection";
 import { printTable } from "@/cli/utils";
 import { getVersion } from "@/cli/version";
+import { HIDDEN_DIR } from "@/constants";
+import {
+  LOCAL_STORE_JSON,
+  LOCAL_STORE_SQLITE,
+  normalizeLocalStoreMode,
+  isSqliteSupported,
+  sqliteUnsupportedMessage,
+  type LocalStoreMode,
+} from "@/sqlite-store/mode";
+import { resolveDbPath, resolveIncludeRowJson } from "@/sqlite-store/store";
 
 // Settings worth showing when set, matching Python's `_RELEVANT_MARKERS`.
 const RELEVANT_MARKERS = [
@@ -27,6 +37,8 @@ const RELEVANT_MARKERS = [
   "TEMPERATURE",
   "DEEPEVAL_DEFAULT_SAVE",
   "DEEPEVAL_RESULTS_FOLDER",
+  "DEEPEVAL_LOCAL_STORE",
+  "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
 ];
 
 function maskSecret(value: string): string {
@@ -71,6 +83,15 @@ interface DiagnoseReport {
     apiUrl: string;
   };
   model: { provider: string | null; model: string | null; reason: string };
+  localStorage: {
+    backend: LocalStoreMode;
+    backendSource: string;
+    location: string;
+    resultsFolder: string | null;
+    resultsFolderSource: string | null;
+    includeRowJson?: boolean;
+    error?: string;
+  };
   sources: { dotenvFiles: string[]; keystore: string };
   settings: Array<{
     name: string;
@@ -78,6 +99,42 @@ interface DiagnoseReport {
     source: string;
     secret: boolean;
   }>;
+}
+
+/** Where finished test runs go, always reported (even on defaults). */
+function localStorageSection(
+  settings: Record<string, unknown>,
+): DiagnoseReport["localStorage"] {
+  const configured = settings.DEEPEVAL_LOCAL_STORE as string | undefined;
+  const backend = normalizeLocalStoreMode(configured ?? "") ?? LOCAL_STORE_JSON;
+  const backendSource =
+    configured === undefined || configured === ""
+      ? "built-in default"
+      : getSettingSource("DEEPEVAL_LOCAL_STORE");
+  const resultsFolder =
+    (settings.DEEPEVAL_RESULTS_FOLDER as string | undefined)?.trim() || null;
+  const base = {
+    backend,
+    backendSource,
+    resultsFolder,
+    resultsFolderSource: resultsFolder
+      ? getSettingSource("DEEPEVAL_RESULTS_FOLDER")
+      : null,
+  };
+  if (backend === LOCAL_STORE_SQLITE) {
+    return {
+      ...base,
+      location: resolveDbPath(resultsFolder ?? undefined),
+      includeRowJson: resolveIncludeRowJson(),
+      ...(isSqliteSupported() ? {} : { error: sqliteUnsupportedMessage() }),
+    };
+  }
+  return {
+    ...base,
+    location: resultsFolder
+      ? `${resultsFolder}/test_run_*.json`
+      : `${HIDDEN_DIR}/.latest_test_run.json (latest run only)`,
+  };
 }
 
 function buildReport(): DiagnoseReport {
@@ -116,6 +173,7 @@ function buildReport(): DiagnoseReport {
         : null,
       reason,
     },
+    localStorage: localStorageSection(settings),
     sources: {
       dotenvFiles: loadedDotenvPaths(),
       keystore: keystoreLocation(),
@@ -154,6 +212,25 @@ function printReport(report: DiagnoseReport): void {
   console.log(`  provider   ${report.model.provider ?? "(none configured)"}`);
   if (report.model.model) console.log(`  model      ${report.model.model}`);
   console.log(`  reason     ${report.model.reason}`);
+
+  const storage = report.localStorage;
+  console.log(`\n${BOLD}Local storage${RESET}`);
+  console.log(`  backend    ${storage.backend} (${storage.backendSource})`);
+  console.log(`  location   ${storage.location}`);
+  if (storage.resultsFolder) {
+    console.log(
+      `  folder     ${storage.resultsFolder} (${storage.resultsFolderSource})`,
+    );
+  }
+  if (storage.includeRowJson !== undefined) {
+    console.log(
+      `  row json   ${storage.includeRowJson ? "on" : "off (default)"}`,
+    );
+  }
+  if (storage.error) console.log(`  ⚠ ${storage.error}`);
+  console.log(
+    "  change with `npx deepeval set-local-store <json|sqlite> --save=dotenv`",
+  );
 
   console.log(`\n${BOLD}Configuration sources${RESET}`);
   console.log(

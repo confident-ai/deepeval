@@ -11,6 +11,13 @@ import {
 } from "@/config/settings";
 import { getFieldMeta } from "@/config/schema";
 import {
+  LOCAL_STORE_JSON,
+  LOCAL_STORE_SQLITE,
+  isSqliteSupported,
+  normalizeLocalStoreMode,
+  sqliteUnsupportedMessage,
+} from "@/sqlite-store/mode";
+import {
   badParameter,
   handleSaveResult,
   printTable,
@@ -183,6 +190,48 @@ export function registerSettingsCommands(program: Command): void {
         successMessage:
           `🙌 Congratulations! You're now using the ${REGION_FLAGS[normalized]} ` +
           `${normalized} data region for Confident AI.`,
+      });
+    });
+
+  program
+    .command("set-local-store")
+    .description(
+      "Choose the local backend for test runs (sets DEEPEVAL_LOCAL_STORE).",
+    )
+    .argument(
+      "<backend>",
+      `Where finished test runs are saved locally: ${LOCAL_STORE_JSON} (default) or ${LOCAL_STORE_SQLITE}.`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((backend: string, options) => {
+      const mode = normalizeLocalStoreMode(backend);
+      if (mode === undefined) {
+        badParameter(
+          `Backend must be ${LOCAL_STORE_JSON} or ${LOCAL_STORE_SQLITE}.`,
+        );
+      }
+      if (mode === LOCAL_STORE_SQLITE && !isSqliteSupported()) {
+        badParameter(sqliteUnsupportedMessage());
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_LOCAL_STORE = mode;
+        },
+        { save },
+      );
+
+      handleSaveResult({
+        result,
+        save,
+        quiet: options.quiet,
+        successMessage:
+          mode === LOCAL_STORE_SQLITE
+            ? "💾 Test runs will now be saved to deepeval.db (SQLite). " +
+              "Run `npx deepeval inspect --list` to browse them."
+            : "📄 Test runs will now be saved as JSON files (the default).",
       });
     });
 
