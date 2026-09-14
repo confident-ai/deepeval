@@ -51,6 +51,11 @@ except ImportError as e:
             )
 
     crewai_installed = False
+    # Fallback base class so `class CrewAIEventsListener(BaseEventListener)`
+    # below can still be defined when crewai is absent. Without it, importing
+    # this module raises a cryptic NameError before is_crewai_installed() can
+    # surface the helpful error on use.
+    BaseEventListener = object
 
 # GLOBAL STATE to prevent duplicate listeners
 IS_WRAPPED_ALL = False
