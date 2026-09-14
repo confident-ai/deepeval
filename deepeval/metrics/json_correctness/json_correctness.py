@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional, Union, Type
 from pydantic import BaseModel, ValidationError
 
@@ -20,6 +21,8 @@ from deepeval.utils import get_or_create_event_loop, serialize_to_json
 from deepeval.templates import make_template_class
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
+DEFAULT_CORRECT_REASON_NO_SCHEMA = "The generated output is valid JSON."
+DEFAULT_INCORRECT_REASON_NO_SCHEMA = "The generated output is not valid JSON."
 
 
 JsonCorrectnessTemplate = make_template_class("JsonCorrectnessMetric")
@@ -33,7 +36,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
     def __init__(
         self,
-        expected_schema: BaseModel,
+        expected_schema: Optional[BaseModel] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: Optional[float] = 0.5,
         async_mode: bool = True,
@@ -55,6 +58,40 @@ class JsonCorrectnessMetric(BaseMetric):
         self.expected_schema = expected_schema
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_template = evaluation_template
+
+    def _validates_as_json(self, actual_output: str) -> bool:
+        """Return whether ``actual_output`` is valid.
+
+        In schema mode (``expected_schema`` set) the output must parse and
+        validate against the pydantic schema. In schema-less mode
+        (``expected_schema=None``) the output only needs to be *parseable* JSON
+        — a fully deterministic, offline JSON well-formedness check that needs
+        no LLM.
+
+        Empty / whitespace-only / non-JSON strings fail both paths.
+        """
+        if self.expected_schema is not None:
+            try:
+                self.expected_schema.model_validate_json(actual_output)
+                return True
+            except ValidationError:
+                return False
+        try:
+            json.loads(actual_output)
+            return True
+        except (ValueError, TypeError):
+            return False
+
+    def _deterministic_reason(self, valid_json: bool) -> Optional[str]:
+        """Schema-less reason — never invokes the LLM, so this mode is fully
+        deterministic and works with no API key configured."""
+        if not self.include_reason:
+            return None
+        return (
+            DEFAULT_CORRECT_REASON_NO_SCHEMA
+            if valid_json
+            else DEFAULT_INCORRECT_REASON_NO_SCHEMA
+        )
 
     def measure(
         self,
@@ -90,13 +127,7 @@ class JsonCorrectnessMetric(BaseMetric):
                     )
                 )
             else:
-                valid_json = True
-                try:
-                    self.expected_schema.model_validate_json(
-                        test_case.actual_output
-                    )
-                except ValidationError:
-                    valid_json = False
+                valid_json = self._validates_as_json(test_case.actual_output)
 
                 self.score = 1 if valid_json else 0
                 self.reason = self.generate_reason(test_case.actual_output)
@@ -139,13 +170,7 @@ class JsonCorrectnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            valid_json = True
-            try:
-                self.expected_schema.model_validate_json(
-                    test_case.actual_output
-                )
-            except ValidationError:
-                valid_json = False
+            valid_json = self._validates_as_json(test_case.actual_output)
 
             self.score = 1 if valid_json else 0
             self.reason = await self.a_generate_reason(test_case.actual_output)
@@ -165,6 +190,9 @@ class JsonCorrectnessMetric(BaseMetric):
             return None
 
         is_valid_json = self.score == 1
+        if self.expected_schema is None:
+            # Schema-less mode never invokes the LLM.
+            return self._deterministic_reason(is_valid_json)
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
@@ -190,6 +218,9 @@ class JsonCorrectnessMetric(BaseMetric):
             return None
 
         is_valid_json = self.score == 1
+        if self.expected_schema is None:
+            # Schema-less mode never invokes the LLM.
+            return self._deterministic_reason(is_valid_json)
         if is_valid_json:
             return DEFAULT_CORRECT_REASON
 
