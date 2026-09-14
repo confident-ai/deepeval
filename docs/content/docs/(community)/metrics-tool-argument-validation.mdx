@@ -1,0 +1,146 @@
+---
+id: metrics-tool-argument-validation
+title: Tool Argument Validation
+sidebar_label: Tool Argument Validation
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The **Tool Argument Validation** metric deterministically validates that an agent's executed tool calls comply with predefined **Pydantic schema contracts**.
+
+Unlike `ToolCorrectnessMetric` (which requires a hardcoded golden dictionary in `expected_tools`) and `ArgumentCorrectnessMetric` (which uses an LLM judge for semantic evaluation), this metric checks syntax, types, required fields, and domain constraints directly in memory using Pydantic.
+
+:::note
+The `ToolArgumentValidationMetric` does **not** rely on an LLM for evaluation. It validates parameters directly against your Pydantic schemas, so it is 100% deterministic, requires no API key, and has zero token cost — making it ideal for CI/CD unit and regression testing.
+:::
+
+## Required Arguments
+
+To use the `ToolArgumentValidationMetric`, you only need to provide `tools_called` when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `tools_called`
+
+## Usage
+
+```python
+from pydantic import BaseModel, Field
+from typing import Literal
+from deepeval import evaluate
+from deepeval.metrics.community import ToolArgumentValidationMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+# 1. Define tool argument contracts with Pydantic
+class SearchFlightSchema(BaseModel):
+    origin: str
+    destination: str
+    passengers: int = Field(ge=1, le=9)
+
+class BookFlightSchema(BaseModel):
+    flight_id: str
+    payment_method: Literal["credit_card", "paypal"]
+
+# 2. Instantiate metric with schema registry
+metric = ToolArgumentValidationMetric(
+    tool_schemas={
+        "search_flights": SearchFlightSchema,
+        "book_flight": BookFlightSchema,
+    },
+    threshold=1.0,
+    strict_mode=False,
+    verbose_mode=True,
+)
+
+# 3. Create test case with agent tool trajectory
+test_case = LLMTestCase(
+    input="Book a flight for 2 from Rome to Paris",
+    actual_output="I found flight AZ123 and booked it for 2 passengers.",
+    tools_called=[
+        ToolCall(
+            name="search_flights",
+            input_parameters={"origin": "FCO", "destination": "CDG", "passengers": 2},
+        ),
+        ToolCall(
+            name="book_flight",
+            input_parameters={"flight_id": "AZ123", "payment_method": "credit_card"},
+        ),
+    ],
+)
+
+# Run standalone
+metric.measure(test_case)
+print(metric.score, metric.reason)
+
+# Or evaluate in a test suite
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** required and **SIX** optional parameters when creating a `ToolArgumentValidationMetric`:
+
+- `tool_schemas`: a non-empty dictionary mapping tool names to Pydantic `BaseModel` classes.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to `1.0`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary score (zeroes any score below threshold), defaulted to `False`.
+- [Optional] `allow_unregistered`: a boolean indicating whether calls to tools not listed in `tool_schemas` should be tolerated and ignored from scoring (`True`) or counted as validation failures (`False`). Defaulted to `False`.
+- [Optional] `include_reason`: a boolean which when set to `True`, provides granular error diagnostics detailing failed parameters and violation types. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints intermediate evaluation steps and diagnostic logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### Diagnostic Output Example
+
+When validation fails, the metric produces structured diagnostics showing the exact field and error type from Pydantic:
+
+```text
+Validation Failed: 1/2 tool call(s) adhered to schema contracts (Score: 0.50).
+Diagnostics:
+- Call #0 [search_flights]: SUCCESS
+- Call #1 [book_flight]: FAILED
+  * parameter 'payment_method': Input should be 'credit_card' or 'paypal' [type=literal_error]
+  * parameter 'flight_id': Field required [type=missing]
+```
+
+## How Is It Calculated?
+
+The `ToolArgumentValidationMetric` score represents the fraction of evaluated tool calls that satisfy their schema contract:
+
+<Equation formula="\text{Tool Argument Validation Score} = \frac{\text{Number of Conforming Tool Calls}}{\text{Total Evaluated Tool Calls}}" />
+
+When no tool calls are provided, the score is `1.0` with reason `"No tool calls provided"`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Tool Correctness Metric?",
+      answer: (
+        <>
+          <code>ToolCorrectnessMetric</code> checks whether the agent produced
+          the <em>exact expected values</em> against a golden dataset (<code>expected_tools</code>).
+          <code>ToolArgumentValidationMetric</code> is referenceless and validates whether
+          arguments satisfy the tool's <em>type signature and contract</em> (Pydantic schema),
+          making it suitable for dynamic agent queries.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from Argument Correctness Metric?",
+      answer: (
+        <>
+          <code>ArgumentCorrectnessMetric</code> uses an LLM judge to evaluate
+          whether arguments make sense semantically for the user query.
+          <code>ToolArgumentValidationMetric</code> checks syntactic and structural
+          validity deterministically with zero token cost.
+        </>
+      ),
+    },
+    {
+      question: "Can input_parameters be a stringified JSON?",
+      answer: (
+        <>
+          Yes. The metric accepts <code>input_parameters</code> as either a Python
+          <code>dict</code> or a JSON-encoded <code>str</code>.
+        </>
+      ),
+    },
+  ]}
+/>
