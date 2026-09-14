@@ -107,7 +107,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         self.model_data = OPENAI_MODELS_DATA.get(model)
 
         # Auto-adjust temperature for known models that require it
-        if self.model_data.supports_temperature is False:
+        if self.model_data and self.model_data.supports_temperature is False:
             temperature = 1
 
         # validation
@@ -119,8 +119,9 @@ class OpenAIModel(DeepEvalBaseLLM):
             cost_per_input_token,
             cost_per_output_token,
         )
-        self.model_data.input_price = cost_per_input_token
-        self.model_data.output_price = cost_per_output_token
+        if self.model_data:
+            self.model_data.input_price = cost_per_input_token
+            self.model_data.output_price = cost_per_output_token
 
         if temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
@@ -285,6 +286,8 @@ class OpenAIModel(DeepEvalBaseLLM):
     ############################
 
     def _cap_top_logprobs(self, top_logprobs: int) -> int:
+        if not self.model_data:
+            return top_logprobs
         max_log_probs = self.model_data.max_log_probs
         if max_log_probs is None:
             return top_logprobs
@@ -398,7 +401,11 @@ class OpenAIModel(DeepEvalBaseLLM):
     def calculate_cost(
         self, input_tokens: int, output_tokens: int
     ) -> Optional[float]:
-        if self.model_data.input_price and self.model_data.output_price:
+        if (
+            self.model_data
+            and self.model_data.input_price
+            and self.model_data.output_price
+        ):
             input_cost = input_tokens * self.model_data.input_price
             output_cost = output_tokens * self.model_data.output_price
             # Carry token counts alongside the cost so metric runs can surface
@@ -413,26 +420,30 @@ class OpenAIModel(DeepEvalBaseLLM):
     #########################
 
     def supports_log_probs(self) -> Union[bool, None]:
-        return self.model_data.supports_log_probs
+        return self.model_data.supports_log_probs if self.model_data else None
 
     def supports_temperature(self) -> Union[bool, None]:
-        return self.model_data.supports_temperature
+        return self.model_data.supports_temperature if self.model_data else None
 
     def supports_multimodal(self) -> Union[bool, None]:
-        return self.model_data.supports_multimodal
+        return self.model_data.supports_multimodal if self.model_data else None
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         """
         OpenAI models that natively enforce typed structured outputs.
          Used by generate(...) when a schema is provided.
         """
-        return self.model_data.supports_structured_outputs
+        return (
+            self.model_data.supports_structured_outputs
+            if self.model_data
+            else None
+        )
 
     def supports_json_mode(self) -> Union[bool, None]:
         """
         OpenAI models that enforce JSON mode
         """
-        return self.model_data.supports_json
+        return self.model_data.supports_json if self.model_data else None
 
     #########
     # Model #
@@ -549,8 +560,12 @@ class OpenAIModel(DeepEvalBaseLLM):
                 model=self.name,
                 input_token_count=input_token_count,
                 output_token_count=output_token_count,
-                cost_per_input_token=self.model_data.input_price,
-                cost_per_output_token=self.model_data.output_price,
+                cost_per_input_token=(
+                    self.model_data.input_price if self.model_data else None
+                ),
+                cost_per_output_token=(
+                    self.model_data.output_price if self.model_data else None
+                ),
             )
             update_current_span(
                 input=messages,
