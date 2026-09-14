@@ -139,7 +139,7 @@ export const settingsSchema = z.object({
     .describe(
       "Local test run store backend: json (default) or sqlite. SQLite needs Node 24+ and writes to deepeval.db inside DEEPEVAL_RESULTS_FOLDER (or the cache folder).",
     ),
-  DEEPEVAL_SQLITE_PAYLOADS: optionalBool().describe(
+  DEEPEVAL_SQLITE_INCLUDE_ROW_JSON: optionalBool().describe(
     "SQLite store: also keep the full JSON object on every test case, trace and span row (payload_json). Larger database; off by default.",
   ),
   DEEPEVAL_CACHE_FOLDER: optionalString().describe(

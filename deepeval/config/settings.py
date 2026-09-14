@@ -381,7 +381,7 @@ class Settings(BaseSettings):
     # also store their full serialized object in `payload_json` (the
     # `test_runs` row always does). Off by default: it roughly doubles the
     # database footprint.
-    DEEPEVAL_SQLITE_PAYLOADS: Optional[bool] = Field(
+    DEEPEVAL_SQLITE_INCLUDE_ROW_JSON: Optional[bool] = Field(
         None,
         description="SQLite store: also keep the full JSON object on every test case, trace and span row (payload_json). Larger database; off by default.",
     )
@@ -1151,7 +1151,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
-        "DEEPEVAL_SQLITE_PAYLOADS",
+        "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
         "GOOGLE_GENAI_USE_VERTEXAI",
         "IGNORE_DEEPEVAL_ERRORS",
         "SKIP_DEEPEVAL_MISSING_PARAMS",

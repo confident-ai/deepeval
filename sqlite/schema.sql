@@ -10,7 +10,7 @@
 --
 -- The `test_runs` row always keeps the complete serialized run in `payload_json`
 -- (that is what `inspect` reloads). `test_cases`, `traces` and `spans` have the
--- same column but it is only filled when DEEPEVAL_SQLITE_PAYLOADS=1, because it
+-- same column but it is only filled when DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1, because it
 -- roughly doubles the file size. `metric_data` (one row per MetricData result)
 -- has no payload. All other columns are a promoted subset for filtering and
 -- joining without parsing JSON.
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS test_cases (
     run_duration    REAL,
     evaluation_cost REAL,
     tags_json       TEXT,
-    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_test_cases_run ON test_cases(test_run_id);
 
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS traces (
     output_json   TEXT,
     metadata_json TEXT,
     tags_json     TEXT,
-    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_traces_run ON traces(test_run_id);
 CREATE INDEX IF NOT EXISTS idx_traces_case ON traces(test_case_id);
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS spans (
     output_token_count REAL,
     input_json         TEXT,
     output_json        TEXT,
-    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_spans_trace_parent ON spans(trace_id, parent_uuid);
 

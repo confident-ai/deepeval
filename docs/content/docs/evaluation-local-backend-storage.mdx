@@ -157,13 +157,13 @@ Across all tables, the named columns are a **promoted subset** of each object, c
 The `test_runs` row always has its `payload_json`: it is the whole run, and it is what <Term py="deepeval inspect" ts="npx deepeval inspect"/> and <Term py="load_test_run()" ts="loadTestRunPayload()"/> read back, so nothing is ever lost. The `test_cases`, `traces` and `spans` rows have the same column but leave it `NULL` unless you opt in:
 
 ```bash
-export DEEPEVAL_SQLITE_PAYLOADS=1
+export DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 ```
 
-With it on, every child row carries its own full object, so fields that were not promoted — a test case's `turns`, a trace's `toolsCalled`, a span's `prompt` — can be queried right on that row instead of dug out of the run-level JSON. The examples marked *payloads on* below need it.
+With it on, every child row carries its own full object, so fields that were not promoted — a test case's `turns`, a trace's `toolsCalled`, a span's `prompt` — can be queried right on that row instead of dug out of the run-level JSON. The examples marked *row JSON on* below need it.
 
 :::warning[Larger database]
-Child payloads store everything twice: the run-level `payload_json` already contains every test case, trace and span, and each child row then repeats its slice of it. Expect `deepeval.db` to grow to roughly two to three times the size of the equivalent JSON export, and more for trace-heavy runs where spans carry large inputs and outputs. SQLite does not compress, so leave this off unless you actually query those fields.
+Row JSON stores everything twice: the run-level `payload_json` already contains every test case, trace and span, and each child row then repeats its slice of it. Expect `deepeval.db` to grow to roughly two to three times the size of the equivalent JSON export, and more for trace-heavy runs where spans carry large inputs and outputs. SQLite does not compress, so leave this off unless you actually query those fields.
 :::
 
 #### Test runs
@@ -227,13 +227,13 @@ CREATE TABLE test_cases (
     run_duration    REAL,
     evaluation_cost REAL,
     tags_json       TEXT,
-    payload_json    TEXT                     -- full test case; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json    TEXT                     -- full test case; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 ```
 
-Fields that are not promoted and live only in `payload_json` (payloads on): `context`, `retrievalContext`, `toolsCalled`, `expectedTools`, `metadata`, `turns`, and `metricsData` (the per-metric results, including verbose logs).
+Fields that are not promoted and live only in `payload_json` (row JSON on): `context`, `retrievalContext`, `toolsCalled`, `expectedTools`, `metadata`, `turns`, and `metricsData` (the per-metric results, including verbose logs).
 
-Turns do not get their own table. Each turn is an object in the `turns` array — `role`, `content`, `order`, `userId`, `retrievalContext`, `toolsCalled`, `comments` — so unpack them with [`json_each`](https://sqlite.org/json1.html#jeach) when you need one row per turn (payloads on):
+Turns do not get their own table. Each turn is an object in the `turns` array — `role`, `content`, `order`, `userId`, `retrievalContext`, `toolsCalled`, `comments` — so unpack them with [`json_each`](https://sqlite.org/json1.html#jeach) when you need one row per turn (row JSON on):
 
 ```sql
 SELECT tc.id AS test_case_id, tc.name,
@@ -246,7 +246,7 @@ WHERE tc.kind = 'multi-turn'
 ORDER BY tc.id, turn_order;
 ```
 
-Every failing case in the latest run, with its retrieval context (payloads on):
+Every failing case in the latest run, with its retrieval context (row JSON on):
 
 ```sql
 SELECT "order", input, actual_output,
@@ -277,11 +277,11 @@ CREATE TABLE traces (
     output_json   TEXT,
     metadata_json TEXT,
     tags_json     TEXT,
-    payload_json  TEXT                       -- full trace, spans included; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json  TEXT                       -- full trace, spans included; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 ```
 
-Fields that live only in `payload_json` (payloads on): `turnId`, `context`, `retrievalContext`, `expectedOutput`, `toolsCalled`, `expectedTools`, `attachments`, `metricCollection`, `metricsData`, and the raw span lists (`baseSpans`, `agentSpans`, `llmSpans`, `retrieverSpans`, `toolSpans`) that the `spans` table is built from.
+Fields that live only in `payload_json` (row JSON on): `turnId`, `context`, `retrievalContext`, `expectedOutput`, `toolsCalled`, `expectedTools`, `attachments`, `metricCollection`, `metricsData`, and the raw span lists (`baseSpans`, `agentSpans`, `llmSpans`, `retrieverSpans`, `toolSpans`) that the `spans` table is built from.
 
 Errored traces per run, grouped by name:
 
@@ -313,11 +313,11 @@ CREATE TABLE spans (
     output_token_count REAL,                 -- llm spans
     input_json         TEXT,
     output_json        TEXT,
-    payload_json       TEXT                  -- full span; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json       TEXT                  -- full span; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 ```
 
-Fields that live only in `payload_json` (payloads on), by type: every span has `metadata`, `integration`, `metricCollection` and `metricsData`; agent spans add `availableTools` and `agentHandoffs`; retriever spans add `embedder`, `topK`, `chunkSize` and `retrievalContext`; tool spans add `description`; LLM spans add `prompt`, `promptAlias` / `promptVersion` / `promptLabel` / `promptCommitHash`, `costPerInputToken`, `costPerOutputToken` and `tokenIntervals`.
+Fields that live only in `payload_json` (row JSON on), by type: every span has `metadata`, `integration`, `metricCollection` and `metricsData`; agent spans add `availableTools` and `agentHandoffs`; retriever spans add `embedder`, `topK`, `chunkSize` and `retrievalContext`; tool spans add `description`; LLM spans add `prompt`, `promptAlias` / `promptVersion` / `promptLabel` / `promptCommitHash`, `costPerInputToken`, `costPerOutputToken` and `tokenIntervals`.
 
 Token usage per model across the whole database:
 
@@ -329,7 +329,7 @@ FROM spans WHERE type = 'llm'
 GROUP BY model ORDER BY input_tokens + output_tokens DESC;
 ```
 
-Which tools an agent span actually called (payloads on):
+Which tools an agent span actually called (row JSON on):
 
 ```sql
 SELECT name, json_extract(payload_json, '$.toolsCalled') AS tools_called
@@ -459,7 +459,7 @@ Or load a run in code:
 from deepeval.sqlite_store import list_test_runs, load_test_run, resolve_db_path
 
 db = resolve_db_path()
-runs = list_test_runs(db, limit=10)    # newest first, without payloads
+runs = list_test_runs(db, limit=10)    # newest first, summary columns only
 run_id, test_run = load_test_run(db)   # latest run as a `TestRun`
 ```
 
@@ -480,7 +480,7 @@ Or load a run in code:
 import { listTestRuns, loadTestRunPayload, resolveDbPath } from "deepeval/sqlite-store";
 
 const db = resolveDbPath();
-const runs = listTestRuns(db, 10);                 // newest first, without payloads
+const runs = listTestRuns(db, 10);                 // newest first, summary columns only
 const { runId, payload } = loadTestRunPayload(db); // latest run
 ```
 

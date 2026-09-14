@@ -51,7 +51,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_FILE_SYSTEM`       | `READ_ONLY` / unset        | Stop `deepeval` writing its own files: the keystore, dotenv persistence, the metric cache, the latest test run, and the results export.                       |
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
 | `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
-| `DEEPEVAL_SQLITE_PAYLOADS`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
+| `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
 | `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
 | `IGNORE_DEEPEVAL_ERRORS`     | `1` / `0` / unset          | Continue a run when a metric errors, instead of failing the test case.                                                                                        |
@@ -115,7 +115,7 @@ The TypeScript store is built on the runtime's built-in `node:sqlite` module, wh
 
 </Switch>
 
-Each run is broken out into five tables — `test_runs`, `test_cases`, `traces`, `spans`, `metric_data` — so you can query across runs with plain SQL, while the `test_runs` row keeps the complete serialized run in `payload_json` (and, with `DEEPEVAL_SQLITE_PAYLOADS=1`, so does every test case, trace and span row). The exact `CREATE TABLE` statements are listed [here](/docs/evaluation-local-backend-storage#schema); the schema is identical in both SDKs, so a Python and a TypeScript project can share one `deepeval.db`.
+Each run is broken out into five tables — `test_runs`, `test_cases`, `traces`, `spans`, `metric_data` — so you can query across runs with plain SQL, while the `test_runs` row keeps the complete serialized run in `payload_json` (and, with `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1`, so does every test case, trace and span row). The exact `CREATE TABLE` statements are listed [here](/docs/evaluation-local-backend-storage#schema); the schema is identical in both SDKs, so a Python and a TypeScript project can share one `deepeval.db`.
 
 For example, to track a metric's average across every run:
 
@@ -136,7 +136,7 @@ Stored runs can be listed and opened in the [<Term py="deepeval inspect" ts="npx
 from deepeval.sqlite_store import list_test_runs, load_test_run, resolve_db_path
 
 db = resolve_db_path()                 # honours DEEPEVAL_RESULTS_FOLDER
-runs = list_test_runs(db, limit=10)    # newest first, no payloads
+runs = list_test_runs(db, limit=10)    # newest first, summary columns only
 run_id, test_run = load_test_run(db)   # latest run as a `TestRun`
 ```
 
@@ -150,7 +150,7 @@ The store uses only Python's built-in `sqlite3` module, so there is nothing extr
 import { listTestRuns, loadTestRunPayload, resolveDbPath } from "deepeval/sqlite-store";
 
 const db = resolveDbPath();                    // honours DEEPEVAL_RESULTS_FOLDER
-const runs = listTestRuns(db, 10);             // newest first, no payloads
+const runs = listTestRuns(db, 10);             // newest first, summary columns only
 const { runId, payload } = loadTestRunPayload(db); // latest run
 ```
 

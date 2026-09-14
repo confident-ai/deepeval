@@ -12,7 +12,7 @@ with plain SQL:
 The `test_runs` row keeps the exact pydantic dump of the whole run in
 `payload_json`, so the full `TestRun` can be reloaded losslessly (this is
 what `deepeval inspect` uses). Test case, trace and span rows have the same
-column but it is only filled when `DEEPEVAL_SQLITE_PAYLOADS=1`, since it
+column but it is only filled when `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1`, since it
 roughly doubles the database size. Only the standard-library `sqlite3` module is
 used: no wheels, no compiled extensions, works on any Python that can run
 deepeval.
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS test_cases (
     run_duration    REAL,
     evaluation_cost REAL,
     tags_json       TEXT,
-    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_test_cases_run ON test_cases(test_run_id);
 
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS traces (
     output_json   TEXT,
     metadata_json TEXT,
     tags_json     TEXT,
-    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_traces_run ON traces(test_run_id);
 CREATE INDEX IF NOT EXISTS idx_traces_case ON traces(test_case_id);
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS spans (
     output_token_count REAL,
     input_json         TEXT,
     output_json        TEXT,
-    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_spans_trace_parent ON spans(trace_id, parent_uuid);
 
@@ -160,17 +160,17 @@ CREATE INDEX IF NOT EXISTS idx_metric_data_owner ON metric_data(owner_type, owne
 # tests/test_core/test_sqlite_store.py fails if this string drifts from it.
 SCHEMA_SQL = _SCHEMA
 
-PAYLOADS_ENV_VAR = "DEEPEVAL_SQLITE_PAYLOADS"
+INCLUDE_ROW_JSON_ENV_VAR = "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON"
 
 
-def resolve_include_payloads() -> bool:
-    """`DEEPEVAL_SQLITE_PAYLOADS` -> bool (default False).
+def resolve_include_row_json() -> bool:
+    """`DEEPEVAL_SQLITE_INCLUDE_ROW_JSON` -> bool (default False).
 
     Controls whether `test_cases`, `traces` and `spans` rows also carry their
     full serialized object in `payload_json`. The `test_runs` row always does,
     since that is what `load_test_run` / `deepeval inspect` read back.
     """
-    raw = (os.getenv(PAYLOADS_ENV_VAR) or "").strip().lower()
+    raw = (os.getenv(INCLUDE_ROW_JSON_ENV_VAR) or "").strip().lower()
     return raw in {"1", "true", "yes", "y", "on"}
 
 
@@ -278,7 +278,7 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
 def write_test_run(
     test_run: TestRun,
     db_path: "str | Path",
-    include_payloads: Optional[bool] = None,
+    include_row_json: Optional[bool] = None,
 ) -> int:
     """Persist `test_run` and everything inside it. Returns the new run id.
 
@@ -286,12 +286,12 @@ def write_test_run(
     half-inserted run. Raises `sqlite3.Error` on failure; callers should
     catch it so a storage problem never fails the evaluation itself.
 
-    `include_payloads` (default: `DEEPEVAL_SQLITE_PAYLOADS`) also stores the
+    `include_row_json` (default: `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`) also stores the
     full JSON object on every test case, trace and span row. The run row
     always keeps its payload regardless.
     """
-    if include_payloads is None:
-        include_payloads = resolve_include_payloads()
+    if include_row_json is None:
+        include_row_json = resolve_include_row_json()
     payload = _to_plain_json(test_run)
 
     conn = connect(db_path)
@@ -304,7 +304,7 @@ def write_test_run(
             ):
                 for case in payload.get(key) or []:
                     _insert_test_case(
-                        conn, run_id, kind, case, include_payloads
+                        conn, run_id, kind, case, include_row_json
                     )
         return run_id
     finally:
@@ -403,7 +403,7 @@ def _insert_test_case(
     run_id: int,
     kind: str,
     case: Dict[str, Any],
-    include_payloads: bool,
+    include_row_json: bool,
 ) -> int:
     if kind == "multi-turn":
         input_text = _text(case.get("scenario"))
@@ -434,7 +434,7 @@ def _insert_test_case(
             case.get("runDuration"),
             case.get("evaluationCost"),
             _dumps(case.get("tags")),
-            _payload(case, include_payloads),
+            _payload(case, include_row_json),
         ),
     )
     case_id = int(cur.lastrowid)
@@ -443,7 +443,7 @@ def _insert_test_case(
 
     trace = case.get("trace")
     if isinstance(trace, dict):
-        _insert_trace(conn, run_id, case_id, trace, include_payloads)
+        _insert_trace(conn, run_id, case_id, trace, include_row_json)
 
     return case_id
 
@@ -453,7 +453,7 @@ def _insert_trace(
     run_id: int,
     case_id: int,
     trace: Dict[str, Any],
-    include_payloads: bool,
+    include_row_json: bool,
 ) -> int:
     cur = conn.execute(
         """
@@ -478,7 +478,7 @@ def _insert_trace(
             _dumps(trace.get("output")),
             _dumps(trace.get("metadata")),
             _dumps(trace.get("tags")),
-            _payload(trace, include_payloads),
+            _payload(trace, include_row_json),
         ),
     )
     trace_id = int(cur.lastrowid)
@@ -489,7 +489,7 @@ def _insert_trace(
         for span in trace.get(bucket) or []:
             if isinstance(span, dict):
                 _insert_span(
-                    conn, run_id, trace_id, default_type, span, include_payloads
+                    conn, run_id, trace_id, default_type, span, include_row_json
                 )
 
     return trace_id
@@ -501,7 +501,7 @@ def _insert_span(
     trace_id: int,
     default_type: str,
     span: Dict[str, Any],
-    include_payloads: bool,
+    include_row_json: bool,
 ) -> int:
     cur = conn.execute(
         """
@@ -527,7 +527,7 @@ def _insert_span(
             span.get("outputTokenCount"),
             _dumps(span.get("input")),
             _dumps(span.get("output")),
-            _payload(span, include_payloads),
+            _payload(span, include_row_json),
         ),
     )
     span_id = int(cur.lastrowid)
@@ -586,7 +586,7 @@ def _insert_metrics(
 def list_test_runs(
     db_path: "str | Path", limit: int = 20
 ) -> List[Dict[str, Any]]:
-    """Newest-first summaries of stored runs (no payloads)."""
+    """Newest-first summaries of stored runs (summary columns only, no payload_json)."""
     if not Path(db_path).is_file():
         return []
     conn = connect(db_path)

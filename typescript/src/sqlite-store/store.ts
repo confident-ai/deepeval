@@ -11,7 +11,7 @@
 // The `test_runs` row keeps the exact object the JSON export would have
 // written in `payload_json`, so a run reloads losslessly (this is what
 // `deepeval inspect` reads). Test case, trace and span rows have the same
-// column but it is only filled when `DEEPEVAL_SQLITE_PAYLOADS=1`, since it
+// column but it is only filled when `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1`, since it
 // roughly doubles the database size. The schema is byte-for-byte the one Python's
 // `deepeval.sqlite_store` creates, so the two SDKs can share a database.
 //
@@ -25,7 +25,7 @@ import { createRequire } from "module";
 import {
   HIDDEN_DIR,
   DEEPEVAL_RESULTS_FOLDER,
-  DEEPEVAL_SQLITE_PAYLOADS,
+  DEEPEVAL_SQLITE_INCLUDE_ROW_JSON,
 } from "@/constants";
 import {
   SqliteUnsupportedError,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS test_cases (
     run_duration    REAL,
     evaluation_cost REAL,
     tags_json       TEXT,
-    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json    TEXT                     -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_test_cases_run ON test_cases(test_run_id);
 
@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS traces (
     output_json   TEXT,
     metadata_json TEXT,
     tags_json     TEXT,
-    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json  TEXT                       -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_traces_run ON traces(test_run_id);
 CREATE INDEX IF NOT EXISTS idx_traces_case ON traces(test_case_id);
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS spans (
     output_token_count REAL,
     input_json         TEXT,
     output_json        TEXT,
-    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_PAYLOADS=1
+    payload_json       TEXT                  -- full object; only with DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1
 );
 CREATE INDEX IF NOT EXISTS idx_spans_trace_parent ON spans(trace_id, parent_uuid);
 
@@ -180,19 +180,19 @@ CREATE INDEX IF NOT EXISTS idx_metric_data_owner ON metric_data(owner_type, owne
 `;
 
 /**
- * `DEEPEVAL_SQLITE_PAYLOADS` -> boolean (default false). Controls whether
+ * `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON` -> boolean (default false). Controls whether
  * `test_cases`, `traces` and `spans` rows also carry their full serialized
  * object in `payload_json`. The `test_runs` row always does, since that is
  * what `loadTestRunPayload` / `deepeval inspect` read back.
  */
-export function resolveIncludePayloads(): boolean {
-  const raw = (process.env[DEEPEVAL_SQLITE_PAYLOADS] ?? "").trim().toLowerCase();
+export function resolveIncludeRowJson(): boolean {
+  const raw = (process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] ?? "").trim().toLowerCase();
   return ["1", "true", "yes", "y", "on"].includes(raw);
 }
 
 export interface WriteTestRunOptions {
-  /** Store the full JSON object on child rows too. Default: `DEEPEVAL_SQLITE_PAYLOADS`. */
-  includePayloads?: boolean;
+  /** Store the full JSON object on child rows too. Default: `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`. */
+  includeRowJson?: boolean;
 }
 
 // --------------------------------------------------------------------------- //
@@ -361,7 +361,7 @@ function payloadOf(obj: Json, include: boolean): string | null {
  * Throws on storage failure; callers should catch so persistence problems
  * never fail the evaluation itself.
  *
- * `includePayloads` (default: `DEEPEVAL_SQLITE_PAYLOADS`) also stores the
+ * `includeRowJson` (default: `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`) also stores the
  * full JSON object on every test case, trace and span row. The run row
  * always keeps its payload regardless.
  */
@@ -370,7 +370,7 @@ export function writeTestRun(
   dbPath: string,
   options: WriteTestRunOptions = {},
 ): number {
-  const includePayloads = options.includePayloads ?? resolveIncludePayloads();
+  const includeRowJson = options.includeRowJson ?? resolveIncludeRowJson();
   // Round-trip through JSON so the normalized columns are derived from the
   // exact payload we store (drops `undefined`, normalizes Dates, etc.).
   const payload = JSON.parse(JSON.stringify(run)) as Json;
@@ -385,7 +385,7 @@ export function writeTestRun(
         if (!isRecord(persisted)) continue;
         const entry = isRecord(persisted.entry) ? persisted.entry : persisted;
         const kind = persisted.conversational === true ? "multi-turn" : "single-turn";
-        insertTestCase(db, runId, kind, entry, persisted, includePayloads);
+        insertTestCase(db, runId, kind, entry, persisted, includeRowJson);
       }
       db.exec("COMMIT");
       return runId;
@@ -458,7 +458,7 @@ function insertTestCase(
   kind: "single-turn" | "multi-turn",
   entry: Json,
   persisted: Json,
-  includePayloads: boolean,
+  includeRowJson: boolean,
 ): number {
   const conversational = kind === "multi-turn";
   const result = db
@@ -481,13 +481,13 @@ function insertTestCase(
       num(entry.runDuration),
       num(entry.evaluationCost),
       dumps(entry.tags),
-      payloadOf(persisted, includePayloads),
+      payloadOf(persisted, includeRowJson),
     );
   const caseId = rowId(result);
 
   insertMetrics(db, runId, "test_case", caseId, entry.metricsData);
   if (isRecord(entry.trace)) {
-    insertTrace(db, runId, caseId, entry.trace, includePayloads);
+    insertTrace(db, runId, caseId, entry.trace, includeRowJson);
   }
   return caseId;
 }
@@ -497,7 +497,7 @@ function insertTrace(
   runId: number,
   caseId: number,
   trace: Json,
-  includePayloads: boolean,
+  includeRowJson: boolean,
 ): number {
   const result = db
     .prepare(
@@ -522,7 +522,7 @@ function insertTrace(
       dumps(trace.output),
       dumps(trace.metadata),
       dumps(trace.tags),
-      payloadOf(trace, includePayloads),
+      payloadOf(trace, includeRowJson),
     );
   const traceId = rowId(result);
 
@@ -532,7 +532,7 @@ function insertTrace(
     if (!Array.isArray(spans)) continue;
     for (const span of spans) {
       if (isRecord(span)) {
-        insertSpan(db, runId, traceId, defaultType, span, includePayloads);
+        insertSpan(db, runId, traceId, defaultType, span, includeRowJson);
       }
     }
   }
@@ -545,7 +545,7 @@ function insertSpan(
   traceId: number,
   defaultType: string,
   span: Json,
-  includePayloads: boolean,
+  includeRowJson: boolean,
 ): number {
   const result = db
     .prepare(
@@ -571,7 +571,7 @@ function insertSpan(
       num(span.outputTokenCount),
       dumps(span.input),
       dumps(span.output),
-      payloadOf(span, includePayloads),
+      payloadOf(span, includeRowJson),
     );
   const spanId = rowId(result);
   insertMetrics(db, runId, "span", spanId, span.metricsData);
@@ -633,7 +633,7 @@ export interface TestRunSummaryRow {
   confident_test_run_id: string | null;
 }
 
-/** Newest-first summaries of stored runs (no payloads). */
+/** Newest-first summaries of stored runs (summary columns only, no payload_json). */
 /**
  * Record the Confident AI test run id for a stored run, e.g. after a later
  * `deepeval view` upload. Throws `TestRunNotFoundError` if `runId` is absent.

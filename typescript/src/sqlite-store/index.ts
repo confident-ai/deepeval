@@ -27,7 +27,7 @@ export {
   loadTestRunPayload,
   parseSource,
   resolveDbPath,
-  resolveIncludePayloads,
+  resolveIncludeRowJson,
   setConfidentTestRunId,
   writeTestRun,
   type TestRunSummaryRow,

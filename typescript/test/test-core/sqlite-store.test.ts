@@ -22,7 +22,7 @@ import {
   loadTestRunPayload,
   parseSource,
   resolveDbPath,
-  resolveIncludePayloads,
+  resolveIncludeRowJson,
   setConfidentTestRunId,
   writeTestRun,
 } from "@/sqlite-store/store";
@@ -41,7 +41,7 @@ import { settingsSchema } from "@/config/schema";
 import {
   DEEPEVAL_LOCAL_STORE,
   DEEPEVAL_RESULTS_FOLDER,
-  DEEPEVAL_SQLITE_PAYLOADS,
+  DEEPEVAL_SQLITE_INCLUDE_ROW_JSON,
 } from "@/constants";
 
 // `node:sqlite` exists (unflagged) from Node 22.13 / 23.4, which is enough to
@@ -372,7 +372,7 @@ describeWithSqlite("sqlite-store write / read", () => {
     expect(loadTestRunPayload(db).runId).toBe(1);
   });
 
-  const childPayloadCounts = () =>
+  const rowJsonCounts = () =>
     ["test_cases", "traces", "spans"].map((t) => {
       const [row] = query(db, `SELECT count(payload_json) AS n FROM ${t}`) as Array<{
         n: number | bigint;
@@ -380,18 +380,18 @@ describeWithSqlite("sqlite-store write / read", () => {
       return Number(row!.n);
     });
 
-  describe("DEEPEVAL_SQLITE_PAYLOADS", () => {
-    const saved = process.env[DEEPEVAL_SQLITE_PAYLOADS];
+  describe("DEEPEVAL_SQLITE_INCLUDE_ROW_JSON", () => {
+    const saved = process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
     afterEach(() => {
-      if (saved === undefined) delete process.env[DEEPEVAL_SQLITE_PAYLOADS];
-      else process.env[DEEPEVAL_SQLITE_PAYLOADS] = saved;
+      if (saved === undefined) delete process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
+      else process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] = saved;
     });
 
-    test("child payloads are off by default", () => {
-      delete process.env[DEEPEVAL_SQLITE_PAYLOADS];
-      expect(resolveIncludePayloads()).toBe(false);
+    test("row JSON is off by default", () => {
+      delete process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
+      expect(resolveIncludeRowJson()).toBe(false);
       const runId = writeTestRun(makeRun(), db);
-      expect(childPayloadCounts()).toEqual([0, 0, 0]);
+      expect(rowJsonCounts()).toEqual([0, 0, 0]);
       // Run row always keeps its payload, so reload still works.
       expect(loadTestRunPayload(db, runId).payload).toEqual(
         JSON.parse(JSON.stringify(makeRun())),
@@ -401,10 +401,10 @@ describeWithSqlite("sqlite-store write / read", () => {
     });
 
     test.each(["1", "true", "YES", " on "])("env %j turns them on", (raw) => {
-      process.env[DEEPEVAL_SQLITE_PAYLOADS] = raw;
-      expect(resolveIncludePayloads()).toBe(true);
+      process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] = raw;
+      expect(resolveIncludeRowJson()).toBe(true);
       writeTestRun(makeRun(), db);
-      const counts = childPayloadCounts();
+      const counts = rowJsonCounts();
       expect(counts.every((n) => n > 0)).toBe(true);
       const [row] = query(db, "SELECT uuid, payload_json FROM traces LIMIT 1") as Array<{
         uuid: string;
@@ -414,19 +414,19 @@ describeWithSqlite("sqlite-store write / read", () => {
     });
 
     test.each(["0", "false", "no", ""])("env %j keeps them off", (raw) => {
-      process.env[DEEPEVAL_SQLITE_PAYLOADS] = raw;
+      process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] = raw;
       writeTestRun(makeRun(), db);
-      expect(childPayloadCounts()).toEqual([0, 0, 0]);
+      expect(rowJsonCounts()).toEqual([0, 0, 0]);
     });
 
-    test("includePayloads option overrides the env", () => {
-      process.env[DEEPEVAL_SQLITE_PAYLOADS] = "1";
-      writeTestRun(makeRun(), db, { includePayloads: false });
-      expect(childPayloadCounts()).toEqual([0, 0, 0]);
+    test("includeRowJson option overrides the env", () => {
+      process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] = "1";
+      writeTestRun(makeRun(), db, { includeRowJson: false });
+      expect(rowJsonCounts()).toEqual([0, 0, 0]);
 
-      delete process.env[DEEPEVAL_SQLITE_PAYLOADS];
-      writeTestRun(makeRun(), db, { includePayloads: true });
-      expect(childPayloadCounts().every((n) => n > 0)).toBe(true);
+      delete process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
+      writeTestRun(makeRun(), db, { includeRowJson: true });
+      expect(rowJsonCounts().every((n) => n > 0)).toBe(true);
     });
   });
 

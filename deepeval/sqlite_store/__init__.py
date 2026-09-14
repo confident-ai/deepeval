@@ -5,7 +5,7 @@ See `deepeval.sqlite_store.store` for the schema and implementation notes.
 
 from deepeval.sqlite_store.store import (
     DB_FILENAME,
-    PAYLOADS_ENV_VAR,
+    INCLUDE_ROW_JSON_ENV_VAR,
     SCHEMA_SQL,
     SCHEMA_VERSION,
     connect,
@@ -17,14 +17,14 @@ from deepeval.sqlite_store.store import (
     load_test_run_payload,
     parse_source,
     resolve_db_path,
-    resolve_include_payloads,
+    resolve_include_row_json,
     set_confident_test_run_id,
     write_test_run,
 )
 
 __all__ = [
     "DB_FILENAME",
-    "PAYLOADS_ENV_VAR",
+    "INCLUDE_ROW_JSON_ENV_VAR",
     "SCHEMA_SQL",
     "SCHEMA_VERSION",
     "connect",
@@ -36,7 +36,7 @@ __all__ = [
     "load_test_run_payload",
     "parse_source",
     "resolve_db_path",
-    "resolve_include_payloads",
+    "resolve_include_row_json",
     "set_confident_test_run_id",
     "write_test_run",
 ]

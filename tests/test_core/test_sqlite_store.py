@@ -295,30 +295,30 @@ class TestWriteTestRun:
         assert reloaded.test_cases[0].trace.uuid == "trace-1"
 
     @staticmethod
-    def _child_payload_counts(db: Path):
+    def _row_json_counts(db: Path):
         return tuple(
             _q(db, f"SELECT count(payload_json) FROM {t}")[0][0]
             for t in ("test_cases", "traces", "spans")
         )
 
-    def test_child_payloads_off_by_default(self, tmp_path: Path, monkeypatch):
-        monkeypatch.delenv(sqlite_store.PAYLOADS_ENV_VAR, raising=False)
+    def test_row_json_off_by_default(self, tmp_path: Path, monkeypatch):
+        monkeypatch.delenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR, raising=False)
         db = tmp_path / "deepeval.db"
         run_id = sqlite_store.write_test_run(_make_test_run(), db)
 
-        assert self._child_payload_counts(db) == (0, 0, 0)
+        assert self._row_json_counts(db) == (0, 0, 0)
         # The run row always keeps its payload: reload still works.
         assert sqlite_store.load_test_run(db, run_id)[1].test_cases
         # Promoted columns are unaffected.
         assert _q(db, "SELECT count(*) FROM spans")[0][0] > 0
 
     @pytest.mark.parametrize("raw", ["1", "true", "YES", " on "])
-    def test_child_payloads_via_env(self, tmp_path: Path, monkeypatch, raw):
-        monkeypatch.setenv(sqlite_store.PAYLOADS_ENV_VAR, raw)
+    def test_row_json_via_env(self, tmp_path: Path, monkeypatch, raw):
+        monkeypatch.setenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR, raw)
         db = tmp_path / "deepeval.db"
         sqlite_store.write_test_run(_make_test_run(), db)
 
-        cases, traces, spans = self._child_payload_counts(db)
+        cases, traces, spans = self._row_json_counts(db)
         assert cases == _q(db, "SELECT count(*) FROM test_cases")[0][0] > 0
         assert traces == _q(db, "SELECT count(*) FROM traces")[0][0] > 0
         assert spans == _q(db, "SELECT count(*) FROM spans")[0][0] > 0
@@ -328,25 +328,25 @@ class TestWriteTestRun:
         assert json.loads(payload)["uuid"] == uuid
 
     @pytest.mark.parametrize("raw", ["0", "false", "no", ""])
-    def test_child_payloads_env_falsy(self, tmp_path: Path, monkeypatch, raw):
-        monkeypatch.setenv(sqlite_store.PAYLOADS_ENV_VAR, raw)
+    def test_row_json_env_falsy(self, tmp_path: Path, monkeypatch, raw):
+        monkeypatch.setenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR, raw)
         db = tmp_path / "deepeval.db"
         sqlite_store.write_test_run(_make_test_run(), db)
-        assert self._child_payload_counts(db) == (0, 0, 0)
+        assert self._row_json_counts(db) == (0, 0, 0)
 
-    def test_child_payloads_argument_overrides_env(
+    def test_row_json_argument_overrides_env(
         self, tmp_path: Path, monkeypatch
     ):
-        monkeypatch.setenv(sqlite_store.PAYLOADS_ENV_VAR, "1")
+        monkeypatch.setenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR, "1")
         db = tmp_path / "deepeval.db"
         sqlite_store.write_test_run(
-            _make_test_run(), db, include_payloads=False
+            _make_test_run(), db, include_row_json=False
         )
-        assert self._child_payload_counts(db) == (0, 0, 0)
+        assert self._row_json_counts(db) == (0, 0, 0)
 
-        monkeypatch.delenv(sqlite_store.PAYLOADS_ENV_VAR)
-        sqlite_store.write_test_run(_make_test_run(), db, include_payloads=True)
-        assert all(n > 0 for n in self._child_payload_counts(db))
+        monkeypatch.delenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR)
+        sqlite_store.write_test_run(_make_test_run(), db, include_row_json=True)
+        assert all(n > 0 for n in self._row_json_counts(db))
 
     def test_confident_test_run_id_null_until_set(self, tmp_path: Path):
         db = tmp_path / "deepeval.db"
