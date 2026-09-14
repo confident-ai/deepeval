@@ -24,6 +24,7 @@ Capability columns:
 | OpenAI Agents | Trace processor + agent wrapper   | `add_trace_processor(DeepEvalTracingProcessor())` | Yes  | Yes                         | Yes              | Yes                 | `deepeval/openai_agents/`            |
 | AgentCore     | OpenTelemetry                     | `instrument_agentcore()`                          | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/agentcore/`   |
 | Strands       | OpenTelemetry                     | `instrument_strands()`                            | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/strands/`     |
+| Microsoft Agent Framework | OpenTelemetry             | `instrument_microsoft_agent_framework()`          | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/microsoft_agent_framework/` |
 | Google ADK    | OpenTelemetry (via OpenInference) | `instrument_google_adk()`                         | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/google_adk/`  |
 | Pydantic AI   | OpenTelemetry                     | `DeepEvalInstrumentationSettings(...)`            | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/pydantic_ai/` |
 
