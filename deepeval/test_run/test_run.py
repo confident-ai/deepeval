@@ -471,8 +471,10 @@ class TestRunManager:
         self.results_folder: Optional[str] = None
         self.results_subfolder: Optional[str] = None
         # Timestamped export if one was written, else rolling snapshot.
-        # Consumed by the post-run inspect prompt.
+        # Consumed by the post-run inspect prompt. In sqlite mode this is
+        # the `.db` path and `last_saved_run_id` identifies the row.
         self.last_saved_path: Optional[Path] = None
+        self.last_saved_run_id: Optional[int] = None
 
     def reset(self):
         self.test_run = None
@@ -482,6 +484,7 @@ class TestRunManager:
         self.results_folder = None
         self.results_subfolder = None
         self.last_saved_path = None
+        self.last_saved_run_id = None
 
     def configure_local_store(
         self,
@@ -500,6 +503,7 @@ class TestRunManager:
         # could linger and mislead the inspect prompt into offering a stale
         # file. Clear it whenever a new run configures its local store.
         self.last_saved_path = None
+        self.last_saved_run_id = None
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
@@ -1050,18 +1054,30 @@ class TestRunManager:
     def save_test_run_locally(self):
         """Persist the current TestRun to disk.
 
-        Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
-        Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json` to
-        `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
+        `DEEPEVAL_LOCAL_STORE=json` (default):
+            Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
+            Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json`
+            to `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
+
+        `DEEPEVAL_LOCAL_STORE=sqlite`:
+            Inserts the run (test cases, traces, spans, metrics) into
+            `deepeval.db` under `results_folder` / `DEEPEVAL_RESULTS_FOLDER`,
+            falling back to the hidden cache dir. No JSON files are written.
         """
         if self.test_run is None:
             return
 
         from deepeval.evaluate.local_store import (
+            LOCAL_STORE_SQLITE,
+            resolve_local_store_mode,
             resolve_target_dir,
             write_rolling_test_run,
             write_test_run,
         )
+
+        if resolve_local_store_mode() == LOCAL_STORE_SQLITE:
+            self._save_test_run_to_sqlite()
+            return
 
         rolling_path = write_rolling_test_run(self.test_run)
         if rolling_path is not None:
@@ -1088,6 +1104,61 @@ class TestRunManager:
         except Exception as e:
             print(
                 f"Warning: failed to save test run to {target_dir}: {e}",
+                file=sys.stderr,
+            )
+
+    def _save_test_run_to_sqlite(self):
+        """SQLite branch of `save_test_run_locally`.
+
+        Any storage failure (read-only FS, locked DB on Windows, network
+        mount refusing locks, schema from a newer deepeval, ...) is reported
+        as a warning: the evaluation already finished and its results were
+        printed, so persistence must never turn into an exception.
+        """
+        if is_read_only_env():
+            return
+
+        from deepeval import sqlite_store
+
+        db_path = sqlite_store.resolve_db_path(
+            results_folder=self.results_folder,
+            results_subfolder=self.results_subfolder,
+        )
+        try:
+            run_id = sqlite_store.write_test_run(self.test_run, db_path)
+        except Exception as e:
+            print(
+                f"Warning: failed to save test run to {db_path}: {e}",
+                file=sys.stderr,
+            )
+            return
+
+        self.last_saved_path = db_path
+        self.last_saved_run_id = run_id
+        print(f"Test run saved to {db_path} (run id {run_id})")
+
+    def _record_confident_test_run_id(
+        self, confident_test_run_id: Optional[str]
+    ) -> None:
+        """SQLite mode only: stamp the row written by `save_test_run_locally`
+        with the id Confident AI assigned, so local and cloud runs can be
+        matched later. Never raises; the upload already succeeded."""
+        if not confident_test_run_id or self.last_saved_run_id is None:
+            return
+        if self.last_saved_path is None:
+            return
+        try:
+            from deepeval import sqlite_store
+
+            sqlite_store.set_confident_test_run_id(
+                self.last_saved_path,
+                self.last_saved_run_id,
+                confident_test_run_id,
+            )
+        except Exception as e:
+            print(
+                f"Warning: could not record Confident AI test run id in "
+                f"{self.last_saved_path}: {e}",
                 file=sys.stderr,
             )
 
@@ -1162,7 +1233,9 @@ class TestRunManager:
         delete_file_if_exists(self.temp_file_path)
         confident_enabled = is_confident()
         if confident_enabled and self.disable_request is False:
-            return self.post_test_run(test_run)
+            link, confident_test_run_id = self.post_test_run(test_run)
+            self._record_confident_test_run_id(confident_test_run_id)
+            return link, confident_test_run_id
         else:
             self.save_test_run(
                 LATEST_TEST_RUN_FILE_PATH,

@@ -32,6 +32,31 @@ if not is_read_only_env():
 
 _LOCK_FILENAME = ".test_run.lock"
 
+LOCAL_STORE_JSON = "json"
+LOCAL_STORE_SQLITE = "sqlite"
+_LOCAL_STORE_ENV_VAR = "DEEPEVAL_LOCAL_STORE"
+
+
+def resolve_local_store_mode() -> str:
+    """Return `"json"` (default) or `"sqlite"` from `DEEPEVAL_LOCAL_STORE`.
+
+    Reads the env var directly (rather than `get_settings()`) so the choice
+    can be flipped per-process without re-validating the whole Settings
+    model. Unknown values fall back to `"json"` with a stderr warning so a
+    typo never silently drops the user's results.
+    """
+    raw = (os.getenv(_LOCAL_STORE_ENV_VAR) or "").strip().lower()
+    if not raw or raw == LOCAL_STORE_JSON:
+        return LOCAL_STORE_JSON
+    if raw in {LOCAL_STORE_SQLITE, "sqlite3", "db"}:
+        return LOCAL_STORE_SQLITE
+    print(
+        f"Warning: unrecognised {_LOCAL_STORE_ENV_VAR}={raw!r}; "
+        "falling back to 'json'. Valid values: 'json', 'sqlite'.",
+        file=sys.stderr,
+    )
+    return LOCAL_STORE_JSON
+
 
 def resolve_target_dir(
     results_folder: Optional[str],

@@ -53,6 +53,11 @@
       "require": "./dist/prompt/index.js",
       "types": "./dist/prompt/index.d.ts"
     },
+    "./sqlite-store": {
+      "import": "./dist/sqlite-store/index.js",
+      "require": "./dist/sqlite-store/index.js",
+      "types": "./dist/sqlite-store/index.d.ts"
+    },
     "./openai": {
       "import": "./dist/openai/index.js",
       "require": "./dist/openai/index.js",
@@ -122,6 +127,9 @@
       ],
       "prompt": [
         "dist/prompt/index.d.ts"
+      ],
+      "sqlite-store": [
+        "dist/sqlite-store/index.d.ts"
       ],
       "openai": [
         "dist/openai/index.d.ts"

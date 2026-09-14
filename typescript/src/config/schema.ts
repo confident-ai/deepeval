@@ -8,6 +8,12 @@ import {
   parseBool,
 } from "@/config/utils";
 import { isValidLogLevel } from "@/logger";
+import {
+  LOCAL_STORE_SQLITE,
+  isSqliteSupported,
+  normalizeLocalStoreMode,
+  sqliteUnsupportedMessage,
+} from "@/sqlite-store/mode";
 import { Environment } from "@/tracing/utils";
 
 export interface SettingFieldMeta {
@@ -111,6 +117,30 @@ export const settingsSchema = z.object({
   // Storage & output
   DEEPEVAL_RESULTS_FOLDER: optionalString().describe(
     "If set, export a timestamped JSON of the latest test run into this folder.",
+  ),
+  DEEPEVAL_LOCAL_STORE: z
+    .string()
+    .transform((value, ctx) => {
+      const mode = normalizeLocalStoreMode(value);
+      if (mode === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Expected json or sqlite.",
+        });
+        return z.NEVER;
+      }
+      if (mode === LOCAL_STORE_SQLITE && !isSqliteSupported()) {
+        ctx.addIssue({ code: "custom", message: sqliteUnsupportedMessage() });
+        return z.NEVER;
+      }
+      return mode;
+    })
+    .optional()
+    .describe(
+      "Local test run store backend: json (default) or sqlite. SQLite needs Node 24+ and writes to deepeval.db inside DEEPEVAL_RESULTS_FOLDER (or the cache folder).",
+    ),
+  DEEPEVAL_SQLITE_PAYLOADS: optionalBool().describe(
+    "SQLite store: also keep the full JSON object on every test case, trace and span row (payload_json). Larger database; off by default.",
   ),
   DEEPEVAL_CACHE_FOLDER: optionalString().describe(
     "Directory DeepEval uses for its cache and key files (default: .deepeval).",

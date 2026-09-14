@@ -1,0 +1,497 @@
+---
+id: evaluation-local-backend-storage
+title: Local Backend Storage
+sidebar_label: Local Backend Storage
+languages: [python, typescript]
+---
+
+import { ASSETS } from "@site/src/assets";
+
+`deepeval` is a local-first package: every evaluation you run is written to your own disk before anything else happens, and nothing leaves your machine unless you log in to Confident AI. This page explains what gets written, where, and how to pick between the two storage backends.
+
+:::tip[We still recommend Confident AI]
+The local backend gives you the raw runs. Comparing them across commits, sharing a failing test case, and regression tracking is what [Confident AI](https://confident-ai.com) adds, using the same test runs. If that's not for you, everything below is yours to keep, query, and export.
+
+<VideoDisplayer
+  src={ASSETS.evaluationOverview}
+  confidentUrl="/docs/getting-started/setup"
+  label="Watch full guide on Confident AI"
+  description="A complete walkthrough of running and analyzing your first evals."
+/>
+:::
+
+## Your options
+
+Finished test runs — hyperparameters, every test case, metric scores and reasons, and the traces and spans captured under them — are saved by one of two backends, chosen with the `DEEPEVAL_LOCAL_STORE` environment variable:
+
+| Backend            | `DEEPEVAL_LOCAL_STORE` | What you get                                                                                                        | Best for                                                                      |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| JSON **(default)** | `json` or unset        | One `test_run_<timestamp>.json` file per run in a folder you choose, plus a rolling copy of the latest run.          | Diffing runs in git, pointing an AI agent at a folder, zero setup.            |
+| SQLite             | `sqlite`               | Every run appended to a single `deepeval.db`, with test cases, traces, spans and metrics broken out into tables.     | Querying across runs, long histories, exporting to pandas / BI tools / other platforms. |
+
+The default is **JSON**. Nothing changes for you unless you opt in to SQLite. Both backends store the same data, serialized with the same schema Confident AI uses, so switching later loses nothing.
+
+## What is written where
+
+All of `deepeval`'s own files live under a hidden `.deepeval/` folder in your working directory (override the location with `DEEPEVAL_CACHE_FOLDER`). Test run storage on top of that goes wherever you point it.
+
+<Switch>
+
+<Case id="python">
+
+| Path                                                     | What it is                                                                                                  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `.deepeval/.latest_run_full.json`                        | Rolling snapshot of the most recent run (JSON mode). Overwritten every run; this is what zero-arg `deepeval inspect` opens. |
+| `<results_folder>/test_run_<YYYYMMDD_HHMMSS>.json`       | One file per run when `results_folder` / `DEEPEVAL_RESULTS_FOLDER` is set (JSON mode).                     |
+| `<results_folder>/deepeval.db` or `.deepeval/deepeval.db` | The SQLite database (SQLite mode). Falls back to the cache folder when no results folder is set.            |
+| `.deepeval/.deepeval-cache.json`                         | Metric result cache used by `deepeval test run -c`. Not a record of runs.                                   |
+| `.deepeval/.deepeval`                                    | Legacy JSON keystore for **non-secret** settings (model name, endpoint). API keys are never written here.    |
+
+</Case>
+
+<Case id="typescript">
+
+| Path                                                     | What it is                                                                                                  |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `.deepeval/.latest_test_run.json`                        | The most recent run, written in both modes. `npx deepeval view` uploads from it and zero-arg `npx deepeval inspect` opens it. |
+| `<DEEPEVAL_RESULTS_FOLDER>/test_run_<YYYYMMDD_HHMMSS>.json` | One file per run when `DEEPEVAL_RESULTS_FOLDER` is set (JSON mode).                                       |
+| `<DEEPEVAL_RESULTS_FOLDER>/deepeval.db` or `.deepeval/deepeval.db` | The SQLite database (SQLite mode). Falls back to the cache folder when no results folder is set. |
+| `.deepeval/.deepeval-cache.json`                         | Metric result cache used by `npx deepeval test run -c`. Not a record of runs.                               |
+| `.deepeval/.deepeval`                                    | Legacy JSON keystore for **non-secret** settings (model name, endpoint). API keys are never written here.    |
+
+</Case>
+
+</Switch>
+
+Setting `DEEPEVAL_FILE_SYSTEM=READ_ONLY` stops every one of these writes, in either mode. Results are still printed to the terminal and still uploaded to Confident AI if you are logged in.
+
+## JSON (default)
+
+With no configuration at all, each run refreshes the rolling latest-run file in `.deepeval/`. To keep a history, name a folder:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval import evaluate
+from deepeval.evaluate import DisplayConfig
+
+evaluate(
+    test_cases=test_cases,
+    metrics=metrics,
+    hyperparameters={"model": "gpt-4o-mini", "temperature": 0.4},
+    display_config=DisplayConfig(results_folder="./evals/prompt-v3"),
+)
+```
+
+Or, for `deepeval test run`, set `DEEPEVAL_RESULTS_FOLDER=./evals/prompt-v3` in the environment.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+DEEPEVAL_RESULTS_FOLDER=./evals/prompt-v3 npx deepeval test run llm_app.test.ts
+```
+
+</Case>
+
+</Switch>
+
+After a few runs the folder is flat, and `ls` order is chronological:
+
+```
+./evals/prompt-v3/
+  test_run_20260421_140114.json
+  test_run_20260421_140132.json
+  test_run_20260421_140151.json
+```
+
+Each file is a complete `TestRun`: hyperparameters, prompts, every test case with its metric scores and reasons, and the traces attached to it. There is no index to maintain, which is what makes this mode ideal for an AI agent — point Cursor or Claude Code at the folder and ask it to open the files. The full set of `results_folder` options is covered [here](/docs/evaluation-flags-and-configs#saving-test-runs-locally).
+
+## SQLite
+
+Set `DEEPEVAL_LOCAL_STORE=sqlite` and every run is appended to one database instead of a new file:
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+deepeval test run test_llm_app.py
+# Test run saved to .deepeval/deepeval.db (run id 3)
+```
+
+The database is created on first write using Python's built-in `sqlite3` module — nothing extra to install, and it behaves the same on macOS, Linux, Windows and CI.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+npx deepeval test run llm_app.test.ts
+# ✅ Test run saved to: .deepeval/deepeval.db (run id 3)
+```
+
+The database is created on first write using Node's built-in `node:sqlite` module, so there is no native addon to compile.
+
+:::caution[Node.js 24 or newer]
+`node:sqlite` is only stable from Node 24. On an older Node, `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error naming your version and telling you to upgrade or switch back to `json`. `deepeval` never silently falls back, so your results are never quietly written somewhere you did not expect.
+:::
+
+</Case>
+
+</Switch>
+
+`deepeval.db` lives in your <Term py="results_folder" ts="DEEPEVAL_RESULTS_FOLDER"/> when one is set, otherwise in `.deepeval/`. In this mode the timestamped `test_run_*.json` files are not written.
+
+### Schema
+
+`deepeval.db` holds five tables, created the first time the file is opened and identical in both SDKs, so a Python and a TypeScript project can share one database. The DDL both SDKs embed comes from a single file in the repository, [`sqlite/schema.sql`](https://github.com/confident-ai/deepeval/blob/main/sqlite/schema.sql), and each SDK's test suite fails if its copy drifts from it. Each table below is shown as its `CREATE TABLE` statement — not for you to run, but because it is the most precise description of what you can query back. Print the live version from your own file with `sqlite3 deepeval.db .schema`.
+
+Across all tables, the named columns are a **promoted subset** of each object, chosen so you can filter, join and aggregate without parsing JSON. The complete object — every field the JSON export would contain, in the same camelCase shape — is `payload_json`, and any field in it is reachable with SQLite's built-in [`json_extract`](https://sqlite.org/json1.html).
+
+The `test_runs` row always has its `payload_json`: it is the whole run, and it is what <Term py="deepeval inspect" ts="npx deepeval inspect"/> and <Term py="load_test_run()" ts="loadTestRunPayload()"/> read back, so nothing is ever lost. The `test_cases`, `traces` and `spans` rows have the same column but leave it `NULL` unless you opt in:
+
+```bash
+export DEEPEVAL_SQLITE_PAYLOADS=1
+```
+
+With it on, every child row carries its own full object, so fields that were not promoted — a test case's `turns`, a trace's `toolsCalled`, a span's `prompt` — can be queried right on that row instead of dug out of the run-level JSON. The examples marked *payloads on* below need it.
+
+:::warning[Larger database]
+Child payloads store everything twice: the run-level `payload_json` already contains every test case, trace and span, and each child row then repeats its slice of it. Expect `deepeval.db` to grow to roughly two to three times the size of the equivalent JSON export, and more for trace-heavy runs where spans carry large inputs and outputs. SQLite does not compress, so leave this off unless you actually query those fields.
+:::
+
+#### Test runs
+
+One row per evaluation run. This is the table everything else hangs off, and its `id` is the run id printed after each run and accepted by <Term py="deepeval inspect --run-id" ts="npx deepeval inspect --run-id"/>.
+
+```sql
+CREATE TABLE test_runs (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_at           TEXT    NOT NULL,   -- ISO 8601, UTC
+    identifier           TEXT,               -- from -id / DEEPEVAL_IDENTIFIER
+    test_file            TEXT,
+    dataset_alias        TEXT,
+    dataset_id           TEXT,
+    test_passed          INTEGER,
+    test_failed          INTEGER,
+    run_duration         REAL,               -- seconds
+    evaluation_cost      REAL,               -- USD, judge model spend
+    official             INTEGER NOT NULL DEFAULT 0,
+    confident_test_run_id TEXT,              -- set once the run is uploaded to Confident AI
+    hyperparameters_json TEXT,               -- {"model": "...", "temperature": ...}
+    prompts_json         TEXT,
+    metrics_scores_json  TEXT,               -- per-metric aggregates for the run
+    payload_json         TEXT    NOT NULL    -- the full TestRun
+);
+```
+
+`confident_test_run_id` is `NULL` for a run that exists only on this machine. When you are logged in with `CONFIDENT_API_KEY`, the run is uploaded as usual and the row is stamped with the id Confident AI assigned, so the same run can be found in both places. <Switch><Case id="python">The row is written first and stamped after the upload succeeds, so a failed upload still leaves the local copy.</Case><Case id="typescript">The upload happens first, so the row is written with the id already in place; a failed upload still writes the row with `NULL`.</Case></Switch>
+
+Runs that have never been uploaded:
+
+```sql
+SELECT id, created_at, identifier FROM test_runs
+WHERE confident_test_run_id IS NULL ORDER BY id;
+```
+
+Pass rate per run, most recent first:
+
+```sql
+SELECT id, created_at, identifier,
+       round(100.0 * test_passed / (test_passed + test_failed), 1) AS pass_pct,
+       json_extract(hyperparameters_json, '$.model') AS model
+FROM test_runs ORDER BY id DESC;
+```
+
+#### Test cases
+
+One row per test case in a run. `kind` is `single-turn` for an `LLMTestCase` and `multi-turn` for a `ConversationalTestCase`. For multi-turn cases the `input` column holds the `scenario`, `expected_output` holds the `expectedOutcome`, `actual_output` is `NULL`, and the turns are in `payload_json` under `turns`.
+
+```sql
+CREATE TABLE test_cases (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_run_id     INTEGER NOT NULL REFERENCES test_runs(id) ON DELETE CASCADE,
+    kind            TEXT    NOT NULL,        -- 'single-turn' | 'multi-turn'
+    "order"         INTEGER,                 -- position within the run
+    name            TEXT,
+    input           TEXT,
+    actual_output   TEXT,
+    expected_output TEXT,
+    success         INTEGER,                 -- 1 if every metric passed
+    run_duration    REAL,
+    evaluation_cost REAL,
+    tags_json       TEXT,
+    payload_json    TEXT                     -- full test case; only with DEEPEVAL_SQLITE_PAYLOADS=1
+);
+```
+
+Fields that are not promoted and live only in `payload_json` (payloads on): `context`, `retrievalContext`, `toolsCalled`, `expectedTools`, `metadata`, `turns`, and `metricsData` (the per-metric results, including verbose logs).
+
+Turns do not get their own table. Each turn is an object in the `turns` array — `role`, `content`, `order`, `userId`, `retrievalContext`, `toolsCalled`, `comments` — so unpack them with [`json_each`](https://sqlite.org/json1.html#jeach) when you need one row per turn (payloads on):
+
+```sql
+SELECT tc.id AS test_case_id, tc.name,
+       json_extract(t.value, '$.order')   AS turn_order,
+       json_extract(t.value, '$.role')    AS role,
+       json_extract(t.value, '$.content') AS content
+FROM test_cases tc, json_each(tc.payload_json, '$.turns') AS t
+WHERE tc.kind = 'multi-turn'
+  AND tc.test_run_id = (SELECT max(id) FROM test_runs)
+ORDER BY tc.id, turn_order;
+```
+
+Every failing case in the latest run, with its retrieval context (payloads on):
+
+```sql
+SELECT "order", input, actual_output,
+       json_extract(payload_json, '$.retrievalContext') AS retrieval_context
+FROM test_cases
+WHERE test_run_id = (SELECT max(id) FROM test_runs) AND success = 0
+ORDER BY "order";
+```
+
+#### Traces
+
+One row per trace attached to a test case — the top-level record of one `@observe`d invocation of your app during the run. Spans are in their own table; the trace row carries the trace-level fields only.
+
+```sql
+CREATE TABLE traces (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_run_id   INTEGER NOT NULL REFERENCES test_runs(id) ON DELETE CASCADE,
+    test_case_id  INTEGER NOT NULL REFERENCES test_cases(id) ON DELETE CASCADE,
+    uuid          TEXT    NOT NULL,          -- trace uuid as seen in tracing
+    name          TEXT,
+    status        TEXT,                      -- 'SUCCESS' | 'ERRORED'
+    start_time    TEXT,
+    end_time      TEXT,
+    thread_id     TEXT,
+    user_id       TEXT,
+    environment   TEXT,
+    input_json    TEXT,
+    output_json   TEXT,
+    metadata_json TEXT,
+    tags_json     TEXT,
+    payload_json  TEXT                       -- full trace, spans included; only with DEEPEVAL_SQLITE_PAYLOADS=1
+);
+```
+
+Fields that live only in `payload_json` (payloads on): `turnId`, `context`, `retrievalContext`, `expectedOutput`, `toolsCalled`, `expectedTools`, `attachments`, `metricCollection`, `metricsData`, and the raw span lists (`baseSpans`, `agentSpans`, `llmSpans`, `retrieverSpans`, `toolSpans`) that the `spans` table is built from.
+
+Errored traces per run, grouped by name:
+
+```sql
+SELECT test_run_id, name, count(*) AS errored
+FROM traces WHERE status = 'ERRORED'
+GROUP BY test_run_id, name ORDER BY test_run_id DESC;
+```
+
+#### Spans
+
+One row per span, across every trace. All five span types share this table; `type` says which one a row is, and `parent_uuid` rebuilds the tree (`NULL` for a root span). LLM-specific columns are `NULL` for other types.
+
+```sql
+CREATE TABLE spans (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    trace_id           INTEGER NOT NULL REFERENCES traces(id) ON DELETE CASCADE,
+    uuid               TEXT    NOT NULL,
+    parent_uuid        TEXT,                 -- NULL for the root span
+    type               TEXT    NOT NULL,     -- 'base' | 'agent' | 'llm' | 'retriever' | 'tool'
+    name               TEXT,
+    status             TEXT,                 -- 'SUCCESS' | 'ERRORED'
+    start_time         TEXT,
+    end_time           TEXT,
+    error              TEXT,
+    model              TEXT,                 -- llm spans
+    provider           TEXT,                 -- llm spans
+    input_token_count  REAL,                 -- llm spans
+    output_token_count REAL,                 -- llm spans
+    input_json         TEXT,
+    output_json        TEXT,
+    payload_json       TEXT                  -- full span; only with DEEPEVAL_SQLITE_PAYLOADS=1
+);
+```
+
+Fields that live only in `payload_json` (payloads on), by type: every span has `metadata`, `integration`, `metricCollection` and `metricsData`; agent spans add `availableTools` and `agentHandoffs`; retriever spans add `embedder`, `topK`, `chunkSize` and `retrievalContext`; tool spans add `description`; LLM spans add `prompt`, `promptAlias` / `promptVersion` / `promptLabel` / `promptCommitHash`, `costPerInputToken`, `costPerOutputToken` and `tokenIntervals`.
+
+Token usage per model across the whole database:
+
+```sql
+SELECT model, count(*) AS calls,
+       sum(input_token_count)  AS input_tokens,
+       sum(output_token_count) AS output_tokens
+FROM spans WHERE type = 'llm'
+GROUP BY model ORDER BY input_tokens + output_tokens DESC;
+```
+
+Which tools an agent span actually called (payloads on):
+
+```sql
+SELECT name, json_extract(payload_json, '$.toolsCalled') AS tools_called
+FROM spans WHERE type = 'agent';
+```
+
+#### Metric data
+
+One row per metric result — a `MetricData`, the score a metric produced for one test case, trace or span — hence the table name; the metrics themselves are not stored, only what they returned. This is the only table without a `payload_json`: a metric result is already flat. `owner_type` says which table the result belongs to and `owner_id` is the `id` in that table, so a join back is one `CASE` away. The same results also remain inside the owner's `payload_json` under `metricsData`, which is where the verbose logs live.
+
+```sql
+CREATE TABLE metric_data (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    test_run_id      INTEGER NOT NULL REFERENCES test_runs(id) ON DELETE CASCADE,
+    owner_type       TEXT    NOT NULL,       -- 'test_case' | 'trace' | 'span'
+    owner_id         INTEGER NOT NULL,       -- id in the owner_type table
+    name             TEXT    NOT NULL,
+    score            REAL,
+    threshold        REAL,
+    success          INTEGER,
+    flaky            INTEGER NOT NULL DEFAULT 0,
+    strict_mode      INTEGER NOT NULL DEFAULT 0,
+    reason           TEXT,
+    error            TEXT,                   -- set when the metric itself failed
+    evaluation_model TEXT,
+    evaluation_cost  REAL,
+    input_tokens     INTEGER,
+    output_tokens    INTEGER
+);
+```
+
+A metric's average score across every run you have ever done — the query that makes this backend worth it:
+
+```sql
+SELECT r.id, r.identifier, m.name, round(avg(m.score), 3) AS avg_score
+FROM metric_data m JOIN test_runs r ON r.id = m.test_run_id
+WHERE m.owner_type = 'test_case'
+GROUP BY r.id, m.name ORDER BY r.id;
+```
+
+The lowest-scoring span-level results in the latest run, with the span they scored:
+
+```sql
+SELECT m.name, m.score, m.reason, s.type, s.name AS span_name
+FROM metric_data m JOIN spans s ON s.id = m.owner_id
+WHERE m.owner_type = 'span' AND m.test_run_id = (SELECT max(id) FROM test_runs)
+ORDER BY m.score ASC LIMIT 10;
+```
+
+Writes are single transactions with a 30-second busy timeout, so parallel `test run` workers can share one database. Any storage failure — read-only filesystem, locked file — is reported as a warning after the results are printed rather than failing the evaluation.
+
+### Exporting to other platforms
+
+Because it is a plain SQLite file, `deepeval.db` opens in anything that speaks SQL, which is the main reason to pick this backend over JSON. A few common destinations:
+
+**CSV / spreadsheets**, straight from the `sqlite3` CLI:
+
+```bash
+sqlite3 -header -csv .deepeval/deepeval.db \
+  "SELECT r.id AS run, r.identifier, m.name, m.score, m.success, m.reason
+   FROM metric_data m JOIN test_runs r ON r.id = m.test_run_id" > metric_scores.csv
+```
+
+**Dataframes**, for notebooks and plotting:
+
+<Switch>
+
+<Case id="python">
+
+```python
+import sqlite3
+import pandas as pd
+from deepeval.sqlite_store import resolve_db_path
+
+with sqlite3.connect(resolve_db_path()) as conn:
+    scores = pd.read_sql(
+        "SELECT test_run_id, name, score, success FROM metric_data WHERE owner_type = 'test_case'",
+        conn,
+    )
+
+scores.groupby(["test_run_id", "name"]).score.mean().unstack().plot()
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { DatabaseSync } from "node:sqlite";
+import { resolveDbPath } from "deepeval/sqlite-store";
+
+const db = new DatabaseSync(resolveDbPath(), { readOnly: true });
+const scores = db
+  .prepare("SELECT test_run_id, name, score, success FROM metric_data WHERE owner_type = 'test_case'")
+  .all();
+db.close();
+
+console.table(scores);
+```
+
+</Case>
+
+</Switch>
+
+**Warehouses and BI tools.** [DuckDB](https://duckdb.org/docs/stable/core_extensions/sqlite) attaches a SQLite file directly (`ATTACH 'deepeval.db' AS evals (TYPE sqlite)`), and from there you can `COPY` any query to Parquet for Snowflake, BigQuery, or S3. Metabase, Grafana, Datasette, and most desktop SQL clients open `.db` files natively, so a dashboard over your eval history is a file path away.
+
+**Confident AI.** The local backend and cloud upload are independent. If you are logged in with `CONFIDENT_API_KEY`, runs are still uploaded when they finish, regardless of which local backend is active, and the `test_runs` row records the Confident AI id in `confident_test_run_id` — SQLite is not a substitute for the platform, it is a durable local copy you own.
+
+## Reading results back
+
+Whatever the backend, the [<Term py="deepeval inspect" ts="npx deepeval inspect"/>](/docs/command-line-interface#inspect) TUI opens a stored run and lets you walk its traces and spans with per-span scores and reasons:
+
+<Switch>
+
+<Case id="python">
+
+```bash
+deepeval inspect                              # latest run (JSON or SQLite, whichever is active)
+deepeval inspect ./evals/prompt-v3            # latest test_run_*.json in a folder
+deepeval inspect --list                       # SQLite: table of stored runs
+deepeval inspect --run-id 7                   # SQLite: open a specific run
+```
+
+Or load a run in code:
+
+```python
+from deepeval.sqlite_store import list_test_runs, load_test_run, resolve_db_path
+
+db = resolve_db_path()
+runs = list_test_runs(db, limit=10)    # newest first, without payloads
+run_id, test_run = load_test_run(db)   # latest run as a `TestRun`
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval inspect                          # latest run (JSON or SQLite, whichever is active)
+npx deepeval inspect ./evals/prompt-v3        # latest test_run_*.json in a folder
+npx deepeval inspect --list                   # SQLite: table of stored runs
+npx deepeval inspect --run-id 7               # SQLite: open a specific run
+```
+
+Or load a run in code:
+
+```typescript
+import { listTestRuns, loadTestRunPayload, resolveDbPath } from "deepeval/sqlite-store";
+
+const db = resolveDbPath();
+const runs = listTestRuns(db, 10);                 // newest first, without payloads
+const { runId, payload } = loadTestRunPayload(db); // latest run
+```
+
+</Case>
+
+</Switch>
+
+<Term py="deepeval diagnose" ts="npx deepeval diagnose"/> reports which `DEEPEVAL_LOCAL_STORE` and `DEEPEVAL_RESULTS_FOLDER` values won and where they came from, which is the first thing to check if runs are landing somewhere you did not expect.
+
+## What is not stored locally
+
+- **Secrets.** API keys live in your dotenv files or the process environment and are never copied into `.deepeval/`, JSON exports, or `deepeval.db`.
+- **Datasets and goldens.** `EvaluationDataset` is saved and loaded explicitly through its own methods; the test run store only records the test cases that were actually evaluated.
+- **Anything remote.** Confident AI uploads are a separate, opt-in step gated on `CONFIDENT_API_KEY`. Without it, the files described on this page are the only place your results exist.

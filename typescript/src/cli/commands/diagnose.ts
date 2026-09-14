@@ -27,6 +27,8 @@ const RELEVANT_MARKERS = [
   "TEMPERATURE",
   "DEEPEVAL_DEFAULT_SAVE",
   "DEEPEVAL_RESULTS_FOLDER",
+  "DEEPEVAL_LOCAL_STORE",
+  "DEEPEVAL_SQLITE_PAYLOADS",
 ];
 
 function maskSecret(value: string): string {

@@ -311,7 +311,7 @@ This allows you to inspect traces and spans locally on your machine:
 
 Move with `↑`/`↓` or `j`/`k`, fold a span with `h`/`l`, and cycle between traces with `←`/`→` or `n`/`p`. Press `/` to filter spans by name, `y` to copy the selected node as JSON (`Y` for the whole trace), `?` for the keybinding list, and `q` to quit.
 
-Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_run_full.json` → `./experiments` (legacy fallback).
+Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/deepeval.db` (when `DEEPEVAL_LOCAL_STORE=sqlite`) → `.deepeval/.latest_run_full.json` → `./experiments` (legacy fallback).
 
 The TUI needs an optional extras bundle (Textual + clipboard support):
 
@@ -325,7 +325,7 @@ pip install 'deepeval[inspect]'
 
 Move with `↑`/`↓` or `j`/`k`, fold a span with `←`/`→` or `h`/`l`, and cycle between traces with `n`/`p`. Press `PgUp`/`PgDn` to scroll a long detail pane, `g`/`G` to jump to the top or bottom, and `q` to quit. The footer lists the full set.
 
-Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/.latest_test_run.json`.
+Resolution order when no path is passed: `--folder` → `DEEPEVAL_RESULTS_FOLDER` → `.deepeval/deepeval.db` (when `DEEPEVAL_LOCAL_STORE=sqlite`) → `.deepeval/.latest_test_run.json`.
 
 The TUI is built on [Ink](https://github.com/vadimdemedes/ink), declared as an optional dependency. `npm install` pulls it in by default, so there's usually nothing extra to do — but if you installed with `--omit=optional`, add it back:
 
@@ -336,6 +336,40 @@ npm install ink react
 </Case>
 
 </Switch>
+
+When runs are saved with [`DEEPEVAL_LOCAL_STORE=sqlite`](/docs/environment-variables#sqlite-local-store), `inspect` reads from the database instead (how the JSON and SQLite backends differ is explained [here](/docs/evaluation-local-backend-storage)). The zero-arg form opens the latest run, and a folder argument prefers the `deepeval.db` inside it:
+
+<Switch>
+
+<Case id="python">
+
+```bash
+deepeval inspect --list                       # table of stored runs: id, time, pass/fail, cost
+deepeval inspect --run-id 7                   # open a specific run
+deepeval inspect ./evals/deepeval.db#7        # same, addressing the run inline
+deepeval inspect ./evals --run-id 7           # folder containing a deepeval.db
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval inspect --list                   # table of stored runs: id, time, pass/fail, cost
+npx deepeval inspect --run-id 7               # open a specific run
+npx deepeval inspect ./evals/deepeval.db#7    # same, addressing the run inline
+npx deepeval inspect ./evals --run-id 7       # folder containing a deepeval.db
+```
+
+</Case>
+
+</Switch>
+
+| Option              | Description                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------- |
+| `-f`, `--folder`    | Folder to scan for the latest run. Overrides `DEEPEVAL_RESULTS_FOLDER`.                          |
+| `--run-id <id>`     | Open this run id from the SQLite store instead of the latest one.                               |
+| `--list`            | Print the runs in the resolved SQLite store and exit (no TUI).                                  |
 
 <Only id="python">
 
@@ -374,7 +408,7 @@ The report shows:
 - **Versions**: deepeval and the runtime it's running on.
 - **Evaluation model**: the model deepeval will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, and the selected text-to-speech and speech-to-text models below those, with what each is used by.</Only>
 - **Configuration sources**: the precedence order every variable is resolved against, independently (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults), which dotenv files were loaded, and where the keystore lives.
-- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get.
+- **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get. Storage settings are included here too: `DEEPEVAL_RESULTS_FOLDER` and [`DEEPEVAL_LOCAL_STORE`](/docs/environment-variables#sqlite-local-store), so if runs are landing in `deepeval.db` instead of `test_run_*.json` files (or vice versa), this is where to confirm which value won and where it came from. <Switch><Case id="python">An unrecognised `DEEPEVAL_LOCAL_STORE` value falls back to `json` at run time with a warning on stderr, so a typo shows up here as the value that lost.</Case><Case id="typescript">A `DEEPEVAL_LOCAL_STORE=sqlite` that this Node version cannot honour (anything below Node 24) is reported as an ignored invalid value with the reason, rather than silently dropped.</Case></Switch>
 - **Confident AI**: login status, masked API key, data region, and the API endpoint.<Only id="python"> The OTEL endpoint is shown too, with warnings if either endpoint looks like it belongs to a different region than your API key.</Only>
 
 Options:

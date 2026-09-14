@@ -1,14 +1,31 @@
 // Reads persisted test runs into nested trace trees. On disk a trace is a
 // `TraceApi`: five flat span buckets whose members point at each other through
 // `parentUuid`.
+//
+// A source is either a `test_run_*.json` file or a SQLite store addressed as
+// `<path>/deepeval.db#<run_id>` (`#<run_id>` optional: latest run). Both
+// resolve to the same run object, so everything below `readPayload` is shared.
 
 import * as fs from "fs";
 import * as path from "path";
 import {
   HIDDEN_DIR,
   LATEST_TEST_RUN_FILE,
+  DEEPEVAL_LOCAL_STORE,
   DEEPEVAL_RESULTS_FOLDER,
 } from "@/constants";
+import {
+  LOCAL_STORE_SQLITE,
+  normalizeLocalStoreMode,
+} from "@/sqlite-store/mode";
+import {
+  DB_FILENAME,
+  TestRunNotFoundError,
+  formatSource,
+  loadTestRunPayload,
+  parseSource,
+  resolveDbPath,
+} from "@/sqlite-store/store";
 import type { BaseApiSpan } from "@/tracing/api";
 import type { InspectSpan, InspectTrace, RunSummary } from "@/inspect/model";
 
@@ -48,24 +65,83 @@ export function findLatestTestRun(folder: string): string {
   return candidates[0]!.file;
 }
 
+/** Prefer `deepeval.db` in sqlite mode (read without the Node gate: the DB may
+ *  have been written elsewhere) or when a run id was requested. */
+function sqliteModeRequested(): boolean {
+  return (
+    normalizeLocalStoreMode(process.env[DEEPEVAL_LOCAL_STORE]) ===
+    LOCAL_STORE_SQLITE
+  );
+}
+
+function dbSource(dbPath: string, runId?: number | null): string {
+  return runId === undefined || runId === null
+    ? dbPath
+    : formatSource(dbPath, runId);
+}
+
+/**
+ * Latest run inside `folder`: the newest `test_run_*.json`, or the
+ * `deepeval.db` inside it when sqlite mode is on, a run id was asked for, or
+ * there are no JSON exports to fall back on.
+ */
+function findLatestInFolder(folder: string, runId?: number | null): string {
+  const dbPath = path.join(folder, DB_FILENAME);
+  const hasDb = fs.existsSync(dbPath);
+  if (hasDb && (runId != null || sqliteModeRequested())) {
+    return dbSource(dbPath, runId);
+  }
+  try {
+    return findLatestTestRun(folder);
+  } catch (e) {
+    if (hasDb) return dbSource(dbPath, runId);
+    throw e;
+  }
+}
+
+export interface ResolveInspectOptions {
+  /** Open this run id from a SQLite store instead of the latest. */
+  runId?: number | null;
+}
+
 export function resolveInspectTarget(
   target?: string,
   folderOption?: string,
+  { runId }: ResolveInspectOptions = {},
 ): string {
   if (target) {
+    const parsed = parseSource(target);
+    if (parsed) {
+      if (!fs.existsSync(parsed.dbPath)) {
+        throw new InspectLoadError(`SQLite store not found: ${parsed.dbPath}`);
+      }
+      return dbSource(parsed.dbPath, runId ?? parsed.runId);
+    }
     if (!fs.existsSync(target)) {
       throw new InspectLoadError(`No such file or directory: ${target}`);
     }
     return fs.statSync(target).isDirectory()
-      ? findLatestTestRun(target)
+      ? findLatestInFolder(target, runId)
       : target;
   }
 
   const folder = folderOption || process.env[DEEPEVAL_RESULTS_FOLDER];
-  if (folder && folder.trim() !== "") return findLatestTestRun(folder.trim());
+  if (folder && folder.trim() !== "") {
+    return findLatestInFolder(folder.trim(), runId);
+  }
+
+  const defaultDb = resolveDbPath(undefined);
+  const hasDefaultDb = fs.existsSync(defaultDb);
+  if (hasDefaultDb && (runId != null || sqliteModeRequested())) {
+    return dbSource(defaultDb, runId);
+  }
 
   const rolling = path.join(process.cwd(), HIDDEN_DIR, LATEST_TEST_RUN_FILE);
   if (fs.existsSync(rolling)) return rolling;
+
+  // A DB written earlier in sqlite mode is still the best fallback even if
+  // the current process is back in json mode.
+  if (hasDefaultDb) return dbSource(defaultDb, runId);
 
   throw new InspectLoadError(
     `No test run found. Expected ${path.join(HIDDEN_DIR, LATEST_TEST_RUN_FILE)} ` +
@@ -99,6 +175,39 @@ function readJson(file: string): Json {
     );
   }
   return parsed;
+}
+
+/** Resolve a source (JSON file or `<db>#<run_id>`) to a run object. */
+function readPayload(source: string): Json {
+  const parsed = parseSource(source);
+  if (!parsed) return readJson(source);
+  try {
+    const { payload } = loadTestRunPayload(parsed.dbPath, parsed.runId);
+    if (!isRecord(payload)) {
+      throw new InspectLoadError(
+        `Expected the test run in ${source} to be an object.`,
+      );
+    }
+    return payload;
+  } catch (e) {
+    if (e instanceof InspectLoadError) throw e;
+    if (e instanceof TestRunNotFoundError) {
+      throw new InspectLoadError(e.message);
+    }
+    throw new InspectLoadError(
+      `Failed to read test run from ${source}: ${(e as Error).message}`,
+    );
+  }
+}
+
+/** Header label: `test_run_x` for files, `deepeval.db#3` for stored runs. */
+export function runIdFromSource(source: string): string {
+  const parsed = parseSource(source);
+  if (parsed) {
+    const base = path.basename(parsed.dbPath);
+    return parsed.runId === null ? base : `${base}#${parsed.runId}`;
+  }
+  return path.parse(source).name;
 }
 
 /** TypeScript nests the trace under `cases[].entry`; Python puts it on `testCases[]`. */
@@ -168,7 +277,7 @@ function parseTrace(raw: Json): InspectTrace {
 }
 
 export function loadTestRun(file: string): InspectTrace[] {
-  const data = readJson(file);
+  const data = readPayload(file);
   const traces: InspectTrace[] = [];
 
   for (const { trace, name, passed } of iterateCases(data)) {
@@ -186,7 +295,7 @@ export function loadTestRun(file: string): InspectTrace[] {
 
 export function summarizeTestRun(file: string): RunSummary | null {
   try {
-    const data = readJson(file);
+    const data = readPayload(file);
     const num = (key: string): number | undefined =>
       typeof data[key] === "number" ? (data[key] as number) : undefined;
     return {
