@@ -894,3 +894,21 @@ def test_openai_calculate_cost_with_zero_tokens(settings):
 
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+def test_openai_model_handles_none_model_data(settings, monkeypatch):
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+
+    model = OpenAIModel(
+        model="custom-unknown-model", base_url="http://localhost:1234/v1"
+    )
+    monkeypatch.setattr(model, "model_data", None)
+
+    assert model.supports_temperature() is None
+    assert model.supports_log_probs() is None
+    assert model.supports_multimodal() is None
+    assert model.supports_structured_outputs() is None
+    assert model.supports_json_mode() is None
+    assert model.calculate_cost(10, 20) is None
+    assert model._cap_top_logprobs(5) == 5
