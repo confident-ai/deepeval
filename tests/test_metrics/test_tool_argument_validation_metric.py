@@ -380,7 +380,9 @@ class TestToolArgumentValidationMetric:
             ]
         )
         assert metric.measure(invalid_case) == 0.0
-        assert metric.validation_results[0].errors[0].field_path == "address.city"
+        assert (
+            metric.validation_results[0].errors[0].field_path == "address.city"
+        )
 
     def test_tools_called_none_raises_missing_params(self):
         """When tools_called is None the framework must reject the test case."""
