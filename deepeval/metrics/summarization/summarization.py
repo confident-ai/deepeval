@@ -19,6 +19,8 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_idk_verdict,
+    is_yes_verdict,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.summarization.schema import (
@@ -213,18 +215,19 @@ class SummarizationMetric(BaseMetric):
         contradictions = []
         redundancies = []
         for verdict in self.alignment_verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                contradictions.append(verdict.reason)
-            elif verdict.verdict.strip().lower() == "idk":
+            if is_yes_verdict(verdict.verdict):
+                continue
+            if is_idk_verdict(verdict.verdict):
                 redundancies.append(verdict.reason)
+            else:
+                contradictions.append(verdict.reason)
 
         questions = []
         if self.coverage_verdicts:
             for verdict in self.coverage_verdicts:
-                if (
-                    verdict.original_verdict.strip().lower() == "yes"
-                    and verdict.summary_verdict.strip().lower() == "no"
-                ):
+                if is_yes_verdict(
+                    verdict.original_verdict
+                ) and not is_yes_verdict(verdict.summary_verdict):
                     questions.append(verdict.question)
 
         prompt: dict = self._get_prompt(
@@ -258,18 +261,19 @@ class SummarizationMetric(BaseMetric):
         contradictions = []
         redundancies = []
         for verdict in self.alignment_verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                contradictions.append(verdict.reason)
-            elif verdict.verdict.strip().lower() == "idk":
+            if is_yes_verdict(verdict.verdict):
+                continue
+            if is_idk_verdict(verdict.verdict):
                 redundancies.append(verdict.reason)
+            else:
+                contradictions.append(verdict.reason)
 
         questions = []
         if self.coverage_verdicts:
             for verdict in self.coverage_verdicts:
-                if (
-                    verdict.original_verdict.strip().lower() == "yes"
-                    and verdict.summary_verdict.strip().lower() == "no"
-                ):
+                if is_yes_verdict(
+                    verdict.original_verdict
+                ) and not is_yes_verdict(verdict.summary_verdict):
                     questions.append(verdict.question)
 
         prompt: dict = self._get_prompt(
@@ -305,7 +309,7 @@ class SummarizationMetric(BaseMetric):
             for verdict in self.alignment_verdicts:
                 # Different from the faithfulness score, this
                 # penalizes 'idk' (full of fluff) summaries
-                if verdict.verdict.strip().lower() == "yes":
+                if is_yes_verdict(verdict.verdict):
                     faithfulness_count += 1
 
             score = faithfulness_count / total
@@ -316,9 +320,9 @@ class SummarizationMetric(BaseMetric):
             total = 0
             coverage_count = 0
             for verdict in self.coverage_verdicts:
-                if verdict.original_verdict.strip().lower() == "yes":
+                if is_yes_verdict(verdict.original_verdict):
                     total += 1
-                    if verdict.summary_verdict.strip().lower() == "yes":
+                    if is_yes_verdict(verdict.summary_verdict):
                         coverage_count += 1
 
             if total == 0:
