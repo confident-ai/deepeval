@@ -50,6 +50,9 @@ class KeyValues(Enum):
     CONFIDENT_BASE_URL = "confident_base_url"
     CONFIDENT_REGION = "confident_region"
 
+    # Local test run storage (`deepeval set-local-store`)
+    DEEPEVAL_LOCAL_STORE = "local_store"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"

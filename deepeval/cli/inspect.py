@@ -82,18 +82,18 @@ def inspect_command(
         _print_run_list(target)
         return
 
-    # Lazy import so the install hint surfaces before Textual's heavy
-    # imports try to load. Catch any ImportError, not just `textual` —
-    # pyperclip's native bindings can fail late on some platforms.
-    try:
-        from deepeval.inspect import run_inspect
-    except ImportError as e:
-        print(_INSTALL_HINT)
-        print(f"[dim]Underlying error: {e}[/dim]")
-        raise typer.Exit(code=1)
+    from deepeval.inspect import run_inspect
 
     try:
         run_inspect(target)
+    except ImportError as e:
+        # `run_inspect` imports Textual / pyperclip lazily, so a missing
+        # extra surfaces here, at call time. Catch any ImportError, not just
+        # `textual` -- pyperclip's native bindings can fail late on some
+        # platforms.
+        print(_INSTALL_HINT)
+        print(f"[dim]Underlying error: {e}[/dim]")
+        raise typer.Exit(code=1)
     except FileNotFoundError as e:
         # `find_latest_test_run` can hit this if the folder vanished
         # between resolution and load.

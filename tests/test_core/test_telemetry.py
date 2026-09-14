@@ -249,6 +249,46 @@ class TestRunId:
         assert backend.events == []
 
 
+class TestSdkLogging:
+    """Our PostHog client must be quiet without touching a user's own client."""
+
+    class _Lane:
+        pass
+
+    class _FakeClient:
+        def __init__(self):
+            self._lanes = [TestSdkLogging._Lane(), TestSdkLogging._Lane()]
+
+    def test_redirects_only_our_clients_log_lines(self):
+        import logging
+
+        from deepeval.telemetry import client as client_mod
+
+        shared = logging.getLogger("posthog")
+        before = (shared.level, list(shared.handlers), list(shared.filters))
+
+        fake = self._FakeClient()
+        client_mod._quiet_sdk_logging(fake)
+
+        ours = logging.getLogger(client_mod._SDK_LOGGER_NAME)
+        assert fake.log is ours
+        assert all(lane.log is ours for lane in fake._lanes)
+        # The SDK's budget message is a WARNING; ours drops it.
+        assert not ours.isEnabledFor(logging.WARNING)
+        assert ours.isEnabledFor(logging.ERROR)
+        # The logger every other PostHog client uses is exactly as it was.
+        assert (
+            shared.level,
+            list(shared.handlers),
+            list(shared.filters),
+        ) == before
+
+    def test_tolerates_unknown_sdk_internals(self):
+        from deepeval.telemetry import client as client_mod
+
+        client_mod._quiet_sdk_logging(object())  # no attributes to set
+
+
 class TestOutcome:
     def test_a_failed_run_reports_the_exception_class(self, backend):
         with pytest.raises(ValueError):

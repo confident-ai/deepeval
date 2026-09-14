@@ -286,8 +286,9 @@ export function loadTestRun(file: string): InspectTrace[] {
 
   if (traces.length === 0) {
     throw new NoTracesError(
-      `${file} contains no traces. \`deepeval inspect\` shows trace trees, so ` +
-        "runs recorded without tracing have nothing to display.",
+      `Unable to inspect ${file}: this test run has no traces.\n` +
+        "See stored runs with `npx deepeval inspect --list`, or " +
+        "`npx deepeval inspect --help` for options.",
     );
   }
   return traces;

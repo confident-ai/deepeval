@@ -108,8 +108,9 @@ def traces_from_test_run_dict(
 
     if not traces:
         raise NoTracesError(
-            f"{source} contains no traces. `deepeval inspect` shows trace "
-            "trees; runs without tracing data have nothing to display."
+            f"Unable to inspect {source}: this test run has no traces.\n"
+            "See stored runs with `deepeval inspect --list`, or "
+            "`deepeval inspect --help` for options."
         )
     return traces
 
@@ -170,7 +171,9 @@ def run_id_from_path(path: str | Path) -> str:
     parsed = sqlite_store.parse_source(path)
     if parsed is not None:
         db_path, run_id = parsed
-        return f"{db_path.name}#{run_id}" if run_id is not None else db_path.name
+        return (
+            f"{db_path.name}#{run_id}" if run_id is not None else db_path.name
+        )
     return Path(path).stem
 
 
