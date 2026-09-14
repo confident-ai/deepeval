@@ -37,6 +37,19 @@ LOCAL_STORE_SQLITE = "sqlite"
 _LOCAL_STORE_ENV_VAR = "DEEPEVAL_LOCAL_STORE"
 
 
+def normalize_local_store_mode(raw: Optional[str]) -> Optional[str]:
+    """Map a raw `DEEPEVAL_LOCAL_STORE` value to a mode, or `None` if unknown.
+
+    Side-effect free, so callers that must stay quiet (telemetry) can use it.
+    """
+    value = (raw or "").strip().lower()
+    if not value or value == LOCAL_STORE_JSON:
+        return LOCAL_STORE_JSON
+    if value in {LOCAL_STORE_SQLITE, "sqlite3", "db"}:
+        return LOCAL_STORE_SQLITE
+    return None
+
+
 def resolve_local_store_mode() -> str:
     """Return `"json"` (default) or `"sqlite"` from `DEEPEVAL_LOCAL_STORE`.
 
@@ -46,10 +59,9 @@ def resolve_local_store_mode() -> str:
     typo never silently drops the user's results.
     """
     raw = (os.getenv(_LOCAL_STORE_ENV_VAR) or "").strip().lower()
-    if not raw or raw == LOCAL_STORE_JSON:
-        return LOCAL_STORE_JSON
-    if raw in {LOCAL_STORE_SQLITE, "sqlite3", "db"}:
-        return LOCAL_STORE_SQLITE
+    mode = normalize_local_store_mode(raw)
+    if mode is not None:
+        return mode
     print(
         f"Warning: unrecognised {_LOCAL_STORE_ENV_VAR}={raw!r}; "
         "falling back to 'json'. Valid values: 'json', 'sqlite'.",

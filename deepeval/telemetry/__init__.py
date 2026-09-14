@@ -74,6 +74,7 @@ from deepeval.telemetry.properties import (
     EventProperties,
     FlushReason,
     Language,
+    LocalStore,
     LoginMethod,
     LoginOutcome,
     LoginPromptSurface,
