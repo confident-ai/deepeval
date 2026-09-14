@@ -555,246 +555,60 @@ class _FakeSpan:
 class TestContextAwareSpanProcessorRouting:
     @staticmethod
     def _make_processor():
-        """Bypass ``__init__`` so the test doesn't depend on the OTLP exporter
-        package being installed locally — we only care about routing logic.
-        """
         processor = ContextAwareSpanProcessor.__new__(ContextAwareSpanProcessor)
-        processor._api_key = "test-key"
-        processor._rest_processor = MagicMock()
-        processor._rest_exporter = MagicMock()
-        processor._rest_exporter.force_flush.return_value = True
+        processor._capture = MagicMock()
+        processor._capture.bindings = {}
+        processor._api_key = None
         processor._otlp_processor = MagicMock()
-        return processor, processor._rest_processor, processor._otlp_processor
+        return processor
 
-    def test_routes_to_rest_when_trace_context_active(self):
-        processor, rest, otlp = self._make_processor()
+    def test_explicit_context_captured_at_start(self):
+        processor = self._make_processor()
         span = _FakeSpan()
-
         with trace():
-            processor.on_end(span)
+            processor.on_start(span, None)
+        processor._capture.start.assert_called_once_with(
+            span, True, api_key=None
+        )
 
-        rest.on_end.assert_called_once_with(span)
-        otlp.on_end.assert_not_called()
-
-    def test_routes_to_otlp_when_no_context(self):
-        processor, rest, otlp = self._make_processor()
+    def test_production_captured_at_start(self):
+        processor = self._make_processor()
         span = _FakeSpan()
-
         token = current_trace_context.set(None)
         try:
             with patch(
                 "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = False
-                processor.on_end(span)
+            ) as manager:
+                manager.is_evaluating = False
+                processor.on_start(span, None)
         finally:
             current_trace_context.reset(token)
-
-        otlp.on_end.assert_called_once_with(span)
-        rest.on_end.assert_not_called()
-
-    def test_routes_to_rest_when_evaluating(self):
-        processor, rest, otlp = self._make_processor()
-        span = _FakeSpan()
-
-        token = current_trace_context.set(None)
-        try:
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = True
-                processor.on_end(span)
-        finally:
-            current_trace_context.reset(token)
-
-        rest.on_end.assert_called_once_with(span)
-        otlp.on_end.assert_not_called()
-
-    def test_routes_to_otlp_when_only_implicit_trace_in_context(self):
-        """Implicit Trace placeholders (pushed by SpanInterceptor for
-        bare ``agent.run`` callers) MUST NOT flip routing to REST —
-        they only exist so ``update_current_trace(...)`` works."""
-        from deepeval.tracing.types import Trace, TraceSpanStatus
-
-        processor, rest, otlp = self._make_processor()
-        span = _FakeSpan()
-
-        implicit_trace = Trace(
-            uuid="abc",
-            root_spans=[],
-            status=TraceSpanStatus.IN_PROGRESS,
-            start_time=0.0,
-        )
-        implicit_trace._is_otel_implicit = True
-        token = current_trace_context.set(implicit_trace)
-        try:
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = False
-                processor.on_end(span)
-        finally:
-            current_trace_context.reset(token)
-
-        otlp.on_end.assert_called_once_with(span)
-        rest.on_end.assert_not_called()
-
-    def test_routes_to_rest_when_evaluating_even_with_implicit_trace(self):
-        """``trace_manager.is_evaluating`` overrides everything — a live
-        eval session must see spans via REST regardless of how the trace
-        context was pushed."""
-        from deepeval.tracing.types import Trace, TraceSpanStatus
-
-        processor, rest, otlp = self._make_processor()
-        span = _FakeSpan()
-
-        implicit_trace = Trace(
-            uuid="abc",
-            root_spans=[],
-            status=TraceSpanStatus.IN_PROGRESS,
-            start_time=0.0,
-        )
-        implicit_trace._is_otel_implicit = True
-        token = current_trace_context.set(implicit_trace)
-        try:
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = True
-                processor.on_end(span)
-        finally:
-            current_trace_context.reset(token)
-
-        rest.on_end.assert_called_once_with(span)
-        otlp.on_end.assert_not_called()
-
-    def test_routes_to_rest_when_test_name_is_set(self):
-        """Trace-shape testing override: when
-        ``trace_testing_manager.test_name`` is set (i.e. inside an
-        ``@assert_trace_json`` / ``@generate_trace_json`` decorator),
-        spans must flow through the REST path even with no user-pushed
-        trace context and ``is_evaluating=False`` — otherwise the only
-        writer of ``trace_testing_manager.test_dict``
-        (``trace_manager.end_trace``) never fires for bare
-        ``agent.run(...)`` flows, the decorator's
-        ``wait_for_test_dict()`` times out, and ``{} == {}`` makes
-        every schema test trivially pass.
-        """
-        from deepeval.tracing.trace_test_manager import (
-            trace_testing_manager,
+        processor._capture.start.assert_called_once_with(
+            span, False, api_key=None
         )
 
-        processor, rest, otlp = self._make_processor()
+    def test_trace_shape_testing_captured_at_start(self):
+        processor = self._make_processor()
         span = _FakeSpan()
-
-        token = current_trace_context.set(None)
-        prev_test_name = trace_testing_manager.test_name
-        try:
-            trace_testing_manager.test_name = "any_name"
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = False
-                processor.on_end(span)
-        finally:
-            trace_testing_manager.test_name = prev_test_name
-            current_trace_context.reset(token)
-
-        rest.on_end.assert_called_once_with(span)
-        otlp.on_end.assert_not_called()
-
-    def test_routes_to_rest_when_test_name_set_with_implicit_trace(self):
-        """The actual scenario in ``test_sync.py`` / ``test_async.py``:
-        bare ``agent.run(...)`` (so ``SpanInterceptor`` pushes an implicit
-        ``Trace`` placeholder, which on its own routes to OTLP) PLUS the
-        test harness has set ``trace_testing_manager.test_name``. The
-        test-name override must still flip routing to REST even though
-        the only trace context active is implicit.
-        """
-        from deepeval.tracing.trace_test_manager import (
-            trace_testing_manager,
-        )
-        from deepeval.tracing.types import Trace, TraceSpanStatus
-
-        processor, rest, otlp = self._make_processor()
-        span = _FakeSpan()
-
-        implicit_trace = Trace(
-            uuid="abc",
-            root_spans=[],
-            status=TraceSpanStatus.IN_PROGRESS,
-            start_time=0.0,
-        )
-        implicit_trace._is_otel_implicit = True
-        token = current_trace_context.set(implicit_trace)
-        prev_test_name = trace_testing_manager.test_name
-        try:
-            trace_testing_manager.test_name = "any_name"
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = False
-                processor.on_end(span)
-        finally:
-            trace_testing_manager.test_name = prev_test_name
-            current_trace_context.reset(token)
-
-        rest.on_end.assert_called_once_with(span)
-        otlp.on_end.assert_not_called()
-
-    def test_routes_to_otlp_when_test_name_is_none(self):
-        """Negative guard: a freshly-cleared ``test_name`` (the default
-        outside the test decorators) must NOT spuriously route to REST.
-        Pairs with ``test_routes_to_rest_when_test_name_is_set`` so a
-        future bug that flips the predicate (e.g. ``is None`` vs
-        ``is not None``) is caught immediately.
-        """
-        from deepeval.tracing.trace_test_manager import (
-            trace_testing_manager,
+        with patch(
+            "deepeval.tracing.otel.context_aware_processor.trace_testing_manager"
+        ) as testing:
+            testing.test_name = "shape"
+            processor.on_start(span, None)
+        processor._capture.start.assert_called_once_with(
+            span, True, api_key=None
         )
 
-        processor, rest, otlp = self._make_processor()
+    @pytest.mark.parametrize("captured", [True, False])
+    def test_end_uses_stored_route(self, captured):
+        processor = self._make_processor()
+        processor._capture.end.return_value = captured
         span = _FakeSpan()
-
-        token = current_trace_context.set(None)
-        prev_test_name = trace_testing_manager.test_name
-        try:
-            trace_testing_manager.test_name = None
-            with patch(
-                "deepeval.tracing.otel.context_aware_processor.trace_manager"
-            ) as fake_tm:
-                fake_tm.is_evaluating = False
-                processor.on_end(span)
-        finally:
-            trace_testing_manager.test_name = prev_test_name
-            current_trace_context.reset(token)
-
-        otlp.on_end.assert_called_once_with(span)
-        rest.on_end.assert_not_called()
-
-    def test_on_start_forwarded_to_both(self):
-        processor, rest, otlp = self._make_processor()
-        span = _FakeSpan()
-
-        processor.on_start(span, None)
-
-        rest.on_start.assert_called_once_with(span, None)
-        otlp.on_start.assert_called_once_with(span, None)
-
-    def test_shutdown_and_force_flush_forwarded_to_both(self):
-        processor, rest, otlp = self._make_processor()
-
-        rest.force_flush.return_value = True
-        otlp.force_flush.return_value = True
-
-        assert processor.force_flush(timeout_millis=5000) is True
-        rest.force_flush.assert_called_once_with(5000)
-        processor._rest_exporter.force_flush.assert_called_once_with(5000)
-        otlp.force_flush.assert_called_once_with(5000)
-
-        processor.shutdown()
-        rest.shutdown.assert_called_once_with()
-        otlp.shutdown.assert_called_once_with()
+        processor.on_end(span)
+        processor._capture.end.assert_called_once_with(span)
+        assert processor._otlp_processor.on_end.call_count == (
+            0 if captured else 1
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -945,8 +759,9 @@ class TestNextSpanPureContextAPI:
     def test_stacked_typed_slots_are_independent(self):
         """``with next_agent_span(...), next_llm_span(...):`` keeps each
         slot separate; popping one does not drain the other."""
-        with next_agent_span(metric_collection="A"), next_llm_span(
-            model="gpt-4"
+        with (
+            next_agent_span(metric_collection="A"),
+            next_llm_span(model="gpt-4"),
         ):
             agent_payload = pop_pending_for("agent")
             assert agent_payload == {"metric_collection": "A"}
@@ -967,8 +782,9 @@ class TestNextSpanPureContextAPI:
     def test_typed_overrides_base_on_key_overlap(self):
         """When base + typed both set the same key, the typed slot wins
         (more specific wins)."""
-        with next_span(metric_collection="base"), next_agent_span(
-            metric_collection="typed"
+        with (
+            next_span(metric_collection="base"),
+            next_agent_span(metric_collection="typed"),
         ):
             payload = pop_pending_for("agent")
             assert payload["metric_collection"] == "typed"
@@ -977,8 +793,9 @@ class TestNextSpanPureContextAPI:
         """``next_agent_span(...)`` is NOT consumed by
         ``pop_pending_for('llm')``. Base slot still goes (it's
         any-type)."""
-        with next_span(metadata={"k": "v"}), next_agent_span(
-            metric_collection="A"
+        with (
+            next_span(metadata={"k": "v"}),
+            next_agent_span(metric_collection="A"),
         ):
             llm_payload = pop_pending_for("llm")
             # Base flowed through, agent slot untouched.

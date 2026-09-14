@@ -454,6 +454,17 @@ def instrument_crewai(api_key: Optional[str] = None):
         if api_key:
             deepeval.login(api_key)
 
+        from deepeval.tracing.otel.frameworks import (
+            instrument,
+            enabled,
+            bind_crewai_metrics,
+        )
+
+        was_enabled = enabled("crewai")
+        if instrument("crewai", api_key=api_key, include_llm=True):
+            if not was_enabled:
+                bind_crewai_metrics()
+            return
         wrap_all()
 
         if _listener_instance is None:
@@ -462,6 +473,9 @@ def instrument_crewai(api_key: Optional[str] = None):
 
 def reset_crewai_instrumentation():
     global _listener_instance
+    from deepeval.tracing.otel.frameworks import reset_crewai_state
+
+    reset_crewai_state()
     if _listener_instance:
         _listener_instance.reset_state()
 

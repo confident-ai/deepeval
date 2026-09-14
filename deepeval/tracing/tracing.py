@@ -171,9 +171,9 @@ class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
         self.active_traces: Dict[str, Trace] = {}  # Map of trace_uuid to Trace
-        self.active_spans: Dict[str, BaseSpan] = (
-            {}
-        )  # Map of span_uuid to BaseSpan
+        self.active_spans: Dict[
+            str, BaseSpan
+        ] = {}  # Map of span_uuid to BaseSpan
 
         settings = get_settings()
         # Initialize queue and worker thread for trace posting
@@ -213,6 +213,8 @@ class TraceManager:
         # ``self.eval_session = EvalSession()``, which makes exit cleanup
         # atomic and impossible to half-do.
         self.eval_session: EvalSession = EvalSession()
+        self._otel_trace_ids = set()
+        self._otel_pending_ends = set()
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -303,18 +305,23 @@ class TraceManager:
         self,
         metric_collection: Optional[str] = None,
         trace_uuid: Optional[str] = None,
+        _trace: Optional[Trace] = None,
     ) -> Trace:
         """Start a new trace and set it as the current trace."""
         if trace_uuid is None:
             trace_uuid = str(uuid.uuid4())
-        new_trace = Trace(
-            uuid=trace_uuid,
-            root_spans=[],
-            status=TraceSpanStatus.IN_PROGRESS,
-            start_time=perf_counter(),
-            end_time=None,
-            metric_collection=metric_collection,
-            confident_api_key=self.confident_api_key,
+        new_trace = (
+            _trace
+            if _trace is not None
+            else Trace(
+                uuid=trace_uuid,
+                root_spans=[],
+                status=TraceSpanStatus.IN_PROGRESS,
+                start_time=perf_counter(),
+                end_time=None,
+                metric_collection=metric_collection,
+                confident_api_key=self.confident_api_key,
+            )
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -340,6 +347,13 @@ class TraceManager:
     def end_trace(self, trace_uuid: str):
         """End a specific trace by its UUID."""
 
+        if trace_uuid in self._otel_trace_ids and any(
+            span.trace_uuid == trace_uuid for span in self.active_spans.values()
+        ):
+            self._otel_pending_ends.add(trace_uuid)
+            return
+        self._otel_pending_ends.discard(trace_uuid)
+        self._otel_trace_ids.discard(trace_uuid)
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
             trace.end_time = (
@@ -395,7 +409,9 @@ class TraceManager:
                         and trace.root_spans[0].children
                         and len(trace.root_spans[0].children) > 0
                     ):
-                        trace.root_spans = [trace.root_spans[0].children[0]]
+                        trace.root_spans = (
+                            trace.root_spans[0].children + trace.root_spans[1:]
+                        )
                     for root_span in trace.root_spans:
                         root_span.parent_uuid = None
 
@@ -422,8 +438,9 @@ class TraceManager:
 
     def remove_span(self, span_uuid: str):
         """Remove a span from the active spans dictionary."""
-        if span_uuid in self.active_spans:
-            del self.active_spans[span_uuid]
+        span = self.active_spans.pop(span_uuid, None)
+        if span is not None and span.trace_uuid in self._otel_pending_ends:
+            self.end_trace(span.trace_uuid)
 
     def add_span_to_trace(self, span: BaseSpan):
         """Add a span to its trace."""
@@ -492,6 +509,8 @@ class TraceManager:
         self.traces = []
         self.active_traces = {}
         self.active_spans = {}
+        self._otel_trace_ids.clear()
+        self._otel_pending_ends.clear()
 
     def get_trace_dict(self, trace: Trace) -> Dict:
         """Convert a trace to a dictionary."""
@@ -643,7 +662,7 @@ class TraceManager:
                     )
                     queue_size = self._trace_queue.qsize()
                     in_flight = len(self._in_flight_tasks)
-                    status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                    status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue, {in_flight} in flight)"
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
@@ -657,7 +676,7 @@ class TraceManager:
             except Exception as e:
                 queue_size = self._trace_queue.qsize()
                 in_flight = len(self._in_flight_tasks)
-                status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue, {in_flight} in flight)"
                 self._print_trace_status(
                     trace_worker_status=TraceWorkerStatus.FAILURE,
                     message=f"Error posting trace {status}",
@@ -797,6 +816,19 @@ class TraceManager:
                     message="Error flushing remaining trace(s)",
                     description=str(e),
                 )
+
+    def create_trace_metric_dict(self, trace: Trace) -> Dict[str, Any]:
+        if len(trace.root_spans) == 1:
+            return self.create_nested_spans_dict(trace.root_spans[0])
+        return {
+            "name": trace.name or "trace",
+            "type": "base",
+            "input": trace.input,
+            "output": trace.output,
+            "children": [
+                self.create_nested_spans_dict(root) for root in trace.root_spans
+            ],
+        }
 
     def create_nested_spans_dict(self, span: BaseSpan) -> Dict[str, Any]:
         api_span = self._convert_span_to_api_span(span)
@@ -1165,7 +1197,17 @@ class Observer:
         self.start_time = perf_counter()
 
         # Get the current span from the context
+        from deepeval.tracing.context import prune_otel_context
+
+        prune_otel_context()
         parent_span = current_span_context.get()
+        if (
+            parent_span is not None
+            and parent_span.uuid not in trace_manager.active_spans
+        ):
+            from deepeval.tracing.otel.capture import promote_context
+
+            promote_context(parent_span)
 
         # Determine trace_uuid and parent_uuid before creating the span instance
         if parent_span:
@@ -1336,7 +1378,11 @@ class Observer:
                         if span.trace_uuid == current_span.trace_uuid
                     ]
 
-                    if not other_active_spans:
+                    if (
+                        not other_active_spans
+                        or current_span.trace_uuid
+                        in trace_manager._otel_trace_ids
+                    ):
                         trace_manager.end_trace(current_span.trace_uuid)
                         current_trace_context.set(None)
 
