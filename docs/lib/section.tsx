@@ -119,9 +119,8 @@ export function createSection(config: SectionConfig) {
     const { nav, ...rest } = baseOptions();
     return (
       <>
-        <Banner id="docs-announcement-sqlite" height="30px">
-          🗄️ NEW: Persistent local storage with SQLite — keep every test run on
-          your machine.{" "}
+        <Banner id="docs-announcement" height="30px">
+          🎉 NEW: Persistent local storage with SQLite.{" "}
           <Link href="/blog/introducing-sqlite-local-storage">
             Read the post →
           </Link>
