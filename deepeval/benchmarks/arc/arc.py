@@ -10,6 +10,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.arc.mode import ARCMode
 from deepeval.benchmarks.arc.template import ARCTemplate
 from deepeval.benchmarks.schema import MultipleChoiceSchema
+from deepeval.benchmarks.utils import validate_n_problems, validate_n_shots
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -26,21 +27,21 @@ class ARC(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 5, "ARC only supports n_shots <= 5"
+        n_shots = validate_n_shots(n_shots, 5, "ARC")
         super().__init__(**kwargs)
         self.mode: ARCMode = mode
         self.scorer = Scorer()
         self.n_shots: int = n_shots
         if mode == ARCMode.EASY:
-            self.n_problems: int = 2376 if n_problems is None else n_problems
-            assert (
-                self.n_problems <= 2376
-            ), "ARC-Easy only supports n_problems <= 2376"
+            self.n_problems: int = validate_n_problems(
+                2376 if n_problems is None else n_problems, 2376, "ARC-Easy"
+            )
         else:
-            self.n_problems: int = 1172 if n_problems is None else n_problems
-            assert (
-                self.n_problems <= 1172
-            ), "ARC-Challenge only supports n_problems <= 1172"
+            self.n_problems: int = validate_n_problems(
+                1172 if n_problems is None else n_problems,
+                1172,
+                "ARC-Challenge",
+            )
         self.predictions: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
         self.verbose_mode = verbose_mode
