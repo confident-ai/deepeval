@@ -513,9 +513,35 @@ class LLMTestCase(BaseModel):
             if not isinstance(input, str):
                 raise TypeError("'input' must be a string")
 
+        actual_output = (
+            data.get("actual_output")
+            if "actual_output" in data
+            else data.get("actualOutput")
+        )
         if actual_output is not None:
             if not isinstance(actual_output, str):
                 raise TypeError("'actual_output' must be a string")
+            else:
+                stripped = actual_output.strip()
+                if "actual_output" in data:
+                    data["actual_output"] = stripped
+                if "actualOutput" in data:
+                    data["actualOutput"] = stripped
+
+        expected_output = (
+            data.get("expected_output")
+            if "expected_output" in data
+            else data.get("expectedOutput")
+        )
+        if expected_output is not None:
+            if not isinstance(expected_output, str):
+                raise TypeError("'expected_output' must be a string")
+            else:
+                stripped = expected_output.strip()
+                if "expected_output" in data:
+                    data["expected_output"] = stripped
+                if "expectedOutput" in data:
+                    data["expectedOutput"] = stripped
 
         # Ensure `context` is None or a list of strings
         if context is not None:
