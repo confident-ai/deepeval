@@ -474,6 +474,40 @@ npx deepeval set-confident-region EU --save=dotenv
 | `--save`, `-s`  | Persist `CONFIDENT_REGION` to a dotenv file. Usage: `dotenv[:path]`. |
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                   |
 
+### `set-local-store`
+
+Choose where finished test runs are saved locally: `json` files (the default) or a single SQLite database. See [local backend storage](/docs/evaluation-local-backend-storage) for what each backend gives you.
+
+Under the hood this sets the [`DEEPEVAL_LOCAL_STORE`](/docs/environment-variables#sqlite-local-store) environment variable; the command is preferred because it validates the value for you.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+deepeval set-local-store sqlite --save=dotenv
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-local-store sqlite --save=dotenv
+```
+
+Requires Node.js 24 or newer for `sqlite`; on an older Node the command exits with an error and leaves your settings unchanged.
+
+</Case>
+
+</Switch>
+
+| Option          | Description                                                               |
+| --------------- | ------------------------------------------------------------------------- |
+| `BACKEND`       | Positional argument. One of `json` or `sqlite`.                           |
+| `--save`, `-s`  | Persist `DEEPEVAL_LOCAL_STORE` to a dotenv file. Usage: `dotenv[:path]`.  |
+| `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                        |
+
 :::caution
 Your API key is issued for a single region. Pointing `deepeval` at a region your key doesn't belong to will fail to authenticate. Run `diagnose` to see the region and endpoint currently in effect.
 :::

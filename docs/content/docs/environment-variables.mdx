@@ -81,7 +81,7 @@ Under `DEEPEVAL_FILE_SYSTEM=READ_ONLY`, `deepeval` still creates a per-run tempo
 
 #### SQLite local store
 
-By default every finished run is written as JSON. Set `DEEPEVAL_LOCAL_STORE=sqlite` to keep a queryable history of runs in a single SQLite database instead. A full comparison of the two backends, where each file lands, and how to export the database to other platforms is [here](/docs/evaluation-local-backend-storage).
+By default every finished run is written as JSON. Set `DEEPEVAL_LOCAL_STORE=sqlite` (or run <Term py="deepeval set-local-store sqlite --save=dotenv" ts="npx deepeval set-local-store sqlite --save=dotenv"/>) to keep a queryable history of runs in a single SQLite database instead. A full comparison of the two backends, where each file lands, and how to export the database to other platforms is [here](/docs/evaluation-local-backend-storage).
 
 <Switch>
 

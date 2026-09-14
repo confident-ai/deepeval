@@ -22,12 +22,12 @@ The local backend gives you the raw runs. Comparing them across commits, sharing
 
 ## Your options
 
-Pick a backend with the `DEEPEVAL_LOCAL_STORE` environment variable:
+Pick a backend with <Term py="deepeval set-local-store" ts="npx deepeval set-local-store"/>:
 
-| Backend            | `DEEPEVAL_LOCAL_STORE` | What you get                                                       | Best for                                                 |
-| ------------------ | ---------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
-| JSON **(default)** | `json` or unset        | One `test_run_<timestamp>.json` file per run.                      | Diffing runs in git, pointing an AI agent at a folder.   |
-| SQLite             | `sqlite`               | Every run appended to one `deepeval.db`, broken out into tables.   | Querying across runs, long histories, exporting to BI.   |
+| Backend            | Command                                                                                       | What you get                                                     | Best for                                               |
+| ------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ |
+| JSON **(default)** | <Term py="deepeval set-local-store json" ts="npx deepeval set-local-store json"/> (or nothing) | One `test_run_<timestamp>.json` file per run.                    | Diffing runs in git, pointing an AI agent at a folder. |
+| SQLite             | <Term py="deepeval set-local-store sqlite" ts="npx deepeval set-local-store sqlite"/>          | Every run appended to one `deepeval.db`, broken out into tables. | Querying across runs, long histories, exporting to BI. |
 
 Both store the same data, so you can switch later without losing anything.
 
@@ -107,14 +107,14 @@ Each file is a complete run: hyperparameters, every test case with its scores an
 
 ## SQLite
 
-Set `DEEPEVAL_LOCAL_STORE=sqlite` and every run is appended to one database:
+Switch once with `--save=dotenv` so it sticks for the project, and every run is appended to one database:
 
 <Switch>
 
 <Case id="python">
 
 ```bash
-export DEEPEVAL_LOCAL_STORE=sqlite
+deepeval set-local-store sqlite --save=dotenv
 deepeval test run test_llm_app.py
 # Test run saved to .deepeval/deepeval.db (run id 3)
 ```
@@ -126,7 +126,7 @@ Uses Python's built-in `sqlite3` — nothing to install.
 <Case id="typescript">
 
 ```bash
-export DEEPEVAL_LOCAL_STORE=sqlite
+npx deepeval set-local-store sqlite --save=dotenv
 npx deepeval test run llm_app.test.ts
 # ✅ Test run saved to: .deepeval/deepeval.db (run id 3)
 ```
@@ -134,7 +134,7 @@ npx deepeval test run llm_app.test.ts
 Uses Node's built-in `node:sqlite` — nothing to install.
 
 :::caution[Node.js 24 or newer]
-On an older Node, `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error telling you to upgrade or switch back to `json`. `deepeval` never silently falls back.
+On an older Node, `set-local-store sqlite` is rejected with an error telling you to upgrade or stay on `json`. `deepeval` never silently falls back.
 :::
 
 </Case>
@@ -439,4 +439,4 @@ const { runId, payload } = loadTestRunPayload(db); // latest run
 
 </Switch>
 
-If runs are landing somewhere you don't expect, <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows which `DEEPEVAL_LOCAL_STORE` and `DEEPEVAL_RESULTS_FOLDER` values are in effect and where they came from.
+If runs are landing somewhere you don't expect, <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows which backend and results folder are in effect and where each setting came from. Switch back any time with <Term py="deepeval set-local-store json" ts="npx deepeval set-local-store json"/>.

@@ -65,6 +65,11 @@ class Regions(Enum):
     EU = "EU"
 
 
+class LocalStores(Enum):
+    JSON = "json"
+    SQLITE = "sqlite"
+
+
 def version_callback(value: Optional[bool] = None) -> None:
     if not value:
         return
@@ -137,6 +142,55 @@ def set_confident_region_command(
         success_msg=(
             f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
         ),
+    )
+
+
+@app.command(name="set-local-store")
+def set_local_store_command(
+    backend: LocalStores = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="Where finished test runs are saved locally: 'json' (default) or 'sqlite'.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose the local backend for test runs (sets DEEPEVAL_LOCAL_STORE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_LOCAL_STORE = backend.value
+
+    handled, path, updates = edit_ctx.result
+
+    if backend == LocalStores.SQLITE:
+        success_msg = (
+            ":floppy_disk: Test runs will now be saved to deepeval.db "
+            "(SQLite). Run `deepeval inspect --list` to browse them."
+        )
+    else:
+        success_msg = (
+            ":page_facing_up: Test runs will now be saved as JSON files "
+            "(the default)."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
     )
 
 
@@ -587,7 +641,6 @@ def unset_debug(
 
 # Last, so provider commands list after the core ones in `deepeval --help`.
 from deepeval.cli import providers  # noqa: E402,F401
-
 
 if __name__ == "__main__":
     app()
