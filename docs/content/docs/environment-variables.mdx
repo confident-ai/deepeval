@@ -108,7 +108,7 @@ npx deepeval test run llm_app.test.ts
 The database lives at `deepeval.db` inside `DEEPEVAL_RESULTS_FOLDER` when set, otherwise inside the `.deepeval` cache folder. The timestamped `test_run_*.json` export is skipped in this mode; `.deepeval/.latest_test_run.json` is still written because `npx deepeval view` uploads from it.
 
 :::caution[Node.js 24 or newer]
-The TypeScript store is built on the runtime's built-in `node:sqlite` module, which is only stable from Node 24. On an older Node, setting `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error telling you the version you are on and to either upgrade or switch back to `json` — deepeval never silently falls back, so your results are not quietly written somewhere else.
+The TypeScript store is built on the runtime's built-in `node:sqlite` module, which is only stable from Node 24. On an older Node, setting `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error telling you the version you are on and to either upgrade or switch back to `json` — `deepeval` never silently falls back, so your results are not quietly written somewhere else.
 :::
 
 </Case>

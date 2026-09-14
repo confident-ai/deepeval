@@ -16,6 +16,7 @@ export {
 } from "@/sqlite-store/mode";
 export {
   DB_FILENAME,
+  MIGRATIONS,
   SCHEMA,
   SCHEMA_VERSION,
   TestRunNotFoundError,

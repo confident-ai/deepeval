@@ -34,8 +34,9 @@ import datetime
 import json
 import os
 import sqlite3
+from types import MappingProxyType
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from deepeval.constants import HIDDEN_DIR
 from deepeval.test_run.test_run import TestRun, TestRunEncoder
@@ -160,6 +161,22 @@ CREATE INDEX IF NOT EXISTS idx_metric_data_owner ON metric_data(owner_type, owne
 # tests/test_core/test_sqlite_store.py fails if this string drifts from it.
 SCHEMA_SQL = _SCHEMA
 
+# Ordered schema migrations, keyed by the `PRAGMA user_version` each one
+# brings the database *to*. `_ensure_schema` applies every entry above the
+# file's current version, in order, inside one transaction. Each value is the
+# embedded copy of `sqlite/migrations/<NNNN>_*.sql`; parity tests keep them in
+# sync. Never edit a shipped entry: add the next one and bump SCHEMA_VERSION.
+_MIGRATIONS: Dict[int, str] = {
+    1: _SCHEMA,  # 0001_initial.sql
+}
+MIGRATIONS: Mapping[int, str] = MappingProxyType(_MIGRATIONS)
+
+if set(_MIGRATIONS) != set(range(1, SCHEMA_VERSION + 1)):  # pragma: no cover
+    raise RuntimeError(
+        "deepeval.sqlite_store: _MIGRATIONS must have exactly one entry for "
+        f"every version 1..{SCHEMA_VERSION}, got {sorted(_MIGRATIONS)}."
+    )
+
 INCLUDE_ROW_JSON_ENV_VAR = "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON"
 
 
@@ -264,10 +281,30 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             f"deepeval.db schema version {version} is newer than this "
             f"deepeval supports ({SCHEMA_VERSION}); please upgrade deepeval."
         )
-    with conn:
-        conn.executescript(_SCHEMA)
-        # Future migrations: `if version < 2: ...` blocks go here.
+    # `executescript` issues a COMMIT first, so drive the transaction by hand:
+    # every pending step plus the version stamp land atomically, and a crash
+    # midway leaves the file at its old version for the next open to retry.
+    conn.execute("BEGIN")
+    try:
+        for step in range(version + 1, SCHEMA_VERSION + 1):
+            for statement in _split_statements(_MIGRATIONS[step]):
+                conn.execute(statement)
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+        conn.execute("COMMIT")
+    except Exception:
+        conn.execute("ROLLBACK")
+        raise
+
+
+def _split_statements(script: str) -> List[str]:
+    """Split a migration script into statements (`--` comments stripped).
+
+    Migration files are plain DDL without string literals containing `;`,
+    so splitting on `;` is sufficient and keeps everything in one transaction
+    (`sqlite3.Cursor.executescript` would commit first).
+    """
+    body = "\n".join(line.split("--", 1)[0] for line in script.splitlines())
+    return [stmt.strip() for stmt in body.split(";") if stmt.strip()]
 
 
 # --------------------------------------------------------------------------- #
@@ -328,7 +365,9 @@ def set_confident_test_run_id(
                 (str(confident_test_run_id), int(run_id)),
             )
             if cur.rowcount == 0:
-                raise LookupError(f"{db_path} has no test run with id {run_id}.")
+                raise LookupError(
+                    f"{db_path} has no test run with id {run_id}."
+                )
     finally:
         conn.close()
 

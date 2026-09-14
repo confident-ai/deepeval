@@ -12,9 +12,11 @@ import {
 } from "@/sqlite-store/mode";
 import {
   DB_FILENAME,
+  MIGRATIONS,
   SCHEMA,
   SCHEMA_VERSION,
   TestRunNotFoundError,
+  applyMigrations,
   connect,
   formatSource,
   latestRunId,
@@ -26,10 +28,7 @@ import {
   setConfidentTestRunId,
   writeTestRun,
 } from "@/sqlite-store/store";
-import {
-  exportTestRun,
-  type LocalTestRun,
-} from "@/evaluate/test-run/local";
+import { exportTestRun, type LocalTestRun } from "@/evaluate/test-run/local";
 import {
   loadTestRun,
   resolveInspectTarget,
@@ -284,13 +283,18 @@ describe("sqlite-store mode / Node gate", () => {
   });
 
   test("settings schema rejects sqlite on unsupported Node, junk always", () => {
-    const junk = settingsSchema.safeParse({ [DEEPEVAL_LOCAL_STORE]: "postgres" });
+    const junk = settingsSchema.safeParse({
+      [DEEPEVAL_LOCAL_STORE]: "postgres",
+    });
     expect(junk.success).toBe(false);
 
-    const sqlite = settingsSchema.safeParse({ [DEEPEVAL_LOCAL_STORE]: "sqlite" });
+    const sqlite = settingsSchema.safeParse({
+      [DEEPEVAL_LOCAL_STORE]: "sqlite",
+    });
     if (isSqliteSupported()) {
       expect(sqlite.success).toBe(true);
-      if (sqlite.success) expect(sqlite.data.DEEPEVAL_LOCAL_STORE).toBe("sqlite");
+      if (sqlite.success)
+        expect(sqlite.data.DEEPEVAL_LOCAL_STORE).toBe("sqlite");
     } else {
       expect(sqlite.success).toBe(false);
       if (!sqlite.success) {
@@ -306,7 +310,9 @@ describe("sqlite-store mode / Node gate", () => {
 
 describe("sqlite-store paths / source specs", () => {
   test("resolveDbPath honours the results folder, else the cache dir", () => {
-    expect(resolveDbPath("/tmp/evals")).toBe(path.join("/tmp/evals", DB_FILENAME));
+    expect(resolveDbPath("/tmp/evals")).toBe(
+      path.join("/tmp/evals", DB_FILENAME),
+    );
     expect(resolveDbPath(undefined)).toBe(path.join(".deepeval", DB_FILENAME));
     expect(resolveDbPath("   ")).toBe(path.join(".deepeval", DB_FILENAME));
   });
@@ -346,7 +352,13 @@ describeWithSqlite("sqlite-store write / read", () => {
       "SELECT name FROM sqlite_master WHERE type='table'",
     ) as Array<{ name: string }>;
     const names = new Set(tables.map((t) => t.name));
-    for (const t of ["test_runs", "test_cases", "traces", "spans", "metric_data"]) {
+    for (const t of [
+      "test_runs",
+      "test_cases",
+      "traces",
+      "spans",
+      "metric_data",
+    ]) {
       expect(names.has(t)).toBe(true);
     }
     const [{ user_version }] = query(nested, "PRAGMA user_version") as Array<{
@@ -374,7 +386,10 @@ describeWithSqlite("sqlite-store write / read", () => {
 
   const rowJsonCounts = () =>
     ["test_cases", "traces", "spans"].map((t) => {
-      const [row] = query(db, `SELECT count(payload_json) AS n FROM ${t}`) as Array<{
+      const [row] = query(
+        db,
+        `SELECT count(payload_json) AS n FROM ${t}`,
+      ) as Array<{
         n: number | bigint;
       }>;
       return Number(row!.n);
@@ -383,7 +398,8 @@ describeWithSqlite("sqlite-store write / read", () => {
   describe("DEEPEVAL_SQLITE_INCLUDE_ROW_JSON", () => {
     const saved = process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
     afterEach(() => {
-      if (saved === undefined) delete process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
+      if (saved === undefined)
+        delete process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON];
       else process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] = saved;
     });
 
@@ -396,7 +412,9 @@ describeWithSqlite("sqlite-store write / read", () => {
       expect(loadTestRunPayload(db, runId).payload).toEqual(
         JSON.parse(JSON.stringify(makeRun())),
       );
-      const [{ n }] = query(db, "SELECT count(*) AS n FROM spans") as Array<{ n: number }>;
+      const [{ n }] = query(db, "SELECT count(*) AS n FROM spans") as Array<{
+        n: number;
+      }>;
       expect(Number(n)).toBeGreaterThan(0);
     });
 
@@ -406,7 +424,10 @@ describeWithSqlite("sqlite-store write / read", () => {
       writeTestRun(makeRun(), db);
       const counts = rowJsonCounts();
       expect(counts.every((n) => n > 0)).toBe(true);
-      const [row] = query(db, "SELECT uuid, payload_json FROM traces LIMIT 1") as Array<{
+      const [row] = query(
+        db,
+        "SELECT uuid, payload_json FROM traces LIMIT 1",
+      ) as Array<{
         uuid: string;
         payload_json: string;
       }>;
@@ -432,7 +453,13 @@ describeWithSqlite("sqlite-store write / read", () => {
 
   test("confident_test_run_id: NULL when not logged in, filled from the payload when posted", () => {
     const local = writeTestRun(makeRun(), db);
-    const posted = writeTestRun(makeRun({ testRunId: "cai_abc123", link: "https://app.confident-ai.com/x" }), db);
+    const posted = writeTestRun(
+      makeRun({
+        testRunId: "cai_abc123",
+        link: "https://app.confident-ai.com/x",
+      }),
+      db,
+    );
     const rows = query(
       db,
       "SELECT id, confident_test_run_id FROM test_runs ORDER BY id",
@@ -442,19 +469,29 @@ describeWithSqlite("sqlite-store write / read", () => {
       [posted, "cai_abc123"],
     ]);
     const summaries = listTestRuns(db);
-    expect(summaries.map((r) => r.confident_test_run_id)).toEqual(["cai_abc123", null]);
+    expect(summaries.map((r) => r.confident_test_run_id)).toEqual([
+      "cai_abc123",
+      null,
+    ]);
   });
 
   test("setConfidentTestRunId stamps a stored run", () => {
     const runId = writeTestRun(makeRun(), db);
     setConfidentTestRunId(db, runId, "cai_later");
-    const [row] = query(db, "SELECT confident_test_run_id FROM test_runs") as Array<{
+    const [row] = query(
+      db,
+      "SELECT confident_test_run_id FROM test_runs",
+    ) as Array<{
       confident_test_run_id: string | null;
     }>;
     expect(row!.confident_test_run_id).toBe("cai_later");
     // Payload untouched: the id lives in the column only.
-    expect(loadTestRunPayload(db, runId).payload).toEqual(JSON.parse(JSON.stringify(makeRun())));
-    expect(() => setConfidentTestRunId(db, 999, "x")).toThrow(TestRunNotFoundError);
+    expect(loadTestRunPayload(db, runId).payload).toEqual(
+      JSON.parse(JSON.stringify(makeRun())),
+    );
+    expect(() => setConfidentTestRunId(db, 999, "x")).toThrow(
+      TestRunNotFoundError,
+    );
   });
 
   test("normalized test_runs columns", () => {
@@ -670,7 +707,8 @@ describeWithSqlite("sqlite-store write / read", () => {
     afterEach(() => {
       if (savedMode === undefined) delete process.env[DEEPEVAL_LOCAL_STORE];
       else process.env[DEEPEVAL_LOCAL_STORE] = savedMode;
-      if (savedFolder === undefined) delete process.env[DEEPEVAL_RESULTS_FOLDER];
+      if (savedFolder === undefined)
+        delete process.env[DEEPEVAL_RESULTS_FOLDER];
       else process.env[DEEPEVAL_RESULTS_FOLDER] = savedFolder;
     });
 
@@ -683,7 +721,9 @@ describeWithSqlite("sqlite-store write / read", () => {
       // Folder with only a DB (no JSON) resolves to the DB in json mode too.
       delete process.env[DEEPEVAL_LOCAL_STORE];
       expect(resolveInspectTarget(dir)).toBe(db);
-      expect(resolveInspectTarget(dir, undefined, { runId: 1 })).toBe(`${db}#1`);
+      expect(resolveInspectTarget(dir, undefined, { runId: 1 })).toBe(
+        `${db}#1`,
+      );
       // Folder with both prefers JSON in json mode, DB in sqlite mode.
       const jsonFile = path.join(dir, "test_run_20260914_060000.json");
       fs.writeFileSync(jsonFile, JSON.stringify(makeRun()), "utf-8");
@@ -708,7 +748,8 @@ describeWithSqlite("sqlite-store write / read", () => {
     afterEach(() => {
       if (savedMode === undefined) delete process.env[DEEPEVAL_LOCAL_STORE];
       else process.env[DEEPEVAL_LOCAL_STORE] = savedMode;
-      if (savedFolder === undefined) delete process.env[DEEPEVAL_RESULTS_FOLDER];
+      if (savedFolder === undefined)
+        delete process.env[DEEPEVAL_RESULTS_FOLDER];
       else process.env[DEEPEVAL_RESULTS_FOLDER] = savedFolder;
       jest.restoreAllMocks();
     });
@@ -743,7 +784,9 @@ describeWithSqlite("sqlite-store write / read", () => {
       const second = exportTestRun(makeRun({ identifier: "two" }, false));
       expect(first).toEqual({ mode: "sqlite", path: db, runId: 1 });
       expect(second).toEqual({ mode: "sqlite", path: db, runId: 2 });
-      expect(fs.readdirSync(dir).filter((f) => f.endsWith(".json"))).toEqual([]);
+      expect(fs.readdirSync(dir).filter((f) => f.endsWith(".json"))).toEqual(
+        [],
+      );
       expect(listTestRuns(db).map((r) => r.identifier)).toEqual(["two", "one"]);
     });
   });
@@ -757,14 +800,192 @@ const SHARED_SCHEMA = path.resolve(__dirname, "../../../sqlite/schema.sql");
 
 /** Strip `--` comments and collapse whitespace so formatting can't fail us. */
 function normalizeSql(sql: string): string {
-  return sql.replace(/--[^\n]*/g, "").replace(/\s+/g, " ").trim();
+  return sql
+    .replace(/--[^\n]*/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const describeIfRepo = fs.existsSync(SHARED_SCHEMA) ? describe : describe.skip;
+
+const MIGRATIONS_DIR = path.resolve(__dirname, "../../../sqlite/migrations");
+
+function migrationFiles(): string[] {
+  return fs
+    .readdirSync(MIGRATIONS_DIR)
+    .filter((f) => /^\d{4}_.*\.sql$/.test(f))
+    .sort();
+}
 
 describeIfRepo("sqlite-store schema parity", () => {
   it("embedded SCHEMA matches sqlite/schema.sql", () => {
     const shared = normalizeSql(fs.readFileSync(SHARED_SCHEMA, "utf8"));
     expect(normalizeSql(SCHEMA)).toBe(shared);
+  });
+
+  it("MIGRATIONS covers 1..SCHEMA_VERSION and matches sqlite/migrations/", () => {
+    const versions = Object.keys(MIGRATIONS)
+      .map(Number)
+      .sort((a, b) => a - b);
+    expect(versions).toEqual(
+      Array.from({ length: SCHEMA_VERSION }, (_, i) => i + 1),
+    );
+    const files = migrationFiles();
+    expect(files.map((f) => Number(f.slice(0, 4)))).toEqual(versions);
+    for (const file of files) {
+      const version = Number(file.slice(0, 4));
+      const onDisk = fs.readFileSync(path.join(MIGRATIONS_DIR, file), "utf8");
+      expect(normalizeSql(MIGRATIONS[version]!)).toBe(normalizeSql(onDisk));
+    }
+  });
+
+  (hasNodeSqlite ? it : it.skip)(
+    "applying migrations in order equals sqlite/schema.sql",
+    () => {
+      const { DatabaseSync } = (
+        process as unknown as {
+          getBuiltinModule: (id: string) => {
+            DatabaseSync: new (p: string) => {
+              exec(sql: string): void;
+              prepare(sql: string): { all(): unknown[] };
+              close(): void;
+            };
+          };
+        }
+      ).getBuiltinModule("node:sqlite");
+
+      const objects = (scripts: string[]) => {
+        const db = new DatabaseSync(":memory:");
+        try {
+          for (const script of scripts) db.exec(script);
+          const rows = db
+            .prepare(
+              "SELECT type, name, sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name",
+            )
+            .all() as { type: string; name: string; sql: string }[];
+          return rows.map((r) => [r.type, r.name, normalizeSql(r.sql)]);
+        } finally {
+          db.close();
+        }
+      };
+
+      const migrated = objects(
+        migrationFiles().map((f) =>
+          fs.readFileSync(path.join(MIGRATIONS_DIR, f), "utf8"),
+        ),
+      );
+      const snapshot = objects([fs.readFileSync(SHARED_SCHEMA, "utf8")]);
+      expect(migrated).toEqual(snapshot);
+    },
+  );
+});
+
+describeWithSqlite("sqlite-store schema upgrade", () => {
+  const PROBE = "ALTER TABLE test_runs ADD COLUMN _probe TEXT;";
+  type RawDb = Parameters<typeof applyMigrations>[0] & { close(): void };
+  const { DatabaseSync } = (
+    process as unknown as {
+      getBuiltinModule: (id: string) => {
+        DatabaseSync: new (p: string) => RawDb;
+      };
+    }
+  ).getBuiltinModule("node:sqlite");
+
+  let dir: string;
+  let db: string;
+
+  beforeEach(() => {
+    dir = tempDir();
+    db = path.join(dir, DB_FILENAME);
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  // Open without `connect()`: once a file is at v2 the real (v1) `connect()`
+  // correctly refuses it, which is itself asserted below.
+  const withRaw = <T>(fn: (raw: RawDb) => T): T => {
+    const raw = new DatabaseSync(db);
+    try {
+      return fn(raw);
+    } finally {
+      raw.close();
+    }
+  };
+  const userVersion = () =>
+    withRaw((raw) =>
+      Number(
+        (
+          raw.prepare("PRAGMA user_version").get() as {
+            user_version: number | bigint;
+          }
+        ).user_version,
+      ),
+    );
+  const columns = (table: string) =>
+    withRaw(
+      (raw) =>
+        new Set(
+          (
+            raw.prepare(`PRAGMA table_info(${table})`).all() as {
+              name: string;
+            }[]
+          ).map((r) => r.name),
+        ),
+    );
+  const upgrade = (
+    migrations: Readonly<Record<number, string>>,
+    targetVersion = 2,
+  ) => withRaw((raw) => applyMigrations(raw, { migrations, targetVersion }));
+
+  test("existing v1 file gets only step 2 and keeps its data", () => {
+    writeTestRun(makeRun(), db);
+    expect(userVersion()).toBe(SCHEMA_VERSION);
+    expect(columns("test_runs").has("_probe")).toBe(false);
+
+    // Step 1 must not re-run: make it explode if the loop starts at 1.
+    upgrade({ 1: "SELECT RAISE(ABORT, 'step 1 re-ran');", 2: PROBE });
+
+    expect(userVersion()).toBe(2);
+    expect(columns("test_runs").has("_probe")).toBe(true);
+    expect(
+      withRaw((raw) =>
+        raw.prepare("SELECT count(*) AS n FROM test_runs").get(),
+      ),
+    ).toMatchObject({ n: 1 });
+    // ...and today's release now refuses the newer file.
+    expect(() => connect(db)).toThrow(/newer than this deepeval/);
+  });
+
+  test("second upgrade pass is a no-op", () => {
+    const migrations = { ...MIGRATIONS, 2: PROBE };
+    connect(db).close(); // v1
+    upgrade(migrations);
+    // Re-running the ALTER would throw "duplicate column"; a no-op does not.
+    upgrade(migrations);
+    expect(userVersion()).toBe(2);
+  });
+
+  test("fresh file applies every step", () => {
+    upgrade({ ...MIGRATIONS, 2: PROBE });
+    expect(userVersion()).toBe(2);
+    const cols = columns("test_runs");
+    expect(cols.has("payload_json")).toBe(true);
+    expect(cols.has("_probe")).toBe(true);
+  });
+
+  test("a failing step rolls back and leaves the old version", () => {
+    connect(db).close(); // v1
+    expect(() =>
+      upgrade({
+        ...MIGRATIONS,
+        2: PROBE + "ALTER TABLE no_such_table ADD COLUMN x TEXT;",
+      }),
+    ).toThrow();
+    expect(userVersion()).toBe(1);
+    expect(columns("test_runs").has("_probe")).toBe(false);
+  });
+
+  test("refuses a file newer than the target", () => {
+    connect(db).close(); // v1
+    expect(() => upgrade(MIGRATIONS, 0)).toThrow(/newer than this deepeval/);
   });
 });

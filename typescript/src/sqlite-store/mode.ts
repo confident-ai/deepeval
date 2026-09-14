@@ -6,7 +6,9 @@ import { DEEPEVAL_LOCAL_STORE } from "@/constants";
 
 export const LOCAL_STORE_JSON = "json";
 export const LOCAL_STORE_SQLITE = "sqlite";
-export type LocalStoreMode = typeof LOCAL_STORE_JSON | typeof LOCAL_STORE_SQLITE;
+export type LocalStoreMode =
+  | typeof LOCAL_STORE_JSON
+  | typeof LOCAL_STORE_SQLITE;
 
 /** First Node major whose `node:sqlite` is stable (no experimental warning). */
 export const MIN_NODE_MAJOR_FOR_SQLITE = 24;

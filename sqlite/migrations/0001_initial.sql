@@ -1,25 +1,8 @@
--- SQLite schema for deepeval's local backend store (`DEEPEVAL_LOCAL_STORE=sqlite`).
+-- Migration 0001: initial schema (brings PRAGMA user_version to 1).
 --
--- This file is the FULL CURRENT schema: what you get by applying every file in
--- sqlite/migrations/ in order to an empty database. Both SDKs embed the
--- migrations, and a parity test in each fails if they drift:
---   Python:     deepeval/sqlite_store/store.py        (_MIGRATIONS, SCHEMA_SQL)
---   TypeScript: typescript/src/sqlite-store/store.ts  (MIGRATIONS, SCHEMA)
--- A further test checks that migrations-applied-in-order == this file, and the
--- docs page (docs/content/docs/evaluation-local-backend-storage.mdx) is checked
--- against this file too.
---
--- To change the schema: add sqlite/migrations/NNNN_<slug>.sql (NNNN = the
--- user_version it brings the database to), mirror it into both SDKs' migration
--- registries, bump SCHEMA_VERSION, then update this file to the new full
--- schema. Never edit a migration that has shipped.
---
--- The `test_runs` row always keeps the complete serialized run in `payload_json`
--- (that is what `inspect` reloads). `test_cases`, `traces` and `spans` have the
--- same column but it is only filled when DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1, because it
--- roughly doubles the file size. `metric_data` (one row per MetricData result)
--- has no payload. All other columns are a promoted subset for filtering and
--- joining without parsing JSON.
+-- Applied by both SDKs when they open a deepeval.db whose user_version is 0.
+-- Never edit a migration after it has shipped; add the next NNNN_<slug>.sql
+-- and update sqlite/schema.sql to match the result of applying them all.
 
 CREATE TABLE IF NOT EXISTS test_runs (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -6,6 +6,7 @@ See `deepeval.sqlite_store.store` for the schema and implementation notes.
 from deepeval.sqlite_store.store import (
     DB_FILENAME,
     INCLUDE_ROW_JSON_ENV_VAR,
+    MIGRATIONS,
     SCHEMA_SQL,
     SCHEMA_VERSION,
     connect,
@@ -25,6 +26,7 @@ from deepeval.sqlite_store.store import (
 __all__ = [
     "DB_FILENAME",
     "INCLUDE_ROW_JSON_ENV_VAR",
+    "MIGRATIONS",
     "SCHEMA_SQL",
     "SCHEMA_VERSION",
     "connect",

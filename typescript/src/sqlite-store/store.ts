@@ -180,13 +180,34 @@ CREATE INDEX IF NOT EXISTS idx_metric_data_owner ON metric_data(owner_type, owne
 `;
 
 /**
+ * Ordered schema migrations keyed by the `PRAGMA user_version` each brings the
+ * database *to*. `ensureSchema` applies every entry above the file's current
+ * version, in order, inside one transaction. Each value is the embedded copy
+ * of `sqlite/migrations/<NNNN>_*.sql`; parity tests keep them in sync. Never
+ * edit a shipped entry: add the next one and bump `SCHEMA_VERSION`.
+ */
+export const MIGRATIONS: Readonly<Record<number, string>> = Object.freeze({
+  1: SCHEMA, // 0001_initial.sql
+});
+
+for (let v = 1; v <= SCHEMA_VERSION; v++) {
+  if (!(v in MIGRATIONS)) {
+    throw new Error(
+      `deepeval/sqlite-store: MIGRATIONS is missing step ${v} (SCHEMA_VERSION=${SCHEMA_VERSION}).`,
+    );
+  }
+}
+
+/**
  * `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON` -> boolean (default false). Controls whether
  * `test_cases`, `traces` and `spans` rows also carry their full serialized
  * object in `payload_json`. The `test_runs` row always does, since that is
  * what `loadTestRunPayload` / `deepeval inspect` read back.
  */
 export function resolveIncludeRowJson(): boolean {
-  const raw = (process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] ?? "").trim().toLowerCase();
+  const raw = (process.env[DEEPEVAL_SQLITE_INCLUDE_ROW_JSON] ?? "")
+    .trim()
+    .toLowerCase();
   return ["1", "true", "yes", "y", "on"].includes(raw);
 }
 
@@ -292,22 +313,55 @@ export function connect(dbPath: string): NodeSqliteDatabase {
 }
 
 function ensureSchema(db: NodeSqliteDatabase): void {
+  applyMigrations(db, {
+    migrations: MIGRATIONS,
+    targetVersion: SCHEMA_VERSION,
+  });
+}
+
+export interface ApplyMigrationsOptions {
+  /** Registry keyed by the version each script brings the database to. */
+  migrations: Readonly<Record<number, string>>;
+  /** Version to upgrade the file to (usually `SCHEMA_VERSION`). */
+  targetVersion: number;
+}
+
+/**
+ * Bring `db` from its current `PRAGMA user_version` to `targetVersion` by
+ * running each pending migration in order, then stamp the version, all in one
+ * transaction. No-op when already current; throws when the file is newer than
+ * `targetVersion`. Exported for tests; `connect()` calls it with the real
+ * `MIGRATIONS` / `SCHEMA_VERSION`.
+ */
+export function applyMigrations(
+  db: NodeSqliteDatabase,
+  { migrations, targetVersion }: ApplyMigrationsOptions,
+): void {
   const row = db.prepare("PRAGMA user_version").get() as
     | { user_version: number | bigint }
     | undefined;
   const version = Number(row?.user_version ?? 0);
-  if (version === SCHEMA_VERSION) return;
-  if (version > SCHEMA_VERSION) {
+  if (version === targetVersion) return;
+  if (version > targetVersion) {
     throw new Error(
       `deepeval.db schema version ${version} is newer than this deepeval ` +
-        `supports (${SCHEMA_VERSION}); please upgrade deepeval.`,
+        `supports (${targetVersion}); please upgrade deepeval.`,
     );
   }
+  // Every pending step plus the version stamp land atomically; a crash midway
+  // leaves the file at its old version for the next open to retry.
   db.exec("BEGIN");
   try {
-    db.exec(SCHEMA);
-    // Future migrations: `if (version < 2) { ... }` blocks go here.
-    db.exec(`PRAGMA user_version = ${SCHEMA_VERSION}`);
+    for (let step = version + 1; step <= targetVersion; step++) {
+      const script = migrations[step];
+      if (script === undefined) {
+        throw new Error(
+          `deepeval/sqlite-store: no migration for schema version ${step}.`,
+        );
+      }
+      db.exec(script);
+    }
+    db.exec(`PRAGMA user_version = ${targetVersion}`);
     db.exec("COMMIT");
   } catch (e) {
     db.exec("ROLLBACK");
@@ -384,7 +438,8 @@ export function writeTestRun(
       for (const persisted of cases) {
         if (!isRecord(persisted)) continue;
         const entry = isRecord(persisted.entry) ? persisted.entry : persisted;
-        const kind = persisted.conversational === true ? "multi-turn" : "single-turn";
+        const kind =
+          persisted.conversational === true ? "multi-turn" : "single-turn";
         insertTestCase(db, runId, kind, entry, persisted, includeRowJson);
       }
       db.exec("COMMIT");
@@ -658,10 +713,7 @@ export function setConfidentTestRunId(
   }
 }
 
-export function listTestRuns(
-  dbPath: string,
-  limit = 20,
-): TestRunSummaryRow[] {
+export function listTestRuns(dbPath: string, limit = 20): TestRunSummaryRow[] {
   if (!fs.existsSync(dbPath)) return [];
   const db = connect(dbPath);
   try {

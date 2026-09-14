@@ -212,7 +212,9 @@ class TestResolveDbPath:
         monkeypatch.delenv("DEEPEVAL_RESULTS_FOLDER", raising=False)
         from deepeval.constants import HIDDEN_DIR
 
-        assert sqlite_store.resolve_db_path() == Path(HIDDEN_DIR) / "deepeval.db"
+        assert (
+            sqlite_store.resolve_db_path() == Path(HIDDEN_DIR) / "deepeval.db"
+        )
 
     def test_results_folder_and_subfolder(self, tmp_path: Path):
         got = sqlite_store.resolve_db_path(str(tmp_path), "sweep")
@@ -252,8 +254,16 @@ class TestSchema:
             r[0]
             for r in _q(db, "SELECT name FROM sqlite_master WHERE type='table'")
         }
-        assert {"test_runs", "test_cases", "traces", "spans", "metric_data"} <= tables
-        assert _q(db, "PRAGMA user_version")[0][0] == sqlite_store.SCHEMA_VERSION
+        assert {
+            "test_runs",
+            "test_cases",
+            "traces",
+            "spans",
+            "metric_data",
+        } <= tables
+        assert (
+            _q(db, "PRAGMA user_version")[0][0] == sqlite_store.SCHEMA_VERSION
+        )
 
     def test_reopen_is_idempotent(self, tmp_path: Path):
         db = tmp_path / "deepeval.db"
@@ -264,15 +274,104 @@ class TestSchema:
     def test_newer_schema_is_rejected(self, tmp_path: Path):
         db = tmp_path / "deepeval.db"
         with closing(sqlite3.connect(str(db))) as conn:
-            conn.execute(f"PRAGMA user_version = {sqlite_store.SCHEMA_VERSION + 1}")
+            conn.execute(
+                f"PRAGMA user_version = {sqlite_store.SCHEMA_VERSION + 1}"
+            )
         with pytest.raises(sqlite3.OperationalError):
             sqlite_store.connect(db)
+
+
+_PROBE_MIGRATION = "ALTER TABLE test_runs ADD COLUMN _probe TEXT;"
+
+
+def _columns(db: Path, table: str) -> set:
+    with closing(sqlite3.connect(str(db))) as conn:
+        return {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+
+
+def _user_version(db: Path) -> int:
+    with closing(sqlite3.connect(str(db))) as conn:
+        return conn.execute("PRAGMA user_version").fetchone()[0]
+
+
+class TestSchemaUpgrade:
+    """Simulate a future release by patching SCHEMA_VERSION=2 + one ALTER step."""
+
+    @pytest.fixture
+    def future_release(self, monkeypatch):
+        """Patch the module the way a release with one more migration would."""
+
+        def activate():
+            store = sqlite_store.store
+            monkeypatch.setattr(store, "SCHEMA_VERSION", 2)
+            monkeypatch.setitem(store._MIGRATIONS, 2, _PROBE_MIGRATION)
+            return store
+
+        return activate
+
+    def test_existing_v1_file_gets_only_step_2(
+        self, tmp_path: Path, future_release
+    ):
+        db = tmp_path / "deepeval.db"
+        # A genuine v1 file with data, written by "today's" release.
+        sqlite_store.write_test_run(_make_test_run(with_cases=False), db)
+        assert _user_version(db) == 1
+        assert "_probe" not in _columns(db, "test_runs")
+
+        store = future_release()
+        # Step 1 must NOT re-run (harmless here thanks to IF NOT EXISTS, but
+        # the loop must start at version + 1). Prove it by making step 1 blow
+        # up if executed.
+        store._MIGRATIONS[1] = "SELECT RAISE(ABORT, 'step 1 re-ran');"
+        try:
+            sqlite_store.connect(db).close()
+        finally:
+            store._MIGRATIONS[1] = sqlite_store.SCHEMA_SQL
+
+        assert _user_version(db) == 2
+        assert "_probe" in _columns(db, "test_runs")
+        # Existing data survives the in-place upgrade.
+        assert len(sqlite_store.list_test_runs(db)) == 1
+
+    def test_second_connect_is_a_noop(self, tmp_path: Path, future_release):
+        db = tmp_path / "deepeval.db"
+        future_release()
+        sqlite_store.connect(db).close()
+        assert _user_version(db) == 2
+        # A second ALTER of the same column would fail if the loop re-ran.
+        sqlite_store.connect(db).close()
+        assert _user_version(db) == 2
+
+    def test_fresh_file_applies_all_steps(self, tmp_path: Path, future_release):
+        db = tmp_path / "deepeval.db"
+        future_release()
+        sqlite_store.connect(db).close()
+        assert _user_version(db) == 2
+        cols = _columns(db, "test_runs")
+        assert {"id", "payload_json", "_probe"} <= cols
+
+    def test_failed_step_rolls_back_and_keeps_old_version(
+        self, tmp_path: Path, future_release
+    ):
+        db = tmp_path / "deepeval.db"
+        sqlite_store.connect(db).close()  # v1 file
+        store = future_release()
+        store._MIGRATIONS[2] = (
+            "ALTER TABLE test_runs ADD COLUMN _probe TEXT;"
+            "ALTER TABLE no_such_table ADD COLUMN x TEXT;"
+        )
+        with pytest.raises(sqlite3.OperationalError):
+            sqlite_store.connect(db)
+        assert _user_version(db) == 1
+        assert "_probe" not in _columns(db, "test_runs")
 
 
 class TestWriteTestRun:
     def test_round_trip_payload_equals_model_dump(self, tmp_path: Path):
         db = tmp_path / "deepeval.db"
-        run = _make_test_run(hyperparameters={"model": "x", "t": 0.2}, identifier="base")
+        run = _make_test_run(
+            hyperparameters={"model": "x", "t": 0.2}, identifier="base"
+        )
 
         run_id = sqlite_store.write_test_run(run, db)
         assert run_id == 1
@@ -322,9 +421,9 @@ class TestWriteTestRun:
         assert cases == _q(db, "SELECT count(*) FROM test_cases")[0][0] > 0
         assert traces == _q(db, "SELECT count(*) FROM traces")[0][0] > 0
         assert spans == _q(db, "SELECT count(*) FROM spans")[0][0] > 0
-        (uuid, payload) = _q(
-            db, "SELECT uuid, payload_json FROM traces LIMIT 1"
-        )[0]
+        uuid, payload = _q(db, "SELECT uuid, payload_json FROM traces LIMIT 1")[
+            0
+        ]
         assert json.loads(payload)["uuid"] == uuid
 
     @pytest.mark.parametrize("raw", ["0", "false", "no", ""])
@@ -334,9 +433,7 @@ class TestWriteTestRun:
         sqlite_store.write_test_run(_make_test_run(), db)
         assert self._row_json_counts(db) == (0, 0, 0)
 
-    def test_row_json_argument_overrides_env(
-        self, tmp_path: Path, monkeypatch
-    ):
+    def test_row_json_argument_overrides_env(self, tmp_path: Path, monkeypatch):
         monkeypatch.setenv(sqlite_store.INCLUDE_ROW_JSON_ENV_VAR, "1")
         db = tmp_path / "deepeval.db"
         sqlite_store.write_test_run(
@@ -351,8 +448,12 @@ class TestWriteTestRun:
     def test_confident_test_run_id_null_until_set(self, tmp_path: Path):
         db = tmp_path / "deepeval.db"
         run_id = sqlite_store.write_test_run(_make_test_run(), db)
-        assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (None,)
-        assert sqlite_store.list_test_runs(db)[0]["confident_test_run_id"] is None
+        assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (
+            None,
+        )
+        assert (
+            sqlite_store.list_test_runs(db)[0]["confident_test_run_id"] is None
+        )
 
         sqlite_store.set_confident_test_run_id(db, run_id, "cai_abc123")
         assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (
@@ -395,14 +496,25 @@ class TestWriteTestRun:
         rows = _q(
             db,
             'SELECT kind, "order", name, input, actual_output, expected_output, '
-            "success, tags_json FROM test_cases ORDER BY \"order\"",
+            'success, tags_json FROM test_cases ORDER BY "order"',
         )
         assert rows[0][:7] == (
-            "single-turn", 0, "case-0", "What is 1+1?", "2", "2", 1,
+            "single-turn",
+            0,
+            "case-0",
+            "What is 1+1?",
+            "2",
+            "2",
+            1,
         )
         assert json.loads(rows[0][7]) == ["math"]
         assert rows[1][:6] == (
-            "multi-turn", 1, "conv-0", "Book a flight", None, "Flight booked",
+            "multi-turn",
+            1,
+            "conv-0",
+            "Book a flight",
+            None,
+            "Flight booked",
         )
 
     def test_traces_and_spans_flattened(self, tmp_path: Path):
@@ -414,9 +526,17 @@ class TestWriteTestRun:
             "SELECT uuid, name, thread_id, user_id, environment, tags_json, "
             "test_case_id FROM traces",
         )
-        assert trace[:5] == ("trace-1", "my-agent", "thread-1", "user-1", "testing")
+        assert trace[:5] == (
+            "trace-1",
+            "my-agent",
+            "thread-1",
+            "user-1",
+            "testing",
+        )
         assert json.loads(trace[5]) == ["a", "b"]
-        (case_id,) = _q(db, "SELECT id FROM test_cases WHERE kind='single-turn'")[0]
+        (case_id,) = _q(
+            db, "SELECT id FROM test_cases WHERE kind='single-turn'"
+        )[0]
         assert trace[6] == case_id
 
         spans = _q(
@@ -427,12 +547,21 @@ class TestWriteTestRun:
         )
         by_uuid = {s[0]: s for s in spans}
         assert set(by_uuid) == {
-            "span-root", "span-llm", "span-tool", "span-ret", "span-base",
+            "span-root",
+            "span-llm",
+            "span-tool",
+            "span-ret",
+            "span-base",
         }
         assert by_uuid["span-root"][1] is None
         assert by_uuid["span-root"][2] == "agent"
         assert by_uuid["span-llm"][1:7] == (
-            "span-root", "llm", "gpt-4o-mini", "openai", 12.0, 34.0,
+            "span-root",
+            "llm",
+            "gpt-4o-mini",
+            "openai",
+            12.0,
+            34.0,
         )
         assert by_uuid["span-tool"][7:] == ("boom", "ERRORED")
         assert by_uuid["span-base"][1] == "span-llm"
@@ -468,7 +597,9 @@ class TestWriteTestRun:
         (span_owner_id,) = _q(
             db, "SELECT owner_id FROM metric_data WHERE owner_type='span'"
         )[0]
-        (span_uuid,) = _q(db, "SELECT uuid FROM spans WHERE id = ?", span_owner_id)[0]
+        (span_uuid,) = _q(
+            db, "SELECT uuid FROM spans WHERE id = ?", span_owner_id
+        )[0]
         assert span_uuid == "span-root"
 
     def test_cross_run_sql_query(self, tmp_path: Path):
@@ -493,7 +624,8 @@ class TestWriteTestRun:
         def worker(i: int):
             try:
                 sqlite_store.write_test_run(
-                    _make_test_run(hyperparameters={"i": i}, with_cases=False), db
+                    _make_test_run(hyperparameters={"i": i}, with_cases=False),
+                    db,
                 )
             except Exception as e:  # pragma: no cover
                 errors.append(e)
@@ -629,7 +761,9 @@ class TestTestRunManagerIntegration:
         for temp in [0.0, 0.4, 0.8]:
             mgr = _TestRunManager()
             mgr.set_test_run(
-                _make_test_run(hyperparameters={"temperature": temp}, with_cases=False)
+                _make_test_run(
+                    hyperparameters={"temperature": temp}, with_cases=False
+                )
             )
             mgr.configure_local_store(results_folder=str(tmp_path))
             mgr.save_test_run_locally()
@@ -642,16 +776,21 @@ class TestTestRunManagerIntegration:
         assert temps == [0.0, 0.4, 0.8]
         assert mgr.last_saved_run_id == 3
 
-    def test_confident_id_stamped_after_upload(self, tmp_path: Path, monkeypatch):
+    def test_confident_id_stamped_after_upload(
+        self, tmp_path: Path, monkeypatch
+    ):
         """Logged-in + sqlite: the row is written first, then stamped with the
-        id Confident AI returned, so upload failures never lose the local copy."""
+        id Confident AI returned, so upload failures never lose the local copy.
+        """
         monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "sqlite")
         mgr = _TestRunManager()
         mgr.set_test_run(_make_test_run(with_cases=False))
         mgr.configure_local_store(results_folder=str(tmp_path))
         mgr.save_test_run_locally()
         db = tmp_path / "deepeval.db"
-        assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (None,)
+        assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (
+            None,
+        )
 
         mgr._record_confident_test_run_id("cai_from_post")
         assert _q(db, "SELECT confident_test_run_id FROM test_runs")[0] == (
@@ -678,7 +817,10 @@ class TestTestRunManagerIntegration:
         mgr.save_test_run_locally()
         mgr.last_saved_run_id = 999  # row that does not exist
         mgr._record_confident_test_run_id("cai_x")  # must not raise
-        assert "could not record Confident AI test run id" in capsys.readouterr().err
+        assert (
+            "could not record Confident AI test run id"
+            in capsys.readouterr().err
+        )
 
     def test_read_only_env_is_noop(self, tmp_path: Path, monkeypatch):
         monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "sqlite")
@@ -717,6 +859,7 @@ class TestTestRunManagerIntegration:
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SHARED_SCHEMA = _REPO_ROOT / "sqlite" / "schema.sql"
+_MIGRATIONS_DIR = _REPO_ROOT / "sqlite" / "migrations"
 _DOCS_PAGE = (
     _REPO_ROOT
     / "docs"
@@ -746,6 +889,51 @@ class TestSchemaParity:
             "sqlite/schema.sql; update both (and SCHEMA_VERSION) together."
         )
 
+    def test_each_migration_matches_its_shared_file(self):
+        """`_MIGRATIONS[n]` is the embedded copy of `sqlite/migrations/000n_*.sql`."""
+        assert set(sqlite_store.MIGRATIONS) == set(
+            range(1, sqlite_store.SCHEMA_VERSION + 1)
+        )
+        for version, embedded in sqlite_store.MIGRATIONS.items():
+            matches = sorted(_MIGRATIONS_DIR.glob(f"{version:04d}_*.sql"))
+            assert len(matches) == 1, (
+                f"expected exactly one sqlite/migrations/{version:04d}_*.sql, "
+                f"got {[m.name for m in matches]}"
+            )
+            assert _normalize_sql(embedded) == _normalize_sql(
+                matches[0].read_text(encoding="utf-8")
+            ), f"_MIGRATIONS[{version}] has drifted from {matches[0].name}"
+
+    def test_no_orphan_migration_files(self):
+        on_disk = sorted(
+            int(p.name[:4])
+            for p in _MIGRATIONS_DIR.glob("[0-9][0-9][0-9][0-9]_*.sql")
+        )
+        assert on_disk == sorted(sqlite_store.MIGRATIONS)
+
+    def test_migrations_in_order_equal_full_schema(self):
+        """Applying every migration to an empty DB == applying schema.sql."""
+
+        def objects(sql_scripts):
+            with closing(sqlite3.connect(":memory:")) as conn:
+                for script in sql_scripts:
+                    conn.executescript(script)
+                rows = conn.execute(
+                    "SELECT type, name, sql FROM sqlite_master "
+                    "WHERE sql IS NOT NULL ORDER BY type, name"
+                ).fetchall()
+            return [(t, n, _normalize_sql(s)) for t, n, s in rows]
+
+        migrated = objects(
+            p.read_text(encoding="utf-8")
+            for p in sorted(_MIGRATIONS_DIR.glob("[0-9][0-9][0-9][0-9]_*.sql"))
+        )
+        snapshot = objects([_SHARED_SCHEMA.read_text(encoding="utf-8")])
+        assert migrated == snapshot, (
+            "sqlite/schema.sql is stale: it must equal the result of applying "
+            "sqlite/migrations/*.sql in order."
+        )
+
     def test_shared_schema_is_valid_sqlite(self):
         with closing(sqlite3.connect(":memory:")) as conn:
             conn.executescript(_SHARED_SCHEMA.read_text(encoding="utf-8"))
@@ -755,7 +943,13 @@ class TestSchemaParity:
                     "SELECT name FROM sqlite_master WHERE type='table'"
                 )
             }
-        assert tables >= {"test_runs", "test_cases", "traces", "spans", "metric_data"}
+        assert tables >= {
+            "test_runs",
+            "test_cases",
+            "traces",
+            "spans",
+            "metric_data",
+        }
 
     @pytest.mark.skipif(
         not _DOCS_PAGE.exists(), reason="docs page not in this checkout"
