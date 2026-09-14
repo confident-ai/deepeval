@@ -95,7 +95,7 @@ class ImageCoherenceMetric(BaseMetric):
                 image_indices = self.get_image_indices(actual_output)
                 if not image_indices:
                     raise ValueError(
-                        f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                        f"The test case must have at least one image in the `actual_output` to calculate {self.__name__} score"
                     )
                 for image_index in image_indices:
                     context_above, context_below = self.get_image_context(
@@ -203,7 +203,7 @@ class ImageCoherenceMetric(BaseMetric):
             image_indices = self.get_image_indices(actual_output)
             if not image_indices:
                 raise ValueError(
-                    f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+                    f"The test case must have at least one image in the `actual_output` to calculate {self.__name__} score"
                 )
             for image_index in image_indices:
                 context_above, context_below = self.get_image_context(

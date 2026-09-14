@@ -104,7 +104,7 @@ class JsonCorrectnessMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"LLM outputed Json:\n{test_case.actual_output}",
+                        f"LLM output Json:\n{test_case.actual_output}",
                         # f"Expected Json Schema:\n{json.dumps(self.expected_schema.model_json_schema(), indent=4)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -153,7 +153,7 @@ class JsonCorrectnessMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"LLM outputed Json:\n{test_case.actual_output}",
+                    f"LLM output Json:\n{test_case.actual_output}",
                     # f"Expected Json Schema:\n{json.dumps(self.expected_schema.model_json_schema(), indent=4)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
