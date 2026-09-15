@@ -4,6 +4,7 @@
     "community-metrics-overview",
     "metrics-citation-faithfulness",
     "metrics-agent-loop-detection",
-    "metrics-tool-permission"
+    "metrics-tool-permission",
+    "metrics-token-budget"
   ]
 }
