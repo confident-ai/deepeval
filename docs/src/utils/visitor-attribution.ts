@@ -1,7 +1,9 @@
 /**
- * Inbound visitor UTM capture + first/last-touch storage for the deepeval docs
- * site. Mirrors the storage layer of `confident-landing/lib/utm.ts` so that
- * marketing has a consistent attribution model across both surfaces.
+ * Inbound visitor UTM capture, first/last-touch storage, and the per-tab page
+ * trail for the deepeval docs site. The touch storage mirrors
+ * `confident-landing/lib/utm.ts` so that marketing has a consistent
+ * attribution model across both surfaces; the trail intentionally does not
+ * (see SESSION_PATH_KEY below).
  *
  * Schema (stored in localStorage under ATTRIBUTION_STORAGE_KEY):
  *
@@ -10,14 +12,18 @@
  *     last_touch:  { params: { ... },                           ts: epochMs }
  *   }
  *
+ * Schema (stored in sessionStorage under SESSION_PATH_KEY):
+ *
+ *   ["/docs", "/docs/metrics/answer-relevancy", ...]   pathnames, visit order
+ *
  * - `first_touch` is write-once within the TTL window (acquisition channel).
  * - `last_touch`  is overwritten on every capture that contains UTMs.
  * - TTL is checked at READ time; expired touches are treated as absent.
  * - A page load with no UTM params in the URL is a no-op — never clears.
  *
  * All storage access is wrapped in try/catch + `typeof window` guards so this
- * is SSR-safe (Docusaurus runs the click listener client-side, but lifecycle
- * imports may pull this module in during SSR builds).
+ * is SSR-safe (the Next.js app router runs the click listener client-side,
+ * but lifecycle imports may pull this module in during SSR builds).
  */
 
 const UTM_KEYS = [
@@ -132,20 +138,17 @@ export function getLastTouchParams(): UtmParams | null {
 /**
  * The docs pages this tab visited, in order, so links into the app can carry
  * which pages the visitor read as the `site_path` query param. sessionStorage
- * is per tab: a link opened in a new tab starts a new trail. Repeats collapse,
- * each path is cut at 120 characters, and only the entry page plus the last
- * SESSION_PATH_MAX_STEPS - 1 pages survive.
- *
- * The app reads site_path at page load, requires a value that starts with "/",
- * and caps it at 300 characters by cutting the end on a ">" boundary. Keep
- * SITE_PATH_MAX_CHARS at or below that cap, or the app drops the most recent
- * steps. When the joined trail is longer, keep the entry page and the most
- * recent steps with a ">…" segment marking the cut: the entry page says where
- * they landed, the tail says what they read just before the click. The cap
- * counts raw characters, before URL encoding.
+ * is per tab: a link opened in a new tab starts a new trail, and a tab that
+ * leaves the docs and returns keeps its trail. Only a page equal to the
+ * previous entry is skipped (A > A collapses, A > B > A does not), each path
+ * is cut at SESSION_PATH_MAX_PATH_CHARS, and only the entry page plus the
+ * last SESSION_PATH_MAX_STEPS - 1 pages survive. The key is docs-specific so
+ * the landing site's trail (objects with clocks, same key name) never
+ * collides if both sites ever share an origin.
  */
-const SESSION_PATH_KEY = 'confident_session_path';
+const SESSION_PATH_KEY = 'confident_docs_session_path';
 const SESSION_PATH_MAX_STEPS = 40;
+const SESSION_PATH_MAX_PATH_CHARS = 120;
 const SITE_PATH_MAX_CHARS = 300;
 const SITE_PATH_GAP = '>…';
 
@@ -155,7 +158,9 @@ function readSessionPath(): string[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed)
-      ? parsed.filter((p): p is string => typeof p === 'string')
+      ? parsed.filter(
+          (p): p is string => typeof p === 'string' && p.startsWith('/'),
+        )
       : [];
   } catch {
     return [];
@@ -165,7 +170,9 @@ function readSessionPath(): string[] {
 export function recordDocsPageView(pathname: string): void {
   if (typeof window === 'undefined') return;
   const steps = readSessionPath();
-  const path = pathname.slice(0, 120);
+  const path = pathname
+    .replace(/\/{2,}/g, '/')
+    .slice(0, SESSION_PATH_MAX_PATH_CHARS);
   if (steps[steps.length - 1] === path) return;
   steps.push(path);
   const kept =
@@ -179,6 +186,18 @@ export function recordDocsPageView(pathname: string): void {
   }
 }
 
+/**
+ * The trail as one query value, paths joined by ">". App-side contract
+ * (confident-cloud apps/frontend/src/utils/utm.ts,
+ * MAX_ATTRIBUTION_VALUE_LENGTH): the app reads site_path at page load, keeps
+ * it only when it starts with "/" (and not "//"), and cuts anything past 300
+ * characters back to the last ">" boundary. Keep SITE_PATH_MAX_CHARS at or
+ * below that value, or the app drops the most recent steps. When the joined
+ * trail is longer, keep the entry page and the most recent steps with a
+ * SITE_PATH_GAP segment marking the cut: the entry page says where they
+ * landed, the tail says what they read just before the click. The cap counts
+ * raw characters, before URL encoding.
+ */
 export function getDocsSessionPathCompact(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const paths = readSessionPath();

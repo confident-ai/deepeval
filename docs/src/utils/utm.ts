@@ -25,11 +25,16 @@
  *   utm_campaign = inbound visitor campaign carried via last_touch
  *   utm_term     = inbound visitor term carried via last_touch
  *   ref_page    = window.location.pathname at click time (always)
- *   site_path   = the docs pages this tab read, ">" separated (app links only)
+ *   site_path   = the docs pages this tab read, ">" separated
+ *                 (app.confident-ai.com only)
  *
  * `utm_campaign` and `utm_term` come from the visitor's stored last_touch
- * (captured from the URL when they first landed). This lets a Google ad
- * campaign survive the deepeval-docs hop into app.confident-ai.com.
+ * (captured from the URL on their most recent UTM landing). This lets a Google
+ * ad campaign survive the deepeval-docs hop into app.confident-ai.com.
+ *
+ * `site_path` comes from the per-tab trail that UtmCapture records in
+ * sessionStorage on every route change (see visitor-attribution.ts). It is
+ * stamped on app.confident-ai.com links only, and only when the tab has one.
  *
  * Programmatic hosts (api.*, eu.api.*, au.api.*, deepeval.*, eu.deepeval.*,
  * au.deepeval.*, otel.*, eu.otel.*, au.otel.*) are intentionally excluded
@@ -56,9 +61,24 @@ export const CONFIDENT_HOSTS_BY_NAME = {
 
 export type ConfidentHost = keyof typeof CONFIDENT_HOSTS_BY_NAME;
 
-/** The app host is the only destination that stores the docs page trail. */
+/** Hostname of CONFIDENT_HOSTS_BY_NAME.APP, for URL#hostname comparison. */
 export const APP_HOSTNAME = new URL(CONFIDENT_HOSTS_BY_NAME.APP).hostname;
+/** Query param that carries the per-tab docs trail. APP_HOSTNAME links only. */
 export const SITE_PATH_PARAM = 'site_path';
+
+/**
+ * Stamp the trail onto an app link. Kept apart from the utm assembly so a
+ * failure here can never cost the utm params: the trail is optional.
+ */
+export function appendSitePath(u: URL): void {
+  if (u.hostname !== APP_HOSTNAME || u.searchParams.has(SITE_PATH_PARAM)) return;
+  try {
+    const sitePath = getDocsSessionPathCompact();
+    if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);
+  } catch {
+    // the trail is optional; the utm params must still ship
+  }
+}
 
 /** Hostname-only set used by both runtime guards (URL#hostname comparison). */
 export const CONFIDENT_HOSTNAMES: ReadonlySet<string> = new Set(
@@ -88,8 +108,9 @@ export interface AppendOpts {
  *   - URL is not a Confident AI host (CONFIDENT_HOSTNAMES)
  *   - The corresponding param is already set on the URL (caller wins)
  *
- * Browser-only — pulls last_touch from localStorage and current pathname from
- * window.location. SSR-safe (returns input unchanged when window is undefined).
+ * Browser-only — pulls last_touch from localStorage, the page trail from
+ * sessionStorage (app host only), and current pathname from window.location.
+ * SSR-safe (returns input unchanged when window is undefined).
  */
 export function appendDeepEvalAttribution(
   url: string,
@@ -131,10 +152,7 @@ export function appendDeepEvalAttribution(
   if (!u.searchParams.has('ref_page')) {
     u.searchParams.set('ref_page', window.location.pathname);
   }
-  if (u.hostname === APP_HOSTNAME && !u.searchParams.has(SITE_PATH_PARAM)) {
-    const sitePath = getDocsSessionPathCompact();
-    if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);
-  }
+  appendSitePath(u);
 
   return u.toString();
 }
