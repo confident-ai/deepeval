@@ -93,6 +93,33 @@ def test_geval_accepts_metadata_and_tags():
     assert payload["evaluationParams"] == ["metadata", "tags"]
 
 
+def test_geval_reference_input_is_explicitly_selected():
+    test_case = LLMTestCase(
+        input="question",
+        actual_output="answer",
+        expected_output="reference",
+    )
+    reference_free_params = [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+    ]
+    reference_based_params = [
+        *reference_free_params,
+        SingleTurnParams.EXPECTED_OUTPUT,
+    ]
+
+    reference_free_text = construct_test_case_string(
+        reference_free_params, test_case
+    )
+    reference_based_text = construct_test_case_string(
+        reference_based_params, test_case
+    )
+
+    assert "Expected Output" not in reference_free_text
+    assert "Expected Output" in reference_based_text
+    assert "reference" in reference_based_text
+
+
 def test_geval_requires_metadata_when_selected():
     test_case = LLMTestCase(input="input", tags=["tag"])
 
