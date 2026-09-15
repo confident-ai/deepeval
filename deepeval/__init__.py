@@ -16,6 +16,7 @@ def _expose_public_api() -> None:
     # All other imports must happen after env is loaded
     # Do not do this at module level or ruff will complain with E402
     global __version__, evaluate, assert_test, compare
+    global analyze_compare_results
     global on_test_run_end, log_hyperparameters, login, telemetry
     global instrument, flush_traces, a_flush_traces
 
@@ -24,6 +25,9 @@ def _expose_public_api() -> None:
     from deepeval.evaluate import (
         evaluate as _evaluate,
         assert_test as _assert_test,
+    )
+    from deepeval.evaluate.analyze import (
+        analyze_compare_results as _analyze_compare_results,
     )
     from deepeval.evaluate.compare import compare as _compare
     from deepeval.test_run import (
@@ -47,6 +51,7 @@ def _expose_public_api() -> None:
     evaluate.configs = _evaluate_module.configs
     assert_test = _assert_test
     compare = _compare
+    analyze_compare_results = _analyze_compare_results
     on_test_run_end = _on_end
     log_hyperparameters = _log_hparams
     login = _login
@@ -99,6 +104,7 @@ __all__ = [
     "assert_test",
     "on_test_run_end",
     "compare",
+    "analyze_compare_results",
     "instrument",
     "flush_traces",
     "a_flush_traces",
