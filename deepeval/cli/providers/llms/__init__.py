@@ -17,5 +17,6 @@ from deepeval.cli.providers.llms import (  # noqa: F401
     gemini,
     litellm,
     portkey,
+    thegrid,
     openrouter,
 )
