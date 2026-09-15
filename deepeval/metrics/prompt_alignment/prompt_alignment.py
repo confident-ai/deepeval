@@ -93,7 +93,7 @@ class PromptAlignmentMetric(BaseMetric):
                     _show_indicator=False,
                     _in_component=_in_component,
                 )
-                loop.run_until_complete(
+                return loop.run_until_complete(
                     asyncio.wait_for(
                         coro,
                         timeout=get_per_task_timeout(),
