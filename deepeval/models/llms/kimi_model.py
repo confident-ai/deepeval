@@ -85,8 +85,8 @@ class KimiModel(DeepEvalBaseLLM):
             cost_per_input_token,
             cost_per_output_token,
         )
-        self.model_data.input_price = float(cost_per_input_token)
-        self.model_data.output_price = float(cost_per_output_token)
+        self.model_data.input_price = cost_per_input_token
+        self.model_data.output_price = cost_per_output_token
 
         self.base_url = "https://api.moonshot.cn/v1"
         # Keep sanitized kwargs for client call to strip legacy keys
