@@ -532,6 +532,20 @@ def verdict_from_json(
     return verdict_cls(verdict=leading, reason=data.get("reason"))
 
 
+def verdicts_from_json(
+    data: Dict,
+    verdict_cls: Type[SchemaType],
+    allowed: Tuple[str, ...] = ("yes", "no"),
+) -> List[SchemaType]:
+    """Build and normalize a list of yes/no-style verdict objects."""
+    verdicts = []
+    for item in data["verdicts"]:
+        verdict = verdict_from_json(item, verdict_cls, allowed)
+        if verdict is not None:
+            verdicts.append(verdict)
+    return verdicts
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
