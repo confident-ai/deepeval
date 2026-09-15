@@ -130,11 +130,19 @@ export function getLastTouchParams(): UtmParams | null {
 }
 
 /**
- * The docs pages this tab visited, in order, so an app signup link can carry
- * which pages the visitor read (`site_path`, accepted by confident-cloud).
- * sessionStorage is per tab: a link opened in a new tab starts a new trail.
- * Paths only, ">" between steps; over the cap keep the entry page and the
- * most recent steps.
+ * The docs pages this tab visited, in order, so links into the app can carry
+ * which pages the visitor read as the `site_path` query param. sessionStorage
+ * is per tab: a link opened in a new tab starts a new trail. Repeats collapse,
+ * each path is cut at 120 characters, and only the entry page plus the last
+ * SESSION_PATH_MAX_STEPS - 1 pages survive.
+ *
+ * The app reads site_path at page load, requires a value that starts with "/",
+ * and caps it at 300 characters by cutting the end on a ">" boundary. Keep
+ * SITE_PATH_MAX_CHARS at or below that cap, or the app drops the most recent
+ * steps. When the joined trail is longer, keep the entry page and the most
+ * recent steps with a ">…" segment marking the cut: the entry page says where
+ * they landed, the tail says what they read just before the click. The cap
+ * counts raw characters, before URL encoding.
  */
 const SESSION_PATH_KEY = 'confident_session_path';
 const SESSION_PATH_MAX_STEPS = 40;
@@ -160,11 +168,12 @@ export function recordDocsPageView(pathname: string): void {
   const path = pathname.slice(0, 120);
   if (steps[steps.length - 1] === path) return;
   steps.push(path);
+  const kept =
+    steps.length > SESSION_PATH_MAX_STEPS
+      ? [steps[0], ...steps.slice(-(SESSION_PATH_MAX_STEPS - 1))]
+      : steps;
   try {
-    sessionStorage.setItem(
-      SESSION_PATH_KEY,
-      JSON.stringify(steps.slice(-SESSION_PATH_MAX_STEPS)),
-    );
+    sessionStorage.setItem(SESSION_PATH_KEY, JSON.stringify(kept));
   } catch {
     // sessionStorage unavailable
   }
@@ -184,5 +193,5 @@ export function getDocsSessionPathCompact(): string | undefined {
       break;
     tail = next;
   }
-  return head + SITE_PATH_GAP + tail;
+  return (head + SITE_PATH_GAP + tail).slice(0, SITE_PATH_MAX_CHARS);
 }
