@@ -24,6 +24,7 @@
  *      utm_campaign = last_touch.utm_campaign     (visitor-derived)
  *      utm_term     = last_touch.utm_term         (visitor-derived)
  *      ref_page     = window.location.pathname
+ *      site_path    = the docs pages this tab read (app.confident-ai.com only)
  *
  *    Caller-set params on the existing href are preserved (we never clobber).
  *
@@ -51,12 +52,16 @@
 
 import { useEffect } from "react";
 import {
+  APP_HOSTNAME,
   CONFIDENT_HOSTNAMES,
+  SITE_PATH_PARAM,
   type UtmMedium,
 } from "@/src/utils/utm";
 import {
   captureVisitorUtms,
+  getDocsSessionPathCompact,
   getLastTouchParams,
+  recordDocsPageView,
 } from "@/src/utils/visitor-attribution";
 
 const SOURCE = "deepeval";
@@ -126,6 +131,10 @@ function stampAnchor(anchor: HTMLAnchorElement | null): void {
   if (!u.searchParams.has("ref_page")) {
     u.searchParams.set("ref_page", window.location.pathname);
   }
+  if (u.hostname === APP_HOSTNAME && !u.searchParams.has(SITE_PATH_PARAM)) {
+    const sitePath = getDocsSessionPathCompact();
+    if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);
+  }
 
   anchor.setAttribute("href", u.toString());
 }
@@ -139,9 +148,14 @@ function handleEvent(e: Event): void {
   stampAnchor(anchor);
 }
 
+const captureAndRecord = (): void => {
+  captureVisitorUtms();
+  recordDocsPageView(window.location.pathname);
+};
+
 const UtmCapture = () => {
   useEffect(() => {
-    captureVisitorUtms();
+    captureAndRecord();
 
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
@@ -152,7 +166,7 @@ const UtmCapture = () => {
     ) {
       const result = originalPushState.apply(this, args);
       try {
-        captureVisitorUtms();
+        captureAndRecord();
       } catch {
         // never let attribution errors break navigation
       }
@@ -165,7 +179,7 @@ const UtmCapture = () => {
     ) {
       const result = originalReplaceState.apply(this, args);
       try {
-        captureVisitorUtms();
+        captureAndRecord();
       } catch {
         // never let attribution errors break navigation
       }
@@ -174,7 +188,7 @@ const UtmCapture = () => {
 
     const handlePopState = () => {
       try {
-        captureVisitorUtms();
+        captureAndRecord();
       } catch {
         // swallow — see above
       }

@@ -25,6 +25,7 @@
  *   utm_campaign = inbound visitor campaign carried via last_touch
  *   utm_term     = inbound visitor term carried via last_touch
  *   ref_page    = window.location.pathname at click time (always)
+ *   site_path   = the docs pages this tab read, ">" separated (app links only)
  *
  * `utm_campaign` and `utm_term` come from the visitor's stored last_touch
  * (captured from the URL when they first landed). This lets a Google ad
@@ -35,7 +36,10 @@
  * — they're API/OTel endpoints, not browser-clickable.
  */
 
-import { getLastTouchParams } from './visitor-attribution';
+import {
+  getDocsSessionPathCompact,
+  getLastTouchParams,
+} from './visitor-attribution';
 
 /**
  * The three browser-clickable Confident AI hosts. Single source of truth for
@@ -51,6 +55,10 @@ export const CONFIDENT_HOSTS_BY_NAME = {
 } as const;
 
 export type ConfidentHost = keyof typeof CONFIDENT_HOSTS_BY_NAME;
+
+/** The app host is the only destination that stores the docs page trail. */
+export const APP_HOSTNAME = new URL(CONFIDENT_HOSTS_BY_NAME.APP).hostname;
+export const SITE_PATH_PARAM = 'site_path';
 
 /** Hostname-only set used by both runtime guards (URL#hostname comparison). */
 export const CONFIDENT_HOSTNAMES: ReadonlySet<string> = new Set(
@@ -122,6 +130,10 @@ export function appendDeepEvalAttribution(
 
   if (!u.searchParams.has('ref_page')) {
     u.searchParams.set('ref_page', window.location.pathname);
+  }
+  if (u.hostname === APP_HOSTNAME && !u.searchParams.has(SITE_PATH_PARAM)) {
+    const sitePath = getDocsSessionPathCompact();
+    if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);
   }
 
   return u.toString();

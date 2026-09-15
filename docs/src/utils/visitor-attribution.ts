@@ -128,3 +128,61 @@ export function getLastTouchParams(): UtmParams | null {
   if (!attribution || !isFreshTouch(attribution.last_touch)) return null;
   return attribution.last_touch.params;
 }
+
+/**
+ * The docs pages this tab visited, in order, so an app signup link can carry
+ * which pages the visitor read (`site_path`, accepted by confident-cloud).
+ * sessionStorage is per tab: a link opened in a new tab starts a new trail.
+ * Paths only, ">" between steps; over the cap keep the entry page and the
+ * most recent steps.
+ */
+const SESSION_PATH_KEY = 'confident_session_path';
+const SESSION_PATH_MAX_STEPS = 40;
+const SITE_PATH_MAX_CHARS = 300;
+const SITE_PATH_GAP = '>…';
+
+function readSessionPath(): string[] {
+  try {
+    const raw = sessionStorage.getItem(SESSION_PATH_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((p): p is string => typeof p === 'string')
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function recordDocsPageView(pathname: string): void {
+  if (typeof window === 'undefined') return;
+  const steps = readSessionPath();
+  const path = pathname.slice(0, 120);
+  if (steps[steps.length - 1] === path) return;
+  steps.push(path);
+  try {
+    sessionStorage.setItem(
+      SESSION_PATH_KEY,
+      JSON.stringify(steps.slice(-SESSION_PATH_MAX_STEPS)),
+    );
+  } catch {
+    // sessionStorage unavailable
+  }
+}
+
+export function getDocsSessionPathCompact(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const paths = readSessionPath();
+  if (!paths.length) return undefined;
+  const full = paths.join('>');
+  if (full.length <= SITE_PATH_MAX_CHARS) return full;
+  const head = paths[0];
+  let tail = '';
+  for (let i = paths.length - 1; i > 0; i--) {
+    const next = '>' + paths[i] + tail;
+    if (head.length + SITE_PATH_GAP.length + next.length > SITE_PATH_MAX_CHARS)
+      break;
+    tail = next;
+  }
+  return head + SITE_PATH_GAP + tail;
+}
