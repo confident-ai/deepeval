@@ -14,6 +14,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    verdicts_from_json,
 )
 from deepeval.metrics.role_violation.schema import (
     RoleViolationVerdict,
@@ -22,7 +23,6 @@ from deepeval.metrics.role_violation.schema import (
     RoleViolationScoreReason,
 )
 from deepeval.templates import make_template_class
-
 
 RoleViolationTemplate = make_template_class("RoleViolationMetric")
 
@@ -224,10 +224,12 @@ class RoleViolationMetric(BaseMetric):
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                RoleViolationVerdict(**item) for item in data["verdicts"]
-            ],
+            extract_schema=lambda s: verdicts_from_json(
+                s.model_dump(), RoleViolationVerdict
+            ),
+            extract_json=lambda data: verdicts_from_json(
+                data, RoleViolationVerdict
+            ),
         )
 
     def _generate_verdicts(self) -> List[RoleViolationVerdict]:
@@ -242,10 +244,12 @@ class RoleViolationMetric(BaseMetric):
             metric=self,
             prompt=prompt,
             schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                RoleViolationVerdict(**item) for item in data["verdicts"]
-            ],
+            extract_schema=lambda s: verdicts_from_json(
+                s.model_dump(), RoleViolationVerdict
+            ),
+            extract_json=lambda data: verdicts_from_json(
+                data, RoleViolationVerdict
+            ),
         )
 
     async def _a_detect_role_violations(

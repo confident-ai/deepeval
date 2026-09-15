@@ -13,6 +13,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    verdicts_from_json,
 )
 from deepeval.test_case import (
     LLMTestCase,
@@ -23,7 +24,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 from deepeval.templates import make_template_class
-
 
 PromptAlignmentTemplate = make_template_class("PromptAlignmentMetric")
 
@@ -232,11 +232,12 @@ class PromptAlignmentMetric(BaseMetric):
             metric=self,
             prompt=prompt,
             schema_cls=paschema.Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                paschema.PromptAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            extract_schema=lambda s: verdicts_from_json(
+                s.model_dump(), paschema.PromptAlignmentVerdict
+            ),
+            extract_json=lambda data: verdicts_from_json(
+                data, paschema.PromptAlignmentVerdict
+            ),
         )
 
     def _generate_verdicts(
@@ -252,11 +253,12 @@ class PromptAlignmentMetric(BaseMetric):
             metric=self,
             prompt=prompt,
             schema_cls=paschema.Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                paschema.PromptAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            extract_schema=lambda s: verdicts_from_json(
+                s.model_dump(), paschema.PromptAlignmentVerdict
+            ),
+            extract_json=lambda data: verdicts_from_json(
+                data, paschema.PromptAlignmentVerdict
+            ),
         )
 
     def _calculate_score(self) -> float:
