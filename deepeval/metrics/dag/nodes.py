@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional, Union
+import inspect
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 from dataclasses import dataclass, field
 from pydantic import create_model
 
@@ -35,7 +36,7 @@ class BaseNode(PromptMixin):
         text = ""
         if parents is not None:
             for parent in parents:
-                if isinstance(parent, TaskNode):
+                if hasattr(parent, "output_label"):
                     text += f"{parent.output_label}:\n{outputs[parent]}{sep}"
         if self.evaluation_params is not None:
             for param in self.evaluation_params:
@@ -217,6 +218,64 @@ class TaskNode(BaseNode):
             extract_schema=lambda s: s.output,
             extract_json=lambda data: data["output"],
         )
+
+
+class CustomNode(BaseNode):
+    """Run deterministic user code inside a single-turn DAG.
+
+    Custom callables are intentionally not serializable because arbitrary
+    Python code cannot be safely or portably restored.
+    """
+
+    def __init__(
+        self,
+        function: Callable[[LLMTestCase, Dict[BaseNode, Any]], Any],
+        output_label: str = "Output",
+        children: Optional[List[BaseNode]] = None,
+        label: Optional[str] = None,
+    ):
+        self.function = function
+        self.output_label = output_label
+        self.children = children or []
+        self.label = label
+        self._validate()
+
+    def __hash__(self):
+        return id(self)
+
+    def _validate(self) -> None:
+        if not callable(self.function):
+            raise TypeError("CustomNode.function must be callable.")
+        if not all(isinstance(child, BaseNode) for child in self.children):
+            raise TypeError("CustomNode children must be BaseNode instances.")
+
+    def _parent_outputs(
+        self, parents: Optional[List[BaseNode]], outputs: Dict[BaseNode, Any]
+    ) -> Dict[BaseNode, Any]:
+        return {
+            parent: outputs[parent]
+            for parent in parents or []
+            if parent in outputs
+        }
+
+    def _execute(
+        self,
+        metric: BaseMetric,
+        test_case: LLMTestCase,
+        parents: Optional[List[BaseNode]],
+        outputs: Dict[BaseNode, Any],
+    ) -> Any:
+        return self.function(test_case, self._parent_outputs(parents, outputs))
+
+    async def _a_execute(
+        self,
+        metric: BaseMetric,
+        test_case: LLMTestCase,
+        parents: Optional[List[BaseNode]],
+        outputs: Dict[BaseNode, Any],
+    ) -> Any:
+        result = self._execute(metric, test_case, parents, outputs)
+        return await result if inspect.isawaitable(result) else result
 
 
 @dataclass
@@ -416,7 +475,8 @@ def construct_node_verbose_log(
     verdict: Optional[Any] = None,
 ) -> str:
     if isinstance(
-        node, (BinaryJudgementNode, NonBinaryJudgementNode, TaskNode)
+        node,
+        (BinaryJudgementNode, NonBinaryJudgementNode, TaskNode, CustomNode),
     ):
         label = node.label if node.label else "None"
 
@@ -447,6 +507,14 @@ def construct_node_verbose_log(
             f"Label: {label}\n\n"
             "Instructions:\n"
             f"{node.instructions}\n\n"
+            f"{node.output_label}:\n{output}\n"
+        )
+    elif isinstance(node, CustomNode):
+        return (
+            "____________________\n"
+            f"| CustomNode | Level == {depth} |\n"
+            "*****************************\n"
+            f"Label: {label}\n\n"
             f"{node.output_label}:\n{output}\n"
         )
     elif isinstance(node, VerdictNode):
