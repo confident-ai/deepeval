@@ -1,5 +1,6 @@
 import logging
 import math
+import re
 from typing import Optional, Any, NamedTuple, Union, Tuple
 import aiohttp
 import requests
@@ -209,6 +210,12 @@ def _sanitize_body(obj):
     return obj
 
 
+def _is_organization_key(api_key: str) -> bool:
+    return bool(
+        re.match(r"^confident_(?:us|eu)_org_", api_key.strip(), re.IGNORECASE)
+    )
+
+
 class Api:
     def __init__(
         self,
@@ -221,6 +228,15 @@ class Api:
         if not api_key:
             raise ValueError(
                 f"No Confident API key found. Please run `deepeval login` or set the {CONFIDENT_API_KEY_ENV_VAR} environment variable in the CLI."
+            )
+
+        api_key = api_key.strip()
+        if _is_organization_key(api_key):
+            raise ConfidentApiError(
+                "Invalid API key: organization API keys cannot be used to upload test runs. "
+                "Use a project API key from Project Settings > API Keys. "
+                "Run `deepeval diagnose` to check your current key and region. "
+                "See https://confident-ai.com/docs for details."
             )
 
         self.api_key = api_key
