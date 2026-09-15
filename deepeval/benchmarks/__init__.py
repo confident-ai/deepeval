@@ -15,6 +15,7 @@ from .lambada.lambada import LAMBADA
 from .winogrande.winogrande import Winogrande
 from .equity_med_qa.equity_med_qa import EquityMedQA
 from .ifeval.ifeval import IFEval
+from .pub_med_qa.pub_med_qa import PubMedQA
 
 __all__ = [
     "BigBenchHard",
@@ -34,4 +35,5 @@ __all__ = [
     "Winogrande",
     "EquityMedQA",
     "IFEval",
+    "PubMedQA",
 ]
