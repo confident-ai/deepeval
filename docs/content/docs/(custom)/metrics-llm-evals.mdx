@@ -112,6 +112,15 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 For accurate and valid results, only the parameters that are mentioned in `criteria`/<Term py="evaluation_steps" ts="evaluationSteps"/> should be included as a member of <Term py="evaluation_params" ts="evaluationParams"/>.
 :::
 
+:::warning
+`GEval` does not infer which test-case fields your criteria needs. If your metric is
+intended to compare the candidate against a reference, explicitly include
+`SingleTurnParams.EXPECTED_OUTPUT` (or `SingleTurnParams.EXPECTED_TOOLS`) in
+`evaluation_params` and provide that field on every test case. Without a reference
+parameter, `GEval` intentionally runs as a reference-free judge and scores only the
+fields you selected.
+:::
+
 As mentioned in the [metrics introduction section](/docs/metrics-introduction), all of `deepeval`'s metrics return a score ranging from 0 - 1, and a metric is only successful if the evaluation score is equal to or greater than `threshold`, and `GEval` is no exception. You can access the `score` and `reason` for each individual `GEval` metric:
 
 <Switch>
