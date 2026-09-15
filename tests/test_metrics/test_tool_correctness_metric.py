@@ -56,6 +56,14 @@ class TestToolCorrectnessMetricType:
         assert metric.score == 1.0
         assert metric.success is True
 
+    def test_measure_returns_score_in_async_mode(self):
+        metric = ToolCorrectnessMetric()
+        test_case = build_test_case(ToolCallType.MCP, ToolCallType.MCP)
+
+        result = metric.measure(test_case, _show_indicator=False)
+
+        assert result == 1.0
+
     def test_type_mismatch_fails_exact_match(self):
         metric = ToolCorrectnessMetric(
             async_mode=False, should_exact_match=True
