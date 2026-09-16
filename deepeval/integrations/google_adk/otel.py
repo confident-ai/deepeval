@@ -68,11 +68,6 @@ def instrument_google_adk(
     with capture_tracing_integration(Integration.GOOGLE_ADK):
         if not api_key:
             api_key = get_confident_api_key()
-            if not api_key:
-                raise ValueError(
-                    "CONFIDENT_API_KEY is not set. "
-                    "Pass it directly or set the environment variable."
-                )
 
         GoogleADKInstrumentor = _require_google_adk_instrumentor()
         GoogleADKInstrumentor().instrument()
