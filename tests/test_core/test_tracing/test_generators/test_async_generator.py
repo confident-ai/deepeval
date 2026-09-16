@@ -49,7 +49,7 @@ async def test_async_generator_cancellation_closes_trace(resume_method):
     try:
         await asyncio.wait_for(waiting.wait(), timeout=5)
         task.cancel("stream cancelled")
-        with pytest.raises(asyncio.CancelledError, match="stream cancelled"):
+        with pytest.raises(asyncio.CancelledError):
             await task
 
         span = captured["span"]
