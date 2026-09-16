@@ -1,0 +1,132 @@
+---
+id: metrics-judge-self-consistency
+title: Judge Self-Consistency
+sidebar_label: Judge Self-Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} referenceless={true} />
+
+The judge self-consistency metric measures **how much a judge agrees with itself**. It wraps another metric, runs it several times against the same [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case), and reports how far apart the repeats landed. Every other metric in `deepeval` measures your LLM application; this one measures the judge you are measuring it with.
+
+:::info
+The `JudgeSelfConsistencyMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This metric adds no dependencies. The reliability statistics are implemented on the Python standard library.
+:::
+
+## Required Arguments
+
+The `JudgeSelfConsistencyMetric` requires whatever the metric it wraps requires — each replicate runs that judge's own validation. Wrapping an [`AnswerRelevancyMetric`](/docs/metrics-answer-relevancy) needs `input` and `actual_output`, wrapping a [`FaithfulnessMetric`](/docs/metrics-faithfulness) also needs `retrieval_context`, and so on.
+
+Only single-turn metrics are supported. Passing a conversational or arena metric raises a `TypeError`.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics.community import JudgeSelfConsistencyMetric
+
+judge = AnswerRelevancyMetric(threshold=0.7)
+metric = JudgeSelfConsistencyMetric(metric=judge, replicates=5)
+
+test_case = LLMTestCase(
+    input="How tall is the Eiffel Tower?",
+    actual_output="The Eiffel Tower is about 330 metres tall.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.decision_flip_rate, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[judge, metric])
+```
+
+There are thirteen optional parameters when creating a `JudgeSelfConsistencyMetric`:
+
+- [Optional] `replicates`: an integer, the number of times to run the wrapped judge on each test case. Must be at least `2`. Defaulted to `5`.
+- [Optional] `threshold`: a float representing the minimum passing **stability**. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.9`.
+- [Optional] `auto_flaky`: a boolean which when set to `True`, [marks this metric as flaky](/docs/metrics-introduction#flaky-metrics) during a run whose replicates disagreed. Defaulted to `True`. See [Flaky, measured rather than declared](#flaky-measured-rather-than-declared).
+- [Optional] `score_range`: a `(low, high)` tuple giving the range the wrapped judge scores on. Stability is measured relative to this range, and scores outside it are reported as an error. Defaulted to `(0.0, 1.0)`.
+- [Optional] `max_concurrent`: an integer capping how many replicates run at once in async mode, or `None` for no cap. The replicates multiply your in-flight LLM calls, so set this if you are near a rate limit. Defaulted to `None`.
+- [Optional] `bootstrap_resamples`: an integer, the number of bootstrap resamples used for the confidence interval on the mean score. Defaulted to `2000`.
+- [Optional] `confidence`: a float strictly between `0` and `1`, the confidence level for that interval. Defaulted to `0.95`.
+- [Optional] `random_seed`: an integer seed making the bootstrap interval reproducible, or `None` for a fresh draw each call. Defaulted to `42`.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, requires perfect stability. It overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, runs the replicates [concurrently within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics) for every run. Defaulted to `False`.
+
+## What It Reports
+
+After `measure()`, these are available on the metric:
+
+| Attribute            | Meaning                                                                             |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `score`              | **Stability**, in `[0, 1]`. `1.0` when every repeat produced the same score.          |
+| `decision_flip_rate` | Fraction of repeat **pairs** that landed on opposite sides of the judge's threshold.  |
+| `replicate_scores`   | The raw score from every replicate that ran.                                         |
+| `result`             | A `JudgeSelfConsistencyResult` with every replicate, the spread, and the interval.    |
+
+:::note
+`evaluate()` copies metrics internally, so the object you constructed is not the one that ran — read the run's results from the test run, not from your instance. A test run carries the `score`, `success`, `flaky` flag, `reason`, and verbose logs, so the flip rate reaches it as prose inside `reason`. The structured `result` and `replicate_scores` exist only on the instance, which means standalone `measure()` is the way to get at them programmatically.
+:::
+
+### Why the flip rate matters more than the score
+
+Stability answers "did the scores move?". The flip rate answers "did the **verdict** move?", and a verdict is what actually changes a test result.
+
+These come apart, which is the point of reporting both. A judge that scores `0.49, 0.51, 0.49, 0.51` against a threshold of `0.5` has barely moved — stability is `0.98`, comfortably above the default threshold — yet two thirds of its repeat pairs disagree on pass/fail. Scores clustered tightly *around* a threshold are the worst case, and a spread-only reading calls them healthy.
+
+## Flaky, Measured Rather Than Declared
+
+`deepeval` already has a [`flaky`](/docs/metrics-introduction#flaky-metrics) property on every metric: a flaky metric's score, reason, and verdict are all computed and reported, but its failure never decides its test case's pass/fail status, and its passes and fails are counted separately in the test run report.
+
+Until now that property has been something you declare from what you already know about a metric. `JudgeSelfConsistencyMetric` sets it from what it measured: when the replicates disagree, the metric marks itself flaky for that run. The reading stays in the report, in the flaky sub-count, without gating the suite:
+
+```
+ Metric                                          ┃ Average Score ┃ Pass Rate
+ Judge Self-Consistency (Answer Relevancy)       │ 0.36          │ 0.00% | passed=0 |
+                                                 │               │ failed=1 (flaky=1)
+```
+
+A run counts as disagreeing when any pair of repeats reached opposite verdicts, or when stability fell below the metric's own threshold. A verdict flip always counts, however small the score movement behind it; float-level jitter between otherwise identical scores does not.
+
+This is deliberate. A judge that disagrees with itself is a fact about your eval harness, not about the application under test, so it should be visible without failing your build. Set `auto_flaky=False` if you would rather the instability gate.
+
+## How Is It Calculated?
+
+Each replicate runs on its own copy of the wrapped judge, made with `deepeval`'s `copy_metrics` — the same helper `evaluate()` uses to isolate metrics across test cases. Each copy gets its own result state; the judge's configuration and model client are shared by reference.
+
+**Stability** is one minus the normalized spread of the replicate scores:
+
+```
+stability = 1 - stdev(scores) / (range width / 2)
+```
+
+Half the width of `score_range` is the largest standard deviation a population on that range can have, attained when half the mass sits at each end, so the ratio puts the spread on a `0-1` scale. Standard deviation rather than variance because it shares the units of the scores: halving the spread of the repeats halves the distance from a perfect reading. The sample standard deviation of a small sample can exceed the population bound, so the result is clamped at `0.0` rather than allowed to go negative.
+
+**Decision flip rate** is the fraction of replicate pairs whose verdicts disagree. With `k` replicates of which `p` passed the judge's threshold:
+
+```
+flip rate = p * (k - p) / (k * (k - 1) / 2)
+```
+
+This is the unbiased estimator of the probability that two independent repeats reach opposite verdicts. That probability is bounded by `0.5`, but the unbiased estimator is not: an even split reports `1.0` at `k=2` and `0.67` at `k=4`. Read it as "how many of my pairs disagreed", and only read it as a probability once `k` is reasonably large. It is `None` when the wrapped judge has no threshold and therefore reaches no verdict.
+
+**The confidence interval** on the mean score is a percentile bootstrap: resample the replicate scores with replacement, take the mean of each resample, and read the interval off the percentiles of that distribution. A wide interval on a handful of replicates is a signal to raise `replicates`, not a finding about the judge.
+
+:::note
+The wrapped judge needs some source of variation for this to be informative. A judge pinned to `temperature=0` may return the same score every time, which the metric will faithfully report as perfect stability.
+:::
+
+:::warning
+When wrapping a [`GEval`](/docs/metrics-llm-evals) metric built from `criteria` rather than `evaluation_steps`, each replicate generates its own evaluation steps before scoring. The reading then mixes rubric-generation variance into judge-scoring variance, and doubles the calls per replicate. Pass `evaluation_steps` explicitly to isolate the scoring variance.
+:::
+
+Methods used: the nonparametric bootstrap and percentile interval follow Efron and Tibshirani, _An Introduction to the Bootstrap_ (Chapman & Hall, 1993), chapters 6 and 13. Pairwise agreement as a test-retest reliability measure follows Shrout and Fleiss, "Intraclass correlations: uses in assessing rater reliability", _Psychological Bulletin_ 86(2), 1979.
