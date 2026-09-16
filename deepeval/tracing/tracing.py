@@ -123,7 +123,7 @@ class _ObservedAsyncGenIter:
         except StopAsyncIteration:
             self._finish()
             raise
-        except Exception as e:
+        except (Exception, asyncio.CancelledError) as e:
             self._finish_err(e)
             raise
 
@@ -150,7 +150,7 @@ class _ObservedAsyncGenIter:
         except StopAsyncIteration:
             self._finish()
             raise
-        except Exception as e:
+        except (Exception, asyncio.CancelledError) as e:
             self._finish_err(e)
             raise
 
