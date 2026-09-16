@@ -443,7 +443,7 @@ def test_anthropic_explicit_thinking_kwarg_wins(mock_require_dep, settings):
 def test_anthropic_thinking_enabled_raises_max_tokens_default(
     mock_require_dep, settings
 ):
-    """Thinking needs headroom the 1024 default does not have."""
+    """Thinking needs a larger token ceiling than the plain default."""
     thinking_model, _ = _anthropic_model(
         mock_require_dep, settings, "claude-opus-5", thinking=True
     )
@@ -499,3 +499,69 @@ async def test_anthropic_thinking_applies_to_a_generate(
 
     await model.a_generate("prompt", schema=_Verdict)
     assert client.create_kwargs["thinking"]["type"] == "enabled"
+
+
+##############################################
+# stop_reason == "max_tokens" guard tests    #
+##############################################
+
+
+class _TruncatedMessagesClient(_MessagesClient):
+    """Replays a response whose stop_reason is 'max_tokens'."""
+
+    def _create(self, **create_kwargs):
+        self.create_kwargs = create_kwargs
+        return SimpleNamespace(
+            content=self.blocks,
+            stop_reason="max_tokens",
+            usage=SimpleNamespace(input_tokens=10, output_tokens=20),
+        )
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_raises_on_max_tokens_truncation_with_schema(
+    mock_require_dep, settings
+):
+    """stop_reason='max_tokens' + schema → DeepEvalError pointing at max_tokens."""
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    client = _TruncatedMessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    model = AnthropicModel(model="claude-opus-5")
+
+    with pytest.raises(DeepEvalError, match="max_tokens"):
+        model.generate("prompt", schema=_Verdict)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_returns_text_on_max_tokens_truncation_without_schema(
+    mock_require_dep, settings
+):
+    """stop_reason='max_tokens' without schema → truncated text is returned, not an error."""
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+        settings.ANTHROPIC_COST_PER_INPUT_TOKEN = 1e-6
+        settings.ANTHROPIC_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    client = _TruncatedMessagesClient()
+    client.blocks = [SimpleNamespace(type="text", text="truncated output")]
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    model = AnthropicModel(model="claude-opus-5")
+
+    text, _ = model.generate("prompt")
+    assert text == "truncated output"
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_default_max_tokens_is_at_least_8192(mock_require_dep, settings):
+    """DEFAULT_MAX_TOKENS must accommodate models that think by default."""
+    assert DEFAULT_MAX_TOKENS >= 8192
