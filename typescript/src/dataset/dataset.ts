@@ -124,22 +124,15 @@ function fileTimestamp(): string {
 const asJsonCell = (value: unknown): string | null =>
   value == null ? null : JSON.stringify(value);
 
-function singleTurnRecord(
-  golden: Golden,
-  fileType: DatasetFileType,
-): Record<string, unknown> {
+function singleTurnRecord(golden: Golden): Record<string, unknown> {
+  return {
   return {
     input: golden.input ?? null,
     actual_output: golden.actualOutput ?? null,
     expected_output: golden.expectedOutput ?? null,
-    // jsonl flattens the list fields to delimited strings, as Python's does.
     retrieval_context:
-      (fileType === "jsonl"
-        ? joinRetrievalContext(golden.retrievalContext)
-        : serializeRetrievalContext(golden.retrievalContext)) ?? null,
-    context:
-      (fileType === "jsonl" ? joinContext(golden.context) : golden.context) ??
-      null,
+      serializeRetrievalContext(golden.retrievalContext) ?? null,
+    context: golden.context ?? null,
     name: golden.name ?? null,
     comments: golden.comments ?? null,
     source_file: golden.sourceFile ?? null,
@@ -896,7 +889,7 @@ export class EvaluationDataset {
     return goldens as GoldenUnionArray;
   }
 
-  /** Cells holding a list are split on their delimiter, defaulting to `|`. */
+  /** Cells holding a list are JSON arrays, with a `|` split as fallback. */
   async addGoldensFromCSV(
     options: LoadGoldensOptions,
   ): Promise<GoldenUnionArray> {
@@ -1015,7 +1008,7 @@ export class EvaluationDataset {
       const records = goldens.map((golden) =>
         this._multiTurn
           ? multiTurnRecord(golden as ConversationalGolden)
-          : singleTurnRecord(golden as Golden, fileType),
+          : singleTurnRecord(golden as Golden),
       );
       contents =
         fileType === "jsonl"
