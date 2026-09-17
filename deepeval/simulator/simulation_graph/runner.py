@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import inspect
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+
+from deepeval.models.llms.utils import safe_asyncio_run
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator.simulation_graph.node import SimulationNode
@@ -87,10 +88,9 @@ class _SimulationGraphRunner:
             async_mode=False,
         )
         if inspect.isawaitable(result):
-            # Action is async but we're in sync mode: run it via asyncio,
-            # matching the existing `is_callback_async` shim used by
-            # `model_callback`.
-            result = asyncio.run(result)
+            # Action is async but we're in sync mode: run it via safe_asyncio_run
+            # so it works correctly even in already-running event loops.
+            result = safe_asyncio_run(result)
 
         turn = _normalize_user_turn(result, node)
         state.visits[id(node)] = visits + 1
