@@ -666,8 +666,8 @@ class TestSaveAndLoad:
         assert test_cases[0].expected_outcome == "User gets flight options"
 
     def test_save_as_csv_round_trips_context_via_test_case_loader(self):
-        """save_as writes context joined by '|', so the test case loader must
-        default to the same delimiter to read its own output back."""
+        """save_as writes context as a JSON array cell, so the test case loader
+        must read that (and still accept a '|' join from older files)."""
         golden = Golden(
             input="q",
             actual_output="out",
@@ -692,3 +692,101 @@ class TestSaveAndLoad:
 
             assert reloaded.test_cases[0].context == ["c1", "c2"]
             assert reloaded.test_cases[0].retrieval_context == ["r1", "r2"]
+
+    def test_save_as_csv_jsonl_round_trips_pipe_inside_list_items(self):
+        """A '|' inside context/retrieval_context must survive save_as csv/jsonl.
+
+        Joining on '|' without escaping used to explode one RAG chunk into many
+        items (shell pipelines, markdown tables), then reload silently.
+        """
+        context = ["cat access.log | grep ERROR", "no pipe here"]
+        retrieval_context = [
+            "| Plan | Price |\n| --- | --- |\n| Pro | $20 |",
+            "plain chunk",
+        ]
+        golden = Golden(
+            input="How much is Pro?",
+            actual_output="$20",
+            context=list(context),
+            retrieval_context=list(retrieval_context),
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for file_type, loader in (
+                ("jsonl", "add_goldens_from_jsonl_file"),
+                ("csv", "add_goldens_from_csv_file"),
+            ):
+                path = EvaluationDataset([golden]).save_as(
+                    file_type,
+                    directory=tmpdir,
+                    file_name=f"pipe_{file_type}",
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                loaded = reloaded.goldens[0]
+                assert loaded.context == context, (
+                    file_type,
+                    loaded.context,
+                )
+                assert loaded.retrieval_context == retrieval_context, (
+                    file_type,
+                    loaded.retrieval_context,
+                )
+
+            csv_path = EvaluationDataset([golden]).save_as(
+                "csv",
+                directory=tmpdir,
+                file_name="pipe_test_cases",
+                include_test_cases=True,
+            )
+            from_cases = EvaluationDataset()
+            from_cases.add_test_cases_from_csv_file(
+                file_path=csv_path,
+                input_col_name="input",
+                actual_output_col_name="actual_output",
+            )
+            case = from_cases.test_cases[0]
+            assert case.context == context
+            assert case.retrieval_context == retrieval_context
+
+    def test_csv_jsonl_loaders_still_accept_pipe_joined_cells(self):
+        """Files written before list cells became JSON arrays still load."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            csv_path = os.path.join(tmpdir, "legacy.csv")
+            with open(csv_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(
+                    ["input", "actual_output", "context", "retrieval_context"]
+                )
+                writer.writerow(["q", "a", "c1|c2", "r1|r2"])
+
+            goldens = EvaluationDataset()
+            goldens.add_goldens_from_csv_file(csv_path)
+            assert goldens.goldens[0].context == ["c1", "c2"]
+            assert goldens.goldens[0].retrieval_context == ["r1", "r2"]
+
+            cases = EvaluationDataset()
+            cases.add_test_cases_from_csv_file(
+                csv_path, "input", "actual_output"
+            )
+            assert cases.test_cases[0].context == ["c1", "c2"]
+            assert cases.test_cases[0].retrieval_context == ["r1", "r2"]
+
+            jsonl_path = os.path.join(tmpdir, "legacy.jsonl")
+            with open(jsonl_path, "w", encoding="utf-8") as f:
+                f.write(
+                    json.dumps(
+                        {
+                            "input": "q",
+                            "actual_output": "a",
+                            "context": "c1|c2",
+                            "retrieval_context": "r1|r2",
+                        }
+                    )
+                    + "\n"
+                )
+
+            jsonl = EvaluationDataset()
+            jsonl.add_goldens_from_jsonl_file(jsonl_path)
+            assert jsonl.goldens[0].context == ["c1", "c2"]
+            assert jsonl.goldens[0].retrieval_context == ["r1", "r2"]
