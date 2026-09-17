@@ -253,7 +253,7 @@ from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 ...
 
-evaluate(
+evaluation_result = evaluate(
     test_cases=test_cases,
     metrics=[AnswerRelevancyMetric(), FaithfulnessMetric()],
 )
@@ -268,6 +268,31 @@ There are **TWO** mandatory and **FIVE** optional parameters when calling `evalu
 - [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
 - [Optional] `error_config`: an `ErrorConfig` controlling how errors are handled. See [error configs](/docs/evaluation-flags-and-configs#error-configs).
 - [Optional] `cache_config`: a `CacheConfig` controlling caching behavior. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
+
+#### Read per-test-case metric results
+
+`evaluate()` returns an `EvaluationResult`. Its `test_results` attribute
+contains one `TestResult` for each evaluated case, and each test result exposes
+its metric outcomes through `metrics_data`:
+
+```python
+for test_result in evaluation_result.test_results:
+    for metric_data in test_result.metrics_data or []:
+        print(
+            test_result.input,
+            metric_data.name,
+            metric_data.score,
+            metric_data.threshold,
+            metric_data.success,
+            metric_data.reason,
+            metric_data.error,
+        )
+```
+
+Use this `EvaluationResult` → `test_results` → `metrics_data` path when an
+application needs per-case scores or reasons. If you need to retain results
+outside the current process, translate these public objects into your own
+versioned schema.
 
 </Case>
 
