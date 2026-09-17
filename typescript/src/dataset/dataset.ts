@@ -126,7 +126,6 @@ const asJsonCell = (value: unknown): string | null =>
 
 function singleTurnRecord(golden: Golden): Record<string, unknown> {
   return {
-  return {
     input: golden.input ?? null,
     actual_output: golden.actualOutput ?? null,
     expected_output: golden.expectedOutput ?? null,
