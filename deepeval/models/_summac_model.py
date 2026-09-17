@@ -316,14 +316,14 @@ class _SummaCConv(torch.nn.Module):
             "ecn",
         ], "Unrecognized nli_labels argument %s" % (nli_labels)
 
-        super(SummaCConv, self).__init__()
+        super(_SummaCConv, self).__init__()
         self.device = device
         self.models = models
 
         self.imagers = []
         for model_name in models:
             self.imagers.append(
-                SummaCImager(
+                _SummaCImager(
                     model_name=model_name, granularity=granularity, **kwargs
                 )
             )
