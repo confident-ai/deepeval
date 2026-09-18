@@ -26,6 +26,7 @@ from deepeval.dataset.utils import (
     serialize_retrieval_context,
     join_context,
     join_retrieval_context,
+    split_joined,
     reconstruct_retrieval_context,
     trimAndLoadJson,
 )
@@ -341,14 +342,14 @@ class EvaluationDataset:
         contexts = _parse_column(
             df,
             context_col_name,
-            lambda value: value.split(context_col_delimiter) if value else [],
+            lambda value: split_joined(value, context_col_delimiter),
         )
         retrieval_contexts = _parse_column(
             df,
             retrieval_context_col_name,
             lambda value: (
                 reconstruct_retrieval_context(
-                    value.split(retrieval_context_col_delimiter)
+                    split_joined(value, retrieval_context_col_delimiter)
                 )
                 if value
                 else []
@@ -551,14 +552,14 @@ class EvaluationDataset:
         contexts = _parse_column(
             df,
             context_col_name,
-            lambda value: value.split(context_col_delimiter) if value else [],
+            lambda value: split_joined(value, context_col_delimiter),
         )
         retrieval_contexts = _parse_column(
             df,
             retrieval_context_col_name,
             lambda value: (
                 reconstruct_retrieval_context(
-                    value.split(retrieval_context_col_delimiter)
+                    split_joined(value, retrieval_context_col_delimiter)
                 )
                 if value
                 else []
@@ -816,7 +817,7 @@ class EvaluationDataset:
             if isinstance(value, list):
                 return value
             if isinstance(value, str):
-                return value.split(delimiter) if value else []
+                return split_joined(value, delimiter)
             raise TypeError(
                 "Expected context fields in JSONL goldens to be a list, string, or null."
             )

@@ -20,6 +20,57 @@ from deepeval.test_case import (
 DELIMITER = "|"
 TOOLS_DELIMITER = ";"
 
+# A delimiter that appears INSIDE an item has to survive the round-trip, or the
+# loader splits one item into several. Markdown tables and shell pipelines both
+# carry "|" as ordinary text, so this is reached by real RAG content rather than
+# by adversarial input.
+#
+# Escaping is deliberately narrow: only a backslash before another backslash or
+# before the delimiter is consumed. A lone backslash means itself, so a Windows
+# path or a LaTeX fragment written by an older version still loads unchanged.
+ESCAPE = "\\"
+
+
+def escape_item(value: str, delimiter: str = DELIMITER) -> str:
+    """Escape one item so it can be joined on `delimiter` and split back out."""
+    return value.replace(ESCAPE, ESCAPE * 2).replace(
+        delimiter, ESCAPE + delimiter
+    )
+
+
+def split_joined(value: str, delimiter: str = DELIMITER) -> List[str]:
+    """Inverse of joining escaped items on `delimiter`.
+
+    Splits on unescaped delimiters only, then undoes the escaping. Reading a
+    file written before escaping existed is unaffected, because such a file
+    contains no escape sequences to undo.
+    """
+    if not value:
+        return []
+    if not delimiter:
+        return [value]
+    items: List[str] = []
+    buffer: List[str] = []
+    index = 0
+    length = len(value)
+    while index < length:
+        if value[index] == ESCAPE and index + 1 < length:
+            following = value[index + 1]
+            if following == ESCAPE or value.startswith(delimiter, index + 1):
+                buffer.append(ESCAPE if following == ESCAPE else delimiter)
+                index += 1 + (1 if following == ESCAPE else len(delimiter))
+                continue
+        if value.startswith(delimiter, index):
+            items.append("".join(buffer))
+            buffer = []
+            index += len(delimiter)
+            continue
+        buffer.append(value[index])
+        index += 1
+    items.append("".join(buffer))
+    return items
+
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -68,14 +119,16 @@ def join_retrieval_context(retrieval_context, delimiter=DELIMITER):
     serialized = serialize_retrieval_context(retrieval_context)
     if serialized is None:
         return None
-    return delimiter.join(str(item) for item in serialized)
+    return delimiter.join(
+        escape_item(str(item), delimiter) for item in serialized
+    )
 
 
 def join_context(context, delimiter=DELIMITER):
     """Flat join of context for csv/jsonl cells."""
     if context is None:
         return None
-    return delimiter.join(str(item) for item in context)
+    return delimiter.join(escape_item(str(item), delimiter) for item in context)
 
 
 def reconstruct_retrieval_context(retrieval_context):

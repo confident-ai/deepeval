@@ -4,7 +4,12 @@ import tempfile
 import json
 import csv
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
-from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
+from deepeval.dataset.utils import (
+    convert_convo_goldens_to_convo_test_cases,
+    join_context,
+    split_joined,
+    DELIMITER,
+)
 from deepeval.test_case import (
     Turn,
     LLMTestCase,
@@ -321,6 +326,61 @@ class TestSaveAndLoad:
                 assert isinstance(rc[0], RetrievedContextData)
                 assert rc[0].source == "s" and rc[0].context == "c"
                 assert rc[1] == "plain"
+
+    def test_save_as_round_trips_context_containing_the_delimiter(self):
+        """csv and jsonl flatten context and retrieval_context into one
+        delimiter-joined cell. A delimiter INSIDE an item used to be written
+        raw, so the loader split that item into several, silently: a markdown
+        table came back as eleven fragments instead of one chunk. Items are
+        escaped on the way out and unescaped on the way in, so all three
+        formats round-trip content that carries the delimiter."""
+        context = ["cat access.log | grep ERROR", "no pipe here"]
+        retrieval_context = [
+            "| Plan | Price |\n| --- | --- |\n| Pro | $20 |",
+            "plain chunk",
+        ]
+        golden = Golden(
+            input="How much is Pro?",
+            actual_output="$20",
+            context=list(context),
+            retrieval_context=list(retrieval_context),
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for fmt, loader in (
+                ("json", "add_goldens_from_json_file"),
+                ("csv", "add_goldens_from_csv_file"),
+                ("jsonl", "add_goldens_from_jsonl_file"),
+            ):
+                path = EvaluationDataset([golden]).save_as(
+                    fmt, directory=tmpdir, file_name=f"delim_{fmt}"
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                assert reloaded.goldens[0].context == context, fmt
+                assert (
+                    reloaded.goldens[0].retrieval_context == retrieval_context
+                ), fmt
+
+    def test_split_joined_reads_files_written_before_escaping(self):
+        """Escaping is narrow on purpose: only a backslash before another
+        backslash or before the delimiter is consumed. A cell written by an
+        older version has no escape sequences, so it loads unchanged, and a
+        lone backslash in one (a Windows path, a LaTeX fragment) still means
+        itself."""
+        assert split_joined("a|b", DELIMITER) == ["a", "b"]
+        assert split_joined(r"C:\data|b", DELIMITER) == [r"C:\data", "b"]
+        assert split_joined("", DELIMITER) == []
+        assert split_joined("solo", DELIMITER) == ["solo"]
+
+        for items in (
+            ["a", "b"],
+            ["cat x | grep y", "no pipe"],
+            [r"C:\data", "b"],
+            ["", "b", ""],
+            ["|", "||"],
+        ):
+            assert split_joined(join_context(items), DELIMITER) == items
 
     def test_save_as_round_trips_turn_retrieval_context_data(self):
         """Multi-turn goldens serialize through format_turns, which previously
