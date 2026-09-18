@@ -555,6 +555,15 @@ def generate_with_schema_and_extract(
         accrue_token_usage(metric, cost)
     else:
         result = metric.model.generate_with_schema(prompt, schema=schema_cls)
+
+    # Handle models that return (result, cost) tuple even when not native
+    if isinstance(result, tuple) and len(result) == 2:
+        actual_result, cost = result
+        if hasattr(metric, "_accrue_cost"):
+            metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
+        result = actual_result
+
     if isinstance(result, schema_cls):
         return extract_schema(result)
     data = trimAndLoadJson(result, metric)
