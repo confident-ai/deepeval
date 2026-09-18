@@ -713,6 +713,55 @@ class TestAsyncContextQuality:
             None,
         ]
 
+    def test_sync_conversational_golden_keeps_each_context_score(self):
+        synth = _make_synthesizer()
+        self._stub_sync_scenarios(synth)
+
+        goldens = synth.generate_conversational_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_outcome=False,
+            max_goldens_per_context=1,
+            _context_scores=self.SCORES,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            0.75,
+            0.25,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_async_conversational_golden_keeps_each_context_score(self):
+        synth = _make_synthesizer()
+        self._stub_async_scenarios(synth)
+
+        goldens = await synth.a_generate_conversational_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_outcome=False,
+            max_goldens_per_context=1,
+            _context_scores=self.SCORES,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            0.75,
+            0.25,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_async_conversational_without_scores_stores_none(self):
+        synth = _make_synthesizer()
+        self._stub_async_scenarios(synth)
+
+        goldens = await synth.a_generate_conversational_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_outcome=False,
+            max_goldens_per_context=1,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            None,
+            None,
+        ]
+
     @pytest.mark.asyncio
     async def test_docs_path_reports_context_quality_in_pandas(self):
         """The documented end-to-end surface: `generate_goldens_from_docs` builds contexts
