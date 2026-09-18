@@ -379,6 +379,29 @@ class CallbackHandler(BaseCallbackHandler):
         # Outermost run done: hand the span context back to the @observe frame.
         self._restore_observe_parent(parent_run_id)
 
+    def on_chain_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        _debug_log(
+            f"on_chain_error: run_id={run_id}, parent_run_id={parent_run_id}, error={error}"
+        )
+        uuid_str = str(run_id)
+        base_span = trace_manager.get_span_by_uuid(uuid_str)
+        if base_span:
+            with self._ctx(run_id=run_id, parent_run_id=parent_run_id):
+                exit_current_context(
+                    uuid_str=uuid_str,
+                    exc_type=type(error),
+                    exc_val=error,
+                )
+        # Outermost run done: hand the span context back to the @observe frame.
+        self._restore_observe_parent(parent_run_id)
+
     def on_chat_model_start(
         self,
         serialized: dict[str, Any],
