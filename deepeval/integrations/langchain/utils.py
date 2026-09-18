@@ -25,7 +25,17 @@ def _persist_mllm_image(img: MLLMImage) -> MLLMImage:
     return img
 
 
-def _mllm_image_from_url_or_data_uri(url: str) -> MLLMImage:
+def _mllm_image_from_url_or_data_uri(url: str) -> Union[MLLMImage, str]:
+    """Build an MLLMImage from a message-content media URL.
+
+    The URL comes from traced message content, which is untrusted (it can be
+    influenced by user input, tool output, or retrieved documents). Only
+    ``data:`` URIs and remote ``http(s)://`` URLs are accepted here. A local
+    filesystem path or ``file://`` URI must never be turned into an MLLMImage
+    from this path, because MLLMImage would read that file off the eval host
+    (arbitrary local file read / exfiltration). In that case we return the raw
+    string so it is kept as plain text and no file is read.
+    """
     url = url.strip()
     if url.startswith("data:"):
         try:
@@ -39,7 +49,11 @@ def _mllm_image_from_url_or_data_uri(url: str) -> MLLMImage:
             )
         except Exception:
             pass
-    return _persist_mllm_image(MLLMImage(url=url))
+    if url.startswith(("http://", "https://")):
+        return _persist_mllm_image(MLLMImage(url=url))
+    # Not a data URI or remote URL (e.g. a local path or file:// URI): do not
+    # read it from disk. Keep the reference as text.
+    return url
 
 
 def _media_url_from_langchain_block(block: dict) -> Optional[str]:
