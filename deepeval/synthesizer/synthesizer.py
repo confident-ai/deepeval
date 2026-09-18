@@ -2768,7 +2768,12 @@ class Synthesizer:
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_scenario_quality": scores[scenario_index],
-                                        "source_files": (
+                    "context_quality": (
+                        context_scores[context_index]
+                        if context_scores is not None
+                        else None
+                    ),
+                    "source_files": (
                         context_source_files[0]
                         if context_source_files
                         else None
