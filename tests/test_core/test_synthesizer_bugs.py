@@ -1,4 +1,4 @@
-"""Tests for three synthesizer bugs:
+"""Tests for four synthesizer bugs:
 
 Bug 1: _a_generate_text_to_sql_from_context crashes with AttributeError
        when include_expected_output=False (expected_output is None).
@@ -6,6 +6,8 @@ Bug 2: generate_goldens_from_scratch sync path assigns every golden the
        evolutions metadata from the *last* loop iteration.
 Bug 3: _rewrite_inputs / _a_rewrite_inputs raises UnboundLocalError
        when max_quality_retries=0.
+Bug 4: the async golden builders never write the documented
+       additional_metadata["context_quality"] that the sync builders write.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -14,6 +16,7 @@ import pytest
 
 from deepeval.synthesizer.config import FiltrationConfig, StylingConfig
 from deepeval.synthesizer.schema import (
+    ConversationalScenario,
     SQLData,
     SyntheticData,
 )
@@ -588,3 +591,164 @@ class TestRewriteScenariosPreservesSources:
 
         assert filtered[0].used_source_files == ["a.txt", "b.txt"]
         assert scores == [1.0]
+
+
+# ===================================================================
+# Bug 4 (#1211): the async golden builders never write context_quality
+# ===================================================================
+
+
+class TestAsyncContextQuality:
+    """`golden.additional_metadata["context_quality"]` is documented, and it is a
+    `to_pandas()` column, but only the sync builders write it. Both async builders
+    receive `_context_scores` and never read it, so the same synthesis keeps the
+    per-context quality score when called synchronously and drops it silently when
+    awaited.
+
+    Each async case uses two contexts with different scores, so an index that has
+    been confused with a neighbour (`input_index`/`scenario_index` instead of
+    `context_index`) fails rather than passing by coincidence."""
+
+    CONTEXTS = [["first context a", "first context b"], ["second context"]]
+    SCORES = [0.75, 0.25]
+
+    def _stub_sync_inputs(self, synth):
+        synth._generate_inputs = MagicMock(
+            return_value=[SyntheticData(input="q?")]
+        )
+        synth._rewrite_inputs = MagicMock(
+            return_value=([SyntheticData(input="q?")], [1.0])
+        )
+        synth._evolve_input = MagicMock(
+            return_value=("q evolved", ["follow_up"])
+        )
+
+    def _stub_async_inputs(self, synth):
+        synth._a_generate_inputs = AsyncMock(
+            return_value=[SyntheticData(input="q?")]
+        )
+        synth._a_rewrite_inputs = AsyncMock(
+            return_value=([SyntheticData(input="q?")], [1.0])
+        )
+        synth._a_evolve_input = AsyncMock(
+            return_value=("q evolved", ["follow_up"])
+        )
+
+    def _stub_sync_scenarios(self, synth):
+        synth._generate_scenarios = MagicMock(
+            return_value=[ConversationalScenario(scenario="a scenario")]
+        )
+        synth._rewrite_scenarios = MagicMock(
+            return_value=(
+                [ConversationalScenario(scenario="a scenario")],
+                [1.0],
+            )
+        )
+        synth._evolve_scenario = MagicMock(
+            return_value=("a scenario evolved", ["follow_up"])
+        )
+
+    def _stub_async_scenarios(self, synth):
+        synth._a_generate_scenarios = AsyncMock(
+            return_value=[ConversationalScenario(scenario="a scenario")]
+        )
+        synth._a_rewrite_scenarios = AsyncMock(
+            return_value=(
+                [ConversationalScenario(scenario="a scenario")],
+                [1.0],
+            )
+        )
+        synth._a_evolve_scenario = AsyncMock(
+            return_value=("a scenario evolved", ["follow_up"])
+        )
+
+    def test_sync_contexts_golden_keeps_each_context_score(self):
+        synth = _make_synthesizer()
+        self._stub_sync_inputs(synth)
+
+        goldens = synth.generate_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_output=False,
+            max_goldens_per_context=1,
+            _context_scores=self.SCORES,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            0.75,
+            0.25,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_async_contexts_golden_keeps_each_context_score(self):
+        synth = _make_synthesizer()
+        self._stub_async_inputs(synth)
+
+        goldens = await synth.a_generate_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_output=False,
+            max_goldens_per_context=1,
+            _context_scores=self.SCORES,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            0.75,
+            0.25,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_async_contexts_without_scores_stores_none(self):
+        """The `is not None` guard is load-bearing: `a_generate_conversational_goldens_from_goldens`
+        reaches this builder with no `_context_scores` at all."""
+        synth = _make_synthesizer()
+        self._stub_async_inputs(synth)
+
+        goldens = await synth.a_generate_goldens_from_contexts(
+            contexts=self.CONTEXTS,
+            include_expected_output=False,
+            max_goldens_per_context=1,
+        )
+
+        assert [g.additional_metadata["context_quality"] for g in goldens] == [
+            None,
+            None,
+        ]
+
+    @pytest.mark.asyncio
+    async def test_docs_path_reports_context_quality_in_pandas(self):
+        """The documented end-to-end surface: `generate_goldens_from_docs` builds contexts
+        with a quality score each, and `to_pandas()` exposes them as a column.
+        """
+        from deepeval.synthesizer.synthesizer import Synthesizer
+
+        synth = _make_synthesizer()
+        self._stub_async_inputs(synth)
+        synth.model.get_model_name.return_value = "fake-model"
+
+        with patch(
+            "deepeval.synthesizer.synthesizer.ContextGenerator"
+        ) as generator_class, patch(
+            "deepeval.synthesizer.synthesizer.remove_pbars"
+        ), patch(
+            "deepeval.synthesizer.synthesizer.initialize_model",
+            return_value=(synth.model, True),
+        ), patch(
+            "deepeval.synthesizer.config.initialize_model",
+            return_value=(synth.model, True),
+        ), patch(
+            "deepeval.synthesizer.config.initialize_embedding_model",
+            return_value=MagicMock(name="fake-embedder"),
+        ):
+            generator = generator_class.return_value
+            generator.a_generate_contexts = AsyncMock(
+                return_value=(self.CONTEXTS, ["a.md", "b.md"], self.SCORES)
+            )
+            generator.total_chunks = 4
+            await synth.a_generate_goldens_from_docs(
+                document_paths=["a.md", "b.md"],
+                include_expected_output=False,
+                max_goldens_per_context=1,
+            )
+
+        frame = synth.to_pandas()
+
+        assert frame["context_quality"].tolist() == [0.75, 0.25]
