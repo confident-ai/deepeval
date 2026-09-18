@@ -108,7 +108,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
+There are **FIFTEEN** optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else <DefaultLLMModel /> when initialized as a standalone instance.
 - [Optional] `encoding`: the encoding to use to decode plain text–based files (`.txt`, `.md`, `.markdown`, `.mdx`). Defaulted to autodetecting the encoding.
@@ -122,6 +122,9 @@ There are **SEVEN** optional parameters when creating a `ContextConstructionConf
 - [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for [context grouping](synthesizer-generate-from-docs#context-grouping). Contexts with similarity scores below this threshold will be rejected. Defaulted to `0.5`.
 - [Optional] `max_retries`: an integer that specifies the number of times to retry context selection **OR** grouping if it does not meet the required quality **OR** similarity threshold. Defaulted to `3`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to during document parsing and context grouping, **OR** [any custom embedding model](/guides/guides-using-custom-embedding-models) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+- [Optional] `allow_cross_file_contexts`: a boolean that specifies if context construction is allowed to be sourced from different files. Defaulted to `False`.
+- [Optional] `target_files_per_context`: an integer specifying the exact number of files to be used per context. It cannot be less than 2. Defaulted to `None`.
+- [Optional] `max_files_per_context`: an integer specifying the maximum number of files that can be used per context. It cannot be less than 2. Defaulted to `3`.
 
 :::caution
 **Unlike other customizations where configurations to your `Synthesizer` generation pipeline is defined at point of instantiating a `Synthesizer`**, customizing context construction happens at the generation level because context construction is unique to the `generate_goldens_from_docs()` method.
