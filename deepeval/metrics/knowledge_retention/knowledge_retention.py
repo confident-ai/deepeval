@@ -9,6 +9,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    is_no_verdict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -150,7 +151,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -172,7 +173,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if not is_no_verdict(verdict.verdict):
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -317,7 +318,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         retention_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if is_no_verdict(verdict.verdict):
                 retention_count += 1
 
         score = retention_count / number_of_verdicts
