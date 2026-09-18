@@ -1,29 +1,8 @@
-"""Context-aware OTel SpanProcessor used by deepeval's OTel integrations.
+"""Route spans using ownership captured synchronously at span start.
 
-Routes each ended OTel span to one of two transports based on whether the
-calling thread/task is inside a deepeval trace context (e.g. an ``@observe``
-decorated function or a ``with trace(...)`` block) or an active evaluation
-session:
-
-  - REST path (``SimpleSpanProcessor(ConfidentSpanExporter())``) when
-    ``current_trace_context`` is set OR ``trace_manager.is_evaluating`` is
-    True OR trace-shape testing mode is active
-    (``trace_testing_manager.test_name`` is set). This makes spans flow
-    through ``trace_manager`` and unlocks pytest tracing evals +
-    ``evals_iterator`` for OTel-based integrations, and lets the
-    ``@assert_trace_json`` / ``@generate_trace_json`` test decorators
-    capture trace-shape JSON for bare ``agent.run(...)`` callers (no
-    ``@observe`` / ``with trace(...)`` wrapper) — the only path that
-    populates ``trace_testing_manager.test_dict`` is
-    ``trace_manager.end_trace``, which only fires on the REST path.
-
-  - OTLP path (``BatchSpanProcessor(OTLPSpanExporter(...))``) otherwise.
-    Direct push to Confident AI's OTel endpoint.
-
-``on_start`` fires for both delegate processors (cheap; the SDK delegates
-treat ``on_start`` as a no-op). ``on_end`` selects exactly one delegate so
-spans are not double-exported. ``shutdown`` and ``force_flush`` forward to
-both.
+Explicit DeepEval scopes, golden-bound evaluations, and trace-shape tests enter
+SpanCapture directly. Production spans alone enter the OTLP batch processor.
+The exporter remains available for legacy explicit batch-export callers.
 """
 
 from __future__ import annotations
@@ -102,9 +81,13 @@ class ContextAwareSpanProcessor(_SpanProcessor):
             )
 
         self._api_key = api_key
+        self._retired_processors = []
 
         self._rest_exporter = ConfidentSpanExporter(api_key=api_key)
         self._rest_processor = SimpleSpanProcessor(self._rest_exporter)
+        from deepeval.tracing.otel.capture import SpanCapture
+
+        self._capture = SpanCapture(self._rest_exporter)
         # Only attach the auth header when we actually have a key — the
         # OTLPSpanExporter forwards the headers dict verbatim onto every
         # request, so a ``None`` value would either crash the gRPC/HTTP
@@ -120,57 +103,57 @@ class ContextAwareSpanProcessor(_SpanProcessor):
             ),
         )
 
-    @staticmethod
-    def _should_route_to_rest() -> bool:
-        # User-pushed trace contexts (via ``@observe`` / ``with trace(...)``)
-        # opt into REST routing through trace_manager. Implicit trace
-        # placeholders pushed by an OTel SpanInterceptor (only present so
-        # ``update_current_trace(...)`` works without an enclosing context)
-        # do NOT count — those callers expect OTLP behavior.
-        trace_ctx = current_trace_context.get()
-        if trace_ctx is not None and not trace_ctx._is_otel_implicit:
-            return True
-        try:
-            if trace_manager.is_evaluating:
-                return True
-        except Exception:
-            pass
-        # Trace-shape testing override: when a test harness has set
-        # ``trace_testing_manager.test_name``, force REST so spans flow
-        # through ``trace_manager.end_trace`` (the only writer of
-        # ``trace_testing_manager.test_dict``). Otherwise the
-        # ``@assert_trace_json`` decorator silently times out and compares
-        # ``{}`` to ``{}``, which trivially passes — masking real
-        # trace-shape regressions for bare ``agent.run(...)`` flows.
-        try:
-            return trace_testing_manager.test_name is not None
-        except Exception:
-            return False
-
     def on_start(self, span, parent_context=None):
-        # Forward to both delegates. Both SDK-provided processors treat
-        # on_start as a no-op, so this is cheap and side-effect-free.
-        try:
-            self._rest_processor.on_start(span, parent_context)
-        except Exception as exc:
-            logger.debug("REST processor on_start failed: %s", exc)
-        try:
-            self._otlp_processor.on_start(span, parent_context)
-        except Exception as exc:
-            logger.debug("OTLP processor on_start failed: %s", exc)
+        self._capture.start(
+            span, self._should_capture_locally(), api_key=self._api_key
+        )
+        binding = self._capture.bindings.get(self._capture.key(span))
+        if binding is not None and binding.transport is None:
+            binding.transport = self._otlp_processor.on_end
+
+    @staticmethod
+    def _should_capture_locally():
+        # A process-wide iterator flag does not make unrelated tasks evaluable.
+        from deepeval.contextvars import get_current_golden
+
+        ctx = current_trace_context.get()
+        return (
+            (ctx is not None and not ctx._is_otel_implicit)
+            or (
+                trace_manager.is_evaluating
+                and (
+                    not trace_manager.is_iterator
+                    or get_current_golden() is not None
+                )
+            )
+            or trace_testing_manager.test_name is not None
+        )
 
     def on_end(self, span):
-        # Route to exactly one delegate to avoid double export.
-        if self._should_route_to_rest():
-            self._rest_processor.on_end(span)
-        else:
-            self._otlp_processor.on_end(span)
+        binding = self._capture.bindings.get(self._capture.key(span))
+        transport = binding.transport if binding is not None else None
+        if not self._capture.end(span):
+            (transport or self._otlp_processor.on_end)(span)
+
+    def reconfigure_api_key(self, api_key):
+        if api_key == self._api_key:
+            return
+        self._retired_processors.append(self._otlp_processor)
+        self._api_key = api_key
+        self._otlp_processor = BatchSpanProcessor(
+            OTLPSpanExporter(
+                endpoint=_otlp_endpoint(),
+                headers={"x-confident-api-key": api_key} if api_key else {},
+            )
+        )
 
     def shutdown(self):
         try:
             self._rest_processor.shutdown()
         except Exception as exc:
             logger.debug("REST processor shutdown failed: %s", exc)
+        for retired in getattr(self, "_retired_processors", ()):
+            retired.shutdown()
         try:
             self._otlp_processor.shutdown()
         except Exception as exc:
@@ -198,7 +181,13 @@ class ContextAwareSpanProcessor(_SpanProcessor):
         except Exception as exc:
             logger.debug("OTLP processor force_flush failed: %s", exc)
             ok_otlp = False
-        return ok_rest and ok_otlp
+        for retired in getattr(self, "_retired_processors", ()):
+            ok_otlp = retired.force_flush(timeout_millis) and ok_otlp
+        return (
+            ok_rest
+            and ok_otlp
+            and (not hasattr(self, "_capture") or self._capture.drained())
+        )
 
 
 __all__ = ["ContextAwareSpanProcessor"]

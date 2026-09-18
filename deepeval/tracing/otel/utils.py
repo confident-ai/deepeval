@@ -313,57 +313,70 @@ def validate_llm_test_case_data(
 ####### gen ai attributes utils (warning: use in try except)#######
 
 
-def check_llm_input_from_gen_ai_attributes(
-    span: ReadableSpan,
-) -> Tuple[Optional[list], Optional[dict]]:
-    input = None
-    output = None
-    try:
-        # check for system instructions
-        system_instructions = []
-        system_instructions_raw = span.attributes.get(
-            "gen_ai.system_instructions"
-        )
-        if system_instructions_raw and isinstance(system_instructions_raw, str):
-            system_instructions_json = json.loads(system_instructions_raw)
-            system_instructions = _flatten_system_instructions(
-                system_instructions_json
-            )
-
-        input_messages = []
-        input_messages_raw = span.attributes.get("gen_ai.input.messages")
-        if input_messages_raw and isinstance(input_messages_raw, str):
-            input_messages_json = json.loads(input_messages_raw)
-            input_messages = _flatten_input(input_messages_json)
-
-        input = system_instructions + input_messages
-
-        model_parameters = check_model_parameters(span)
-        if model_parameters:
-            input.append(model_parameters)
-
-    except Exception:
-        pass
-    try:
-        output = json.loads(span.attributes.get("gen_ai.output.messages"))
-        output = _flatten_input(output)
-    except Exception:
-        pass
-
-    if input is None and output is None:
+def decode_otel_value(value):
+    """Decode JSON-encoded Confident fields, retaining legacy plain strings."""
+    if isinstance(value, str):
         try:
-            input = json.loads(span.attributes.get("events"))
-            if input and isinstance(input, list):
-                # check if the last event is a genai choice
-                last_event = input.pop()
-                if (
-                    last_event
-                    and last_event.get("event.name") == "gen_ai.choice"
-                ):
-                    output = last_event
-        except Exception:
+            return json.loads(value)
+        except (ValueError, TypeError):
             pass
+    return value
 
+
+def check_llm_input_from_gen_ai_attributes(span: ReadableSpan):
+    attrs = span.attributes or {}
+
+    def messages(key):
+        value = decode_otel_value(attrs.get(key))
+        if isinstance(value, list) and all(
+            isinstance(m, dict)
+            and isinstance(m.get("role"), str)
+            and (isinstance(m.get("parts"), list) or "content" in m)
+            for m in value
+        ):
+            return _flatten_input(value)
+        return None
+
+    input = messages("gen_ai.input.messages")
+    output = messages("gen_ai.output.messages")
+    legacy_input, legacy_output = [], []
+    events = list(getattr(span, "events", ()) or ())
+    old_events = decode_otel_value(attrs.get("events"))
+    if isinstance(old_events, list):
+        events.extend(old_events)
+    for event in events:
+        if isinstance(event, dict):
+            name = event.get("name") or event.get("event.name", "")
+            fields = event.get("attributes", event)
+        else:
+            name, fields = event.name, event.attributes or {}
+        roles = {
+            "gen_ai.user.message": "user",
+            "gen_ai.system.message": "system",
+            "gen_ai.assistant.message": "assistant",
+            "gen_ai.tool.message": "tool",
+        }
+        if name not in roles and name != "gen_ai.choice":
+            continue
+        message = decode_otel_value(fields.get("message"))
+        if not isinstance(message, dict):
+            message = {
+                "role": roles.get(name, "assistant"),
+                "content": fields.get("content"),
+            }
+        (legacy_output if name == "gen_ai.choice" else legacy_input).append(
+            message
+        )
+    if input is None:
+        input = legacy_input or None
+    if output is None:
+        output = legacy_output or None
+    system = decode_otel_value(attrs.get("gen_ai.system_instructions"))
+    if isinstance(system, list):
+        input = _flatten_system_instructions(system) + (input or [])
+    parameters = check_model_parameters(span)
+    if parameters:
+        input = (input or []) + [parameters]
     return input, output
 
 
@@ -473,7 +486,11 @@ def check_span_type_from_gen_ai_attributes(span: ReadableSpan):
         ):
             return "llm"
 
-        elif gen_ai_tool_name:
+        elif gen_ai_operation_name in {"invoke_agent", "create_agent"}:
+            return "agent"
+        elif gen_ai_operation_name in {"retrieval", "retrieve"}:
+            return "retriever"
+        elif gen_ai_tool_name or gen_ai_operation_name == "execute_tool":
             return "tool"
     except Exception:
         pass
