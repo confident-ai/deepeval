@@ -1,5 +1,6 @@
 from deepeval.benchmarks.mmlu.task import MMLUTask
 
+import re
 
 class MMLUTemplate:
 
@@ -37,3 +38,32 @@ class MMLUTemplate:
         for entry in l:
             s += " " + entry
         return s
+
+    @staticmethod
+    def extract_answer(response: object) -> str | None:
+        if response is None:
+            return None
+        
+        text = str(response).strip()
+
+        match = re.fullmatch(
+            r"""
+            (?ix)
+            \s*
+            (?:
+                (?:final\s+)?answer
+                \s*(?:is|:|-)?\s*
+            )?
+            [\(\[]?
+            ([A-D])
+            [\)\]]?
+            [.!]?
+            \s*
+            """,
+            text,
+        )
+
+        if match is None:
+            return None
+        
+        return match.group(1).upper()
