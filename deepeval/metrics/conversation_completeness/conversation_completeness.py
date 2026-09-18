@@ -9,6 +9,7 @@ from deepeval.metrics.utils import (
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    verdict_from_json,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -22,7 +23,6 @@ from deepeval.metrics.conversation_completeness.schema import (
     ConversationCompletenessScoreReason,
 )
 from deepeval.templates import make_template_class
-
 
 ConversationCompletenessTemplate = make_template_class(
     "ConversationCompletenessMetric"
@@ -228,7 +228,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
 
     async def _a_generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
-    ) -> ConversationCompletenessVerdict:
+    ) -> Optional[ConversationCompletenessVerdict]:
         prompt = self._get_prompt(
             "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
@@ -240,13 +240,17 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             metric=self,
             prompt=prompt,
             schema_cls=ConversationCompletenessVerdict,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+            extract_schema=lambda r: verdict_from_json(
+                r.model_dump(), ConversationCompletenessVerdict
+            ),
+            extract_json=lambda data: verdict_from_json(
+                data, ConversationCompletenessVerdict
+            ),
         )
 
     def _generate_verdict(
         self, turns: List[Turn], intention: str, multimodal: bool
-    ) -> ConversationCompletenessVerdict:
+    ) -> Optional[ConversationCompletenessVerdict]:
         prompt = self._get_prompt(
             "generate_verdicts",
             turns=[convert_turn_to_dict(turn) for turn in turns],
@@ -257,8 +261,12 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             metric=self,
             prompt=prompt,
             schema_cls=ConversationCompletenessVerdict,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+            extract_schema=lambda r: verdict_from_json(
+                r.model_dump(), ConversationCompletenessVerdict
+            ),
+            extract_json=lambda data: verdict_from_json(
+                data, ConversationCompletenessVerdict
+            ),
         )
 
     async def _a_extract_user_intentions(
