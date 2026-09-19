@@ -132,9 +132,7 @@ class AiMonthSummary(BaseModel):
 
 PR_NUM_RE = re.compile(r"\(#(\d+)\)|pull request #(\d+)", re.IGNORECASE)
 MERGE_SUBJECT_RE = re.compile(r"^Merge pull request #(\d+)\b", re.IGNORECASE)
-user_cache: Dict[str, Tuple[str, str]] = (
-    {}
-)  # maps login to (display_name, html_url)
+user_cache: Dict[str, Tuple[str, str]] = {}  # maps login to (display_name, html_url)
 tag_to_date: Dict[str, str] = {}
 
 ###################################
@@ -152,9 +150,7 @@ VERSION_RE = re.compile(r"^####\s+(v[0-9].+?)\s*$")
 # - Prefer the stable marker (lets humans edit the visible link/text)
 # - Fall back to parsing the link if the marker is missing
 BULLET_PR_RE = re.compile(r"\[#(\d+)\]\(")
-BULLET_PR_MARKER_RE = re.compile(
-    r"(?:<!--\s*pr:(\d+)\s*-->|\{/\*\s*pr:(\d+)\s*\*/\})"
-)
+BULLET_PR_MARKER_RE = re.compile(r"(?:<!--\s*pr:(\d+)\s*-->|\{/\*\s*pr:(\d+)\s*\*/\})")
 BULLET_TAIL_RE = re.compile(
     r"\s*\(\[#\d+\]\([^)]+\)\)\s*(?:<!--\s*pr:\d+\s*-->|\{/\*\s*pr:\d+\s*\*/\}).*$"
 )
@@ -269,9 +265,7 @@ def list_tags_between(from_tag: str, to_tag: str) -> List[str]:
     # filter in [from..to] by order in this sorted list
     tag_names = [tag for tag, _ in tags]
     if from_tag not in tag_names or to_tag not in tag_names:
-        raise SystemExit(
-            f"from/to tag not found in local tags: {from_tag} -> {to_tag}"
-        )
+        raise SystemExit(f"from/to tag not found in local tags: {from_tag} -> {to_tag}")
     from_index = tag_names.index(from_tag)
     to_index = tag_names.index(to_tag)
     if from_index > to_index:
@@ -357,16 +351,14 @@ def extract_pr_numbers(commits: Iterable[Commit]) -> Dict[int, Commit]:
         if pr_num not in prs:
             prs[pr_num] = commit
         else:
-            if MERGE_SUBJECT_RE.match(
-                commit.subject
-            ) and not MERGE_SUBJECT_RE.match(prs[pr_num].subject):
+            if MERGE_SUBJECT_RE.match(commit.subject) and not MERGE_SUBJECT_RE.match(
+                prs[pr_num].subject
+            ):
                 prs[pr_num] = commit
     return prs
 
 
-def offline_pr_title_from_merge_commit(
-    commit_sha: str, fallback_subject: str
-) -> str:
+def offline_pr_title_from_merge_commit(commit_sha: str, fallback_subject: str) -> str:
     """
     GitHub merge commits look like:
       Merge pull request #1234 from ...
@@ -394,9 +386,7 @@ def stitch_truncated_title(title: str, body: str) -> str:
 
     # If title ends with ellipsis, try to append the first non-empty line of the body.
     if t.endswith("…") or t.endswith("..."):
-        first_line = next(
-            (ln.strip() for ln in body.splitlines() if ln.strip()), ""
-        )
+        first_line = next((ln.strip() for ln in body.splitlines() if ln.strip()), "")
         if first_line:
             t2 = t[:-1].rstrip() if t.endswith("…") else t[:-3].rstrip()
             # Avoid doubling if body starts with same prefix
@@ -419,9 +409,7 @@ def sanitize_for_multimodal_sentinel(prompt: str) -> str:
 ######################
 
 
-def gh_get(
-    url: str, *, accept: Optional[str] = None, timeout_s: int = 20
-) -> bytes:
+def gh_get(url: str, *, accept: Optional[str] = None, timeout_s: int = 20) -> bytes:
     token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
     req = urllib.request.Request(url)
     req.add_header("User-Agent", "deepeval-changelog-generator")
@@ -574,9 +562,7 @@ def ai_release_note_for_pr(
     title: str,
     body: str,
 ) -> tuple[AiReleaseNote, float]:
-    prompt = sanitize_for_multimodal_sentinel(
-        build_ai_prompt(title=title, body=body)
-    )
+    prompt = sanitize_for_multimodal_sentinel(build_ai_prompt(title=title, body=body))
     try:
         parsed, cost = model.generate(prompt, schema=AiReleaseNote)
         # OpenAIModel returns (BaseModel, cost) when schema is provided
@@ -827,11 +813,7 @@ def split_prefix_and_body(text: str) -> Tuple[str, str]:
         return ignore_block.rstrip("\n") + "\n", rest
 
     marker_in_text = next(
-        (
-            marker
-            for marker in (START_MARKER, LEGACY_START_MARKER)
-            if marker in text
-        ),
+        (marker for marker in (START_MARKER, LEGACY_START_MARKER) if marker in text),
         None,
     )
     if marker_in_text:
@@ -943,9 +925,7 @@ def parse_body(body: str) -> ChangelogIndex:
         if line.startswith("- "):
             if month is None or category is None or version is None:
                 continue
-            matched = BULLET_PR_RE.search(line) or BULLET_PR_MARKER_RE.search(
-                line
-            )
+            matched = BULLET_PR_RE.search(line) or BULLET_PR_MARKER_RE.search(line)
             if not matched:
                 continue
             pr = int(next(group for group in matched.groups() if group))
@@ -994,9 +974,7 @@ def render_changelog_body(
 
             if month_entries:
                 try:
-                    summary = ai_month_summary(
-                        ai, month=month, entries=month_entries
-                    )
+                    summary = ai_month_summary(ai, month=month, entries=month_entries)
                     summary = mdx_escape(summary)
                     out.append(summary)
                 except Exception as e:
@@ -1086,9 +1064,7 @@ def build_release_entries(
     commits = commits_in_range(prev, tag)
     pr_map = extract_pr_numbers(commits)
     if ignore_prs:
-        pr_map = {
-            pr: commit for pr, commit in pr_map.items() if pr not in ignore_prs
-        }
+        pr_map = {pr: commit for pr, commit in pr_map.items() if pr not in ignore_prs}
 
     # collect entries for this tag into an index shape
     idx: ChangelogIndex = {month: {}}
@@ -1110,11 +1086,7 @@ def build_release_entries(
 
     for pr_num, commit in sorted(pr_map.items(), key=lambda kv: kv[0]):
         _status(f"[{tag}] PR #{pr_num}: preparing…")
-        if (
-            existing_keys
-            and (pr_num in existing_keys)
-            and not overwrite_existing
-        ):
+        if existing_keys and (pr_num in existing_keys) and not overwrite_existing:
             _status(f"[{tag}] PR #{pr_num}: skipping (already present)")
             _tick()
             # Preserve manual edits/moves and avoid useless LLM calls
@@ -1321,8 +1293,8 @@ def run_with_overall_progress(
                         for _cat, versions in categories.items():
                             for version in versions.keys():
                                 if version not in version_date_entries:
-                                    version_date_entries[version] = (
-                                        git_tag_date_ymd(version)
+                                    version_date_entries[version] = git_tag_date_ymd(
+                                        version
                                     )
                 else:
                     os.makedirs(args.output_dir, exist_ok=True)
@@ -1405,8 +1377,8 @@ def run_with_overall_progress(
                         for _cat, versions in categories.items():
                             for version in versions.keys():
                                 if version not in version_date_entries:
-                                    version_date_entries[version] = (
-                                        git_tag_date_ymd(version)
+                                    version_date_entries[version] = git_tag_date_ymd(
+                                        version
                                     )
                 else:
                     os.makedirs(args.output_dir, exist_ok=True)
@@ -1429,9 +1401,7 @@ def run_with_overall_progress(
             pr_map = extract_pr_numbers(commits)
             if per_year_ignore.get(y):
                 pr_map = {
-                    pr: c
-                    for pr, c in pr_map.items()
-                    if pr not in per_year_ignore[y]
+                    pr: c for pr, c in pr_map.items() if pr not in per_year_ignore[y]
                 }
             per_tag.update(tag_task, total=len(pr_map), completed=0)
 
@@ -1490,9 +1460,7 @@ def main() -> int:
             "from different release schemes, which --range cannot span."
         ),
     )
-    g.add_argument(
-        "--latest", action="store_true", help="Generate for latest tag only"
-    )
+    g.add_argument("--latest", action="store_true", help="Generate for latest tag only")
     g.add_argument(
         "--range",
         nargs=2,
