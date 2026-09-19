@@ -141,16 +141,8 @@ def _print_run_list(target: str) -> None:
             r.get("identifier") or "",
             "" if r.get("test_passed") is None else str(r["test_passed"]),
             "" if r.get("test_failed") is None else str(r["test_failed"]),
-            (
-                ""
-                if r.get("run_duration") is None
-                else f"{r['run_duration']:.2f}"
-            ),
-            (
-                ""
-                if r.get("evaluation_cost") is None
-                else f"{r['evaluation_cost']:.4f}"
-            ),
+            ("" if r.get("run_duration") is None else f"{r['run_duration']:.2f}"),
+            ("" if r.get("evaluation_cost") is None else f"{r['evaluation_cost']:.4f}"),
         )
     Console().print(table)
     print(
@@ -244,8 +236,7 @@ def _find_latest(folder: Path, run_id: Optional[int]) -> Optional[str]:
     db_path = folder / sqlite_store.DB_FILENAME
     has_db = db_path.is_file()
     prefer_db = has_db and (
-        run_id is not None
-        or resolve_local_store_mode() == LOCAL_STORE_SQLITE
+        run_id is not None or resolve_local_store_mode() == LOCAL_STORE_SQLITE
     )
     if prefer_db:
         return _db_source(db_path, run_id)

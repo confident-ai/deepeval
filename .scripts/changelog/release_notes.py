@@ -35,7 +35,9 @@ except ImportError:
         CATEGORY_ORDER,
     )
 
-HEADER = "New to `deepeval`? Get started [here](https://deepeval.com/docs/introduction)."
+HEADER = (
+    "New to `deepeval`? Get started [here](https://deepeval.com/docs/introduction)."
+)
 FOOTER = "A huge thank you to everyone who contributed to this release ❤️"
 
 CATEGORY_EMOJI = {
@@ -132,9 +134,7 @@ def parse_release_body(body: str) -> ParsedNotes:
         elif section == SECTION_NEW_CONTRIB:
             match = NEW_CONTRIB_RE.match(stripped)
             if match:
-                parsed.new_contributors[int(match.group("num"))] = match.group(
-                    "login"
-                )
+                parsed.new_contributors[int(match.group("num"))] = match.group("login")
 
     return parsed
 
@@ -175,9 +175,7 @@ def pr_scope(number: int) -> str:
                 break
             page += 1
     except urllib.error.HTTPError as exc:
-        log(
-            f"warning: could not fetch files for #{number} ({exc}); treating as shared"
-        )
+        log(f"warning: could not fetch files for #{number} ({exc}); treating as shared")
         return "shared"
 
     if ts and not py:
@@ -325,9 +323,7 @@ def main() -> int:
         try:
             cleaned = ai_cleanup(get_ai_model(args.ai_model), in_scope)
         except Exception as exc:
-            log(
-                f"warning: AI cleanup failed ({exc}); using deterministic titles."
-            )
+            log(f"warning: AI cleanup failed ({exc}); using deterministic titles.")
             cleaned = {}
 
     sys.stdout.write(render_markdown(in_scope, cleaned, new_contributors))

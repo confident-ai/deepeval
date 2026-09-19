@@ -61,9 +61,7 @@ class Edit:
     file: str
     pattern: str
     value: Callable[[str], str]  # new version -> replacement text
-    is_version: bool = (
-        True  # False for fields that travel with a release, e.g. a date
-    )
+    is_version: bool = True  # False for fields that travel with a release, e.g. a date
 
 
 def _version_edit(file: str, pattern: str) -> Edit:
@@ -77,9 +75,7 @@ class Target:
     json_key: str  # key in sdk-versions.json
     publish_commands: List[str]  # printed at the end, never run
     paths: List[str]  # what shipping this SDK covers, for "did it change?"
-    single_digit: (
-        bool  # cap x.y.z at 9 and carry left, rather than plain semver
-    )
+    single_digit: bool  # cap x.y.z at 9 and carry left, rather than plain semver
 
 
 TARGETS: Dict[str, Target] = {
@@ -87,9 +83,7 @@ TARGETS: Dict[str, Target] = {
         name="python",
         edits=[
             _version_edit("pyproject.toml", r'^version\s*=\s*"([^"]+)"'),
-            _version_edit(
-                "deepeval/_version.py", r'__version__[^=]*=\s*"([^"]+)"'
-            ),
+            _version_edit("deepeval/_version.py", r'__version__[^=]*=\s*"([^"]+)"'),
             _version_edit("CITATION.cff", r"^version:\s*(\S+)"),
             Edit(
                 file="CITATION.cff",
@@ -105,9 +99,7 @@ TARGETS: Dict[str, Target] = {
     ),
     "typescript": Target(
         name="typescript",
-        edits=[
-            _version_edit("typescript/package.json", r'"version":\s*"([^"]+)"')
-        ],
+        edits=[_version_edit("typescript/package.json", r'"version":\s*"([^"]+)"')],
         json_key="typescript",
         publish_commands=["cd typescript && npm publish"],
         paths=["typescript"],
@@ -154,9 +146,7 @@ def read_version(edit: Edit) -> str:
         fail(f"{edit.file} is missing — run this from a full checkout.")
     match = re.search(edit.pattern, path.read_text(), re.MULTILINE)
     if not match:
-        fail(
-            f"could not find a version in {edit.file} (pattern: {edit.pattern})"
-        )
+        fail(f"could not find a version in {edit.file} (pattern: {edit.pattern})")
     return match.group(1)
 
 
@@ -194,9 +184,7 @@ def write_json_version(key: str, version: str) -> None:
 def current_version(target: Target) -> str:
     """Every declaration must already agree, or the bump would paper over drift."""
     found = [
-        (edit.file, read_version(edit))
-        for edit in target.edits
-        if edit.is_version
+        (edit.file, read_version(edit)) for edit in target.edits if edit.is_version
     ]
     versions = {version for _, version in found}
     if len(versions) > 1:
@@ -256,9 +244,7 @@ def next_version(current: str, bump: str, single_digit: bool) -> str:
         return _join(major, minor, patch + 1, single_digit)
 
     if not SEMVER.match(bump):
-        raise ValueError(
-            f"'{bump}' is neither major/minor/patch nor a version number."
-        )
+        raise ValueError(f"'{bump}' is neither major/minor/patch nor a version number.")
     if single_digit:
         _require_single_digit_version(bump)
     return bump
@@ -285,9 +271,7 @@ def next_taggable(target: Target, current: str, bump: str) -> str:
     seen = {start}
     while version in tagged:
         if version in seen:
-            raise ValueError(
-                f"cannot find a free {target.name} tag after {start}"
-            )
+            raise ValueError(f"cannot find a free {target.name} tag after {start}")
         seen.add(version)
         version = next_version(version, bump, target.single_digit)
     return version
@@ -319,9 +303,7 @@ def prompt_version(target: Target, current: str) -> Optional[str]:
 
     while True:
         try:
-            answer = input(
-                f"  {target.name}: {current} ->{suggestion} "
-            ).strip()
+            answer = input(f"  {target.name}: {current} ->{suggestion} ").strip()
         except EOFError:
             raise SystemExit(1)
 
@@ -344,9 +326,7 @@ def prompt_version(target: Target, current: str) -> Optional[str]:
             print(f"    {error}")
             continue
         if version == current:
-            print(
-                f"    {target.name} is already at {version} — pick a higher one."
-            )
+            print(f"    {target.name} is already at {version} — pick a higher one.")
             continue
         existing = existing_tag(target, version)
         if existing:
@@ -416,9 +396,7 @@ def existing_tag(target: Target, version: str) -> Optional[str]:
 
 
 def highest_tag_version(target: Target) -> Optional[str]:
-    cores = [
-        version for version in tag_versions(target) if _core_parts(version)
-    ]
+    cores = [version for version in tag_versions(target) if _core_parts(version)]
     return max(cores, key=_version_key) if cores else None
 
 
@@ -482,9 +460,7 @@ def main() -> None:
 
     if not args.dry_run:
         check_clean_tree()
-    currents = {
-        name: current_version(target) for name, target in TARGETS.items()
-    }
+    currents = {name: current_version(target) for name, target in TARGETS.items()}
 
     say(
         "version to release (enter for the next free tag, or "
