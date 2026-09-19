@@ -320,7 +320,12 @@ class EvaluationDataset:
                 else [default] * len(df)
             )
 
-        df = pd.read_csv(file_path)
+        # Read every cell as text. pandas' default NA tokens ("N/A",
+        # "None", "null", "NaN", ...) and its dtype inference would
+        # otherwise rewrite a cell, so only an empty cell is missing here.
+        df = pd.read_csv(
+            file_path, dtype=str, keep_default_na=False, na_values=[""]
+        )
         # Convert np.nan (default for missing values in pandas) to None for compatibility with Python and Pydantic
         df = df.astype(object).where(pd.notna(df), None)
 
@@ -525,11 +530,12 @@ class EvaluationDataset:
                 else [default] * len(df)
             )
 
-        df = (
-            pd.read_csv(file_path)
-            .astype(object)
-            .where(pd.notna(pd.read_csv(file_path)), None)
+        # Read as text, as add_test_cases_from_csv_file does.
+        df = pd.read_csv(
+            file_path, dtype=str, keep_default_na=False, na_values=[""]
         )
+        # Convert np.nan (default for missing values in pandas) to None for compatibility with Python and Pydantic
+        df = df.astype(object).where(pd.notna(df), None)
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(
