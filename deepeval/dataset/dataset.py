@@ -510,6 +510,7 @@ class EvaluationDataset:
         turns_col_name: Optional[str] = "turns",
         expected_outcome_col_name: Optional[str] = "expected_outcome",
         user_description_col_name: Optional[str] = "user_description",
+        persona_col_name: Optional[str] = "persona",
     ):
         try:
             import pandas as pd
@@ -601,6 +602,7 @@ class EvaluationDataset:
         turns_raw = get_column_data(df, turns_col_name)
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
         user_descriptions = get_column_data(df, user_description_col_name)
+        personas = _parse_column(df, persona_col_name, parse_mapping)
 
         for (
             input,
@@ -622,6 +624,7 @@ class EvaluationDataset:
             turns,
             expected_outcome,
             user_description,
+            persona,
         ) in zip(
             inputs,
             actual_outputs,
@@ -642,6 +645,7 @@ class EvaluationDataset:
             turns_raw,
             expected_outcomes,
             user_descriptions,
+            personas,
         ):
             if scenario:
                 parsed_turns = parse_turns(turns) if turns else []
@@ -650,7 +654,7 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
-                        user_description=user_description,
+                        **persona_kwargs(persona, user_description),
                         context=context,
                         comments=comments,
                         name=name,
@@ -1411,6 +1415,7 @@ class EvaluationDataset:
                             "turns",
                             "expected_outcome",
                             "user_description",
+                            "persona",
                             "context",
                             "name",
                             "comments",
@@ -1440,12 +1445,21 @@ class EvaluationDataset:
                             if golden.custom_column_key_values
                             else None
                         )
+                        persona = (
+                            json.dumps(
+                                serialize_persona(golden.persona),
+                                ensure_ascii=False,
+                            )
+                            if golden.persona is not None
+                            else None
+                        )
                         writer.writerow(
                             [
                                 golden.scenario,
                                 turns,
                                 golden.expected_outcome,
                                 golden.user_description,
+                                persona,
                                 context,
                                 golden.name,
                                 golden.comments,
