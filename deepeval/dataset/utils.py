@@ -14,9 +14,10 @@ from deepeval.test_case import (
     RetrievedContextData,
 )
 
-# Single source of truth for how list-valued cells are flattened into a single
-# csv/jsonl cell. Every save path joins on these and every load path splits on
-# them, so a save/load round-trip is lossless.
+# CSV cells that hold a list are written as a JSON array so a "|" inside an
+# item (markdown tables, shell pipelines) survives a save/load round-trip.
+# Loaders try JSON first, then fall back to splitting on DELIMITER so files
+# written before this change still load. JSONL writes native lists.
 DELIMITER = "|"
 TOOLS_DELIMITER = ";"
 
@@ -64,18 +65,51 @@ def serialize_retrieval_context(retrieval_context):
 
 
 def join_retrieval_context(retrieval_context, delimiter=DELIMITER):
-    """Flat join of serialized retrieval_context for csv/jsonl cells."""
+    """Serialize retrieval_context for a CSV cell as a JSON array."""
     serialized = serialize_retrieval_context(retrieval_context)
-    if serialized is None:
-        return None
-    return delimiter.join(str(item) for item in serialized)
+    return encode_list_cell(serialized, delimiter)
 
 
 def join_context(context, delimiter=DELIMITER):
-    """Flat join of context for csv/jsonl cells."""
-    if context is None:
+    """Serialize context for a CSV cell as a JSON array."""
+    return encode_list_cell(context, delimiter)
+
+
+def encode_list_cell(items, delimiter=DELIMITER):
+    """JSON-encode a list for a CSV cell.
+
+    ``delimiter`` is kept so callers that used to join on it still compile;
+    parsing falls back to that delimiter for pre-JSON files.
+    """
+    if items is None:
         return None
-    return delimiter.join(str(item) for item in context)
+    _ = delimiter
+    return json.dumps([str(item) for item in items], ensure_ascii=False)
+
+
+def parse_list_cell(value, delimiter=DELIMITER):
+    """Parse a CSV/JSONL cell that holds a list of strings.
+
+    A JSON array is the on-disk form ``save_as`` writes. A ``delimiter``-joined
+    string is still accepted so existing files keep loading.
+    """
+    if value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    if not isinstance(value, str):
+        value = str(value)
+    if value == "":
+        return []
+    stripped = value.strip()
+    if stripped.startswith("["):
+        try:
+            parsed = json.loads(stripped)
+        except json.JSONDecodeError:
+            parsed = None
+        if isinstance(parsed, list):
+            return parsed
+    return value.split(delimiter)
 
 
 def reconstruct_retrieval_context(retrieval_context):
