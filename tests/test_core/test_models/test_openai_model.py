@@ -894,3 +894,191 @@ def test_openai_calculate_cost_with_zero_tokens(settings):
 
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+# ── Prompt-cache pricing tests ────────────────────────────────────────────────
+
+
+class TestCachedTokensFromUsage:
+    def test_extracts_cached_tokens_when_present(self):
+        from deepeval.models.llms.openai_model import _cached_tokens_from_usage
+
+        details = SimpleNamespace(cached_tokens=300)
+        usage = SimpleNamespace(prompt_tokens_details=details)
+        assert _cached_tokens_from_usage(usage) == 300
+
+    def test_returns_zero_when_details_absent(self):
+        from deepeval.models.llms.openai_model import _cached_tokens_from_usage
+
+        usage = SimpleNamespace()
+        assert _cached_tokens_from_usage(usage) == 0
+
+    def test_returns_zero_when_cached_tokens_none(self):
+        from deepeval.models.llms.openai_model import _cached_tokens_from_usage
+
+        details = SimpleNamespace(cached_tokens=None)
+        usage = SimpleNamespace(prompt_tokens_details=details)
+        assert _cached_tokens_from_usage(usage) == 0
+
+    def test_returns_zero_when_details_none(self):
+        from deepeval.models.llms.openai_model import _cached_tokens_from_usage
+
+        usage = SimpleNamespace(prompt_tokens_details=None)
+        assert _cached_tokens_from_usage(usage) == 0
+
+
+class TestCalculateCostWithCaching:
+    def test_no_cached_tokens_uses_regular_pricing(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o")
+        # gpt-4o: $2.50/M input, $10.00/M output
+        cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
+        expected = 1000 * (2.50 / 1e6) + 500 * (10.00 / 1e6)
+        assert abs(float(cost) - expected) < 1e-12
+
+    def test_cached_tokens_apply_discounted_rate(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o")
+        # 800 total input, 300 cached → 500 at $2.50/M + 300 at $1.25/M
+        cost = model.calculate_cost(
+            input_tokens=800, output_tokens=200, cached_tokens=300
+        )
+        expected = (
+            500 * (2.50 / 1e6)  # uncached
+            + 300 * (1.25 / 1e6)  # cached
+            + 200 * (10.00 / 1e6)  # output
+        )
+        assert abs(float(cost) - expected) < 1e-12
+
+    def test_cached_tokens_cheaper_than_full_price(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o")
+        cost_no_cache = model.calculate_cost(
+            input_tokens=1000, output_tokens=500, cached_tokens=0
+        )
+        cost_with_cache = model.calculate_cost(
+            input_tokens=1000, output_tokens=500, cached_tokens=600
+        )
+        assert float(cost_with_cache) < float(cost_no_cache)
+
+    def test_cached_tokens_on_model_without_cache_price_falls_back(
+        self, settings
+    ):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4-turbo")
+        # gpt-4-turbo has no cache_read_input_price; all input billed at $10/M
+        assert model.model_data.cache_read_input_price is None
+        cost_no_cache = model.calculate_cost(
+            input_tokens=1000, output_tokens=500, cached_tokens=0
+        )
+        cost_with_cache = model.calculate_cost(
+            input_tokens=1000, output_tokens=500, cached_tokens=600
+        )
+        assert float(cost_with_cache) == float(cost_no_cache)
+
+    def test_evaluation_cost_carries_cached_tokens(self, settings):
+        from deepeval.models.utils import EvaluationCost
+
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o")
+        cost = model.calculate_cost(
+            input_tokens=500, output_tokens=100, cached_tokens=200
+        )
+        assert isinstance(cost, EvaluationCost)
+        assert cost.cached_tokens == 200
+        assert cost.input_tokens == 500
+        assert cost.output_tokens == 100
+
+    def test_evaluation_cost_cached_tokens_none_when_zero(self, settings):
+        from deepeval.models.utils import EvaluationCost
+
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o")
+        cost = model.calculate_cost(
+            input_tokens=500, output_tokens=100, cached_tokens=0
+        )
+        assert isinstance(cost, EvaluationCost)
+        assert cost.cached_tokens is None
+
+    def test_gpt_4o_mini_cache_price(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="gpt-4o-mini")
+        assert model.model_data.cache_read_input_price == 0.075 / 1e6
+
+    def test_o1_cache_price(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="o1")
+        assert model.model_data.cache_read_input_price == 7.50 / 1e6
+
+    def test_o4_mini_cache_price(self, settings):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+        model = GPTModel(model="o4-mini")
+        assert model.model_data.cache_read_input_price == 0.275 / 1e6
+
+
+class TestGeneratePassesCachedTokens:
+    @patch("deepeval.models.llms.openai_model.OpenAI")
+    def test_generate_extracts_and_passes_cached_tokens(
+        self, mock_openai_class, settings
+    ):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+
+        mock_client = Mock()
+        mock_openai_class.return_value = mock_client
+
+        details = SimpleNamespace(cached_tokens=400)
+        usage = SimpleNamespace(
+            prompt_tokens=1000,
+            completion_tokens=200,
+            prompt_tokens_details=details,
+        )
+        mock_completion = Mock()
+        mock_completion.choices = [Mock(message=Mock(content="hi"))]
+        mock_completion.usage = usage
+        mock_client.chat.completions.create.return_value = mock_completion
+
+        model = GPTModel(model="gpt-4o")
+        _, cost = model.generate("prompt")
+
+        # Cached tokens should be on the cost object
+        assert cost.cached_tokens == 400
+        # Cost should reflect discount: 600 uncached at $2.50/M + 400 at $1.25/M + 200 output at $10/M
+        expected = 600 * (2.50 / 1e6) + 400 * (1.25 / 1e6) + 200 * (10.00 / 1e6)
+        assert abs(float(cost) - expected) < 1e-12
+
+    @patch("deepeval.models.llms.openai_model.OpenAI")
+    def test_generate_without_cache_details_uses_full_price(
+        self, mock_openai_class, settings
+    ):
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = "test-key"
+
+        mock_client = Mock()
+        mock_openai_class.return_value = mock_client
+
+        usage = SimpleNamespace(
+            prompt_tokens=1000,
+            completion_tokens=200,
+            prompt_tokens_details=None,
+        )
+        mock_completion = Mock()
+        mock_completion.choices = [Mock(message=Mock(content="hi"))]
+        mock_completion.usage = usage
+        mock_client.chat.completions.create.return_value = mock_completion
+
+        model = GPTModel(model="gpt-4o")
+        _, cost = model.generate("prompt")
+
+        expected = 1000 * (2.50 / 1e6) + 200 * (10.00 / 1e6)
+        assert abs(float(cost) - expected) < 1e-12
+        assert cost.cached_tokens is None
