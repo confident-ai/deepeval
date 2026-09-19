@@ -20,6 +20,7 @@
     "evaluation-unit-testing-in-ci-cd",
     "evaluation-flags-and-configs",
     "evaluation-local-backend-storage",
+    "evaluation-comparing-test-runs",
 
     "---[Gauge]Eval Metrics---",
     "metrics-introduction",
