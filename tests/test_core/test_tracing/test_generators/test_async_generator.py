@@ -1,7 +1,74 @@
 import pytest
 import asyncio
 from deepeval.tracing import observe, update_llm_span
+from deepeval.tracing.context import (
+    current_span_context,
+    current_trace_context,
+)
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.types import TraceSpanStatus
 from tests.test_core.test_tracing.conftest import trace_test
+
+
+@pytest.mark.parametrize("resume_method", ["__anext__", "athrow"])
+@pytest.mark.asyncio
+async def test_async_generator_cancellation_closes_trace(resume_method):
+    waiting = asyncio.Event()
+    captured = {}
+
+    @observe()
+    async def stream():
+        try:
+            yield "first"
+        except ValueError:
+            pass
+        waiting.set()
+        await asyncio.Event().wait()
+        yield "unreachable"
+
+    # Retain the iterator: cancellation must clean up without relying on GC.
+    generator = stream()
+
+    async def consume():
+        assert await generator.__anext__() == "first"
+        captured["span"] = current_span_context.get()
+        captured["trace"] = current_trace_context.get()
+        try:
+            if resume_method == "athrow":
+                await generator.athrow(ValueError("resume"))
+            else:
+                await generator.__anext__()
+        except asyncio.CancelledError:
+            captured["context_after_cancel"] = (
+                current_span_context.get(),
+                current_trace_context.get(),
+            )
+            raise
+
+    task = asyncio.create_task(consume())
+    try:
+        await asyncio.wait_for(waiting.wait(), timeout=5)
+        task.cancel("stream cancelled")
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+        span = captured["span"]
+        trace = captured["trace"]
+        assert span.end_time is not None
+        assert span.status == TraceSpanStatus.ERRORED
+        assert span.error == "stream cancelled"
+        assert trace.end_time is not None
+        assert trace.status == TraceSpanStatus.ERRORED
+        assert not trace_manager.active_spans
+        assert not trace_manager.active_traces
+        assert captured["context_after_cancel"] == (None, None)
+
+        await generator.aclose()
+        assert span.status == TraceSpanStatus.ERRORED
+    finally:
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+        await generator.aclose()
 
 
 @observe(type="llm", model="gpt-4-turbo")
