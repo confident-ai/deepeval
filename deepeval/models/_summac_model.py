@@ -89,9 +89,9 @@ class _SummaCImager:
             )
             and len(self.grans) <= 2
         ), "Unrecognized `granularity` %s" % (granularity)
-        assert (
-            model_name in model_map.keys()
-        ), "Unrecognized model name: `%s`" % (model_name)
+        assert model_name in model_map.keys(), "Unrecognized model name: `%s`" % (
+            model_name
+        )
 
         self.model_name = model_name
         if model_name != "decomp":
@@ -151,9 +151,7 @@ class _SummaCImager:
     def split_2sents(self, text):
         sentences = nltk.tokenize.sent_tokenize(text)
         sentences = [sent for sent in sentences if len(sent) > 10]
-        two_sents = [
-            " ".join(sentences[i : (i + 2)]) for i in range(len(sentences))
-        ]
+        two_sents = [" ".join(sentences[i : (i + 2)]) for i in range(len(sentences))]
         return two_sents
 
     def split_paragraphs(self, text):
@@ -241,9 +239,7 @@ class _SummaCImager:
                     return_tensors="pt",
                     truncation_strategy="only_first",
                 )
-                batch_tokens = {
-                    k: v.to(self.device) for k, v in batch_tokens.items()
-                }
+                batch_tokens = {k: v.to(self.device) for k, v in batch_tokens.items()}
                 with torch.no_grad():
                     model_outputs = self.model(**batch_tokens)
 
@@ -284,8 +280,7 @@ class _SummaCImager:
             with open(cache_file, "r") as f:
                 cache_cp = json.load(f)
                 self.cache = {
-                    tuple(k.split("[///]")): np.array(v)
-                    for k, v in cache_cp.items()
+                    tuple(k.split("[///]")): np.array(v) for k, v in cache_cp.items()
                 }
 
 
@@ -316,16 +311,14 @@ class _SummaCConv(torch.nn.Module):
             "ecn",
         ], "Unrecognized nli_labels argument %s" % (nli_labels)
 
-        super(SummaCConv, self).__init__()
+        super(_SummaCConv, self).__init__()
         self.device = device
         self.models = models
 
         self.imagers = []
         for model_name in models:
             self.imagers.append(
-                SummaCImager(
-                    model_name=model_name, granularity=granularity, **kwargs
-                )
+                _SummaCImager(model_name=model_name, granularity=granularity, **kwargs)
             )
         if imager_load_cache:
             for imager in self.imagers:
@@ -386,9 +379,7 @@ class _SummaCConv(torch.nn.Module):
     def build_image(self, original, generated):
         import numpy as np
 
-        images = [
-            imager.build_image(original, generated) for imager in self.imagers
-        ]
+        images = [imager.build_image(original, generated) for imager in self.imagers]
         image = np.concatenate(images, axis=0)
         return image
 
@@ -517,9 +508,7 @@ class _SummaCConv(torch.nn.Module):
             logits, histograms, images = self.forward(originals, generateds)
             probs = torch.nn.functional.softmax(logits, dim=-1)
             batch_scores = probs[:, 1].tolist()
-        return {
-            "scores": batch_scores
-        }  # , "histograms": histograms, "images": images
+        return {"scores": batch_scores}  # , "histograms": histograms, "images": images
 
 
 class _SummaCZS:
@@ -539,10 +528,7 @@ class _SummaCZS:
         assert op1 in ["max", "mean", "min"], "Unrecognized `op1`"
 
         self.imager = _SummaCImager(
-            model_name=model_name,
-            granularity=granularity,
-            device=device,
-            **kwargs
+            model_name=model_name, granularity=granularity, device=device, **kwargs
         )
         if imager_load_cache:
             self.imager.load_cache()
