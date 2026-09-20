@@ -8,7 +8,11 @@ from deepeval.test_case import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -165,7 +169,7 @@ class MisuseMetric(BaseMetric):
 
         misuses = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 misuses.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -188,7 +192,7 @@ class MisuseMetric(BaseMetric):
 
         misuses = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 misuses.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -214,14 +218,12 @@ class MisuseMetric(BaseMetric):
             misuses=self.misuses,
             domain=self.domain,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                MisuseVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=MisuseVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     def _generate_verdicts(self) -> List[MisuseVerdict]:
@@ -233,14 +235,12 @@ class MisuseMetric(BaseMetric):
             misuses=self.misuses,
             domain=self.domain,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                MisuseVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=MisuseVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     async def _a_generate_misuses(self, actual_output: str) -> List[str]:
@@ -272,17 +272,11 @@ class MisuseMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        appropriate_use_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "yes":
-                appropriate_use_count += 1
-
-        score = appropriate_use_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+        )
 
     @property
     def __name__(self):

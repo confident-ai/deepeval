@@ -8,7 +8,11 @@ from deepeval.test_case import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -163,7 +167,7 @@ class ToxicityMetric(BaseMetric):
 
         toxics = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 toxics.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -186,7 +190,7 @@ class ToxicityMetric(BaseMetric):
 
         toxics = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 toxics.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -212,16 +216,12 @@ class ToxicityMetric(BaseMetric):
             opinions=self.opinions,
         )
 
-        verdicts: List[ToxicityVerdict] = (
-            await a_generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=Verdicts,
-                extract_schema=lambda s: [item for item in s.verdicts],
-                extract_json=lambda data: [
-                    ToxicityVerdict(**item) for item in data["verdicts"]
-                ],
-            )
+        verdicts: List[ToxicityVerdict] = await a_generate_qag_verdicts(
+            metric=self,
+            prompt=prompt,
+            verdict_cls=ToxicityVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
         return verdicts
 
@@ -234,14 +234,12 @@ class ToxicityMetric(BaseMetric):
             opinions=self.opinions,
         )
 
-        verdicts: List[ToxicityVerdict] = generate_with_schema_and_extract(
+        verdicts: List[ToxicityVerdict] = generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: [item for item in s.verdicts],
-            extract_json=lambda data: [
-                ToxicityVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=ToxicityVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
         return verdicts
 
@@ -274,17 +272,11 @@ class ToxicityMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
-            return 1
-
-        non_toxic_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "yes":
-                non_toxic_count += 1
-
-        score = non_toxic_count / total
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+        )
 
     @property
     def __name__(self):

@@ -8,7 +8,11 @@ from deepeval.test_case import (
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -158,7 +162,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -181,7 +185,7 @@ class PIILeakageMetric(BaseMetric):
 
         privacy_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 privacy_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -206,14 +210,12 @@ class PIILeakageMetric(BaseMetric):
             "generate_verdicts",
             extracted_pii=self.extracted_pii,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                PIILeakageVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=PIILeakageVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     def _generate_verdicts(self) -> List[PIILeakageVerdict]:
@@ -224,14 +226,12 @@ class PIILeakageMetric(BaseMetric):
             "generate_verdicts",
             extracted_pii=self.extracted_pii,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                PIILeakageVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=PIILeakageVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     async def _a_extract_pii(
@@ -267,17 +267,11 @@ class PIILeakageMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        no_privacy_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                no_privacy_count += 1
-
-        score = no_privacy_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+        )
 
     @property
     def __name__(self):

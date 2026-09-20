@@ -4,7 +4,11 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -200,7 +204,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -230,7 +234,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -254,17 +258,12 @@ class ContextualRecallMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 0
-
-        justified_sentences = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.lower() == "yes":
-                justified_sentences += 1
-
-        score = justified_sentences / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES,),
+            empty_score=0,
+        )
 
     async def _a_generate_verdicts(
         self,
@@ -278,14 +277,12 @@ class ContextualRecallMetric(BaseMetric):
             multimodal=multimodal,
             **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
-        verdicts = await a_generate_with_schema_and_extract(
+        verdicts = await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=ContextualRecallVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
         final_verdicts = []
         for verdict in verdicts:
@@ -309,14 +306,12 @@ class ContextualRecallMetric(BaseMetric):
             multimodal=multimodal,
             **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
-        verdicts = generate_with_schema_and_extract(
+        verdicts = generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                ContextualRecallVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=ContextualRecallVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
         final_verdicts = []
         for verdict in verdicts:

@@ -53,6 +53,9 @@ class KeyValues(Enum):
     # Local test run storage (`deepeval set-local-store`)
     DEEPEVAL_LOCAL_STORE = "local_store"
 
+    # Feature channel (`deepeval set-mode`)
+    DEEPEVAL_MODE = "mode"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"

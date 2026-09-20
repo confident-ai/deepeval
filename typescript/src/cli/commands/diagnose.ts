@@ -24,6 +24,11 @@ import {
   type LocalStoreMode,
 } from "@/sqlite-store/mode";
 import { resolveDbPath, resolveIncludeRowJson } from "@/sqlite-store/store";
+import {
+  MODE_EXPERIMENTAL,
+  resolveDeepEvalMode,
+  type DeepEvalMode,
+} from "@/config/mode";
 
 // Settings worth showing when set, matching Python's `_RELEVANT_MARKERS`.
 const RELEVANT_MARKERS = [
@@ -39,6 +44,7 @@ const RELEVANT_MARKERS = [
   "DEEPEVAL_RESULTS_FOLDER",
   "DEEPEVAL_LOCAL_STORE",
   "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
+  "DEEPEVAL_MODE",
 ];
 
 function maskSecret(value: string): string {
@@ -92,6 +98,7 @@ interface DiagnoseReport {
     includeRowJson?: boolean;
     error?: string;
   };
+  mode: { mode: DeepEvalMode; modeSource: string };
   sources: { dotenvFiles: string[]; keystore: string };
   settings: Array<{
     name: string;
@@ -137,6 +144,20 @@ function localStorageSection(
   };
 }
 
+/** Which feature channel is in effect, always reported (even on defaults). */
+function modeSection(
+  settings: Record<string, unknown>,
+): DiagnoseReport["mode"] {
+  const configured = settings.DEEPEVAL_MODE as string | undefined;
+  return {
+    mode: resolveDeepEvalMode(),
+    modeSource:
+      configured === undefined || configured === ""
+        ? "built-in default"
+        : getSettingSource("DEEPEVAL_MODE"),
+  };
+}
+
 function buildReport(): DiagnoseReport {
   const settings = getSettings() as Record<string, unknown>;
   const apiKey = (settings.CONFIDENT_API_KEY as string | undefined) ?? "";
@@ -174,6 +195,7 @@ function buildReport(): DiagnoseReport {
       reason,
     },
     localStorage: localStorageSection(settings),
+    mode: modeSection(settings),
     sources: {
       dotenvFiles: loadedDotenvPaths(),
       keystore: keystoreLocation(),
@@ -230,6 +252,15 @@ function printReport(report: DiagnoseReport): void {
   if (storage.error) console.log(`  ⚠ ${storage.error}`);
   console.log(
     "  change with `npx deepeval set-local-store <json|sqlite> --save=dotenv`",
+  );
+
+  console.log(`\n${BOLD}Mode${RESET}`);
+  console.log(`  channel    ${report.mode.mode} (${report.mode.modeSource})`);
+  console.log(
+    report.mode.mode === MODE_EXPERIMENTAL
+      ? "  ⚠ experimental features may change or break between releases; " +
+          "opt out with `npx deepeval set-mode stable --save=dotenv`"
+      : "  change with `npx deepeval set-mode <stable|experimental> --save=dotenv`",
   );
 
   console.log(`\n${BOLD}Configuration sources${RESET}`);

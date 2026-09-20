@@ -2,7 +2,11 @@ import asyncio
 from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdict,
+    a_generate_qag_verdict,
+    score_qag_verdicts,
     check_conversational_test_case_params,
     construct_verbose_logs,
     initialize_model,
@@ -179,7 +183,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             if (
                 verdict is not None
                 and verdict.verdict is not None
-                and verdict.verdict.strip().lower() == "no"
+                and verdict.verdict == Verdict.NO
             ):
                 incompletenesses.append(verdict.reason)
 
@@ -207,7 +211,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             if (
                 verdict is not None
                 and verdict.verdict is not None
-                and verdict.verdict.strip().lower() == "no"
+                and verdict.verdict == Verdict.NO
             ):
                 incompletenesses.append(verdict.reason)
 
@@ -236,12 +240,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdict(
             metric=self,
             prompt=prompt,
-            schema_cls=ConversationCompletenessVerdict,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+            verdict_cls=ConversationCompletenessVerdict,
+            allowed=YES_NO,
         )
 
     def _generate_verdict(
@@ -253,12 +256,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intention=intention,
             multimodal=multimodal,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdict(
             metric=self,
             prompt=prompt,
-            schema_cls=ConversationCompletenessVerdict,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ConversationCompletenessVerdict(**data),
+            verdict_cls=ConversationCompletenessVerdict,
+            allowed=YES_NO,
         )
 
     async def _a_extract_user_intentions(
@@ -295,22 +297,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         )
 
     def _calculate_score(self) -> float:
-        # Filter out None verdicts that can occur during parallel evaluation
-        # when verdict generation fails (e.g., LLM timeout, parse error).
-        valid_verdicts = [
-            v for v in self.verdicts if v is not None and v.verdict is not None
-        ]
-        number_of_verdicts = len(valid_verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        relevant_count = 0
-        for verdict in valid_verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        # None verdicts (failed generation / out-of-vocabulary replies) are
+        # dropped by score_qag_verdicts.
+        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.YES,))
 
     @property
     def __name__(self):

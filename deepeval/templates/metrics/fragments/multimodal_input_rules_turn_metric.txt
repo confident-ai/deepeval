@@ -5,4 +5,4 @@
 - Do not infer or guess objects, text, or details not visibly present.
 - If an image is unclear or ambiguous, mark uncertainty explicitly.
 - When evaluating claims, compare them to BOTH textual and visual evidence.
-- If the claim references something not clearly visible, respond with 'idk'.
+- If the claim references something not clearly visible, respond with 'borderline'.

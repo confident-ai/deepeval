@@ -5,7 +5,10 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -259,15 +262,12 @@ class ContextualPrecisionMetric(BaseMetric):
             multimodal_note=mm_note,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=cpschema.Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                cpschema.ContextualPrecisionVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=cpschema.ContextualPrecisionVerdict,
+            verdicts_cls=cpschema.Verdicts,
+            allowed=YES_NO,
         )
 
     def _generate_verdicts(
@@ -290,15 +290,12 @@ class ContextualPrecisionMetric(BaseMetric):
             multimodal_note=mm_note,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=cpschema.Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                cpschema.ContextualPrecisionVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=cpschema.ContextualPrecisionVerdict,
+            verdicts_cls=cpschema.Verdicts,
+            allowed=YES_NO,
         )
 
     def _group_retrieval_contexts(
@@ -341,8 +338,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         # Convert verdicts to a binary list where 'yes' is 1 and others are 0
         node_verdicts = [
-            1 if v.verdict.strip().lower() == "yes" else 0
-            for v in self.verdicts
+            1 if v.verdict == Verdict.YES else 0 for v in self.verdicts
         ]
 
         sum_weighted_precision_at_k = 0.0

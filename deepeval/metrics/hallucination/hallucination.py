@@ -6,7 +6,11 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -161,7 +165,7 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 factual_alignments.append(verdict.reason)
             else:
                 contradictions.append(verdict.reason)
@@ -188,7 +192,7 @@ class HallucinationMetric(BaseMetric):
         factual_alignments = []
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 factual_alignments.append(verdict.reason)
             else:
                 contradictions.append(verdict.reason)
@@ -217,14 +221,12 @@ class HallucinationMetric(BaseMetric):
             contexts=contexts,
             contexts_count=len(contexts),
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                HallucinationVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=HallucinationVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     def _generate_verdicts(
@@ -236,28 +238,20 @@ class HallucinationMetric(BaseMetric):
             contexts=contexts,
             contexts_count=len(contexts),
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                HallucinationVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=HallucinationVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        factually_aligned_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                factually_aligned_count += 1
-
-        score = factually_aligned_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES,),
+        )
 
     @property
     def __name__(self):

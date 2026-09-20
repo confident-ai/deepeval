@@ -51,6 +51,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_FILE_SYSTEM`       | `READ_ONLY` / unset        | Stop `deepeval` writing its own files: the keystore, dotenv persistence, the metric cache, the latest test run, and the results export.                       |
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
 | `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
+| `DEEPEVAL_MODE`              | `stable` / `experimental` / unset | Feature channel. `stable` (default) only runs finalised behaviour; `experimental` opts into the latest features, which may change or break between releases. Unrecognised values mean `stable`. See [DeepEval mode](#deepeval-mode). |
 | `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
 | `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
@@ -161,6 +162,53 @@ The store uses only Node's built-in `node:sqlite` module, so there is no native 
 </Switch>
 
 Writes are single transactions with a 30-second busy timeout, and any storage failure (read-only filesystem, locked database) is reported as a warning rather than failing the evaluation. `DEEPEVAL_FILE_SYSTEM=READ_ONLY` disables it entirely, like every other local write.
+
+#### DeepEval mode
+
+`DEEPEVAL_MODE` picks the feature channel. Leave it unset (or set it to `stable`) to get only finalised behaviour. Set it to `experimental` (or run <Term py="deepeval set-mode experimental --save=dotenv" ts="npx deepeval set-mode experimental --save=dotenv"/>) to enrol in the newest deepeval features before they are finalised — anything gated on it may change or break between releases, so keep it off in CI unless you are deliberately testing those features.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_MODE=experimental
+deepeval test run test_llm_app.py
+```
+
+In code, gate on the channel with `is_experimental()`:
+
+```python
+from deepeval.config.mode import is_experimental
+
+if is_experimental():
+    ...
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_MODE=experimental
+npx deepeval test run llm_app.test.ts
+```
+
+In code, gate on the channel with `isExperimental()`:
+
+```typescript
+import { isExperimental } from "deepeval";
+
+if (isExperimental()) {
+  // ...
+}
+```
+
+</Case>
+
+</Switch>
+
+The value is case-insensitive. Anything other than `stable` or `experimental` falls back to `stable` with a one-time warning on stderr, so a typo can never silently enrol you. <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows the channel currently in effect and where it was set.
 
 ## Logging
 

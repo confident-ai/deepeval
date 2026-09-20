@@ -2,7 +2,11 @@ from typing import Optional, Union, List, Type
 
 from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdict,
+    a_generate_qag_verdict,
+    score_qag_verdicts,
     check_conversational_test_case_params,
     construct_verbose_logs,
     initialize_model,
@@ -150,7 +154,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -172,7 +176,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -209,12 +213,11 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
             )
-            verdict = await a_generate_with_schema_and_extract(
+            verdict = await a_generate_qag_verdict(
                 metric=self,
                 prompt=prompt,
-                schema_cls=KnowledgeRetentionVerdict,
-                extract_schema=lambda s: s,
-                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+                verdict_cls=KnowledgeRetentionVerdict,
+                allowed=YES_NO,
             )
             verdicts.append(verdict)
         return verdicts
@@ -241,12 +244,11 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 accumulated_knowledge=accumulated_knowledge,
             )
 
-            verdict = generate_with_schema_and_extract(
+            verdict = generate_qag_verdict(
                 metric=self,
                 prompt=prompt,
-                schema_cls=KnowledgeRetentionVerdict,
-                extract_schema=lambda s: s,
-                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+                verdict_cls=KnowledgeRetentionVerdict,
+                allowed=YES_NO,
             )
             verdicts.append(verdict)
         return verdicts
@@ -311,18 +313,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         return knowledges
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        retention_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                retention_count += 1
-
-        score = retention_count / number_of_verdicts
-
-        return 0 if self.strict_mode and score < self.threshold else score
+        # "yes" means the assistant forgot something, so "no" is the pass.
+        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.NO,))
 
     @property
     def __name__(self):

@@ -7,7 +7,11 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_conversational_test_case_params,
     get_unit_interactions,
@@ -362,12 +366,12 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=FaithfulnessVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
         )
 
     def _generate_verdicts(
@@ -385,13 +389,18 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             multimodal=multimodal,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=FaithfulnessVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
         )
+
+    def _passing_verdicts(self) -> Tuple[str, ...]:
+        if self.penalize_ambiguous_claims:
+            return (Verdict.YES,)
+        return (Verdict.YES, Verdict.BORDERLINE)
 
     def _get_interaction_score_and_reason(
         self, verdicts, multimodal: bool
@@ -401,24 +410,11 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             reason = "<no claims to verify>" if self.include_reason else None
             return 1.0, reason
 
-        faithfulness_count = 0
-        for verdict in verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                faithfulness_count += 1
-
-            if (
-                self.penalize_ambiguous_claims
-                and verdict.verdict.strip().lower() == "idk"
-            ):
-                faithfulness_count -= 1
-
-        score = faithfulness_count / number_of_verdicts
-        reason = self._get_interaction_reason(score, verdicts, multimodal)
-        return (
-            (0, reason)
-            if self.strict_mode and score < self.threshold
-            else (score, reason)
+        score = score_qag_verdicts(
+            self, verdicts, passing=self._passing_verdicts()
         )
+        reason = self._get_interaction_reason(score, verdicts, multimodal)
+        return score, reason
 
     async def _a_get_interaction_score_and_reason(
         self, verdicts, multimodal: bool
@@ -428,26 +424,13 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             reason = "<no claims to verify>" if self.include_reason else None
             return 1.0, reason
 
-        faithfulness_count = 0
-        for verdict in verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                faithfulness_count += 1
-
-            if (
-                self.penalize_ambiguous_claims
-                and verdict.verdict.strip().lower() == "idk"
-            ):
-                faithfulness_count -= 1
-
-        score = faithfulness_count / number_of_verdicts
+        score = score_qag_verdicts(
+            self, verdicts, passing=self._passing_verdicts()
+        )
         reason = await self._a_get_interaction_reason(
             score, verdicts, multimodal
         )
-        return (
-            (0, reason)
-            if self.strict_mode and score < self.threshold
-            else (score, reason)
-        )
+        return score, reason
 
     async def _a_get_interaction_reason(
         self, score, verdicts, multimodal: bool
@@ -457,7 +440,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
         contradictions = []
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 contradictions.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -481,7 +464,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
 
         contradictions = []
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 contradictions.append(verdict.reason)
 
         prompt = self._get_prompt(
