@@ -742,6 +742,16 @@ class Settings(BaseSettings):
         None, description="OpenRouter base URL (if using a custom endpoint)."
     )
 
+    # Atlas Cloud
+    USE_ATLASCLOUD_MODEL: Optional[bool] = None
+    ATLASCLOUD_API_KEY: Optional[SecretStr] = None
+    ATLASCLOUD_MODEL_NAME: Optional[str] = None
+    ATLASCLOUD_COST_PER_INPUT_TOKEN: Optional[float] = None
+    ATLASCLOUD_COST_PER_OUTPUT_TOKEN: Optional[float] = None
+    ATLASCLOUD_BASE_URL: Optional[AnyUrl] = Field(
+        None, description="Atlas Cloud base URL (if using a custom endpoint)."
+    )
+
     # Vertex AI
     VERTEX_AI_MODEL_NAME: Optional[str] = Field(
         None,

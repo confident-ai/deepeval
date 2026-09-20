@@ -30,7 +30,7 @@ MODELS_JSON = (
 # Namespaces that carry a default model but no pricing registry, so
 # `_build_defaults` must not demand a registry entry for them. OpenRouter model
 # names are `provider/model` strings that DeepEval deliberately does not validate.
-REGISTRYLESS_DEFAULTS = {"openrouter"}
+REGISTRYLESS_DEFAULTS = {"openrouter", "atlascloud"}
 
 # Python registry variable -> namespace key in the emitted JSON.
 REGISTRIES = {
