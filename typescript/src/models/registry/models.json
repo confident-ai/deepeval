@@ -1905,6 +1905,7 @@
   },
   "_defaults": {
     "anthropic": "claude-opus-5",
+    "atlascloud": "openai/gpt-4.1-mini",
     "gemini": "gemini-3.6-flash",
     "openai": "gpt-5.4",
     "openrouter": "openai/gpt-5.4"

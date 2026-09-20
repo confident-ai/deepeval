@@ -41,6 +41,7 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
     OpenRouterModel,
+    AtlasCloudModel,
 )
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
@@ -675,6 +676,13 @@ def should_use_openrouter_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_atlascloud_model():
+    if SETTINGS.USE_ATLASCLOUD_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_ATLASCLOUD_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_moonshot_model():
     if SETTINGS.USE_MOONSHOT_MODEL:
         return True
@@ -735,6 +743,8 @@ def initialize_model(
         return DeepSeekModel(model=model), True
     elif should_use_openrouter_model():
         return OpenRouterModel(model=model), True
+    elif should_use_atlascloud_model():
+        return AtlasCloudModel(model=model), True
     elif should_use_anthropic_model():
         return AnthropicModel(model=model), True
     elif should_use_amazon_bedrock_model():
@@ -765,6 +775,7 @@ def is_native_model(
         or isinstance(model, DeepSeekModel)
         or isinstance(model, OpenRouterModel)
         or isinstance(model, PortkeyModel)
+        or isinstance(model, AtlasCloudModel)
     ):
         return True
     else:
