@@ -17,6 +17,7 @@
     "lmstudio",
     "litellm",
     "ai-sdk",
-    "typesafe-ai"
+    "typesafe-ai",
+    "atlascloud"
   ]
 }
