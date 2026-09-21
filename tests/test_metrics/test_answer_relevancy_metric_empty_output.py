@@ -5,8 +5,8 @@ when actual_output is missing/empty:
   - None (missing param)
   - "" (empty string)
 
-Whitespace-only strings are intentionally not validated because we can't make assumptions
-about the value of the actual_output beyond its existence or emptiness.
+Whitespace-only strings (e.g. "   ", "\n", "\t") are treated as empty and raise
+MissingTestCaseParamsError.
 
 These tests use DummyModel and do not require OPENAI_API_KEY.
 """
@@ -54,15 +54,28 @@ def test_answer_relevancy_empty_actual_output_raises_sync():
     assert "cannot be empty" in msg or "actual_output" in msg
 
 
-def test_answer_relevancy_whitespace_actual_output_does_not_raise_validation():
-    """Whitespace-only actual_output should NOT raise MissingTestCaseParamsError."""
+@pytest.mark.parametrize("whitespace", ["   ", "\n", "\t"])
+def test_answer_relevancy_whitespace_actual_output_raises_sync(whitespace: str):
+    """Whitespace-only actual_output should raise MissingTestCaseParamsError (sync)."""
     metric = make_metric(async_mode=False)
     tc = LLMTestCase(
-        input="What if these shoes don't fit?", actual_output="   "
+        input="What if these shoes don't fit?", actual_output=whitespace
     )
 
-    # Only validate inputs here. Running the full metric would require a real
-    # model that supports generate_with_schema.
+    with pytest.raises(MissingTestCaseParamsError) as exc_info:
+        metric.measure(tc, _show_indicator=False)
+
+    msg = str(exc_info.value).lower()
+    assert "cannot be empty" in msg or "actual_output" in msg
+
+
+def test_answer_relevancy_valid_actual_output_passes_validation():
+    """A non-whitespace actual_output passes the guard (guard does not reject all strings)."""
+    metric = make_metric(async_mode=False)
+    tc = LLMTestCase(
+        input="What if these shoes don't fit?", actual_output="a real answer"
+    )
+
     check_llm_test_case_params(
         test_case=tc,
         test_case_params=metric._required_params,
