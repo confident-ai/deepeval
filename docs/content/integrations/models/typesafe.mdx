@@ -1,0 +1,111 @@
+---
+id: typesafe
+title: TypeSafe (Jev)
+sidebar_label: TypeSafe
+languages: [python]
+---
+
+`deepeval` can route the **decision step** of its QAG (question-answer generation) metrics to [TypeSafe](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions and still writes the reasons; Jev only answers the yes/no question for each item.
+
+:::caution
+This is an **experimental** feature. It is only active when `DEEPEVAL_MODE=experimental`, and it may change between releases.
+:::
+
+### Setting Up
+
+Install the TypeSafe SDK (it is not a `deepeval` dependency):
+
+```bash
+pip install typesafe-sdk
+```
+
+Provide your `TYPESAFE_API_KEY` and switch `deepeval` into experimental mode:
+
+```bash
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+export DEEPEVAL_MODE=experimental
+```
+
+Or persist the key with the CLI:
+
+```bash
+deepeval set-typesafe --prompt-api-key --save=dotenv
+```
+
+`deepeval set-typesafe` also accepts `--model` (defaults to `jev-latest`) and `--cost-per-input-token`. Run `deepeval unset-typesafe` to remove the configuration again.
+
+### How It Works
+
+Nothing changes in your metric code. When `DEEPEVAL_MODE=experimental`, the metrics below build one [Noul](https://docs.typesafe.ai/primitives/noul) question per extracted item, send them to Jev in a single request, and threshold the returned `P(yes)` into a verdict:
+
+- Metrics with a `yes`/`no` vocabulary: `P(yes) >= 0.5` is `yes`.
+- Metrics that also allow `borderline`: `P(yes) > 0.65` is `yes`, `P(yes) < 0.35` is `no`, anything in between is `borderline`.
+
+Jev's input tokens are added to the metric's `evaluation_cost` alongside your LLM's usage.
+
+```python
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+
+# With DEEPEVAL_MODE=experimental and TYPESAFE_API_KEY set, verdicts come from Jev.
+metric = FaithfulnessMetric()
+metric.measure(
+    LLMTestCase(
+        input="...",
+        actual_output="...",
+        retrieval_context=["..."],
+    )
+)
+```
+
+Metrics that route verdicts to Jev:
+
+- `FaithfulnessMetric`, `TurnFaithfulnessMetric`, `SummarizationMetric` (alignment)
+- `AnswerRelevancyMetric`, `HallucinationMetric`
+- `ContextualPrecisionMetric`, `TurnContextualPrecisionMetric`
+- `PromptAlignmentMetric`, `ArgumentCorrectnessMetric`
+- `BiasMetric`, `ToxicityMetric`, `MisuseMetric`, `NonAdviceMetric`, `PIILeakageMetric`, `RoleViolationMetric`
+
+All other metrics keep using your LLM in both modes.
+
+### No Fallback
+
+In experimental mode `deepeval` never silently falls back to the LLM for verdicts. If `typesafe-sdk` is not installed or `TYPESAFE_API_KEY` is missing, constructing one of the metrics above raises an error that tells you to either configure TypeSafe or switch back with `DEEPEVAL_MODE=stable`.
+
+### Using Jev Directly
+
+`TypeSafeModel` is also available for your own typed decisions. It exposes Jev's three primitives: `noul` (yes/no probability), `choice` (one option from a set) and `score` (a position on an ordered rubric).
+
+```python
+from deepeval.models import TypeSafeModel
+from deepeval.models.system_one import NoulQuestion, ScoreQuestion
+
+model = TypeSafeModel(model="jev-latest")
+answers, cost = model.decide(
+    state={"ticket": "I was charged twice. Please fix this ASAP."},
+    questions={
+        "billing": NoulQuestion(instructions="Is `ticket` about billing?"),
+        "urgency": ScoreQuestion(
+            instructions="How urgent is `ticket`?",
+            levels=["can wait", "this week", "today"],
+        ),
+    },
+)
+print(answers.nouls["billing"].probability, answers.scores["urgency"].score)
+```
+
+There are **ZERO** mandatory and **THREE** optional parameters when creating a `TypeSafeModel`:
+
+- [Optional] `model`: The Jev model or alias to use. Defaults to `TYPESAFE_MODEL_NAME`; falls back to `jev-latest` if unset.
+- [Optional] `api_key`: Your TypeSafe API key. Defaults to `TYPESAFE_API_KEY`; raises an error at runtime if unset.
+- [Optional] `cost_per_input_token`: USD per input token for cost reporting. Defaults to `TYPESAFE_COST_PER_INPUT_TOKEN`, then to `deepeval`'s pricing for known Jev models. Jev does not charge for output tokens.
+
+Extra `**kwargs` are forwarded to the underlying `TypeSafeClient`.
+
+### Available Models
+
+- `jev-latest` (alias of the current stable release)
+- `jev-preview`
+- `jev-1.13.0`
+
+See [TypeSafe's models page](https://docs.typesafe.ai/models) for the current list.

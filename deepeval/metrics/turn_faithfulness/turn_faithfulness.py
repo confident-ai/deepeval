@@ -11,6 +11,8 @@ from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
     score_qag_verdicts,
     construct_verbose_logs,
     check_conversational_test_case_params,
@@ -71,6 +73,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -372,6 +375,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             verdict_cls=FaithfulnessVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(claims, truths),
         )
 
     def _generate_verdicts(
@@ -395,6 +399,17 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             verdict_cls=FaithfulnessVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(claims, truths),
+        )
+
+    def _experimental_system_one_spec(
+        self, claims: Claims, truths: Truths
+    ) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=list(claims),
+            item_key="claim",
+            state={"reference_context": list(truths)},
         )
 
     def _passing_verdicts(self) -> Tuple[str, ...]:

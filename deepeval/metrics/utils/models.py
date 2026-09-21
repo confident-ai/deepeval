@@ -2,7 +2,9 @@ from typing import Optional, Tuple, Union
 
 from pydantic import SecretStr
 
+from deepeval.config.mode import MODE_ENV_VAR, DeepEvalMode, is_experimental
 from deepeval.config.settings import get_settings
+from deepeval.errors import DeepEvalError
 from deepeval.key_handler import (
     ModelKeyValues,
     EmbeddingKeyValues,
@@ -27,8 +29,12 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
     OpenRouterModel,
+    TypeSafeModel,
 )
-from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.models.base_model import (
+    DeepEvalBaseEmbeddingModel,
+    DeepEvalBaseSystemOneModel,
+)
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
     GEMINI_MODELS_DATA,
@@ -224,6 +230,27 @@ def is_native_model(
         return True
     else:
         return False
+
+
+###############################################
+# System One Model
+###############################################
+
+
+def initialize_system_one_model() -> Optional[DeepEvalBaseSystemOneModel]:
+    """Jev answers QAG verdicts only under DEEPEVAL_MODE=experimental. There
+    is no LLM fallback in that mode: a missing key or SDK is an error."""
+    if not is_experimental():
+        return None
+    try:
+        return TypeSafeModel()
+    except DeepEvalError as e:
+        raise DeepEvalError(
+            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} routes QAG verdicts "
+            f"to TypeSafe Jev, but it is not usable: {e} "
+            f"Configure it with `deepeval set-typesafe --prompt-api-key` or "
+            f"switch back with {MODE_ENV_VAR}={DeepEvalMode.STABLE}."
+        ) from e
 
 
 ###############################################

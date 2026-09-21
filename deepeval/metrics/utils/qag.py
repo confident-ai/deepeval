@@ -1,6 +1,19 @@
 import re
-from typing import Any, Dict, List, Optional, Tuple, Type, Union
+from dataclasses import dataclass
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
+from deepeval.config.mode import MODE_ENV_VAR, DeepEvalMode, is_experimental
+from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import (
     BaseMetric,
     BaseConversationalMetric,
@@ -8,9 +21,11 @@ from deepeval.metrics.base_metric import (
     YES_NO,
     LEGACY_VERDICT_ALIASES,
 )
+from deepeval.models.system_one.schema import NoulQuestion
 
 from .generation import (
     SchemaType,
+    accrue_token_usage,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
@@ -113,6 +128,111 @@ def score_qag_verdicts(
     return 0 if metric.strict_mode and score < metric.threshold else score
 
 
+###############################################
+# System One (Jev) verdicts
+###############################################
+#
+# Under DEEPEVAL_MODE=experimental the decision step of a QAG metric is a set
+# of Noul questions, one per item, answered by a System One model. The LLM
+# still extracts the items and writes the reasons. P(yes) is thresholded into
+# the metric's verdict vocabulary; there is deliberately no LLM fallback.
+
+SYSTEM_ONE_YES_THRESHOLD = 0.5
+SYSTEM_ONE_BORDERLINE_LOW = 0.35
+SYSTEM_ONE_BORDERLINE_HIGH = 0.65
+
+
+@dataclass
+class SystemOneVerdictSpec:
+    instructions: str
+    items: Sequence[Any]
+    item_key: str
+    state: Optional[Dict[str, Any]] = None
+    criteria: Optional[Tuple[Any, Any]] = None
+    build_verdict: Optional[Callable[[Any, Verdict, float], Any]] = None
+
+
+def verdict_from_probability(
+    probability: float, allowed: Tuple[Verdict, ...] = YES_NO
+) -> Verdict:
+    if Verdict.BORDERLINE in allowed:
+        if probability > SYSTEM_ONE_BORDERLINE_HIGH:
+            return Verdict.YES
+        if probability < SYSTEM_ONE_BORDERLINE_LOW:
+            return Verdict.NO
+        return Verdict.BORDERLINE
+    return (
+        Verdict.YES if probability >= SYSTEM_ONE_YES_THRESHOLD else Verdict.NO
+    )
+
+
+def _system_one_active(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    spec: Optional[SystemOneVerdictSpec],
+) -> bool:
+    if spec is None or not is_experimental():
+        return False
+    if getattr(metric, "system_one_model", None) is None:
+        raise DeepEvalError(
+            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} routes QAG verdicts "
+            f"to a System One model, but {type(metric).__name__} has none "
+            f"configured. Set TYPESAFE_API_KEY or switch back with "
+            f"{MODE_ENV_VAR}={DeepEvalMode.STABLE}."
+        )
+    return True
+
+
+def _jsonable(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    return str(value)
+
+
+def _system_one_request(
+    spec: SystemOneVerdictSpec,
+) -> Tuple[Dict[str, Any], Dict[str, NoulQuestion]]:
+    items = [_jsonable(item) for item in spec.items]
+    state = {**_jsonable(spec.state or {}), f"{spec.item_key}s": items}
+    true, false = spec.criteria if spec.criteria else (None, None)
+    questions = {
+        f"{spec.item_key}_{i}": NoulQuestion(
+            instructions={spec.item_key: item, "question": spec.instructions},
+            true=true,
+            false=false,
+        )
+        for i, item in enumerate(items)
+    }
+    return state, questions
+
+
+def _system_one_verdicts(
+    spec: SystemOneVerdictSpec,
+    answers: Dict[str, Any],
+    verdict_cls: Type[SchemaType],
+    allowed: Tuple[Verdict, ...],
+) -> List[SchemaType]:
+    verdicts: List[SchemaType] = []
+    for i, item in enumerate(spec.items):
+        answer = answers.get(f"{spec.item_key}_{i}")
+        if answer is None:
+            raise DeepEvalError(
+                f"System One model returned no answer for {spec.item_key} {i}."
+            )
+        p = answer.probability
+        verdict = verdict_from_probability(p, allowed)
+        if spec.build_verdict is not None:
+            verdicts.append(spec.build_verdict(item, verdict, p))
+        else:
+            verdicts.append(
+                verdict_cls(verdict=verdict, reason=f"P(yes)={p:.2f}")
+            )
+    return verdicts
+
+
 def generate_qag_verdicts(
     metric: Union[BaseMetric, BaseConversationalMetric],
     prompt: Any,
@@ -120,6 +240,7 @@ def generate_qag_verdicts(
     verdict_cls: Type[SchemaType],
     verdicts_cls: Type[Any],
     allowed: Tuple[Verdict, ...] = YES_NO,
+    system_one: Optional[SystemOneVerdictSpec] = None,
 ) -> List[SchemaType]:
     """THE QAG entry point: ask the judge for a list of verdicts.
 
@@ -128,7 +249,19 @@ def generate_qag_verdicts(
     enforces the vocabulary; on the loose-JSON path each item is normalized via
     ``normalize_qag_verdict`` and out-of-vocabulary items are dropped. Score the
     result with ``score_qag_verdicts``.
+
+    ``system_one`` describes the same decision as Noul questions; it is used
+    instead of ``prompt`` when ``DEEPEVAL_MODE=experimental``.
     """
+    if _system_one_active(metric, system_one):
+        if len(system_one.items) == 0:
+            return []
+        state, questions = _system_one_request(system_one)
+        answers, cost = metric.system_one_model.noul(state, questions)
+        metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
+        return _system_one_verdicts(system_one, answers, verdict_cls, allowed)
+
     return generate_with_schema_and_extract(
         metric=metric,
         prompt=prompt,
@@ -147,8 +280,18 @@ async def a_generate_qag_verdicts(
     verdict_cls: Type[SchemaType],
     verdicts_cls: Type[Any],
     allowed: Tuple[Verdict, ...] = YES_NO,
+    system_one: Optional[SystemOneVerdictSpec] = None,
 ) -> List[SchemaType]:
     """Async counterpart of ``generate_qag_verdicts``."""
+    if _system_one_active(metric, system_one):
+        if len(system_one.items) == 0:
+            return []
+        state, questions = _system_one_request(system_one)
+        answers, cost = await metric.system_one_model.a_noul(state, questions)
+        metric._accrue_cost(cost)
+        accrue_token_usage(metric, cost)
+        return _system_one_verdicts(system_one, answers, verdict_cls, allowed)
+
     return await a_generate_with_schema_and_extract(
         metric=metric,
         prompt=prompt,

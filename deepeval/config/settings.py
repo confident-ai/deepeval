@@ -761,6 +761,19 @@ class Settings(BaseSettings):
     )
     VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
 
+    # TypeSafe (System One). No USE_* flag: Jev is used for QAG verdicts
+    # whenever DEEPEVAL_MODE=experimental, alongside the active LLM.
+    TYPESAFE_API_KEY: Optional[SecretStr] = Field(
+        None, description="TypeSafe API key."
+    )
+    TYPESAFE_MODEL_NAME: Optional[str] = Field(
+        None, description="TypeSafe System One model name (e.g. 'jev-latest')."
+    )
+    TYPESAFE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="TypeSafe input token cost (used for cost reporting).",
+    )
+
     #
     # Speech Keys (TTS/STT)
     #

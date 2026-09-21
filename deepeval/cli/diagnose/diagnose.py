@@ -60,6 +60,7 @@ _PROVIDER_BY_CLASS = {
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
+    "TypeSafeModel": "TypeSafe",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",

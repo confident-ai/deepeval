@@ -11,6 +11,8 @@ from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
     score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -59,6 +61,7 @@ class PromptAlignmentMetric(BaseMetric):
         self.prompt_instructions = prompt_instructions
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -238,6 +241,7 @@ class PromptAlignmentMetric(BaseMetric):
             verdict_cls=paschema.PromptAlignmentVerdict,
             verdicts_cls=paschema.Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(input, actual_output),
         )
 
     def _generate_verdicts(
@@ -255,6 +259,17 @@ class PromptAlignmentMetric(BaseMetric):
             verdict_cls=paschema.PromptAlignmentVerdict,
             verdicts_cls=paschema.Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(input, actual_output),
+        )
+
+    def _experimental_system_one_spec(
+        self, input: str, actual_output: str
+    ) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.prompt_instructions,
+            item_key="instruction",
+            state={"input": input, "actual_output": actual_output},
         )
 
     def _calculate_score(self) -> float:

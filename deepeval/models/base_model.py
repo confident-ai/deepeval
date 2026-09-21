@@ -3,6 +3,7 @@ from typing import (
     Any,
     AsyncGenerator,
     AsyncIterable,
+    Dict,
     Optional,
     List,
     Tuple,
@@ -14,6 +15,16 @@ from dataclasses import dataclass
 
 if TYPE_CHECKING:
     from deepeval.test_case import Audio, AudioChunk
+    from deepeval.models.system_one.schema import (
+        ChoiceAnswer,
+        ChoiceQuestion,
+        NoulAnswer,
+        NoulQuestion,
+        ScoreAnswer,
+        ScoreQuestion,
+        SystemOneAnswers,
+        SystemOneQuestion,
+    )
 
 
 @dataclass
@@ -152,6 +163,76 @@ class DeepEvalBaseLLM(ABC):
             except TypeError:
                 pass
         return await self.a_generate(*args, **kwargs)
+
+
+class DeepEvalBaseSystemOneModel(ABC):
+    """A model that answers typed questions about a `state` with calibrated
+    probabilities instead of generating text. Metrics use it for the decision
+    step only; extraction and reasons stay on the LLM."""
+
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def decide(
+        self,
+        state: Any,
+        questions: Dict[str, "SystemOneQuestion"],
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        pass
+
+    @abstractmethod
+    async def a_decide(
+        self,
+        state: Any,
+        questions: Dict[str, "SystemOneQuestion"],
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        pass
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
+    def noul(
+        self, state: Any, questions: Dict[str, "NoulQuestion"]
+    ) -> Tuple[Dict[str, "NoulAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.nouls, cost
+
+    async def a_noul(
+        self, state: Any, questions: Dict[str, "NoulQuestion"]
+    ) -> Tuple[Dict[str, "NoulAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.nouls, cost
+
+    def choice(
+        self, state: Any, questions: Dict[str, "ChoiceQuestion"]
+    ) -> Tuple[Dict[str, "ChoiceAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.choices, cost
+
+    async def a_choice(
+        self, state: Any, questions: Dict[str, "ChoiceQuestion"]
+    ) -> Tuple[Dict[str, "ChoiceAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.choices, cost
+
+    def score(
+        self, state: Any, questions: Dict[str, "ScoreQuestion"]
+    ) -> Tuple[Dict[str, "ScoreAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.scores, cost
+
+    async def a_score(
+        self, state: Any, questions: Dict[str, "ScoreQuestion"]
+    ) -> Tuple[Dict[str, "ScoreAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.scores, cost
 
 
 class DeepEvalBaseTTS(ABC):

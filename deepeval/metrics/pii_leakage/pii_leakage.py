@@ -12,6 +12,8 @@ from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
     score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -50,6 +52,7 @@ class PIILeakageMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -216,6 +219,7 @@ class PIILeakageMetric(BaseMetric):
             verdict_cls=PIILeakageVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self) -> List[PIILeakageVerdict]:
@@ -232,6 +236,14 @@ class PIILeakageMetric(BaseMetric):
             verdict_cls=PIILeakageVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.extracted_pii,
+            item_key="statement",
         )
 
     async def _a_extract_pii(

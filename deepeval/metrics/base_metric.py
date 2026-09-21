@@ -17,7 +17,7 @@ from deepeval.templates.resolver import (
 from deepeval.templates.template_class import filter_template_kwargs
 
 if TYPE_CHECKING:
-    from deepeval.models import DeepEvalBaseLLM
+    from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 
 
 ###############################################
@@ -121,6 +121,7 @@ class BaseMetric(PromptMixin):
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -192,6 +193,7 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

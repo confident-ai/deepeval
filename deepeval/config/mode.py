@@ -5,7 +5,8 @@ finalised; anything gated on it may change or break between releases.
 `stable` is the default and the fallback for an unset or unrecognised value,
 so a typo can never silently enrol someone.
 
-Gate features with `is_experimental()` rather than comparing strings.
+Gate features with `is_experimental()` rather than comparing strings. The list
+of current experimental features and where they live is in `EXPERIMENTAL.md`.
 """
 
 import os

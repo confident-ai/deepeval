@@ -15,8 +15,10 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneVerdictSpec,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -78,6 +80,7 @@ class FaithfulnessMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -274,6 +277,7 @@ class FaithfulnessMetric(BaseMetric):
             verdict_cls=FaithfulnessVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
@@ -293,6 +297,15 @@ class FaithfulnessMetric(BaseMetric):
             verdict_cls=FaithfulnessVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.claims,
+            item_key="claim",
+            state={"retrieval_context": self.truths},
         )
 
     async def _a_generate_truths(
