@@ -34,5 +34,6 @@ class Provider(str, Enum):
     AZURE = "Azure"
     OPEN_ROUTER = "OpenRouter"
     PORTKEY = "Portkey"
+    THEGRID = "The Grid"
     TRUE_FOUNDRY = "TrueFoundry"
     MOONSHOT = "Moonshot"

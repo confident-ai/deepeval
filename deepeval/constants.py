@@ -42,6 +42,7 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     PORTKEY = "portkey"
+    THEGRID = "thegrid"
     # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
     # to carry a retry policy, not as selectable LLM providers.
     ASSEMBLYAI = "assemblyai"
