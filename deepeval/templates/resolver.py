@@ -67,6 +67,10 @@ MetricTemplateMethod = Literal[
     "rewrite_reason",
     # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
     "_experimental_system_one_verdict",
+    "_experimental_system_one_strict_verdict",
+    "_experimental_system_one_step_verdict",
+    "_experimental_system_one_rubric_score",
+    "_experimental_system_one_reason",
 ]
 
 # Keep in sync with the method keys in `templates/simulator/templates.json`.

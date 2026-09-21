@@ -5,7 +5,7 @@ sidebar_label: TypeSafe
 languages: [python]
 ---
 
-`deepeval` can route the **decision step** of its QAG (question-answer generation) metrics to [TypeSafe](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions and still writes the reasons; Jev only answers the yes/no question for each item.
+`deepeval` can route the **decision step** of its metrics to [TypeSafe](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions, generates G-Eval evaluation steps and writes the reasons; Jev only answers the typed question: a yes/no verdict per item, a DAG judgement, or a G-Eval score.
 
 :::caution
 This is an **experimental** feature. It is only active when `DEEPEVAL_MODE=experimental`, and it may change between releases.
@@ -65,6 +65,14 @@ Metrics that route verdicts to Jev:
 - `ContextualPrecisionMetric`, `TurnContextualPrecisionMetric`
 - `PromptAlignmentMetric`, `ArgumentCorrectnessMetric`
 - `BiasMetric`, `ToxicityMetric`, `MisuseMetric`, `NonAdviceMetric`, `PIILeakageMetric`, `RoleViolationMetric`
+
+`GEval` and `ConversationalGEval` route their **score** to Jev. The LLM still generates the evaluation steps and the reason:
+
+- `strict_mode=True`: one yes/no question, "does the test case follow every step completely"; `P(yes) >= 0.5` scores 1, otherwise 0.
+- No rubric: one yes/no question per evaluation step, all in one request. The mean `P(yes)` is mapped onto the score range (0-10 by default), then normalised to 0-1 as usual.
+- With a `rubric`: one [Score](https://docs.typesafe.ai/primitives/score) question whose levels are your rubric's `expected_outcome`s, mapped onto the score range. Jev accepts at most 10 rubric levels.
+
+`DAGMetric` and `ConversationalDAGMetric` route their judgement nodes to Jev: `BinaryJudgementNode` becomes a yes/no question on the node's criteria (`P >= 0.5` is `True`), `NonBinaryJudgementNode` becomes a [Choice](https://docs.typesafe.ai/primitives/choice) over the child verdicts. `TaskNode` and `VerdictNode` reasons stay on the LLM.
 
 All other metrics keep using your LLM in both modes.
 

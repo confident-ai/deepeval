@@ -12,7 +12,6 @@ from typing import (
     Union,
 )
 
-from deepeval.config.mode import MODE_ENV_VAR, DeepEvalMode, is_experimental
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import (
     BaseMetric,
@@ -23,6 +22,11 @@ from deepeval.metrics.base_metric import (
 )
 from deepeval.models.system_one.schema import NoulQuestion
 
+from .decision import (
+    SYSTEM_ONE_YES_THRESHOLD,
+    _jsonable,
+    _system_one_active,
+)
 from .generation import (
     SchemaType,
     accrue_token_usage,
@@ -137,7 +141,6 @@ def score_qag_verdicts(
 # still extracts the items and writes the reasons. P(yes) is thresholded into
 # the metric's verdict vocabulary; there is deliberately no LLM fallback.
 
-SYSTEM_ONE_YES_THRESHOLD = 0.5
 SYSTEM_ONE_BORDERLINE_LOW = 0.35
 SYSTEM_ONE_BORDERLINE_HIGH = 0.65
 
@@ -164,32 +167,6 @@ def verdict_from_probability(
     return (
         Verdict.YES if probability >= SYSTEM_ONE_YES_THRESHOLD else Verdict.NO
     )
-
-
-def _system_one_active(
-    metric: Union[BaseMetric, BaseConversationalMetric],
-    spec: Optional[SystemOneVerdictSpec],
-) -> bool:
-    if spec is None or not is_experimental():
-        return False
-    if getattr(metric, "system_one_model", None) is None:
-        raise DeepEvalError(
-            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} routes QAG verdicts "
-            f"to a System One model, but {type(metric).__name__} has none "
-            f"configured. Set TYPESAFE_API_KEY or switch back with "
-            f"{MODE_ENV_VAR}={DeepEvalMode.STABLE}."
-        )
-    return True
-
-
-def _jsonable(value: Any) -> Any:
-    if value is None or isinstance(value, (str, int, float, bool)):
-        return value
-    if isinstance(value, dict):
-        return {str(k): _jsonable(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_jsonable(v) for v in value]
-    return str(value)
 
 
 def _system_one_request(

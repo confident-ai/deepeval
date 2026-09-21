@@ -21,6 +21,17 @@ from .generation import (
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
+from .decision import (
+    SystemOneBinarySpec,
+    SystemOneChoiceSpec,
+    SystemOneScoreSpec,
+    generate_binary_judgement,
+    a_generate_binary_judgement,
+    generate_choice_judgement,
+    a_generate_choice_judgement,
+    generate_rubric_score,
+    a_generate_rubric_score,
+)
 from .metrics import (
     warn_score_direction_flipped,
     check_at_least_one_metric_has_threshold,
@@ -85,6 +96,16 @@ __all__ = [
     "accrue_token_usage",
     "generate_with_schema_and_extract",
     "a_generate_with_schema_and_extract",
+    # decision
+    "SystemOneBinarySpec",
+    "SystemOneChoiceSpec",
+    "SystemOneScoreSpec",
+    "generate_binary_judgement",
+    "a_generate_binary_judgement",
+    "generate_choice_judgement",
+    "a_generate_choice_judgement",
+    "generate_rubric_score",
+    "a_generate_rubric_score",
     # metrics
     "warn_score_direction_flipped",
     "check_at_least_one_metric_has_threshold",

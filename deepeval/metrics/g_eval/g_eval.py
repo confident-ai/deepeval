@@ -11,12 +11,14 @@ from deepeval.test_case import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
+    initialize_system_one_model,
     check_llm_test_case_params,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
-    accrue_token_usage,
+    generate_rubric_score,
+    a_generate_rubric_score,
+    SystemOneScoreSpec,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -27,7 +29,6 @@ from deepeval.metrics.g_eval.utils import (
     construct_g_eval_params_string,
     construct_test_case_string,
     format_rubrics,
-    no_log_prob_support,
     calculate_weighted_summed_score,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
@@ -77,6 +78,7 @@ class GEval(BaseMetric):
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
             evaluation_steps
@@ -307,43 +309,20 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
                 multimodal=multimodal,
             )
-        try:
-            # don't use log probabilities for unsupported gpt models
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
-
-            # Don't have to check for using native model
-            # since generate raw response only exist for deepeval's native model
-            res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
-
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-
-            data = trimAndLoadJson(res.choices[0].message.content, self)
-
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
-            return await a_generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=gschema.ReasonScore,
-                extract_schema=lambda s: (s.score, s.reason),
-                extract_json=lambda d: (d["score"], d["reason"]),
-            )
+        return await a_generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=gschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=calculate_weighted_summed_score,
+            system_one=self._experimental_system_one_spec(
+                test_case_content,
+                g_eval_params_str,
+                _additional_context,
+                multimodal,
+            ),
+        )
 
     def _evaluate(
         self,
@@ -380,39 +359,71 @@ class GEval(BaseMetric):
                 multimodal=multimodal,
             )
 
-        try:
-            # don't use log probabilities for unsupported gpt models
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
+        return generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=gschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=calculate_weighted_summed_score,
+            system_one=self._experimental_system_one_spec(
+                test_case_content,
+                g_eval_params_str,
+                _additional_context,
+                multimodal,
+            ),
+        )
 
-            res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
+    def _experimental_system_one_spec(
+        self,
+        test_case_content: str,
+        g_eval_params_str: str,
+        _additional_context: Optional[str],
+        multimodal: bool,
+    ) -> SystemOneScoreSpec:
+        rubric_str = format_rubrics(self.rubric) if self.rubric else None
+        state = {
+            "test_case": test_case_content,
+            "parameters": g_eval_params_str,
+        }
+        if _additional_context:
+            state["additional_context"] = _additional_context
+
+        def reason_prompt(score, probabilities):
+            return self._get_prompt(
+                "_experimental_system_one_reason",
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
+                test_case_content=test_case_content,
+                parameters=g_eval_params_str,
+                rubric=rubric_str,
+                probabilities=probabilities,
+                score=score,
+                _additional_context=_additional_context,
+                multimodal=multimodal,
             )
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
 
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
-            return generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=gschema.ReasonScore,
-                extract_schema=lambda s: (s.score, s.reason),
-                extract_json=lambda d: (d["score"], d["reason"]),
-            )
+        return SystemOneScoreSpec(
+            steps=self.evaluation_steps,
+            rubric_levels=(
+                [r.expected_outcome for r in self.rubric]
+                if self.rubric
+                else None
+            ),
+            score_range=self.score_range,
+            strict_mode=self.strict_mode,
+            state=state,
+            strict_instructions=self._get_prompt(
+                "_experimental_system_one_strict_verdict"
+            ),
+            step_instructions=self._get_prompt(
+                "_experimental_system_one_step_verdict"
+            ),
+            rubric_instructions=self._get_prompt(
+                "_experimental_system_one_rubric_score"
+            ),
+            reason_prompt=reason_prompt,
+            reason_schema_cls=gschema.Reason,
+        )
 
     def upload(self):
         ensure_required_params(
