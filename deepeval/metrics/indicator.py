@@ -5,7 +5,7 @@ import time
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from contextlib import contextmanager
-from typing import List, Optional, Union
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
@@ -18,6 +18,10 @@ from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import record_metric
 from deepeval.utils import update_pbar
 from deepeval.config.settings import get_settings
+
+if TYPE_CHECKING:
+    from deepeval.classifiers.base_classifier import BaseClassifier
+    from deepeval.test_run.cache import CachedClassification
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +239,121 @@ async def measure_metrics_with_indicator(
                 )
 
         await asyncio.gather(*tasks)
+
+
+def _timeout_error_message() -> str:
+    return (
+        "Timed out/cancelled while evaluating metric. "
+        "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
+        "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
+        if not get_settings().DEEPEVAL_DISABLE_TIMEOUTS
+        else "Cancelled while evaluating metric (DeepEval timeouts are disabled; this likely came from upstream orchestration or the provider/network layer). "
+        "Set DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
+    )
+
+
+def hydrate_classifier_from_cache(
+    classifier: "BaseClassifier", cached: "CachedClassification"
+) -> None:
+    """Restore a classifier's result from cache. ``success`` is intentionally
+    left for the caller: it depends on the current test case's expected label.
+    """
+    classification = cached.classification
+    classifier.label = classification.label
+    classifier.reason = classification.reason
+    classifier.error = None
+    classifier.evaluation_model = classification.evaluation_model
+    classifier.evaluation_cost = classification.evaluation_cost
+    classifier.input_tokens = classification.input_tokens
+    classifier.output_tokens = classification.output_tokens
+
+
+async def classify_with_indicator(
+    classifiers: List["BaseClassifier"],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    cached_test_case: Union[CachedTestCase, None],
+    ignore_errors: bool,
+    show_indicator: bool,
+    progress: Optional[Progress] = None,
+    pbar_eval_id: Optional[int] = None,
+    _in_component: bool = False,
+):
+    """Classifier counterpart of ``measure_metrics_with_indicator``."""
+    tasks = []
+    for classifier in classifiers:
+        cached = Cache.get_classification(classifier, cached_test_case)
+        if cached is not None:
+            hydrate_classifier_from_cache(classifier, cached)
+            update_pbar(progress, pbar_eval_id)
+            continue
+        tasks.append(
+            safe_a_classify(
+                classifier,
+                test_case,
+                ignore_errors,
+                progress=progress,
+                pbar_eval_id=pbar_eval_id,
+                _in_component=_in_component,
+            )
+        )
+
+    if not tasks:
+        return
+
+    if show_indicator:
+        with Progress(
+            SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
+            TextColumn("[progress.description]{task.description}"),
+            transient=False,
+        ) as indicator:
+            for classifier in classifiers:
+                indicator.add_task(
+                    description=format_classifier_description(classifier),
+                    total=100,
+                )
+            await asyncio.gather(*tasks)
+    else:
+        await asyncio.gather(*tasks)
+
+
+async def safe_a_classify(
+    classifier: "BaseClassifier",
+    tc: Union[LLMTestCase, ConversationalTestCase],
+    ignore_errors: bool,
+    progress: Optional[Progress] = None,
+    pbar_eval_id: Optional[int] = None,
+    _in_component: bool = False,
+):
+    try:
+        await classifier.a_classify(
+            tc,
+            _show_indicator=False,
+            _in_component=_in_component,
+        )
+        update_pbar(progress, pbar_eval_id)
+
+    except asyncio.CancelledError:
+        logger.info("caught asyncio.CancelledError")
+        classifier.error = _timeout_error_message()
+        classifier.label = None
+        if not ignore_errors:
+            raise
+
+    except Exception as e:
+        if ignore_errors:
+            classifier.error = str(e)
+            classifier.label = None
+            logger.info("a classifier was marked as errored")
+        else:
+            raise
+
+
+def format_classifier_description(
+    classifier: "BaseClassifier", async_mode: Optional[bool] = None
+) -> str:
+    run_async = classifier.async_mode if async_mode is None else async_mode
+    return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{classifier.__name__} Classifier[/rgb(106,0,255)]! [rgb(55,65,81)](using {classifier.evaluation_model}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
 async def safe_a_measure(

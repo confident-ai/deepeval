@@ -247,7 +247,7 @@ def initialize_system_one_model() -> Optional[DeepEvalBaseSystemOneModel]:
     except DeepEvalError as e:
         raise DeepEvalError(
             f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} routes metric "
-            f"decisions to TypeSafe Jev, but it is not usable: {e} "
+            f"decisions to TypeSafe AI Jev, but it is not usable: {e} "
             f"Configure it with `deepeval set-typesafe --prompt-api-key` or "
             f"switch back with {MODE_ENV_VAR}={DeepEvalMode.STABLE}."
         ) from e

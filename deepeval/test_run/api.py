@@ -6,6 +6,28 @@ from deepeval.tracing.api import TraceApi, MetricData
 from deepeval.utils import make_model_config
 
 
+class Classification(BaseModel):
+    """Classifier counterpart of ``MetricData``: one classifier's result on
+    one test case. ``success`` is ``None`` when the test case declared no
+    expected label for this classifier.
+
+    Local-only: classifications live on ``TestResult`` and are never attached
+    to the API test cases that are uploaded to Confident AI."""
+
+    model_config = make_model_config(extra="ignore")
+
+    name: str
+    label: Optional[str] = None
+    expected_label: Optional[str] = Field(None, alias="expectedLabel")
+    success: Optional[bool] = None
+    reason: Optional[str] = None
+    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
+    error: Optional[str] = None
+    evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
+    input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
+    output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
+
+
 class LLMApiTestCase(BaseModel):
     name: str
     input: str

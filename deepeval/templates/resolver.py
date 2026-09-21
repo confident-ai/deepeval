@@ -7,7 +7,7 @@ from typing import Any, Dict, Literal, Optional, Set, Tuple
 
 import jinja2
 
-Feature = Literal["metrics", "simulator"]
+Feature = Literal["metrics", "simulator", "classifiers"]
 
 # Keep in sync with the method keys in `templates/metrics/templates.json`.
 # `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
@@ -82,7 +82,15 @@ SimulatorTemplateMethod = Literal[
     "interruption_frustration",
 ]
 
-TemplateMethod = MetricTemplateMethod | SimulatorTemplateMethod
+# Keep in sync with the method keys in `templates/classifiers/templates.json`.
+ClassifierTemplateMethod = Literal[
+    "classify_single_turn",
+    "classify_multi_turn",
+]
+
+TemplateMethod = (
+    MetricTemplateMethod | SimulatorTemplateMethod | ClassifierTemplateMethod
+)
 
 
 class MetricTemplateNotFoundError(KeyError):

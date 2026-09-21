@@ -198,7 +198,7 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
     def _build_client(self, module, cls):
         api_key = require_secret_api_key(
             self.api_key,
-            provider_label="TypeSafe",
+            provider_label="TypeSafe AI",
             env_var_name="TYPESAFE_API_KEY",
             param_hint="`api_key` to TypeSafeModel(...)",
         )
@@ -208,4 +208,4 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
         return cls(**kw)
 
     def get_model_name(self):
-        return f"{self.name} (TypeSafe)"
+        return f"{self.name} (TypeSafe AI)"

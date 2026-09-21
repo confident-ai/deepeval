@@ -69,7 +69,11 @@ LEGACY_VERDICT_ALIASES: Dict[str, Verdict] = {"idk": Verdict.BORDERLINE}
 
 class PromptMixin:
     """Renders a metric prompt template. `template_class` overrides the default
-    `self.__class__.__name__` when borrowing another class's templates."""
+    `self.__class__.__name__` when borrowing another class's templates.
+    `_template_feature` selects the `templates/<feature>/templates.json`
+    bundle; metrics use the default, classifiers override it."""
+
+    _template_feature: str = "metrics"
 
     def _get_prompt(
         self,
@@ -92,7 +96,7 @@ class PromptMixin:
                 return render(**filter_template_kwargs(render, context))
 
         return resolve_template(
-            "metrics",
+            self._template_feature,
             template_class or self.__class__.__name__,
             method,
             **context,

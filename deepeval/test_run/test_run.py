@@ -600,10 +600,12 @@ class TestRunManager:
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
+        # Classifier-only results are local for now, so a case with no metric
+        # data and no trace has nothing to add to the (uploadable) test run.
         if (
             api_test_case.metrics_data is not None
             and len(api_test_case.metrics_data) == 0
-            and api_test_case.trace is None
+            and getattr(api_test_case, "trace", None) is None
         ):
             return
 

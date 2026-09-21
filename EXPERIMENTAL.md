@@ -14,9 +14,9 @@ branch (settings, CLI, base classes) are listed per feature below instead.
 
 ## Current experimental features
 
-### TypeSafe Jev for metric decisions (Python only)
+### TypeSafe AI Jev for metric decisions (Python only)
 
-Routes the decision step of a metric to TypeSafe's System One model (Jev)
+Routes the decision step of a metric to TypeSafe AI's System One model (Jev)
 instead of the LLM: QAG yes/no verdicts, DAG binary and non-binary judgements,
 and the G-Eval score. The LLM still extracts items, generates evaluation steps
 and writes reasons. In experimental mode there is no LLM fallback: a missing
@@ -47,7 +47,7 @@ Where it lives, in the order you would remove it:
 | Model class | `deepeval/models/system_one/` and `DeepEvalBaseSystemOneModel` in `deepeval/models/base_model.py`; exports in `deepeval/models/__init__.py` |
 | Provider plumbing | `ProviderSlug.TYPESAFE` (`deepeval/constants.py`), `TYPESAFE_ERROR_POLICY` (`deepeval/models/retry_policy.py`), `TYPESAFE_*` fields in `deepeval/config/settings.py` and `deepeval/key_handler.py`, `TypeSafeModel` label in `deepeval/cli/diagnose/diagnose.py` |
 | CLI | `deepeval/cli/providers/system_one/` (`set-typesafe`, `unset-typesafe`), imported from `deepeval/cli/providers/__init__.py` |
-| Docs | `docs/content/integrations/models/typesafe.mdx` and its `meta.json` entry |
+| Docs | `docs/content/integrations/models/typesafe-ai.mdx` and its `meta.json` entry |
 
 Metrics wired: Faithfulness, TurnFaithfulness, Summarization (alignment),
 AnswerRelevancy, Hallucination, ContextualPrecision, TurnContextualPrecision,

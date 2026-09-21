@@ -1,11 +1,11 @@
 ---
-id: typesafe
-title: TypeSafe (Jev)
-sidebar_label: TypeSafe
+id: typesafe-ai
+title: TypeSafe AI (Jev)
+sidebar_label: TypeSafe AI
 languages: [python]
 ---
 
-`deepeval` can route the **decision step** of its metrics to [TypeSafe](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions, generates G-Eval evaluation steps and writes the reasons; Jev only answers the typed question: a yes/no verdict per item, a DAG judgement, or a G-Eval score.
+`deepeval` can route the **decision step** of its metrics to [TypeSafe AI](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions, generates G-Eval evaluation steps and writes the reasons; Jev only answers the typed question: a yes/no verdict per item, a DAG judgement, or a G-Eval score.
 
 :::caution
 This is an **experimental** feature. It is only active when `DEEPEVAL_MODE=experimental`, and it may change between releases.
@@ -13,7 +13,7 @@ This is an **experimental** feature. It is only active when `DEEPEVAL_MODE=exper
 
 ### Setting Up
 
-Install the TypeSafe SDK (it is not a `deepeval` dependency):
+Install the TypeSafe AI SDK (it is not a `deepeval` dependency):
 
 ```bash
 pip install typesafe-sdk
@@ -78,7 +78,7 @@ All other metrics keep using your LLM in both modes.
 
 ### No Fallback
 
-In experimental mode `deepeval` never silently falls back to the LLM for verdicts. If `typesafe-sdk` is not installed or `TYPESAFE_API_KEY` is missing, constructing one of the metrics above raises an error that tells you to either configure TypeSafe or switch back with `DEEPEVAL_MODE=stable`.
+In experimental mode `deepeval` never silently falls back to the LLM for verdicts. If `typesafe-sdk` is not installed or `TYPESAFE_API_KEY` is missing, constructing one of the metrics above raises an error that tells you to either configure TypeSafe AI or switch back with `DEEPEVAL_MODE=stable`.
 
 ### Using Jev Directly
 
@@ -105,7 +105,7 @@ print(answers.nouls["billing"].probability, answers.scores["urgency"].score)
 There are **ZERO** mandatory and **THREE** optional parameters when creating a `TypeSafeModel`:
 
 - [Optional] `model`: The Jev model or alias to use. Defaults to `TYPESAFE_MODEL_NAME`; falls back to `jev-latest` if unset.
-- [Optional] `api_key`: Your TypeSafe API key. Defaults to `TYPESAFE_API_KEY`; raises an error at runtime if unset.
+- [Optional] `api_key`: Your TypeSafe AI API key. Defaults to `TYPESAFE_API_KEY`; raises an error at runtime if unset.
 - [Optional] `cost_per_input_token`: USD per input token for cost reporting. Defaults to `TYPESAFE_COST_PER_INPUT_TOKEN`, then to `deepeval`'s pricing for known Jev models. Jev does not charge for output tokens.
 
 Extra `**kwargs` are forwarded to the underlying `TypeSafeClient`.
@@ -116,4 +116,4 @@ Extra `**kwargs` are forwarded to the underlying `TypeSafeClient`.
 - `jev-preview`
 - `jev-1.13.0`
 
-See [TypeSafe's models page](https://docs.typesafe.ai/models) for the current list.
+See [TypeSafe AI's models page](https://docs.typesafe.ai/models) for the current list.

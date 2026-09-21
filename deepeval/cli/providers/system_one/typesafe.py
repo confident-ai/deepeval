@@ -21,7 +21,7 @@ def set_typesafe_model_env(
         None,
         "-m",
         "--model",
-        help=f"TypeSafe System One model (default: {DEFAULT_TYPESAFE_MODEL})",
+        help=f"TypeSafe AI System One model (default: {DEFAULT_TYPESAFE_MODEL})",
     ),
     prompt_api_key: bool = typer.Option(
         False,
@@ -55,7 +55,7 @@ def set_typesafe_model_env(
     api_key = None
     if prompt_api_key:
         api_key = coerce_blank_to_none(
-            typer.prompt("TypeSafe API key", hide_input=True)
+            typer.prompt("TypeSafe AI API key", hide_input=True)
         )
 
     model = coerce_blank_to_none(model)
@@ -80,7 +80,7 @@ def set_typesafe_model_env(
         save=save,
         quiet=quiet,
         success_msg=(
-            f":raising_hands: TypeSafe `{escape(effective_model)}` is configured. "
+            f":raising_hands: TypeSafe AI `{escape(effective_model)}` is configured. "
             f"It answers QAG verdicts alongside your LLM when "
             f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL}."
         ),
@@ -93,7 +93,7 @@ def unset_typesafe_model_env(
         None,
         "-s",
         "--save",
-        help="Remove only the TypeSafe related environment variables from a dotenv file. "
+        help="Remove only the TypeSafe AI related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
     clear_secrets: bool = typer.Option(
@@ -124,11 +124,11 @@ def unset_typesafe_model_env(
         updates=updates,
         save=save,
         quiet=quiet,
-        updated_msg="Removed TypeSafe environment variables from {path}.",
+        updated_msg="Removed TypeSafe AI environment variables from {path}.",
         tip_msg=None,
     ):
         print(
-            f"The TypeSafe configuration has been removed. QAG verdicts under "
+            f"The TypeSafe AI configuration has been removed. Metric decisions under "
             f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} will now fail until "
             f"TYPESAFE_API_KEY is set again or you switch to "
             f"{MODE_ENV_VAR}={DeepEvalMode.STABLE}."
