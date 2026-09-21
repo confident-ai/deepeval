@@ -25,16 +25,19 @@
  *   utm_campaign = inbound visitor campaign carried via last_touch
  *   utm_term     = inbound visitor term carried via last_touch
  *   ref_page    = window.location.pathname at click time (always)
- *   site_path   = the docs pages this tab read, ">" separated
- *                 (app.confident-ai.com only)
+ *   site_path   = where this tab arrived from and the docs pages it read,
+ *                 ">" separated, on every Confident AI host. The marketing
+ *                 site seeds its own trail from it, so one trail can span
+ *                 deepeval.com and confident-ai.com.
  *
  * `utm_campaign` and `utm_term` come from the visitor's stored last_touch
  * (captured from the URL on their most recent UTM landing). This lets a Google
  * ad campaign survive the deepeval-docs hop into app.confident-ai.com.
  *
  * `site_path` comes from the per-tab trail that UtmCapture records in
- * sessionStorage on every route change (see visitor-attribution.ts). It is
- * stamped on app.confident-ai.com links only, and only when the tab has one.
+ * sessionStorage on every route change (see visitor-attribution.ts), prefixed
+ * with the markers that name the arrival site. It is stamped on every
+ * Confident AI host, and only when the tab has a trail.
  *
  * Programmatic hosts (api.*, eu.api.*, au.api.*, deepeval.*, eu.deepeval.*,
  * au.deepeval.*, otel.*, eu.otel.*, au.otel.*) are intentionally excluded
@@ -63,7 +66,7 @@ export type ConfidentHost = keyof typeof CONFIDENT_HOSTS_BY_NAME;
 
 /** Hostname of CONFIDENT_HOSTS_BY_NAME.APP, for URL#hostname comparison. */
 export const APP_HOSTNAME = new URL(CONFIDENT_HOSTS_BY_NAME.APP).hostname;
-/** Query param that carries the per-tab docs trail. APP_HOSTNAME links only. */
+/** Query param that carries the per-tab docs trail. Confident hosts only. */
 export const SITE_PATH_PARAM = 'site_path';
 
 /**
@@ -71,7 +74,8 @@ export const SITE_PATH_PARAM = 'site_path';
  * failure here can never cost the utm params: the trail is optional.
  */
 export function appendSitePath(u: URL): void {
-  if (u.hostname !== APP_HOSTNAME || u.searchParams.has(SITE_PATH_PARAM)) return;
+  if (!CONFIDENT_HOSTNAMES.has(u.hostname)) return;
+  if (u.searchParams.has(SITE_PATH_PARAM)) return;
   try {
     const sitePath = getDocsSessionPathCompact();
     if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);

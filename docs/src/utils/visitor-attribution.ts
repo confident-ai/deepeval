@@ -16,6 +16,10 @@
  *
  *   ["/docs", "/docs/metrics/answer-relevancy", ...]   pathnames, visit order
  *
+ * Schema (stored in sessionStorage under ARRIVAL_KEY):
+ *
+ *   { host: "google.com" }        the external site this tab arrived from
+ *
  * - `first_touch` is write-once within the TTL window (acquisition channel).
  * - `last_touch`  is overwritten on every capture that contains UTMs.
  * - TTL is checked at READ time; expired touches are treated as absent.
@@ -152,6 +156,62 @@ const SESSION_PATH_MAX_PATH_CHARS = 120;
 const SITE_PATH_MAX_CHARS = 300;
 const SITE_PATH_GAP = '>…';
 
+/**
+ * The external site this tab arrived from, written once on the first page
+ * load. The docs site never recorded this: it stored inbound utm params only,
+ * so a visitor who reached the docs from a Google result and then signed up
+ * looked like "deepeval" with nothing before it. window.location.hostname is
+ * compared, not a constant, so preview deployments and localhost behave.
+ *
+ * Confident AI's own hosts count as internal: a visitor who walks
+ * deepeval.com to confident-ai.com and back has not arrived from anywhere new.
+ */
+const ARRIVAL_KEY = 'confident_docs_arrival';
+const OWN_HOST_SUFFIXES = ['deepeval.com', 'confident-ai.com'];
+const HOST_PATTERN = /^[a-z0-9.-]{1,253}$/i;
+
+function externalReferrerHost(): string {
+  try {
+    if (!document.referrer) return '';
+    const host = new URL(document.referrer).hostname.replace(/^www\./, '');
+    const own = window.location.hostname.replace(/^www\./, '');
+    if (!host || host === own || !HOST_PATTERN.test(host)) return '';
+    if (OWN_HOST_SUFFIXES.some((d) => host === d || host.endsWith('.' + d))) {
+      return '';
+    }
+    return host;
+  } catch {
+    return '';
+  }
+}
+
+export function captureDocsArrival(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (sessionStorage.getItem(ARRIVAL_KEY)) return;
+    const host = externalReferrerHost();
+    if (!host) return;
+    sessionStorage.setItem(ARRIVAL_KEY, JSON.stringify({ host }));
+  } catch {
+    // sessionStorage unavailable
+  }
+}
+
+function readDocsArrival(): string {
+  try {
+    const raw = sessionStorage.getItem(ARRIVAL_KEY);
+    if (!raw) return '';
+    const parsed: unknown = JSON.parse(raw);
+    const host =
+      parsed && typeof parsed === 'object'
+        ? (parsed as { host?: unknown }).host
+        : undefined;
+    return typeof host === 'string' && HOST_PATTERN.test(host) ? host : '';
+  } catch {
+    return '';
+  }
+}
+
 function readSessionPath(): string[] {
   try {
     const raw = sessionStorage.getItem(SESSION_PATH_KEY);
@@ -187,6 +247,28 @@ export function recordDocsPageView(pathname: string): void {
 }
 
 /**
+ * Trail markers, shared with confident-landing's lib/utm.ts. A step that
+ * starts with "/@" is a marker and not a page:
+ *
+ *   /@from=google.com      the external site the visit started from
+ *   /@site=deepeval.com    the site the steps after it belong to
+ *
+ * Markers keep the whole value starting with "/", which is what the app
+ * requires, and let one trail carry steps from both sites once the landing
+ * site seeds its own trail from this value.
+ */
+const MARKER_PREFIX = '/@';
+const OWN_SITE = 'deepeval.com';
+
+function trailMarkers(): string[] {
+  const markers: string[] = [];
+  const arrival = readDocsArrival();
+  if (arrival) markers.push(`${MARKER_PREFIX}from=${arrival}`);
+  markers.push(`${MARKER_PREFIX}site=${OWN_SITE}`);
+  return markers;
+}
+
+/**
  * The trail as one query value, paths joined by ">". App-side contract
  * (confident-cloud apps/frontend/src/utils/utm.ts,
  * MAX_ATTRIBUTION_VALUE_LENGTH): the app reads site_path at page load, keeps
@@ -202,15 +284,18 @@ export function getDocsSessionPathCompact(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const paths = readSessionPath();
   if (!paths.length) return undefined;
+  // Markers are never dropped: they are two short steps and they carry the
+  // only answer to "where was this visitor before deepeval.com".
+  const prefix = trailMarkers().join('>') + '>';
+  const budget = SITE_PATH_MAX_CHARS - prefix.length;
   const full = paths.join('>');
-  if (full.length <= SITE_PATH_MAX_CHARS) return full;
+  if (full.length <= budget) return prefix + full;
   const head = paths[0];
   let tail = '';
   for (let i = paths.length - 1; i > 0; i--) {
     const next = '>' + paths[i] + tail;
-    if (head.length + SITE_PATH_GAP.length + next.length > SITE_PATH_MAX_CHARS)
-      break;
+    if (head.length + SITE_PATH_GAP.length + next.length > budget) break;
     tail = next;
   }
-  return (head + SITE_PATH_GAP + tail).slice(0, SITE_PATH_MAX_CHARS);
+  return (prefix + head + SITE_PATH_GAP + tail).slice(0, SITE_PATH_MAX_CHARS);
 }
