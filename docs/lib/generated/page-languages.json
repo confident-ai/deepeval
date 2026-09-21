@@ -62,6 +62,60 @@
   "/docs/benchmarks-winogrande": [
     "python"
   ],
+  "/docs/classifiers-abstention": [
+    "python"
+  ],
+  "/docs/classifiers-clarification": [
+    "python"
+  ],
+  "/docs/classifiers-classifier": [
+    "python"
+  ],
+  "/docs/classifiers-conversation-escalation": [
+    "python"
+  ],
+  "/docs/classifiers-conversation-instruction-completeness": [
+    "python"
+  ],
+  "/docs/classifiers-conversation-resolution": [
+    "python"
+  ],
+  "/docs/classifiers-conversation-scope-adherence": [
+    "python"
+  ],
+  "/docs/classifiers-data-leakage": [
+    "python"
+  ],
+  "/docs/classifiers-escalation": [
+    "python"
+  ],
+  "/docs/classifiers-forbidden-commitments": [
+    "python"
+  ],
+  "/docs/classifiers-instruction-completeness": [
+    "python"
+  ],
+  "/docs/classifiers-introduction": [
+    "python"
+  ],
+  "/docs/classifiers-prompt-injection": [
+    "python"
+  ],
+  "/docs/classifiers-refusal": [
+    "python"
+  ],
+  "/docs/classifiers-required-disclosure": [
+    "python"
+  ],
+  "/docs/classifiers-response-language": [
+    "python"
+  ],
+  "/docs/classifiers-scope-adherence": [
+    "python"
+  ],
+  "/docs/classifiers-tone-adherence": [
+    "python"
+  ],
   "/docs/command-line-interface": [
     "python",
     "typescript"
@@ -136,6 +190,10 @@
     "typescript"
   ],
   "/docs/evaluation-llm-tracing": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-local-backend-storage": [
     "python",
     "typescript"
   ],
@@ -633,6 +691,9 @@
   "/integrations/models/portkey": [
     "python",
     "typescript"
+  ],
+  "/integrations/models/typesafe-ai": [
+    "python"
   ],
   "/integrations/models/vertex-ai": [
     "python",

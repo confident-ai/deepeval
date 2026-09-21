@@ -1,0 +1,34 @@
+---
+id: classifiers-escalation
+title: EscalationClassifier
+sidebar_label: Escalation
+languages: [python]
+---
+
+The `EscalationClassifier` labels a single response as `escalated`, `offered`, or `not_escalated` based on whether the assistant routed the user to a human, offered to do so, or handled the request itself. It is meant for customer support, healthcare, financial services, and any application with defined escalation triggers such as an angry customer, a legal threat, an out-of-scope request, or a mention of self-harm, where test cases pair each trigger with the escalation behavior you expect.
+
+## Labels
+
+- `escalated`: the response hands the user over to a human agent or another escalation path.
+- `offered`: the response offers to escalate or connect the user with a human but does not do so yet.
+- `not_escalated`: the response handles the request itself with no mention of escalation.
+
+## Usage
+
+```python
+from deepeval.classifiers import EscalationClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+escalation = EscalationClassifier()
+
+test_case = LLMTestCase(
+    input="I'm going to sue you if this isn't fixed today.",
+    actual_output="I understand. I'm connecting you with a member of our team now.",
+    expected_labels={"escalation": "escalated"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[escalation])
+```
+
+All built-in classifiers accept the same optional arguments as a [custom `Classifier`](/docs/classifiers-classifier#usage): `model`, `include_reason`, `async_mode`, and `evaluation_template`. You can also override `name` or pass your own `labels`.

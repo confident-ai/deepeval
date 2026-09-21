@@ -21,6 +21,12 @@
     "evaluation-flags-and-configs",
     "evaluation-local-backend-storage",
 
+    "---[Tags]Classifiers---",
+    "classifiers-introduction",
+    "classifiers-classifier",
+    "(single-turn-classifiers)",
+    "(multi-turn-classifiers)",
+
     "---[Gauge]Eval Metrics---",
     "metrics-introduction",
     "(custom)",

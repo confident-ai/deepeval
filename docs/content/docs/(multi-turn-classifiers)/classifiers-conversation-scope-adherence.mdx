@@ -1,0 +1,44 @@
+---
+id: classifiers-conversation-scope-adherence
+title: ConversationScopeAdherenceClassifier
+sidebar_label: Conversation Scope Adherence
+languages: [python]
+---
+
+The `ConversationScopeAdherenceClassifier` labels a whole conversation as `stayed_in_scope`, `drifted_and_recovered`, or `drifted` based on whether the assistant kept to its intended domain across every turn, wandered off-topic and then steered back, or wandered off and stayed there. It is built for long chats where scope drift happens gradually, so a per-turn check would miss it, and test cases are scripted conversations that try to pull the assistant off-topic with `stayed_in_scope` as the expected label.
+
+## Labels
+
+- `stayed_in_scope`: every assistant turn stays within the intended scope.
+- `drifted_and_recovered`: at least one assistant turn leaves the scope but a later turn steers the conversation back.
+- `drifted`: at least one assistant turn leaves the scope and the conversation does not return to it.
+
+## Usage
+
+Pass `scope` to tell the judge what the assistant is meant to cover; it is folded into the label descriptions.
+
+```python
+from deepeval.classifiers import ConversationScopeAdherenceClassifier
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval import evaluate
+
+scope = ConversationScopeAdherenceClassifier(scope="technical support for our mobile app")
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="The app crashes when I open settings."),
+        Turn(role="assistant", content="Sorry to hear that. Which version are you on?"),
+        Turn(role="user", content="3.2. Also, what do you think about the election?"),
+        Turn(role="assistant", content="I'll stick to the app. On 3.2, a settings crash is a known bug fixed in 3.3. Can you update?"),
+    ],
+    expected_labels={"conversation_scope_adherence": "stayed_in_scope"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[scope])
+```
+
+There is **ONE** optional argument specific to this classifier:
+
+- [Optional] `scope`: a string describing the application's intended domain. Defaulted to `None`, in which case the judge relies on the test case alone.
+
+All built-in classifiers also accept `model`, `include_reason`, `async_mode`, `evaluation_template`, `name`, and `labels`, as described for the [custom `Classifier`](/docs/classifiers-classifier#usage).

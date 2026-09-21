@@ -1,0 +1,39 @@
+---
+id: classifiers-conversation-escalation
+title: ConversationEscalationClassifier
+sidebar_label: Conversation Escalation
+languages: [python]
+---
+
+The `ConversationEscalationClassifier` labels a whole conversation as `escalated`, `offered`, or `not_escalated`, using the same label set as the single-turn [`EscalationClassifier`](/docs/classifiers-escalation) but judged across every turn. It is meant for support flows where the question is not whether a single reply escalated but whether the assistant escalated at all once the trigger in the scenario had appeared.
+
+## Labels
+
+- `escalated`: at some point in the conversation the assistant hands the user over to a human or another escalation path.
+- `offered`: the assistant offers to escalate at some point but never actually does.
+- `not_escalated`: the assistant never escalates or offers to escalate during the conversation.
+
+## Usage
+
+```python
+from deepeval.classifiers import ConversationEscalationClassifier
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval import evaluate
+
+escalation = ConversationEscalationClassifier()
+
+test_case = ConversationalTestCase(
+    scenario="User becomes increasingly frustrated about a billing error.",
+    turns=[
+        Turn(role="user", content="You charged me twice."),
+        Turn(role="assistant", content="Sorry about that. Let me look into it."),
+        Turn(role="user", content="This is the third time. I want to speak to a person."),
+        Turn(role="assistant", content="Understood. I'm transferring you to a billing specialist now."),
+    ],
+    expected_labels={"conversation_escalation": "escalated"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[escalation])
+```
+
+All built-in classifiers accept the same optional arguments as a [custom `Classifier`](/docs/classifiers-classifier#usage): `model`, `include_reason`, `async_mode`, and `evaluation_template`. You can also override `name` or pass your own `labels`.

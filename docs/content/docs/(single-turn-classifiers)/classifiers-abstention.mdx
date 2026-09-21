@@ -1,0 +1,37 @@
+---
+id: classifiers-abstention
+title: AbstentionClassifier
+sidebar_label: Abstention
+languages: [python]
+---
+
+The `AbstentionClassifier` labels a single response as `abstained`, `answered`, or `fabricated` based on whether the assistant said it did not know when the answer was not in the provided context, answered from context that did support it, or produced an answer the context does not back. It pairs with grounding metrics such as [`FaithfulnessMetric`](/docs/metrics-faithfulness) and is built for RAG and enterprise search test suites that deliberately include unanswerable questions with `abstained` as the expected label.
+
+## Labels
+
+- `abstained`: the provided context does not contain the answer and the response says so instead of answering.
+- `answered`: the provided context contains the answer and the response gives it.
+- `fabricated`: the provided context does not contain the answer but the response gives one anyway.
+
+## Usage
+
+Populate `retrieval_context` (or `context`) so the judge can tell whether the answer was available.
+
+```python
+from deepeval.classifiers import AbstentionClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+abstention = AbstentionClassifier()
+
+test_case = LLMTestCase(
+    input="What is the refund window for enterprise plans?",
+    actual_output="I don't have that information in our policy documents. Please contact your account manager.",
+    retrieval_context=["Standard plans can be refunded within 30 days of purchase."],
+    expected_labels={"abstention": "abstained"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[abstention])
+```
+
+All built-in classifiers accept the same optional arguments as a [custom `Classifier`](/docs/classifiers-classifier#usage): `model`, `include_reason`, `async_mode`, and `evaluation_template`. You can also override `name` or pass your own `labels`.
