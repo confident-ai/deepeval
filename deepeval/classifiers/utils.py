@@ -45,8 +45,12 @@ def normalize_labels(labels: Sequence[Union[str, Label]]) -> List[Label]:
         if not label.name or not label.name.strip():
             raise ValueError("Label names cannot be empty.")
         if label.name.strip().upper() == NONE_LABEL:
+            # Internal sentinel the judge uses to decline classifying
+            # (see `allow_none`); a user label with the same name would be
+            # indistinguishable from it.
             raise ValueError(
-                f"'{NONE_LABEL}' is reserved for when no label applies and cannot be declared as a label."
+                f"'{label.name}' cannot be used as a label name. If you want a "
+                "'no classification' outcome, set allow_none=True instead."
             )
 
     seen = Counter(label.name.strip().lower() for label in normalized)
@@ -59,17 +63,20 @@ def normalize_labels(labels: Sequence[Union[str, Label]]) -> List[Label]:
     return normalized
 
 
-def resolve_label(raw: Optional[str], labels: List[Label]) -> Optional[str]:
-    """Map the judge's raw answer onto a declared label name (or ``NONE``).
+def resolve_label(
+    raw: Optional[str], labels: List[Label], allow_none: bool = False
+) -> Optional[str]:
+    """Map the judge's raw answer onto a declared label name.
 
-    Returns ``None`` when the answer matches nothing, so the caller can record
-    an error instead of silently inventing a label.
+    Returns ``NONE_LABEL`` when the judge declined to classify and
+    ``allow_none`` permits that, and ``None`` when the answer matches nothing,
+    so the caller can record an error instead of silently inventing a label.
     """
     if raw is None:
         return None
     candidate = str(raw).strip()
     if candidate.upper() == NONE_LABEL:
-        return NONE_LABEL
+        return NONE_LABEL if allow_none else None
     for label in labels:
         if label.name == candidate:
             return label.name
@@ -166,6 +173,19 @@ def construct_turns(test_case: ConversationalTestCase) -> List[Dict]:
 
 
 ###############################################
+# Copying
+###############################################
+
+
+def copy_classifiers(
+    classifiers: Sequence[BaseClassifier],
+) -> List[BaseClassifier]:
+    """Classifier counterpart of ``copy_metrics``: one fresh instance per
+    classifier so concurrently evaluated test cases never share state."""
+    return [classifier.copy() for classifier in classifiers]
+
+
+###############################################
 # Run-level validation
 ###############################################
 
@@ -211,9 +231,9 @@ def validate_classifiers(
             if classifier is None:
                 unknown_keys[key] += 1
                 continue
-            if value not in classifier.label_names:
+            if value not in classifier.labels:
                 raise ValueError(
-                    f"expected_labels['{key}'] = '{value}' is not one of classifier '{key}' labels: {', '.join(classifier.label_names)}."
+                    f"expected_labels['{key}'] = '{value}' is not one of classifier '{key}' labels: {', '.join(str(l) for l in classifier.labels)}."
                 )
 
     if unknown_keys:

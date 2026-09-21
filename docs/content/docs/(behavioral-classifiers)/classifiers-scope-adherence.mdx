@@ -1,0 +1,70 @@
+---
+id: classifiers-scope-adherence
+title: Scope Adherence Classifier
+sidebar_label: Scope Adherence
+languages: [python]
+---
+
+<ClassifierTagsDisplayer singleTurn={true} multiTurn={true} chatbot={true} policy={true} />
+
+The `ScopeAdherenceClassifier` in `deepeval` is a categorical LLM-as-a-judge that determines whether your LLM application stayed within its intended domain, deflected an off-topic request, or answered something it should not have.
+
+It works best with test cases built from off-topic prompts the assistant should decline or redirect, together with a `scope` argument so the judge knows where the boundary actually is.
+
+:::info
+This is most useful for **user-facing** narrow vertical assistants, where a banking bot should not write poems or give medical advice.
+:::
+
+## Labels
+
+- `in_scope`: the request is within the intended scope and the response addresses it.
+- `deflected`: the request falls outside the scope and the response declines or redirects without answering it.
+- `out_of_scope_answered`: the request falls outside the scope but the response answers it anyway.
+
+## Usage
+
+Pass `scope` to tell the judge what the assistant is meant to cover; it is folded into the label descriptions.
+
+```python
+from deepeval.classifiers import ScopeAdherenceClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+classifier = ScopeAdherenceClassifier(scope="personal banking: accounts, cards, transfers, and payments")
+
+test_case = LLMTestCase(
+    input="Write me a poem about my cat.",
+    actual_output="I can only help with your banking. Is there an account question I can answer?",
+    expected_labels={classifier.name: "deflected"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[classifier])
+```
+
+There are **SIX** optional parameters when creating a `ScopeAdherenceClassifier`:
+
+- [Optional] `scope`: a string describing the application's intended domain, folded into the label descriptions. Defaulted to `None`, in which case the judge relies on the test case alone.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
+- [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
+- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](/docs/classifiers-custom#customize-your-template). Defaulted to `ClassifierTemplate`.
+
+:::note
+The `name` and label set of a built-in classifier are fixed, so `expected_labels` values mean the same thing across every dataset and run. If you need different labels or boundaries, build a [custom `Classifier`](/docs/classifiers-custom) instead.
+:::
+
+### As a standalone
+
+You can also run the `ScopeAdherenceClassifier` on a single test case as a standalone, one-off execution. `classify()` returns the label and stores the result on the instance:
+
+```python
+...
+
+label = classifier.classify(test_case)
+print(classifier.label, classifier.reason)
+```
+
+## How Is It Calculated?
+
+The `ScopeAdherenceClassifier` is a **one-shot LLM-as-a-judge**: a single call to your evaluation `model` with the test case content and the labels above, returning the chosen label and a reason. The result is compared against the test case's `expected_labels` entry, if any, to decide pass or fail.

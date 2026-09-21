@@ -39,8 +39,9 @@ class Classifier(BaseClassifier):
         labels: Sequence[Union[str, Label]],
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
+        allow_none: bool = False,
         async_mode: bool = True,
-        evaluation_template: Type[ClassifierTemplate] = ClassifierTemplate,
+        classification_template: Type[ClassifierTemplate] = ClassifierTemplate,
     ):
         if not name or not name.strip():
             raise ValueError("Classifier 'name' cannot be empty.")
@@ -50,8 +51,9 @@ class Classifier(BaseClassifier):
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
+        self.allow_none = allow_none
         self.async_mode = async_mode
-        self.evaluation_template = evaluation_template
+        self.classification_template = classification_template
 
     def classify(
         self,
@@ -151,22 +153,31 @@ class Classifier(BaseClassifier):
                 labels=labels,
                 test_case_content=construct_multi_turn_content(test_case),
                 turns=construct_turns(test_case),
+                allow_none=self.allow_none,
             )
         return self._get_prompt(
             "classify_single_turn",
             labels=labels,
             test_case_content=construct_single_turn_content(test_case),
+            allow_none=self.allow_none,
         )
 
     def _finalize(
         self, raw_label: Optional[str], reason: Optional[str]
     ) -> None:
-        label = resolve_label(raw_label, self.labels)
+        label = resolve_label(raw_label, self.labels, self.allow_none)
         if label is None:
+            allowed = ", ".join(str(label) for label in self.labels)
+            if self.allow_none:
+                allowed += ", or no classification"
             self.error = (
                 f"Judge returned '{raw_label}', which is not one of the declared labels "
-                f"({', '.join(self.label_names)}) or {NONE_LABEL}."
+                f"({allowed})."
             )
+            self.label = None
+        elif label == NONE_LABEL:
+            # The judge declined to classify; that is a valid outcome when
+            # allow_none is on, surfaced to users as `label is None` with no error.
             self.label = None
         else:
             self.label = label

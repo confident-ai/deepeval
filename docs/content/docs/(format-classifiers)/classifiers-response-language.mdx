@@ -1,0 +1,66 @@
+---
+id: classifiers-response-language
+title: Response Language Classifier
+sidebar_label: Response Language
+languages: [python]
+---
+
+<ClassifierTagsDisplayer singleTurn={true} multiTurn={true} format={true} />
+
+The `ResponseLanguageClassifier` in `deepeval` is a categorical LLM-as-a-judge that determines whether your LLM application replied in the same language the user wrote in.
+
+For applications that support more than one language, inputs across all of them belong in the dataset. This catches the common failure where a model drifts back to English, or to whatever language its system prompt was written in.
+
+:::info
+This is most useful for **multilingual user-facing apps**.
+:::
+
+## Labels
+
+- `matches_user`: the response is written in the same language as the user's input.
+- `mismatch`: the response is written in a different language from the user's input.
+
+## Usage
+
+```python
+from deepeval.classifiers import ResponseLanguageClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+classifier = ResponseLanguageClassifier()
+
+test_case = LLMTestCase(
+    input="¿Dónde está mi pedido?",
+    actual_output="Su pedido fue enviado ayer y llegará el jueves.",
+    expected_labels={classifier.name: "matches_user"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[classifier])
+```
+
+There are **FIVE** optional parameters when creating a `ResponseLanguageClassifier`:
+
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
+- [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
+- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](/docs/classifiers-custom#customize-your-template). Defaulted to `ClassifierTemplate`.
+
+:::note
+The `name` and label set of a built-in classifier are fixed, so `expected_labels` values mean the same thing across every dataset and run. If you need different labels or boundaries, build a [custom `Classifier`](/docs/classifiers-custom) instead.
+:::
+
+### As a standalone
+
+You can also run the `ResponseLanguageClassifier` on a single test case as a standalone, one-off execution. `classify()` returns the label and stores the result on the instance:
+
+```python
+...
+
+label = classifier.classify(test_case)
+print(classifier.label, classifier.reason)
+```
+
+## How Is It Calculated?
+
+The `ResponseLanguageClassifier` is a **one-shot LLM-as-a-judge**: a single call to your evaluation `model` with the test case content and the labels above, returning the chosen label and a reason. The result is compared against the test case's `expected_labels` entry, if any, to decide pass or fail.

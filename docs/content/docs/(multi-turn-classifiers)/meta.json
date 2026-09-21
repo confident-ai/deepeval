@@ -1,9 +1,0 @@
-{
-  "title": "Multi-Turn Classifiers",
-  "pages": [
-    "classifiers-conversation-resolution",
-    "classifiers-conversation-escalation",
-    "classifiers-conversation-scope-adherence",
-    "classifiers-conversation-instruction-completeness"
-  ]
-}

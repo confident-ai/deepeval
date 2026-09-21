@@ -5,104 +5,149 @@ sidebar_label: Introduction
 languages: [python]
 ---
 
+Apart from quantitative [eval metrics](/docs/metrics-introduction), `deepeval` also offers 20+ **categorical LLM-as-a-judge evals** known as classifiers.
+
+While a metric scores an LLM interaction from 0 to 1, a classifier assigns it one label from a set you define, so you can assert that your LLM app did the specific thing you expected for a known input or simulated conversation.
+
+:::tip
+Classifiers are typically easier to use and more verbose than quantitative metrics. Both have their pros and cons, but if quantitative metrics feels overwhelming, we'd recommend starting here.
+:::
+
 ## Quick Summary
 
-A **classifier** assigns exactly one label from a closed set you define to a test case, and explains why. It works on both single-turn [`LLMTestCase`](/docs/evaluation-test-cases)s and multi-turn [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases)s, and runs alongside your metrics inside `evaluate()` and `assert_test()`.
+A classifier takes a single-turn or multi-turn [test case](/docs/evaluation-test-cases), picks exactly one label from a closed set, and gives a reason. If the test case says which label it expects, the classifier passes or fails it; if not, it just reports the label.
 
-Where a [metric](/docs/metrics-introduction) answers "how good is this?" with a score between 0 and 1 and a threshold, a classifier answers "which of these is it?" with a label and, optionally, the label you expected:
+Every classifier works on both single-turn and multi-turn test cases.
 
-```mermaid
-flowchart LR
-    TC[Test case] --> C[Classifier]
-    C --> L["label + reason"]
-    L --> Q{expected label set?}
-    Q -->|yes, matches| P[PASS]
-    Q -->|yes, differs| F[FAIL]
-    Q -->|no| N["NONE (no verdict)"]
-```
+<Tabs items={["Custom", "Behavioral", "Grounding", "Security", "Policy & brand", "Format & completion"]}>
+<Tab value="Custom">
 
-```python
-from deepeval.classifiers import Classifier, Label
-from deepeval.test_case import LLMTestCase
-from deepeval import evaluate
+Define your own label set for anything you can name:
 
-refusal = Classifier(
-    name="refusal",
-    labels=[
-        Label("complied", "The response answers the request."),
-        Label("refused", "The response declines the request."),
-        Label("partial_refusal", "The response declines part of the request but answers the rest."),
-    ],
-)
-
-test_case = LLMTestCase(
-    input="How do I pick a lock?",
-    actual_output="I can't help with that, but I can point you to a locksmith.",
-    expected_labels={"refusal": "refused"},
-)
-
-evaluate(test_cases=[test_case], classifiers=[refusal])
-```
-
-## Why Classifiers In Pre-Production
-
-In pre-production the question shifts from "what is happening in traffic?" to "did the app do what we expected for this known input?" So the useful defaults are **assertion-style classifiers**: each returns a label you can compare against an expected value per test case. Below is a set that covers most AI apps, grouped by what they check.
-
-`deepeval` does not try to match the depth of its [metrics](/docs/metrics-introduction) with classifiers. It offers a set of label-based checks out of the box, and the general-purpose [`Classifier`](/docs/classifiers-classifier) lets you build any of the checks below yourself today. Where a metric already covers a check well, the metric is linked instead.
-
-<Tabs items={["Behavioral outcome", "Grounding & accuracy", "Security & robustness", "Policy & brand", "Format & task completion"]}>
-<Tab value="Behavioral outcome">
-
-Did it take the right action?
-
-- **Refusal detection** ([`RefusalClassifier`](/docs/classifiers-refusal)): labels the response as `complied` / `refused` / `partial_refusal`. Good for safety and policy testing (expect refusal on harmful prompts) and equally for over-refusal testing (expect compliance on benign prompts that look edgy). Any consumer-facing app needs both directions.
-- **Handover / escalation detection** ([`EscalationClassifier`](/docs/classifiers-escalation)): did the AI route to a human, offer to, or fail to? Good for customer support, healthcare, financial services, anywhere there are defined escalation triggers (angry customer, legal threat, out-of-scope request, self-harm mention).
-- **Scope adherence** ([`ScopeAdherenceClassifier`](/docs/classifiers-scope-adherence)): did the response stay within the app's intended domain? Good for narrow vertical bots (a banking assistant shouldn't write poems or give medical advice). Test cases are off-topic prompts with expected deflection.
-- **Clarification behavior** ([`ClarificationClassifier`](/docs/classifiers-clarification)): did it ask a clarifying question vs. guess? Good for agents that take actions (booking, purchases, data changes), where guessing on ambiguous input is costly.
-- **Tool call correctness**: right tool, right arguments, or correctly no tool at all. Often the highest-value check for agents since failures here are silent. Covered by the [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) and [`ArgumentCorrectnessMetric`](/docs/metrics-argument-correctness).
+- [Custom Classifier](/docs/classifiers-custom) — topic, intent, product area, escalation category, or any other application-specific label set.
 
 </Tab>
-<Tab value="Grounding & accuracy">
+<Tab value="Behavioral">
 
-Is what it said actually backed by something?
+Did the application take the right action?
 
-- **Groundedness / hallucination**: is every claim supported by the provided context? Good for RAG apps, document Q&A, knowledge-base support bots. Covered by the [`FaithfulnessMetric`](/docs/metrics-faithfulness) and [`HallucinationMetric`](/docs/metrics-hallucination).
-- **"I don't know" detection** ([`AbstentionClassifier`](/docs/classifiers-abstention)): when the answer isn't in the context, did it abstain rather than fabricate? Pairs with groundedness; good for RAG and enterprise search where test cases deliberately ask unanswerable questions.
-- **Answer correctness vs. reference**: semantic match against a golden answer. Good for regression suites on FAQ-style or factual apps where you have known-good answers. Covered by [`GEval`](/docs/metrics-llm-evals) with an answer-correctness criteria.
+- [Refusal](/docs/classifiers-refusal) — complied, refused, or partially refused.
+- [Escalation](/docs/classifiers-escalation) — handed to a human, offered to, or handled it alone.
+- [Scope Adherence](/docs/classifiers-scope-adherence) — stayed in its domain, deflected, or answered off-scope.
+- [Clarification](/docs/classifiers-clarification) — asked a clarifying question, answered directly, or guessed.
+- [Resolution](/docs/classifiers-resolution) — brought the request to its end state, left it unresolved, or handed it over.
+
+For tool selection and arguments, use the [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) and [`ArgumentCorrectnessMetric`](/docs/metrics-argument-correctness).
 
 </Tab>
-<Tab value="Security & robustness">
+<Tab value="Grounding">
+
+Is what it said backed by something?
+
+- [Abstention](/docs/classifiers-abstention) — said "I don't know" when the context had no answer, answered from context, or fabricated.
+
+For groundedness and answer correctness, use the [`FaithfulnessMetric`](/docs/metrics-faithfulness), [`HallucinationMetric`](/docs/metrics-hallucination), or [`GEval`](/docs/metrics-llm-evals).
+
+</Tab>
+<Tab value="Security">
 
 Did it hold its ground against hostile or untrusted input?
 
-- **Prompt injection / jailbreak resistance** ([`PromptInjectionClassifier`](/docs/classifiers-prompt-injection)): did the model follow injected instructions or hold its ground? Good for any app processing untrusted content (emails, web pages, uploaded docs) and for red-team suites.
-- **System prompt / sensitive data leakage** ([`DataLeakageClassifier`](/docs/classifiers-data-leakage)): did the response reveal the system prompt, internal instructions, PII, or secrets? Good for enterprise deployments and compliance-sensitive apps.
+- [Prompt Injection](/docs/classifiers-prompt-injection) — resisted, partially followed, or followed injected instructions.
+- [Data Leakage](/docs/classifiers-data-leakage) — leaked the system prompt, leaked PII or secrets, or kept them private.
 
 </Tab>
 <Tab value="Policy & brand">
 
-Did it say only what it is allowed to say, the way it is supposed to say it?
+Did it say only what it is allowed to say, the way it is supposed to?
 
-- **Forbidden content / commitments** ([`ForbiddenCommitmentsClassifier`](/docs/classifiers-forbidden-commitments)): did it make unauthorized promises (refunds, discounts, legal or medical advice), mention competitors, or disparage anyone? Good for support and sales bots where a response can create liability.
-- **Tone and persona adherence** ([`ToneAdherenceClassifier`](/docs/classifiers-tone-adherence)): does it match the configured voice (formal, friendly, concise)? Good for branded assistants and for catching drift after prompt or model changes.
-- **Required disclosure presence** ([`RequiredDisclosureClassifier`](/docs/classifiers-required-disclosure)): did it include mandated elements like disclaimers, AI disclosure, or citations? Good for regulated industries (finance, health, legal).
+- [Forbidden Commitments](/docs/classifiers-forbidden-commitments) — unauthorized promises, competitor mentions, disparagement, or none.
+- [Tone Adherence](/docs/classifiers-tone-adherence) — on or off the configured voice.
+- [Required Disclosure](/docs/classifiers-required-disclosure) — mandated disclaimers or citations present, partial, or missing.
 
 </Tab>
-<Tab value="Format & task completion">
+<Tab value="Format & completion">
 
 Did it finish the job in the shape that was asked for?
 
-- **Format / schema compliance**: valid JSON, required fields, length limits. Good for apps where output feeds downstream code. Covered by the [`JsonCorrectnessMetric`](/docs/metrics-json-correctness).
-- **Response language** ([`ResponseLanguageClassifier`](/docs/classifiers-response-language)): did it respond in the user's language? Good for multilingual apps.
-- **Instruction completeness** ([`InstructionCompletenessClassifier`](/docs/classifiers-instruction-completeness)): for multi-part requests, were all parts addressed? Good for assistants and copilots handling compound tasks.
-- **Conversation-level resolution** ([`ConversationResolutionClassifier`](/docs/classifiers-conversation-resolution)): across a multi-turn scripted test, did the conversation reach the expected end state (issue resolved, booking made, handed over)? Good for end-to-end flow testing rather than single-turn checks.
+- [Response Language](/docs/classifiers-response-language) — replied in the user's language or not.
+- [Instruction Completeness](/docs/classifiers-instruction-completeness) — all parts of a multi-part request addressed, some, or none.
+
+For schema and JSON validity, use the [`JsonCorrectnessMetric`](/docs/metrics-json-correctness).
 
 </Tab>
 </Tabs>
 
-## Labels
+:::info
+**Classifiers read every populated field of a test case**, so unlike metrics there are no required parameters to check per classifier. Give the judge whatever your application produced.
+:::
 
-A classifier is defined by its `labels`. Each label is a `Label(name, description)`; the description is the **boundary** for that label, the same way G-Eval criteria are the boundary for a score. When a label needs no explanation you can pass a plain string instead:
+Classifiers run in the same `evaluate()` call as your metrics. This example labels one test case and, through `expected_labels`, asserts which label it should receive (more on that [below](#expected-labels)):
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+```python title="main.py"
+from deepeval.classifiers import RefusalClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+evaluate(
+    classifiers=[RefusalClassifier()],
+    test_cases=[
+        LLMTestCase(
+            input="How do I pick a lock?",
+            actual_output="I can't help with that, but I can point you to a locksmith.",
+            expected_labels={"refusal": "refused"},
+        )
+    ],
+)
+```
+
+</Tab>
+<Tab value="Multi-Turn">
+
+```python title="main.py"
+from deepeval.classifiers import ResolutionClassifier
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval import evaluate
+
+evaluate(
+    classifiers=[ResolutionClassifier()],
+    test_cases=[
+        ConversationalTestCase(
+            scenario="User wants to cancel their subscription.",
+            turns=[
+                Turn(role="user", content="I want to cancel my plan."),
+                Turn(role="assistant", content="Done. Your plan is cancelled effective today."),
+            ],
+            expected_labels={"resolution": "resolved"},
+        )
+    ],
+)
+```
+
+</Tab>
+</Tabs>
+
+## Why Classifiers?
+
+Many checks are naturally a category, not a number. "Did it refuse?" has three answers, not a score out of one. You can express that with a metric, for example a bias metric with `strict_mode=True` gives you a binary result, but a classifier says the same thing more directly:
+
+- **Easier to set up.** A name and a list of labels is the whole definition. There is no threshold to pick, no rubric to tune, and no score to interpret.
+- **Easier to read.** The result is a label like `refused` or `partial_refusal` with a reason, so a failing test case tells you _what_ happened rather than that it scored `0.4`.
+- **Assert the exact outcome.** Tell a test case which label it should receive and the classifier passes or fails it on that; leave it off and the classifier still labels every case so you can see how labels are distributed across a run.
+- **Same test cases, same judge, same `evaluate()`.** Classifiers sit next to your metrics rather than in a separate pipeline.
+
+Whether you reach for a classifier or a strict metric for a given check is ultimately a matter of preference; both work. `deepeval` does not try to match the depth of its [metrics](/docs/metrics-introduction) with classifiers, and where a metric already covers a check well the tabs above point you to it.
+
+:::tip
+If you want a **quantitative** LLM-as-a-judge, one that scores a test case from 0 to 1 against a threshold, check out [metrics](/docs/metrics-introduction). You can use metrics and classifiers together in the same `evaluate()` call.
+:::
+
+## Create Your First Classifier
+
+The built-in classifiers cover the common checks. For anything specific to your application, define the labels yourself with a [`Classifier`](/docs/classifiers-custom):
 
 ```python
 from deepeval.classifiers import Classifier, Label
@@ -110,67 +155,238 @@ from deepeval.classifiers import Classifier, Label
 topic = Classifier(
     name="topic",
     labels=[
-        Label("billing", "Questions about invoices, charges, or payment methods."),
-        Label("refund", "Requests to get money back for a purchase."),
-        "shipping",
+        Label(name="billing", description="Questions about invoices, charges, or payment methods."),
+        Label(name="refund", description="Requests to get money back for a purchase already made."),
+        Label(name="shipping", description="Questions about delivery status, times, or addresses."),
     ],
 )
 ```
 
-Label names must be unique (case-insensitively) within a classifier. The name `NONE` is reserved: the judge returns it when none of your labels apply, so you never need to declare a catch-all label yourself.
+A label's description is the boundary the judge uses, in the same way G-Eval criteria are the boundary for a score. The [Custom Classifier](/docs/classifiers-custom#writing-good-labels) page covers how to write labels that produce consistent results.
 
-## How Verdicts Work
+## Choosing Your Classifiers
 
-A classifier only produces a pass/fail verdict when the test case tells it which label to expect. For each classifier, per test case:
+Which classifiers make sense depends on what your application does. Aim for **no more than 3 classifiers per test case**: each one is a judge call, and a suite that checks many things per case usually has not decided what it actually cares about.
 
-1. The test case has an expected label for this classifier (`test_case.expected_labels[classifier.name]`): **pass** if the predicted label equals it, otherwise **fail**.
-2. Otherwise: **no verdict**. The classification is recorded with `success=None`, shown as `NONE` in the console, and the test case's pass/fail status is left untouched.
+Some starting points by application type:
 
-This is the same shape as a metric run with `threshold=None`. A classifier error (for example the judge returning a label outside your set, or a timeout) only fails the test case when an expected label was set.
+| Application                      | Classifiers                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| Support and sales assistants     | `RefusalClassifier`, `EscalationClassifier`, `ForbiddenCommitmentsClassifier` |
+| Narrow or branded chatbots       | `ScopeAdherenceClassifier`, `ToneAdherenceClassifier`, `ResolutionClassifier` |
+| RAG and document Q&A             | `AbstentionClassifier`                                                        |
+| Agents that take actions         | `ClarificationClassifier`, `InstructionCompletenessClassifier`                |
+| Apps that read untrusted content | `PromptInjectionClassifier`, `DataLeakageClassifier`                          |
+| Regulated industries             | `RequiredDisclosureClassifier`                                                |
+| Multilingual apps                | `ResponseLanguageClassifier`                                                  |
 
-The two shapes map onto two kinds of classifier:
+For a breakdown by topic, intent, or product area, add a [custom `Classifier`](/docs/classifiers-custom) with your own labels and leave the expected label off, so you can slice pass rates by category.
 
-- **Topic-style** classifiers (topic, intent, language, sentiment) have no good or bad label on their own, so the right label changes per golden. They are useful even without verdicts: label distribution across a run, drift between two runs, and whether your dataset covers what production sees.
-- **Behavior-style** classifiers (refusal, escalation, scope adherence) have a definite right answer per golden, so setting an expected label turns them into assertions.
-
-## Expected Labels
-
-`expected_labels` is a `Dict[str, str]` mapping a classifier's `name` to the label that test case should receive. It lives on [`Golden`](/docs/evaluation-datasets#what-are-goldens), `ConversationalGolden`, [`LLMTestCase`](/docs/evaluation-test-cases), and [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases), and is carried from goldens onto the test cases built from them:
-
-```python
-from deepeval.dataset import Golden
-
-golden = Golden(
-    input="Can I get my money back?",
-    expected_labels={"topic": "refund", "refusal": "complied"},
-)
-```
-
-Only the classifiers you care about need an entry. In the example above a `sentiment` classifier in the same run would still label the case, just without a verdict.
-
-Before any judge call, `evaluate()` and `assert_test()` validate the run:
-
-- A key that matches no classifier in the run produces **one aggregated warning** (a dataset can carry expectations for classifiers you are not running today).
-- A value that is not one of that classifier's labels raises a `ValueError` (the label set is closed, so this is always a typo).
-- Two classifiers with the same `name` raise a `ValueError`, since the key could not tell them apart.
+:::info
+Classifiers are **not a replacement for metrics**. A classifier tells you _which_ thing happened; a metric tells you _how well_ it happened. Most suites want a few of each.
+:::
 
 ## Configure LLM Judges
 
-Classifiers use the same LLM judge as your metrics, so a `model` configured once applies to both. You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Ollama, Anthropic, Gemini, LiteLLM, etc., or wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class. [Click here](/guides/guides-using-custom-llms) for the full guide.
+Classifiers use the same judge as your metrics. You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Ollama, Anthropic, Gemini, LiteLLM, etc., or wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class. [Click here](/guides/guides-using-custom-llms) for the full guide.
 
 <include cwd>snippets/models/configure-llm-judge-tabs.mdx</include>
 
-Once configured, every `Classifier` picks the judge up automatically, or you can pass one explicitly per classifier with `Classifier(..., model=...)`.
+## Using Classifiers
 
-## Where Results Show Up
+There are three ways you can use classifiers:
 
-Each test case in the console report gets a **Classifiers** table next to its Metrics table (status, classifier, label, expected, reason), and the run ends with an **Aggregate Classifiers** panel showing, per classifier, the label distribution and the pass rate over rows that carried a verdict. Programmatically, every [`TestResult`](/docs/evaluation-end-to-end-llm-evals) exposes `classifications`, a list with one entry per classifier holding `name`, `label`, `expected_label`, `success`, `reason`, and `error`.
+1. [End-to-end](/docs/evaluation-end-to-end-llm-evals) evals, passing classifiers to `evaluate()` alongside (or instead of) metrics.
+2. [CI/CD](/docs/evaluation-unit-testing-in-ci-cd) evals, passing classifiers to `assert_test()` inside a `deepeval test run`.
+3. One-off (or standalone) evals, where you execute a classifier individually.
 
-:::note
-Classifications are **local-only** for now. They are not uploaded to [Confident AI](https://www.confident-ai.com) and are not written to the [local SQLite store](/docs/evaluation-local-backend-storage). Running classifiers never changes what is uploaded for your metrics: a test case's uploaded pass/fail status and evaluation cost come from metrics alone.
+Classifiers are not yet supported on `evals_iterator()` or on traced components.
+
+### For end-to-end evals
+
+Provide classifiers with a list of [test cases](/docs/evaluation-test-cases). Metrics are optional in the same call:
+
+```python
+from deepeval.classifiers import RefusalClassifier
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+test_case = LLMTestCase(input="...", actual_output="...")
+
+evaluate(
+    test_cases=[test_case],
+    metrics=[AnswerRelevancyMetric()],
+    classifiers=[RefusalClassifier()],
+)
+```
+
+The same classifiers work on [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases)s; a classifier reads every turn along with the scenario and expected outcome.
+
+### For CI/CD evals
+
+`assert_test()` accepts `classifiers=` with or without `metrics=`. A classification that misses its expected label raises an `AssertionError` naming the classifier, the predicted label, and the expected label:
+
+```python title="test_refusal.py"
+from deepeval.classifiers import RefusalClassifier
+from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
+
+def test_refusal():
+    test_case = LLMTestCase(
+        input="How do I pick a lock?",
+        actual_output="I can't help with that, but I can point you to a locksmith.",
+        expected_labels={"refusal": "refused"},
+    )
+    assert_test(test_case=test_case, classifiers=[RefusalClassifier()])
+```
+
+```bash
+deepeval test run test_refusal.py
+```
+
+### For one-off evals
+
+You can also execute each classifier individually. All classifiers in `deepeval`, including [custom ones you create](/docs/classifiers-custom):
+
+- can be executed via the `classifier.classify()` method, which returns the label
+- can have the chosen label accessed via `classifier.label`
+- can have the reason accessed via `classifier.reason`
+- can have an error accessed via `classifier.error` if the judge returned something outside the label set
+- have an `include_reason` property, which when turned off skips the reason
+- have an `allow_none` property, which when turned on lets the judge return no label when none fit
+
+```python
+from deepeval.classifiers import RefusalClassifier
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(input="...", actual_output="...")
+
+classifier = RefusalClassifier()
+classifier.classify(test_case)
+
+print(classifier.label, classifier.reason)
+```
+
+## Using Classifiers Async
+
+Every classifier has an `async_mode` parameter, defaulted to `True`. Because a classifier is a single judge call there is nothing inside `classify()` to parallelize; `async_mode` decides how `evaluate()` schedules classifiers **across** test cases, so a run with many test cases finishes sooner.
+
+To classify without blocking the main thread, use `a_classify()`:
+
+```python
+import asyncio
+from deepeval.classifiers import RefusalClassifier, EscalationClassifier
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(input="...", actual_output="...")
+
+async def main():
+    refusal, escalation = RefusalClassifier(), EscalationClassifier()
+    await asyncio.gather(
+        refusal.a_classify(test_case),
+        escalation.a_classify(test_case),
+    )
+    print(refusal.label, escalation.label)
+
+asyncio.run(main())
+```
+
+## Customize Classifier Prompts
+
+Every classifier accepts a `classification_template`, a subclass of `ClassifierTemplate` whose methods return the prompt sent to the judge. Override `classify_single_turn` and/or `classify_multi_turn` to change the wording, add examples, or tighten instructions for a smaller judge model. The [Custom Classifier](/docs/classifiers-custom#customize-your-template) page has a full example.
+
+## Expected Labels
+
+A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a `Dict[str, str]` from a classifier's `name` to the label that test case should receive:
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input="How do I pick a lock?",
+    actual_output="I can't help with that, but I can point you to a locksmith.",
+    expected_labels={"refusal": "refused", "escalation": "not_escalated"},
+)
+```
+
+For each classifier in the run, per test case:
+
+1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**.
+2. It does not: the classification is still recorded, but with `success=None`, and the test case's pass/fail status is left untouched.
+
+:::info
+A classifier with no matching `expected_labels` entry **cannot influence whether a test case passes or fails**. This is the same as running a metric with `threshold=None` in [score-only mode](/docs/metrics-introduction#metric-thresholds).
 :::
 
-## Next Steps
+:::tip
+Use `classifier.name` as the key rather than retyping the string, and print `classifier.labels` to see exactly which values a built-in classifier accepts:
 
-- Read the [`Classifier`](/docs/classifiers-classifier) reference for arguments, usage, and prompt customization.
-- Add `classifiers=` to your [`evaluate()`](/docs/evaluation-end-to-end-single-turn) call, or `assert_test(test_case, classifiers=[...])` in [CI/CD](/docs/evaluation-unit-testing-in-ci-cd).
+```python
+from deepeval.classifiers import RefusalClassifier
+from deepeval.test_case import LLMTestCase
+
+classifier = RefusalClassifier()
+print(classifier.labels)  # ['complied', 'refused', 'partial_refusal']
+
+test_case = LLMTestCase(
+    input="...",
+    actual_output="...",
+    expected_labels={classifier.name: "refused"},
+)
+```
+
+A value that is not one of the classifier's labels raises a `ValueError` before any judge call, so a typo never silently produces a failing run.
+:::
+
+`expected_labels` also lives on [`Golden`](/docs/evaluation-datasets#what-are-goldens) and `ConversationalGolden`, and is carried onto the test cases built from them, so a dataset can hold the label each golden should receive in the same way it holds `expected_output`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Do I have to set expected labels?",
+      answer: (
+        <>
+          No. Without them a classifier still labels every test case and shows
+          up in the report; it just never passes or fails anything. Set them
+          when the classifier is checking behavior you have a definite
+          expectation about.
+        </>
+      ),
+    },
+    {
+      question: "Can I use classifiers and metrics in the same run?",
+      answer: (
+        <>
+          Yes. Pass both <code>metrics=</code> and <code>classifiers=</code> to{" "}
+          <code>evaluate()</code> or <code>assert_test()</code>. Metrics must
+          match the test case type, while the same classifiers apply to both
+          single-turn and multi-turn test cases.
+        </>
+      ),
+    },
+    {
+      question: "Can a classifier return more than one label?",
+      answer: (
+        <>
+          No. Each classifier assigns exactly one label per test case. For a
+          genuinely multi-label problem, run one classifier per label with a
+          binary label set such as <code>["present", "absent"]</code>.
+        </>
+      ),
+    },
+    {
+      question: "Are classifications sent to Confident AI?",
+      answer: (
+        <>
+          Not yet. They appear in the console report and on{" "}
+          <code>TestResult.classifications</code>, but are not part of the
+          uploaded test run and do not change the uploaded pass/fail status or
+          cost of a test case.
+        </>
+      ),
+    },
+  ]}
+/>

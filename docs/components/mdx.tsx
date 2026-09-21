@@ -17,6 +17,7 @@ import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import ClassifierTagsDisplayer from "@site/src/components/ClassifierTagsDisplayer";
 import IntegrationTagsDisplayer from "@site/src/components/IntegrationTagsDisplayer";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
@@ -48,6 +49,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Equation,
     Mermaid,
     MetricTagsDisplayer,
+    ClassifierTagsDisplayer,
     IntegrationTagsDisplayer,
     AgentTraceTerminal,
     FeatureComparisonTable,

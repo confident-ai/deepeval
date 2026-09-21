@@ -263,7 +263,7 @@ There are **TWO** mandatory and **SIX** optional parameters when calling `evalua
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot mix `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`. Can be omitted when `classifiers` is provided.
-- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-classifier)s to label each test case alongside the metrics. See [classifiers](/docs/classifiers-introduction).
+- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-custom)s to label each test case alongside the metrics. See [classifiers](/docs/classifiers-introduction).
 - [Optional] `identifier`: a string label for this test run on Confident AI.
 - [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
 - [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
@@ -325,7 +325,7 @@ evaluate(
 :::
 
 :::info[Adding classifiers]
-Pass `classifiers=` to label each test case in the same run. A classifier only affects a test case's verdict when the test case sets `expected_labels` for it; otherwise it just reports the label:
+Pass `classifiers=` to label each test case in the same run. A classifier only passes or fails a test case when the test case sets `expected_labels` for it; otherwise its classification is simply recorded:
 
 ```python
 from deepeval.classifiers import Classifier
@@ -340,7 +340,7 @@ evaluate(
 )
 ```
 
-Classifiers are not yet supported on `evals_iterator()` or on traced components. See the [classifiers introduction](/docs/classifiers-introduction) for how verdicts and expected labels work.
+Classifiers are not yet supported on `evals_iterator()` or on traced components. See the [classifiers introduction](/docs/classifiers-introduction#expected-labels) for how expected labels work.
 :::
 
 </Case>

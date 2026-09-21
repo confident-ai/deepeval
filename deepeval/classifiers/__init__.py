@@ -1,33 +1,25 @@
 from .base_classifier import BaseClassifier, Label
 from .classifier import Classifier, ClassifierTemplate
 
-from .single_turn import (
-    RefusalClassifier,
-    EscalationClassifier,
-    ScopeAdherenceClassifier,
-    ClarificationClassifier,
-    AbstentionClassifier,
-    PromptInjectionClassifier,
-    DataLeakageClassifier,
-    ForbiddenCommitmentsClassifier,
-    ToneAdherenceClassifier,
-    RequiredDisclosureClassifier,
-    ResponseLanguageClassifier,
-    InstructionCompletenessClassifier,
-)
-from .multi_turn import (
-    ConversationResolutionClassifier,
-    ConversationEscalationClassifier,
-    ConversationScopeAdherenceClassifier,
-    ConversationInstructionCompletenessClassifier,
-)
+from .refusal import RefusalClassifier
+from .escalation import EscalationClassifier
+from .scope_adherence import ScopeAdherenceClassifier
+from .clarification import ClarificationClassifier
+from .abstention import AbstentionClassifier
+from .prompt_injection import PromptInjectionClassifier
+from .data_leakage import DataLeakageClassifier
+from .forbidden_commitments import ForbiddenCommitmentsClassifier
+from .tone_adherence import ToneAdherenceClassifier
+from .required_disclosure import RequiredDisclosureClassifier
+from .response_language import ResponseLanguageClassifier
+from .instruction_completeness import InstructionCompletenessClassifier
+from .resolution import ResolutionClassifier
 
 __all__ = [
     "Classifier",
     "Label",
     "BaseClassifier",
     "ClassifierTemplate",
-    # Single-turn
     "RefusalClassifier",
     "EscalationClassifier",
     "ScopeAdherenceClassifier",
@@ -40,9 +32,5 @@ __all__ = [
     "RequiredDisclosureClassifier",
     "ResponseLanguageClassifier",
     "InstructionCompletenessClassifier",
-    # Multi-turn
-    "ConversationResolutionClassifier",
-    "ConversationEscalationClassifier",
-    "ConversationScopeAdherenceClassifier",
-    "ConversationInstructionCompletenessClassifier",
+    "ResolutionClassifier",
 ]

@@ -39,6 +39,7 @@ from deepeval.metrics.indicator import (
     hydrate_classifier_from_cache,
 )
 from deepeval.classifiers.base_classifier import BaseClassifier
+from deepeval.classifiers.utils import copy_classifiers
 from deepeval.models.retry_policy import (
     set_outer_deadline,
     reset_outer_deadline,
@@ -523,7 +524,7 @@ async def a_execute_test_cases(
                         _is_assert_test=_is_assert_test,
                         progress=progress,
                         pbar_id=pbar_id,
-                        classifiers=copy_metrics(classifiers),
+                        classifiers=copy_classifiers(classifiers),
                     )
                     tasks.append(asyncio.create_task(task))
 
@@ -544,7 +545,7 @@ async def a_execute_test_cases(
                         _is_assert_test=_is_assert_test,
                         progress=progress,
                         pbar_id=pbar_id,
-                        classifiers=copy_metrics(classifiers),
+                        classifiers=copy_classifiers(classifiers),
                     )
                     tasks.append(asyncio.create_task(task))
 
@@ -589,7 +590,7 @@ async def a_execute_test_cases(
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     show_indicator=display_config.show_indicator,
-                    classifiers=copy_metrics(classifiers),
+                    classifiers=copy_classifiers(classifiers),
                 )
                 tasks.append(asyncio.create_task((task)))
 
@@ -613,7 +614,7 @@ async def a_execute_test_cases(
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     show_indicator=display_config.show_indicator,
-                    classifiers=copy_metrics(classifiers),
+                    classifiers=copy_classifiers(classifiers),
                 )
                 tasks.append(asyncio.create_task((task)))
 

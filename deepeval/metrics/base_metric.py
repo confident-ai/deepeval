@@ -71,9 +71,12 @@ class PromptMixin:
     """Renders a metric prompt template. `template_class` overrides the default
     `self.__class__.__name__` when borrowing another class's templates.
     `_template_feature` selects the `templates/<feature>/templates.json`
-    bundle; metrics use the default, classifiers override it."""
+    bundle and `_template_attr` names the instance attribute holding a
+    user-supplied template class; metrics use the defaults, classifiers
+    override both."""
 
     _template_feature: str = "metrics"
+    _template_attr: str = "evaluation_template"
 
     def _get_prompt(
         self,
@@ -86,11 +89,11 @@ class PromptMixin:
     ) -> str:
         context = {**kwargs, "multimodal": multimodal, "strict": strict}
 
-        # An explicit `template_class` borrows another class's templates, so an
-        # `evaluation_template` set for this metric must not hijack it.
+        # An explicit `template_class` borrows another class's templates, so a
+        # user template set for this metric must not hijack it.
         if template_class is None:
             render = getattr(
-                getattr(self, "evaluation_template", None), method, None
+                getattr(self, self._template_attr, None), method, None
             )
             if render is not None:
                 return render(**filter_template_kwargs(render, context))

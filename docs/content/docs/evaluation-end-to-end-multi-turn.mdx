@@ -242,7 +242,7 @@ There are **TWO** mandatory and **SIX** optional parameters when calling `evalua
 
 - `test_cases`: a list of `ConversationalTestCase`s (or an `EvaluationDataset`). You cannot mix `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseConversationalMetric`. See the [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) for the full list (e.g. `TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`). Can be omitted when `classifiers` is provided.
-- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-classifier)s to label each conversation alongside the metrics. See [classifiers](/docs/classifiers-introduction).
+- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-custom)s to label each conversation alongside the metrics. See [classifiers](/docs/classifiers-introduction).
 - [Optional] `identifier`: a string label for this test run.
 - [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
 - [Optional] `display_config`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).
@@ -250,7 +250,7 @@ There are **TWO** mandatory and **SIX** optional parameters when calling `evalua
 - [Optional] `cache_config`: a `CacheConfig` controlling caching. See [cache configs](/docs/evaluation-flags-and-configs#cache-configs).
 
 :::info[Adding classifiers]
-The same `Classifier` that labels an `LLMTestCase` also labels a `ConversationalTestCase`, reading every turn plus the scenario and expected outcome. Pass `classifiers=` next to your metrics; a classifier only affects a conversation's verdict when `expected_labels` is set on the test case:
+The same `Classifier` that labels an `LLMTestCase` also labels a `ConversationalTestCase`, reading every turn plus the scenario and expected outcome. Pass `classifiers=` next to your metrics; a classifier only passes or fails a conversation when `expected_labels` is set on the test case:
 
 ```python
 from deepeval.classifiers import Classifier
@@ -265,7 +265,7 @@ evaluate(
 )
 ```
 
-See the [classifiers introduction](/docs/classifiers-introduction) for how verdicts and expected labels work.
+See the [classifiers introduction](/docs/classifiers-introduction#expected-labels) for how expected labels work.
 :::
 
 </Case>

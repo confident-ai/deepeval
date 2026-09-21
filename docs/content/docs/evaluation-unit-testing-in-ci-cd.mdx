@@ -125,7 +125,7 @@ There are **ONE** mandatory and **TWO** optional parameters for `assert_test()` 
 
 - `test_case`: an `LLMTestCase` you constructed inside the test.
 - [Optional] `metrics`: a list of `BaseMetric`s.
-- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-classifier)s. A classifier fails the test only when the test case sets `expected_labels` for it and the predicted label differs; the `AssertionError` names the classifier, the predicted label, and the expected label.
+- [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-custom)s. A classifier fails the test only when the test case sets `expected_labels` for it and the predicted label differs; the `AssertionError` names the classifier, the predicted label, and the expected label.
 
 ```python
 from deepeval.classifiers import Classifier

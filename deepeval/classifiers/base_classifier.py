@@ -35,6 +35,28 @@ class Label(BaseModel):
             kwargs["description"] = description
         super().__init__(**kwargs)
 
+    # `print(classifier.labels)` should read as the list of label names a
+    # test case can put in `expected_labels`, not as pydantic reprs, and
+    # `"refused" in classifier.labels` should work.
+    def __repr__(self) -> str:
+        return repr(self.name)
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Label):
+            return (
+                self.name == other.name
+                and self.description == other.description
+            )
+        if isinstance(other, str):
+            return self.name == other
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash((self.name, self.description))
+
 
 class BaseClassifier(PromptMixin):
     """Classifier counterpart of ``BaseMetric``.
@@ -46,6 +68,7 @@ class BaseClassifier(PromptMixin):
     """
 
     _template_feature = "classifiers"
+    _template_attr = "classification_template"
 
     name: str
     labels: List[Label]
@@ -58,6 +81,9 @@ class BaseClassifier(PromptMixin):
     strict_mode: bool = False
     async_mode: bool = True
     include_reason: bool = True
+    # When True the judge may decline to classify, surfaced as `label is None`
+    # with no error. When False every response must receive a label.
+    allow_none: bool = False
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     input_tokens: Optional[int] = None
@@ -103,9 +129,31 @@ class BaseClassifier(PromptMixin):
             self.success = self.label == expected_label
         return self.success
 
-    @property
-    def label_names(self) -> List[str]:
-        return [label.name for label in self.labels]
+    def copy(self) -> "BaseClassifier":
+        """Return a fresh instance with the same configuration.
+
+        Mirrors ``copy_metrics``: the executor evaluates test cases
+        concurrently and each needs its own instance so per-case state
+        (``label``, ``reason``, ``error``, cost) never bleeds across cases.
+        Only the concrete class's own ``__init__`` parameters are replayed,
+        so built-in classifiers with fixed labels reconstruct cleanly.
+        """
+        import inspect
+
+        params = inspect.signature(type(self).__init__).parameters
+        state = vars(self)
+        kwargs = {
+            name: state[name]
+            for name, param in params.items()
+            if name != "self"
+            and param.kind
+            in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            )
+            and name in state
+        }
+        return type(self)(**kwargs)
 
     @property
     def __name__(self):

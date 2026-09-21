@@ -51,6 +51,18 @@ def _natural_sort_key(s: str):
     ]
 
 
+# Shown when a classifier with `allow_none=True` declined to classify.
+NO_CLASSIFICATION = "none"
+
+
+def _classification_label(c) -> str:
+    if c.label is not None:
+        return str(c.label)
+    if c.error:
+        return "N/A"
+    return NO_CLASSIFICATION
+
+
 def _classification_status(c, rich: bool = True) -> str:
     if c.error:
         return "[bold red]ERROR[/bold red]" if rich else "⚠️ ERROR"
@@ -81,8 +93,9 @@ def _aggregate_classifications(test_results: List[TestResult]) -> dict:
             agg["total"] += 1
             if c.error:
                 agg["errors"] += 1
-            elif c.label is not None:
-                agg["labels"][c.label] = agg["labels"].get(c.label, 0) + 1
+            else:
+                label = _classification_label(c)
+                agg["labels"][label] = agg["labels"].get(label, 0) + 1
             if c.success is True:
                 agg["passes"] += 1
             elif c.success is False:
@@ -272,7 +285,7 @@ class EvaluationConsoleReport:
                     classifiers_table.add_row(
                         _classification_status(c),
                         c.name,
-                        str(c.label) if c.label is not None else "N/A",
+                        _classification_label(c),
                         (
                             str(c.expected_label)
                             if c.expected_label is not None
@@ -528,7 +541,7 @@ class EvaluationConsoleReport:
                     reason_str = str(c.reason or c.error or "N/A").replace(
                         "\n", " <br> "
                     )
-                    label_str = str(c.label) if c.label is not None else "N/A"
+                    label_str = _classification_label(c)
                     expected_str = (
                         str(c.expected_label)
                         if c.expected_label is not None

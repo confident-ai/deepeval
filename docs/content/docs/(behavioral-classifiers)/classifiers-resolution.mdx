@@ -1,0 +1,72 @@
+---
+id: classifiers-resolution
+title: Resolution Classifier
+sidebar_label: Resolution
+languages: [python]
+---
+
+<ClassifierTagsDisplayer singleTurn={true} multiTurn={true} chatbot={true} />
+
+The `ResolutionClassifier` in `deepeval` is a categorical LLM-as-a-judge that determines whether your LLM application brought the user's request to its expected end state, left it unresolved, or handed it over.
+
+It is most at home on multi-turn test cases, where `scenario` (and optionally `expected_outcome`) tells the judge what a successful ending looks like, but it works on a single reply too.
+
+:::info
+This is most useful for **end-to-end flow testing** of **user-facing** chatbots, where the outcome of the whole exchange matters more than the quality of any single turn.
+:::
+
+## Labels
+
+- `resolved`: by the end of the interaction the user's goal is fully achieved.
+- `unresolved`: by the end of the interaction the user's goal is not achieved and has not been handed over.
+- `handed_over`: the interaction ends with the user handed over to a human or another channel instead of being resolved.
+
+## Usage
+
+```python
+from deepeval.classifiers import ResolutionClassifier
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval import evaluate
+
+classifier = ResolutionClassifier()
+
+test_case = ConversationalTestCase(
+    scenario="User wants to cancel their subscription.",
+    turns=[
+        Turn(role="user", content="I want to cancel my plan."),
+        Turn(role="assistant", content="I can do that. Can you confirm the email on the account?"),
+        Turn(role="user", content="jane@example.com"),
+        Turn(role="assistant", content="Done. Your plan is cancelled effective today."),
+    ],
+    expected_labels={classifier.name: "resolved"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[classifier])
+```
+
+There are **FIVE** optional parameters when creating a `ResolutionClassifier`:
+
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
+- [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
+- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](/docs/classifiers-custom#customize-your-template). Defaulted to `ClassifierTemplate`.
+
+:::note
+The `name` and label set of a built-in classifier are fixed, so `expected_labels` values mean the same thing across every dataset and run. If you need different labels or boundaries, build a [custom `Classifier`](/docs/classifiers-custom) instead.
+:::
+
+### As a standalone
+
+You can also run the `ResolutionClassifier` on a single test case as a standalone, one-off execution. `classify()` returns the label and stores the result on the instance:
+
+```python
+...
+
+label = classifier.classify(test_case)
+print(classifier.label, classifier.reason)
+```
+
+## How Is It Calculated?
+
+The `ResolutionClassifier` is a **one-shot LLM-as-a-judge**: a single call to your evaluation `model` with the test case content and the labels above, returning the chosen label and a reason. The result is compared against the test case's `expected_labels` entry, if any, to decide pass or fail.

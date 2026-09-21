@@ -74,6 +74,7 @@ class ClassifierConfiguration(BaseModel):
     labels: List[CachedLabel]
     evaluation_model: Optional[str] = None
     include_reason: bool = True
+    allow_none: bool = False
 
 
 class CachedClassification(BaseModel):
@@ -434,6 +435,7 @@ class Cache:
             ],
             evaluation_model=classifier.evaluation_model,
             include_reason=classifier.include_reason,
+            allow_none=getattr(classifier, "allow_none", False),
         )
 
     @staticmethod

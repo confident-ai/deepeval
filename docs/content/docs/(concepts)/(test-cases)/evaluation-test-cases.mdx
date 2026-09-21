@@ -664,7 +664,7 @@ const testCase = new LLMTestCase({
 
 ### Expected Labels
 
-The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this test case should receive. A classifier only produces a pass/fail verdict for a test case when its name appears here; otherwise it still labels the case but leaves the verdict untouched. Metrics never read this parameter.
+The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this test case should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
 
 ```python
 from deepeval.test_case import LLMTestCase
