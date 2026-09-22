@@ -273,6 +273,15 @@ class PromptAlignmentMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts != len(self.prompt_instructions):
+            self.error = (
+                "Judge verdict count must match prompt instruction count: "
+                f"expected {len(self.prompt_instructions)}, "
+                f"got {number_of_verdicts}."
+            )
+            raise ValueError(self.error)
+
         return score_qag_verdicts(
             self,
             self.verdicts,
