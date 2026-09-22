@@ -1,6 +1,6 @@
 {
   "name": "deepeval",
-  "version": "0.9.17",
+  "version": "0.9.18",
   "description": "The LLM Evaluation Framework for TypeScript",
   "repository": {
     "type": "git",
