@@ -7,7 +7,12 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
     construct_verbose_logs,
     check_conversational_test_case_params,
     get_unit_interactions,
@@ -75,6 +80,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -302,12 +308,15 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal_note=mm_note,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=ContextualPrecisionVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                input, expected_outcome, retrieval_context
+            ),
         )
 
     def _generate_verdicts(
@@ -335,12 +344,25 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             multimodal_note=mm_note,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=ContextualPrecisionVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                input, expected_outcome, retrieval_context
+            ),
+        )
+
+    def _experimental_system_one_spec(
+        self, input: str, expected_outcome: str, retrieval_context: List[str]
+    ) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=retrieval_context,
+            item_key="node",
+            state={"user_message": input, "assistant_output": expected_outcome},
         )
 
     async def _a_get_interaction_score_and_reason(
@@ -395,9 +417,7 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             return 0
 
         # Convert verdicts to binary list where 'yes' is 1 and others are 0
-        node_verdicts = [
-            1 if v.verdict.strip().lower() == "yes" else 0 for v in verdicts
-        ]
+        node_verdicts = [1 if v.verdict == Verdict.YES else 0 for v in verdicts]
 
         sum_weighted_precision_at_k = 0.0
         relevant_nodes_count = 0

@@ -1,14 +1,15 @@
 from typing import List
 from pydantic import BaseModel
+from deepeval.metrics.base_metric import YesNo
 
 
 class ContextualRecallVerdict(BaseModel):
-    verdict: str
+    verdict: YesNo
     reason: str
 
 
 class VerdictWithExpectedOutput(BaseModel):
-    verdict: str
+    verdict: YesNo
     reason: str
     expected_output: str
 

@@ -8,7 +8,11 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_conversational_test_case_params,
     get_unit_interactions,
@@ -295,12 +299,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 **_contextual_relevancy_verdict_kwargs(multimodal),
             )
 
-            result = await a_generate_with_schema_and_extract(
+            result = await a_generate_qag_verdicts(
                 metric=self,
                 prompt=prompt,
-                schema_cls=ContextualRelevancyVerdicts,
-                extract_schema=lambda s: s.verdicts,
-                extract_json=lambda data: data["verdicts"],
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
             )
 
             verdicts.extend(result)
@@ -325,12 +329,12 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 **_contextual_relevancy_verdict_kwargs(multimodal),
             )
 
-            result = generate_with_schema_and_extract(
+            result = generate_qag_verdicts(
                 metric=self,
                 prompt=prompt,
-                schema_cls=ContextualRelevancyVerdicts,
-                extract_schema=lambda s: s.verdicts,
-                extract_json=lambda data: data["verdicts"],
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
             )
 
             verdicts.extend(result)
@@ -384,17 +388,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     def _calculate_interaction_score(
         self, verdicts: List[ContextualRelevancyVerdict]
     ) -> float:
-        number_of_verdicts = len(verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        relevant_count = 0
-        for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
-        return score
+        return score_qag_verdicts(self, verdicts, passing=(Verdict.YES,))
 
     async def _a_get_interaction_reason(
         self,
@@ -411,7 +405,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 relevant_statements.append(verdict.statement)
             else:
                 irrelevant_statements.append(
@@ -450,7 +444,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 relevant_statements.append(verdict.statement)
             else:
                 # Include the reason for irrelevance

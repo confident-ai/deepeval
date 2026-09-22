@@ -11,7 +11,13 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -58,6 +64,7 @@ class NonAdviceMetric(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.advice_types = advice_types
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -175,7 +182,7 @@ class NonAdviceMetric(BaseMetric):
 
         non_advice_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 non_advice_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -197,7 +204,7 @@ class NonAdviceMetric(BaseMetric):
 
         non_advice_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 non_advice_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -224,14 +231,13 @@ class NonAdviceMetric(BaseMetric):
             multimodal=multimodal,
             advices=self.advices,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                NonAdviceVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=NonAdviceVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self, *, multimodal: bool) -> List[NonAdviceVerdict]:
@@ -243,14 +249,21 @@ class NonAdviceMetric(BaseMetric):
             multimodal=multimodal,
             advices=self.advices,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                NonAdviceVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=NonAdviceVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.advices,
+            item_key="statement",
+            state={"advice_types": self.advice_types},
         )
 
     async def _a_generate_advices(
@@ -292,17 +305,11 @@ class NonAdviceMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        appropriate_advice_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                appropriate_advice_count += 1
-
-        score = appropriate_advice_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+        )
 
     @property
     def __name__(self):

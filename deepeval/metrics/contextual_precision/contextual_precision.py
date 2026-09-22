@@ -5,7 +5,12 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -69,6 +74,7 @@ class ContextualPrecisionMetric(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -259,15 +265,15 @@ class ContextualPrecisionMetric(BaseMetric):
             multimodal_note=mm_note,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=cpschema.Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                cpschema.ContextualPrecisionVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=cpschema.ContextualPrecisionVerdict,
+            verdicts_cls=cpschema.Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                input, expected_output, retrieval_context
+            ),
         )
 
     def _generate_verdicts(
@@ -290,15 +296,25 @@ class ContextualPrecisionMetric(BaseMetric):
             multimodal_note=mm_note,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=cpschema.Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                cpschema.ContextualPrecisionVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=cpschema.ContextualPrecisionVerdict,
+            verdicts_cls=cpschema.Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                input, expected_output, retrieval_context
+            ),
+        )
+
+    def _experimental_system_one_spec(
+        self, input: str, expected_output: str, retrieval_context: List[str]
+    ) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=retrieval_context,
+            item_key="node",
+            state={"input": input, "expected_output": expected_output},
         )
 
     def _group_retrieval_contexts(
@@ -341,8 +357,7 @@ class ContextualPrecisionMetric(BaseMetric):
 
         # Convert verdicts to a binary list where 'yes' is 1 and others are 0
         node_verdicts = [
-            1 if v.verdict.strip().lower() == "yes" else 0
-            for v in self.verdicts
+            1 if v.verdict == Verdict.YES else 0 for v in self.verdicts
         ]
 
         sum_weighted_precision_at_k = 0.0

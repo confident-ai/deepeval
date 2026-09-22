@@ -2,14 +2,14 @@ import logging
 import sys
 import json
 import os
-from typing import List, Optional, Dict, Union
+from typing import TYPE_CHECKING, List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
 from deepeval.utils import make_model_config
 
 from deepeval.test_case import SingleTurnParams, LLMTestCase, ToolCallParams
-from deepeval.test_run.api import MetricData
+from deepeval.test_run.api import MetricData, Classification
 from deepeval.utils import (
     delete_file_if_exists,
     is_read_only_env,
@@ -17,6 +17,11 @@ from deepeval.utils import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
+
+if TYPE_CHECKING:
+    # Imported lazily: `deepeval.classifiers` depends on `deepeval.metrics`,
+    # which imports this module, so a runtime import here would be circular.
+    from deepeval.classifiers.base_classifier import BaseClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +65,28 @@ class CachedMetricData(BaseModel):
     metric_configuration: MetricConfiguration
 
 
+class CachedLabel(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class ClassifierConfiguration(BaseModel):
+    labels: List[CachedLabel]
+    evaluation_model: Optional[str] = None
+    include_reason: bool = True
+    allow_none: bool = False
+
+
+class CachedClassification(BaseModel):
+    classification: Classification
+    classifier_configuration: ClassifierConfiguration
+
+
 class CachedTestCase(BaseModel):
     cached_metrics_data: List[CachedMetricData] = Field(
+        default_factory=lambda: []
+    )
+    cached_classifications: List[CachedClassification] = Field(
         default_factory=lambda: []
     )
     hyperparameters: Optional[str] = Field(None)
@@ -377,6 +402,41 @@ class Cache:
                 return False
 
         return True
+
+    @staticmethod
+    def get_classification(
+        classifier: "BaseClassifier",
+        cached_test_case: Optional[CachedTestCase],
+    ) -> Optional[CachedClassification]:
+        """Return the cached classification for this classifier, if the cached
+        run used the same name, label set (names and descriptions) and judge
+        model, and did not error. ``expected_label`` / ``success`` on the
+        cached row are stale by design and must be recomputed by the caller."""
+        if not cached_test_case:
+            return None
+        configuration = Cache.create_classifier_configuration(classifier)
+        for cached in cached_test_case.cached_classifications:
+            if (
+                cached.classification.name == classifier.__name__
+                and cached.classification.error is None
+                and cached.classifier_configuration == configuration
+            ):
+                return cached
+        return None
+
+    @staticmethod
+    def create_classifier_configuration(
+        classifier: "BaseClassifier",
+    ) -> ClassifierConfiguration:
+        return ClassifierConfiguration(
+            labels=[
+                CachedLabel(name=label.name, description=label.description)
+                for label in classifier.labels
+            ],
+            evaluation_model=classifier.evaluation_model,
+            include_reason=classifier.include_reason,
+            allow_none=getattr(classifier, "allow_none", False),
+        )
 
     @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:

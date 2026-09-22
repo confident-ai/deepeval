@@ -18,6 +18,11 @@ import {
   sqliteUnsupportedMessage,
 } from "@/sqlite-store/mode";
 import {
+  MODE_EXPERIMENTAL,
+  MODE_STABLE,
+  normalizeDeepEvalMode,
+} from "@/config/mode";
+import {
   badParameter,
   handleSaveResult,
   printTable,
@@ -232,6 +237,42 @@ export function registerSettingsCommands(program: Command): void {
             ? "💾 Test runs will now be saved to deepeval.db (SQLite). " +
               "Run `npx deepeval inspect --list` to browse them."
             : "📄 Test runs will now be saved as JSON files (the default).",
+      });
+    });
+
+  program
+    .command("set-mode")
+    .description("Choose the deepeval feature channel (sets DEEPEVAL_MODE).")
+    .argument(
+      "<mode>",
+      `Feature channel: ${MODE_STABLE} (default) or ${MODE_EXPERIMENTAL} (opt into the latest features, which may not be stable yet).`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((mode: string, options) => {
+      const normalized = normalizeDeepEvalMode(mode);
+      if (normalized === undefined) {
+        badParameter(`Mode must be ${MODE_STABLE} or ${MODE_EXPERIMENTAL}.`);
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_MODE = normalized;
+        },
+        { save },
+      );
+
+      handleSaveResult({
+        result,
+        save,
+        quiet: options.quiet,
+        successMessage:
+          normalized === MODE_EXPERIMENTAL
+            ? "🧪 You're now on the experimental channel. Features behind it " +
+              "may change or break between releases; run " +
+              "`npx deepeval set-mode stable` to opt out."
+            : "✅ You're now on the stable channel (the default).",
       });
     });
 

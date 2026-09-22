@@ -1031,6 +1031,38 @@ except Exception:  # pragma: no cover - aiohttp/requests are core deps
     SPEECH_ERROR_POLICY = None
 
 
+###################
+# TypeSafe Policy #
+###################
+# SDK errors carry `.status`, not `.status_code`, so 5xx (incl. 529 Overloaded)
+# is retried via the `TypeSafeInternalServerError` class rather than `http_excs`.
+
+try:
+    module = require_dependency(
+        "typesafe_sdk",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install typesafe-sdk`.",
+    )
+
+    TYPESAFE_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(
+            module.TypeSafeAuthenticationError,
+            module.TypeSafePermissionDeniedError,
+        ),
+        rate_limit_excs=(module.TypeSafeRateLimitError,),
+        network_excs=(
+            module.TypeSafeAPIConnectionError,
+            module.TypeSafeAPITimeoutError,
+            module.TypeSafeInternalServerError,
+        ),
+        http_excs=(),
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:  # TypeSafe optional
+    TYPESAFE_ERROR_POLICY = None
+
+
 # Map provider slugs to their policy objects.
 # It is OK if some are None, we'll treat that as no Error Policy / Tenacity
 _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
@@ -1047,6 +1079,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
     PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
     PS.PORTKEY.value: PORTKEY_ERROR_POLICY,
+    PS.TYPESAFE.value: TYPESAFE_ERROR_POLICY,
     PS.ASSEMBLYAI.value: SPEECH_ERROR_POLICY,
     PS.CARTESIA.value: SPEECH_ERROR_POLICY,
     PS.DEEPGRAM.value: SPEECH_ERROR_POLICY,
@@ -1074,6 +1107,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
     PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
     PS.PORTKEY.value: _opt_pred(PORTKEY_ERROR_POLICY),
+    PS.TYPESAFE.value: _opt_pred(TYPESAFE_ERROR_POLICY),
     PS.ASSEMBLYAI.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.CARTESIA.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.DEEPGRAM.value: _opt_pred(SPEECH_ERROR_POLICY),
@@ -1103,4 +1137,5 @@ __all__ = [
     "GROK_ERROR_POLICY",
     "LOCAL_ERROR_POLICY",
     "SPEECH_ERROR_POLICY",
+    "TYPESAFE_ERROR_POLICY",
 ]

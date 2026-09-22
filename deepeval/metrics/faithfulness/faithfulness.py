@@ -7,12 +7,18 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneVerdictSpec,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -74,6 +80,7 @@ class FaithfulnessMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -199,10 +206,10 @@ class FaithfulnessMetric(BaseMetric):
 
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 contradictions.append(verdict.reason)
             if (
-                verdict.verdict.strip().lower() == "idk"
+                verdict.verdict == Verdict.BORDERLINE
                 and self.penalize_ambiguous_claims
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
@@ -228,10 +235,10 @@ class FaithfulnessMetric(BaseMetric):
 
         contradictions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 contradictions.append(verdict.reason)
             if (
-                verdict.verdict.strip().lower() == "idk"
+                verdict.verdict == Verdict.BORDERLINE
                 and self.penalize_ambiguous_claims
             ):
                 contradictions.append(f"(Ambiguous) {verdict.reason}")
@@ -264,14 +271,13 @@ class FaithfulnessMetric(BaseMetric):
             retrieval_context="\n\n".join(self.truths),
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                FaithfulnessVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=FaithfulnessVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self, multimodal: bool) -> List[FaithfulnessVerdict]:
@@ -285,14 +291,21 @@ class FaithfulnessMetric(BaseMetric):
             retrieval_context="\n\n".join(self.truths),
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                FaithfulnessVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=FaithfulnessVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.claims,
+            item_key="claim",
+            state={"retrieval_context": self.truths},
         )
 
     async def _a_generate_truths(
@@ -378,23 +391,12 @@ class FaithfulnessMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        faithfulness_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                faithfulness_count += 1
-
-            if (
-                self.penalize_ambiguous_claims
-                and verdict.verdict.strip().lower() == "idk"
-            ):
-                faithfulness_count -= 1
-
-        score = faithfulness_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        passing = (
+            (Verdict.YES,)
+            if self.penalize_ambiguous_claims
+            else (Verdict.YES, Verdict.BORDERLINE)
+        )
+        return score_qag_verdicts(self, self.verdicts, passing=passing)
 
     @property
     def __name__(self):

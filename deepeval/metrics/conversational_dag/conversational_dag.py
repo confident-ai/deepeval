@@ -8,6 +8,7 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     initialize_model,
+    initialize_system_one_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -43,6 +44,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         self.dag = copy_graph(dag)
         self.name = name
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason

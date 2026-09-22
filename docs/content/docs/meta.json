@@ -35,6 +35,15 @@
     "(metrics-others)",
     "(community)",
 
+    "---[Tags]Classifiers---",
+    "classifiers-introduction",
+    "classifiers-custom",
+    "(behavioral-classifiers)",
+    "(grounding-classifiers)",
+    "(security-classifiers)",
+    "(policy-classifiers)",
+    "(format-classifiers)",
+
     "---[Sparkles]Prompt Optimization---",
     "prompt-optimization-introduction",
     "(algorithms)",

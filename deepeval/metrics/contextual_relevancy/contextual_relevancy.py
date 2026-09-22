@@ -6,7 +6,11 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -21,6 +25,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_relevancy.schema import (
+    ContextualRelevancyVerdict,
     ContextualRelevancyVerdicts,
     ContextualRelevancyScoreReason,
 )
@@ -204,7 +209,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if verdict.verdict == Verdict.NO:
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -234,7 +239,7 @@ class ContextualRelevancyMetric(BaseMetric):
         relevant_statements = []
         for verdicts in self.verdicts_list:
             for verdict in verdicts.verdicts:
-                if verdict.verdict.lower() == "no":
+                if verdict.verdict == Verdict.NO:
                     irrelevant_statements.append(verdict.reason)
                 else:
                     relevant_statements.append(verdict.statement)
@@ -257,19 +262,12 @@ class ContextualRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        total_verdicts = 0
-        relevant_statements = 0
-        for verdicts in self.verdicts_list:
-            for verdict in verdicts.verdicts:
-                total_verdicts += 1
-                if verdict.verdict.lower() == "yes":
-                    relevant_statements += 1
-
-        if total_verdicts == 0:
-            return 0
-
-        score = relevant_statements / total_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            [v for verdicts in self.verdicts_list for v in verdicts.verdicts],
+            passing=(Verdict.YES,),
+            empty_score=0,
+        )
 
     async def _a_generate_verdicts(
         self, input: str, context: List[str], multimodal: bool
@@ -282,12 +280,14 @@ class ContextualRelevancyMetric(BaseMetric):
             **_contextual_relevancy_verdict_kwargs(multimodal),
         )
 
-        return await a_generate_with_schema_and_extract(
-            metric=self,
-            prompt=prompt,
-            schema_cls=ContextualRelevancyVerdicts,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        return ContextualRelevancyVerdicts(
+            verdicts=await a_generate_qag_verdicts(
+                metric=self,
+                prompt=prompt,
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
+            )
         )
 
     def _generate_verdicts(
@@ -301,12 +301,14 @@ class ContextualRelevancyMetric(BaseMetric):
             **_contextual_relevancy_verdict_kwargs(multimodal),
         )
 
-        return generate_with_schema_and_extract(
-            metric=self,
-            prompt=prompt,
-            schema_cls=ContextualRelevancyVerdicts,
-            extract_schema=lambda r: r,
-            extract_json=lambda data: ContextualRelevancyVerdicts(**data),
+        return ContextualRelevancyVerdicts(
+            verdicts=generate_qag_verdicts(
+                metric=self,
+                prompt=prompt,
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
+            )
         )
 
     @property

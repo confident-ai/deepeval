@@ -16,7 +16,7 @@ A **single-turn test case** is a blueprint provided by `deepeval` to unit test L
 Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of `MLLMImage` or `ConversationalTestCase`.
 :::
 
-An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has **NINE** parameters:
+An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has the following parameters:
 
 - `input`
 - [Optional] <Term py="actual_output" ts="actualOutput"/>
@@ -25,6 +25,7 @@ An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has *
 - [Optional] <Term py="retrieval_context" ts="retrievalContext"/>
 - [Optional] <Term py="tools_called" ts="toolsCalled"/>
 - [Optional] <Term py="expected_tools" ts="expectedTools"/>
+- <Only id="python">[Optional] `expected_labels`</Only>
 - [Optional] <Term py="token_cost" ts="tokenCost"/>
 - [Optional] <Term py="completion_time" ts="completionTime"/>
 
@@ -658,6 +659,26 @@ const testCase = new LLMTestCase({
 </Case>
 
 </Switch>
+
+<Only id="python">
+
+### Expected Labels
+
+The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this test case should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input="How do I pick a lock?",
+    actual_output="I can't help with that, but I can point you to a locksmith.",
+    expected_labels={"refusal": "refused", "topic": "security"},
+)
+```
+
+Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning, so a dataset can carry expectations for classifiers you are not running today.
+
+</Only>
 
 ### Token cost
 

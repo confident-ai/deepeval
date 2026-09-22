@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Optional, Dict, List
+from enum import Enum
+from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -16,12 +17,66 @@ from deepeval.templates.resolver import (
 from deepeval.templates.template_class import filter_template_kwargs
 
 if TYPE_CHECKING:
-    from deepeval.models import DeepEvalBaseLLM
+    from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
+
+
+###############################################
+# QAG (question-answer generation) verdicts
+###############################################
+#
+# Every yes/no-style metric asks an LLM judge to classify a list of items
+# (claims, statements, opinions, ...) into one of two vocabularies:
+#
+# - ``YesNo``: a strict binary verdict.
+# - ``YesNoBorderline``: a binary verdict plus a ``borderline`` bucket for
+#   items that are ambiguous / only partially supported. Each metric decides
+#   how the borderline bucket is scored (see ``score_qag_verdicts`` in
+#   ``deepeval.metrics.utils``).
+#
+# Always refer to verdicts through the ``Verdict`` enum (``Verdict.YES``)
+# rather than raw strings so a typo is an ``AttributeError`` at import time
+# instead of a silently wrong score. Members subclass ``str`` so
+# ``Verdict.YES == "yes"`` and they serialize as plain strings.
+
+
+class Verdict(str, Enum):
+    YES = "yes"
+    NO = "no"
+    BORDERLINE = "borderline"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+# Field types for pydantic schemas. Pydantic renders these as
+# ``{"enum": ["yes", "no"], "type": "string"}`` and coerces incoming strings to
+# ``Verdict`` members.
+YesNo = Literal[Verdict.YES, Verdict.NO]
+YesNoBorderline = Literal[Verdict.YES, Verdict.NO, Verdict.BORDERLINE]
+
+# Allowed-vocabulary tuples for ``generate_qag_verdicts(..., allowed=...)``.
+YES_NO: Tuple[Verdict, ...] = (Verdict.YES, Verdict.NO)
+YES_NO_BORDERLINE: Tuple[Verdict, ...] = (
+    Verdict.YES,
+    Verdict.NO,
+    Verdict.BORDERLINE,
+)
+
+# Older prompts used ``idk`` for the borderline bucket. Judges that saw a cached
+# or third-party copy of those prompts may still reply with it.
+LEGACY_VERDICT_ALIASES: Dict[str, Verdict] = {"idk": Verdict.BORDERLINE}
 
 
 class PromptMixin:
     """Renders a metric prompt template. `template_class` overrides the default
-    `self.__class__.__name__` when borrowing another class's templates."""
+    `self.__class__.__name__` when borrowing another class's templates.
+    `_template_feature` selects the `templates/<feature>/templates.json`
+    bundle and `_template_attr` names the instance attribute holding a
+    user-supplied template class; metrics use the defaults, classifiers
+    override both."""
+
+    _template_feature: str = "metrics"
+    _template_attr: str = "evaluation_template"
 
     def _get_prompt(
         self,
@@ -34,17 +89,17 @@ class PromptMixin:
     ) -> str:
         context = {**kwargs, "multimodal": multimodal, "strict": strict}
 
-        # An explicit `template_class` borrows another class's templates, so an
-        # `evaluation_template` set for this metric must not hijack it.
+        # An explicit `template_class` borrows another class's templates, so a
+        # user template set for this metric must not hijack it.
         if template_class is None:
             render = getattr(
-                getattr(self, "evaluation_template", None), method, None
+                getattr(self, self._template_attr, None), method, None
             )
             if render is not None:
                 return render(**filter_template_kwargs(render, context))
 
         return resolve_template(
-            "metrics",
+            self._template_feature,
             template_class or self.__class__.__name__,
             method,
             **context,
@@ -73,6 +128,7 @@ class BaseMetric(PromptMixin):
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -144,6 +200,7 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

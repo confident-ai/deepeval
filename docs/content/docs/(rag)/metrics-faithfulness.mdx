@@ -321,6 +321,14 @@ The `FaithfulnessMetric` first uses an LLM to extract all claims made in the <Te
 Sometimes, you may want to only consider the most important factual truths in the <Term py="retrieval_context" ts="retrievalContext"/>. If this is the case, you can choose to set the <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> parameter to limit the maximum number of truths to consider during evaluation.
 :::
 
+<Only id="python">
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
+</Only>
+
 ## Customize Your Template
 
 Since `deepeval`'s `FaithfulnessMetric` is evaluated by LLM-as-a-judge, you can likely improve your metric accuracy by [overriding `deepeval`'s default prompt templates](/docs/metrics-introduction#customizing-metric-prompts). This is especially helpful if:

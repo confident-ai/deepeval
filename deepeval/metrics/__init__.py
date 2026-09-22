@@ -2,6 +2,7 @@ from .base_metric import (
     BaseMetric,
     BaseConversationalMetric,
     BaseArenaMetric,
+    Verdict,
 )
 
 from .dag.dag import DAGMetric, DeepAcyclicGraph
@@ -82,6 +83,7 @@ __all__ = [
     "BaseMetric",
     "BaseConversationalMetric",
     "BaseArenaMetric",
+    "Verdict",
     # Non-LLM metrics
     "ExactMatchMetric",
     "PatternMatchMetric",

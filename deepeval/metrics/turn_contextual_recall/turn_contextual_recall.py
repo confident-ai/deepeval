@@ -7,7 +7,11 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_conversational_test_case_params,
     get_unit_interactions,
@@ -296,12 +300,12 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=ContextualRecallVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     def _generate_verdicts(
@@ -322,12 +326,12 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
             **_contextual_recall_verdict_kwargs(retrieval_context, multimodal),
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: s.verdicts,
-            extract_json=lambda data: data["verdicts"],
+            verdict_cls=ContextualRecallVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
         )
 
     async def _a_get_interaction_score_and_reason(
@@ -377,17 +381,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
     def _calculate_interaction_score(
         self, verdicts: List[ContextualRecallVerdict]
     ) -> float:
-        number_of_verdicts = len(verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        attributable_count = 0
-        for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                attributable_count += 1
-
-        score = attributable_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(self, verdicts, passing=(Verdict.YES,))
 
     async def _a_get_interaction_reason(
         self,
@@ -403,7 +397,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -440,7 +434,7 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in verdicts:
-            if verdict.verdict.lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)

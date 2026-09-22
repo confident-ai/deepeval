@@ -2490,7 +2490,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 18
+      "commits": 19
     },
     {
       "login": "BloggerBust",
@@ -2717,7 +2717,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 17
+      "commits": 18
     },
     {
       "login": "BloggerBust",
@@ -2878,7 +2878,7 @@
       "name": "Jeffrey Ip",
       "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
       "url": "https://github.com/penguine-ip",
-      "commits": 5
+      "commits": 6
     }
   ],
   "content/docs/evaluation-trajectory-based-llm-evals.mdx": [
@@ -5309,6 +5309,15 @@
       "avatarUrl": "https://avatars.githubusercontent.com/u/230393880?v=4",
       "url": "https://github.com/trevor-cai",
       "commits": 1
+    }
+  ],
+  "content/integrations/models/typesafe-ai.mdx": [
+    {
+      "login": "penguine-ip",
+      "name": "Jeffrey Ip",
+      "avatarUrl": "https://avatars.githubusercontent.com/u/143328635?v=4",
+      "url": "https://github.com/penguine-ip",
+      "commits": 3
     }
   ],
   "content/integrations/models/vertex-ai.mdx": [

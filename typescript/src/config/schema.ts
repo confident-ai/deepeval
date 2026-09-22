@@ -14,6 +14,11 @@ import {
   normalizeLocalStoreMode,
   sqliteUnsupportedMessage,
 } from "@/sqlite-store/mode";
+import {
+  MODE_EXPERIMENTAL,
+  MODE_STABLE,
+  normalizeDeepEvalMode,
+} from "@/config/mode";
 import { Environment } from "@/tracing/utils";
 
 export interface SettingFieldMeta {
@@ -118,6 +123,23 @@ export const settingsSchema = z.object({
   DEEPEVAL_RESULTS_FOLDER: optionalString().describe(
     "If set, export a timestamped JSON of the latest test run into this folder.",
   ),
+  DEEPEVAL_MODE: z
+    .string()
+    .transform((value, ctx) => {
+      const mode = normalizeDeepEvalMode(value);
+      if (mode === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Expected ${MODE_STABLE} or ${MODE_EXPERIMENTAL}.`,
+        });
+        return z.NEVER;
+      }
+      return mode;
+    })
+    .optional()
+    .describe(
+      "DeepEval feature channel: stable (default) or experimental. Experimental enrols you into the latest features, which may not be stable yet.",
+    ),
   DEEPEVAL_LOCAL_STORE: z
     .string()
     .transform((value, ctx) => {

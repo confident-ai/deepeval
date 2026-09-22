@@ -1320,6 +1320,8 @@ class Golden(BaseModel):
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     expected_tools: Optional[List[ToolCall]] = None
+    # Classifier name -> expected label, see /docs/classifiers-introduction
+    expected_labels: Optional[Dict[str, str]] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
@@ -1363,6 +1365,12 @@ class Golden {
 The <Term py="actual_output" ts="actualOutput" />, <Term py="retrieval_context" ts="retrievalContext" />, and <Term py="tools_called" ts="toolsCalled" /> are meant to be populated dynamically instead of passed directly from a golden to test case at evaluation time.
 :::
 
+<Only id="python">
+
+`expected_labels` is carried from a golden onto the test case built from it, so a dataset can hold the label each golden should receive per [classifier](/docs/classifiers-introduction) in the same way it holds `expected_output` for metrics.
+
+</Only>
+
 For multi-turn `ConversationalGolden`s:
 
 <Switch>
@@ -1377,6 +1385,8 @@ class ConversationalGolden(BaseModel):
     expected_outcome: Optional[str] = None
     persona: Optional[Persona] = None
     context: Optional[List[str]] = None
+    # Classifier name -> expected label, see /docs/classifiers-introduction
+    expected_labels: Optional[Dict[str, str]] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None

@@ -16,6 +16,7 @@ import { ASSETS } from "@site/src/assets";
 - Checking a project against its governance policy (<Term py="deepeval gate" ts="npx deepeval gate"/>)
 - Diagnosing your environment (<Term py="deepeval diagnose" ts="npx deepeval diagnose"/>): default models, effective settings, and where each value comes from
 - Enabling/disabling debug
+- Opting into experimental features (<Term py="deepeval set-mode experimental" ts="npx deepeval set-mode experimental"/>)
 - Selecting an LLM provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, OpenRouter, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
 - Listing and updating any deepeval setting (<Term py="deepeval settings -l" ts="npx deepeval settings -l"/>, <Term py="deepeval settings --set KEY=VALUE" ts="npx deepeval settings --set KEY=VALUE"/>)
@@ -409,6 +410,7 @@ The report shows:
 - **Evaluation model**: the model `deepeval` will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, and the selected text-to-speech and speech-to-text models below those, with what each is used by.</Only>
 - **Configuration sources**: the precedence order every variable is resolved against, independently (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults), which dotenv files were loaded, and where the keystore lives.
 - **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get. Storage settings are included here too: `DEEPEVAL_RESULTS_FOLDER` and [`DEEPEVAL_LOCAL_STORE`](/docs/environment-variables#sqlite-local-store), so if runs are landing in `deepeval.db` instead of `test_run_*.json` files (or vice versa), this is where to confirm which value won and where it came from. <Switch><Case id="python">An unrecognised `DEEPEVAL_LOCAL_STORE` value falls back to `json` at run time with a warning on stderr, so a typo shows up here as the value that lost.</Case><Case id="typescript">A `DEEPEVAL_LOCAL_STORE=sqlite` that this Node version cannot honour (anything below Node 24) is reported as an ignored invalid value with the reason, rather than silently dropped.</Case></Switch>
+- **Mode**: the feature channel in effect — `stable` (default) or `experimental` — and where it was set. An unrecognised [`DEEPEVAL_MODE`](/docs/environment-variables#deepeval-mode) value is reported as `stable`, since that is what the runtime falls back to.
 - **Confident AI**: login status, masked API key, data region, and the API endpoint.<Only id="python"> The OTEL endpoint is shown too, with warnings if either endpoint looks like it belongs to a different region than your API key.</Only>
 
 Options:
@@ -511,6 +513,40 @@ Requires Node.js 24 or newer for `sqlite`; on an older Node the command exits wi
 :::caution
 Your API key is issued for a single region. Pointing `deepeval` at a region your key doesn't belong to will fail to authenticate. Run `diagnose` to see the region and endpoint currently in effect.
 :::
+
+### `set-mode`
+
+Choose the deepeval feature channel. `stable` (the default) only runs finalised behaviour; `experimental` opts you into the newest features before they are finalised, so anything gated on it may change or break between releases.
+
+Under the hood this sets the [`DEEPEVAL_MODE`](/docs/environment-variables#deepeval-mode) environment variable; the command is preferred because it validates the value for you. Unset or unrecognised values always mean `stable`.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+deepeval set-mode experimental --save=dotenv
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-mode experimental --save=dotenv
+```
+
+</Case>
+
+</Switch>
+
+| Option          | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| `MODE`          | Positional argument. One of `stable` or `experimental`.              |
+| `--save`, `-s`  | Persist `DEEPEVAL_MODE` to a dotenv file. Usage: `dotenv[:path]`.    |
+| `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                   |
+
+To opt out, run <Term py="deepeval set-mode stable" ts="npx deepeval set-mode stable"/>. Run <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> to see the channel currently in effect and where it came from.
 
 ### `gate`
 

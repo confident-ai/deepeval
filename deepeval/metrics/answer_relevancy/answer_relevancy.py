@@ -4,7 +4,13 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
@@ -48,6 +54,7 @@ class AnswerRelevancyMetric(BaseMetric):
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
@@ -168,7 +175,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -193,7 +200,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -225,14 +232,13 @@ class AnswerRelevancyMetric(BaseMetric):
             statements=self.statements,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=AnswerRelevancyVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(input),
         )
 
     def _generate_verdicts(
@@ -248,14 +254,21 @@ class AnswerRelevancyMetric(BaseMetric):
             statements=self.statements,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=AnswerRelevancyVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(input),
+        )
+
+    def _experimental_system_one_spec(self, input: str) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.statements,
+            item_key="statement",
+            state={"input": input},
         )
 
     def _generate_statements(
@@ -301,17 +314,11 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        relevant_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES, Verdict.BORDERLINE),
+        )
 
     @property
     def __name__(self):

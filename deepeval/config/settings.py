@@ -377,6 +377,14 @@ class Settings(BaseSettings):
         description="Local test run store backend: 'json' (default) or 'sqlite'. SQLite writes to deepeval.db inside DEEPEVAL_RESULTS_FOLDER (or the cache folder).",
     )
 
+    # Feature channel. `stable` (default) only runs finalised behaviour;
+    # `experimental` opts into the newest deepeval features, which may change
+    # or break between releases. Unset or unrecognised values mean `stable`.
+    DEEPEVAL_MODE: Optional[Literal["stable", "experimental"]] = Field(
+        None,
+        description="DeepEval feature channel: 'stable' (default) or 'experimental'. Experimental enrols you into the latest features, which may not be stable yet.",
+    )
+
     # SQLite store only. When truthy, `test_cases`, `traces` and `spans` rows
     # also store their full serialized object in `payload_json` (the
     # `test_runs` row always does). Off by default: it roughly doubles the
@@ -752,6 +760,20 @@ class Settings(BaseSettings):
         None, description="vLLM API key (if required by your vLLM gateway)."
     )
     VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
+
+    # TypeSafe AI (System One). No USE_* flag: Jev is used for metric decisions
+    # whenever DEEPEVAL_MODE=experimental, alongside the active LLM.
+    TYPESAFE_API_KEY: Optional[SecretStr] = Field(
+        None, description="TypeSafe AI API key."
+    )
+    TYPESAFE_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="TypeSafe AI System One model name (e.g. 'jev-latest').",
+    )
+    TYPESAFE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="TypeSafe AI input token cost (used for cost reporting).",
+    )
 
     #
     # Speech Keys (TTS/STT)
@@ -1280,6 +1302,16 @@ class Settings(BaseSettings):
         raise ValueError(
             f"DEEPEVAL_LOCAL_STORE must be 'json' or 'sqlite' (case-insensitive), got {s!r}."
         )
+
+    @field_validator("DEEPEVAL_MODE", mode="before")
+    @classmethod
+    def _normalize_deepeval_mode(cls, v):
+        # Lenient on purpose: the mode must never break settings loading, and
+        # anything unrecognised means `stable` (see deepeval.config.mode).
+        from deepeval.config.mode import normalize_deepeval_mode
+
+        mode = normalize_deepeval_mode(v)
+        return mode.value if mode is not None else None
 
     @field_validator("CONFIDENT_REGION", mode="before")
     @classmethod

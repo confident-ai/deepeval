@@ -53,6 +53,9 @@ class KeyValues(Enum):
     # Local test run storage (`deepeval set-local-store`)
     DEEPEVAL_LOCAL_STORE = "local_store"
 
+    # Feature channel (`deepeval set-mode`)
+    DEEPEVAL_MODE = "mode"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"
@@ -167,6 +170,11 @@ class ModelKeyValues(Enum):
     OPENROUTER_COST_PER_INPUT_TOKEN = "OPENROUTER_COST_PER_INPUT_TOKEN"
     OPENROUTER_COST_PER_OUTPUT_TOKEN = "OPENROUTER_COST_PER_OUTPUT_TOKEN"
     OPENROUTER_API_KEY = "OPENROUTER_API_KEY"
+
+    # TypeSafe (System One)
+    TYPESAFE_API_KEY = "TYPESAFE_API_KEY"
+    TYPESAFE_MODEL_NAME = "TYPESAFE_MODEL_NAME"
+    TYPESAFE_COST_PER_INPUT_TOKEN = "TYPESAFE_COST_PER_INPUT_TOKEN"
 
 
 class EmbeddingKeyValues(Enum):

@@ -1,0 +1,205 @@
+---
+id: classifiers-custom
+title: Custom Classifier
+sidebar_label: Custom Classifier
+languages: [python]
+---
+
+<ClassifierTagsDisplayer custom={true} singleTurn={true} multiTurn={true} />
+
+The `Classifier` in `deepeval` is a categorical LLM-as-a-judge that assigns one label from a set you define to any single-turn or multi-turn test case. It is the class every [built-in classifier](/docs/classifiers-refusal) is built on, and the one to reach for when the labels are specific to your application: topic, intent, product area, escalation category, or anything else you can name.
+
+The whole classifier is the label set. Writing good labels is most of the work, and the rest of this page is about that.
+
+## Usage
+
+```python
+from deepeval.classifiers import Classifier, Label
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+classifier = Classifier(
+    name="topic",
+    labels=[
+        Label(name="billing", description="Questions about invoices, charges, or payment methods."),
+        Label(name="refund", description="Requests to get money back for a purchase that has already been made."),
+        Label(name="shipping", description="Questions about delivery status, times, or addresses."),
+    ],
+)
+
+test_case = LLMTestCase(
+    input="I was charged twice this month.",
+    actual_output="Sorry about that. I can see the duplicate charge and will reverse it.",
+    expected_labels={classifier.name: "billing"},
+)
+
+evaluate(test_cases=[test_case], classifiers=[classifier])
+```
+
+There are **TWO** mandatory and **FIVE** optional parameters when creating a `Classifier`:
+
+- `name`: a string that identifies the classifier. It is the key a test case uses in `expected_labels`, so it must be unique within a run.
+- `labels`: a list of `Label`s or plain strings. At least one is required and names must be unique.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
+- [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
+- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](#customize-your-template). Defaulted to `ClassifierTemplate`.
+
+The same `Classifier` also accepts a `ConversationalTestCase`, in which case it reads every turn along with the scenario and expected outcome.
+
+:::tip
+If you leave `expected_labels` off the test case, the classification is still recorded but does not pass or fail the case; see [expected labels](/docs/classifiers-introduction#expected-labels) in the introduction.
+:::
+
+### As a standalone
+
+You can also run a `Classifier` on a single test case as a standalone, one-off execution. `classify()` returns the label and stores the result on the instance:
+
+```python
+...
+
+label = classifier.classify(test_case)
+print(classifier.label, classifier.reason)
+```
+
+## Writing Good Labels
+
+This is the data model of a `Label`:
+
+```python
+from pydantic import BaseModel
+
+class Label(BaseModel):
+    name: str
+    description: Optional[str] = None
+```
+
+Which can be used in a classifier as such:
+
+```python
+from deepeval.classifiers import Classifier, Label
+
+urgency = Classifier(
+    name="urgency",
+    labels=[
+        Label(name="urgent", description="The user needs a response within the hour or is blocked from working."),
+        Label(name="routine", description="The user can wait; no deadline or blocker is mentioned."),
+    ],
+)
+```
+
+A label's description is the boundary the judge uses to decide, in the same way that G-Eval's criteria are the boundary for a score. Three things make a label set work well:
+
+- **Make labels mutually exclusive.** The judge picks exactly one, so overlapping labels give inconsistent results between runs.
+- **Describe the edge, not the centre.** "Questions about billing" adds nothing to the name; "invoices, charges, or payment methods, but not requests for money back" tells the judge where billing stops and refund starts.
+- **Decide what happens when nothing fits.** The judge picks the closest label by default. If some responses genuinely match none, set `allow_none=True` rather than adding an "other" label.
+
+Plain strings are fine when the name is unambiguous on its own:
+
+```python
+from deepeval.classifers import Classifier
+
+sentiment = Classifier(name="sentiment", labels=["positive", "neutral", "negative"])
+```
+
+## How Is It Calculated?
+
+A `Classifier` is a **one-shot LLM-as-a-judge**. A single call to your evaluation `model` does all the work:
+
+1. The prompt contains the populated fields of the test case (or every turn of a conversation) and your labels with their descriptions.
+2. The judge returns one label and a reason.
+3. The label is matched against your declared labels. Anything else is an error, not a guess at the closest one. With `allow_none=True`, the judge may also return no label.
+4. If the test case has an `expected_labels` entry for this classifier, the result passes when they match and fails otherwise.
+
+Results on an `LLMTestCase` are cached like metrics, keyed on `name`, labels, `model`, `include_reason`, and `allow_none`.
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the label decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
+## Customize Your Template
+
+You can override the default prompts by subclassing `ClassifierTemplate` and passing it as `classification_template`. There are two methods, one per test case type:
+
+- `classify_single_turn(labels: str, test_case_content: str)`
+- `classify_multi_turn(labels: str, test_case_content: str, turns: list)`
+
+`labels` is the rendered list of label names and descriptions, `test_case_content` is the rendered test case fields, and `turns` is a list of dicts with the populated fields of each turn. An override only needs to declare the variables it uses, and must keep asking for JSON with `label` and `reason` fields.
+
+```python
+from deepeval.classifiers import Classifier, ClassifierTemplate
+import textwrap
+
+class StrictClassifierTemplate(ClassifierTemplate):
+    @staticmethod
+    def classify_single_turn(labels: str, test_case_content: str) -> str:
+        return textwrap.dedent(
+            f"""
+            Pick exactly one label for the test case below. Prefer the most
+            specific label.
+
+            Labels:
+            {labels}
+
+            Test case:
+            {test_case_content}
+
+            Return JSON only: {{"label": "...", "reason": "..."}}
+            JSON:
+            """
+        )
+
+classifier = Classifier(
+    name="topic",
+    labels=["billing", "refund", "shipping"],
+    classification_template=StrictClassifierTemplate,
+)
+```
+
+:::tip
+The default templates live under [`deepeval/classifiers/classifier/templates/`](https://github.com/confident-ai/deepeval/tree/main/deepeval/classifiers/classifier/templates) on GitHub. Start from those when writing your own.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Can a classifier return more than one label?",
+      answer: (
+        <>
+          No. A <code>Classifier</code> assigns exactly one label per test case.
+          If your problem is genuinely multi-label, create one classifier per
+          label with a binary label set such as{" "}
+          <code>["present", "absent"]</code>.
+        </>
+      ),
+    },
+    {
+      question: "What happens when none of my labels fit?",
+      answer: (
+        <>
+          By default the judge picks the closest label and explains the
+          reservation in its reason. Set <code>allow_none=True</code> if you
+          would rather it return no label in that situation; the classification
+          then has <code>label=None</code>, no error, and fails only if the test
+          case expected a specific label.
+        </>
+      ),
+    },
+    {
+      question:
+        "Why does my classifier error instead of picking the closest label?",
+      answer: (
+        <>
+          Matching is exact (ignoring case) against your declared labels. If the
+          judge invents a label, <code>deepeval</code> records an error rather
+          than guessing which of your labels it meant. This usually means two
+          labels overlap or a description is vague; tighten the descriptions
+          before reaching for a custom template.
+        </>
+      ),
+    },
+  ]}
+/>

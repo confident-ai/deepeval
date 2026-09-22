@@ -178,6 +178,14 @@ The `TurnContextualPrecisionMetric` first constructs a sliding windows of turns.
 
 The final score is the average of all precision scores across the conversation. This ensures that relevant retrieval context nodes appear earlier in the ranking.
 
+<Only id="python">
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
+</Only>
+
 ## FAQs
 
 <FAQs

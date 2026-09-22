@@ -182,6 +182,14 @@ Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to
 - Provide a comprehensive reason for the scores computed
 - Integrated 100% with Confident AI
 
+<Only id="python">
+
+:::tip
+If you want a **categorical** LLM-as-a-judge, one that assigns a label from a set you define instead of a score, check out [classifiers](/docs/classifiers-introduction). You can use metrics and classifiers together in the same `evaluate()` call.
+:::
+
+</Only>
+
 ## Create Your First Metric
 
 ### Custom Metrics
@@ -1190,6 +1198,14 @@ const metric = new AnswerRelevancyMetric({ threshold: null });
 :::caution
 Because every test case must be able to pass or fail, each `evaluate()` or <Term py="assert_test()" ts="expect(testCase).toPass()"/> call requires **at least one non-flaky metric with a `threshold`**.
 :::
+
+<Only id="python">
+
+:::info
+[Classifiers](/docs/classifiers-introduction) have the same informational mode: a classifier whose `name` has no entry in the test case's [`expected_labels`](/docs/classifiers-introduction#expected-labels) records its label and reason but never influences the test case's pass/fail status.
+:::
+
+</Only>
 
 ## Flaky Metrics
 

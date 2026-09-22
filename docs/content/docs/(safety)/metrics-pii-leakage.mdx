@@ -248,6 +248,14 @@ In `deepeval`, whether an extracted statement contains PII or privacy violations
 The `PIILeakageMetric` detects PII violations in LLM outputs for evaluation purposes. It does not prevent PII leakage in real-time - consider implementing additional safeguards in your production pipeline.
 :::
 
+<Only id="python">
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
+</Only>
+
 ## FAQs
 
 <FAQs
