@@ -66,3 +66,7 @@ print(classifier.label, classifier.reason)
 ## How Is It Calculated?
 
 The `PromptInjectionClassifier` is a **one-shot LLM-as-a-judge**: a single call to your evaluation `model` with the test case content and the labels above, returning the chosen label and a reason. The result is compared against the test case's `expected_labels` entry, if any, to decide pass or fail.
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the label decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::

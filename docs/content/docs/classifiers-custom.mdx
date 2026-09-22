@@ -114,6 +114,10 @@ A `Classifier` is a **one-shot LLM-as-a-judge**. A single call to your evaluatio
 
 Results on an `LLMTestCase` are cached like metrics, keyed on `name`, labels, `model`, `include_reason`, and `allow_none`.
 
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the label decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
 ## Customize Your Template
 
 You can override the default prompts by subclassing `ClassifierTemplate` and passing it as `classification_template`. There are two methods, one per test case type:

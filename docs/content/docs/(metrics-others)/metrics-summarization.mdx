@@ -331,6 +331,14 @@ console.log(metric.scoreBreakdown);
 Since the summarization score is the minimum of the alignment and coverage scores, a 0 value for either one of these scores will result in a final summarization score of 0.
 :::
 
+<Only id="python">
+
+:::info
+Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the alignment verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
+:::
+
+</Only>
+
 ## FAQs
 
 <FAQs
