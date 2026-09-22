@@ -28,7 +28,7 @@ from deepeval.models.system_one.schema import (
     ScoreQuestion,
     SystemOneAnswers,
 )
-from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
 
 
 ###############################################
@@ -103,63 +103,73 @@ class CannedLLM(DeepEvalBaseLLM):
 
 
 ###############################################
-# The worked example from the docs
+# The worked example from the docs: Tool Faithfulness
 ###############################################
 
 QUESTIONS = [
     Noul(
-        "actual_output contains no fact that contradicts expected_output.",
+        "Every fact and figure in actual_output appears in the output of a tool in tools_called.",
         weight=2,
     ),
-    Noul("actual_output covers every detail present in expected_output."),
+    Noul(
+        "actual_output reports every value returned in tools_called accurately."
+    ),
     Score(
-        "How closely does actual_output match expected_output?",
+        "How much of actual_output is grounded in the outputs in tools_called?",
         levels=[
-            "Contradicts it",
-            "Mostly wrong",
-            "Mostly right",
-            "Fully matches",
+            "Fabricated",
+            "Mostly fabricated",
+            "Mostly grounded",
+            "Fully grounded",
         ],
     ),
     Choice(
-        "How did the response handle the request?",
+        "What did actual_output do with information the tools did not return?",
         options={
-            "answered": 1.0,
-            "partially_answered": 0.5,
-            "declined": 0.0,
-            "not_a_question": None,
+            "left_it_out": 1.0,
+            "flagged_it_as_unknown": 1.0,
+            "hedged_it": 0.5,
+            "stated_it_as_fact": 0.0,
+            "nothing_missing": None,
         },
     ),
 ]
 
 TEST_CASE = LLMTestCase(
-    input="The dog chased the cat up the tree, who ran up the tree?",
-    actual_output="It depends, some might consider the cat, while others might argue the dog.",
-    expected_output="The cat.",
+    input="What's the weather in Paris right now?",
+    actual_output="It's 18°C and sunny in Paris, with a light breeze and around 40% humidity.",
+    tools_called=[
+        ToolCall(
+            name="get_weather",
+            input_parameters={"city": "Paris"},
+            output={"temp_c": 18, "condition": "sunny"},
+        )
+    ],
 )
 
 EXAMPLE_ANSWERS = SystemOneAnswers(
     nouls={
         "q_0": NoulAnswer(probability=0.30),
-        "q_1": NoulAnswer(probability=0.55),
+        "q_1": NoulAnswer(probability=0.90),
     },
     scores={
         "q_2": ScoreAnswer(
-            score=1.4,
-            probabilities={0: 0.15, 1: 0.40, 2: 0.35, 3: 0.10},
-            confidence=0.5,
+            score=1.7,
+            probabilities={0: 0.05, 1: 0.30, 2: 0.55, 3: 0.10},
+            confidence=0.55,
         )
     },
     choices={
         "q_3": ChoiceAnswer(
-            choice="partially_answered",
+            choice="stated_it_as_fact",
             probabilities={
-                "answered": 0.20,
-                "partially_answered": 0.65,
-                "declined": 0.10,
-                "not_a_question": 0.05,
+                "left_it_out": 0.05,
+                "flagged_it_as_unknown": 0.05,
+                "hedged_it": 0.25,
+                "stated_it_as_fact": 0.60,
+                "nothing_missing": 0.05,
             },
-            confidence=0.7,
+            confidence=0.6,
         )
     },
 )
@@ -169,11 +179,11 @@ def make_metric(answers=EXAMPLE_ANSWERS, **kwargs) -> JevEval:
     kwargs.setdefault("include_reason", False)
     kwargs.setdefault("model", ExplodingLLM())
     return JevEval(
-        name="Correctness",
+        name="Tool Faithfulness",
         evaluation_params=[
             SingleTurnParams.INPUT,
             SingleTurnParams.ACTUAL_OUTPUT,
-            SingleTurnParams.EXPECTED_OUTPUT,
+            SingleTurnParams.TOOLS_CALLED,
         ],
         questions=QUESTIONS,
         system_one_model=FakeSystemOneModel(answers),
@@ -190,13 +200,13 @@ def make_metric(answers=EXAMPLE_ANSWERS, **kwargs) -> JevEval:
 def test_worked_example_score():
     metric = make_metric()
     score = metric.measure(TEST_CASE)
-    # (2*0.30 + 0.55 + 1.4/3 + 0.525/0.95) / 5
-    expected = (2 * 0.30 + 0.55 + 1.4 / 3 + 0.525 / 0.95) / 5
+    # (2*0.30 + 0.90 + 1.7/3 + 0.225/0.95) / 5
+    expected = (2 * 0.30 + 0.90 + 1.7 / 3 + 0.225 / 0.95) / 5
     assert score == pytest.approx(expected, abs=1e-9)
-    assert score == pytest.approx(0.434, abs=1e-3)
+    assert score == pytest.approx(0.461, abs=1e-3)
     assert metric.success is False
     assert metric.reason is None
-    assert metric.confidence == pytest.approx(0.5)
+    assert metric.confidence == pytest.approx(0.55)
 
 
 def test_breakdown_values():
@@ -207,11 +217,11 @@ def test_breakdown_values():
     assert outcomes[0].probabilities == pytest.approx(
         {"true": 0.3, "false": 0.7}
     )
-    assert outcomes[1].value == pytest.approx(0.55)
-    assert outcomes[2].value == pytest.approx(1.4 / 3)
-    assert outcomes[2].probabilities["Mostly wrong"] == pytest.approx(0.40)
-    assert outcomes[2].confidence == 0.5
-    assert outcomes[3].value == pytest.approx(0.525 / 0.95)
+    assert outcomes[1].value == pytest.approx(0.90)
+    assert outcomes[2].value == pytest.approx(1.7 / 3)
+    assert outcomes[2].probabilities["Mostly grounded"] == pytest.approx(0.55)
+    assert outcomes[2].confidence == 0.55
+    assert outcomes[3].value == pytest.approx(0.225 / 0.95)
     assert outcomes[3].applicable is True
     assert all(o.applicable for o in outcomes)
 
@@ -219,12 +229,13 @@ def test_breakdown_values():
 def test_choice_excluded_when_not_applicable_mass_dominates():
     answers = EXAMPLE_ANSWERS.model_copy(deep=True)
     answers.choices["q_3"] = ChoiceAnswer(
-        choice="not_a_question",
+        choice="nothing_missing",
         probabilities={
-            "answered": 0.05,
-            "partially_answered": 0.03,
-            "declined": 0.02,
-            "not_a_question": 0.90,
+            "left_it_out": 0.04,
+            "flagged_it_as_unknown": 0.02,
+            "hedged_it": 0.02,
+            "stated_it_as_fact": 0.02,
+            "nothing_missing": 0.90,
         },
         confidence=0.9,
     )
@@ -234,7 +245,7 @@ def test_choice_excluded_when_not_applicable_mass_dominates():
     assert outcomes[3].applicable is False
     assert outcomes[3].value is None
     # Only the first three decide the score now.
-    assert score == pytest.approx((2 * 0.30 + 0.55 + 1.4 / 3) / 4)
+    assert score == pytest.approx((2 * 0.30 + 0.90 + 1.7 / 3) / 4)
     assert metric.score_breakdown[3]["applicable"] is False
 
 
@@ -339,11 +350,26 @@ def test_questions_sent_to_jev_have_no_credits():
     assert questions["q_2"].levels == QUESTIONS[2].levels
     assert isinstance(questions["q_3"], ChoiceQuestion)
     assert questions["q_3"].options == {
-        "answered": None,
-        "partially_answered": None,
-        "declined": None,
-        "not_a_question": None,
+        "left_it_out": None,
+        "flagged_it_as_unknown": None,
+        "hedged_it": None,
+        "stated_it_as_fact": None,
+        "nothing_missing": None,
     }
+
+
+def test_tool_calls_are_structured_in_state():
+    state = construct_single_turn_state(
+        [SingleTurnParams.TOOLS_CALLED], TEST_CASE
+    )
+    assert state["test_case"]["tools_called"] == [
+        {
+            "name": "get_weather",
+            "type": "FUNCTION",
+            "input_parameters": {"city": "Paris"},
+            "output": {"temp_c": 18, "condition": "sunny"},
+        }
+    ]
 
 
 def test_one_decide_call_per_measure():
@@ -355,7 +381,7 @@ def test_one_decide_call_per_measure():
     assert set(state["test_case"]) == {
         "input",
         "actual_output",
-        "expected_output",
+        "tools_called",
     }
     assert len(questions) == 4
 
@@ -369,10 +395,10 @@ def test_include_reason_false_makes_no_llm_call():
 
 
 def test_include_reason_true_uses_llm_once():
-    llm = CannedLLM('{"reason": "The response entertains the dog."}')
+    llm = CannedLLM('{"reason": "The breeze is not in the tool output."}')
     metric = make_metric(include_reason=True, model=llm)
     metric.measure(TEST_CASE)
-    assert metric.reason == "The response entertains the dog."
+    assert metric.reason == "The breeze is not in the tool output."
     assert len(llm.prompts) == 1
     assert metric.evaluation_model == "fake-jev + canned-llm"
 
@@ -391,15 +417,17 @@ def test_reason_prompt_covers_every_question_and_hides_numbers():
         assert q.text in prompt
     # Verbalised outcomes, not probabilities.
     assert "likely fails" in prompt  # q_0 at 0.30
-    assert "unclear" in prompt  # q_1 at 0.55
-    assert '"Mostly wrong", leaning "Mostly right"' in prompt  # 0.40 vs 0.35
-    assert '"partially_answered"' in prompt
-    # No probability / score digits leak into the prompt.
-    assert not re.search(r"\b0\.\d+", prompt)
-    assert "%" not in prompt
+    assert "clearly holds" in prompt  # q_1 at 0.90
+    assert '"Mostly grounded"' in prompt  # 0.55 vs 0.30: no runner-up
+    assert '"stated_it_as_fact"' in prompt
+    # No probability / score digits leak into the outcomes block. (The test
+    # case's own "40%" is content the LLM must be able to cite.)
+    outcomes_block = prompt.split("Test Case:")[0]
+    assert not re.search(r"\b0\.\d+", outcomes_block)
+    assert "%" not in outcomes_block
     # The test case itself is there for the LLM to cite.
     assert TEST_CASE.actual_output in prompt
-    assert TEST_CASE.expected_output in prompt
+    assert '"temp_c": 18' in prompt
 
 
 def test_verbalise_bands():
@@ -496,9 +524,9 @@ def test_weight_must_be_positive():
 
 def test_name_suffix():
     metric = make_metric()
-    assert metric.__name__ == "Correctness [JevEval]"
+    assert metric.__name__ == "Tool Faithfulness [JevEval]"
     metric = make_metric(_include_jev_eval_suffix=False)
-    assert metric.__name__ == "Correctness"
+    assert metric.__name__ == "Tool Faithfulness"
 
 
 def test_missing_test_case_param_raises():
@@ -520,9 +548,9 @@ def test_live_reason_is_grounded():
     metric.measure(TEST_CASE)
     reason = metric.reason.lower()
     # Something from every question shows up.
-    assert "contradict" in reason or "conflict" in reason or "dog" in reason
-    assert "cat" in reason
-    # No probabilities, percentages or scores.
-    assert "%" not in reason
+    assert "breeze" in reason or "humidity" in reason
+    assert "sunny" in reason or "18" in reason
+    # No probabilities or judge confidence. (The test case's own "40%" may be
+    # quoted, so a bare "%" check would be wrong here.)
     assert not re.search(r"\b0\.\d+", reason)
     assert "confiden" not in reason

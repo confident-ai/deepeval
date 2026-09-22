@@ -229,7 +229,10 @@ def _is_populated(value: Any) -> bool:
 
 def _field(value: Any) -> Any:
     if isinstance(value, list) and value and isinstance(value[0], ToolCall):
-        return [repr(tool) for tool in value]
+        # Structured, not repr(): Jev can then read `output` as data.
+        return [
+            tool.model_dump(mode="json", exclude_none=True) for tool in value
+        ]
     return value
 
 
