@@ -1,0 +1,406 @@
+---
+id: metrics-jev-eval
+title: JevEval
+sidebar_label: JevEval
+languages: [python]
+---
+
+<MetricTagsDisplayer singleTurn={true} custom={true} />
+
+JevEval is a custom metric whose decisions are made by Jev, TypeSafe AI's System One model, instead of a generative LLM. You define the decision points as bounded **questions**, Jev answers each with calibrated probabilities, and `deepeval` turns those probabilities into a score with a fixed equation.
+
+There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. The only thing an LLM does in JevEval is, optionally, write the reason.
+
+:::tip
+If you want a custom metric where an LLM drafts the evaluation logic from a one-line `criteria`, use [`GEval`](/docs/metrics-llm-evals). JevEval is for when you already know **what** you want decided and want it decided the same way every run.
+
+To evaluate entire conversations instead of a single `LLMTestCase`, use [`ConversationalJevEval`](/docs/metrics-conversational-jev-eval).
+:::
+
+## Required Arguments
+
+To use `JevEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+You'll also need to supply any additional arguments such as `expected_output` and `retrieval_context` if your questions refer to them.
+
+## Usage
+
+Instantiate a `JevEval` with the test case fields your questions talk about, and the questions themselves:
+
+```python
+from deepeval.metrics.jev_eval import Noul, Score, Choice
+from deepeval.test_case import SingleTurnParams
+from deepeval.metrics import JevEval
+
+correctness = JevEval(
+    name="Correctness",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+    questions=[
+        Noul("actual_output contains no fact that contradicts expected_output.", weight=2),
+        Noul("actual_output covers every detail present in expected_output."),
+        Score(
+            "How closely does actual_output match expected_output?",
+            levels=["Contradicts it", "Mostly wrong", "Mostly right", "Fully matches"],
+        ),
+        Choice(
+            "How did the response handle the request?",
+            options={"answered": 1.0, "partially_answered": 0.5, "declined": 0.0, "not_a_question": None},
+        ),
+    ],
+)
+```
+
+There are **THREE** mandatory and **SEVEN** optional parameters when creating a `JevEval`:
+
+- `name`: name of custom metric.
+- `evaluation_params`: a list of type `SingleTurnParams`. These fields are the **state** Jev sees; a question can only refer to fields listed here.
+- `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
+- [Optional] `system_one_model`: a Jev model name such as `"jev-latest"`, **OR** a `TypeSafeModel` instance. Defaults to `TypeSafeModel()`, which reads `TYPESAFE_API_KEY` and `TYPESAFE_MODEL_NAME`.
+- [Optional] `include_reason`: a boolean which when set to `True`, has your evaluation LLM write a reason grounded in the test case. When `False`, JevEval makes **no LLM call at all**. Defaulted to `True`.
+- [Optional] `model`: the LLM used only for the reason; a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />. Not constructed when `include_reason=False`.
+- [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints every question's probabilities and value to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+:::danger
+Question text refers to the state by field name (`input`, `actual_output`, `expected_output`, ...). A field that is not in `evaluation_params` is invisible to Jev, so every field your questions mention must be listed.
+:::
+
+As with every `deepeval` metric, `JevEval` returns a score from 0 - 1 and is successful when that score is equal to or greater than `threshold`. You can access `score`, `reason` and the per-question `score_breakdown`:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+...
+
+test_case = LLMTestCase(
+    input="The dog chased the cat up the tree, who ran up the tree?",
+    actual_output="It depends, some might consider the cat, while others might argue the dog.",
+    expected_output="The cat."
+)
+
+# To run metric as a standalone
+# correctness.measure(test_case)
+# print(correctness.score, correctness.reason)
+# print(correctness.score_breakdown)
+
+evaluate(test_cases=[test_case], metrics=[correctness])
+```
+
+### Setting up Jev
+
+JevEval needs Jev in every mode; there is no LLM to fall back to. Install the SDK and set your key once:
+
+```bash
+pip install typesafe-sdk
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+```
+
+Constructing a `JevEval` without them raises immediately with these instructions. See the [TypeSafe AI integration](/integrations/models/typesafe-ai) for the CLI (`deepeval set-typesafe`), model aliases and cost settings. Unlike the rest of the Jev integration, JevEval does **not** require `DEEPEVAL_MODE=experimental`.
+
+## Question Types
+
+Jev has three [decision primitives](/blog/introducing-jev-in-deepeval#understanding-jevs-decision-primitives). JevEval exposes each as a question class, and each maps its answer onto a value \(v \in [0, 1]\) with a fixed rule.
+
+### Noul
+
+A `Noul` is one proposition about the state. Jev returns \(P(\text{true})\), and that probability is the value:
+
+<Equation formula="v = P(\text{true})" />
+
+```python
+from deepeval.metrics.jev_eval import Noul
+
+Noul("actual_output contains no fact that contradicts expected_output.", weight=2)
+```
+
+Use Nouls for a **checklist**: several independent checks, each calibrated, each weighted by how much you care. `Noul` also accepts optional `true` / `false` descriptions that sharpen what counts as either side.
+
+### Score
+
+A `Score` is one holistic judgement over ordered descriptive levels, **worst first**. Jev returns a probability for every level; the value is the expected level position, normalised so the top level is `1`:
+
+<Equation formula="v = \frac{1}{n-1}\sum_{i=0}^{n-1} i\,P(i)" />
+
+```python
+from deepeval.metrics.jev_eval import Score
+
+Score(
+    "How closely does actual_output match expected_output?",
+    levels=["Contradicts it", "Mostly wrong", "Mostly right", "Fully matches"],
+)
+```
+
+Use a Score when "between two levels" is meaningful. Jev accepts between 2 and 10 levels.
+
+### Choice
+
+A `Choice` is one selection from an **unordered** closed set. You attach a **credit** in `[0, 1]` to every option, or `None` to mark an option that means "this question does not apply here". The value is the credit-weighted probability over the applicable options:
+
+<Equation formula="v = \frac{\sum_{o \,:\, c_o \neq \varnothing} P(o)\,c_o}{\sum_{o \,:\, c_o \neq \varnothing} P(o)}" />
+
+```python
+from deepeval.metrics.jev_eval import Choice
+
+Choice(
+    "How did the response handle the request?",
+    options={"answered": 1.0, "partially_answered": 0.5, "declined": 0.0, "not_a_question": None},
+)
+```
+
+If the `None` options collect **half or more** of the probability, the question is dropped from the metric for that test case: it did not apply, so it neither helps nor hurts.
+
+Credits do not have to be monotone, which is what a Score cannot express. `{"complied_unsafely": 0.0, "declined": 0.0, "complied_safely": 1.0}` says two very different outcomes deserve the same credit. Jev only ever sees the option names; credits stay in `deepeval`.
+
+:::info
+JevEval outputs a **score**, not a label. If you want the chosen option itself as the result, use a [classifier](/docs/classifiers-introduction) instead.
+:::
+
+## How Is It Calculated?
+
+The `JevEval` score is calculated according to the following equation:
+
+<Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i \, v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
+
+Where \(w_i\) is the `weight` of question \(i\), \(v_i \in [0, 1]\) is the value Jev's answer maps onto, and \(\mathcal{A}\) is the set of questions that **applied** to this test case.
+
+`JevEval` first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai), TypeSafe AI's [System One model](https://docs.typesafe.ai/concepts/system-one), in a **single request**. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value according to its question type:
+
+<Equation formula="v_{\text{Noul}} = P(\text{true})" />
+
+<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
+
+<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
+
+**A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
+
+<Equation formula="i \in \mathcal{A} \iff \sum_{o \,:\, c_o = \varnothing} P(o) < 0.5" />
+
+`Noul` and `Score` questions always apply. If \(\mathcal{A}\) is empty, the score is `1`: nothing applicable was left to fail.
+
+:::note
+The credits \(c_o\) never leave `deepeval`. Jev only sees the option **names**, so it cannot be steered by how much each option is worth.
+:::
+
+With `include_reason=True`, the evaluation LLM then receives the state and each question's outcome **in words** (never the probabilities or the score) and writes a reason that cites the test case. With `include_reason=False`, the metric finishes without any LLM call.
+
+<div style={{textAlign: 'center', margin: "2rem 0"}}>
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 40, 'fontSize': 11}}}%%
+flowchart LR
+    S[State from<br>`evaluation_params`] --> D[Jev `decide`<br>one request]
+    Q[Noul / Score / Choice<br>questions] --> D
+    D --> V[Map each answer<br>to a value 0-1]
+    V --> W[Weighted mean over<br>applicable questions]
+    W --> F[Final score<br>0-1]
+    V -.->|include_reason| R[LLM writes a<br>grounded reason]
+```
+
+</div>
+
+## Example
+
+Let's trace the `Correctness` metric from [Usage](#usage) on the dog/cat test case end to end. Every number below is one you can read back from `score_breakdown`.
+
+<Steps>
+
+<Step>
+
+### Build the state
+
+`evaluation_params` decides what Jev gets to see. The three fields are pulled off the `LLMTestCase` into one JSON object:
+
+```json
+{
+  "test_case": {
+    "input": "The dog chased the cat up the tree, who ran up the tree?",
+    "actual_output": "It depends, some might consider the cat, while others might argue the dog.",
+    "expected_output": "The cat."
+  }
+}
+```
+
+This is why the questions say `actual_output` and `expected_output`: they name keys in this object. Had a question mentioned `retrieval_context`, Jev would simply not have it.
+
+</Step>
+
+<Step>
+
+### Translate the questions
+
+Each question becomes one entry in a single Jev request, keyed `q_0` to `q_3`:
+
+- `q_0`, `q_1`: yes/no questions on the two `Noul` statements.
+- `q_2`: a score question over the four `Score` levels.
+- `q_3`: a choice question over the four option **names** only. The credits (`1.0`, `0.5`, `0.0`, `None`) are never sent; they are `deepeval`-side bookkeeping for the next step.
+
+One `decide()` call sends the state and all four questions. Jev evaluates them in parallel and returns probabilities, no text.
+
+</Step>
+
+<Step>
+
+### What Jev returns
+
+An illustrative answer for this test case:
+
+```text
+q_0  P(true) = 0.30      # the "might argue the dog" hedge conflicts with "The cat."
+q_1  P(true) = 0.55      # the cat is mentioned, so partly covered
+q_2  score = 1.4, probabilities {0: 0.15, 1: 0.40, 2: 0.35, 3: 0.10}, confidence 0.5
+q_3  choice = partially_answered,
+     probabilities {answered: 0.20, partially_answered: 0.65, declined: 0.10, not_a_question: 0.05},
+     confidence 0.7
+```
+
+</Step>
+
+<Step>
+
+### Map each answer to a value
+
+This is where the three primitives become comparable.
+
+**`q_0` (Noul, weight 2)** and **`q_1` (Noul, weight 1)** are already values:
+
+<Equation formula="v_0 = 0.30 \qquad v_1 = 0.55" />
+
+**`q_2` (Score)** has four levels, so \(n - 1 = 3\):
+
+<Equation formula="v_2 = \frac{0(0.15) + 1(0.40) + 2(0.35) + 3(0.10)}{3} = \frac{1.4}{3} = 0.467" />
+
+Landing between "Mostly wrong" and "Mostly right" is the point: the expected position is already a soft score.
+
+**`q_3` (Choice)** has `not_a_question` marked `None`. Its mass is \(0.05 < 0.5\), so the question applies. Renormalise over the other three and weight by credit:
+
+<Equation formula="v_3 = \frac{0.20 \cdot 1.0 + 0.65 \cdot 0.5 + 0.10 \cdot 0.0}{0.20 + 0.65 + 0.10} = \frac{0.525}{0.95} = 0.553" />
+
+Had the input been "Hello!" and Jev put `0.9` on `not_a_question`, `q_3` would drop out entirely and the other three questions would decide the score alone.
+
+</Step>
+
+<Step>
+
+### Weighted mean
+
+<Equation formula="\text{JevEval} = \frac{2 \cdot 0.30 + 1 \cdot 0.55 + 1 \cdot 0.467 + 1 \cdot 0.553}{2 + 1 + 1 + 1} = \frac{2.17}{5} = 0.434" />
+
+`correctness.score` is `0.434` and `success` is `False` against the default threshold of `0.5`. The contradiction Noul carried weight 2, so its low probability pulled the score down more than any other single question could. Weight is the only place your "how much do I care" enters the math.
+
+</Step>
+
+<Step>
+
+### Read the breakdown
+
+`score_breakdown` keeps every intermediate so you can see why:
+
+```python
+[
+  {"question": "actual_output contains no fact that contradicts expected_output.", "type": "noul", "weight": 2.0, "value": 0.30, "applicable": True, "probabilities": {"true": 0.30, "false": 0.70}, "confidence": None},
+  {"question": "actual_output covers every detail present in expected_output.", "type": "noul", "weight": 1.0, "value": 0.55, "applicable": True, "probabilities": {"true": 0.55, "false": 0.45}, "confidence": None},
+  {"question": "How closely does actual_output match expected_output?", "type": "score", "weight": 1.0, "value": 0.467, "applicable": True, "probabilities": {"Contradicts it": 0.15, "Mostly wrong": 0.40, "Mostly right": 0.35, "Fully matches": 0.10}, "confidence": 0.5},
+  {"question": "How did the response handle the request?", "type": "choice", "weight": 1.0, "value": 0.553, "applicable": True, "probabilities": {"answered": 0.20, "partially_answered": 0.65, "declined": 0.10, "not_a_question": 0.05}, "confidence": 0.7},
+]
+```
+
+</Step>
+
+<Step>
+
+### Reason
+
+With `include_reason=True`, the evaluation LLM now gets the state and the four questions, each with its outcome **in words** ("likely fails", `"Mostly wrong", leaning "Mostly right"`, `"partially_answered"`), never the numbers. It is instructed to cover every question, cite the span of the test case that decided it, and never justify anything by a score or a confidence:
+
+> The response entertains the dog as an answer while the expected output is only 'The cat', so it introduces a conflicting claim. It does name the cat, but hedges with 'it depends' rather than committing, so the expected detail is only partly delivered. Against the expected answer it lands closer to mostly wrong than mostly right for that same reason. The user asked a direct question and the response engaged with it but did not settle it, so it was partially answered rather than declined.
+
+With `include_reason=False`, this step is skipped and the whole metric ran with zero LLM tokens.
+
+</Step>
+
+</Steps>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is JevEval different from G-Eval?",
+      answer: (
+        <>
+          <code>GEval</code> asks an LLM to draft evaluation steps from a{" "}
+          <code>criteria</code> and then generate a score, and uses token
+          probabilities to smooth that number. <code>JevEval</code> has no
+          generative judge: you write the questions, Jev returns calibrated
+          probabilities, and the score is a fixed weighted mean. Use G-Eval
+          when you want the LLM to figure out the logic; use JevEval when you
+          know what you want decided and want it decided the same way every run.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Choice instead of Score?",
+      answer: (
+        <>
+          Use a <code>Score</code> when the outcomes sit on a line from worst
+          to best. Use a <code>Choice</code> when they do not: two options can
+          share a credit, and an option can mean "this question does not apply"
+          by setting its credit to <code>None</code>.
+        </>
+      ),
+    },
+    {
+      question: "How is a Choice question turned into a score?",
+      answer: (
+        <>
+          Jev returns a probability per option. The <code>None</code> options
+          are summed first: if they hold half or more of the mass the question
+          is dropped. Otherwise the remaining options are renormalised and
+          multiplied by their credits. In the worked example that is{" "}
+          <code>(0.20·1.0 + 0.65·0.5 + 0.10·0.0) / 0.95 = 0.553</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I run JevEval without any LLM?",
+      answer: (
+        <>
+          Yes. Set <code>include_reason=False</code> and no LLM is constructed
+          or called; the metric is one Jev request plus arithmetic. You still
+          get <code>score</code> and <code>score_breakdown</code>, just no{" "}
+          <code>reason</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I use JevEval on a conversation?",
+      answer: (
+        <>
+          Use{" "}
+          <a href="/docs/metrics-conversational-jev-eval">
+            ConversationalJevEval
+          </a>{" "}
+          instead. It takes a <code>ConversationalTestCase</code>, puts the
+          turns into the state as a <code>turns</code> list, and scores with
+          the same three question types and the same equation.
+        </>
+      ),
+    },
+    {
+      question: "Do I need DEEPEVAL_MODE=experimental?",
+      answer: (
+        <>
+          No. The experimental mode switch routes the <em>other</em> metrics'
+          decisions to Jev. <code>JevEval</code> is Jev-native and works in
+          stable mode; it only needs <code>typesafe-sdk</code> installed and{" "}
+          <code>TYPESAFE_API_KEY</code> set.
+        </>
+      ),
+    },
+  ]}
+/>

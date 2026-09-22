@@ -2,8 +2,10 @@
   "title": "Custom",
   "pages": [
     "metrics-llm-evals",
+    "metrics-jev-eval",
     "metrics-dag",
     "metrics-conversational-g-eval",
+    "metrics-conversational-jev-eval",
     "metrics-conversational-dag",
     "metrics-arena-g-eval",
     "metrics-custom"
