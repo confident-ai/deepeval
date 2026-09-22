@@ -21,7 +21,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 
@@ -451,46 +450,90 @@ class ToolCorrectnessMetric(BaseMetric):
 
     # Non exact matching score
     def _calculate_non_exact_match_score(self) -> float:
-        total_score = 0.0
-        matched_called_tools = set()
-        for expected_tool in self.expected_tools:
-            best_score = 0.0
-            for called_tool in self.tools_called:
-                if called_tool in matched_called_tools:
-                    continue
-                if (
-                    expected_tool.name == called_tool.name
-                    and expected_tool.type == called_tool.type
-                ):
-                    match_score = 1.0
-                    if (
-                        ToolCallParams.INPUT_PARAMETERS
-                        in self.evaluation_params
-                    ):
-                        match_score *= self._compare_dicts(
-                            expected_tool.input_parameters,
-                            called_tool.input_parameters,
-                        )
-                    if (
-                        ToolCallParams.OUTPUT in self.evaluation_params
-                        and expected_tool.output != called_tool.output
-                    ):
-                        match_score = 0.0
-                    if match_score > best_score:
-                        best_score = match_score
-                        best_called_tool = called_tool
-            if best_score > 0:
-                total_score += best_score
-                matched_called_tools.add(best_called_tool)
-        return (
-            1.0
-            if not self.expected_tools and not self.tools_called
-            else (
-                0.0
-                if not self.expected_tools
-                else total_score / len(self.expected_tools)
-            )
+        if not self.expected_tools:
+            return 1.0 if not self.tools_called else 0.0
+        scores = [
+            [
+                self._tool_pair_score(expected_tool, called_tool)
+                for called_tool in self.tools_called
+            ]
+            for expected_tool in self.expected_tools
+        ]
+        total_score = sum(
+            scores[i][j] for i, j in self._max_weight_assignment(scores)
         )
+        return total_score / len(self.expected_tools)
+
+    def _tool_pair_score(
+        self, expected_tool: ToolCall, called_tool: ToolCall
+    ) -> float:
+        if (
+            expected_tool.name != called_tool.name
+            or expected_tool.type != called_tool.type
+        ):
+            return 0.0
+        score = 1.0
+        if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
+            score *= self._compare_dicts(
+                expected_tool.input_parameters,
+                called_tool.input_parameters,
+            )
+        if (
+            ToolCallParams.OUTPUT in self.evaluation_params
+            and expected_tool.output != called_tool.output
+        ):
+            score = 0.0
+        return score
+
+    @staticmethod
+    def _max_weight_assignment(
+        scores: List[List[float]],
+    ) -> List[Tuple[int, int]]:
+        """Pair rows with columns, each used at most once, maximizing the
+        summed score (Hungarian algorithm, O(n^2 m)). A greedy pass makes
+        the result depend on the order of expected_tools whenever calls
+        earn partial credit; this does not."""
+        n = len(scores)
+        m = len(scores[0]) if n else 0
+        if n == 0 or m == 0:
+            return []
+        transposed = n > m
+        if transposed:
+            scores = [list(col) for col in zip(*scores)]
+            n, m = m, n
+        cost = [[-value for value in row] for row in scores]
+        inf = float("inf")
+        u, v = [0.0] * (n + 1), [0.0] * (m + 1)
+        p, way = [0] * (m + 1), [0] * (m + 1)
+        for i in range(1, n + 1):
+            p[0], j0 = i, 0
+            minv, used = [inf] * (m + 1), [False] * (m + 1)
+            while True:
+                used[j0] = True
+                i0, delta, j1 = p[j0], inf, 0
+                for j in range(1, m + 1):
+                    if used[j]:
+                        continue
+                    cur = cost[i0 - 1][j - 1] - u[i0] - v[j]
+                    if cur < minv[j]:
+                        minv[j], way[j] = cur, j0
+                    if minv[j] < delta:
+                        delta, j1 = minv[j], j
+                for j in range(m + 1):
+                    if used[j]:
+                        u[p[j]] += delta
+                        v[j] -= delta
+                    else:
+                        minv[j] -= delta
+                j0 = j1
+                if p[j0] == 0:
+                    break
+            while j0:
+                j1 = way[j0]
+                p[j0] = p[j1]
+                j0 = j1
+        pairs = [(p[j] - 1, j - 1) for j in range(1, m + 1) if p[j]]
+        return [(b, a) for a, b in pairs] if transposed else pairs
 
     # Consider ordering score
     def _compute_weighted_lcs(self) -> Tuple[List[ToolCall], float]:
