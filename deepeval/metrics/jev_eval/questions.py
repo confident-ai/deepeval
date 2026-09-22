@@ -191,3 +191,5 @@ class QuestionOutcome(BaseModel):
     applicable: bool
     probabilities: Dict[str, float]
     confidence: Optional[float] = None
+    # Only set under strict_mode: did this question meet the strict bar?
+    passed: Optional[bool] = None

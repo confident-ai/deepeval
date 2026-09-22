@@ -4,6 +4,7 @@ import styles from "./MetricTagsDisplayer.module.scss";
 
 interface MetricTagsDisplayerProps {
   usesLLMs?: boolean;
+  jev?: boolean;
   singleTurn?: boolean;
   multiTurn?: boolean;
   referenceless?: boolean;
@@ -20,6 +21,7 @@ interface MetricTagsDisplayerProps {
 
 const MetricTagsDisplayer = ({
   usesLLMs = true,
+  jev = false,
   singleTurn = false,
   multiTurn = false,
   referenceless = false,
@@ -32,7 +34,10 @@ const MetricTagsDisplayer = ({
   safety = false,
   multimodal = true,
   community = false,
-}) => {
+}: MetricTagsDisplayerProps) => {
+  // Jev scores without a language model, so it is never LLM-as-a-judge and
+  // (today) text-only.
+  if (jev) usesLLMs = false;
   if (!usesLLMs) multimodal = false;
 
   return (
@@ -42,6 +47,9 @@ const MetricTagsDisplayer = ({
           <TriangleAlert aria-hidden="true" />
           <span>Community</span>
         </div>
+      )}
+      {jev && (
+        <div className={`${styles.pill} ${styles.jev}`}>Jev-as-a-judge</div>
       )}
       {usesLLMs && (
         <div className={`${styles.pill} ${styles.usesLLM}`}>LLM-as-a-judge</div>

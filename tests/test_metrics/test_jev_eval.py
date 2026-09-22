@@ -326,6 +326,94 @@ def test_score_two_levels_maps_to_top_index():
 
 
 ###############################################
+# Strict mode
+###############################################
+
+
+def test_strict_mode_forces_threshold_and_binary_score():
+    metric = make_metric(strict_mode=True)
+    assert metric.threshold == 1
+    score = metric.measure(TEST_CASE)
+    # q_0 is at 0.30 (< 0.5) and q_3's chosen option earns 0.0, so it fails.
+    assert score == 0.0
+    assert metric.success is False
+    passed = [o["passed"] for o in metric.score_breakdown]
+    assert passed == [False, True, False, False]
+
+
+def test_strict_mode_perfect_answers_score_one():
+    answers = SystemOneAnswers(
+        nouls={
+            "q_0": NoulAnswer(probability=0.9),
+            "q_1": NoulAnswer(probability=0.7),
+        },
+        scores={
+            "q_2": ScoreAnswer(
+                score=2.8,
+                probabilities={0: 0.0, 1: 0.05, 2: 0.1, 3: 0.85},
+                confidence=0.85,
+            )
+        },
+        choices={
+            "q_3": ChoiceAnswer(
+                choice="left_it_out",
+                probabilities={
+                    "left_it_out": 0.7,
+                    "flagged_it_as_unknown": 0.2,
+                    "hedged_it": 0.05,
+                    "stated_it_as_fact": 0.03,
+                    "nothing_missing": 0.02,
+                },
+                confidence=0.7,
+            )
+        },
+    )
+    metric = make_metric(answers, strict_mode=True)
+    assert metric.measure(TEST_CASE) == 1.0
+    assert metric.success is True
+    assert all(o["passed"] for o in metric.score_breakdown)
+
+
+def test_strict_mode_skips_not_applicable_choice():
+    answers = SystemOneAnswers(
+        nouls={
+            "q_0": NoulAnswer(probability=0.9),
+            "q_1": NoulAnswer(probability=0.9),
+        },
+        scores={
+            "q_2": ScoreAnswer(
+                score=2.9,
+                probabilities={0: 0.0, 1: 0.0, 2: 0.1, 3: 0.9},
+                confidence=0.9,
+            )
+        },
+        choices={
+            "q_3": ChoiceAnswer(
+                choice="nothing_missing",
+                probabilities={
+                    "left_it_out": 0.02,
+                    "flagged_it_as_unknown": 0.02,
+                    "hedged_it": 0.02,
+                    "stated_it_as_fact": 0.04,
+                    "nothing_missing": 0.90,
+                },
+                confidence=0.9,
+            )
+        },
+    )
+    metric = make_metric(answers, strict_mode=True)
+    assert metric.measure(TEST_CASE) == 1.0
+    assert metric.score_breakdown[3]["applicable"] is False
+    assert metric.score_breakdown[3]["passed"] is None
+
+
+def test_non_strict_breakdown_has_no_passed_flag():
+    metric = make_metric()
+    metric.measure(TEST_CASE)
+    assert all(o["passed"] is None for o in metric.score_breakdown)
+
+
+###############################################
 # Request shape
 ###############################################
 

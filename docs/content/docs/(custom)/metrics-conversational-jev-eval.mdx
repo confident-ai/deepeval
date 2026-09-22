@@ -5,7 +5,7 @@ sidebar_label: Conversational JevEval
 languages: [python]
 ---
 
-<MetricTagsDisplayer multiTurn={true} custom={true} chatbot={true} />
+<MetricTagsDisplayer jev={true} multiTurn={true} custom={true} chatbot={true} />
 
 The conversational JevEval is the multi-turn version of [`JevEval`](/docs/metrics-jev-eval): a custom metric whose decisions are made by Jev, a System One model, over an **entire conversation**. You define the decision points as bounded **questions** about the turns, Jev answers each with calibrated probabilities, and `deepeval` turns those probabilities into a score with a fixed equation.
 
@@ -76,13 +76,14 @@ convo_test_case = ConversationalTestCase(
 evaluate(test_cases=[convo_test_case], metrics=[refund_handling])
 ```
 
-There are **THREE** mandatory and **SEVEN** optional parameters when creating a `ConversationalJevEval`:
+There are **THREE** mandatory and **EIGHT** optional parameters when creating a `ConversationalJevEval`:
 
 - `name`: name of custom metric.
 - `evaluation_params`: a list of type `MultiTurnParams`. These fields are the **state** Jev sees. `MultiTurnParams.CONTENT` and `MultiTurnParams.ROLE` are always included, so every turn's role and content are part of the state whether you list them or not.
 - `questions`: a list of [`Noul`](/docs/metrics-jev-eval#noul), [`Score`](/docs/metrics-jev-eval#score) and [`Choice`](/docs/metrics-jev-eval#choice) questions. Each has a `weight` (default `1.0`).
 - [Optional] `system_one_model`: a Jev model name such as `"jev-latest"`, **OR** a `TypeSafeModel` instance with your own `api_key`, `model` and `cost_per_input_token`. Defaults to `TypeSafeModel()`, which reads `TYPESAFE_API_KEY` from your environment. Pass `TypeSafeModel(model=..., api_key=...)` to configure it in code instead.
 - [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 if every applicable question is answered in its best possible way, 0 otherwise. It also overrides the current threshold and sets it to 1. See [strict mode](#strict-mode). Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints every question's probabilities and value to the console. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
@@ -126,6 +127,20 @@ Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's
 :::note
 The credits $c_o$ never leave `deepeval`. Jev only sees the option **names**, so it cannot be steered by how much each option is worth.
 :::
+
+### Strict mode
+
+With `strict_mode=True`, the weighted mean is replaced by an all-or-nothing check. Every applicable question must be answered in its best possible way, decided from Jev's probabilities alone:
+
+<Equation formula="\text{ConversationalJevEval}_{\text{strict}} = \begin{cases} 1 & \text{if every } i \in \mathcal{A} \text{ passes} \\ 0 & \text{otherwise} \end{cases}" />
+
+Where a question passes when:
+
+- `Noul`: $P(\text{true}) \ge 0.5$
+- `Score`: Jev's most probable level is the **top** level
+- `Choice`: Jev's most probable applicable option carries a credit of `1.0`
+
+`threshold` is set to `1`, and each entry of `score_breakdown` gains a `passed` flag so you can see which question fell short. Questions that did not apply to this conversation are skipped, as usual.
 
 With `include_reason=True`, the evaluation LLM then writes a `reason` explaining each question's outcome against the conversation. With `include_reason=False`, the metric finishes without any LLM call.
 

@@ -29,12 +29,14 @@ from . import schema as jschema
 from .questions import JevQuestion, QuestionOutcome
 from .utils import (
     aggregate,
+    aggregate_strict,
     build_questions,
     construct_single_turn_state,
     describe_outcomes,
     format_outcomes_for_logs,
     initialize_jev_model,
     initialize_reason_model,
+    mark_strict,
     min_confidence,
     outcomes_from_answers,
     validate_questions,
@@ -53,6 +55,7 @@ class JevEval(BaseMetric):
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         threshold: Optional[float] = 0.5,
+        strict_mode: bool = False,
         async_mode: bool = True,
         verbose_mode: bool = False,
         flaky: bool = False,
@@ -74,7 +77,8 @@ class JevEval(BaseMetric):
         self.evaluation_model = self.system_one_model.get_model_name()
         if include_reason:
             self.evaluation_model += f" + {self.model.get_model_name()}"
-        self.threshold = threshold
+        self.strict_mode = strict_mode
+        self.threshold = 1 if strict_mode else threshold
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
@@ -253,7 +257,11 @@ class JevEval(BaseMetric):
         accrue_token_usage(self, cost)
 
     def _finalize(self, outcomes: List[QuestionOutcome]) -> None:
-        self.score = aggregate(outcomes)
+        if self.strict_mode:
+            outcomes = mark_strict(self.questions, outcomes)
+            self.score = aggregate_strict(outcomes)
+        else:
+            self.score = aggregate(outcomes)
         self.score_breakdown = [o.model_dump() for o in outcomes]
         self.confidence = min_confidence(outcomes)
         self.success = self.is_successful()

@@ -209,6 +209,57 @@ def aggregate(outcomes: Sequence[QuestionOutcome]) -> float:
     return sum(o.weight * o.value for o in applicable) / total_weight
 
 
+###############################################
+# Strict mode
+###############################################
+#
+# `strict_mode` keeps deepeval's contract: the score is 1 for perfection and
+# 0 otherwise. "Perfection" is every applicable question answered in its best
+# possible way, decided from Jev's probabilities without an LLM.
+
+STRICT_NOUL_THRESHOLD = 0.5
+
+
+def _argmax(probabilities: Dict[str, float]) -> Optional[str]:
+    if not probabilities:
+        return None
+    return max(probabilities.items(), key=lambda kv: kv[1])[0]
+
+
+def passes_strictly(question: JevQuestion, outcome: QuestionOutcome) -> bool:
+    if isinstance(question, Noul):
+        return outcome.probabilities.get("true", 0.0) >= STRICT_NOUL_THRESHOLD
+    if isinstance(question, Score):
+        return _argmax(outcome.probabilities) == question.levels[-1]
+    if isinstance(question, Choice):
+        credits = question.applicable_options
+        chosen = _argmax(
+            {name: outcome.probabilities.get(name, 0.0) for name in credits}
+        )
+        return chosen is not None and credits[chosen] >= 1.0
+    raise TypeError(f"Unsupported question type: {type(question).__name__}")
+
+
+def mark_strict(
+    questions: Sequence[JevQuestion], outcomes: Sequence[QuestionOutcome]
+) -> List[QuestionOutcome]:
+    """Record, per applicable question, whether it met the strict bar."""
+    marked: List[QuestionOutcome] = []
+    for question, outcome in zip(questions, outcomes):
+        passed = (
+            passes_strictly(question, outcome) if outcome.applicable else None
+        )
+        marked.append(outcome.model_copy(update={"passed": passed}))
+    return marked
+
+
+def aggregate_strict(outcomes: Sequence[QuestionOutcome]) -> float:
+    applicable = [o for o in outcomes if o.applicable]
+    if not applicable:
+        return EMPTY_SCORE
+    return 1.0 if all(o.passed for o in applicable) else 0.0
+
+
 def min_confidence(outcomes: Sequence[QuestionOutcome]) -> Optional[float]:
     values = [o.confidence for o in outcomes if o.confidence is not None]
     return min(values) if values else None
@@ -360,5 +411,7 @@ def format_outcomes_for_logs(outcomes: Sequence[QuestionOutcome]) -> str:
         )
         if outcome.confidence is not None:
             line += f" confidence={outcome.confidence:.3f}"
+        if outcome.passed is not None:
+            line += f" strict_pass={outcome.passed}"
         lines.append(line)
     return "\n".join(lines)

@@ -84,6 +84,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 
   - **Custom, All-Purpose Metrics:**
 
+    - [JevEval](https://deepeval.com/docs/metrics-jev-eval) — a custom metric scored by Jev, a System One model that answers your questions with calibrated probabilities instead of generated text
     - [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — a research-backed LLM-as-a-judge metric for evaluating on any custom criteria with human-like accuracy
     - [DAG](https://deepeval.com/docs/metrics-dag) — DeepEval's graph-based deterministic LLM-as-a-judge metric builder
 

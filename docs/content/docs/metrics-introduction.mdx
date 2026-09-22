@@ -11,17 +11,21 @@ import { ASSETS } from "@site/src/assets";
 
 ## Quick Summary
 
-Almost all predefined metrics on `deepeval` use **LLM-as-a-judge**, with techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval**. Most score [test cases](/docs/evaluation-test-cases) representing atomic interactions, while [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) score the complete ordered trace produced by an AI agent.
+Almost all predefined metrics on `deepeval` use **LLM-as-a-judge**, with techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval** (with the exception of [**JevEval**](/docs/metrics-jev-eval), which is scored by Jev, a System One model, instead of an LLM).
+
+Most score [test cases](/docs/evaluation-test-cases) representing atomic interactions, while [trajectory metrics](/docs/evaluation-trajectory-based-llm-evals) score the complete ordered trace produced by an AI agent.
 
 All of `deepeval`'s metrics output a **score between 0-1** based on its corresponding equation, as well as score **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
 
 <Tabs items={["Custom metrics", "AI Agents", "RAG", "Chatbots (multi-turn)", "Safety", "Image", "Others"]}>
 <Tab value="Custom metrics">
 
-Custom metrics allow you to define your **custom criteria** using SOTA implementations of LLM-as-a-Judge metrics in everyday language:
+Custom metrics allow you to define your **custom criteria** using SOTA implementations of LLM-as-a-Judge (and Jev-as-a-Judge) metrics in everyday language:
 
+- JevEval
 - G-Eval
 - DAG (Deep Acyclic Graph)
+- Conversational JevEval
 - Conversational G-Eval
 - Conversational DAG
 - Arena G-Eval
@@ -176,6 +180,7 @@ More information on everything can be found on the [Confident AI evaluation docs
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 
 - Are research-backed LLM-as-as-Judge (`GEval`)
+- <Only id="python">Support frontier, SOTA eval techniques such as Jev-as-a-Judge (`JevEval`), scored by a System One model with calibrated probabilities instead of generated text</Only>
 - One of the most used in the world (20 million+ daily evaluations)
 - Make deterministic metric scores possible (when using `DAGMetric`)
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
@@ -194,9 +199,9 @@ If you want a **categorical** LLM-as-a-judge, one that assigns a label from a se
 
 ### Custom Metrics
 
-`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language. G-Eval is available for all single-turn, multi-turn, and multimodal evals.
+`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language, and JevEval, which scores the bounded questions you define with Jev, a System One model, instead of an LLM. Both are available for single-turn and multi-turn evals.
 
-<Tabs items={["G-Eval", "Conversational G-Eval"]}>
+<Tabs items={["G-Eval", "JevEval"]}>
 <Tab value="G-Eval">
 
 <Switch>
@@ -252,57 +257,43 @@ console.log(correctness.score, correctness.reason);
 </Switch>
 
 </Tab>
-<Tab value="Conversational G-Eval">
+<Tab value="JevEval">
 
 <Switch>
 
 <Case id="python">
 
 ```python
-from deepeval.test_case import Turn, MultiTurnParams, ConversationalTestCase
-from deepeval.metrics import ConversationalGEval
+from deepeval.metrics.jev_eval import Noul, Score
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import JevEval
 
-convo_test_case = ConversationalTestCase(turns=[Turn(role="...", content="..."), Turn(role="...", content="...")])
-professionalism_metric = ConversationalGEval(
-    name="Professionalism",
-    criteria="Determine whether the assistant has acted professionally based on the content."
-    evaluation_params=[MultiTurnParams.CONTENT],
-    strict_mode=True
+test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+correctness = JevEval(
+    name="Correctness",
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+    questions=[
+        Noul("actual_output contains no fact that contradicts expected_output.", weight=2),
+        Score(
+            "How closely does actual_output match expected_output?",
+            levels=["Contradicts it", "Mostly wrong", "Mostly right", "Fully matches"],
+        ),
+    ],
 )
 
-professionalism_metric.measure(convo_test_case)
-print(professionalism_metric.score, professionalism_metric.reason)
+correctness.measure(test_case)
+print(correctness.score, correctness.reason)
 ```
 
 </Case>
 
 <Case id="typescript">
 
-```typescript
-import {
-  Turn,
-  MultiTurnParams,
-  ConversationalTestCase,
-} from "deepeval/test-case";
-import { ConversationalGEval } from "deepeval/metrics";
+<NotImplemented id="typescript" feature="JevEval">
 
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "..." }),
-    new Turn({ role: "assistant", content: "..." }),
-  ],
-});
-const professionalismMetric = new ConversationalGEval({
-  name: "Professionalism",
-  criteria:
-    "Determine whether the assistant has acted professionally based on the content.",
-  evaluationParams: [MultiTurnParams.CONTENT],
-  strictMode: true,
-});
+Use `GEval` in the first tab to create a custom metric in the meantime.
 
-await professionalismMetric.measure(convoTestCase);
-console.log(professionalismMetric.score, professionalismMetric.reason);
-```
+</NotImplemented>
 
 </Case>
 
@@ -311,7 +302,7 @@ console.log(professionalismMetric.score, professionalismMetric.reason);
 </Tab>
 </Tabs>
 
-Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
+Under the hood, G-Eval first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation; JevEval skips generation entirely and sends your questions to Jev, which returns calibrated probabilities that `deepeval` turns into a score. For more information, visit the [G-Eval](/docs/metrics-llm-evals) and [JevEval](/docs/metrics-jev-eval) documentation pages.
 
 :::tip
 
@@ -636,6 +627,19 @@ You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Oll
 
 <include cwd>snippets/models/configure-llm-judge-tabs.mdx</include>
 
+<Only id="python">
+
+:::tip
+If you're using [`JevEval`](/docs/metrics-jev-eval), just set your `TYPESAFE_API_KEY` instead:
+
+```bash
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+```
+
+:::
+
+</Only>
+
 ## Using Metrics
 
 There are four ways you can use metrics:
@@ -820,7 +824,9 @@ for await (const golden of dataset.evalsIterator()) {
 
 Here are a few examples available for your selected SDK:
 
-<include cwd>snippets/integrations/framework-integration-card-examples.mdx</include>
+<include cwd>
+  snippets/integrations/framework-integration-card-examples.mdx
+</include>
 
 Pass metrics to <Term py="evals_iterator()" ts="evalsIterator()"/> for end-to-end or trajectory-based evaluation. Attach or stage metrics on framework-emitted spans for component-level evaluation. Each integration guide shows the supported patterns for that framework.
 
@@ -1243,6 +1249,12 @@ Test cases can also be [marked as flaky](/docs/evaluation-test-cases#mark-test-c
 
 ## What About Non-LLM-as-a-judge Metrics?
 
+<Only id="python">
+
+If you want custom criteria judged without a language model at all, use [`JevEval`](/docs/metrics-jev-eval). You write the questions, Jev, a System One model, answers each with calibrated probabilities, and `deepeval` turns them into a score with a fixed equation, so there's no chain-of-thought, no generated text, and no score to parse.
+
+</Only>
+
 If you're looking to use something like **ROUGE**, **BLEU**, or **BLEURT**, etc. you can create a custom metric and use the `scorer` module available in `deepeval` for scoring by following [this guide](/docs/metrics-custom).
 
 The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeval/scorer/scorer.py) is available but not documented because our experience tells us these scorers are not useful as LLM metrics where outputs require a high level of reasoning to evaluate.
@@ -1266,9 +1278,11 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
       question: "Do all of deepeval's metrics use an LLM?",
       answer: (
         <>
-          Most do — they're <strong>LLM-as-a-judge</strong> (QAG, G-Eval). The{" "}
-          <a href="/docs/metrics-dag">DAGMetric</a> can be fully deterministic,
-          and for statistical scorers like ROUGE/BLEU you build a{" "}
+          Most do — they're <strong>LLM-as-a-judge</strong> (QAG, G-Eval).{" "}
+          <a href="/docs/metrics-jev-eval">JevEval</a> is the exception: it is
+          scored by Jev, a System One model, with no LLM in the scoring path.
+          The <a href="/docs/metrics-dag">DAGMetric</a> can be fully
+          deterministic, and for statistical scorers like ROUGE/BLEU you build a{" "}
           <a href="/docs/metrics-custom">custom metric</a> with the{" "}
           <code>scorer</code> module.
         </>
@@ -1318,9 +1332,9 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
           rather than prebuilt test cases. Trajectory metrics can score the
           complete agent path, while component metrics can score selected spans.
           For continuous online evals, dashboards, and alerts on live traffic,
-          run them on{" "}
-          <a href="https://confident-ai.com">Confident AI</a>, the enterprise
-          platform for all-in-one evals, observability, and red teaming.
+          run them on <a href="https://confident-ai.com">Confident AI</a>, the
+          enterprise platform for all-in-one evals, observability, and red
+          teaming.
         </>
       ),
     },
@@ -1331,10 +1345,11 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
           Yes. Once you{" "}
           <a href="/docs/evaluation-llm-tracing">set up tracing</a>, metrics can
           score spans and traces automatically. Metrics on the complete ordered
-          trace are <a href="/docs/evaluation-trajectory-based-llm-evals">
+          trace are{" "}
+          <a href="/docs/evaluation-trajectory-based-llm-evals">
             trajectory-based
-          </a>, while metrics on individual spans are{" "}
-          <a href="/docs/evaluation-component-level-llm-evals">
+          </a>
+          , while metrics on individual spans are <a href="/docs/evaluation-component-level-llm-evals">
             component-level
           </a>. Wire them up on{" "}
           <a href="https://confident-ai.com">Confident AI</a> to track metric
@@ -1348,10 +1363,10 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
         <>
           Metrics carrying the <strong>Trajectory</strong> tag evaluate the
           complete ordered trace. These are <code>TaskCompletionMetric</code>,{" "}
-          <code>StepEfficiencyMetric</code>,{" "}
-          <code>PlanAdherenceMetric</code>, and <code>PlanQualityMetric</code>.
-          They require tracing and are passed to the evals iterator or test
-          assertion rather than measured against one isolated component.
+          <code>StepEfficiencyMetric</code>, <code>PlanAdherenceMetric</code>,
+          and <code>PlanQualityMetric</code>. They require tracing and are
+          passed to the evals iterator or test assertion rather than measured
+          against one isolated component.
         </>
       ),
     },
