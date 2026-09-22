@@ -60,9 +60,9 @@ def initialize_jev_model(
         return TypeSafeModel(model=model)
     except DeepEvalError as e:
         raise DeepEvalError(
-            f"JevEval scores with TypeSafe AI Jev, but it is not usable: {e} "
-            "Install the SDK with `pip install typesafe-sdk` and set "
-            "TYPESAFE_API_KEY (or run `deepeval set-typesafe --prompt-api-key`)."
+            f"JevEval needs Jev to score, but it is not usable: {e} "
+            "Pass a configured `TypeSafeModel` as `system_one_model`, or "
+            "install `typesafe-sdk` and set TYPESAFE_API_KEY."
         ) from e
 
 
