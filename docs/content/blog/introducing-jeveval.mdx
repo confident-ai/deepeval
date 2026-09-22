@@ -1,0 +1,236 @@
+---
+title: "Introducing JevEval: Jev-as-a-Judge for LLM Evaluation"
+description: JevEval is a custom LLM evaluation metric powered by Jev that turns explicit questions and calibrated probabilities into deterministic scores.
+date: 2026-09-23
+authors: [penguine]
+category: announcements
+---
+
+Yesterday, we introduced [Jev in DeepEval](/blog/introducing-jev-in-deepeval) and the idea behind it: language tasks should stay with language models, while bounded decisions should go to a model built to decide.
+
+Today, we're taking that idea one step further with **JevEval**, a custom evaluation metric where Jev is not hidden inside someone else's metric. You write the decision points yourself, Jev answers them with calibrated probabilities, and DeepEval turns those answers into a score using fixed math.
+
+This is Jev-as-a-Judge: no generated verdicts, no JSON recovery, and no prompt asking an LLM to invent a number between 1 and 10.
+
+## The problem with custom LLM-as-a-Judge
+
+Most custom LLM evaluation metrics begin with a sentence:
+
+> Determine whether the response is helpful, accurate, and complete.
+
+That sentence is passed to an LLM, which has to interpret the criteria, decide what matters, produce a score, and usually explain itself—all in one generative step.
+
+This is convenient, but it hides too much. What did "helpful" mean for this test case? Did accuracy matter more than completeness? What does a score of `0.71` mean, and why did the same response receive `0.66` on the next run?
+
+The problem is not that LLMs cannot read the response. It is that we ask generation to do three separate jobs:
+
+1. Define the evaluation logic.
+2. Make the decisions.
+3. Calculate the score.
+
+JevEval separates them. **You define the logic, Jev makes the decisions, and DeepEval calculates the score.**
+
+## What is JevEval?
+
+`JevEval` is a custom metric for [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case). Instead of giving it one open-ended criterion, you give it:
+
+- the test case fields Jev is allowed to see,
+- a list of bounded questions about those fields,
+- and, optionally, a weight for each question.
+
+Jev receives the selected fields as structured state and answers every question in one request. It returns probability distributions rather than generated text. DeepEval then maps each answer onto a value from `0` to `1` and takes a weighted mean:
+
+<Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
+
+Here, $w_i$ is the question's weight, $v_i$ is the value calculated from Jev's probabilities, and $\mathcal{A}$ is the set of questions that apply to the test case.
+
+The important part is where the score comes from. Jev does not generate it. An LLM does not interpret it after the fact. The equation is fixed, inspectable, and the same on every run.
+
+## Three ways to ask a decision
+
+JevEval is built from three question types, each matching one of [Jev's decision primitives](/blog/introducing-jev-in-deepeval#understanding-jevs-decision-primitives).
+
+### Noul: is this proposition true?
+
+A `Noul` is a binary proposition such as:
+
+> Every fact in `actual_output` appears in `tools_called`.
+
+Jev returns $P(\text{true})$, and that probability becomes the question's value:
+
+<Equation formula="v_{\text{Noul}} = P(\text{true})" />
+
+Nouls are useful for requirements that read like a checklist: the answer cited its sources, the response followed the requested format, or the assistant verified the order before issuing a refund.
+
+### Score: where does this land on an ordered scale?
+
+A `Score` uses descriptive levels arranged from worst to best:
+
+> Fabricated → Mostly fabricated → Mostly grounded → Fully grounded
+
+Jev returns a probability for every level. DeepEval calculates the expected position and normalizes it to `0–1`:
+
+<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} kP(k)" />
+
+This preserves uncertainty between adjacent levels instead of forcing a brittle integer rating.
+
+### Choice: which behavior occurred?
+
+A `Choice` selects from an unordered set of behaviors. You assign each option a credit from `0` to `1`:
+
+- `left_it_out`: `1.0`
+- `flagged_it_as_unknown`: `1.0`
+- `hedged_it`: `0.5`
+- `stated_it_as_fact`: `0.0`
+
+Unlike an ordered score, two very different behaviors can earn the same credit. You can also assign `None` to an option such as `nothing_missing`. If Jev places at least half of the probability on not-applicable options, that question drops out of the score rather than rewarding or penalizing the response for a situation that never occurred.
+
+The credits never leave DeepEval. Jev sees only the option names, so the value you assign cannot steer its decision.
+
+## Building a Tool Faithfulness metric
+
+Suppose an agent calls a weather tool that returns `18°C` and `sunny`, but its answer also claims there is a light breeze and `40%` humidity. A useful metric should distinguish between reporting the returned values correctly and inventing additional ones.
+
+<Only id="python">
+
+```python title="test_tool_faithfulness.py"
+from deepeval.metrics.jev_eval import Choice, Noul, Score
+from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
+from deepeval.metrics import JevEval
+from deepeval import evaluate
+
+tool_faithfulness = JevEval(
+    name="Tool Faithfulness",
+    evaluation_params=[
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.TOOLS_CALLED,
+    ],
+    questions=[
+        Noul(
+            "Every fact and figure in actual_output appears in the output "
+            "of a tool in tools_called.",
+            weight=2,
+        ),
+        Noul(
+            "actual_output reports every value returned in tools_called accurately."
+        ),
+        Score(
+            "How much of actual_output is grounded in tools_called?",
+            levels=[
+                "Fabricated",
+                "Mostly fabricated",
+                "Mostly grounded",
+                "Fully grounded",
+            ],
+        ),
+        Choice(
+            "What did actual_output do with information the tools did not return?",
+            options={
+                "left_it_out": 1.0,
+                "flagged_it_as_unknown": 1.0,
+                "hedged_it": 0.5,
+                "stated_it_as_fact": 0.0,
+                "nothing_missing": None,
+            },
+        ),
+    ],
+    include_reason=False,
+)
+
+test_case = LLMTestCase(
+    input="What's the weather in Paris right now?",
+    actual_output=(
+        "It's 18°C and sunny in Paris, with a light breeze "
+        "and around 40% humidity."
+    ),
+    tools_called=[
+        ToolCall(
+            name="get_weather",
+            input_parameters={"city": "Paris"},
+            output={"temp_c": 18, "condition": "sunny"},
+        )
+    ],
+)
+
+evaluate(test_cases=[test_case], metrics=[tool_faithfulness])
+```
+
+</Only>
+
+This metric does not collapse tool faithfulness into one vague judgement. It asks four inspectable questions:
+
+1. Did every claim come from a tool?
+2. Were the values that did come from the tool reported accurately?
+3. How grounded was the response overall?
+4. How did the response handle information the tool did not provide?
+
+The first question has twice the weight because hallucinating an unsupported fact is the failure we care about most. That importance is explicit in code rather than implied somewhere inside a prompt.
+
+## One request, a complete breakdown
+
+JevEval sends the state and all four questions to Jev in a single `decide()` call. Jev evaluates the questions in parallel, and DeepEval stores every intermediate result in `score_breakdown`.
+
+For each question, you can inspect:
+
+- its type and weight,
+- the complete probability distribution,
+- its mapped `0–1` value,
+- whether it applied,
+- and, in strict mode, whether it passed.
+
+This makes the final score traceable. If the Tool Faithfulness metric fails, you can see whether the response invented information, copied a returned value incorrectly, or landed between two grounding levels. You are debugging an evaluation specification, not reverse-engineering a generated number.
+
+## The LLM explanation is optional
+
+By default, JevEval can ask an evaluation LLM to write a human-readable reason grounded in the test case and the outcomes. The LLM explains the decision; it does not make it.
+
+Set `include_reason=False`, as in the example above, and JevEval makes no LLM call at all. The metric becomes one Jev request plus arithmetic, while still returning `score`, `success`, `confidence`, and `score_breakdown`.
+
+This boundary matters. Explanations are language tasks, so an LLM is useful there. Passing or failing a regression test is a decision task, so the explanation cannot change the score.
+
+## Strict mode for non-negotiable requirements
+
+A weighted mean is useful when strengths can offset weaknesses. Sometimes they should not.
+
+With `strict_mode=True`, JevEval returns `1` only when every applicable question passes in its best possible way; otherwise it returns `0`. The threshold is set to `1`, and the breakdown shows exactly which requirement failed.
+
+Use strict mode for hard constraints such as:
+
+- every citation must be supported,
+- no prohibited behavior may occur,
+- every required field must be present,
+- or every mandatory workflow step must be completed.
+
+It turns the same question set from a quality score into an executable acceptance test.
+
+## JevEval works for conversations too
+
+Many important behaviors only make sense across multiple turns: whether an assistant remembered a constraint, verified identity before taking action, resolved the user's request, or stayed within its assigned role.
+
+[`ConversationalJevEval`](/docs/metrics-conversational-jev-eval) applies the same Noul, Score, and Choice model to an entire [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases). The conversation becomes a structured `turns` list, and you can add fields such as `scenario`, `expected_outcome`, and `chatbot_role` to the state.
+
+The scoring equation stays the same. The only difference is what the questions can see.
+
+## Getting started
+
+Install DeepEval and the TypeSafe SDK, then set your API key:
+
+```bash
+pip install -U deepeval typesafe-sdk
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+```
+
+Then define the state, write the questions, and run JevEval like any other DeepEval metric.
+
+The full [JevEval documentation](/docs/metrics-jev-eval) covers question design, strict mode, score calculation, and a worked example down to every probability. If you're evaluating multi-turn agents, start with the [Conversational JevEval documentation](/docs/metrics-conversational-jev-eval).
+
+## Evals as specifications
+
+Custom evals should tell you more than whether an LLM liked a response. They should encode what your system is required to do, show how each requirement was judged, and calculate the result in a way you can inspect.
+
+That is what JevEval is for.
+
+You write the evaluation specification as bounded questions. Jev returns calibrated decisions. DeepEval turns them into a traceable score with fixed math. And when you need an explanation, an LLM explains the result without getting a vote.
+
+Jev-as-a-Judge is not about replacing language models everywhere. It is about giving language generation fewer decisions it was never designed to make.
