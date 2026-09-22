@@ -19,6 +19,8 @@ from deepeval.models.llms import (
     DeepSeekModel,
     PortkeyModel,
     OpenRouterModel,
+    TypeSafeModel,
+    JevModel,
 )
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
@@ -63,6 +65,8 @@ __all__ = [
     "OllamaEmbeddingModel",
     "PortkeyModel",
     "OpenRouterModel",
+    "TypeSafeModel",
+    "JevModel",
     "OpenAITTSModel",
     "OpenAISTTModel",
     "CartesiaTTSModel",

@@ -1186,6 +1186,28 @@ DEEPSEEK_MODELS_DATA = ModelDataRegistry(
 )
 
 
+TYPESAFE_MODELS_DATA = ModelDataRegistry(
+    {
+        "jev": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.01 / 1e6,
+            output_price=0.01 / 1e6,
+        ),
+        "typesafe/jev": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            input_price=0.01 / 1e6,
+            output_price=0.01 / 1e6,
+        ),
+    }
+)
+
+
 OLLAMA_MODELS_DATA = ModelDataRegistry(
     {
         "qwen3": make_model_data(

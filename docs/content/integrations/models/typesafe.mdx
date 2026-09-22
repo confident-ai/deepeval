@@ -1,0 +1,98 @@
+---
+title: TypeSafe (Jev)
+sidebar_label: TypeSafe
+languages: [python]
+---
+
+`deepeval` allows you to use TypeSafe AI's **Jev** model as a high-speed, cost-effective "System One" decision model to run `deepeval` metrics. 
+
+Unlike traditional autoregressive LLMs that generate free-form text token-by-token, Jev is a non-autoregressive decision model designed for structured, calibrated evaluations in **70–500ms**, making it ideal for accelerating automated CI/CD evaluation pipelines.
+
+### Command Line
+
+To configure your TypeSafe model through the CLI, run:
+
+```bash
+deepeval set-typesafe --model=jev
+```
+
+The CLI command above sets `jev` as the default model for all metrics, unless overridden in code. To unset TypeSafe:
+
+```bash
+deepeval unset-typesafe
+```
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+You can specify your model directly in code using `TypeSafeModel`:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.models import TypeSafeModel
+
+# Initialize TypeSafeModel
+model = TypeSafeModel(
+    model="jev",
+    api_key="your-typesafe-api-key"
+)
+
+# Use it with any DeepEval metric
+metric = GEval(
+    name="Correctness",
+    criteria="Determine whether the actual output accurately addresses the input.",
+    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    model=model
+)
+
+test_case = LLMTestCase(
+    input="How do I reset my password?",
+    actual_output="Navigate to Settings > Account > Reset Password."
+)
+
+metric.measure(test_case)
+print(f"Score: {metric.score}, Reason: {metric.reason}")
+```
+
+### System One Architecture & Hybrid Generation
+
+Jev is specifically trained for **System One decisions** (scoring rubrics, categorical classification, and calibrated truth probabilities via `Score`, `Choice`, and `Noul` primitives). 
+
+For metrics requiring creative prose generation (such as dynamically writing evaluation steps in `GEval` without user-provided steps):
+- **Deterministic Rubric Steps**: `TypeSafeModel` automatically provides standardized evaluation steps.
+- **Hybrid Generator**: You can optionally pass a lightweight `generator_model` to handle creative text synthesis, while Jev executes the actual scoring decisions at millisecond latency:
+
+```python
+from deepeval.models import TypeSafeModel, OpenAIModel
+
+# Hybrid setup: OpenAI drafts steps, Jev executes sub-second scoring
+model = TypeSafeModel(
+    model="jev",
+    api_key="typesafe-api-key",
+    generator_model=OpenAIModel(model="gpt-4o-mini")
+)
+```
+
+### Installation
+
+To use `TypeSafeModel`, install the official SDK:
+
+```bash
+pip install typesafe-sdk
+```
+
+### Parameters
+
+When creating a `TypeSafeModel`:
+
+- [Optional] `model`: A string specifying the TypeSafe model name. Defaults to `"jev"`, or read from `TYPESAFE_MODEL_NAME`.
+- [Optional] `api_key`: A string specifying your TypeSafe API key. Defaults to `TYPESAFE_API_KEY` from environment variables.
+- [Optional] `generator_model`: An optional LLM instance or string (e.g. `"gpt-4o-mini"`) used only when free-form text synthesis is required.
+- [Optional] `base_url`: A string specifying a custom endpoint URL (e.g. gateway or proxy). Defaults to `https://api.typesafe.ai`.
+- [Optional] `cost_per_input_token`: A float specifying the input token/decision cost override. Defaults to `TYPESAFE_COST_PER_INPUT_TOKEN`.
+- [Optional] `cost_per_output_token`: A float specifying the output token/decision cost override. Defaults to `TYPESAFE_COST_PER_OUTPUT_TOKEN`.

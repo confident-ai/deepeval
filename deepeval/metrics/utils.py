@@ -41,6 +41,7 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
     OpenRouterModel,
+    TypeSafeModel,
 )
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
@@ -668,6 +669,13 @@ def should_use_deepseek_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_typesafe_model():
+    if SETTINGS.USE_TYPESAFE_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_TYPESAFE_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_openrouter_model():
     if SETTINGS.USE_OPENROUTER_MODEL:
         return True
@@ -733,6 +741,8 @@ def initialize_model(
         return GrokModel(model=model), True
     elif should_use_deepseek_model():
         return DeepSeekModel(model=model), True
+    elif should_use_typesafe_model():
+        return TypeSafeModel(model=model), True
     elif should_use_openrouter_model():
         return OpenRouterModel(model=model), True
     elif should_use_anthropic_model():
@@ -765,6 +775,7 @@ def is_native_model(
         or isinstance(model, DeepSeekModel)
         or isinstance(model, OpenRouterModel)
         or isinstance(model, PortkeyModel)
+        or isinstance(model, TypeSafeModel)
     ):
         return True
     else:

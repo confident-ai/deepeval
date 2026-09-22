@@ -581,6 +581,24 @@ class Settings(BaseSettings):
         None,
         description="DeepSeek output token cost (used for cost reporting).",
     )
+    # TypeSafe
+    USE_TYPESAFE_MODEL: Optional[bool] = Field(
+        None, description="Select TypeSafe as the active LLM provider."
+    )
+    TYPESAFE_API_KEY: Optional[SecretStr] = Field(
+        None, description="TypeSafe API key."
+    )
+    TYPESAFE_MODEL_NAME: Optional[str] = Field(
+        None, description="TypeSafe model name (e.g. 'jev')."
+    )
+    TYPESAFE_COST_PER_INPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="TypeSafe input token cost (used for cost reporting).",
+    )
+    TYPESAFE_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
+        None,
+        description="TypeSafe output token cost (used for cost reporting).",
+    )
     # Gemini
     USE_GEMINI_MODEL: Optional[bool] = Field(
         None, description="Select Google Gemini as the active LLM provider."
@@ -1165,6 +1183,7 @@ class Settings(BaseSettings):
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
         "USE_DEEPSEEK_MODEL",
+        "USE_TYPESAFE_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",

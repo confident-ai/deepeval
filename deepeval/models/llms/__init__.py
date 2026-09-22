@@ -11,6 +11,7 @@ from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
 from .portkey_model import PortkeyModel
 from .openrouter_model import OpenRouterModel
+from .typesafe_model import TypeSafeModel, JevModel
 
 __all__ = [
     "AzureOpenAIModel",
@@ -26,6 +27,8 @@ __all__ = [
     "DeepSeekModel",
     "PortkeyModel",
     "OpenRouterModel",
+    "TypeSafeModel",
+    "JevModel",
 ]
 
 
