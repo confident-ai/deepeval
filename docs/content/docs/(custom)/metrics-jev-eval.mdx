@@ -1,0 +1,412 @@
+---
+id: metrics-jev-eval
+title: JevEval
+sidebar_label: JevEval
+languages: [python]
+---
+
+<MetricTagsDisplayer singleTurn={true} custom={true} />
+
+JevEval is a custom metric whose decisions are made by Jev, a System One model, instead of a generative LLM. You define the decision points as bounded **questions**, Jev answers each with calibrated probabilities, and `deepeval` turns those probabilities into a score with a fixed equation.
+
+There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. The only thing an LLM does in JevEval is, optionally, write the reason.
+
+:::tip
+If you want a custom metric where an LLM drafts the evaluation logic from a one-line `criteria`, use [`GEval`](/docs/metrics-llm-evals). JevEval is for when you already know **what** you want decided and want it decided the same way every run.
+
+To evaluate entire conversations instead of a single `LLMTestCase`, use [`ConversationalJevEval`](/docs/metrics-conversational-jev-eval).
+:::
+
+## Required Arguments
+
+To use `JevEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+You'll also need to supply any additional arguments such as `tools_called`, `expected_output` or `retrieval_context` if your questions refer to them.
+
+## Usage
+
+First, if you haven't already, install `typesafe-sdk` and save your Jev API key:
+
+```bash
+pip install typesafe-sdk
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+```
+
+Instantiate a `JevEval` with the test case fields your questions talk about, and the questions themselves:
+
+Here we build a custom **Tool Faithfulness** metric that checks whether the LLM hallucinated on top of what its tools actually returned:
+
+```python
+from deepeval.metrics.jev_eval import Noul, Score, Choice
+from deepeval.test_case import SingleTurnParams
+from deepeval.metrics import JevEval
+
+tool_faithfulness = JevEval(
+    name="Tool Faithfulness",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.TOOLS_CALLED],
+    questions=[
+        Noul("Every fact and figure in actual_output appears in the output of a tool in tools_called.", weight=2),
+        Noul("actual_output reports every value returned in tools_called accurately."),
+        Score(
+            "How much of actual_output is grounded in the outputs in tools_called?",
+            levels=["Fabricated", "Mostly fabricated", "Mostly grounded", "Fully grounded"],
+        ),
+        Choice(
+            "What did actual_output do with information the tools did not return?",
+            options={"left_it_out": 1.0, "flagged_it_as_unknown": 1.0, "hedged_it": 0.5, "stated_it_as_fact": 0.0, "nothing_missing": None},
+        ),
+    ],
+)
+```
+
+There are **THREE** mandatory and **SEVEN** optional parameters when creating a `JevEval`:
+
+- `name`: name of custom metric.
+- `evaluation_params`: a list of type `SingleTurnParams`. These fields are the **state** Jev sees; a question can only refer to fields listed here.
+- `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
+- [Optional] `system_one_model`: a Jev model name such as `"jev-latest"`, **OR** a `TypeSafeModel` instance with your own `api_key`, `model` and `cost_per_input_token`. Defaults to `TypeSafeModel()`, which reads `TYPESAFE_API_KEY` from your environment. Pass `TypeSafeModel(model=..., api_key=...)` to configure it in code instead.
+- [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints every question's probabilities and value to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `include_reason`: a boolean which when set to `True`, has your evaluation LLM write a reason grounded in the test case. When `False`, JevEval makes **no LLM call at all**. Defaulted to `True`.
+- [Optional] `model`: the LLM used only for the reason; a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />. Not constructed when `include_reason=False`.
+
+:::danger
+Question text refers to the state by field name (`input`, `actual_output`, `tools_called`, ...). A field that is not in `evaluation_params` is invisible to Jev, so every field your questions mention must be listed.
+:::
+
+As with every `deepeval` metric, `JevEval` returns a score from 0 - 1 and is successful when that score is equal to or greater than `threshold`. You can access `score`, `reason` and the per-question `score_breakdown`:
+
+```python
+from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval import evaluate
+...
+
+test_case = LLMTestCase(
+    input="What's the weather in Paris right now?",
+    actual_output="It's 18°C and sunny in Paris, with a light breeze and around 40% humidity.",
+    tools_called=[
+        ToolCall(
+            name="get_weather",
+            input_parameters={"city": "Paris"},
+            output={"temp_c": 18, "condition": "sunny"},
+        )
+    ],
+)
+
+# To run metric as a standalone
+# tool_faithfulness.measure(test_case)
+# print(tool_faithfulness.score, tool_faithfulness.reason)
+# print(tool_faithfulness.score_breakdown)
+
+evaluate(test_cases=[test_case], metrics=[tool_faithfulness])
+```
+
+## Question Types
+
+`JevEval` has three question types, drawn directly from Jev's [decision primitives](/blog/introducing-jev-in-deepeval#understanding-jevs-decision-primitives). Each maps its answer onto a value $v \in [0, 1]$ with a fixed rule.
+
+| Question type | Best for                                                          | Example                                                          |
+| ------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `Noul`        | A yes/no check: one proposition that is either true or false      | "Every figure in `actual_output` appears in a tool output."      |
+| `Score`       | A judgement of degree along an ordered scale, worst to best       | "How much of `actual_output` is grounded?" Fabricated → Fully    |
+| `Choice`      | Picking one of several distinct behaviours, some of which may not apply | "What did it do with data the tools never returned?"       |
+
+### Noul
+
+A `Noul` is one proposition about the state. Jev returns $P(\text{true})$, and that probability is the value:
+
+<Equation formula="v = P(\text{true})" />
+
+```python
+from deepeval.metrics.jev_eval import Noul
+
+Noul("Every fact and figure in actual_output appears in the output of a tool in tools_called.", weight=2)
+```
+
+Use Nouls for a **checklist**: several independent checks, each calibrated, each weighted by how much you care. `Noul` also accepts optional `true` / `false` descriptions that sharpen what counts as either side.
+
+### Score
+
+A `Score` is one holistic judgement over ordered descriptive levels, **worst first**. Jev returns a probability for every level; the value is the expected level position, normalised so the top level is `1`:
+
+<Equation formula="v = \frac{1}{n-1}\sum_{i=0}^{n-1} i\,P(i)" />
+
+```python
+from deepeval.metrics.jev_eval import Score
+
+Score(
+    "How much of actual_output is grounded in the outputs in tools_called?",
+    levels=["Fabricated", "Mostly fabricated", "Mostly grounded", "Fully grounded"],
+)
+```
+
+Use a Score when "between two levels" is meaningful. Jev accepts between 2 and 10 levels.
+
+### Choice
+
+A `Choice` is one selection from an **unordered** closed set. You attach a **credit** in `[0, 1]` to every option, or `None` to mark an option that means "this question does not apply here". The value is the credit-weighted probability over the applicable options:
+
+<Equation formula="v = \frac{\sum_{o \,:\, c_o \neq \varnothing} P(o)\,c_o}{\sum_{o \,:\, c_o \neq \varnothing} P(o)}" />
+
+```python
+from deepeval.metrics.jev_eval import Choice
+
+Choice(
+    "What did actual_output do with information the tools did not return?",
+    options={"left_it_out": 1.0, "flagged_it_as_unknown": 1.0, "hedged_it": 0.5, "stated_it_as_fact": 0.0, "nothing_missing": None},
+)
+```
+
+If the `None` options collect **half or more** of the probability, the question is dropped from the metric for that test case: it did not apply, so it neither helps nor hurts.
+
+Credits do not have to be monotone, which is what a Score cannot express. Above, `left_it_out` and `flagged_it_as_unknown` are two very different behaviours that deserve the same full credit, and `nothing_missing` means the question should not count at all. Jev only ever sees the option names; credits stay in `deepeval`.
+
+:::info
+JevEval outputs a **score**, not a label. If you want the chosen option itself as the result, use a [classifier](/docs/classifiers-introduction) instead.
+:::
+
+## How Is It Calculated?
+
+The `JevEval` score is calculated according to the following equation:
+
+<Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i \, v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
+
+Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's answer maps onto, and $\mathcal{A}$ is the set of questions that **applied** to this test case.
+
+`JevEval` first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value according to its question type:
+
+<Equation formula="v_{\text{Noul}} = P(\text{true})" />
+
+<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
+
+<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
+
+**A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
+
+<Equation formula="i \in \mathcal{A} \iff \sum_{o \,:\, c_o = \varnothing} P(o) < 0.5" />
+
+`Noul` and `Score` questions always apply. If $\mathcal{A}$ is empty, the score is `1`: nothing applicable was left to fail.
+
+:::note
+The credits $c_o$ never leave `deepeval`. Jev only sees the option **names**, so it cannot be steered by how much each option is worth.
+:::
+
+With `include_reason=True`, the evaluation LLM then writes a `reason` explaining each question's outcome against the test case. With `include_reason=False`, the metric finishes without any LLM call.
+
+<div style={{textAlign: 'center', margin: "2rem 0"}}>
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 40, 'fontSize': 11}}}%%
+flowchart LR
+    S[State from<br>`evaluation_params`] --> D[Jev `decide`<br>one request]
+    Q[Noul / Score / Choice<br>questions] --> D
+    D --> V[Map each answer<br>to a value 0-1]
+    V --> W[Weighted mean over<br>applicable questions]
+    W --> F[Final score<br>0-1]
+    V -.->|include_reason| R[LLM writes a<br>grounded reason]
+```
+
+</div>
+
+## Example
+
+Let's trace the `Tool Faithfulness` metric from [Usage](#usage) on the Paris weather test case end to end. Every number below is one you can read back from `score_breakdown`.
+
+<Steps>
+
+<Step>
+
+### Build the state
+
+`evaluation_params` decides what Jev gets to see. The three fields are pulled off the `LLMTestCase` into one JSON object, with each `ToolCall` serialised as structured data so Jev can read its `output` directly:
+
+```json
+{
+  "test_case": {
+    "input": "What's the weather in Paris right now?",
+    "actual_output": "It's 18°C and sunny in Paris, with a light breeze and around 40% humidity.",
+    "tools_called": [
+      {
+        "name": "get_weather",
+        "type": "FUNCTION",
+        "input_parameters": {"city": "Paris"},
+        "output": {"temp_c": 18, "condition": "sunny"}
+      }
+    ]
+  }
+}
+```
+
+This is why the questions say `actual_output` and `tools_called`: they name keys in this object. Had a question mentioned `retrieval_context`, Jev would simply not have it.
+
+</Step>
+
+<Step>
+
+### Translate the questions
+
+Each question becomes one entry in a single Jev request, keyed `q_0` to `q_3`:
+
+- `q_0`, `q_1`: yes/no questions on the two `Noul` statements.
+- `q_2`: a score question over the four `Score` levels.
+- `q_3`: a choice question over the five option **names** only. The credits (`1.0`, `1.0`, `0.5`, `0.0`, `None`) are never sent; they are `deepeval`-side bookkeeping for the next step.
+
+One `decide()` call sends the state and all four questions. Jev evaluates them in parallel and returns probabilities, no text.
+
+</Step>
+
+<Step>
+
+### What Jev returns
+
+An illustrative answer for this test case:
+
+```text
+q_0  P(true) = 0.30      # "light breeze" and "40% humidity" are in no tool output
+q_1  P(true) = 0.90      # 18°C and sunny match temp_c and condition exactly
+q_2  score = 1.7, probabilities {0: 0.05, 1: 0.30, 2: 0.55, 3: 0.10}, confidence 0.55
+q_3  choice = stated_it_as_fact,
+     probabilities {left_it_out: 0.05, flagged_it_as_unknown: 0.05, hedged_it: 0.25, stated_it_as_fact: 0.60, nothing_missing: 0.05},
+     confidence 0.6
+```
+
+</Step>
+
+<Step>
+
+### Map each answer to a value
+
+This is where the three primitives become comparable.
+
+**`q_0` (Noul, weight 2)** and **`q_1` (Noul, weight 1)** are already values:
+
+<Equation formula="v_0 = 0.30 \qquad v_1 = 0.90" />
+
+**`q_2` (Score)** has four levels, so $n - 1 = 3$:
+
+<Equation formula="v_2 = \frac{0(0.05) + 1(0.30) + 2(0.55) + 3(0.10)}{3} = \frac{1.7}{3} = 0.567" />
+
+Landing between "Mostly fabricated" and "Mostly grounded" is the point: the expected position is already a soft score.
+
+**`q_3` (Choice)** has `nothing_missing` marked `None`. Its mass is $0.05 < 0.5$, so the question applies; the tool never returned wind or humidity. Renormalise over the other four and weight by credit:
+
+<Equation formula="v_3 = \frac{0.05 \cdot 1.0 + 0.05 \cdot 1.0 + 0.25 \cdot 0.5 + 0.60 \cdot 0.0}{0.05 + 0.05 + 0.25 + 0.60} = \frac{0.225}{0.95} = 0.237" />
+
+Had the response stuck to "18°C and sunny" and Jev put `0.9` on `nothing_missing`, `q_3` would drop out entirely and the other three questions would decide the score alone.
+
+</Step>
+
+<Step>
+
+### Weighted mean
+
+<Equation formula="\text{JevEval} = \frac{2 \cdot 0.30 + 1 \cdot 0.90 + 1 \cdot 0.567 + 1 \cdot 0.237}{2 + 1 + 1 + 1} = \frac{2.304}{5} = 0.461" />
+
+`tool_faithfulness.score` is `0.461` and `success` is `False` against the default threshold of `0.5`. The response got the tool's own values right, but the "every fact appears in a tool output" Noul carried weight 2, so the invented breeze and humidity pulled the score down more than any other single question could. Weight is the only place your "how much do I care" enters the math.
+
+</Step>
+
+<Step>
+
+### Read the breakdown
+
+`score_breakdown` keeps every intermediate so you can see why:
+
+```python
+[
+  {"question": "Every fact and figure in actual_output appears in the output of a tool in tools_called.", "type": "noul", "weight": 2.0, "value": 0.30, "applicable": True, "probabilities": {"true": 0.30, "false": 0.70}, "confidence": None},
+  {"question": "actual_output reports every value returned in tools_called accurately.", "type": "noul", "weight": 1.0, "value": 0.90, "applicable": True, "probabilities": {"true": 0.90, "false": 0.10}, "confidence": None},
+  {"question": "How much of actual_output is grounded in the outputs in tools_called?", "type": "score", "weight": 1.0, "value": 0.567, "applicable": True, "probabilities": {"Fabricated": 0.05, "Mostly fabricated": 0.30, "Mostly grounded": 0.55, "Fully grounded": 0.10}, "confidence": 0.55},
+  {"question": "What did actual_output do with information the tools did not return?", "type": "choice", "weight": 1.0, "value": 0.237, "applicable": True, "probabilities": {"left_it_out": 0.05, "flagged_it_as_unknown": 0.05, "hedged_it": 0.25, "stated_it_as_fact": 0.60, "nothing_missing": 0.05}, "confidence": 0.6},
+]
+```
+
+</Step>
+
+<Step>
+
+### Reason
+
+With `include_reason=True`, the evaluation LLM writes a `reason` that walks through each question and points at the part of the test case behind it:
+
+> The response's '18°C and sunny' matches the get_weather output, but 'a light breeze and around 40% humidity' appears nowhere in what the tool returned, so the answer draws on more than the tool provided. The two values the tool did return, temp_c 18 and condition sunny, are reported accurately. Most of the response rests on the tool output, with the breeze and humidity being the part that does not. The tool returned no wind or humidity data, and the response presented both as fact, softening only the humidity with 'around', rather than leaving them out or saying they were unavailable.
+
+With `include_reason=False`, this step is skipped and the whole metric ran with zero LLM tokens.
+
+</Step>
+
+</Steps>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is JevEval different from G-Eval?",
+      answer: (
+        <>
+          <code>GEval</code> asks an LLM to draft evaluation steps from a{" "}
+          <code>criteria</code> and then generate a score, and uses token
+          probabilities to smooth that number. <code>JevEval</code> has no
+          generative judge: you write the questions, Jev returns calibrated
+          probabilities, and the score is a fixed weighted mean. Use G-Eval
+          when you want the LLM to figure out the logic; use JevEval when you
+          know what you want decided and want it decided the same way every run.
+        </>
+      ),
+    },
+    {
+      question: "When should I use Choice instead of Score?",
+      answer: (
+        <>
+          Use a <code>Score</code> when the outcomes sit on a line from worst
+          to best. Use a <code>Choice</code> when they do not: two options can
+          share a credit, and an option can mean "this question does not apply"
+          by setting its credit to <code>None</code>.
+        </>
+      ),
+    },
+    {
+      question: "How is a Choice question turned into a score?",
+      answer: (
+        <>
+          Jev returns a probability per option. The <code>None</code> options
+          are summed first: if they hold half or more of the mass the question
+          is dropped. Otherwise the remaining options are renormalised and
+          multiplied by their credits. In the worked example that is{" "}
+          <code>(0.05·1.0 + 0.05·1.0 + 0.25·0.5 + 0.60·0.0) / 0.95 = 0.237</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I run JevEval without any LLM?",
+      answer: (
+        <>
+          Yes. Set <code>include_reason=False</code> and no LLM is constructed
+          or called; the metric is one Jev request plus arithmetic. You still
+          get <code>score</code> and <code>score_breakdown</code>, just no{" "}
+          <code>reason</code>.
+        </>
+      ),
+    },
+    {
+      question: "Can I use JevEval on a conversation?",
+      answer: (
+        <>
+          Use{" "}
+          <a href="/docs/metrics-conversational-jev-eval">
+            ConversationalJevEval
+          </a>{" "}
+          instead. It takes a <code>ConversationalTestCase</code>, puts the
+          turns into the state as a <code>turns</code> list, and scores with
+          the same three question types and the same equation.
+        </>
+      ),
+    },
+  ]}
+/>
