@@ -167,7 +167,11 @@ This metric does not collapse tool faithfulness into one vague judgement. It ask
 
 The first question has twice the weight because hallucinating an unsupported fact is the failure we care about most. That importance is explicit in code rather than implied somewhere inside a prompt.
 
-## One request, a complete breakdown
+## Configuring JevEval
+
+Beyond the questions themselves, three settings shape how a JevEval metric behaves: what it records, whether an LLM explains the result, and whether partial credit is allowed.
+
+### Debug score breakdown
 
 JevEval sends the state and all four questions to Jev in a single `decide()` call. Jev evaluates the questions in parallel, and DeepEval stores every intermediate result in `score_breakdown`.
 
@@ -181,7 +185,7 @@ For each question, you can inspect:
 
 This makes the final score traceable. If the Tool Faithfulness metric fails, you can see whether the response invented information, copied a returned value incorrectly, or landed between two grounding levels. You are debugging an evaluation specification, not reverse-engineering a generated number.
 
-## The LLM explanation is optional
+### Optional LLM explainability
 
 By default, JevEval can ask an evaluation LLM to write a human-readable reason grounded in the test case and the outcomes. The LLM explains the decision; it does not make it.
 
@@ -189,7 +193,7 @@ Set `include_reason=False`, as in the example above, and JevEval makes no LLM ca
 
 This boundary matters. Explanations are language tasks, so an LLM is useful there. Passing or failing a regression test is a decision task, so the explanation cannot change the score.
 
-## Strict mode for non-negotiable requirements
+### Enforce strict mode
 
 A weighted mean is useful when strengths can offset weaknesses. Sometimes they should not.
 

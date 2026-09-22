@@ -50,45 +50,43 @@ That does not make the entire metric run 100 ms—the LLM-owned steps still take
 
 ## Understanding Jev's decision primitives
 
-Under the hood, Jev has three decision types. Here is the quick version before we get technical:
+Under the hood, Jev answers three kinds of question. Every decision DeepEval sends to Jev is one of these, so it is worth knowing them before we look at where they fit inside a metric:
 
-| Primitive  | What Jev returns                                         | Where DeepEval uses it                                      |
-| ---------- | -------------------------------------------------------- | ----------------------------------------------------------- |
-| **Noul**   | Probability that a proposition is true                   | QAG verdicts, binary DAG nodes, and G-Eval without a rubric |
-| **Choice** | One option, its probability distribution, and confidence | Classifier labels and non-binary DAG nodes                  |
-| **Score**  | Expected position over ordered descriptive levels        | Rubric-based G-Eval                                         |
+| Primitive  | The question shape                          | What Jev returns                                         |
+| ---------- | ------------------------------------------- | -------------------------------------------------------- |
+| **Noul**   | Is this proposition true?                   | Probability that it is true                              |
+| **Choice** | Which one of these options fits?            | One option, its probability distribution, and confidence |
+| **Score**  | Where does this land on an ordered scale?   | Expected position over the ordered levels                |
 
 **Noul: one proposition, one probability**
 
-TypeSafe calls a yes/no question a [Noul](https://docs.typesafe.ai/primitives/noul). A Noul does not return the words `yes` or `no`; it returns one value:
+TypeSafe calls a yes/no question a [Noul](https://docs.typesafe.ai/primitives/noul). You state a proposition, such as _"this claim is supported by the provided context"_, and Jev returns one value:
 
 <Equation formula="p = P(\text{yes})" />
 
 A value near `1` is a strong yes, a value near `0` is a strong no, and a value near `0.5` means the evidence does not separate the two cleanly. There is no separate confidence field because the complementary probability is already `P(no) = 1 - p`.
 
-For Faithfulness, every extracted claim becomes one Noul against the extracted truths. DeepEval batches them into one request, thresholds each probability, and applies the same equation as before. Noul also powers binary [DAG](/docs/metrics-dag) nodes and [G-Eval](/docs/metrics-llm-evals) in strict or rubric-free mode.
+Because the answer is a number rather than the words `yes` or `no`, your code decides where the line sits. A strict check might require `p >= 0.5`; a check that tolerates ambiguity might treat everything between `0.35` and `0.65` as undecided.
 
 **Choice: a closed set, not generated text**
 
-A [Choice](https://docs.typesafe.ai/primitives/choice) selects one option from a set you define. It returns the selected option, the complete probability distribution over every option, and confidence derived from how concentrated that distribution is.
-
-DeepEval turns non-binary DAG branches and classifier labels into that closed option set:
+A [Choice](https://docs.typesafe.ai/primitives/choice) selects one option from a set you define, such as `refused`, `complied`, or `partial_refusal`. It returns the selected option, the complete probability distribution over every option, and a confidence derived from how concentrated that distribution is:
 
 <Equation formula="\hat{y} = \operatorname*{arg\,max}_{y \in \mathcal{Y}} P(y \mid x)" />
 
-Because the option set comes from your code, Jev cannot invent another label, vary its casing, or bury it in an explanation.
+Because the option set comes from your code, Jev cannot invent another option, vary its casing, or bury it in an explanation.
 
-**Score: probability over an ordered rubric**
+**Score: probability over an ordered scale**
 
-A [Score](https://docs.typesafe.ai/primitives/score) evaluates ordered descriptive levels and returns the expected position across their probabilities:
+A [Score](https://docs.typesafe.ai/primitives/score) evaluates ordered descriptive levels, worst first, such as _"fabricated"_, _"mostly grounded"_, and _"fully grounded"_. Jev returns a probability for every level, and the result is the expected position across them:
 
 <Equation formula="s = \sum_{i=0}^{n-1} iP(i)" />
 
-This lets the result land between levels. DeepEval uses it for rubric-based G-Eval and normalizes the position to `0–1`:
+This lets the result land between levels rather than snapping to one of them. Dividing by `n - 1` normalizes the position to `0–1`:
 
 <Equation formula="s_{\text{normalized}} = \frac{s}{n - 1}" />
 
-The rubric outcomes become Jev's levels; the LLM still generates evaluation steps, while Jev owns the bounded score.
+That is the whole vocabulary. The next section shows where each of these questions appears inside a DeepEval metric.
 
 ## Using Jev for LLM evaluation metrics
 
@@ -155,6 +153,18 @@ The same boundary applies elsewhere:
 - **[G-Eval](/docs/metrics-llm-evals):** The LLM generates the evaluation steps; Jev scores them with **Noul** in strict or rubric-free mode, and **Score** when you provide a rubric.
 - **[DAG](/docs/metrics-dag):** The LLM produces text for task nodes; Jev uses **Noul** for binary judgement points and **Choice** for non-binary ones.
 
+## JevEval: a Jev-native metric
+
+Everything so far has been Jev slotting into metrics that already existed. That is the safe part. Here is the best part.
+
+[`JevEval`](/docs/metrics-jev-eval) is a custom metric built around Jev from the start. Instead of a `criteria` sentence for an LLM to interpret, you write the decision points yourself as Noul, Score, and Choice questions about your test case. Jev answers all of them in one request, each answer is mapped onto a value $v_i \in [0, 1]$ using the primitive rules above, and the score is a weighted mean over the questions that applied:
+
+<Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i \, v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
+
+No LLM generates a verdict anywhere in that path. The only thing an LLM can do in JevEval is, optionally, write the reason. Set `include_reason=False` and the metric is one Jev request plus arithmetic.
+
+We wrote a separate post on it: [Introducing JevEval: Jev-as-a-Judge for LLM Evaluation](/blog/introducing-jev-as-a-judge) walks through building a Tool Faithfulness metric, question by question, down to every probability. There is a [`ConversationalJevEval`](/docs/metrics-conversational-jev-eval) for multi-turn test cases too.
+
 ## What about Categorical LLM-as-a-Judge?
 
 For the longest time, DeepEval has only had quantitative LLM-as-a-judge metrics. Now, alongside Jev, we're also releasing categorical LLM-as-a-judge—what we call [classifiers](/docs/classifiers-introduction)—which I'm not going to spend too much time on today to avoid stealing the spotlight.
@@ -217,8 +227,6 @@ export TYPESAFE_API_KEY=<your-typesafe-api-key>
 </Steps>
 
 That's it. Run the same eval again. Your LLM still extracts the language; Jev now makes the decision in between.
-
-If you want to define the decision points yourself instead of using Jev inside an existing metric, read [Introducing JevEval](/blog/introducing-jev-as-a-judge). It shows how to build a custom Jev-as-a-Judge metric from Noul, Score, and Choice questions, with a complete probability-level score breakdown.
 
 ## What's Next?
 

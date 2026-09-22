@@ -120,8 +120,8 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          💥 Introducing Jev in DeepEval: The frontier anti-LLM-as-a-Judge.{" "}
-          <Link href="/blog/introducing-jev-in-deepeval">Read the post →</Link>
+          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
