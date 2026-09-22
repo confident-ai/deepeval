@@ -37,6 +37,7 @@ from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
 from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
+from deepeval.cli.compare.command import compare_command
 from deepeval.cli.test.command import app as test_app
 from deepeval.cli.utils import (
     handle_save_result as _handle_save_result,
@@ -55,6 +56,7 @@ from deepeval.confident.api import (
 app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
+app.command(name="compare")(compare_command)
 app.command(name="diagnose")(diagnose_command)
 app.command(name="login", help=LOGIN_HELP)(login_command)
 app.command(name="logout")(logout_command)
