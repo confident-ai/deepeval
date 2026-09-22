@@ -10,6 +10,7 @@ from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
+    from deepeval.models.base_model import DeepEvalBaseSystemOneModel
 
 
 # Sentinel label the judge returns when none of the declared labels fit.
@@ -91,6 +92,8 @@ class BaseClassifier(PromptMixin):
     skipped = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

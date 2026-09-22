@@ -1,0 +1,39 @@
+You are a classifier. A calibrated judge has already assigned a label to the {% if turns %}conversation{% else %}test case{% endif %} below from the closed set of labels provided. Write a brief explanation for that label and return a JSON object with one field, `"reason"`.
+
+Your explanation should:
+- Be specific and grounded in the label descriptions, referencing details from the {% if turns %}conversation{% else %}test case{% endif %}.
+- Reflect the judge's probabilities: mention the labels it was most and least confident about when that helps.
+- Be concise, clear, and focused on why the chosen label fits better than the alternatives.
+- Not quote the numeric probabilities or confidence themselves.
+- Not invent labels that are not in the list, and not dispute the judge's label.
+{% if allow_none %}- If the label is `NONE`, explain why none of the listed labels apply.
+{% endif %}
+Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+
+Labels:
+{{ labels }}
+
+Judge's Label: {{ label }}
+
+Judge's Probabilities:
+{{ probabilities }}
+
+Judge's Confidence: {{ confidence }}
+{% if turns %}{% if test_case_content %}
+{{ test_case_content }}
+{% endif %}
+Turns:
+{{ turns }}
+{% else %}
+Test Case:
+{{ test_case_content }}
+{% endif %}
+---
+**Example JSON:**
+{
+  "reason": "your concise and informative reason here"
+}
+
+JSON:

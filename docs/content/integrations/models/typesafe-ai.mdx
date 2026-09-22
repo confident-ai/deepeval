@@ -5,7 +5,7 @@ sidebar_label: TypeSafe AI
 languages: [python]
 ---
 
-`deepeval` can route the **decision step** of its metrics to [TypeSafe AI](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions, generates G-Eval evaluation steps and writes the reasons; Jev only answers the typed question: a yes/no verdict per item, a DAG judgement, or a G-Eval score.
+`deepeval` can route the **decision step** of its metrics and classifiers to [TypeSafe AI](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one) that returns calibrated probabilities instead of generated text. Your LLM still extracts claims, statements and opinions, generates G-Eval evaluation steps and writes the reasons; Jev only answers the typed question: a yes/no verdict per item, a DAG judgement, a G-Eval score, or a classifier's label.
 
 :::caution
 This is an **experimental** feature. It is only active when `DEEPEVAL_MODE=experimental`, and it may change between releases.
@@ -76,9 +76,21 @@ Metrics that route verdicts to Jev:
 
 All other metrics keep using your LLM in both modes.
 
+Classifiers (`Classifier` and every built-in such as `RefusalClassifier`) route their **label** to Jev as one [Choice](https://docs.typesafe.ai/primitives/choice) over the declared labels, using each label's description as the option boundary; `NONE` is added as an option when `allow_none=True`. With `include_reason=True` the LLM writes the reason from Jev's label and per-label probabilities; with `include_reason=False` classification makes no LLM call at all.
+
+```python
+from deepeval.classifiers import RefusalClassifier
+from deepeval.test_case import LLMTestCase
+
+# With DEEPEVAL_MODE=experimental and TYPESAFE_API_KEY set, the label comes from Jev.
+classifier = RefusalClassifier()
+classifier.classify(LLMTestCase(input="...", actual_output="..."))
+print(classifier.label, classifier.reason)
+```
+
 ### No Fallback
 
-In experimental mode `deepeval` never silently falls back to the LLM for verdicts. If `typesafe-sdk` is not installed or `TYPESAFE_API_KEY` is missing, constructing one of the metrics above raises an error that tells you to either configure TypeSafe AI or switch back with `DEEPEVAL_MODE=stable`.
+In experimental mode `deepeval` never silently falls back to the LLM for verdicts. If `typesafe-sdk` is not installed or `TYPESAFE_API_KEY` is missing, constructing one of the metrics or classifiers above raises an error that tells you to either configure TypeSafe AI or switch back with `DEEPEVAL_MODE=stable`.
 
 ### Using Jev Directly
 

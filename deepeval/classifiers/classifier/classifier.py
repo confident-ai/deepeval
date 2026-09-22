@@ -1,28 +1,35 @@
 """LLM-judged classifier: assigns exactly one label from a closed set."""
 
 import asyncio
-from typing import List, Optional, Sequence, Tuple, Type, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from deepeval.classifiers.base_classifier import (
     NONE_LABEL,
     BaseClassifier,
     Label,
 )
-from deepeval.classifiers.classifier.schema import ClassificationResult
+from deepeval.classifiers.classifier.schema import (
+    ClassificationResult,
+    Reason,
+)
 from deepeval.classifiers.utils import (
+    SystemOneClassifySpec,
+    a_generate_classification,
     construct_multi_turn_content,
+    construct_multi_turn_state,
     construct_single_turn_content,
+    construct_single_turn_state,
     construct_turns,
     format_labels,
+    generate_classification,
     normalize_labels,
     resolve_label,
 )
 from deepeval.config.settings import get_settings
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
-    a_generate_with_schema_and_extract,
-    generate_with_schema_and_extract,
     initialize_model,
+    initialize_system_one_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.templates import make_template_class
@@ -30,6 +37,12 @@ from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.utils import get_or_create_event_loop
 
 ClassifierTemplate = make_template_class("Classifier", feature="classifiers")
+
+# Built-in classifiers (``RefusalClassifier`` ...) share ``Classifier``'s bundle
+# entry. Public templates reach it through ``classification_template``; the
+# ``_experimental_*`` ones are not exposed on the template class, so they name
+# the bundle key explicitly.
+_EXPERIMENTAL_TEMPLATE_CLASS = "Classifier"
 
 
 class Classifier(BaseClassifier):
@@ -49,6 +62,7 @@ class Classifier(BaseClassifier):
         self.name = name
         self.labels = normalize_labels(labels)
         self.model, self.using_native_model = initialize_model(model)
+        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
         self.allow_none = allow_none
@@ -86,12 +100,11 @@ class Classifier(BaseClassifier):
                 )
             else:
                 prompt = self._build_prompt(test_case)
-                raw_label, reason = generate_with_schema_and_extract(
+                raw_label, reason = generate_classification(
                     self,
                     prompt,
-                    ClassificationResult,
-                    extract_schema=lambda r: (r.label, r.reason),
-                    extract_json=lambda d: (d.get("label"), d.get("reason")),
+                    schema_cls=ClassificationResult,
+                    system_one=self._experimental_system_one_spec(test_case),
                 )
                 self._finalize(raw_label, reason)
 
@@ -113,12 +126,11 @@ class Classifier(BaseClassifier):
             _in_component=_in_component,
         ):
             prompt = self._build_prompt(test_case)
-            raw_label, reason = await a_generate_with_schema_and_extract(
+            raw_label, reason = await a_generate_classification(
                 self,
                 prompt,
-                ClassificationResult,
-                extract_schema=lambda r: (r.label, r.reason),
-                extract_json=lambda d: (d.get("label"), d.get("reason")),
+                schema_cls=ClassificationResult,
+                system_one=self._experimental_system_one_spec(test_case),
             )
             self._finalize(raw_label, reason)
             return self.label
@@ -160,6 +172,64 @@ class Classifier(BaseClassifier):
             labels=labels,
             test_case_content=construct_single_turn_content(test_case),
             allow_none=self.allow_none,
+        )
+
+    def _experimental_system_one_spec(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> SystemOneClassifySpec:
+        """Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+
+        The label is one Choice over the declared labels (plus ``NONE`` when
+        ``allow_none``); the LLM only writes the reason, if one is wanted.
+        """
+        multi_turn = isinstance(test_case, ConversationalTestCase)
+        state = (
+            construct_multi_turn_state(test_case)
+            if multi_turn
+            else construct_single_turn_state(test_case)
+        )
+        options: Dict[str, Optional[str]] = {
+            label.name: label.description for label in self.labels
+        }
+        if self.allow_none:
+            options[NONE_LABEL] = "None of the other labels apply."
+
+        reason_prompt = None
+        if self.include_reason:
+            labels = format_labels(self.labels)
+            test_case_content = (
+                construct_multi_turn_content(test_case)
+                if multi_turn
+                else construct_single_turn_content(test_case)
+            )
+            turns = construct_turns(test_case) if multi_turn else None
+
+            def reason_prompt(
+                label: str, probabilities: Dict[str, float], confidence: float
+            ) -> str:
+                return self._get_prompt(
+                    "_experimental_system_one_reason",
+                    template_class=_EXPERIMENTAL_TEMPLATE_CLASS,
+                    labels=labels,
+                    label=label,
+                    probabilities=probabilities,
+                    confidence=confidence,
+                    test_case_content=test_case_content,
+                    turns=turns,
+                    allow_none=self.allow_none,
+                )
+
+        return SystemOneClassifySpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_classify",
+                template_class=_EXPERIMENTAL_TEMPLATE_CLASS,
+                allow_none=self.allow_none,
+                multi_turn=multi_turn,
+            ),
+            options=options,
+            state=state,
+            reason_prompt=reason_prompt,
+            reason_schema_cls=Reason,
         )
 
     def _finalize(

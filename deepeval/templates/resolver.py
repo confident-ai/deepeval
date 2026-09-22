@@ -86,6 +86,9 @@ SimulatorTemplateMethod = Literal[
 ClassifierTemplateMethod = Literal[
     "classify_single_turn",
     "classify_multi_turn",
+    # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+    "_experimental_system_one_classify",
+    "_experimental_system_one_reason",
 ]
 
 TemplateMethod = (
