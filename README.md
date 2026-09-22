@@ -69,12 +69,12 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
 
 Use these evaluations to determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
+> Jev is now available in DeepEval, both in existing metrics and the latest [JevEval.](https://deepeval.com/docs/metrics-jev-eval)
+
 > [!IMPORTANT]
 > Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the enterprise AI evals and observability platform.
 >
 > ![Demo GIF](assets/demo.gif)
-
-> Want to talk LLM evaluation, need help picking metrics, or just to say hi? [Come join our discord.](https://discord.com/invite/3SEyvpgu2f)
 
 <br />
 
