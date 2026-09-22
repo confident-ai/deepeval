@@ -82,6 +82,8 @@ The reason I can't pick your metrics for customers is that I don't know what suc
 
 What I do know however, is the [`TaskCompletionMetric`](/docs/metrics-task-completion) works almost everywhere — while the custom [`G-Eval`](/docs/metrics-llm-evals) criteria that truly move the needle have to come from your understanding of what "good" looks like for your users.
 
+When that definition of "good" can be written as explicit bounded questions, [JevEval](/blog/introducing-jeveval) gives you another custom-metric path: Jev answers each question with calibrated probabilities, and DeepEval calculates the score with fixed math.
+
 This is where human-in-the-loop annotations come in: divide the work across your team, annotate how 100 or so of your AI's outputs actually perform, and then figure out which combination of metrics has the highest alignment rate to those human judgments. But that's a story for another day.
 
 ## Types of harnesses for eval driven development

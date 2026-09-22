@@ -18,6 +18,8 @@ This guide explains what LLM-as-a-Judge is, and how to use it in an open-source 
 
 These techniques can judge different scopes. Most score one output, component, or interaction, while trajectory-based agent metrics inspect a complete ordered trace. A separate pattern, pairwise comparison, judges two or more outputs against each other, which is useful when you want to know which prompt or model version is better rather than how good one output is on its own.
 
+DeepEval also supports a decision model alternative for bounded decisions: [`JevEval`](/blog/introducing-jeveval). It uses Jev, a System One decision model rather than an LLM judge, to answer explicit questions with calibrated probabilities. JevEval is therefore not technically LLM-as-a-Judge, but it belongs in the same design conversation whenever you are choosing how a custom metric should judge an output.
+
 But before we dive too deep, let's go through the fundamentals of what LLM-as-a-judge is.
 
 ## What is LLM-as-a-Judge Evaluation?
@@ -88,6 +90,7 @@ This is why LLM-as-a-Judge is common in LLM evaluation workflows for RAG systems
 DeepEval makes this practical by giving you reusable LLM judge implementations instead of forcing you to write prompts and scoring logic from scratch:
 
 - Use `GEval` for custom quality criteria.
+- Use [`JevEval`](/blog/introducing-jeveval) when you can express a custom metric as explicit bounded questions and want the score calculated with fixed math.
 - Use `DAGMetric` for strict multi-step scoring logic.
 - Use built-in RAG metrics for grounding and retrieval quality.
 - Use built-in agentic metrics for complete trajectories and component-level tool use.
@@ -383,12 +386,27 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 Use built-in QAG-style metrics when your evaluation target is already covered by DeepEval. They give you stronger defaults than a one-sentence custom judge. For agents, `TaskCompletionMetric`, `StepEfficiencyMetric`, `PlanAdherenceMetric`, and `PlanQualityMetric` judge the complete trajectory; tool and argument metrics remain component-level checks on individual LLM spans.
 
-## Choosing Between G-Eval, DAG, and QAG
+## A Decision-Model Alternative: Jev-as-a-Judge
+
+The techniques above all use an LLM somewhere in the judging path. If you already know the exact decisions your metric needs to make, generation may be unnecessary.
+
+[`JevEval`](/blog/introducing-jeveval) lets you define those decisions as three bounded question types:
+
+- `Noul` for a true-or-false proposition.
+- `Score` for ordered descriptive levels.
+- `Choice` for one option from an unordered closed set.
+
+Jev returns calibrated probabilities for every question in one request. DeepEval maps those probabilities onto `0–1` values and calculates a weighted mean. With `include_reason=False`, no LLM is called at all; with it enabled, an LLM only explains the result and cannot change the score.
+
+Use `GEval` when you want an LLM to derive evaluation logic from broad criteria. Use `DAGMetric` when the logic branches. Use JevEval when you can write the decision points directly and want a complete probability-level breakdown. For the model architecture and its use inside built-in metrics, see [Introducing Jev for Evals](/blog/introducing-jev-in-deepeval).
+
+## Choosing Between G-Eval, DAG, QAG, and JevEval
 
 | You need to...                                           | Use                             | Why                                                                    |
 | -------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
 | Create a custom subjective metric quickly                | `GEval`                         | Natural-language criteria are enough to start                          |
 | Turn a subjective metric into a stable production metric | `GEval` with `evaluation_steps` | Explicit steps reduce ambiguity                                        |
+| Score explicit bounded questions with fixed math         | `JevEval`                       | Jev returns probabilities; DeepEval calculates the weighted score      |
 | Enforce hard requirements before subjective scoring      | `DAGMetric`                     | Branches make failures deterministic                                   |
 | Evaluate standard RAG quality                            | Built-in RAG metrics            | DeepEval already implements the QAG-style algorithm                    |
 | Evaluate a complete agent trajectory                     | Built-in trajectory metrics     | They inspect ordered plans, decisions, calls, and handoffs             |
@@ -402,6 +420,7 @@ In practice, most projects use a small mix: two or three built-in metrics for sy
 LLM judges are useful because they understand semantics, but they can still be noisy if your metric is vague. Use these patterns to make them more reliable.
 
 - Write explicit `evaluation_steps` when criteria are interpreted inconsistently.
+- Use [`JevEval`](/blog/introducing-jeveval) when the rubric can be decomposed into bounded questions and you do not need an LLM to generate the judgement.
 - Set `strict_mode=True` when only perfect outputs should pass.
 - Break criteria into branches with `DAGMetric` when the judge must enforce hard rules.
 - Use built-in metrics when the evaluation task is common, such as RAG, agentic, multi-turn, safety, or image evaluation.
@@ -563,6 +582,8 @@ If the score looks wrong, check three things first:
 - Is the metric accidentally reference-based? Check whether it depends on `expected_output`, `context`, `retrieval_context`, or `expected_tools`.
 - Is the criterion too broad? Move from `criteria` to explicit `evaluation_steps`, or use `DAGMetric`.
 
+For `JevEval`, inspect `score_breakdown` instead. It records every question's probability distribution, mapped value, weight, and applicability, so the final score can be traced back to the individual decisions.
+
 ## FAQs
 
 <FAQs
@@ -619,6 +640,18 @@ If the score looks wrong, check three things first:
         "G-Eval is best for custom subjective criteria written in natural language. DAG is best when the judge needs deterministic branches, hard gates, or multi-step scoring logic. QAG-style metrics break evaluation into closed-ended checks and are used by many built-in DeepEval metrics.",
     },
     {
+      question: "How is JevEval different from LLM-as-a-Judge?",
+      answer: (
+        <>
+          JevEval does not use a generative LLM to make its decisions. You
+          define bounded <code>Noul</code>, <code>Score</code>, and{" "}
+          <code>Choice</code> questions; Jev returns calibrated probabilities;
+          and DeepEval calculates the score with fixed math. An LLM is optional
+          and can only write the explanation.
+        </>
+      ),
+    },
+    {
       question: "Is LLM-as-a-Judge reference-based or referenceless?",
       answer:
         "It can be either. A judge is reference-based when it uses fields such as expected_output, context, retrieval_context, or expected_tools. It is referenceless when it evaluates only the input and actual_output without a labelled answer.",
@@ -658,6 +691,7 @@ If the score looks wrong, check three things first:
 
 ## Next Steps
 
+- Read [Introducing JevEval](/blog/introducing-jeveval) to build a custom Jev-as-a-Judge metric from bounded questions.
 - Use [`GEval`](/docs/metrics-llm-evals) to build custom LLM judges.
 - Use [`DAGMetric`](/docs/metrics-dag) for deterministic LLM judge workflows.
 - Use [`ArenaGEval`](/docs/metrics-arena-g-eval) for pairwise prompt or model comparisons.

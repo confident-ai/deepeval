@@ -218,6 +218,8 @@ export TYPESAFE_API_KEY=<your-typesafe-api-key>
 
 That's it. Run the same eval again. Your LLM still extracts the language; Jev now makes the decision in between.
 
+If you want to define the decision points yourself instead of using Jev inside an existing metric, read [Introducing JevEval](/blog/introducing-jeveval). It shows how to build a custom Jev-as-a-Judge metric from Noul, Score, and Choice questions, with a complete probability-level score breakdown.
+
 ## What's Next?
 
 For the longest time, LLMs have been doing both jobs at opposite ends of the eval algorithm: the language-heavy extraction they are best at, and the bounded decisions they are worst at. Jev lets us finally separate the two—language tasks stay with LLMs, decision points go to Jev, and equations turn those decisions into scores.

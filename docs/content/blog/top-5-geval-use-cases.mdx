@@ -281,6 +281,8 @@ Because G-Eval relies on LLM-generated scores, it's inherently **probabilistic**
 - **Poor at Counting & Structural Checks**: G-Eval struggles with tasks that require numerical precision or rigid structure. It often fails to verify things like “exactly three bullet points,” proper step order, or presence of all required sections in code or JSON.
 - **Subjective by Design**: G-Eval is well-suited for open-ended evaluations—such as tone, helpfulness, or creativity—but less effective for rule-based tasks that require deterministic outputs and exact matching. Even in subjective tasks, results can vary significantly unless the evaluation criteria are clearly defined and unambiguous.
 
+If you can express your rubric as explicit bounded questions rather than one open-ended criterion, [JevEval](/blog/introducing-jeveval) is another option. Jev returns calibrated probabilities for each question, and DeepEval calculates the final score with fixed math; use G-Eval when you want an LLM to derive the evaluation logic, and JevEval when you already know the decisions the metric should make.
+
 This is a naive G-Eval approach to evaluate the persuasiveness of a sales email drafting agent:
 
 ```python

@@ -14,7 +14,7 @@ This is Jev-as-a-Judge: no generated verdicts, no JSON recovery, and no prompt a
 
 ## The problem with custom LLM-as-a-Judge
 
-Most custom LLM evaluation metrics begin with a sentence:
+Most [custom LLM-as-a-Judge metrics](/blog/llm-as-a-judge) begin with a sentence:
 
 > Determine whether the response is helpful, accurate, and complete.
 
@@ -202,7 +202,7 @@ Use strict mode for hard constraints such as:
 - every required field must be present,
 - or every mandatory workflow step must be completed.
 
-It turns the same question set from a quality score into an executable acceptance test.
+It turns the same question set from a quality score into an executable acceptance test you can use in an [eval-driven development loop](/blog/eval-driven-development).
 
 ## JevEval works for conversations too
 
@@ -211,6 +211,8 @@ Many important behaviors only make sense across multiple turns: whether an assis
 [`ConversationalJevEval`](/docs/metrics-conversational-jev-eval) applies the same Noul, Score, and Choice model to an entire [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases). The conversation becomes a structured `turns` list, and you can add fields such as `scenario`, `expected_outcome`, and `chatbot_role` to the state.
 
 The scoring equation stays the same. The only difference is what the questions can see.
+
+If you do not have conversation test cases yet, start with the [conversation simulation workflow](/blog/how-to-evaluate-conversational-agent) and use `ConversationalJevEval` to score the generated conversations.
 
 ## Getting started
 
