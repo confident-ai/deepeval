@@ -18,7 +18,7 @@ This guide explains what LLM-as-a-Judge is, and how to use it in an open-source 
 
 These techniques can judge different scopes. Most score one output, component, or interaction, while trajectory-based agent metrics inspect a complete ordered trace. A separate pattern, pairwise comparison, judges two or more outputs against each other, which is useful when you want to know which prompt or model version is better rather than how good one output is on its own.
 
-DeepEval also supports a decision model alternative for bounded decisions: [`JevEval`](/blog/introducing-jeveval). It uses Jev, a System One decision model rather than an LLM judge, to answer explicit questions with calibrated probabilities. JevEval is therefore not technically LLM-as-a-Judge, but it belongs in the same design conversation whenever you are choosing how a custom metric should judge an output.
+DeepEval also supports a decision model alternative for bounded decisions: [`JevEval`](/blog/introducing-jev-as-a-judge). It uses Jev, a System One decision model rather than an LLM judge, to answer explicit questions with calibrated probabilities. JevEval is therefore not technically LLM-as-a-Judge, but it belongs in the same design conversation whenever you are choosing how a custom metric should judge an output.
 
 But before we dive too deep, let's go through the fundamentals of what LLM-as-a-judge is.
 
@@ -90,7 +90,7 @@ This is why LLM-as-a-Judge is common in LLM evaluation workflows for RAG systems
 DeepEval makes this practical by giving you reusable LLM judge implementations instead of forcing you to write prompts and scoring logic from scratch:
 
 - Use `GEval` for custom quality criteria.
-- Use [`JevEval`](/blog/introducing-jeveval) when you can express a custom metric as explicit bounded questions and want the score calculated with fixed math.
+- Use [`JevEval`](/blog/introducing-jev-as-a-judge) when you can express a custom metric as explicit bounded questions and want the score calculated with fixed math.
 - Use `DAGMetric` for strict multi-step scoring logic.
 - Use built-in RAG metrics for grounding and retrieval quality.
 - Use built-in agentic metrics for complete trajectories and component-level tool use.
@@ -390,7 +390,7 @@ Use built-in QAG-style metrics when your evaluation target is already covered by
 
 The techniques above all use an LLM somewhere in the judging path. If you already know the exact decisions your metric needs to make, generation may be unnecessary.
 
-[`JevEval`](/blog/introducing-jeveval) lets you define those decisions as three bounded question types:
+[`JevEval`](/blog/introducing-jev-as-a-judge) lets you define those decisions as three bounded question types:
 
 - `Noul` for a true-or-false proposition.
 - `Score` for ordered descriptive levels.
@@ -420,7 +420,7 @@ In practice, most projects use a small mix: two or three built-in metrics for sy
 LLM judges are useful because they understand semantics, but they can still be noisy if your metric is vague. Use these patterns to make them more reliable.
 
 - Write explicit `evaluation_steps` when criteria are interpreted inconsistently.
-- Use [`JevEval`](/blog/introducing-jeveval) when the rubric can be decomposed into bounded questions and you do not need an LLM to generate the judgement.
+- Use [`JevEval`](/blog/introducing-jev-as-a-judge) when the rubric can be decomposed into bounded questions and you do not need an LLM to generate the judgement.
 - Set `strict_mode=True` when only perfect outputs should pass.
 - Break criteria into branches with `DAGMetric` when the judge must enforce hard rules.
 - Use built-in metrics when the evaluation task is common, such as RAG, agentic, multi-turn, safety, or image evaluation.
@@ -691,7 +691,7 @@ For `JevEval`, inspect `score_breakdown` instead. It records every question's pr
 
 ## Next Steps
 
-- Read [Introducing JevEval](/blog/introducing-jeveval) to build a custom Jev-as-a-Judge metric from bounded questions.
+- Read [Introducing JevEval](/blog/introducing-jev-as-a-judge) to build a custom Jev-as-a-Judge metric from bounded questions.
 - Use [`GEval`](/docs/metrics-llm-evals) to build custom LLM judges.
 - Use [`DAGMetric`](/docs/metrics-dag) for deterministic LLM judge workflows.
 - Use [`ArenaGEval`](/docs/metrics-arena-g-eval) for pairwise prompt or model comparisons.
