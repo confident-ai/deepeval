@@ -7,7 +7,7 @@ languages: [python]
 
 <MetricTagsDisplayer jev={true} singleTurn={true} custom={true} />
 
-JevEval is a custom metric that scores an LLM interaction as the **weighted mean** of the answers to bounded **questions** you write about it. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text, and `deepeval` combines those probabilities into a score with a fixed equation.
+JevEval is a custom metric that scores an LLM interaction as the **weighted mean** of the answers to bounded **questions** you write about it. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text; the probability is the question's value, and the metric score is the weighted mean of those values.
 
 There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. The only thing an LLM does in JevEval is, optionally, write the reason.
 
