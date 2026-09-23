@@ -6,6 +6,7 @@ import type { MDXComponents } from "mdx/types";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { Term } from "@/components/lang/term";
 import { DefaultLLMModel } from "@/components/lang/default-llm-model";
+import { DefaultSystemOneModel } from "@/components/lang/default-system-one-model";
 import { Switch, Case } from "@/components/lang/switch";
 import { Only } from "@/components/lang/only";
 import { NotImplemented } from "@/components/lang/not-implemented";
@@ -63,6 +64,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
+    DefaultSystemOneModel,
     Term,
     Switch,
     Case,

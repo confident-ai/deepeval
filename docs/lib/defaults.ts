@@ -19,3 +19,12 @@ export const DEFAULT_MODELS = {
 } as const;
 
 export type DefaultModelProvider = keyof typeof DEFAULT_MODELS;
+
+/**
+ * The System One model a metric falls back to when given no `system_one_model`.
+ *
+ * Mirrors `DEFAULT_TYPESAFE_MODEL` in `deepeval/models/system_one/constants.py`.
+ * Pages render it through `<DefaultSystemOneModel />`. Keep it in step with
+ * `constants.py`.
+ */
+export const DEFAULT_SYSTEM_ONE_MODEL = "jev-latest";

@@ -7,7 +7,7 @@ languages: [python]
 
 <MetricTagsDisplayer jev={true} singleTurn={true} custom={true} />
 
-JevEval is a custom metric whose decisions are made by Jev, a System One model, instead of a generative LLM. You define the decision points as bounded **questions**, Jev answers each with calibrated probabilities, and `deepeval` turns those probabilities into a score with a fixed equation.
+JevEval is a custom metric that scores an LLM interaction as the **weighted mean** of the answers to bounded **questions** you write about it. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text, and `deepeval` combines those probabilities into a score with a fixed equation.
 
 There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. The only thing an LLM does in JevEval is, optionally, write the reason.
 
@@ -22,9 +22,8 @@ To evaluate entire conversations instead of a single `LLMTestCase`, use [`Conver
 To use `JevEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
 
-You'll also need to supply any additional arguments such as `tools_called`, `expected_output` or `retrieval_context` if your questions refer to them.
+You'll also need to supply any additional arguments such as `actual_output`, `tools_called`, `expected_output` or `retrieval_context` if your questions refer to them.
 
 ## Usage
 
@@ -67,7 +66,7 @@ There are **THREE** mandatory and **EIGHT** optional parameters when creating a 
 - `name`: name of custom metric.
 - `evaluation_params`: a list of type `SingleTurnParams`. These fields are the **state** Jev sees; a question can only refer to fields listed here.
 - `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
-- [Optional] `system_one_model`: a Jev model name such as `"jev-latest"`, **OR** a `TypeSafeModel` instance with your own `api_key`, `model` and `cost_per_input_token`. Defaults to `TypeSafeModel()`, which reads `TYPESAFE_API_KEY` from your environment. Pass `TypeSafeModel(model=..., api_key=...)` to configure it in code instead.
+- [Optional] `system_one_model`: a string specifying which System One model to use, **OR** [any custom System One model](/integrations/models/typesafe-ai) of type `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 if every applicable question is answered in its best possible way, 0 otherwise. It also overrides the current threshold and sets it to 1. See [strict mode](#strict-mode). Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -121,7 +120,7 @@ evaluate(test_cases=[test_case], metrics=[tool_faithfulness])
 
 A `Noul` is one proposition about the state. Jev returns $P(\text{true})$, and that probability is the value:
 
-<Equation formula="v = P(\text{true})" />
+<Equation formula="v_{\text{Noul}} = P(\text{true})" />
 
 ```python
 from deepeval.metrics.jev_eval import Noul
@@ -135,7 +134,7 @@ Use Nouls for a **checklist**: several independent checks, each calibrated, each
 
 A `Score` is one holistic judgement over ordered descriptive levels, **worst first**. Jev returns a probability for every level; the value is the expected level position, normalised so the top level is `1`:
 
-<Equation formula="v = \frac{1}{n-1}\sum_{i=0}^{n-1} i\,P(i)" />
+<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
 
 ```python
 from deepeval.metrics.jev_eval import Score
@@ -148,11 +147,15 @@ Score(
 
 Use a Score when "between two levels" is meaningful. Jev accepts between 2 and 10 levels.
 
+:::caution
+`levels` must be ordered **worst first**. The first level maps to `0` and the last to `1`, so a list written best first silently inverts the score.
+:::
+
 ### Choice
 
 A `Choice` is one selection from an **unordered** closed set. You attach a **credit** in `[0, 1]` to every option, or `None` to mark an option that means "this question does not apply here". The value is the credit-weighted probability over the applicable options:
 
-<Equation formula="v = \frac{\sum_{o \,:\, c_o \neq \varnothing} P(o)\,c_o}{\sum_{o \,:\, c_o \neq \varnothing} P(o)}" />
+<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
 
 ```python
 from deepeval.metrics.jev_eval import Choice
@@ -165,7 +168,7 @@ Choice(
 
 If the `None` options collect **half or more** of the probability, the question is dropped from the metric for that test case: it did not apply, so it neither helps nor hurts.
 
-Credits do not have to be monotone, which is what a Score cannot express. Above, `left_it_out` and `flagged_it_as_unknown` are two very different behaviours that deserve the same full credit, and `nothing_missing` means the question should not count at all. Jev only ever sees the option names; credits stay in `deepeval`.
+Credits do not have to be monotone, which is what a Score cannot express. Above, `left_it_out` and `flagged_it_as_unknown` are two very different behaviours that deserve the same full credit, and `nothing_missing` means the question should not count at all.
 
 :::info
 JevEval outputs a **score**, not a label. If you want the chosen option itself as the result, use a [classifier](/docs/classifiers-introduction) instead.
@@ -179,23 +182,13 @@ The `JevEval` score is calculated according to the following equation:
 
 Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's answer maps onto, and $\mathcal{A}$ is the set of questions that **applied** to this test case.
 
-`JevEval` first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value according to its question type:
-
-<Equation formula="v_{\text{Noul}} = P(\text{true})" />
-
-<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
-
-<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
+`JevEval` first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
 
 **A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
 
 <Equation formula="i \in \mathcal{A} \iff \sum_{o \,:\, c_o = \varnothing} P(o) < 0.5" />
 
 `Noul` and `Score` questions always apply. If $\mathcal{A}$ is empty, the score is `1`: nothing applicable was left to fail.
-
-:::note
-The credits $c_o$ never leave `deepeval`. Jev only sees the option **names**, so it cannot be steered by how much each option is worth.
-:::
 
 ### Strict mode
 

@@ -7,7 +7,7 @@ languages: [python]
 
 <MetricTagsDisplayer jev={true} multiTurn={true} custom={true} chatbot={true} />
 
-The conversational JevEval is the multi-turn version of [`JevEval`](/docs/metrics-jev-eval): a custom metric whose decisions are made by Jev, a System One model, over an **entire conversation**. You define the decision points as bounded **questions** about the turns, Jev answers each with calibrated probabilities, and `deepeval` turns those probabilities into a score with a fixed equation.
+The conversational JevEval is the multi-turn version of [`JevEval`](/docs/metrics-jev-eval): a custom metric that scores an **entire conversation** as the **weighted mean** of the answers to bounded **questions** you write about its turns. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text, and `deepeval` combines those probabilities into a score with a fixed equation.
 
 No LLM judges the conversation. The only thing an LLM does in `ConversationalJevEval` is, optionally, write a reason that cites the turns.
 
@@ -81,7 +81,7 @@ There are **THREE** mandatory and **EIGHT** optional parameters when creating a 
 - `name`: name of custom metric.
 - `evaluation_params`: a list of type `MultiTurnParams`. These fields are the **state** Jev sees. `MultiTurnParams.CONTENT` and `MultiTurnParams.ROLE` are always included, so every turn's role and content are part of the state whether you list them or not.
 - `questions`: a list of [`Noul`](/docs/metrics-jev-eval#noul), [`Score`](/docs/metrics-jev-eval#score) and [`Choice`](/docs/metrics-jev-eval#choice) questions. Each has a `weight` (default `1.0`).
-- [Optional] `system_one_model`: a Jev model name such as `"jev-latest"`, **OR** a `TypeSafeModel` instance with your own `api_key`, `model` and `cost_per_input_token`. Defaults to `TypeSafeModel()`, which reads `TYPESAFE_API_KEY` from your environment. Pass `TypeSafeModel(model=..., api_key=...)` to configure it in code instead.
+- [Optional] `system_one_model`: a string specifying which System One model to use, **OR** [any custom System One model](/integrations/models/typesafe-ai) of type `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 if every applicable question is answered in its best possible way, 0 otherwise. It also overrides the current threshold and sets it to 1. See [strict mode](#strict-mode). Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -96,7 +96,15 @@ Question text refers to the state by field name: `turns` for the conversation, p
 
 ## Question Types
 
-`ConversationalJevEval` has the same three question types as `JevEval`, drawn directly from Jev's decision primitives; see [Noul](/docs/metrics-jev-eval#noul), [Score](/docs/metrics-jev-eval#score) and [Choice](/docs/metrics-jev-eval#choice) for the value each one maps onto. What changes in the conversational metric is **what the questions are about**:
+`ConversationalJevEval` has the same three question types as `JevEval`, drawn directly from Jev's decision primitives. Each maps Jev's probabilities onto a value $v \in [0, 1]$ with the same fixed rule as in `JevEval`:
+
+<Equation formula="v_{\text{Noul}} = P(\text{true})" />
+
+<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
+
+<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
+
+See [Noul](/docs/metrics-jev-eval#noul), [Score](/docs/metrics-jev-eval#score) and [Choice](/docs/metrics-jev-eval#choice) for how to write each one. What changes in the conversational metric is **what the questions are about**:
 
 - Write questions about `turns` as a whole ("by the end of turns", "at any point in turns") or about a role ("the assistant", "the user").
 - Reference conversation-level fields by name: "the `scenario`", "matches `expected_outcome`", "stays in `chatbot_role`".
@@ -110,23 +118,13 @@ The `ConversationalJevEval` score is calculated according to the following equat
 
 Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's answer maps onto, and $\mathcal{A}$ is the set of questions that **applied** to this conversation.
 
-`ConversationalJevEval` first builds a JSON **state** with the conversation as a `turns` list (each turn carrying `role`, `content` and any per-turn field in `evaluation_params`) plus the conversation-level fields you listed, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value according to its question type:
-
-<Equation formula="v_{\text{Noul}} = P(\text{true})" />
-
-<Equation formula="v_{\text{Score}} = \frac{1}{n-1}\sum_{k=0}^{n-1} k \, P(k) \qquad \text{for } n \text{ ordered levels, worst first}" />
-
-<Equation formula="v_{\text{Choice}} = \frac{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)\, c_o}{\displaystyle\sum_{o \,:\, c_o \neq \varnothing} P(o)} \qquad \text{for options } o \text{ with credits } c_o \in [0, 1] \cup \{\varnothing\}" />
+`ConversationalJevEval` first builds a JSON **state** with the conversation as a `turns` list (each turn carrying `role`, `content` and any per-turn field in `evaluation_params`) plus the conversation-level fields you listed, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
 
 **A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
 
 <Equation formula="i \in \mathcal{A} \iff \sum_{o \,:\, c_o = \varnothing} P(o) < 0.5" />
 
 `Noul` and `Score` questions always apply. If $\mathcal{A}$ is empty, the score is `1`: nothing applicable was left to fail. This is how you keep a chatbot from being penalised for behaviour the user never triggered in a given conversation.
-
-:::note
-The credits $c_o$ never leave `deepeval`. Jev only sees the option **names**, so it cannot be steered by how much each option is worth.
-:::
 
 ### Strict mode
 

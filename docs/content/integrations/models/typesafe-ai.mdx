@@ -32,7 +32,7 @@ Or persist the key with the CLI:
 deepeval set-typesafe --prompt-api-key --save=dotenv
 ```
 
-`deepeval set-typesafe` also accepts `--model` (defaults to `jev-latest`) and `--cost-per-input-token`. Run `deepeval unset-typesafe` to remove the configuration again.
+`deepeval set-typesafe` also accepts `--model` (defaults to <DefaultSystemOneModel />) and `--cost-per-input-token`. Run `deepeval unset-typesafe` to remove the configuration again.
 
 ### How It Works
 
@@ -116,7 +116,7 @@ print(answers.nouls["billing"].probability, answers.scores["urgency"].score)
 
 There are **ZERO** mandatory and **THREE** optional parameters when creating a `TypeSafeModel`:
 
-- [Optional] `model`: The Jev model or alias to use. Defaults to `TYPESAFE_MODEL_NAME`; falls back to `jev-latest` if unset.
+- [Optional] `model`: The Jev model or alias to use. Defaults to `TYPESAFE_MODEL_NAME`; falls back to <DefaultSystemOneModel /> if unset.
 - [Optional] `api_key`: Your TypeSafe AI API key. Defaults to `TYPESAFE_API_KEY`; raises an error at runtime if unset.
 - [Optional] `cost_per_input_token`: USD per input token for cost reporting. Defaults to `TYPESAFE_COST_PER_INPUT_TOKEN`, then to `deepeval`'s pricing for known Jev models. Jev does not charge for output tokens.
 

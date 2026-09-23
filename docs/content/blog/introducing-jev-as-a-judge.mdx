@@ -85,8 +85,6 @@ A `Choice` selects from an unordered set of behaviors. You assign each option a 
 
 Unlike an ordered score, two very different behaviors can earn the same credit. You can also assign `None` to an option such as `nothing_missing`. If Jev places at least half of the probability on not-applicable options, that question drops out of the score rather than rewarding or penalizing the response for a situation that never occurred.
 
-The credits never leave DeepEval. Jev sees only the option names, so the value you assign cannot steer its decision.
-
 ## Building a Tool Faithfulness metric
 
 Suppose an agent calls a weather tool that returns `18°C` and `sunny`, but its answer also claims there is a light breeze and `40%` humidity. A useful metric should distinguish between reporting the returned values correctly and inventing additional ones.
