@@ -318,6 +318,7 @@ class AnswerRelevancyMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES, Verdict.BORDERLINE),
+            expected_count=len(self.statements),
         )
 
     @property

@@ -396,7 +396,12 @@ class FaithfulnessMetric(BaseMetric):
             if self.penalize_ambiguous_claims
             else (Verdict.YES, Verdict.BORDERLINE)
         )
-        return score_qag_verdicts(self, self.verdicts, passing=passing)
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=passing,
+            expected_count=len(self.claims),
+        )
 
     @property
     def __name__(self):

@@ -99,6 +99,7 @@ class HallucinationMetric(BaseMetric):
                     )
                 )
             else:
+                self.contexts: List[str] = test_case.context
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
                         test_case.actual_output, test_case.context
@@ -144,6 +145,7 @@ class HallucinationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            self.contexts: List[str] = test_case.context
             self.verdicts: List[HallucinationVerdict] = (
                 await self._a_generate_verdicts(
                     test_case.actual_output, test_case.context
@@ -270,6 +272,7 @@ class HallucinationMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES,),
+            expected_count=len(self.contexts),
         )
 
     @property

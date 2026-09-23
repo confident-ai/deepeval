@@ -110,6 +110,7 @@ def score_qag_verdicts(
     *,
     passing: Tuple[Verdict, ...],
     empty_score: float = 1,
+    expected_count: Optional[int] = None,
 ) -> float:
     """Fraction of ``verdicts`` whose ``.verdict`` is in ``passing``.
 
@@ -118,9 +119,18 @@ def score_qag_verdicts(
     as bias, ``(Verdict.YES, Verdict.BORDERLINE)`` to let borderline items pass. ``None`` entries
     (dropped out-of-vocabulary verdicts) are ignored. Applies the shared
     ``strict_mode`` clamp.
+
+    When ``expected_count`` is given (the number of items the judge was asked
+    to assess), missing verdicts count against the score instead of shrinking
+    the denominator: the divisor becomes ``max(len(verdicts), expected_count)``.
+    This keeps a judge that truncates its verdict list, or one whose
+    out-of-vocabulary replies are dropped, from inflating the score.
     """
     verdicts = [v for v in verdicts if v is not None]
-    if len(verdicts) == 0:
+    denominator = len(verdicts)
+    if expected_count is not None:
+        denominator = max(denominator, expected_count)
+    if denominator == 0:
         return empty_score
 
     passed = sum(
@@ -128,7 +138,7 @@ def score_qag_verdicts(
         for v in verdicts
         if normalize_qag_verdict(v.verdict, passing) is not None
     )
-    score = passed / len(verdicts)
+    score = passed / denominator
     return 0 if metric.strict_mode and score < metric.threshold else score
 
 
