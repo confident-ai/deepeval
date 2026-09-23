@@ -70,13 +70,9 @@ def _measure(model, run_async: bool) -> float:
 
 @pytest.mark.parametrize("structured", [False, True])
 @pytest.mark.parametrize("run_async", [False, True])
-def test_truncated_verdict_list_must_not_score_perfect(
-    structured, run_async
-):
+def test_truncated_verdict_list_must_not_score_perfect(structured, run_async):
     """Judge assesses only the first of 3 PII: score is 1/3, not 1."""
-    model = _FixedPIIJudge(
-        [{"verdict": "no", "reason": "masked"}], structured
-    )
+    model = _FixedPIIJudge([{"verdict": "no", "reason": "masked"}], structured)
     metric, score = _measure(model, run_async)
     assert score == pytest.approx(1 / 3)
     assert not metric.is_successful()
