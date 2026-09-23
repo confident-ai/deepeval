@@ -34,6 +34,7 @@ from deepeval.utils import (
 from deepeval.metrics import (
     BaseMetric,
 )
+from deepeval.metrics.utils import copy_metrics
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
 )
@@ -365,7 +366,11 @@ async def _a_execute_span_test_case(
             )
         return
 
-    metrics: List[BaseMetric] = list(span.metrics or [])
+    # The metric objects on a span come from the @observe decorator and are
+    # shared by every call of that function. Spans are evaluated concurrently,
+    # so each span measures its own copies; otherwise one span's measurement
+    # overwrites another's score before it is recorded.
+    metrics: List[BaseMetric] = copy_metrics(list(span.metrics or []))
     if not metrics:
         return
 
