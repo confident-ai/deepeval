@@ -58,13 +58,13 @@ class ARC(DeepEvalBaseBenchmark):
 
         with capture_benchmark_run("ARC", self.n_problems):
             overall_correct_predictions = 0
-            overall_total_predictions = self.n_problems
             predictions_row = []
 
             # Solving each problem
             goldens: List[Golden] = self.load_benchmark_dataset(self.mode)[
                 : self.n_problems
             ]
+            overall_total_predictions = len(goldens)
             for idx, golden in enumerate(
                 tqdm(goldens, desc=f"Processing {self.n_problems} problems")
             ):
@@ -86,6 +86,8 @@ class ARC(DeepEvalBaseBenchmark):
             # Calculate overall accuracy
             overall_accuracy = (
                 overall_correct_predictions / overall_total_predictions
+                if overall_total_predictions
+                else 0.0
             )
             print(f"Overall ARC Accuracy: {overall_accuracy}")
 
