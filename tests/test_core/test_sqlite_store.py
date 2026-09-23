@@ -834,10 +834,13 @@ class TestTestRunManagerIntegration:
         assert not (tmp_path / "deepeval.db").exists()
         assert mgr.last_saved_path is None
 
+    @pytest.mark.parametrize("terminal_width", [10, 80, 120])
     def test_storage_failure_is_a_warning_not_an_error(
-        self, tmp_path: Path, monkeypatch, capsys
+        self, tmp_path: Path, monkeypatch, capsys, terminal_width: int
     ):
         monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "sqlite")
+
+        monkeypatch.setenv("COLUMNS", str(terminal_width))
 
         def boom(*_a, **_k):
             raise sqlite3.OperationalError("disk I/O error")
@@ -849,7 +852,9 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        warning = " ".join(capsys.readouterr().err.split())
+        assert "Warning: failed to save test run" in warning
+        assert "disk I/O error" in warning
         assert mgr.last_saved_path is None
 
 
