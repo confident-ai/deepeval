@@ -1,3 +1,4 @@
+import json
 import re
 import warnings
 from dataclasses import dataclass
@@ -76,8 +77,8 @@ class Persona(BaseModel):
     they are trying to do. Keep behavioral traits here and task instructions
     on the golden.
 
-    `name` and `characteristics` apply to every simulation. Every field below
-    `characteristics` is voice-only and is ignored by text simulations.
+    `name`, `characteristics` and `metadata` apply to every simulation. Every
+    field below `metadata` is voice-only and is ignored by text simulations.
     """
 
     name: Optional[str] = Field(default=None)
@@ -85,6 +86,7 @@ class Persona(BaseModel):
     # speaking style, filler words — who the user is, never what they want.
     # Successor to `ConversationalGolden.user_description`.
     characteristics: str
+    metadata: Optional[Dict] = Field(default=None)
 
     # --- voice only: behavior ---
     interruption_behavior: Optional[InterruptionBehavior] = Field(default=None)
@@ -108,6 +110,10 @@ class Persona(BaseModel):
         if self.name:
             sections.append(f"Name: {self.name}")
         sections.append(self.characteristics.strip())
+        if self.metadata:
+            sections.append(
+                "Details:\n" + json.dumps(self.metadata, indent=2, default=str)
+            )
 
         behavior: List[str] = []
         if self.interruption_behavior is not None:
