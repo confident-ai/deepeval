@@ -143,7 +143,7 @@ class ARC(DeepEvalBaseBenchmark):
 
         # Construct test set
         goldens: List[Golden] = []
-        for data in dataset["train"]:
+        for data in dataset["test"]:
             input = ARCTemplate.format_question(data, False)
             expected_output = ARCTemplate.format_answer(data)
             golden = Golden(input=input, expected_output=expected_output)
