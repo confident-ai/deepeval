@@ -89,6 +89,41 @@ class TestExactMatchTypeMismatchDiagnostics:
         assert metric._calculate_exact_match_score() == 0.0
         assert "Tool type mismatches" not in metric._generate_reason()
 
+    def test_extra_call_has_no_phantom_mismatches(self):
+        # Mirror of the missing-call case: an extra called tool of a
+        # different type must not be paired cross-position against the
+        # expected tool.
+        expected = [call("search", ToolCallType.FUNCTION)]
+        called = [
+            call("search", ToolCallType.FUNCTION),
+            call("search", ToolCallType.MCP),
+        ]
+        metric = build_metric(expected, called)
+
+        assert metric._calculate_exact_match_score() == 0.0
+        reason = metric._generate_reason()
+        assert reason.startswith("Not an exact match")
+        assert "Tool type mismatches" not in reason
+
+    def test_single_genuine_mismatch_among_duplicates_reported_once(self):
+        # Only position 1 genuinely mismatches; it must be reported exactly
+        # once. The pre-fix any-pair scan reported this same entry twice
+        # (once per expected tool), so this pins the per-position semantics.
+        expected = [
+            call("search", ToolCallType.FUNCTION),
+            call("search", ToolCallType.FUNCTION),
+        ]
+        called = [
+            call("search", ToolCallType.FUNCTION),
+            call("search", ToolCallType.MCP),
+        ]
+        metric = build_metric(expected, called)
+
+        assert metric._calculate_exact_match_score() == 0.0
+        mismatches = metric._get_type_mismatches(positional=True)
+        assert mismatches == ["search (expected FUNCTION, called MCP)"]
+        assert "Tool type mismatches" in metric._generate_reason()
+
 
 class TestNonExactMatchBehaviorUnchanged:
     def test_any_pair_mismatches_preserved_outside_exact_match(self):
