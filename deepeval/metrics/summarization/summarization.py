@@ -312,6 +312,7 @@ class SummarizationMetric(BaseMetric):
                 self.alignment_verdicts,
                 passing=(Verdict.YES,),
                 empty_score=0,
+                expected_count=len(self.claims),
             )
 
         else:

@@ -101,6 +101,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                     self.score = 1.0
                     self.reason = "No tool calls provided"
                 else:
+                    self.tools_called: List[ToolCall] = test_case.tools_called
                     self.verdicts: List[ArgumentCorrectnessVerdict] = (
                         self._generate_verdicts(
                             test_case.input,
@@ -153,6 +154,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 self.score = 1.0
                 self.reason = "No tool calls provided"
             else:
+                self.tools_called: List[ToolCall] = test_case.tools_called
                 self.verdicts: List[ArgumentCorrectnessVerdict] = (
                     await self._a_generate_verdicts(
                         test_case.input,
@@ -277,6 +279,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES,),
+            expected_count=len(self.tools_called),
         )
 
     @property
