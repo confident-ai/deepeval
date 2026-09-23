@@ -709,6 +709,17 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             input_price=5.00 / 1e6,
             output_price=25.00 / 1e6,
         ),
+        # Rejects `thinking: {"type": "disabled"}`, so like claude-fable-5 it
+        # leaves `supports_thinking` unset and no thinking block is sent.
+        "claude-opus-5-5": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=4.00 / 1e6,
+            output_price=20.00 / 1e6,
+        ),
         # Standard rate. Anthropic ran an introductory $2/$10 through
         # 2026-08-31; this table has no notion of time-varying pricing, so it
         # records the durable number.
