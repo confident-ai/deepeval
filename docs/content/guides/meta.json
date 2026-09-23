@@ -16,6 +16,8 @@
     "guides-using-synthesizer",
 
     "---[ChartNoAxesCombined]Eval Metrics---",
+    "guides-g-eval-examples",
+    "guides-jev-eval-examples",
     "guides-dag-metric",
 
     "---[Waypoints]Tracing + Evals---",

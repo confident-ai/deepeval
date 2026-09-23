@@ -11,7 +11,7 @@ import { ASSETS } from "@site/src/assets";
 
 The conversational deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for multi-turn evaluation with the help of using LLM-as-a-judge.
 
-The `ConversationalDAGMetric` gives you more deterministic control over scoring than [`ConversationalGEval`](/docs/metrics-conversational-g-eval) by breaking complex criteria into focused decisions and mapping their outcomes to scores you define. You can also use `ConversationalGEval`, or any other multi-turn metric in `deepeval`, within your `ConversationalDAGMetric`.
+The `ConversationalDAGMetric` gives you more deterministic control over scoring than [`ConversationalGEval`](/docs/metrics-llm-evals) by breaking complex criteria into focused decisions and mapping their outcomes to scores you define. You can also use `ConversationalGEval`, or any other multi-turn metric in `deepeval`, within your `ConversationalDAGMetric`.
 
 :::tip
 For a complete walkthrough that builds a conversational DAG from start to finish, see the [multi-turn walkthrough in the Building a DAG Metric guide](/guides/guides-dag-metric#multi-turn-walkthrough).
@@ -739,7 +739,7 @@ For a complete runnable example, see the [multi-turn walkthrough in the Building
         <>
           When a single holistic score hides what matters — e.g. the request was
           satisfied but the assistant was rude. A{" "}
-          <a href="/docs/metrics-conversational-g-eval">ConversationalGEval</a>{" "}
+          <a href="/docs/metrics-llm-evals">ConversationalGEval</a>{" "}
           averages that into one fuzzy score; a DAG checks satisfaction and tone
           on separate deterministic branches.
         </>

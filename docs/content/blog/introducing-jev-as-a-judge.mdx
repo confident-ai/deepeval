@@ -210,7 +210,7 @@ It turns the same question set from a quality score into an executable acceptanc
 
 Many important behaviors only make sense across multiple turns: whether an assistant remembered a constraint, verified identity before taking action, resolved the user's request, or stayed within its assigned role.
 
-[`ConversationalJevEval`](/docs/metrics-conversational-jev-eval) applies the same Noul, Score, and Choice model to an entire [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases). The conversation becomes a structured `turns` list, and you can add fields such as `scenario`, `expected_outcome`, and `chatbot_role` to the state.
+[`ConversationalJevEval`](/docs/metrics-jev-eval) applies the same Noul, Score, and Choice model to an entire [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases). The conversation becomes a structured `turns` list, and you can add fields such as `scenario`, `expected_outcome`, and `chatbot_role` to the state.
 
 The scoring equation stays the same. The only difference is what the questions can see.
 
@@ -227,7 +227,7 @@ export TYPESAFE_API_KEY=<your-typesafe-api-key>
 
 Then define the state, write the questions, and run JevEval like any other DeepEval metric.
 
-The full [JevEval documentation](/docs/metrics-jev-eval) covers question design, strict mode, score calculation, and a worked example down to every probability. If you're evaluating multi-turn agents, start with the [Conversational JevEval documentation](/docs/metrics-conversational-jev-eval).
+The full [JevEval documentation](/docs/metrics-jev-eval) covers question design, strict mode, score calculation, and a worked example down to every probability. If you're evaluating multi-turn agents, switch to the Multi-Turn tabs on that same page for `ConversationalJevEval`.
 
 ## Evals as specifications
 

@@ -68,19 +68,7 @@
   "/docs/classifiers-clarification": [
     "python"
   ],
-  "/docs/classifiers-classifier": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-escalation": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-instruction-completeness": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-resolution": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-scope-adherence": [
+  "/docs/classifiers-custom": [
     "python"
   ],
   "/docs/classifiers-data-leakage": [
@@ -105,6 +93,9 @@
     "python"
   ],
   "/docs/classifiers-required-disclosure": [
+    "python"
+  ],
+  "/docs/classifiers-resolution": [
     "python"
   ],
   "/docs/classifiers-response-language": [
@@ -306,10 +297,6 @@
     "python",
     "typescript"
   ],
-  "/docs/metrics-conversational-g-eval": [
-    "python",
-    "typescript"
-  ],
   "/docs/metrics-custom": [
     "python"
   ],
@@ -336,6 +323,9 @@
   "/docs/metrics-introduction": [
     "python",
     "typescript"
+  ],
+  "/docs/metrics-jev-eval": [
+    "python"
   ],
   "/docs/metrics-json-correctness": [
     "python",
@@ -544,6 +534,13 @@
     "python"
   ],
   "/guides/guides-dag-metric": [
+    "python"
+  ],
+  "/guides/guides-g-eval-examples": [
+    "python",
+    "typescript"
+  ],
+  "/guides/guides-jev-eval-examples": [
     "python"
   ],
   "/guides/guides-multi-turn-evaluation": [

@@ -5,7 +5,7 @@ sidebar_label: JevEval
 languages: [python]
 ---
 
-<MetricTagsDisplayer jev={true} singleTurn={true} custom={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} multiTurn={true} custom={true} />
 
 JevEval is a custom metric that scores an LLM interaction as the **weighted mean** of the answers to bounded **questions** you write about it. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text; the probability is the question's value, and the metric score is the weighted mean of those values.
 
@@ -14,16 +14,8 @@ There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON t
 :::tip
 If you want a custom metric where an LLM drafts the evaluation logic from a one-line `criteria`, use [`GEval`](/docs/metrics-llm-evals). JevEval is for when you already know **what** you want decided and want it decided the same way every run.
 
-To evaluate entire conversations instead of a single `LLMTestCase`, use [`ConversationalJevEval`](/docs/metrics-conversational-jev-eval).
+To evaluate entire conversations instead of a single test case, use the **Multi-Turn** tabs below.
 :::
-
-## Required Arguments
-
-To use `JevEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
-
-- `input`
-
-You'll also need to supply any additional arguments such as `actual_output`, `tools_called`, `expected_output` or `retrieval_context` if your questions refer to them.
 
 ## Usage
 
@@ -34,7 +26,10 @@ pip install typesafe-sdk
 export TYPESAFE_API_KEY=<your-typesafe-api-key>
 ```
 
-Instantiate a `JevEval` with the test case fields your questions talk about, and the questions themselves:
+Instantiate the metric with the test case fields your questions talk about, and the questions themselves:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
 
 Here we build a custom **Tool Faithfulness** metric that checks whether the LLM hallucinated on top of what its tools actually returned:
 
@@ -61,10 +56,40 @@ tool_faithfulness = JevEval(
 )
 ```
 
-There are **THREE** mandatory and **EIGHT** optional parameters when creating a `JevEval`:
+</Tab>
+<Tab value="Multi-Turn">
+
+Here we build a custom **Refund Handling** metric that checks how a support chatbot handled a refund request across a conversation:
+
+```python
+from deepeval.metrics.jev_eval import Noul, Score, Choice
+from deepeval.test_case import MultiTurnParams
+from deepeval.metrics import ConversationalJevEval
+
+refund_handling = ConversationalJevEval(
+    name="Refund Handling",
+    evaluation_params=[MultiTurnParams.SCENARIO, MultiTurnParams.EXPECTED_OUTCOME],
+    questions=[
+        Noul("The assistant verifies the order before acting on the refund."),
+        Score(
+            "How fully is the user's request settled by the end of turns?",
+            levels=["Not addressed", "Partly settled", "Fully resolved"],
+        ),
+        Choice(
+            "What did the assistant do about the amount the user asked for?",
+            options={"stated_it": 1.0, "deferred_it": 0.5, "ignored_it": 0.0, "never_asked": None},
+        ),
+    ],
+)
+```
+
+</Tab>
+</Tabs>
+
+There are **THREE** mandatory and **EIGHT** optional parameters when creating a JevEval metric:
 
 - `name`: name of custom metric.
-- `evaluation_params`: a list of type `SingleTurnParams`. These fields are the **state** Jev sees; a question can only refer to fields listed here.
+- `evaluation_params`: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). These fields are the **state** Jev sees; a question can only refer to fields listed here.
 - `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
 - [Optional] `system_one_model`: a string specifying which System One model to use, **OR** [any custom System One model](/integrations/models/typesafe-ai) of type `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -72,14 +97,17 @@ There are **THREE** mandatory and **EIGHT** optional parameters when creating a 
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints every question's probabilities and value to the console. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
-- [Optional] `include_reason`: a boolean which when set to `True`, has your evaluation LLM write a reason grounded in the test case. When `False`, JevEval makes **no LLM call at all**. Defaulted to `True`.
+- [Optional] `include_reason`: a boolean which when set to `True`, has your evaluation LLM write a reason grounded in the test case (for conversations, one that cites specific turns). When `False`, JevEval makes **no LLM call at all**. Defaulted to `True`.
 - [Optional] `model`: the LLM used only for the reason; a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />. Not constructed when `include_reason=False`.
 
 :::danger
-Question text refers to the state by field name (`input`, `actual_output`, `tools_called`, ...). A field that is not in `evaluation_params` is invisible to Jev, so every field your questions mention must be listed.
+Question text refers to the state by field name: `input`, `actual_output`, `tools_called`, ... for a single turn, or `turns` plus conversation-level fields such as `scenario` or `expected_outcome` for a conversation. A field that is not in `evaluation_params` is invisible to Jev, so every field your questions mention must be listed.
 :::
 
-As with every `deepeval` metric, `JevEval` returns a score from 0 - 1 and is successful when that score is equal to or greater than `threshold`. You can access `score`, `reason` and the per-question `score_breakdown`:
+As with every `deepeval` metric, JevEval returns a score from 0 - 1 and is successful when that score is equal to or greater than `threshold`. You can access `score`, `reason` and the per-question `score_breakdown`:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
 
 ```python
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -106,9 +134,40 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[tool_faithfulness])
 ```
 
+</Tab>
+<Tab value="Multi-Turn">
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval import evaluate
+...
+
+convo_test_case = ConversationalTestCase(
+    scenario="A customer asks for a refund on a late order.",
+    expected_outcome="The refund amount is confirmed.",
+    turns=[
+        Turn(role="user", content="My order arrived a week late. I want a refund."),
+        Turn(role="assistant", content="Sorry about that. What is your order number?"),
+        Turn(role="user", content="It's 4471. How much do I get back?"),
+        Turn(role="assistant", content="You'll receive a refund within 5-7 days."),
+        Turn(role="user", content="ok thanks"),
+    ],
+)
+
+# To run metric as a standalone
+# refund_handling.measure(convo_test_case)
+# print(refund_handling.score, refund_handling.reason)
+# print(refund_handling.score_breakdown)
+
+evaluate(test_cases=[convo_test_case], metrics=[refund_handling])
+```
+
+</Tab>
+</Tabs>
+
 ## Question Types
 
-`JevEval` has three question types, drawn directly from Jev's [decision primitives](/blog/introducing-jev-in-deepeval#understanding-jevs-decision-primitives). Each maps its answer onto a value $v \in [0, 1]$ with a fixed rule.
+JevEval has three question types, drawn directly from Jev's [decision primitives](/blog/introducing-jev-in-deepeval#understanding-jevs-decision-primitives). Each maps its answer onto a value $v \in [0, 1]$ with a fixed rule.
 
 | Question type | Best for                                                          | Example                                                          |
 | ------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
@@ -174,21 +233,29 @@ Credits do not have to be monotone, which is what a Score cannot express. Above,
 JevEval outputs a **score**, not a label. If you want the chosen option itself as the result, use a [classifier](/docs/classifiers-introduction) instead.
 :::
 
+### Writing questions about a conversation
+
+Multi-turn JevEval uses the same three question types. What changes is **what the questions are about**:
+
+- Write questions about `turns` as a whole ("by the end of turns", "at any point in turns") or about a role ("the assistant", "the user").
+- Reference conversation-level fields by name: "the `scenario`", "matches `expected_outcome`", "stays in `chatbot_role`".
+- Use a `Choice` with a `None` option for behaviours that may never have come up in this particular conversation, so the question drops out instead of penalising the chatbot for something the user never asked.
+
 ## How Is It Calculated?
 
-The `JevEval` score is calculated according to the following equation:
+The JevEval score is calculated according to the following equation:
 
 <Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i \, v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
 
 Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's answer maps onto, and $\mathcal{A}$ is the set of questions that **applied** to this test case.
 
-`JevEval` first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
+The metric first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. For single-turn the state is the listed fields of the test case; for multi-turn it is the entire conversation plus the conversation-level fields you listed. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
 
 **A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
 
 <Equation formula="i \in \mathcal{A} \iff \sum_{o \,:\, c_o = \varnothing} P(o) < 0.5" />
 
-`Noul` and `Score` questions always apply. If $\mathcal{A}$ is empty, the score is `1`: nothing applicable was left to fail.
+`Noul` and `Score` questions always apply. If $\mathcal{A}$ is empty, the score is `1`: nothing applicable was left to fail. For conversations this is how you keep a chatbot from being penalised for behaviour the user never triggered.
 
 ### Strict mode
 
@@ -223,7 +290,7 @@ flowchart LR
 
 ## Example
 
-Let's trace the `Tool Faithfulness` metric from [Usage](#usage) on the Paris weather test case end to end. Every number below is one you can read back from `score_breakdown`.
+Let's trace the `Tool Faithfulness` metric from [Usage](#usage) on the Paris weather test case end to end. Every number below is one you can read back from `score_breakdown`. The same trace for the multi-turn `Refund Handling` metric is in the [JevEval examples guide](/guides/guides-jev-eval-examples#worked-example-refund-handling).
 
 <Steps>
 
@@ -350,6 +417,8 @@ With `include_reason=False`, this step is skipped and the whole metric ran with 
 
 </Steps>
 
+For more ready-made question sets, single-turn and multi-turn, see the [JevEval examples guide](/guides/guides-jev-eval-examples).
+
 ## FAQs
 
 <FAQs
@@ -406,13 +475,37 @@ With `include_reason=False`, this step is skipped and the whole metric ran with 
       question: "Can I use JevEval on a conversation?",
       answer: (
         <>
-          Use{" "}
-          <a href="/docs/metrics-conversational-jev-eval">
-            ConversationalJevEval
-          </a>{" "}
-          instead. It takes a <code>ConversationalTestCase</code>, puts the
-          turns into the state as a <code>turns</code> list, and scores with
-          the same three question types and the same equation.
+          Yes, with <code>ConversationalJevEval</code>. It takes a{" "}
+          <a href="/docs/evaluation-multiturn-test-cases">ConversationalTestCase</a>,
+          puts the turns into the state as a <code>turns</code> list, and scores
+          with the same three question types and the same equation. Switch to the
+          Multi-Turn tab in any code block above.
+        </>
+      ),
+    },
+    {
+      question: "Do I have to list CONTENT and ROLE in evaluation params for a conversation?",
+      answer: (
+        <>
+          No. Every question is about the conversation, so{" "}
+          <code>MultiTurnParams.CONTENT</code> and{" "}
+          <code>MultiTurnParams.ROLE</code> are added automatically. List only
+          the extra fields your questions need, such as{" "}
+          <code>SCENARIO</code>, <code>EXPECTED_OUTCOME</code>,{" "}
+          <code>CHATBOT_ROLE</code>, <code>RETRIEVAL_CONTEXT</code> or{" "}
+          <code>TOOLS_CALLED</code>.
+        </>
+      ),
+    },
+    {
+      question: "How do I handle behaviour the user never triggered in a conversation?",
+      answer: (
+        <>
+          Give the <code>Choice</code> an option with credit{" "}
+          <code>None</code>, such as <code>never_asked</code>. When Jev puts
+          half or more of the probability on it, the question drops out of the
+          score for that conversation instead of penalising the chatbot for
+          something that never came up.
         </>
       ),
     },
