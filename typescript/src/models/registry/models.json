@@ -638,6 +638,15 @@
       "supportsTemperature": false,
       "supportsThinking": true
     },
+    "claude-opus-5-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 4e-06,
+      "outputPrice": 2e-05,
+      "supportsTemperature": false
+    },
     "claude-sonnet-5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,

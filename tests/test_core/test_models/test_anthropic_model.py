@@ -418,6 +418,27 @@ def test_anthropic_omits_thinking_for_models_without_the_parameter(
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_opus_5_5_sends_no_temperature_or_thinking(
+    mock_require_dep, settings
+):
+    """claude-opus-5-5 rejects `temperature` and a disabled thinking block."""
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+
+    client = _MessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    model = AnthropicModel(model="claude-opus-5-5", temperature=0)
+
+    _, cost = model.generate("prompt", schema=_Verdict)
+    assert "temperature" not in client.create_kwargs
+    assert "thinking" not in client.create_kwargs
+    assert cost == pytest.approx(10 * 4e-06 + 20 * 2e-05)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_explicit_thinking_kwarg_wins(mock_require_dep, settings):
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "test-key"
