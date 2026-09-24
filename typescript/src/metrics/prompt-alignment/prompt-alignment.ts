@@ -135,7 +135,12 @@ export class PromptAlignmentMetric extends BaseMetric {
   }
 
   private calculateScore(): number {
-    const total = this.verdicts.length;
+    // Judge every extracted item: a truncated or empty verdict list must
+    // count against the score, not shrink the denominator.
+    const total = Math.max(
+      this.verdicts.length,
+      this.promptInstructions.length,
+    );
     if (total === 0) return 1;
     const alignmentCount = this.verdicts.filter(
       (v) => v.verdict.trim().toLowerCase() !== "no",

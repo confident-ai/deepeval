@@ -116,7 +116,7 @@ export class ContextualPrecisionMetric extends BaseMetric {
         testCase.expectedOutput ?? "",
         groupedContext,
       );
-      this.score = this.calculateScore();
+      this.score = this.calculateScore(groupedContext.length);
       this.reason = await this.generateReason(testCase.input);
       this.success = this.isSuccessful();
 
@@ -171,8 +171,10 @@ export class ContextualPrecisionMetric extends BaseMetric {
   }
 
   /** Rank-weighted precision: reward relevant nodes ranked higher. */
-  private calculateScore(): number {
-    const total = this.verdicts.length;
+  private calculateScore(expectedCount: number): number {
+    // Judge every item that was up for judgment: a truncated or empty
+    // verdict list must count against the score, not shrink the denominator.
+    const total = Math.max(this.verdicts.length, expectedCount);
     if (total === 0) return 0;
     const nodeVerdicts = this.verdicts.map((v) =>
       v.verdict.trim().toLowerCase() === "yes" ? 1 : 0,

@@ -79,7 +79,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
           testCase.input,
           toolsCalled,
         );
-        this.score = this.calculateScore();
+        this.score = this.calculateScore(toolsCalled.length);
         this.reason = await this.generateReason(testCase.input);
       }
       this.success = this.isSuccessful();
@@ -124,8 +124,10 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     return reason;
   }
 
-  private calculateScore(): number {
-    const total = this.verdicts.length;
+  private calculateScore(expectedCount: number): number {
+    // Judge every item that was up for judgment: a truncated or empty
+    // verdict list must count against the score, not shrink the denominator.
+    const total = Math.max(this.verdicts.length, expectedCount);
     if (total === 0) return 1;
     const correctCount = this.verdicts.filter(
       (v) => v.verdict.trim().toLowerCase() !== "no",
