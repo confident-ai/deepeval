@@ -52,6 +52,8 @@ class MetricData(BaseModel):
     input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
     output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
+    judge_prompts: Optional[List[str]] = Field(None, alias="judgePrompts")
+    judge_responses: Optional[List[str]] = Field(None, alias="judgeResponses")
 
 
 class BaseApiSpan(BaseModel):

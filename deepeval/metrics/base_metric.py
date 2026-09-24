@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Optional, Dict, List
+from typing import TYPE_CHECKING, Any, Optional, Dict, List
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -73,6 +73,8 @@ class BaseMetric(PromptMixin):
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    judge_prompts: Optional[List[str]] = None
+    judge_responses: Optional[List[str]] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -123,6 +125,14 @@ class BaseMetric(PromptMixin):
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
+    def _record_judge_call(self, prompt: Any, response: Any) -> None:
+        if self.judge_prompts is None:
+            self.judge_prompts = []
+        if self.judge_responses is None:
+            self.judge_responses = []
+        self.judge_prompts.append(str(prompt))
+        self.judge_responses.append(str(response))
+
 
 class BaseConversationalMetric(PromptMixin):
     threshold: Optional[float] = None
@@ -144,6 +154,8 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    judge_prompts: Optional[List[str]] = None
+    judge_responses: Optional[List[str]] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -198,6 +210,14 @@ class BaseConversationalMetric(PromptMixin):
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
+    def _record_judge_call(self, prompt: Any, response: Any) -> None:
+        if self.judge_prompts is None:
+            self.judge_prompts = []
+        if self.judge_responses is None:
+            self.judge_responses = []
+        self.judge_prompts.append(str(prompt))
+        self.judge_responses.append(str(response))
+
 
 class BaseArenaMetric(PromptMixin):
     reason: Optional[str] = None
@@ -212,6 +232,8 @@ class BaseArenaMetric(PromptMixin):
     verbose_logs: Optional[str] = None
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    judge_prompts: Optional[List[str]] = None
+    judge_responses: Optional[List[str]] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -253,3 +275,11 @@ class BaseArenaMetric(PromptMixin):
             self.input_tokens = (self.input_tokens or 0) + input_tokens
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
+
+    def _record_judge_call(self, prompt: Any, response: Any) -> None:
+        if self.judge_prompts is None:
+            self.judge_prompts = []
+        if self.judge_responses is None:
+            self.judge_responses = []
+        self.judge_prompts.append(str(prompt))
+        self.judge_responses.append(str(response))

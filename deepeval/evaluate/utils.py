@@ -68,6 +68,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
+            judgePrompts=metric.judge_prompts,
+            judgeResponses=metric.judge_responses,
         )
     else:
         return MetricData(
@@ -84,6 +86,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
+            judgePrompts=metric.judge_prompts,
+            judgeResponses=metric.judge_responses,
         )
 
 
@@ -102,6 +106,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
+            judgePrompts=metric.judge_prompts,
+            judgeResponses=metric.judge_responses,
         )
     else:
         return MetricData(
@@ -117,6 +123,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
+            judgePrompts=metric.judge_prompts,
+            judgeResponses=metric.judge_responses,
         )
 
 

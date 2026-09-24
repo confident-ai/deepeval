@@ -279,9 +279,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             res, cost = self.model.generate(prompt)
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
+            self._record_judge_call(prompt, res)
             return res
         else:
             res = self.model.generate(prompt)
+            self._record_judge_call(prompt, res)
             return res
 
     async def _a_generate_reason(
@@ -313,9 +315,11 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             res, cost = await self.model.a_generate(prompt)
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
+            self._record_judge_call(prompt, res)
             return res
         else:
             res = await self.model.a_generate(prompt)
+            self._record_judge_call(prompt, res)
             return res
 
     def _get_goal_accuracy_score(

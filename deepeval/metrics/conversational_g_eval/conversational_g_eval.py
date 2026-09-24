@@ -278,7 +278,11 @@ class ConversationalGEval(BaseConversationalMetric):
 
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            
+            raw_content = res.choices[0].message.content
+            self._record_judge_call(prompt, raw_content)
+            
+            data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -333,7 +337,11 @@ class ConversationalGEval(BaseConversationalMetric):
             )
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            
+            raw_content = res.choices[0].message.content
+            self._record_judge_call(prompt, raw_content)
+            
+            data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]
             score = data["score"]
