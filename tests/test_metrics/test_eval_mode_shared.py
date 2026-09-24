@@ -83,7 +83,8 @@ def test_every_system_one_metric_takes_eval_mode():
     missing = [
         cls.__name__
         for cls in _metric_classes()
-        if _takes(cls, "system_one_model") and not _takes(cls, "eval_mode")
+        if _takes(cls, "system_one_model")
+        and not _takes(cls, "eval_mode")
         and cls.__name__ not in {"JevEval", "ConversationalJevEval"}
     ]
     assert missing == []
