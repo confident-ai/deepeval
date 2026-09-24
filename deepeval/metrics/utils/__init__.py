@@ -5,6 +5,9 @@ are an implementation detail:
 
 - ``qag``: the QAG (question-answer generation) verdict loop —
   ``generate_qag_verdicts`` / ``score_qag_verdicts``.
+- ``decision``: non-QAG decision points (DAG judgements, G-Eval score) and
+  the System One plumbing shared by every Jev call.
+- ``system_one``: the whole-chain System One path (`system_one` eval mode).
 - ``generation``: generic schema-constrained LLM calls and JSON parsing.
 - ``models``: evaluation model / embedding model resolution.
 - ``test_case``: test-case parameter validation.
@@ -25,12 +28,29 @@ from .decision import (
     SystemOneBinarySpec,
     SystemOneChoiceSpec,
     SystemOneScoreSpec,
+    system_one_probability,
+    a_system_one_probability,
+    system_one_score,
+    a_system_one_score,
+    format_decision_reason,
+    has_whole_metric_form,
     generate_binary_judgement,
     a_generate_binary_judgement,
     generate_choice_judgement,
     a_generate_choice_judgement,
     generate_rubric_score,
     a_generate_rubric_score,
+    effective_eval_mode,
+    reset_system_one_state,
+)
+from .system_one import (
+    SystemOneEvalSpec,
+    compact_trace,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    format_system_one_reason,
+    format_classification_reason,
 )
 from .metrics import (
     warn_score_direction_flipped,
@@ -62,6 +82,7 @@ from .models import (
 )
 from .qag import (
     SystemOneVerdictSpec,
+    split_sentences,
     verdict_from_probability,
     normalize_qag_verdict,
     verdict_from_json,
@@ -100,12 +121,28 @@ __all__ = [
     "SystemOneBinarySpec",
     "SystemOneChoiceSpec",
     "SystemOneScoreSpec",
+    "system_one_probability",
+    "a_system_one_probability",
+    "system_one_score",
+    "a_system_one_score",
+    "format_decision_reason",
+    "has_whole_metric_form",
     "generate_binary_judgement",
     "a_generate_binary_judgement",
     "generate_choice_judgement",
     "a_generate_choice_judgement",
     "generate_rubric_score",
     "a_generate_rubric_score",
+    "effective_eval_mode",
+    "reset_system_one_state",
+    # system_one
+    "SystemOneEvalSpec",
+    "compact_trace",
+    "parse_questions",
+    "run_system_one_eval",
+    "a_run_system_one_eval",
+    "format_system_one_reason",
+    "format_classification_reason",
     # metrics
     "warn_score_direction_flipped",
     "check_at_least_one_metric_has_threshold",
@@ -134,6 +171,7 @@ __all__ = [
     "initialize_embedding_model",
     # qag
     "SystemOneVerdictSpec",
+    "split_sentences",
     "verdict_from_probability",
     "normalize_qag_verdict",
     "verdict_from_json",

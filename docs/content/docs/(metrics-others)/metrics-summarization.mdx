@@ -4,7 +4,7 @@ title: Summarization
 sidebar_label: Summarization
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer referenceless={true} />
+<MetricTagsDisplayer jev={true} referenceless={true} />
 
 The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the <Term py="actual_output" ts="actualOutput"/>.
 
@@ -22,6 +22,8 @@ To use the `SummarizationMetric`, you'll have to provide the following arguments
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 Let's take this `input` and <Term py="actual_output" ts="actualOutput"/> as an example:
 
@@ -141,7 +143,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **TEN** optional parameters when instantiating an `SummarizationMetric` class:
+There are **TWELVE** optional parameters when instantiating an `SummarizationMetric` class:
 
 </Case>
 
@@ -165,6 +167,8 @@ There are **NINE** optional parameters when instantiating an `SummarizationMetri
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/>: a number which when set, determines the maximum number of factual truths to extract from the `input`. The truths extracted will used to determine the alignment score, and will be ordered by importance, decided by your evaluation `model`. Defaulted to <Term py="None" ts="null"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 :::note
 Sometimes, you may want to only consider the most important factual truths in the `input`. If this is the case, you can choose to set the <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> parameter to limit the maximum number of truths to consider during evaluation.
@@ -274,6 +278,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `SummarizationMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `SummarizationMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Summarization} = \min(\text{Alignment Score}, \text{Coverage Score})" />
@@ -333,9 +345,24 @@ Since the summarization score is the minimum of the alignment and coverage score
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the alignment verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the alignment classification is answered by Jev, a System One model, instead: one yes/no question per summary claim, with `P(yes) > 0.65` counted as aligned, `< 0.35` as contradictory, and anything in between as borderline. The extraction, the equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead. The coverage score stays on the LLM.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the original text (`input`) and the summary (`actual_output`) and asked:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| Every claim in the summary `actual_output` agrees with the facts in the original text `input`; none contradicts it or adds information the original does not contain. | Noul | 2 |
+| The summary `actual_output` covers the main points of the original text `input`. | Noul | 1 |
+| How much of the important information in the original text `input` does the summary `actual_output` preserve? (Almost none → All of it) | Score | 1 |
+| Reading only the summary `actual_output`, this question can be answered the same way as from the original text `input`: *&lt;assessment question&gt;* | Noul | 1 |
+
+The last row is repeated once per entry in `assessment_questions`, and omitted when none are given.
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

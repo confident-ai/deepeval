@@ -10,11 +10,18 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     initialize_model,
+    initialize_system_one_model,
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneBinarySpec,
+    SystemOneEvalSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
@@ -35,6 +42,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -45,8 +56,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         ] = KnowledgeRetentionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -85,11 +104,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.knowledges: List[Union[Knowledge, None]] = (
                     self._generate_knowledges(test_case.turns)
                 )
                 self.verdicts: List[KnowledgeRetentionVerdict] = (
-                    self._generate_verdicts(test_case.turns)
+                    self._generate_verdicts(
+                        test_case.turns, test_case.multimodal
+                    )
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -129,11 +153,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.knowledges: List[Union[Knowledge, None]] = (
                 await self._a_generate_knowledges(test_case.turns)
             )
             self.verdicts: List[KnowledgeRetentionVerdict] = (
-                await self._a_generate_verdicts(test_case.turns)
+                await self._a_generate_verdicts(
+                    test_case.turns, test_case.multimodal
+                )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
@@ -193,7 +222,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_verdicts(
-        self, turns: List[Turn]
+        self, turns: List[Turn], multimodal: bool
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for i in range(len(turns)):
@@ -218,12 +247,15 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 verdict_cls=KnowledgeRetentionVerdict,
                 allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    turns[i].content, accumulated_knowledge, multimodal
+                ),
             )
             verdicts.append(verdict)
         return verdicts
 
     def _generate_verdicts(
-        self, turns: List[Turn]
+        self, turns: List[Turn], multimodal: bool
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for i in range(len(turns)):
@@ -249,6 +281,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 prompt=prompt,
                 verdict_cls=KnowledgeRetentionVerdict,
                 allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    turns[i].content, accumulated_knowledge, multimodal
+                ),
             )
             verdicts.append(verdict)
         return verdicts
@@ -311,6 +346,34 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
 
         return knowledges
+
+    def _experimental_system_one_spec(
+        self, llm_message: str, accumulated_knowledge: List, multimodal: bool
+    ) -> Optional[SystemOneBinarySpec]:
+        if multimodal:
+            return None
+        return SystemOneBinarySpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            state={
+                "llm_message": llm_message,
+                "accumulated_knowledge": accumulated_knowledge,
+            },
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev
+        request, each turn carrying its `role` and `content`; see
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+        )
 
     def _calculate_score(self) -> float:
         # "yes" means the assistant forgot something, so "no" is the pass.

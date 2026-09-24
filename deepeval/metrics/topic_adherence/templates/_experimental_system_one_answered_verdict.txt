@@ -1,0 +1,1 @@
+Does `response` directly and correctly answer `question`? Answer no if the assistant refuses, deflects or gives an irrelevant reply.

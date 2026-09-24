@@ -436,7 +436,7 @@ All three questions carry the default weight of `1`:
 
 ```python
 [
-  {"question": "The assistant verifies the order before acting on the refund.", "type": "noul", "weight": 1.0, "value": 0.90, "applicable": True, "probabilities": {"true": 0.90, "false": 0.10}, "confidence": None},
+  {"question": "The assistant verifies the order before acting on the refund.", "type": "noul", "weight": 1.0, "value": 0.90, "applicable": True, "probabilities": {"true": 0.90, "false": 0.10}, "confidence": 0.80},
   {"question": "How fully is the user's request settled by the end of turns?", "type": "score", "weight": 1.0, "value": 0.55, "applicable": True, "probabilities": {"Not addressed": 0.10, "Partly settled": 0.70, "Fully resolved": 0.20}, "confidence": 0.7},
   {"question": "What did the assistant do about the amount the user asked for?", "type": "choice", "weight": 1.0, "value": 0.184, "applicable": True, "probabilities": {"stated_it": 0.05, "deferred_it": 0.25, "ignored_it": 0.65, "never_asked": 0.05}, "confidence": 0.65},
 ]
@@ -448,11 +448,17 @@ All three questions carry the default weight of `1`:
 
 ### Reason
 
-With `include_reason=True`, the evaluation LLM writes a `reason` that walks through each question and points at the turns behind it:
+With `include_reason=True`, a `reason` is built from the answers above, one line per question with its outcome in words and the numbers behind it:
 
-> The assistant's first turn asks for the order number before doing anything, which is the verification the scenario requires. In its second turn it promises a refund 'within 5-7 days' but never confirms the amount the user asked about in their second turn, so the request is only partly settled against an expected outcome of the amount being confirmed. The user's final message, 'ok thanks', closes the exchange without the amount ever being stated, which is why the assistant is treated as having ignored rather than deferred it.
+```
+Decided by jev-latest, minimum confidence 0.65.
+1. The assistant verifies the order before acting on the refund. -> clearly holds (P(yes)=0.90, confidence=0.80)
+2. How fully is the user's request settled by the end of turns? -> "Partly settled" (expected level=0.55 of 1.00, confidence=0.70)
+3. What did the assistant do about the amount the user asked for? -> "ignored_it" (P=0.65, confidence=0.65)
+Score: 0.54 (weighted mean of 3 applicable questions).
+```
 
-With `include_reason=False`, this step is skipped and the whole metric ran with zero LLM tokens.
+Nothing is generated, so the same answers always produce the same reason and the whole metric runs with zero LLM tokens whether or not `include_reason` is set.
 
 </Step>
 

@@ -1,10 +1,5 @@
 """JevEval: Jev-native score metric. All tests run against a fake System One
-model, so no network or API key is needed. The one live-LLM reason test is
-skipped without OPENAI_API_KEY."""
-
-import os
-import re
-from typing import Any, Dict, Optional, Tuple
+model, so no network, API key or LLM is needed: JevEval never calls one."""
 
 import pytest
 
@@ -14,11 +9,9 @@ from deepeval.metrics.jev_eval.utils import (
     aggregate,
     build_questions,
     construct_single_turn_state,
-    describe_outcomes,
     outcomes_from_answers,
     verbalise_outcome,
 )
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.models.system_one.schema import (
     ChoiceAnswer,
     ChoiceQuestion,
@@ -29,77 +22,7 @@ from deepeval.models.system_one.schema import (
     SystemOneAnswers,
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
-
-
-###############################################
-# Fakes
-###############################################
-
-
-class FakeSystemOneModel(DeepEvalBaseSystemOneModel):
-    """Returns canned answers and records what it was asked."""
-
-    def __init__(self, answers: SystemOneAnswers, cost: Optional[float] = 0.0):
-        super().__init__("fake-jev")
-        self.answers = answers
-        self.cost = cost
-        self.calls = []
-
-    def load_model(self, *args, **kwargs):
-        return None
-
-    def get_model_name(self):
-        return "fake-jev"
-
-    def decide(
-        self, state: Any, questions: Dict[str, Any]
-    ) -> Tuple[SystemOneAnswers, Optional[float]]:
-        self.calls.append((state, questions))
-        return self.answers, self.cost
-
-    async def a_decide(
-        self, state: Any, questions: Dict[str, Any]
-    ) -> Tuple[SystemOneAnswers, Optional[float]]:
-        return self.decide(state, questions)
-
-
-class ExplodingLLM(DeepEvalBaseLLM):
-    """Fails if any LLM call is made."""
-
-    def __init__(self):
-        super().__init__("exploding-llm")
-
-    def load_model(self, *args, **kwargs):
-        return None
-
-    def get_model_name(self):
-        return "exploding-llm"
-
-    def generate(self, *args, **kwargs):
-        raise AssertionError("LLM must not be called")
-
-    async def a_generate(self, *args, **kwargs):
-        raise AssertionError("LLM must not be called")
-
-
-class CannedLLM(DeepEvalBaseLLM):
-    def __init__(self, reply: str):
-        super().__init__("canned-llm")
-        self.reply = reply
-        self.prompts = []
-
-    def load_model(self, *args, **kwargs):
-        return None
-
-    def get_model_name(self):
-        return "canned-llm"
-
-    def generate(self, prompt, *args, **kwargs):
-        self.prompts.append(prompt)
-        return self.reply
-
-    async def a_generate(self, prompt, *args, **kwargs):
-        return self.generate(prompt)
+from tests.test_metrics.system_one_fakes import FakeSystemOneModel
 
 
 ###############################################
@@ -177,7 +100,6 @@ EXAMPLE_ANSWERS = SystemOneAnswers(
 
 def make_metric(answers=EXAMPLE_ANSWERS, **kwargs) -> JevEval:
     kwargs.setdefault("include_reason", False)
-    kwargs.setdefault("model", ExplodingLLM())
     return JevEval(
         name="Tool Faithfulness",
         evaluation_params=[
@@ -206,13 +128,17 @@ def test_worked_example_score():
     assert score == pytest.approx(0.461, abs=1e-3)
     assert metric.success is False
     assert metric.reason is None
-    assert metric.confidence == pytest.approx(0.55)
+    # Least decisive answer: the first Noul at P=0.30 -> |2*0.30 - 1| = 0.40,
+    # below the Score's 0.55 and the Choice's 0.60.
+    assert metric.confidence == pytest.approx(0.40)
 
 
 def test_breakdown_values():
     outcomes = outcomes_from_answers(QUESTIONS, EXAMPLE_ANSWERS)
     assert [o.type for o in outcomes] == ["noul", "noul", "score", "choice"]
     assert outcomes[0].value == pytest.approx(0.30)
+    assert outcomes[0].confidence == pytest.approx(0.40)
+    assert outcomes[1].confidence == pytest.approx(0.80)
     assert outcomes[0].weight == 2
     assert outcomes[0].probabilities == pytest.approx(
         {"true": 0.3, "false": 0.7}
@@ -474,48 +400,88 @@ def test_one_decide_call_per_measure():
     assert len(questions) == 4
 
 
-def test_include_reason_false_makes_no_llm_call():
-    metric = make_metric(include_reason=False, model=ExplodingLLM())
+def test_include_reason_false_gives_no_reason():
+    metric = make_metric(include_reason=False)
     metric.measure(TEST_CASE)
     assert metric.reason is None
-    assert "canned" not in metric.evaluation_model
     assert metric.evaluation_model == "fake-jev"
 
 
-def test_include_reason_true_uses_llm_once():
-    llm = CannedLLM('{"reason": "The breeze is not in the tool output."}')
-    metric = make_metric(include_reason=True, model=llm)
-    metric.measure(TEST_CASE)
-    assert metric.reason == "The breeze is not in the tool output."
-    assert len(llm.prompts) == 1
-    assert metric.evaluation_model == "fake-jev + canned-llm"
+def test_model_argument_is_gone():
+    # JevEval has no LLM anywhere in its chain, so there is nothing for a
+    # `model` argument to configure.
+    with pytest.raises(TypeError):
+        make_metric(model="gpt-4o")
 
 
 ###############################################
-# Reason prompt
+# Reason (deterministic, no LLM)
 ###############################################
 
 
-def test_reason_prompt_covers_every_question_and_hides_numbers():
-    llm = CannedLLM('{"reason": "ok"}')
-    metric = make_metric(include_reason=True, model=llm)
+def test_reason_is_deterministic_and_covers_every_question():
+    metric = make_metric(include_reason=True)
     metric.measure(TEST_CASE)
-    prompt = llm.prompts[0]
+    reason = metric.reason
+    assert reason.startswith("Decided by fake-jev, minimum confidence 0.40.")
     for q in QUESTIONS:
-        assert q.text in prompt
-    # Verbalised outcomes, not probabilities.
-    assert "likely fails" in prompt  # q_0 at 0.30
-    assert "clearly holds" in prompt  # q_1 at 0.90
-    assert '"Mostly grounded"' in prompt  # 0.55 vs 0.30: no runner-up
-    assert '"stated_it_as_fact"' in prompt
-    # No probability / score digits leak into the outcomes block. (The test
-    # case's own "40%" is content the LLM must be able to cite.)
-    outcomes_block = prompt.split("Test Case:")[0]
-    assert not re.search(r"\b0\.\d+", outcomes_block)
-    assert "%" not in outcomes_block
-    # The test case itself is there for the LLM to cite.
-    assert TEST_CASE.actual_output in prompt
-    assert '"temp_c": 18' in prompt
+        assert q.text in reason
+    # Verbalised outcomes with the numbers that produced them.
+    assert "likely fails (P(yes)=0.30, confidence=0.40, weight=2)" in reason
+    assert "clearly holds (P(yes)=0.90, confidence=0.80)" in reason
+    assert '"Mostly grounded"' in reason  # 0.55 vs 0.30: no runner-up
+    assert "expected level=0.57 of 1.00" in reason
+    assert '"stated_it_as_fact" (P=0.60, confidence=0.60)' in reason
+    assert reason.endswith(
+        "Score: 0.46 (weighted mean of 4 applicable questions)."
+    )
+    # Same answers, same reason: nothing generated.
+    again = make_metric(include_reason=True)
+    again.measure(TEST_CASE)
+    assert again.reason == reason
+
+
+def test_reason_marks_strict_results():
+    metric = make_metric(include_reason=True, strict_mode=True)
+    metric.measure(TEST_CASE)
+    assert "strict=fail" in metric.reason
+    assert "strict=pass" in metric.reason
+    assert metric.reason.endswith(
+        "Score: 0.00 (strict mode: at least one applicable question failed)."
+    )
+
+
+def test_reason_marks_not_applicable_choice():
+    answers = EXAMPLE_ANSWERS.model_copy(deep=True)
+    answers.choices["q_3"] = ChoiceAnswer(
+        choice="nothing_missing",
+        probabilities={
+            "left_it_out": 0.04,
+            "flagged_it_as_unknown": 0.02,
+            "hedged_it": 0.02,
+            "stated_it_as_fact": 0.02,
+            "nothing_missing": 0.90,
+        },
+        confidence=0.9,
+    )
+    metric = make_metric(answers, include_reason=True)
+    metric.measure(TEST_CASE)
+    assert "-> not applicable (not applicable" in metric.reason
+    assert "weighted mean of 3 applicable questions" in metric.reason
+
+
+def test_multimodal_test_case_rejected_up_front():
+    metric = make_metric()
+    with pytest.raises(ValueError, match="text only"):
+        metric.measure(
+            LLMTestCase(
+                input="what is this? [DEEPEVAL:IMAGE:https://x/y.png]",
+                actual_output="a cat",
+                tools_called=TEST_CASE.tools_called,
+                multimodal=True,
+            )
+        )
+    assert metric.system_one_model.calls == []
 
 
 def test_verbalise_bands():
@@ -530,19 +496,6 @@ def test_verbalise_bands():
     assert verbalise_outcome(noul(0.5)) == "unclear"
     assert verbalise_outcome(noul(0.2)) == "likely fails"
     assert verbalise_outcome(noul(0.05)) == "clearly fails"
-
-
-def test_describe_outcomes_has_no_probabilities():
-    described = describe_outcomes(
-        QUESTIONS, outcomes_from_answers(QUESTIONS, EXAMPLE_ANSWERS)
-    )
-    assert len(described) == 4
-    for entry in described:
-        assert "probabilities" not in entry
-        assert "value" not in entry
-        assert "confidence" not in entry
-    assert described[2]["levels"] == QUESTIONS[2].levels
-    assert described[3]["options"] == list(QUESTIONS[3].options)
 
 
 ###############################################
@@ -621,24 +574,3 @@ def test_missing_test_case_param_raises():
     metric = make_metric()
     with pytest.raises(Exception):
         metric.measure(LLMTestCase(input="hi", actual_output="there"))
-
-
-###############################################
-# Live reason (optional)
-###############################################
-
-
-@pytest.mark.skipif(
-    not os.getenv("OPENAI_API_KEY"), reason="needs OPENAI_API_KEY"
-)
-def test_live_reason_is_grounded():
-    metric = make_metric(include_reason=True, model=None)
-    metric.measure(TEST_CASE)
-    reason = metric.reason.lower()
-    # Something from every question shows up.
-    assert "breeze" in reason or "humidity" in reason
-    assert "sunny" in reason or "18" in reason
-    # No probabilities or judge confidence. (The test case's own "40%" may be
-    # quoted, so a bare "%" check would be wrong here.)
-    assert not re.search(r"\b0\.\d+", reason)
-    assert "confiden" not in reason

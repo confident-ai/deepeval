@@ -1,4 +1,5 @@
-from typing import Optional, List, Union, Type
+import asyncio
+from typing import Optional, List, Tuple, Union, Type
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -6,12 +7,23 @@ from deepeval.metrics.utils import (
     get_unit_interactions,
     check_conversational_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneBinarySpec,
+    SystemOneEvalSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_probability,
+    a_system_one_probability,
+    verdict_from_probability,
 )
+from deepeval.metrics.base_metric import Verdict
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.topic_adherence.schema import (
     RelevancyVerdict,
@@ -37,6 +49,10 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         relevant_topics: List[str],
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -48,8 +64,16 @@ class TopicAdherenceMetric(BaseConversationalMetric):
     ):
         self.relevant_topics = relevant_topics
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -87,6 +111,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 unit_interactions = get_unit_interactions(test_case.turns)
                 interaction_pairs = self._get_qa_pairs(
                     unit_interactions, multimodal=test_case.multimodal
@@ -173,6 +200,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             unit_interactions = get_unit_interactions(test_case.turns)
             interaction_pairs = await self._a_get_qa_pairs(
                 unit_interactions, multimodal=test_case.multimodal
@@ -303,6 +333,16 @@ class TopicAdherenceMetric(BaseConversationalMetric):
     def _get_qa_verdict(
         self, qa_pair: QAPair, *, multimodal: bool
     ) -> RelevancyVerdict:
+        specs = self._experimental_system_one_specs(qa_pair, multimodal)
+        if specs is not None:
+            on_topic = system_one_probability(self, specs[0])
+            answered = (
+                system_one_probability(self, specs[1])
+                if on_topic is not None
+                else None
+            )
+            if answered is not None:
+                return self._system_one_verdict(on_topic, answered)
         prompt = self._get_prompt(
             "get_qa_pair_verdict",
             relevant_topics=self.relevant_topics,
@@ -321,6 +361,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
     async def _a_get_qa_verdict(
         self, qa_pair: QAPair, *, multimodal: bool
     ) -> RelevancyVerdict:
+        specs = self._experimental_system_one_specs(qa_pair, multimodal)
+        if specs is not None:
+            on_topic, answered = await asyncio.gather(
+                *[a_system_one_probability(self, spec) for spec in specs]
+            )
+            if on_topic is not None and answered is not None:
+                return self._system_one_verdict(on_topic, answered)
         prompt = self._get_prompt(
             "get_qa_pair_verdict",
             relevant_topics=self.relevant_topics,
@@ -334,6 +381,64 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             schema_cls=RelevancyVerdict,
             extract_schema=lambda s: s,
             extract_json=lambda data: RelevancyVerdict(**data),
+        )
+
+    def _experimental_system_one_specs(
+        self, qa_pair: QAPair, multimodal: bool
+    ) -> Optional[Tuple[SystemOneBinarySpec, SystemOneBinarySpec]]:
+        if multimodal:
+            return None
+        state = {
+            "relevant_topics": list(self.relevant_topics),
+            "question": qa_pair.question,
+            "response": qa_pair.response,
+        }
+        return (
+            SystemOneBinarySpec(
+                instructions=self._get_prompt(
+                    "_experimental_system_one_on_topic_verdict"
+                ),
+                state=state,
+            ),
+            SystemOneBinarySpec(
+                instructions=self._get_prompt(
+                    "_experimental_system_one_answered_verdict"
+                ),
+                state=state,
+            ),
+        )
+
+    def _system_one_verdict(
+        self, on_topic: float, answered: float
+    ) -> RelevancyVerdict:
+        relevant = verdict_from_probability(on_topic) == Verdict.YES
+        responded = verdict_from_probability(answered) == Verdict.YES
+        if relevant:
+            verdict = "TP" if responded else "FN"
+        else:
+            verdict = "FP" if responded else "TN"
+        return RelevancyVerdict(
+            verdict=verdict,
+            reason=f"P(on topic)={on_topic:.2f}, P(answered)={answered:.2f}",
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation and
+        `relevant_topics` as one Jev request, with one Noul per topic and one
+        for off-topic questions; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions",
+                    relevant_topics=list(self.relevant_topics),
+                )
+            ),
+            extra_state={"relevant_topics": list(self.relevant_topics)},
         )
 
     def _get_qa_pairs(

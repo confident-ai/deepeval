@@ -75,6 +75,12 @@ class Modes(Enum):
     EXPERIMENTAL = "experimental"
 
 
+class EvalModes(Enum):
+    LLM = "llm"
+    HYBRID = "hybrid"
+    SYSTEM_ONE = "system_one"
+
+
 def version_callback(value: Optional[bool] = None) -> None:
     if not value:
         return
@@ -236,6 +242,71 @@ def set_mode_command(
     else:
         success_msg = (
             ":white_check_mark: You're now on the stable channel (the default)."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
+    )
+
+
+@app.command(name="set-eval-mode")
+def set_eval_mode_command(
+    mode: EvalModes = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="Who decides in LLM-as-a-judge metrics: 'llm' (default, the LLM "
+        "runs the whole chain), 'hybrid' (the LLM extracts, a System One "
+        "model decides, the LLM covers any decision whose Jev call fails) or "
+        "'system_one' (a System One model runs the whole metric in one "
+        "request, with no LLM and no fallback).",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose who decides in LLM-as-a-judge metrics (sets DEEPEVAL_EVAL_MODE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_EVAL_MODE = mode.value
+
+    handled, path, updates = edit_ctx.result
+
+    if mode == EvalModes.SYSTEM_ONE:
+        success_msg = (
+            ":brain: Eval mode is now `system_one`: built-in metrics and "
+            "classifiers are decided entirely by your System One model (Jev) "
+            "in one request, with no LLM and no fallback (DAG metrics run as "
+            "`hybrid`, since their task nodes need the LLM). Make sure "
+            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
+            "`deepeval set-eval-mode llm` to switch back."
+        )
+    elif mode == EvalModes.HYBRID:
+        success_msg = (
+            ":test_tube: Eval mode is now `hybrid`: the LLM extracts and "
+            "explains, your System One model (Jev) takes the decision points, "
+            "and the LLM covers any decision whose Jev call fails. Make sure "
+            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
+            "`deepeval set-eval-mode llm` to switch back."
+        )
+    else:
+        success_msg = (
+            ":white_check_mark: Eval mode is now `llm` (the default): the "
+            "LLM runs every metric end to end."
         )
 
     _handle_save_result(

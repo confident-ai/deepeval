@@ -75,7 +75,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `TurnRelevancyMetric`:
+There are **TEN** optional parameters when creating a `TurnRelevancyMetric`:
 
 </Case>
 
@@ -97,6 +97,8 @@ There are **SEVEN** optional parameters when creating a `TurnRelevancyMetric`:
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="window_size" ts="windowSize"/>: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -134,11 +136,43 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `TurnRelevancyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `TurnRelevancyMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Conversation Relevancy} = \frac{\text{Number of Turns with Relevant Assistant Content}}{\text{Total Number of Assistant Turns}}" />
 
 The `TurnRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `"assistant"` content that is relevant to the previous conversational context found in the sliding window.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the relevancy verdict for each sliding window is answered by Jev, a System One model, instead: one yes/no question on whether the last assistant turn is relevant to the conversation so far, with `P(yes) >= 0.5` counted as relevant. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and asked three questions:
+
+| Question                                                                                                            | Type  | Weight |
+| ------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every assistant turn in `turns` is relevant to the conversation so far, given the user turns before it.             | Noul  | 2      |
+| No assistant turn in `turns` ignores the user turn it responds to or changes the subject.                           | Noul  | 1      |
+| Across `turns`, how relevant are the assistant turns to the conversation so far? (Mostly irrelevant → All relevant) | Score | 1      |
+
+:::note
+Under `system_one` Jev judges the conversation as a whole, whereas the LLM chain scores each sliding window and averages the verdicts.
+:::
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every factual claim in `actual_output` is supported by the facts in `retrieval_context`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No claim in `actual_output` contradicts the facts in `retrieval_context`."
+  },
+  {
+    "type": "score",
+    "question": "How much of `actual_output` is grounded in the facts in `retrieval_context`?",
+    "levels": ["Fabricated", "Mostly fabricated", "Mostly grounded", "Fully grounded"]
+  }
+]

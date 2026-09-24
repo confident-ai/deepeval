@@ -4,7 +4,7 @@ title: Contextual Recall
 sidebar_label: Contextual Recall
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer singleTurn={true} rag={true} referenceBased={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} rag={true} referenceBased={true} />
 
 The contextual recall metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's retriever by evaluating the extent of which the <Term py="retrieval_context" ts="retrievalContext"/> aligns with the <Term py="expected_output" ts="expectedOutput"/>. `deepeval`'s contextual recall metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -29,6 +29,8 @@ To use the `ContextualRecallMetric`, you'll have to provide the following argume
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `ContextualRecallMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
 
@@ -195,7 +197,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `ContextualRecallMetric`:
+There are **TEN** optional parameters when creating a `ContextualRecallMetric`:
 
 </Case>
 
@@ -217,6 +219,8 @@ There are **SEVEN** optional parameters when creating a `ContextualRecallMetric`
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a class of type `ContextualRecallTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualRecallMetric` score. Defaulted to `deepeval`'s `ContextualRecallTemplate`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### Within components
 
@@ -320,6 +324,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `ContextualRecallMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `ContextualRecallMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Contextual Recall} = \frac{\text{Number of Attributable Statements}}{\text{Total Number of Statements}}" />
@@ -331,6 +343,26 @@ We use the <Term py="expected_output" ts="expectedOutput"/> instead of the <Term
 :::
 
 A higher contextual recall score represents a greater ability of the retrieval system to capture all relevant information from the total available relevant set within your knowledge base.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the `expected_output` is split into sentences in code, and Jev, a System One model, answers one yes/no question per sentence: can it be attributed to the `retrieval_context`? `P(yes) >= 0.5` counts as attributable. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `expected_output` and `retrieval_context` and asked three questions:
+
+| Question                                                                                                      | Type  | Weight |
+| ------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every sentence in `expected_output` can be attributed to the facts in `retrieval_context`.                    | Noul  | 2      |
+| `retrieval_context` contains the key facts needed to write `expected_output`.                                 | Noul  | 1      |
+| How much of `expected_output` can be attributed to the facts in `retrieval_context`? (None of it → All of it) | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## Customize Your Template
 

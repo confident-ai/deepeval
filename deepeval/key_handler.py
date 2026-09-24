@@ -56,6 +56,9 @@ class KeyValues(Enum):
     # Feature channel (`deepeval set-mode`)
     DEEPEVAL_MODE = "mode"
 
+    # Who decides in LLM-as-a-judge metrics (`deepeval set-eval-mode`)
+    DEEPEVAL_EVAL_MODE = "eval_mode"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"

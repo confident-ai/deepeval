@@ -2,15 +2,25 @@ import asyncio
 from typing import Optional, Union, List, Type
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     get_unit_interactions,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    format_decision_reason,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_score,
+    a_system_one_score,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -25,6 +35,13 @@ from deepeval.templates import make_template_class
 
 MCPTaskCompletionTemplate = make_template_class("MCPTaskCompletionMetric")
 
+TASK_COMPLETION_LEVELS = [
+    "Not completed",
+    "Partly completed",
+    "Mostly completed",
+    "Fully completed",
+]
+
 
 class MCPTaskCompletionMetric(BaseConversationalMetric):
     _required_test_case_params = [
@@ -36,6 +53,10 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -46,8 +67,16 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         ] = MCPTaskCompletionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -90,6 +119,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
+                if run_system_one_eval(self, test_case):
+                    return self.score
 
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
@@ -142,6 +173,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
 
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
@@ -219,6 +252,14 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         )
 
     def _get_task_score(self, task: Task, *, multimodal: bool) -> TaskScore:
+        value = system_one_score(
+            self, self._system_one_score_spec(task, multimodal)
+        )
+        if value is not None:
+            return TaskScore(
+                score=value,
+                reason=format_decision_reason(self, "task completion", value),
+            )
         prompt = self._get_prompt(
             "get_task_completion_score",
             task=task,
@@ -236,6 +277,14 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     async def _a_get_task_score(
         self, task: Task, *, multimodal: bool
     ) -> TaskScore:
+        value = await a_system_one_score(
+            self, self._system_one_score_spec(task, multimodal)
+        )
+        if value is not None:
+            return TaskScore(
+                score=value,
+                reason=format_decision_reason(self, "task completion", value),
+            )
         prompt = self._get_prompt(
             "get_task_completion_score",
             task=task,
@@ -248,6 +297,39 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
             schema_cls=TaskScore,
             extract_schema=lambda s: s,
             extract_json=lambda data: TaskScore(**data),
+        )
+
+    def _system_one_score_spec(
+        self, task: Task, multimodal: bool
+    ) -> Optional[SystemOneScoreSpec]:
+        if multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt("_experimental_system_one_score"),
+            levels=TASK_COMPLETION_LEVELS,
+            state={"task": task.task, "steps_taken": task.steps_taken},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role`, `content` and the MCP primitives it
+        called; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                MultiTurnParams.ROLE,
+                MultiTurnParams.CONTENT,
+                MultiTurnParams.MCP_TOOLS,
+                MultiTurnParams.MCP_RESOURCES,
+                MultiTurnParams.MCP_PROMPTS,
+                MultiTurnParams.TOOLS_CALLED,
+            ],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
         )
 
     def _get_tasks(self, unit_interactions: List) -> List[Task]:

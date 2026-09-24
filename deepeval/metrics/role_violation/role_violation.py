@@ -6,20 +6,25 @@ from deepeval.test_case import (
     SingleTurnParams,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneEvalSpec,
     SystemOneVerdictSpec,
     initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.role_violation.schema import (
     RoleViolationVerdict,
     Verdicts,
@@ -43,6 +48,10 @@ class RoleViolationMetric(BaseMetric):
         threshold: Optional[float] = 0.5,
         role: str = None,  # Required parameter to specify the expected role
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -59,9 +68,16 @@ class RoleViolationMetric(BaseMetric):
 
         self.threshold = 0 if strict_mode else threshold
         self.role = role
-        self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -102,6 +118,9 @@ class RoleViolationMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.role_violations: List[str] = self._detect_role_violations(
                     test_case.actual_output, multimodal=test_case.multimodal
                 )
@@ -149,6 +168,9 @@ class RoleViolationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.role_violations: List[str] = (
                 await self._a_detect_role_violations(
                     test_case.actual_output, multimodal=test_case.multimodal
@@ -258,6 +280,24 @@ class RoleViolationMetric(BaseMetric):
             items=self.role_violations,
             item_key="statement",
             state={"role": self.role},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `input` and `actual_output`, with the assigned `role` written into
+        the questions; higher probabilities mean the role was kept. See
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions", role=self.role
+                )
+            ),
         )
 
     async def _a_detect_role_violations(

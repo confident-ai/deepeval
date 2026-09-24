@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every tool call in `tools_called` has `input_parameters` that correctly address `input`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No tool call in `tools_called` has `input_parameters` that are missing, irrelevant to `input`, or wrong for `input`."
+  },
+  {
+    "type": "score",
+    "question": "How many of the tool calls in `tools_called` have `input_parameters` that correctly address `input`?",
+    "levels": ["None of them", "Less than half", "Most of them", "All of them"]
+  }
+]

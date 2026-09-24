@@ -5,7 +5,7 @@ sidebar_label: Citation Faithfulness
 languages: [python]
 ---
 
-<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} community={true} singleTurn={true} rag={true} referenceless={true} />
 
 The citation faithfulness metric uses LLM-as-a-judge to check whether every `[N]` citation marker in your RAG pipeline's `actual_output` points to the passage in `retrieval_context` that actually supports the specific claim the marker is attached to. `deepeval`'s citation faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -28,6 +28,8 @@ To use the `CitationFaithfulnessMetric`, you'll have to provide the following ar
 The `retrieval_context` passages are numbered (`[1]`, `[2]`, ...) before being shown to the judge, and the `[N]` markers in `actual_output` refer to those passage numbers.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `CitationFaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
 
@@ -62,7 +64,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 In the example above the `FaithfulnessMetric` would pass the answer, because the completion-year claim is supported by passage `[2]`. The `CitationFaithfulnessMetric` fails it, because the `[1]` citation points to the height passage rather than the passage that supports the claim.
 
-There are eight optional parameters when creating a `CitationFaithfulnessMetric`:
+There are nine optional parameters when creating a `CitationFaithfulnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`. The score is `1.0` for a faithful answer and `0.0` for an unfaithful one, so the default requires a faithful verdict to pass.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
@@ -71,8 +73,18 @@ There are eight optional parameters when creating a `CitationFaithfulnessMetric`
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ## How Is It Calculated?
+
+<Only id="python">
+
+You can change how the `CitationFaithfulnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
 
 The `CitationFaithfulnessMetric` score is calculated according to the following equation:
 
@@ -80,3 +92,26 @@ A single LLM judge reads the question, the numbered passages, and the answer, th
 
 - `faithful` (score `1.0`): every factual claim is supported by the passages, and every `[N]` citation marker points to a passage that supports the claim it is attached to.
 - `unfaithful` (score `0.0`): at least one claim is unsupported, contradicts a passage, or carries a citation `[N]` where passage `N` does not support that claim, even if some other passage would.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the faithful / unfaithful verdict is answered by Jev, a System One model, as one yes/no question, with `P(yes) >= 0.5` counted as faithful. The reason states Jev's probability and confidence. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the `actual_output` and the numbered passages and asked three questions:
+
+| Question                                                                                                                                                            | Type  | Weight |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every [N] citation marker in `actual_output` is attached to a claim that passage [N] in `passages` supports.                                                        | Noul  | 2      |
+| Every factual claim in `actual_output` is supported by `passages`, and none contradicts them.                                                                       | Noul  | 1      |
+| How many of the [N] citation markers in `actual_output` point to a passage in `passages` that supports the claim they are attached to? (None of them → All of them) | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+The metric is pass/fail: a weighted mean of `0.5` or above scores `1`, anything lower scores `0`.
+
+</Only>
+

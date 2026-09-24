@@ -5,11 +5,11 @@ sidebar_label: JevEval
 languages: [python]
 ---
 
-<MetricTagsDisplayer jev={true} singleTurn={true} multiTurn={true} custom={true} />
+<MetricTagsDisplayer usesLLMs={false} jev={true} singleTurn={true} multiTurn={true} custom={true} />
 
 JevEval is a custom metric that scores an LLM interaction as the **weighted mean** of the answers to bounded **questions** you write about it. Each question is answered by Jev, a System One model, as a calibrated probability rather than generated text; the probability is the question's value, and the metric score is the weighted mean of those values.
 
-There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. The only thing an LLM does in JevEval is, optionally, write the reason.
+There is no chain-of-thought, no "give this a score from 1 to 10", and no JSON to recover. No LLM is involved at any point: even the `reason` is deterministic text built from Jev's answers and their confidence, so the same test case always produces the same reason.
 
 :::tip
 If you want a custom metric where an LLM drafts the evaluation logic from a one-line `criteria`, use [`GEval`](/docs/metrics-llm-evals). JevEval is for when you already know **what** you want decided and want it decided the same way every run.
@@ -86,19 +86,22 @@ refund_handling = ConversationalJevEval(
 </Tab>
 </Tabs>
 
-There are **THREE** mandatory and **EIGHT** optional parameters when creating a JevEval metric:
+There are **THREE** mandatory and **SEVEN** optional parameters when creating a JevEval metric:
 
 - `name`: name of custom metric.
 - `evaluation_params`: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). These fields are the **state** Jev sees; a question can only refer to fields listed here.
 - `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
-- [Optional] `system_one_model`: a string specifying which System One model to use, **OR** [any custom System One model](/integrations/models/typesafe-ai) of type `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `threshold`: the passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 if every applicable question is answered in its best possible way, 0 otherwise. It also overrides the current threshold and sets it to 1. See [strict mode](#strict-mode). Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints every question's probabilities and value to the console. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
-- [Optional] `include_reason`: a boolean which when set to `True`, has your evaluation LLM write a reason grounded in the test case (for conversations, one that cites specific turns). When `False`, JevEval makes **no LLM call at all**. Defaulted to `True`.
-- [Optional] `model`: the LLM used only for the reason; a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />. Not constructed when `include_reason=False`.
+- [Optional] `include_reason`: a boolean which when set to `True`, attaches a `reason` listing each question's outcome in words, the probability and confidence behind it, and how the score follows. The reason is built in code from Jev's answers, so it costs nothing and never varies between runs. Defaulted to `True`.
+
+:::note
+JevEval takes no `model` argument. Nothing in it is generated, the reason included, so there is no evaluation LLM to configure and no LLM provider needs to be set up to run it.
+:::
 
 :::danger
 Question text refers to the state by field name: `input`, `actual_output`, `tools_called`, ... for a single turn, or `turns` plus conversation-level fields such as `scenario` or `expected_outcome` for a conversation. A field that is not in `evaluation_params` is invisible to Jev, so every field your questions mention must be listed.
@@ -249,7 +252,7 @@ The JevEval score is calculated according to the following equation:
 
 Where $w_i$ is the `weight` of question $i$, $v_i \in [0, 1]$ is the value Jev's answer maps onto, and $\mathcal{A}$ is the set of questions that **applied** to this test case.
 
-The metric first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to [Jev](/integrations/models/typesafe-ai) in a **single request**. For single-turn the state is the listed fields of the test case; for multi-turn it is the entire conversation plus the conversation-level fields you listed. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
+The metric first builds a JSON **state** from the fields listed in `evaluation_params`, then sends the state and every question to Jev in a **single request**. For single-turn the state is the listed fields of the test case; for multi-turn it is the entire conversation plus the conversation-level fields you listed. Jev is a [System One model](https://docs.typesafe.ai/concepts/system-one): it answers bounded questions with calibrated probabilities rather than generating language. Jev returns a probability distribution per question; no text is generated. Each distribution becomes a value $v_i$ using the rule for its [question type](#question-types): $v_{\text{Noul}}$, $v_{\text{Score}}$, or $v_{\text{Choice}}$.
 
 **A `Choice` question applies only if its `None`-credited options hold less than half the probability:**
 
@@ -271,7 +274,7 @@ Where a question passes when:
 
 `threshold` is set to `1`, and each entry of `score_breakdown` gains a `passed` flag so you can see which question fell short. Questions that did not apply to this test case are skipped, as usual.
 
-With `include_reason=True`, the evaluation LLM then writes a `reason` explaining each question's outcome against the test case. With `include_reason=False`, the metric finishes without any LLM call.
+With `include_reason=True`, a `reason` is then built from the same answers: one line per question with its outcome in words, the probability and confidence behind it, and a closing line showing how the score follows. Nothing is generated, so there is no LLM call at any point.
 
 <div style={{textAlign: 'center', margin: "2rem 0"}}>
 
@@ -283,7 +286,7 @@ flowchart LR
     D --> V[Map each answer<br>to a value 0-1]
     V --> W[Weighted mean over<br>applicable questions]
     W --> F[Final score<br>0-1]
-    V -.->|include_reason| R[LLM writes a<br>grounded reason]
+    V -.->|include_reason| R[Reason built<br>from the answers]
 ```
 
 </div>
@@ -394,8 +397,8 @@ Had the response stuck to "18°C and sunny" and Jev put `0.9` on `nothing_missin
 
 ```python
 [
-  {"question": "Every fact and figure in actual_output appears in the output of a tool in tools_called.", "type": "noul", "weight": 2.0, "value": 0.30, "applicable": True, "probabilities": {"true": 0.30, "false": 0.70}, "confidence": None},
-  {"question": "actual_output reports every value returned in tools_called accurately.", "type": "noul", "weight": 1.0, "value": 0.90, "applicable": True, "probabilities": {"true": 0.90, "false": 0.10}, "confidence": None},
+  {"question": "Every fact and figure in actual_output appears in the output of a tool in tools_called.", "type": "noul", "weight": 2.0, "value": 0.30, "applicable": True, "probabilities": {"true": 0.30, "false": 0.70}, "confidence": 0.40},
+  {"question": "actual_output reports every value returned in tools_called accurately.", "type": "noul", "weight": 1.0, "value": 0.90, "applicable": True, "probabilities": {"true": 0.90, "false": 0.10}, "confidence": 0.80},
   {"question": "How much of actual_output is grounded in the outputs in tools_called?", "type": "score", "weight": 1.0, "value": 0.567, "applicable": True, "probabilities": {"Fabricated": 0.05, "Mostly fabricated": 0.30, "Mostly grounded": 0.55, "Fully grounded": 0.10}, "confidence": 0.55},
   {"question": "What did actual_output do with information the tools did not return?", "type": "choice", "weight": 1.0, "value": 0.237, "applicable": True, "probabilities": {"left_it_out": 0.05, "flagged_it_as_unknown": 0.05, "hedged_it": 0.25, "stated_it_as_fact": 0.60, "nothing_missing": 0.05}, "confidence": 0.6},
 ]
@@ -407,11 +410,18 @@ Had the response stuck to "18°C and sunny" and Jev put `0.9` on `nothing_missin
 
 ### Reason
 
-With `include_reason=True`, the evaluation LLM writes a `reason` that walks through each question and points at the part of the test case behind it:
+With `include_reason=True`, a `reason` is built from the answers above. It names the judge and the least decisive answer, then walks through each question with its outcome in words and the numbers behind it (a Noul's confidence is `|2p - 1|`, the same statistic Jev reports for Choice and Score):
 
-> The response's '18°C and sunny' matches the get_weather output, but 'a light breeze and around 40% humidity' appears nowhere in what the tool returned, so the answer draws on more than the tool provided. The two values the tool did return, temp_c 18 and condition sunny, are reported accurately. Most of the response rests on the tool output, with the breeze and humidity being the part that does not. The tool returned no wind or humidity data, and the response presented both as fact, softening only the humidity with 'around', rather than leaving them out or saying they were unavailable.
+```
+Decided by jev-latest, minimum confidence 0.40.
+1. Every fact and figure in actual_output appears in the output of a tool in tools_called. -> likely fails (P(yes)=0.30, confidence=0.40, weight=2)
+2. actual_output reports every value returned in tools_called accurately. -> clearly holds (P(yes)=0.90, confidence=0.80)
+3. How much of actual_output is grounded in the outputs in tools_called? -> "Mostly grounded" (expected level=0.57 of 1.00, confidence=0.55)
+4. What did actual_output do with information the tools did not return? -> "stated_it_as_fact" (P=0.60, confidence=0.60)
+Score: 0.46 (weighted mean of 4 applicable questions).
+```
 
-With `include_reason=False`, this step is skipped and the whole metric ran with zero LLM tokens.
+Nothing here is generated: the same answers always produce the same reason, and the whole metric ran with zero LLM tokens whether or not `include_reason` is set. The `confidence` on the metric (`0.40` here) is the minimum across every question, so you can filter or flag results where Jev was not decisive.
 
 </Step>
 
@@ -464,10 +474,11 @@ For more ready-made question sets, single-turn and multi-turn, see the [JevEval 
       question: "Can I run JevEval without any LLM?",
       answer: (
         <>
-          Yes. Set <code>include_reason=False</code> and no LLM is constructed
-          or called; the metric is one Jev request plus arithmetic. You still
-          get <code>score</code> and <code>score_breakdown</code>, just no{" "}
-          <code>reason</code>.
+          JevEval never uses one. The score is one Jev request plus arithmetic,
+          and the <code>reason</code> is built in code from Jev's answers and
+          their confidence, so no LLM provider has to be configured. Set{" "}
+          <code>include_reason=False</code> if you do not want the reason text
+          at all.
         </>
       ),
     },

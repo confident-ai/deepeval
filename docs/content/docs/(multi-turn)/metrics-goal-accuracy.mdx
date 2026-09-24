@@ -4,7 +4,7 @@ title: Goal Accuracy
 sidebar_label: Goal Accuracy
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
 The Goal Accuracy metric is a multi-turn agentic metric that evaluates your LLM agent's abilities **on planning and executing the plan to finish a task or reach a goal**. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
@@ -17,6 +17,8 @@ To use the `GoalAccuracyMetric`, you'll have to provide the following arguments 
 You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `GoalAccuracyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
@@ -76,7 +78,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **SEVEN** optional parameters when creating a `GoalAccuracyMetric`:
+There are **NINE** optional parameters when creating a `GoalAccuracyMetric`:
 
 </Case>
 
@@ -97,6 +99,8 @@ There are **SIX** optional parameters when creating a `GoalAccuracyMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -134,6 +138,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
+<Only id="python">
+
+You can change how the `GoalAccuracyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `GoalAccuracyMetric` score is calculated using the following steps:
 
 - Find **individual goals and steps** taken by your LLM agent for each user-assistat interactions.
@@ -145,6 +157,26 @@ The `GoalAccuracyMetric` score is calculated using the following steps:
 :::info
 The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evaluates the steps taken by the LLM agent to find its plan and how accurately it has finished the task or reached the goal in that interaction.
 :::
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the goal accuracy and plan quality of each interaction are rated by Jev, a System One model, on a five-level scale mapped onto 0 to 1. Each interaction's reason states Jev's score and confidence, and the LLM writes the final reason. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation (with the tools called in each turn) and asked three questions:
+
+| Question                                                                                                                                                                                              | Type  | Weight |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every goal the user states in `turns` is fully and correctly achieved in the assistant turns that follow it, as seen by the user.                                                                     | Noul  | 2      |
+| Across `turns`, how fully and correctly do the assistant's visible replies achieve the goals the user states? (Not achieved → Fully achieved)                                                         | Score | 1      |
+| Across `turns`, how clear and complete is the assistant's plan (including its `tools_called`) for each user goal, and how closely does it follow that plan? (No plan → Complete plan, fully followed) | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

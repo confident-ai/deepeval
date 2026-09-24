@@ -5,6 +5,7 @@ sidebar_label: Argument Correctness
 languages: [python, typescript]
 ---
 <MetricTagsDisplayer
+  jev={true}
   singleTurn={true}
   usesLLMs={true}
   agent={true}
@@ -28,6 +29,8 @@ To use the `ArgumentCorrectnessMetric`, you'll have to provide the following arg
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `ArgumentCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
@@ -115,7 +118,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **SEVEN** optional parameters when creating an `ArgumentCorrectnessMetric`:
+There are **NINE** optional parameters when creating an `ArgumentCorrectnessMetric`:
 
 </Case>
 
@@ -136,6 +139,8 @@ There are **SIX** optional parameters when creating an `ArgumentCorrectnessMetri
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### Within components
 
@@ -243,6 +248,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `ArgumentCorrectnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `ArgumentCorrectnessMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
@@ -282,9 +295,21 @@ await metric.measure(testCase);
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the assessment is answered by Jev, a System One model, instead: one yes/no question per tool call, with `P(yes) >= 0.5` counted as correct. The equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `input` and the structured `tools_called` and asked three questions:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| Every tool call in `tools_called` has `input_parameters` that correctly address `input`. | Noul | 2 |
+| No tool call in `tools_called` has `input_parameters` that are missing, irrelevant to `input`, or wrong for `input`. | Noul | 1 |
+| How many of the tool calls in `tools_called` have `input_parameters` that correctly address `input`? (None of them → All of them) | Score | 1 |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

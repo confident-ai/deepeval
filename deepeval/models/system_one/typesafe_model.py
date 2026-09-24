@@ -14,6 +14,7 @@ from deepeval.models.system_one.constants import (
     DEFAULT_TYPESAFE_MODEL,
     TYPESAFE_MODELS_DATA,
 )
+from deepeval.models.system_one.limits import check_context_budget
 from deepeval.models.system_one.schema import (
     ChoiceAnswer,
     ChoiceQuestion,
@@ -74,10 +75,10 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
         state: Any,
         questions: Dict[str, SystemOneQuestion],
     ) -> Tuple[SystemOneAnswers, Optional[float]]:
+        sdk_questions = self._to_sdk_questions(questions)
+        check_context_budget(state, sdk_questions)
         client = self.load_model()
-        response = client.system_one(
-            state, self._to_sdk_questions(questions), model=self.name
-        )
+        response = client.system_one(state, sdk_questions, model=self.name)
         return self._from_sdk_response(response)
 
     @retry_typesafe
@@ -86,9 +87,11 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
         state: Any,
         questions: Dict[str, SystemOneQuestion],
     ) -> Tuple[SystemOneAnswers, Optional[float]]:
+        sdk_questions = self._to_sdk_questions(questions)
+        check_context_budget(state, sdk_questions)
         client = self.load_model(async_mode=True)
         response = await client.system_one(
-            state, self._to_sdk_questions(questions), model=self.name
+            state, sdk_questions, model=self.name
         )
         return self._from_sdk_response(response)
 

@@ -5,6 +5,7 @@ sidebar_label: Turn Contextual Precision
 languages: [python, typescript]
 ---
 <MetricTagsDisplayer
+  jev={true}
   multiTurn={true}
   chatbot={true}
   referenceFree={false}
@@ -23,6 +24,8 @@ To use the `TurnContextualPrecisionMetric`, you'll have to provide the following
 You must provide the `role`, `content`, and <Term py="retrieval_context" ts="retrievalContext"/> for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `TurnContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
@@ -96,7 +99,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `TurnContextualPrecisionMetric`:
+There are **TEN** optional parameters when creating a `TurnContextualPrecisionMetric`:
 
 </Case>
 
@@ -118,6 +121,8 @@ There are **SEVEN** optional parameters when creating a `TurnContextualPrecision
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="window_size" ts="windowSize"/>: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -155,6 +160,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `TurnContextualPrecisionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `TurnContextualPrecisionMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Turn Contextual Precision} = \frac{\sum \text{Turn Contextual Precision Scores}}{\text{Total Number of Assistant Turns}}" />
@@ -180,9 +193,21 @@ The final score is the average of all precision scores across the conversation. 
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), step 1 is answered by Jev, a System One model, instead: one yes/no question per node, with `P(yes) >= 0.5` counted as useful. The equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation, each turn carrying its `role`, `content` and ordered `retrieval_context`, plus the `expected_outcome`, and asked three questions:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| In every assistant turn in `turns` that has a `retrieval_context`, the documents useful for answering the preceding user message towards `expected_outcome` are listed before the documents that are not useful. | Noul | 2 |
+| In every assistant turn in `turns` that has a `retrieval_context`, the first document is useful for answering the preceding user message. | Noul | 1 |
+| Across the assistant turns in `turns`, how well are the `retrieval_context` documents ordered, with the ones useful for answering the preceding user message first? (Useful documents are all at the end → Useful documents are all first) | Score | 1 |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

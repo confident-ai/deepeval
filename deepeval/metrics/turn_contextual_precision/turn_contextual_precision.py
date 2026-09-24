@@ -11,8 +11,12 @@ from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneEvalSpec,
     SystemOneVerdictSpec,
     initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
     construct_verbose_logs,
     check_conversational_test_case_params,
     get_unit_interactions,
@@ -21,7 +25,8 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import MLLMImage
@@ -68,6 +73,10 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -79,9 +88,16 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
         ] = TurnContextualPrecisionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -123,6 +139,9 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 unit_interactions = get_unit_interactions(test_case.turns)
                 turns_windows: List[List[Turn]] = [
                     list(itertools.chain(*window))
@@ -178,6 +197,9 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             unit_interactions = get_unit_interactions(test_case.turns)
             turns_windows: List[List[Turn]] = [
                 list(itertools.chain(*window))
@@ -363,6 +385,22 @@ class TurnContextualPrecisionMetric(BaseConversationalMetric):
             items=retrieval_context,
             item_key="node",
             state={"user_message": input, "assistant_output": expected_outcome},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role`, `content` and ordered
+        `retrieval_context`, plus the `expected_outcome`; see
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
         )
 
     async def _a_get_interaction_score_and_reason(

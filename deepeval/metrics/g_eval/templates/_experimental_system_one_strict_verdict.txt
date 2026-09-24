@@ -1,1 +1,0 @@
-Does `test_case` follow EVERY one of the `evaluation_steps` completely, with no shortcomings?

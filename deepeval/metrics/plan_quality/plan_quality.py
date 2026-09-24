@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Type
+from typing import Dict, Optional, List, Union, Type
 
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -9,12 +9,23 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    compact_trace,
+    format_decision_reason,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_score,
+    a_system_one_score,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.schema import Task
 from deepeval.metrics.plan_quality.schema import (
@@ -25,6 +36,14 @@ from deepeval.templates import make_template_class
 
 
 PlanQualityTemplate = make_template_class("PlanQualityMetric")
+
+PLAN_QUALITY_LEVELS = [
+    "Inadequate plan",
+    "Weak plan",
+    "Adequate but flawed plan",
+    "Good plan",
+    "Excellent plan",
+]
 
 
 class PlanQualityMetric(BaseMetric):
@@ -38,6 +57,10 @@ class PlanQualityMetric(BaseMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -46,8 +69,16 @@ class PlanQualityMetric(BaseMetric):
         evaluation_template: Type[PlanQualityTemplate] = PlanQualityTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -88,6 +119,9 @@ class PlanQualityMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 task = self._extract_task_from_trace(test_case)
                 agent_plan = self._extract_plan_from_trace(test_case)
                 if len(agent_plan.plan) == 0:
@@ -143,6 +177,9 @@ class PlanQualityMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             task = await self._a_extract_task_from_trace(test_case)
             agent_plan = await self._a_extract_plan_from_trace(test_case)
             if len(agent_plan.plan) == 0:
@@ -173,6 +210,14 @@ class PlanQualityMetric(BaseMetric):
             return self.score
 
     def _get_plan_quality_score(self, task, plan, *, multimodal: bool):
+        value = system_one_score(
+            self, self._system_one_score_spec(task, plan, multimodal)
+        )
+        if value is not None:
+            return PlanQualityScore(
+                score=value,
+                reason=format_decision_reason(self, "plan quality", value),
+            )
         prompt = self._get_prompt(
             "evaluate_plan_quality",
             template_class="PlanQualityMetric",
@@ -189,6 +234,14 @@ class PlanQualityMetric(BaseMetric):
         )
 
     async def _a_get_plan_quality_score(self, task, plan, *, multimodal: bool):
+        value = await a_system_one_score(
+            self, self._system_one_score_spec(task, plan, multimodal)
+        )
+        if value is not None:
+            return PlanQualityScore(
+                score=value,
+                reason=format_decision_reason(self, "plan quality", value),
+            )
         prompt = self._get_prompt(
             "evaluate_plan_quality",
             template_class="PlanQualityMetric",
@@ -268,6 +321,53 @@ class PlanQualityMetric(BaseMetric):
             schema_cls=Task,
             extract_schema=lambda s: s.task,
             extract_json=lambda data: data["task"],
+        )
+
+    def _system_one_score_spec(
+        self, task, plan, multimodal: bool
+    ) -> Optional[SystemOneScoreSpec]:
+        if multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt("_experimental_system_one_score"),
+            levels=PLAN_QUALITY_LEVELS,
+            state={
+                "task": task,
+                "plan": plan,
+            },
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        the trace (or `input`, `actual_output` and `tools_called` when there
+        is none); every question is not applicable when the agent states no
+        plan, which scores 1 like the LLM chain; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        has_trace = isinstance(test_case._trace_dict, Dict)
+        return SystemOneEvalSpec(
+            evaluation_params=(
+                []
+                if has_trace
+                else [
+                    SingleTurnParams.INPUT,
+                    SingleTurnParams.ACTUAL_OUTPUT,
+                    SingleTurnParams.TOOLS_CALLED,
+                ]
+            ),
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions",
+                    has_trace=has_trace,
+                )
+            ),
+            extra_state={
+                "trace": (
+                    compact_trace(test_case._trace_dict) if has_trace else None
+                ),
+            },
         )
 
     @property

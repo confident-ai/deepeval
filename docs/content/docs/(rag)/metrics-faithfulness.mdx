@@ -4,7 +4,7 @@ title: Faithfulness
 sidebar_label: Faithfulness
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer singleTurn={true} rag={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} rag={true} referenceless={true} />
 
 The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the <Term py="actual_output" ts="actualOutput"/> factually aligns with the contents of your <Term py="retrieval_context" ts="retrievalContext"/>. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -23,6 +23,8 @@ To use the `FaithfulnessMetric`, you'll have to provide the following arguments 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `FaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
 
@@ -179,7 +181,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **NINE** optional parameters when creating a `FaithfulnessMetric`:
+There are **TWELVE** optional parameters when creating a `FaithfulnessMetric`:
 
 </Case>
 
@@ -206,6 +208,8 @@ There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, will **not** count claims that are ambiguous as faithful. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: of type <Term py="FaithfulnessTemplate" ts="FaithfulnessTemplateOverride"/>, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s default prompts.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### Within components
 
@@ -309,6 +313,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `FaithfulnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `FaithfulnessMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Faithfulness} = \frac{\text{Number of Truthful Claims}}{\text{Total Number of Claims}}" />
@@ -323,9 +335,21 @@ Sometimes, you may want to only consider the most important factual truths in th
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the classification step is answered by Jev, a System One model, instead: one yes/no question per claim, with `P(yes) > 0.65` counted as truthful, `< 0.35` as contradictory, and anything in between as borderline. The extraction, the equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `actual_output` and `retrieval_context` and asked three questions:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| Every factual claim in `actual_output` is supported by the facts in `retrieval_context`. | Noul | 2 |
+| No claim in `actual_output` contradicts the facts in `retrieval_context`. | Noul | 1 |
+| How much of `actual_output` is grounded in the facts in `retrieval_context`? (Fabricated → Fully grounded) | Score | 1 |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

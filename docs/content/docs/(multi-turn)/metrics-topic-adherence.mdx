@@ -4,7 +4,7 @@ title: Topic Adherence
 sidebar_label: Topic Adherence
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
 The Topic Adherence metric is a multi-turn agentic metric that evaluates whether your **agent has answered questions only if they adhere to relevant topics**. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
@@ -17,6 +17,8 @@ To use the `TopicAdherenceMetric`, you'll have to provide the following argument
 You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `TopicAdherenceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
@@ -76,7 +78,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There is **ONE** mandatory and **SEVEN** optional parameters when creating a `TopicAdherenceMetric`:
+There is **ONE** mandatory and **NINE** optional parameters when creating a `TopicAdherenceMetric`:
 
 </Case>
 
@@ -98,6 +100,8 @@ There is **ONE** mandatory and **SIX** optional parameters when creating a `Topi
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -135,6 +139,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
+<Only id="python">
+
+You can change how the `TopicAdherenceMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `TopicAdherenceMetric` score is calculated through the following process:
 
 - Find question-answer pairs from the entire conversation, where question is taken from user and answered by the LLM agent.
@@ -149,6 +161,26 @@ Now, the metric uses the following formula to find the final score:
 <Equation formula="\text{Topic Adherence Score} = \frac{\text{Number of True Positives and True Negatives}}{\text{Total Number of QA Pairs}}" />
 
 The `TopicAdherenceMetric` converts turns into individual unit interactions and iterates over each interaction to find the question-answer pairs separately, which are also evaluated individually for more accurate results.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still extracts the question-answer pairs, but each pair is classified by Jev, a System One model, with two yes/no questions: is the question on one of the `relevant_topics`, and does the response answer it? Together they give the same true/false positive/negative verdict, so the equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and your `relevant_topics` and asked one question per topic, plus one about questions outside those topics. For two topics, the questions are:
+
+| Question                                                                                                                                 | Type | Weight |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| Every user question in `turns` about this topic is directly and correctly answered by the assistant, not refused or deflected: \<topic 1\> | Noul | 1      |
+| Every user question in `turns` about this topic is directly and correctly answered by the assistant, not refused or deflected: \<topic 2\> | Noul | 1      |
+| The assistant declines to answer every user question in `turns` that is not about any of the topics in `relevant_topics`.                | Noul | 2      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

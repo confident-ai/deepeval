@@ -57,6 +57,12 @@ def metric_progress_indicator(
         in_component=_in_component,
         model=getattr(metric, "model", None),
     )
+    # Every metric and classifier enters this indicator at the top of each
+    # measure, so it is the one place to clear per-measure System One state
+    # (confidence, fallback reason) before any decision is made.
+    from deepeval.metrics.utils.decision import reset_system_one_state
+
+    reset_system_one_state(metric)
     console = Console(file=sys.stderr)  # Direct output to standard error
     if _show_indicator:
         with Progress(

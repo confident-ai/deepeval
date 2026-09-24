@@ -4,7 +4,7 @@ title: Prompt Alignment
 sidebar_label: Prompt Alignment
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer singleTurn={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} referenceless={true} />
 
 The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate <Term py="actual_output" ts="actualOutput"/>s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -27,6 +27,8 @@ To use the `PromptAlignmentMetric`, you'll have to provide the following argumen
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `PromptAlignmentMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
@@ -92,7 +94,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **ONE** mandatory and **SEVEN** optional parameters when creating an `PromptAlignmentMetric`:
+There are **ONE** mandatory and **NINE** optional parameters when creating an `PromptAlignmentMetric`:
 
 </Case>
 
@@ -114,6 +116,8 @@ There are **ONE** mandatory and **SIX** optional parameters when creating an `Pr
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### Within components
 
@@ -219,6 +223,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `PromptAlignmentMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `PromptAlignmentMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Prompt Alignment} = \frac{\text{Number of Instructions Followed}}{\text{Total Number of Instructions}}" />
@@ -233,9 +245,21 @@ By providing an initial list of <Term py="prompt_instructions" ts="promptInstruc
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the classification is answered by Jev, a System One model, instead: one yes/no question per instruction, with `P(yes) >= 0.5` counted as followed. The equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `input` and `actual_output` and asked one question per entry in `prompt_instructions`, so the score is the share of instructions followed, weighted by how confidently each holds:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| `actual_output` completely follows this prompt instruction when responding to `input`: *&lt;instruction&gt;* | Noul | 1 |
+
+One row per instruction; each instruction's text is written into its question.
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

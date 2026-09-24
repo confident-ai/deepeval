@@ -4,7 +4,7 @@ title: MCP Task Completion
 sidebar_label: MCP Task Completion
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} multiTurn={true} chatbot={true} referenceless={true} />
 
 The MCP task completion metric is a conversational metric that uses LLM-as-a-judge to evaluate how effectively an **MCP based LLM agent accomplishes a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -20,6 +20,8 @@ You will also need to provide <Term py="mcp_tools_called" ts="mcpToolsCalled"/>,
 You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `MCPTaskCompletionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of MCP based agents.
 
@@ -75,7 +77,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **SEVEN** optional parameters when creating a `MCPTaskCompletionMetric`:
+There are **NINE** optional parameters when creating a `MCPTaskCompletionMetric`:
 
 </Case>
 
@@ -96,6 +98,8 @@ There are **SIX** optional parameters when creating a `MCPTaskCompletionMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -133,11 +137,39 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
+<Only id="python">
+
+You can change how the `MCPTaskCompletionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `MCPTaskCompletionMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{MCP Task Completeness} = \frac{\text{Number of Tasks Satisfied in Each Interaction}}{\text{Total Number of Interactions}}" />
 
 The `MCPTaskCompletionMetric` converts turns into individual unit interactions and iterates over each interaction to evaluate whether the agent finished the task given by user for that interaction using an LLM.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still splits the conversation into tasks, but each task's completion score is rated by Jev, a System One model, on a four-level scale mapped onto 0 to 1. The equation and the LLM-written final reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation (with the MCP calls in each turn) and asked three questions:
+
+| Question                                                                                                                                                                                                               | Type  | Weight |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every task a user message in `turns` asks for is completed by the assistant, as the user sees it in the assistant's replies (tool calls and their results are invisible to the user unless the assistant relays them). | Noul  | 2      |
+| Everything the assistant tells the user it did or found in `turns` is backed by the MCP calls and results in `turns`; it does not claim results it never obtained.                                                     | Noul  | 1      |
+| Across `turns`, how completely and correctly, as the user sees it, does the assistant complete the tasks the user asks for? (Not completed → Fully completed)                                                          | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

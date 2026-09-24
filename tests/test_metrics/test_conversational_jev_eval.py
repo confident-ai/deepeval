@@ -1,15 +1,11 @@
 """ConversationalJevEval: the multi-turn counterpart of JevEval, against a fake
-System One model."""
-
-import re
-from typing import Any, Dict, Optional, Tuple
+System One model. No LLM is involved anywhere."""
 
 import pytest
 
 from deepeval.metrics import ConversationalJevEval
 from deepeval.metrics.jev_eval import Choice, Noul, Score
 from deepeval.metrics.jev_eval.utils import construct_multi_turn_state
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.models.system_one.schema import (
     ChoiceAnswer,
     NoulAnswer,
@@ -17,49 +13,7 @@ from deepeval.models.system_one.schema import (
     SystemOneAnswers,
 )
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
-
-
-class FakeSystemOneModel(DeepEvalBaseSystemOneModel):
-    def __init__(self, answers: SystemOneAnswers):
-        super().__init__("fake-jev")
-        self.answers = answers
-        self.calls = []
-
-    def load_model(self, *args, **kwargs):
-        return None
-
-    def get_model_name(self):
-        return "fake-jev"
-
-    def decide(
-        self, state: Any, questions: Dict[str, Any]
-    ) -> Tuple[SystemOneAnswers, Optional[float]]:
-        self.calls.append((state, questions))
-        return self.answers, 0.0
-
-    async def a_decide(self, state, questions):
-        return self.decide(state, questions)
-
-
-class CannedLLM(DeepEvalBaseLLM):
-    def __init__(self, reply: str):
-        super().__init__("canned-llm")
-        self.reply = reply
-        self.prompts = []
-
-    def load_model(self, *args, **kwargs):
-        return None
-
-    def get_model_name(self):
-        return "canned-llm"
-
-    def generate(self, prompt, *args, **kwargs):
-        self.prompts.append(prompt)
-        return self.reply
-
-    async def a_generate(self, prompt, *args, **kwargs):
-        return self.generate(prompt)
-
+from tests.test_metrics.system_one_fakes import FakeSystemOneModel
 
 TEST_CASE = ConversationalTestCase(
     scenario="A customer asks for a refund on a late order.",
@@ -174,22 +128,29 @@ def test_measure_end_to_end():
     assert len(metric.score_breakdown) == 3
     assert metric.system_one_model.calls[0][0]["turns"][0]["role"] == "user"
     assert metric.__name__ == "Refund Handling [Conversational JevEval]"
+    # Least decisive: the Choice at 0.65 (the Noul at 0.9 derives to 0.8).
+    assert metric.confidence == pytest.approx(0.65)
+    assert metric.evaluation_model == "fake-jev"
 
 
-def test_reason_prompt_cites_turns_and_hides_numbers():
-    llm = CannedLLM('{"reason": "ok"}')
-    metric = make_metric(include_reason=True, model=llm)
+def test_reason_is_deterministic_and_cites_every_question():
+    metric = make_metric(include_reason=True)
     metric.measure(TEST_CASE)
-    prompt = llm.prompts[0]
+    reason = metric.reason
+    assert reason.startswith("Decided by fake-jev, minimum confidence 0.65.")
     for q in QUESTIONS:
-        assert q.text in prompt
-    assert "clearly holds" in prompt
-    assert '"Partly settled"' in prompt
-    assert '"ignored_it"' in prompt
-    assert "What is your order number?" in prompt
-    assert TEST_CASE.scenario in prompt
-    assert not re.search(r"\b0\.\d+", prompt)
-    assert "%" not in prompt
+        assert q.text in reason
+    assert "clearly holds (P(yes)=0.90, confidence=0.80)" in reason
+    assert '"Partly settled"' in reason
+    assert '"ignored_it" (P=0.65, confidence=0.65)' in reason
+    assert reason.endswith(
+        "Score: 0.54 (weighted mean of 3 applicable questions)."
+    )
+
+
+def test_model_argument_is_gone():
+    with pytest.raises(TypeError):
+        make_metric(model="gpt-4o")
 
 
 def test_missing_scenario_raises():

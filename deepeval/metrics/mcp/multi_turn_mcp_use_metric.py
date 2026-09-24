@@ -1,21 +1,32 @@
 import asyncio
-from typing import Optional, Union, List
+from typing import Any, Dict, Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     get_unit_interactions,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    format_decision_reason,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_score,
+    a_system_one_score,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.utils import (
     available_mcp_servers_block,
+    mcp_servers_state,
     task_steps_taken_text,
     turn_mcp_interaction_text,
 )
@@ -23,6 +34,19 @@ from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore, Reason
 from deepeval.errors import MissingTestCaseParamsError
 
 _MCP_TASK_COMPLETION_TEMPLATES = "MCPTaskCompletionMetric"
+
+PRIMITIVE_USAGE_LEVELS = [
+    "Wrong primitives",
+    "Poor choice",
+    "Reasonable choice",
+    "Best choice",
+]
+ARGUMENT_CORRECTNESS_LEVELS = [
+    "Incorrect",
+    "Mostly incorrect",
+    "Mostly correct",
+    "Fully correct",
+]
 
 
 class MultiTurnMCPUseMetric(BaseConversationalMetric):
@@ -35,6 +59,10 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -42,8 +70,16 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         flaky: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -85,6 +121,9 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
                 primitives_accuracy_scores = [
@@ -149,6 +188,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
 
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
@@ -193,6 +234,14 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     def _get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
+        value = system_one_score(
+            self, self._system_one_primitives_spec(task, test_case)
+        )
+        if value is not None:
+            return ToolScore(
+                score=value,
+                reason=format_decision_reason(self, "primitive usage", value),
+            )
         available_tools, _, _ = available_mcp_servers_block(
             test_case.mcp_servers
         )
@@ -215,6 +264,14 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     async def _a_get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
+        value = await a_system_one_score(
+            self, self._system_one_primitives_spec(task, test_case)
+        )
+        if value is not None:
+            return ToolScore(
+                score=value,
+                reason=format_decision_reason(self, "primitive usage", value),
+            )
         available_tools, _, _ = available_mcp_servers_block(
             test_case.mcp_servers
         )
@@ -237,6 +294,16 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     def _get_args_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
+        value = system_one_score(
+            self, self._system_one_args_spec(task, test_case)
+        )
+        if value is not None:
+            return ArgsScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         (
             available_tools,
             available_resources,
@@ -263,6 +330,16 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     async def _a_get_args_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
+        value = await a_system_one_score(
+            self, self._system_one_args_spec(task, test_case)
+        )
+        if value is not None:
+            return ArgsScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         (
             available_tools,
             available_resources,
@@ -284,6 +361,71 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             schema_cls=ArgsScore,
             extract_schema=lambda s: s,
             extract_json=lambda data: ArgsScore(**data),
+        )
+
+    def _system_one_task_state(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> Dict[str, Any]:
+        return {
+            "task": task.task,
+            "steps_taken": task.steps_taken,
+            "mcp_servers": mcp_servers_state(test_case.mcp_servers),
+        }
+
+    def _system_one_primitives_spec(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneScoreSpec]:
+        if test_case.multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_mcp_use_primitive_score",
+                template_class=_MCP_TASK_COMPLETION_TEMPLATES,
+            ),
+            levels=PRIMITIVE_USAGE_LEVELS,
+            state=self._system_one_task_state(task, test_case),
+        )
+
+    def _system_one_args_spec(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneScoreSpec]:
+        if test_case.multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_mcp_use_args_score",
+                template_class=_MCP_TASK_COMPLETION_TEMPLATES,
+            ),
+            levels=ARGUMENT_CORRECTNESS_LEVELS,
+            state=self._system_one_task_state(task, test_case),
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role`, `content` and the MCP primitives it
+        called, alongside the `mcp_servers` available; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                MultiTurnParams.ROLE,
+                MultiTurnParams.CONTENT,
+                MultiTurnParams.MCP_TOOLS,
+                MultiTurnParams.MCP_RESOURCES,
+                MultiTurnParams.MCP_PROMPTS,
+                MultiTurnParams.TOOLS_CALLED,
+            ],
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_mcp_use_questions",
+                    template_class=_MCP_TASK_COMPLETION_TEMPLATES,
+                )
+            ),
+            extra_state={
+                "mcp_servers": mcp_servers_state(test_case.mcp_servers)
+            },
         )
 
     def _get_tasks(self, unit_interactions: List) -> List[Task]:

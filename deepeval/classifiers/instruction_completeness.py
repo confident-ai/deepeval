@@ -2,7 +2,8 @@ from typing import List, Optional, Type, Union
 
 from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier import Classifier, ClassifierTemplate
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import ClassifierEvalModeName
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 
 DEFAULT_LABELS: List[Label] = [
     Label(
@@ -26,6 +27,10 @@ class InstructionCompletenessClassifier(Classifier):
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[ClassifierEvalModeName] = None,
         include_reason: bool = True,
         allow_none: bool = False,
         async_mode: bool = True,
@@ -35,6 +40,8 @@ class InstructionCompletenessClassifier(Classifier):
             name="instruction_completeness",
             labels=list(DEFAULT_LABELS),
             model=model,
+            system_one_model=system_one_model,
+            eval_mode=eval_mode,
             include_reason=include_reason,
             allow_none=allow_none,
             async_mode=async_mode,

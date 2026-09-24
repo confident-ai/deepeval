@@ -167,7 +167,7 @@ The first question has twice the weight because hallucinating an unsupported fac
 
 ## Configuring JevEval
 
-Beyond the questions themselves, three settings shape how a JevEval metric behaves: what it records, whether an LLM explains the result, and whether partial credit is allowed.
+Beyond the questions themselves, three settings shape how a JevEval metric behaves: what it records, whether it explains the result, and whether partial credit is allowed.
 
 ### Debug score breakdown
 
@@ -183,13 +183,13 @@ For each question, you can inspect:
 
 This makes the final score traceable. If the Tool Faithfulness metric fails, you can see whether the response invented information, copied a returned value incorrectly, or landed between two grounding levels. You are debugging an evaluation specification, not reverse-engineering a generated number.
 
-### Optional LLM explainability
+### Deterministic explainability
 
-By default, JevEval can ask an evaluation LLM to write a human-readable reason grounded in the test case and the outcomes. The LLM explains the decision; it does not make it.
+By default, JevEval attaches a `reason` built from the outcomes themselves: one line per question with its result in words, the probability and confidence behind it, and a closing line showing how the score follows. Nothing is generated. The same answers always produce the same reason, and there is no LLM anywhere in the metric, so there is no `model` argument to configure.
 
-Set `include_reason=False`, as in the example above, and JevEval makes no LLM call at all. The metric becomes one Jev request plus arithmetic, while still returning `score`, `success`, `confidence`, and `score_breakdown`.
+Set `include_reason=False`, as in the example above, and you skip the reason text; the metric still returns `score`, `success`, `confidence`, and `score_breakdown`.
 
-This boundary matters. Explanations are language tasks, so an LLM is useful there. Passing or failing a regression test is a decision task, so the explanation cannot change the score.
+This boundary matters. A reason that is assembled from the decision cannot drift from it, and passing or failing a regression test stays a decision task with no generative step in the loop.
 
 ### Enforce strict mode
 
@@ -235,6 +235,6 @@ Custom evals should tell you more than whether an LLM liked a response. They sho
 
 That is what JevEval is for.
 
-You write the evaluation specification as bounded questions. Jev returns calibrated decisions. DeepEval turns them into a traceable score with fixed math. And when you need an explanation, an LLM explains the result without getting a vote.
+You write the evaluation specification as bounded questions. Jev returns calibrated decisions. DeepEval turns them into a traceable score with fixed math, and the explanation is read straight off those decisions, so nothing generative ever gets a vote.
 
 Jev-as-a-Judge is not about replacing language models everywhere. It is about giving language generation fewer decisions it was never designed to make.

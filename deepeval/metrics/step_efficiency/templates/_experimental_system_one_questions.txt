@@ -1,0 +1,17 @@
+{% if has_trace %}{% set run = "the agent run in `trace`" %}{% set goal = "the task the user gave in the root span's input of `trace`" %}{% else %}{% set run = "`actual_output` (with the tools in `tools_called`)" %}{% set goal = "the task the user asked for in `input`" %}{% endif %}
+[
+  {
+    "type": "noul",
+    "statement": {{ ("Every step of " ~ run ~ " (each tool call, LLM call and retrieval) was strictly necessary for " ~ goal ~ "; none was redundant, repeated, speculative or done only to enrich the answer.") | tojson }},
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": {{ (run ~ " takes the most direct path to " ~ goal ~ ", with no detours, re-queries or loops that a shorter sequence of actions would have avoided.") | tojson }}
+  },
+  {
+    "type": "score",
+    "question": {{ ("Judging only the number and directness of its steps, not the quality of the result, how efficiently does " ~ run ~ " carry out " ~ goal ~ "?") | tojson }},
+    "levels": ["Highly inefficient", "Low efficiency", "Moderate efficiency", "Strong efficiency", "Perfectly efficient"]
+  }
+]

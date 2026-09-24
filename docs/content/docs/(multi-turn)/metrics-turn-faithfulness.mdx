@@ -5,6 +5,7 @@ sidebar_label: Turn Faithfulness
 languages: [python, typescript]
 ---
 <MetricTagsDisplayer
+  jev={true}
   multiTurn={true}
   chatbot={true}
   referenceFree={false}
@@ -22,6 +23,8 @@ To use the `TurnFaithfulnessMetric`, you'll have to provide the following argume
 You must provide the `role`, `content`, and <Term py="retrieval_context" ts="retrievalContext"/> for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `TurnFaithfulnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
@@ -81,7 +84,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **TEN** optional parameters when creating a `TurnFaithfulnessMetric`:
+There are **TWELVE** optional parameters when creating a `TurnFaithfulnessMetric`:
 
 </Case>
 
@@ -105,6 +108,8 @@ There are **NINE** optional parameters when creating a `TurnFaithfulnessMetric`:
 - [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, penalizes claims that cannot be verified as true or false. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="window_size" ts="windowSize"/>: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -142,6 +147,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `TurnFaithfulnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `TurnFaithfulnessMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Turn Faithfulness} = \frac{\sum \text{Turn Faithfulness Scores}}{\text{Total Number of Assistant Turns}}" />
@@ -159,9 +172,21 @@ The final score is the average of all interaction faithfulness scores across the
 
 <Only id="python">
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the verdicts decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), step 3 is answered by Jev, a System One model, instead: one yes/no question per claim, with `P(yes) > 0.65` counted as truthful, `< 0.35` as contradictory, and anything in between as borderline. The extraction, the equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation, each turn carrying its `role`, `content` and `retrieval_context`, and asked three questions:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| Every factual claim made in an assistant turn in `turns` is supported by the `retrieval_context` of that turn or of an earlier assistant turn. | Noul | 2 |
+| No assistant turn in `turns` contradicts the `retrieval_context` available to it. | Noul | 1 |
+| Across `turns`, how much of what the assistant states is grounded in the `retrieval_context` available to it? (Fabricated → Fully grounded) | Score | 1 |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 </Only>
 

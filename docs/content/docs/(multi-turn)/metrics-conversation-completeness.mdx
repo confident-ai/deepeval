@@ -4,7 +4,7 @@ title: Conversation Completeness
 sidebar_label: Conversation Completeness
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} multiTurn={true} chatbot={true} referenceless={true} />
 
 The conversation completeness metric is a conversational metric that determines whether your LLM chatbot is able to complete an end-to-end conversation by satisfying user needs **throughout a conversation**.
 
@@ -21,6 +21,8 @@ To use the `ConversationCompletenessMetric`, you'll have to provide the followin
 You must provide the `role` and `content` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `ConversationCompletenessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
@@ -74,7 +76,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There are **SEVEN** optional parameters when creating a `ConversationCompletenessMetric`:
+There are **NINE** optional parameters when creating a `ConversationCompletenessMetric`:
 
 </Case>
 
@@ -95,6 +97,8 @@ There are **SIX** optional parameters when creating a `ConversationCompletenessM
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -132,6 +136,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `ConversationCompletenessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `ConversationCompletenessMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Conversation Completeness} = \frac{\text{Number of Satisfied User Intentions in Conversation}}{\text{Total Number of User Intentions in Conversation}}" />
@@ -139,6 +151,26 @@ The `ConversationCompletenessMetric` score is calculated according to the follow
 The `ConversationCompletenessMetric` assumes that a conversion is only complete if user intentions, such as asking for help to an LLM chatbot, are met by the LLM chatbot.
 
 Hence, the `ConversationCompletenessMetric` first uses an LLM to extract a list of high level user intentions found in `turns` (in `"user"` roles), before using the same LLM to determine whether each intention was met and/or satisfied throughout the conversation by the `"assistant"`.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still extracts the user intentions, but whether each one was satisfied is answered by Jev, a System One model: one yes/no question per intention, with `P(yes) >= 0.5` counted as satisfied. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and asked three questions:
+
+| Question                                                                                                          | Type  | Weight |
+| ----------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every intention the user expresses in `turns` is satisfied by the assistant turns by the end of the conversation. | Noul  | 2      |
+| No user request in `turns` is ignored, refused without cause or left only partly addressed by the assistant.      | Noul  | 1      |
+| Across `turns`, how many of the user's intentions does the assistant satisfy? (None satisfied → All satisfied)    | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

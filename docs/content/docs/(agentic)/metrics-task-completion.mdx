@@ -4,7 +4,7 @@ title: Task Completion
 sidebar_label: Task Completion
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer singleTurn={true} agent={true} trajectory={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} agent={true} trajectory={true} referenceless={true} />
 
 The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -13,6 +13,8 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 :::
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
@@ -106,7 +108,7 @@ for await (const golden of dataset.evalsIterator({ metrics: [taskCompletion] }))
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `TaskCompletionMetric`:
+There are **TEN** optional parameters when creating a `TaskCompletionMetric`:
 
 </Case>
 
@@ -128,10 +130,20 @@ There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 To learn more about how the <Term py="evals_iterator" ts="evalsIterator"/> work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
 ## How Is It Calculated?
+
+<Only id="python">
+
+You can change how the `TaskCompletionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
 
 The `TaskCompletionMetric` score is calculated according to the following equation:
 
@@ -139,6 +151,26 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 
 - **Task** and **Outcome** are extracted from the trace (or test case for end-to-end) using an LLM.
 - The **Alignment Score** measures how well the outcome aligns with the extracted (or user-provided) task, as judged by an LLM.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still extracts the task and outcome, but the alignment score is given by Jev, a System One model, as a rating from "Not achieved" to "Fully achieved" mapped onto 0 to 1. The reason states Jev's score and confidence. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the trace (only each span's name, type, inputs, outputs and tool calls), or the raw `input`, `actual_output` and `tools_called` when there is no trace, plus the `task` if you provided one, and asked three questions:
+
+| Question                                                                                                                                                                               | Type  | Weight |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| The agent run in `trace` fully accomplishes the user's task (the root span's input in `trace`).                                                                                        | Noul  | 2      |
+| The final outcome of the agent run in `trace` is what the user's task (the root span's input in `trace`) asks for: not a partial result, a different result, or only a plan to get it. | Noul  | 1      |
+| How completely does the agent run in `trace` accomplish the user's task (the root span's input in `trace`)? (Not achieved → Fully achieved)                                            | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

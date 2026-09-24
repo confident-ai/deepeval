@@ -4,7 +4,7 @@ title: Tool Use
 sidebar_label: Tool Use
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
 The Tool Use metric is a multi-turn agentic metric that evaluates your LLM agent's **tool selection and argument generation** capabilities. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
@@ -17,6 +17,8 @@ To use the `ToolUseMetric`, you'll have to provide the following arguments when 
 You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `ToolUseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
@@ -79,7 +81,7 @@ await evaluate([convoTestCase], [metric]);
 
 <Case id="python">
 
-There is **ONE** mandatory and **SEVEN** optional parameters when creating a `ToolUseMetric`:
+There is **ONE** mandatory and **NINE** optional parameters when creating a `ToolUseMetric`:
 
 </Case>
 
@@ -101,6 +103,8 @@ There is **ONE** mandatory and **SIX** optional parameters when creating a `Tool
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -138,6 +142,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
+<Only id="python">
+
+You can change how the `ToolUseMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `ToolUseMetric` score is determined through the following process:
 
 1. Compute the **Tool Selection Score** for each unit interaction.
@@ -147,6 +159,29 @@ The `ToolUseMetric` score is determined through the following process:
 
 - The **Tool Selection Score** evaluates whether the agent chose the most appropriate tool for the task among all the available tools.
 - The **Argument Correctness Score** assesses whether the arguments provided in the tool call were accurate and suitable for the task. This score is only considered when a tool call has been made.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the tool selection and argument correctness scores of each interaction are rated by Jev, a System One model, on a five-level scale mapped onto 0 to 1, with a short line stating Jev's score and confidence as each score's reason. The equation and the LLM-written final reasons are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation (with the tools called in each turn) and your `available_tools` and asked two questions:
+
+| Question                                                                                                                                                                                                                                                                               | Type | Weight |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ------ |
+| In every assistant turn of `turns`, the tools in `tools_called` are the most suitable of `available_tools` for what the user asked: no call is unnecessary, redundant or unrelated to the user's goal, and no better-suited tool in `available_tools` was ignored when one was needed. | Noul | 1      |
+| Every tool call in the `tools_called` of the assistant turns in `turns` passes arguments that are correct, specific and complete for what the user asked and for that tool's definition in `available_tools`, with no missing, malformed, generic or unrelated argument.               | Noul | 1      |
+
+:::note
+Under `system_one` the two questions are averaged, whereas the LLM chain takes the lower of the tool selection and argument correctness scores.
+:::
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

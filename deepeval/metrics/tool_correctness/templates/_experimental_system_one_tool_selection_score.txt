@@ -1,0 +1,1 @@
+Judging only which tools were chosen (not how well they were used or whether the output was correct), how well do the tools in `tools_called` match what `input` asks for, given the purpose of each tool in `available_tools`? Penalise better-suited tools that were ignored, unnecessary extra tools, and tools poorly matched to their purpose.

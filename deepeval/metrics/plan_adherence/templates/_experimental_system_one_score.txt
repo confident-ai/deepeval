@@ -1,0 +1,1 @@
+How strictly do the actions in `trace` follow `plan`, the plan the agent declared for `task`? Every planned step must appear in `trace` in the same order, and any major action not in `plan` counts against it. Judge only obedience to `plan`, not whether the task succeeded.

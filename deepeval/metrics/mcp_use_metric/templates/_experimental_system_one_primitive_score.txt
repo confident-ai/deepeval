@@ -1,0 +1,1 @@
+Judging only which MCP tools, resources and prompts were chosen (not whether they worked, and not their arguments), how well do the primitives in `primitives_used` fit what `input` asked for, given that `mcp_servers` lists every primitive the agent could have used? Penalise missing a clearly better primitive and unnecessary or irrelevant calls.

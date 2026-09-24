@@ -1,0 +1,20 @@
+{% if has_trace %}{% set run = "the agent run in `trace`" %}{% set source = "`trace` (in its reasoning, thoughts or an explicit plan)" %}{% else %}{% set run = "`actual_output` (with the tools in `tools_called`)" %}{% set source = "`actual_output`" %}{% endif %}
+{% set no_plan = "The agent states no plan" %}
+[
+  {
+    "type": "choice",
+    "question": {{ ("Does " ~ run ~ " carry out every step of the plan the agent states in " ~ source ~ ", explicitly and in the stated order?") | tojson }},
+    "options": {"Yes, every planned step is carried out in order": 1.0, "No, a planned step is missing, only implied or out of order": 0.0, {{ no_plan | tojson }}: null},
+    "weight": 2
+  },
+  {
+    "type": "choice",
+    "question": {{ ("Does " ~ run ~ " take any major action, tool call or reasoning step that is not part of the plan the agent states in " ~ source ~ "?") | tojson }},
+    "options": {"No, it does only what the plan says": 1.0, "Yes, it takes actions outside the plan": 0.0, {{ no_plan | tojson }}: null}
+  },
+  {
+    "type": "choice",
+    "question": {{ ("How strictly do the actions of " ~ run ~ " follow the plan the agent states in " ~ source ~ "?") | tojson }},
+    "options": {"No adherence": 0.0, "Weak adherence": 0.25, "Partial adherence": 0.5, "Strong adherence": 0.75, "Perfect adherence": 1.0, {{ no_plan | tojson }}: null}
+  }
+]

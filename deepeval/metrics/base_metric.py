@@ -17,6 +17,8 @@ from deepeval.templates.resolver import (
 from deepeval.templates.template_class import filter_template_kwargs
 
 if TYPE_CHECKING:
+    from deepeval.config.eval_mode import EvalMode
+    from deepeval.metrics.utils.system_one import SystemOneEvalSpec
     from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 
 
@@ -128,7 +130,18 @@ class BaseMetric(PromptMixin):
     requires_trace: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    # System One (Jev). `eval_mode` picks who decides (see
+    # `deepeval.config.eval_mode`); `confidence` is the least decisive Jev
+    # answer that fed this measure, `None` when no Jev call was made;
+    # `system_one_fallback_reason` records why a `hybrid` decision was handed
+    # to the LLM because its Jev call failed.
+    eval_mode: Optional[EvalMode] = None
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
+    confidence: Optional[float] = None
+    system_one_fallback_reason: Optional[str] = None
+    # Per-measure System One bookkeeping; reset by `reset_system_one_state`.
+    _system_one_outcomes: Optional[list] = None
+    _system_one_disabled: bool = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -139,6 +152,16 @@ class BaseMetric(PromptMixin):
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
         raise NotImplementedError
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """How this metric runs as one System One request under
+        `system_one` eval mode: the test case fields to send and the
+        questions to ask. `None` (the default) means the metric has no
+        whole-chain form and runs its LLM chain in every mode. See
+        `deepeval.metrics.utils.system_one`."""
+        return None
 
     @abstractmethod
     async def a_measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -200,7 +223,13 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    # System One (Jev); see `BaseMetric`.
+    eval_mode: Optional[EvalMode] = None
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
+    confidence: Optional[float] = None
+    system_one_fallback_reason: Optional[str] = None
+    _system_one_outcomes: Optional[list] = None
+    _system_one_disabled: bool = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -213,6 +242,12 @@ class BaseConversationalMetric(PromptMixin):
         self, test_case: ConversationalTestCase, *args, **kwargs
     ) -> float:
         raise NotImplementedError
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """See `BaseMetric._system_one_eval_spec`."""
+        return None
 
     @abstractmethod
     async def a_measure(

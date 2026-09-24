@@ -20,6 +20,18 @@ from deepeval.utils import convert_to_multi_modal_array
 from .models import MULTIMODAL_SUPPORTED_MODELS
 
 
+def _reject_multimodal_without_llm(metric, model: Optional[DeepEvalBaseLLM]):
+    """A metric has no LLM only when a System One model (Jev) is judging it,
+    and Jev reads text only."""
+    if model is None:
+        name = getattr(metric, "__name__", type(metric).__name__)
+        raise ValueError(
+            f"{name} is judged by System One (Jev) in this eval mode, and Jev "
+            f"evaluates text only. Run multimodal test cases with "
+            f'`eval_mode="llm"` or `eval_mode="hybrid"`.'
+        )
+
+
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
     test_case_params: List[MultiTurnParams],
@@ -29,6 +41,7 @@ def check_conversational_test_case_params(
     multimodal: Optional[bool] = False,
 ):
     if multimodal:
+        _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []
@@ -102,6 +115,7 @@ def check_llm_test_case_params(
     multimodal: Optional[bool] = False,
 ):
     if multimodal:
+        _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []

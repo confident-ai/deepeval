@@ -12,13 +12,11 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     initialize_model,
-    initialize_system_one_model,
     check_llm_test_case_params,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
     generate_rubric_score,
     a_generate_rubric_score,
-    SystemOneScoreSpec,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -78,7 +76,6 @@ class GEval(BaseMetric):
         self.score_range = get_score_range(self.rubric)
         self.score_range_span = self.score_range[1] - self.score_range[0]
         self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = (
             evaluation_steps
@@ -316,12 +313,6 @@ class GEval(BaseMetric):
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
             weighted_score_fn=calculate_weighted_summed_score,
-            system_one=self._experimental_system_one_spec(
-                test_case_content,
-                g_eval_params_str,
-                _additional_context,
-                multimodal,
-            ),
         )
 
     def _evaluate(
@@ -366,63 +357,6 @@ class GEval(BaseMetric):
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
             weighted_score_fn=calculate_weighted_summed_score,
-            system_one=self._experimental_system_one_spec(
-                test_case_content,
-                g_eval_params_str,
-                _additional_context,
-                multimodal,
-            ),
-        )
-
-    def _experimental_system_one_spec(
-        self,
-        test_case_content: str,
-        g_eval_params_str: str,
-        _additional_context: Optional[str],
-        multimodal: bool,
-    ) -> SystemOneScoreSpec:
-        rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        state = {
-            "test_case": test_case_content,
-            "parameters": g_eval_params_str,
-        }
-        if _additional_context:
-            state["additional_context"] = _additional_context
-
-        def reason_prompt(score, probabilities):
-            return self._get_prompt(
-                "_experimental_system_one_reason",
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_content=test_case_content,
-                parameters=g_eval_params_str,
-                rubric=rubric_str,
-                probabilities=probabilities,
-                score=score,
-                _additional_context=_additional_context,
-                multimodal=multimodal,
-            )
-
-        return SystemOneScoreSpec(
-            steps=self.evaluation_steps,
-            rubric_levels=(
-                [r.expected_outcome for r in self.rubric]
-                if self.rubric
-                else None
-            ),
-            score_range=self.score_range,
-            strict_mode=self.strict_mode,
-            state=state,
-            strict_instructions=self._get_prompt(
-                "_experimental_system_one_strict_verdict"
-            ),
-            step_instructions=self._get_prompt(
-                "_experimental_system_one_step_verdict"
-            ),
-            rubric_instructions=self._get_prompt(
-                "_experimental_system_one_rubric_score"
-            ),
-            reason_prompt=reason_prompt,
-            reason_schema_cls=gschema.Reason,
         )
 
     def upload(self):

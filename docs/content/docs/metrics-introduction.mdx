@@ -25,9 +25,6 @@ Custom metrics allow you to define your **custom criteria** using SOTA implement
 - JevEval
 - G-Eval
 - DAG (Deep Acyclic Graph)
-- Conversational JevEval
-- Conversational G-Eval
-- Conversational DAG
 - Arena G-Eval
 - Do it yourself, 100% self-coded metrics (e.g. if you want to use BLEU, ROUGE)
 
@@ -180,7 +177,11 @@ More information on everything can be found on the [Confident AI evaluation docs
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 
 - Are research-backed LLM-as-as-Judge (`GEval`)
-- <Only id="python">Support frontier, SOTA eval techniques such as Jev-as-a-Judge (`JevEval`), scored by a System One model with calibrated probabilities instead of generated text</Only>
+- <Only id="python">
+    Support frontier, SOTA eval techniques such as Jev-as-a-Judge (`JevEval`),
+    scored by a System One model with calibrated probabilities instead of
+    generated text
+  </Only>
 - One of the most used in the world (20 million+ daily evaluations)
 - Make deterministic metric scores possible (when using `DAGMetric`)
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
@@ -621,7 +622,29 @@ Here are some additional ideas if you're not sure:
 
 In some cases, where your LLM model is doing most of the heavy lifting, it is not uncommon to have more use case specific metrics.
 
-## Configure LLM Judges
+## Choose Who Judges With Eval Modes
+
+<Only id="python">
+
+Every built-in LLM-as-a-judge metric can be judged by an LLM alone, by an LLM and [Jev](/integrations/models/typesafe-ai) together, or by Jev alone. Jev is a System One model that answers bounded questions with calibrated probabilities instead of generating text, and the [**eval mode**](/docs/evaluation-eval-modes) picks which of the three you get:
+
+| Eval mode       | Who does what                                                                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `llm` (default) | The LLM runs the whole metric.                                                                                                                        |
+| `hybrid`        | The LLM extracts and writes the reason, and Jev makes the decisions. If a Jev call fails, the LLM makes that decision instead.                         |
+| `system_one`    | Jev runs the whole metric in **one request**, and the reason is built from its answers. No LLM is called, so no LLM API key is needed. |
+
+Switch modes for every metric from the CLI, or pass `eval_mode` to a single metric to override it:
+
+```bash
+deepeval set-eval-mode hybrid
+deepeval set-eval-mode system_one
+deepeval set-eval-mode llm  # back to the default
+```
+
+</Only>
+
+### Configure LLM Judges
 
 You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Ollama, Anthropic, Gemini, LiteLLM, etc. You can also wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class to use ANY model of your choice. [Click here](/guides/guides-using-custom-llms) for full guide.
 
@@ -629,14 +652,21 @@ You can use **ANY** LLM judge in `deepeval`, including OpenAI, Azure OpenAI, Oll
 
 <Only id="python">
 
-:::tip
-If you're using [`JevEval`](/docs/metrics-jev-eval), just set your `TYPESAFE_API_KEY` instead:
+### Configure Jev
+
+Set your TypeSafe AI key to use Jev under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and in [`JevEval`](/docs/metrics-jev-eval):
 
 ```bash
 export TYPESAFE_API_KEY=<your-typesafe-api-key>
 ```
 
-:::
+Or save it with the CLI, which also lets you pick the Jev model:
+
+```bash
+deepeval set-typesafe --prompt-api-key --save=dotenv
+```
+
+See the [TypeSafe AI integration](/integrations/models/typesafe-ai) for the available Jev models.
 
 </Only>
 
@@ -1351,9 +1381,9 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
           </a>
           , while metrics on individual spans are <a href="/docs/evaluation-component-level-llm-evals">
             component-level
-          </a>. Wire them up on{" "}
-          <a href="https://confident-ai.com">Confident AI</a> to track metric
-          scores on production traffic over time.
+          </a>. Wire them up on <a href="https://confident-ai.com">
+            Confident AI
+          </a> to track metric scores on production traffic over time.
         </>
       ),
     },

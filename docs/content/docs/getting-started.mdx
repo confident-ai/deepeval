@@ -10,7 +10,8 @@ import { Bot, FileSearch, MessagesSquare } from "lucide-react";
 
 This quickstart takes you from installing DeepEval to your first passing eval in a few
 minutes. You'll create a small test case, choose a metric, and run it with
-<Term py="deepeval test run" ts="npx deepeval test run"/>.
+
+<Term py="deepeval test run" ts="npx deepeval test run" />.
 
 By the end of this quickstart, you should be able to:
 
@@ -55,7 +56,9 @@ The package ships a `deepeval` binary, so every command below runs through `npx`
 
 </Switch>
 
-`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI quality platform with observability, evals, and monitoring that DeepEval integrates with natively:
+:::info
+
+To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI observability and evals platform that DeepEval integrates with natively:
 
 <Switch>
 
@@ -77,12 +80,12 @@ npx deepeval login
 
 </Switch>
 
-Your browser handles authentication only. After you sign in or create an
-account, return to the terminal to enter your name and organization, confirm
-the prefilled first-project name, or select one of your existing projects.
-DeepEval creates and saves a dedicated project API key automatically. For CI
-or other non-interactive environments, pass an existing key with
-<Term py="deepeval login --api-key ..." ts="npx deepeval login --api-key ..."/>.
+:::
+
+For CI or other non-interactive environments, pass an existing key with
+
+<Term py="deepeval login --api-key ..." ts="npx deepeval login --api-key ..." />
+.
 
 <details>
 
@@ -119,6 +122,9 @@ An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` repr
 <ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
 
 Run <Term py="touch test_example.py" ts="touch example.test.ts"/> in your terminal and paste in the following code:
+
+<Tabs items={["LLM-as-a-judge", "Jev-as-a-judge"]}>
+<Tab value="LLM-as-a-judge">
 
 <Switch>
 
@@ -183,6 +189,58 @@ Importing `deepeval/vitest` registers the `toPass()` matcher. `npx deepeval test
 </Case>
 
 </Switch>
+
+</Tab>
+<Tab value="Jev-as-a-judge">
+
+<Switch>
+
+<Case id="python">
+
+```python title="test_example.py"
+from deepeval.metrics.jev_eval import Noul, Score
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+from deepeval.metrics import JevEval
+from deepeval import assert_test
+
+def test_correctness():
+    correctness_metric = JevEval(
+        name="Correctness",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+        questions=[
+            Noul("No fact in actual_output contradicts a fact in expected_output.", weight=2),
+            Score(
+                "How much of the detail in expected_output is present in actual_output?",
+                levels=["Almost none", "Some", "Most", "All of it"],
+            ),
+        ],
+        threshold=0.5,
+    )
+    test_case = LLMTestCase(
+        input="I have a persistent cough and fever. Should I be worried?",
+        # Replace this with the actual output from your LLM application
+        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
+        expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs.",
+    )
+    assert_test(test_case, [correctness_metric])
+```
+
+</Case>
+
+<Case id="typescript">
+
+<NotImplemented id="typescript" feature="JevEval">
+
+Use the LLM-as-a-judge example until `JevEval` is available in TypeScript.
+
+</NotImplemented>
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>
 
 Then, run <Term py="deepeval test run" ts="npx deepeval test run"/> from the root directory of your project to evaluate your LLM app **end-to-end**:
 
@@ -403,7 +461,7 @@ It is recommended that you push your test runs to Confident AI — an AI quality
 <Tabs items={["Confident AI", "Locally in JSON"]}>
 <Tab value="Confident AI">
 
-Confident AI is an AI quality platform with observability, evals, and monitoring that `deepeval` integrates with natively, and helps you build the best LLM evals pipeline.
+Confident AI is an AI observability and evals platform that DeepEval integrates with natively, and helps you build the best LLM evals pipeline.
 
 Run <Term py="deepeval view" ts="npx deepeval view"/> to view your newly ran test run on the platform:
 
@@ -564,7 +622,8 @@ npx tsx main.ts
 
 🎉 Congratulations! Your eval should have run ✅ A quick recap of what happened:
 
-- <Term py="evals_iterator()" ts="evalsIterator()"/> looped through your dataset, capturing one trace per golden.
+- <Term py="evals_iterator()" ts="evalsIterator()" /> looped through your dataset,
+  capturing one trace per golden.
 - <Switch><Case id="python">Your integration's adapter (or `@observe`) created spans</Case><Case id="typescript">Your integration (or `observe`)</Case></Switch> recorded the agent's internal steps.
 - `TaskCompletionMetric` analyzed the complete ordered trace after the agent finished.
 - DeepEval aggregated everything into one test run.
@@ -576,7 +635,10 @@ npx tsx main.ts
 
 Trajectory-based evaluation tells you whether the complete path was effective. [Component-level evaluation](/docs/evaluation-component-level-llm-evals) uses the same trace to score one span at a time, helping you identify which planner, retriever, tool call, LLM generation, or sub-agent caused a failure.
 
-<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component-level metrics attached to individual spans within an agent trace" />
+<ImageDisplayer
+  src={ASSETS.componentLevelEvals}
+  alt="component-level metrics attached to individual spans within an agent trace"
+/>
 
 Once your agent is traced, attach component metrics only to the spans you need to diagnose. Trajectory and component scores can run together in the same test run. See the [component-level guide](/docs/evaluation-component-level-llm-evals) for stack-specific examples, sub-agent evaluation, retriever scoring, and span customization.
 
@@ -742,7 +804,9 @@ Already building with an agent framework? DeepEval integrations capture its trac
 
 Here are a few examples available for your selected SDK:
 
-<include cwd>snippets/integrations/framework-integration-card-examples.mdx</include>
+<include cwd>
+  snippets/integrations/framework-integration-card-examples.mdx
+</include>
 
 [Browse all framework integrations →](/integrations)
 

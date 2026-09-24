@@ -13,11 +13,18 @@ from deepeval.metrics.utils import (
     get_turns_in_sliding_window,
     get_unit_interactions,
     initialize_model,
+    initialize_system_one_model,
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneBinarySpec,
+    SystemOneEvalSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -38,6 +45,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -50,8 +61,16 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         ] = TurnRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -92,6 +111,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 unit_interactions = get_unit_interactions(test_case.turns)
                 turns_windows: List[List[Turn]] = [
                     list(itertools.chain(*window))
@@ -101,7 +123,8 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                 ]
 
                 self.verdicts = [
-                    self._generate_verdict(window) for window in turns_windows
+                    self._generate_verdict(window, test_case.multimodal)
+                    for window in turns_windows
                 ]
 
                 self.score = self._calculate_score()
@@ -141,6 +164,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             unit_interactions = get_unit_interactions(test_case.turns)
             turns_windows: List[List[Turn]] = [
                 list(itertools.chain(*window))
@@ -150,7 +176,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             ]
 
             self.verdicts = await asyncio.gather(
-                *[self._a_generate_verdict(window) for window in turns_windows]
+                *[
+                    self._a_generate_verdict(window, test_case.multimodal)
+                    for window in turns_windows
+                ]
             )
 
             self.score = self._calculate_score()
@@ -228,13 +257,14 @@ class TurnRelevancyMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_verdict(
-        self, turns_sliding_window: List[Turn]
+        self, turns_sliding_window: List[Turn], multimodal: bool
     ) -> TurnRelevancyVerdict:
+        sliding_window = [
+            convert_turn_to_dict(turn) for turn in turns_sliding_window
+        ]
         prompt = self._get_prompt(
             "generate_verdicts",
-            sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_window
-            ],
+            sliding_window=sliding_window,
             template_class=self.template_class,
         )
 
@@ -243,16 +273,20 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             verdict_cls=TurnRelevancyVerdict,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                sliding_window, multimodal
+            ),
         )
 
     def _generate_verdict(
-        self, turns_sliding_window: List[Turn]
+        self, turns_sliding_window: List[Turn], multimodal: bool
     ) -> TurnRelevancyVerdict:
+        sliding_window = [
+            convert_turn_to_dict(turn) for turn in turns_sliding_window
+        ]
         prompt = self._get_prompt(
             "generate_verdicts",
-            sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_window
-            ],
+            sliding_window=sliding_window,
             template_class=self.template_class,
         )
 
@@ -261,6 +295,33 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             prompt=prompt,
             verdict_cls=TurnRelevancyVerdict,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                sliding_window, multimodal
+            ),
+        )
+
+    def _experimental_system_one_spec(
+        self, sliding_window: List[Dict], multimodal: bool
+    ) -> Optional[SystemOneBinarySpec]:
+        if multimodal:
+            return None
+        return SystemOneBinarySpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            state={"turns": sliding_window},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role` and `content`; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
         )
 
     def _calculate_score(self) -> float:

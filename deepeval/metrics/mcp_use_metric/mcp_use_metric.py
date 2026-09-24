@@ -1,13 +1,23 @@
-from typing import Optional, List, Union, Type
+from typing import Any, Dict, Optional, List, Union, Type
 
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    format_decision_reason,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_score,
+    a_system_one_score,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -18,13 +28,27 @@ from deepeval.test_case import (
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.mcp.utils import mcp_calls_state, mcp_servers_state
 from .schema import MCPPrimitivesScore, MCPArgsScore
 from deepeval.templates import make_template_class
 
 
 MCPUseTemplate = make_template_class("MCPUseMetric")
+
+PRIMITIVE_USAGE_LEVELS = [
+    "Wrong primitives",
+    "Poor choice",
+    "Reasonable choice",
+    "Best choice",
+]
+ARGUMENT_CORRECTNESS_LEVELS = [
+    "Incorrect",
+    "Mostly incorrect",
+    "Mostly correct",
+    "Fully correct",
+]
 
 
 class MCPUseMetric(BaseMetric):
@@ -38,6 +62,10 @@ class MCPUseMetric(BaseMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         strict_mode: bool = False,
         async_mode: bool = True,
@@ -46,8 +74,16 @@ class MCPUseMetric(BaseMetric):
         evaluation_template: Type[MCPUseTemplate] = MCPUseTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -88,6 +124,9 @@ class MCPUseMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 available_primitives, primitives_used = (
                     self._get_mcp_interaction_text(
                         mcp_servers=test_case.mcp_servers,
@@ -127,7 +166,7 @@ class MCPUseMetric(BaseMetric):
                     steps=steps,
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,
@@ -155,6 +194,9 @@ class MCPUseMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             available_primitives, primitives_used = (
                 self._get_mcp_interaction_text(
                     mcp_servers=test_case.mcp_servers,
@@ -200,6 +242,14 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
+        value = system_one_score(
+            self, self._system_one_primitives_spec(test_case)
+        )
+        if value is not None:
+            return MCPPrimitivesScore(
+                score=value,
+                reason=format_decision_reason(self, "primitive usage", value),
+            )
         prompt = self._get_prompt(
             "get_primitive_correctness_prompt",
             template_class="MCPUseMetric",
@@ -222,6 +272,14 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
+        value = await a_system_one_score(
+            self, self._system_one_primitives_spec(test_case)
+        )
+        if value is not None:
+            return MCPPrimitivesScore(
+                score=value,
+                reason=format_decision_reason(self, "primitive usage", value),
+            )
         prompt = self._get_prompt(
             "get_primitive_correctness_prompt",
             template_class="MCPUseMetric",
@@ -244,6 +302,14 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
+        value = system_one_score(self, self._system_one_args_spec(test_case))
+        if value is not None:
+            return MCPArgsScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         prompt = self._get_prompt(
             "get_mcp_argument_correctness_prompt",
             template_class="MCPUseMetric",
@@ -266,6 +332,16 @@ class MCPUseMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
+        value = await a_system_one_score(
+            self, self._system_one_args_spec(test_case)
+        )
+        if value is not None:
+            return MCPArgsScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         prompt = self._get_prompt(
             "get_mcp_argument_correctness_prompt",
             template_class="MCPUseMetric",
@@ -280,6 +356,69 @@ class MCPUseMetric(BaseMetric):
             schema_cls=MCPArgsScore,
             extract_schema=lambda s: s,
             extract_json=lambda data: MCPArgsScore(**data),
+        )
+
+    def _system_one_state(self, test_case: LLMTestCase) -> Dict[str, Any]:
+        return {
+            "input": test_case.input,
+            "actual_output": test_case.actual_output,
+            "mcp_servers": mcp_servers_state(test_case.mcp_servers),
+            "primitives_used": mcp_calls_state(
+                test_case.mcp_tools_called or test_case.tools_called or [],
+                test_case.mcp_resources_called or [],
+                test_case.mcp_prompts_called or [],
+            ),
+        }
+
+    def _system_one_primitives_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneScoreSpec]:
+        if test_case.multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_primitive_score"
+            ),
+            levels=PRIMITIVE_USAGE_LEVELS,
+            state=self._system_one_state(test_case),
+        )
+
+    def _system_one_args_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneScoreSpec]:
+        if test_case.multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_args_score"
+            ),
+            levels=ARGUMENT_CORRECTNESS_LEVELS,
+            state=self._system_one_state(test_case),
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `input`, `actual_output`, the MCP primitives called and the
+        `mcp_servers` available; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
+                SingleTurnParams.MCP_TOOLS_CALLED,
+                SingleTurnParams.MCP_RESOURCES_CALLED,
+                SingleTurnParams.MCP_PROMPTS_CALLED,
+                SingleTurnParams.TOOLS_CALLED,
+            ],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+            extra_state={
+                "mcp_servers": mcp_servers_state(test_case.mcp_servers)
+            },
         )
 
     def _calculate_score(

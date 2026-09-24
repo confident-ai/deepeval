@@ -6,11 +6,18 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     print_tools_called,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    format_decision_reason,
+    system_one_score,
+    a_system_one_score,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
@@ -23,6 +30,14 @@ from deepeval.templates import make_template_class
 
 
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
+
+TOOL_SELECTION_LEVELS = [
+    "Misaligned",
+    "Poor selection",
+    "Mixed selection",
+    "Mostly appropriate",
+    "Fully appropriate",
+]
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -39,6 +54,10 @@ class ToolCorrectnessMetric(BaseMetric):
         threshold: Optional[float] = 0.5,
         evaluation_params: List[ToolCallParams] = [],
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -52,7 +71,16 @@ class ToolCorrectnessMetric(BaseMetric):
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.async_mode = async_mode
         self.include_reason = include_reason
         self.strict_mode = strict_mode
@@ -368,6 +396,14 @@ class ToolCorrectnessMetric(BaseMetric):
     def _get_tool_selection_score(
         self, user_input, tools_called, available_tools, *, multimodal: bool
     ):
+        value = system_one_score(
+            self,
+            self._system_one_tool_selection_spec(
+                user_input, tools_called, available_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return self._system_one_tool_selection_score(value)
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
         prompt = self._get_prompt(
@@ -388,6 +424,14 @@ class ToolCorrectnessMetric(BaseMetric):
     async def _a_get_tool_selection_score(
         self, user_input, tools_called, available_tools, *, multimodal: bool
     ):
+        value = await a_system_one_score(
+            self,
+            self._system_one_tool_selection_spec(
+                user_input, tools_called, available_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return self._system_one_tool_selection_score(value)
         tools_called_formatted = print_tools_called(tools_called)
         available_tools_formatted = print_tools_called(available_tools)
         prompt = self._get_prompt(
@@ -404,6 +448,50 @@ class ToolCorrectnessMetric(BaseMetric):
             extract_schema=lambda s: s,
             extract_json=lambda data: ToolSelectionScore(**data),
         )
+
+    def _system_one_tool_selection_spec(
+        self,
+        user_input,
+        tools_called: List[ToolCall],
+        available_tools: List[ToolCall],
+        multimodal: bool,
+    ) -> Optional[SystemOneScoreSpec]:
+        if multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                "_experimental_system_one_tool_selection_score"
+            ),
+            levels=TOOL_SELECTION_LEVELS,
+            state={
+                "input": user_input,
+                "tools_called": [
+                    t.model_dump(mode="json", exclude_none=True)
+                    for t in tools_called or []
+                ],
+                "available_tools": [
+                    t.model_dump(mode="json", exclude_none=True)
+                    for t in available_tools or []
+                ],
+            },
+        )
+
+    def _system_one_tool_selection_score(
+        self, value: float
+    ) -> ToolSelectionScore:
+        return ToolSelectionScore(
+            score=value,
+            reason=format_decision_reason(self, "tool selection", value),
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the score is decided in code by matching
+        `tools_called` against `expected_tools`, so there is no whole-metric
+        Jev request; the tool-selection check (when `available_tools` is
+        given) is the metric's only Jev decision. See EXPERIMENTAL.md."""
+        return None
 
     # Calculate score
     def _calculate_score(self) -> float:

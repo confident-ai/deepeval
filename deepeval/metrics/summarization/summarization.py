@@ -6,7 +6,7 @@ from deepeval.test_case import (
     SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.faithfulness.faithfulness import (
     _faithfulness_claims_multimodal_instruction,
     _faithfulness_truths_limit_phrase,
@@ -17,8 +17,12 @@ from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneEvalSpec,
     SystemOneVerdictSpec,
     initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
     score_qag_verdicts,
     construct_verbose_logs,
     check_llm_test_case_params,
@@ -26,6 +30,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.summarization.schema import (
     ScoreType,
@@ -55,6 +60,10 @@ class SummarizationMetric(BaseMetric):
         threshold: Optional[float] = 0.5,
         n: int = 5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
         async_mode=True,
@@ -67,9 +76,16 @@ class SummarizationMetric(BaseMetric):
         ] = SummarizationTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
 
         if assessment_questions is not None and len(assessment_questions) == 0:
             self.assessment_questions = None
@@ -121,6 +137,9 @@ class SummarizationMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.truths: List[str] = self._generate_truths(test_case.input)
                 self.claims: List[str] = self._generate_claims(
                     test_case.actual_output
@@ -179,6 +198,9 @@ class SummarizationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.input),
                 self._a_generate_claims(test_case.actual_output),
@@ -490,6 +512,25 @@ class SummarizationMetric(BaseMetric):
             items=self.claims,
             item_key="summary_claim",
             state={"original_text": self.truths},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        the original text (`input`) and the summary (`actual_output`):
+        alignment and coverage questions, plus one Noul per user-supplied
+        assessment question. See EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions",
+                    assessment_questions=self.assessment_questions or [],
+                )
+            ),
         )
 
     async def _a_generate_truths(self, text: str) -> List[str]:

@@ -6,9 +6,19 @@ from deepeval.metrics.utils import (
     get_unit_interactions,
     check_conversational_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneScoreSpec,
+    format_decision_reason,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_score,
+    a_system_one_score,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import (
     ConversationalTestCase,
     MultiTurnParams,
@@ -16,7 +26,7 @@ from deepeval.test_case import (
     Turn,
 )
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.tool_use.schema import (
     ToolSelectionScore,
@@ -28,6 +38,22 @@ from deepeval.templates import make_template_class
 
 
 ToolUseTemplate = make_template_class("ToolUseMetric")
+
+TOOL_SELECTION_LEVELS = [
+    "Irrelevant or unjustified",
+    "Poor selection",
+    "Mixed selection",
+    "Mostly correct",
+    "Perfectly matched",
+]
+
+ARGUMENT_CORRECTNESS_LEVELS = [
+    "Nonsensical or unrelated",
+    "Poor arguments",
+    "Partially correct",
+    "Mostly correct",
+    "Fully correct",
+]
 
 
 class ToolUseMetric(BaseConversationalMetric):
@@ -42,6 +68,10 @@ class ToolUseMetric(BaseConversationalMetric):
         available_tools: List[ToolCall],
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -51,8 +81,16 @@ class ToolUseMetric(BaseConversationalMetric):
     ):
         self.available_tools = available_tools
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -91,6 +129,9 @@ class ToolUseMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 unit_interactions = get_unit_interactions(test_case.turns)
                 user_input_and_tools = self._get_user_input_and_turns(
                     unit_interactions
@@ -164,6 +205,9 @@ class ToolUseMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             unit_interactions = get_unit_interactions(test_case.turns)
             user_input_and_tools = self._get_user_input_and_turns(
                 unit_interactions
@@ -218,6 +262,19 @@ class ToolUseMetric(BaseConversationalMetric):
     def _get_argument_correctness_score(
         self, user_and_tools: UserInputAndTools, *, multimodal: bool
     ):
+        value = system_one_score(
+            self,
+            self._system_one_score_spec(
+                "argument_correctness", user_and_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return ArgumentCorrectnessScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         prompt = self._get_prompt(
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
@@ -240,6 +297,19 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        value = await a_system_one_score(
+            self,
+            self._system_one_score_spec(
+                "argument_correctness", user_and_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return ArgumentCorrectnessScore(
+                score=value,
+                reason=format_decision_reason(
+                    self, "argument correctness", value
+                ),
+            )
         prompt = self._get_prompt(
             "get_argument_correctness_score",
             user_input=user_and_tools.user_messages,
@@ -262,6 +332,17 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        value = system_one_score(
+            self,
+            self._system_one_score_spec(
+                "tool_selection", user_and_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return ToolSelectionScore(
+                score=value,
+                reason=format_decision_reason(self, "tool selection", value),
+            )
         prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
@@ -284,6 +365,17 @@ class ToolUseMetric(BaseConversationalMetric):
         *,
         multimodal: bool,
     ):
+        value = await a_system_one_score(
+            self,
+            self._system_one_score_spec(
+                "tool_selection", user_and_tools, multimodal
+            ),
+        )
+        if value is not None:
+            return ToolSelectionScore(
+                score=value,
+                reason=format_decision_reason(self, "tool selection", value),
+            )
         prompt = self._get_prompt(
             "get_tool_selection_score",
             user_input=user_and_tools.user_messages,
@@ -466,6 +558,56 @@ class ToolUseMetric(BaseConversationalMetric):
             schema_cls=Reason,
             extract_schema=lambda s: s.reason,
             extract_json=lambda data: data["reason"],
+        )
+
+    def _system_one_score_spec(
+        self,
+        kind: str,
+        user_and_tools: UserInputAndTools,
+        multimodal: bool,
+    ) -> Optional[SystemOneScoreSpec]:
+        if multimodal:
+            return None
+        return SystemOneScoreSpec(
+            instructions=self._get_prompt(
+                f"_experimental_system_one_{kind}_score"
+            ),
+            levels=(
+                TOOL_SELECTION_LEVELS
+                if kind == "tool_selection"
+                else ARGUMENT_CORRECTNESS_LEVELS
+            ),
+            state={
+                "user_messages": user_and_tools.user_messages,
+                "assistant_messages": user_and_tools.assistant_messages,
+                "tools_called": user_and_tools.tools_called,
+                "available_tools": user_and_tools.available_tools,
+            },
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role`, `content` and `tools_called`, with the
+        metric's `available_tools`; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                MultiTurnParams.ROLE,
+                MultiTurnParams.CONTENT,
+                MultiTurnParams.TOOLS_CALLED,
+            ],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+            extra_state={
+                "available_tools": [
+                    tool.model_dump(mode="json", exclude_none=True)
+                    for tool in self.available_tools
+                ],
+            },
         )
 
     @property

@@ -4,7 +4,7 @@ title: Step Efficiency
 sidebar_label: Step Efficiency
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer usesLLMs={true} singleTurn={true} agent={true} trajectory={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} usesLLMs={true} singleTurn={true} agent={true} trajectory={true} referenceless={true} />
 
 The Step Efficiency metric is an agentic metric that extracts the task from your agent's trace and evaluates the **efficiency of your agent's execution steps** in completing that task. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
@@ -13,6 +13,8 @@ Step Efficiency analyzes your **agent's full trace** to determine the task and e
 :::
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `StepEfficiencyMetric()` to your agent's `@observe` tag or in the <Term py="evals_iterator" ts="evalsIterator"/> method.
 
@@ -111,7 +113,7 @@ for await (const golden of dataset.evalsIterator({ metrics: [metric] })) {
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `StepEfficiencyMetric`:
+There are **NINE** optional parameters when creating a `StepEfficiencyMetric`:
 
 </Case>
 
@@ -132,6 +134,8 @@ There are **SEVEN** optional parameters when creating a `StepEfficiencyMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 To learn more about how the <Term py="evals_iterator" ts="evalsIterator"/> work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
@@ -141,6 +145,14 @@ The `StepEfficiencyMetric` is an agentic trace-only metric, so unlike other `dee
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `StepEfficiencyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `StepEfficiencyMetric` score is calculated using the following steps:
 
 - Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
@@ -149,6 +161,26 @@ The `StepEfficiencyMetric` score is calculated using the following steps:
 <Equation formula="\text{Step Efficiency Score} = \text{AlignmentScore}(\text{Task}, \text{Execution Steps})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and execution steps. It will penalize any actions taken by the LLM agent that were not strictly required to finish the task.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still extracts the task, but the efficiency score is given by Jev, a System One model, as a rating from "Highly inefficient" to "Perfectly efficient" mapped onto 0 to 1. The reason states Jev's score and confidence. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the trace (only each span's name, type, inputs, outputs and tool calls) and asked three questions:
+
+| Question                                                                                                                                                                                                                                            | Type  | Weight |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| Every step of the agent run in `trace` (each tool call, LLM call and retrieval) was strictly necessary for the task the user gave in the root span's input of `trace`; none was redundant, repeated, speculative or done only to enrich the answer. | Noul  | 2      |
+| the agent run in `trace` takes the most direct path to the task the user gave in the root span's input of `trace`, with no detours, re-queries or loops that a shorter sequence of actions would have avoided.                                      | Noul  | 1      |
+| Judging only the number and directness of its steps, not the quality of the result, how efficiently does the agent run in `trace` carry out the task the user gave in the root span's input of `trace`? (Highly inefficient → Perfectly efficient)  | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

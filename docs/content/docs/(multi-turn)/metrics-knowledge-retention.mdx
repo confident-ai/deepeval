@@ -4,7 +4,7 @@ title: Knowledge Retention
 sidebar_label: Knowledge Retention
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer multiTurn={true} chatbot={true} referenceless={true} />
+<MetricTagsDisplayer jev={true} multiTurn={true} chatbot={true} referenceless={true} />
 
 The knowledge retention metric is a conversational metric that determines whether your LLM chatbot is able to retain factual information presented **throughout a conversation**.
 
@@ -21,6 +21,8 @@ To use the `KnowledgeRetentionMetric`, you'll have to provide the following argu
 You must provide the `role` and `content` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `KnowledgeRetentionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
@@ -70,7 +72,21 @@ await evaluate([convoTestCase], [metric]);
 
 </Switch>
 
+<Switch>
+
+<Case id="python">
+
+There are **EIGHT** optional parameters when creating a `KnowledgeRetentionMetric`:
+
+</Case>
+
+<Case id="typescript">
+
 There are **SIX** optional parameters when creating a `KnowledgeRetentionMetric`:
+
+</Case>
+
+</Switch>
 
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
@@ -78,6 +94,8 @@ There are **SIX** optional parameters when creating a `KnowledgeRetentionMetric`
 - [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
+- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
 
 ### As a standalone
 
@@ -115,11 +133,39 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+<Only id="python">
+
+You can change how the `KnowledgeRetentionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+</Only>
+
+### LLM-as-a-judge
+
 The `KnowledgeRetentionMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Assistant Turns without Knowledge Attritions}}{\text{Total Number of Assistant Turns}}" />
 
 The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge supplied in `"content"` by the `"user"` role throughout `turns`, before using the same LLM to determine whether each corresponding `"assistant"` content indicates an inability to recall said knowledge.
+
+<Only id="python">
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the LLM still extracts the knowledge from each user turn, but whether each assistant turn forgets or contradicts it is answered by Jev, a System One model: one yes/no question per assistant turn, with `P(yes) >= 0.5` counted as a knowledge attrition. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and asked three questions:
+
+| Question                                                                                                                                                 | Type  | Weight |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| No assistant turn in `turns` forgets or contradicts a fact the user stated in an earlier turn.                                                           | Noul  | 2      |
+| No assistant turn in `turns` asks the user again for information the user already gave in an earlier turn, other than to clarify, confirm or correct it. | Noul  | 1      |
+| Across `turns`, how well does the assistant retain and respect the facts the user has already stated? (Forgets most facts → Retains every fact)          | Score | 1      |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+</Only>
 
 ## FAQs
 

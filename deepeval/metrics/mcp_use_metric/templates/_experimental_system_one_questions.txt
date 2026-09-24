@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "The MCP tools, resources and prompts the agent called (`mcp_tools_called`, `mcp_resources_called`, `mcp_prompts_called`, or `tools_called`) are the right ones among those in `mcp_servers` for what `input` asks, with no clearly better primitive missed and no unnecessary call.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Every MCP call the agent made passes arguments that match that primitive's input schema in `mcp_servers` and carry the values `input` calls for."
+  },
+  {
+    "type": "score",
+    "question": "Overall, how well does the agent use the MCP servers in `mcp_servers`, in both the primitives chosen and the arguments passed, to address `input`?",
+    "levels": ["Wrong use", "Poor use", "Adequate use", "Correct use"]
+  }
+]

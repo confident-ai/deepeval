@@ -33,6 +33,7 @@
 
     // ----- shared with metrics (same hues) -----
     &.usesLLM    { --pill-hue: oklch(0.58 0.19 280); } // violet
+    &.jev        { --pill-hue: oklch(0.52 0.17 300); } // purple
     &.custom     { --pill-hue: oklch(0.60 0.16 60);  } // amber
     &.singleTurn { --pill-hue: oklch(0.55 0.18 245); } // blue
     &.multiTurn  { --pill-hue: oklch(0.58 0.13 195); } // teal

@@ -88,7 +88,7 @@ This lets the result land between levels rather than snapping to one of them. Di
 
 That is the whole vocabulary. The next section shows where each of these questions appears inside a DeepEval metric.
 
-## Using Jev for LLM evaluation metrics
+## Mixing Jev with "traditional" LLM-as-a-judge metrics
 
 There is a common misconception that an LLM-as-a-judge metric is one giant prompt that says _"give this response a score from 0 to 1."_ Some metrics work that way, but DeepEval's do not.
 
@@ -146,12 +146,89 @@ Jev replaces exactly that decision point:
 
 For binary metrics, `P(yes) >= 0.5` is `yes`. For metrics such as Faithfulness that allow ambiguity, above `0.65` is `yes`, below `0.35` is `no`, and the middle is `borderline`. The score calculation itself is unchanged.
 
-Language tasks stay with the LLM; decision points go to Jev. In experimental mode DeepEval does not silently fall back to the LLM for a decision, so a missing SDK or API key fails loudly instead of quietly restoring the old source of variance.
+To run your metrics this way, switch DeepEval's eval mode to `hybrid`:
 
-The same boundary applies elsewhere:
+```bash
+deepeval set-eval-mode hybrid
+```
 
-- **[G-Eval](/docs/metrics-llm-evals):** The LLM generates the evaluation steps; Jev scores them with **Noul** in strict or rubric-free mode, and **Score** when you provide a rubric.
-- **[DAG](/docs/metrics-dag):** The LLM produces text for task nodes; Jev uses **Noul** for binary judgement points and **Choice** for non-binary ones.
+Nothing changes in your metric code. The same `FaithfulnessMetric` now has the LLM extract the claims and Jev decide each verdict:
+
+```python title="test_faithfulness.py"
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+metric = FaithfulnessMetric()  # LLM extracts the claims, Jev decides each verdict
+evaluate(
+    test_cases=[
+        LLMTestCase(
+            input="When was the Eiffel Tower completed?",
+            actual_output="It was completed in 1889 and is 330 metres tall.",
+            retrieval_context=["The Eiffel Tower was completed in 1889."],
+        )
+    ],
+    metrics=[metric],
+)
+```
+
+If you'd rather choose per metric instead of process-wide, pass `eval_mode` directly:
+
+```python
+metric = FaithfulnessMetric(eval_mode="hybrid")
+```
+
+Language tasks stay with the LLM; decision points go to Jev. A missing SDK or API key fails loudly when the metric is created rather than quietly restoring the old source of variance. And because the LLM is already part of the chain, if a Jev call fails mid-run (a rate limit, an oversized input), that one decision goes to the LLM instead of failing the whole eval.
+
+The same boundary applies to [DAG](/docs/metrics-dag): the LLM produces text for task nodes; Jev uses **Noul** for binary judgement points and **Choice** for non-binary ones.
+
+[G-Eval](/docs/metrics-llm-evals) is the deliberate exception. It is LLM-as-a-judge by definition, so it stays entirely on the LLM. If you want a custom metric decided by Jev, that is what [JevEval](#jeveval-a-jev-native-metric) is for.
+
+## Using Jev to replace LLM-as-a-judge
+
+Everything above still starts with an LLM: it reads the response, breaks it into claims, and only then does Jev decide. You can also skip that step and have Jev judge the response directly. Instead of extracting claims and asking about each one, DeepEval asks Jev a few bounded questions about the whole test case, and the score comes from those answers alone. No LLM is involved at any point.
+
+Switch the eval mode to `system_one`, process-wide or on the metric:
+
+```bash
+deepeval set-eval-mode system_one
+```
+
+```python
+metric = FaithfulnessMetric(eval_mode="system_one")
+```
+
+Take Faithfulness again. DeepEval sends the raw `actual_output` and `retrieval_context` to Jev in one request and asks three questions: is every claim in the output supported by the context, does nothing in it contradict the context, and how grounded is the output overall. Each answer maps onto a value between 0 and 1, and the score is their weighted mean:
+
+```mermaid
+sequenceDiagram
+    participant TestCase
+    participant DeepEval
+    participant Jev
+
+    TestCase->>DeepEval: actual_output and retrieval_context
+    DeepEval->>Jev: Raw test case as state, two Nouls and one Score
+    Jev-->>DeepEval: P(yes), P(yes), expected level
+    DeepEval->>DeepEval: Weighted mean, reason from the answers
+```
+
+No LLM appears anywhere in that diagram. The reason is built from the answers too, so the whole metric runs with zero LLM calls:
+
+```python
+metric.measure(test_case)
+
+print(metric.score)       # weighted mean of Jev's answers
+print(metric.confidence)  # least decisive answer, so you can filter on it
+print(metric.reason)      # built from the answers, not written by an LLM
+```
+
+Jev makes every decision, and `metric.confidence` tells you when an answer deserves a second look. A test case too large for Jev's context fails with a message telling you to run that metric on the LLM, and any other Jev error is raised as-is.
+
+This turns every built-in LLM-as-a-judge metric and every classifier into a System One metric: the RAG metrics, the safety metrics, the multi-turn and conversational metrics, and the agentic ones like Task Completion, Step Efficiency and the MCP metrics, which Jev judges straight from the agent's trace. The only exceptions are G-Eval, which is LLM-as-a-judge by definition, and DAG, whose task nodes need the LLM, so it runs as `hybrid`. Each metric's page lists the questions Jev is asked.
+
+:::info
+A `system_one` score is a Jev-derived value, not the same ratio the LLM chain computes, so treat the two as different judges of the same metric rather than interchangeable numbers.
+:::
 
 ## JevEval: a Jev-native metric
 
@@ -161,7 +238,7 @@ Everything so far has been Jev slotting into metrics that already existed. That 
 
 <Equation formula="\text{JevEval} = \frac{\displaystyle\sum_{i \in \mathcal{A}} w_i \, v_i}{\displaystyle\sum_{i \in \mathcal{A}} w_i}" />
 
-No LLM generates a verdict anywhere in that path. The only thing an LLM can do in JevEval is, optionally, write the reason. Set `include_reason=False` and the metric is one Jev request plus arithmetic.
+No LLM is involved anywhere in that path. Even the reason is deterministic text built from Jev's answers and their confidence, so the metric is one Jev request plus arithmetic whether or not you keep the reason.
 
 We wrote a separate post on it: [Introducing JevEval: Jev-as-a-Judge for LLM Evaluation](/blog/introducing-jev-as-a-judge) walks through building a Tool Faithfulness metric, question by question, down to every probability. There is a [`ConversationalJevEval`](/docs/metrics-jev-eval) for multi-turn test cases too.
 
@@ -199,15 +276,6 @@ But if you want to try out the latest System One capabilities, it takes three st
 <Steps>
 <Step>
 
-Switch DeepEval to experimental mode:
-
-```bash
-deepeval set-mode experimental
-```
-
-</Step>
-<Step>
-
 Install the TypeSafe SDK:
 
 ```bash
@@ -224,12 +292,22 @@ export TYPESAFE_API_KEY=<your-typesafe-api-key>
 ```
 
 </Step>
+<Step>
+
+Pick how much of the judging Jev does:
+
+```bash
+deepeval set-eval-mode hybrid       # LLM extracts, Jev decides
+deepeval set-eval-mode system_one   # Jev judges the whole test case
+```
+
+</Step>
 </Steps>
 
-That's it. Run the same eval again. Your LLM still extracts the language; Jev now makes the decision in between.
+That's it. Run the same eval again with no changes to your metric code, and Jev is now [deciding the verdicts](#mixing-jev-with-traditional-llm-as-a-judge-metrics) or [judging the whole thing](#using-jev-to-replace-llm-as-a-judge), depending on the mode you picked.
 
 ## What's Next?
 
 For the longest time, LLMs have been doing both jobs at opposite ends of the eval algorithm: the language-heavy extraction they are best at, and the bounded decisions they are worst at. Jev lets us finally separate the two—language tasks stay with LLMs, decision points go to Jev, and equations turn those decisions into scores.
 
-We'll soon release benchmark results for Jev across different metrics, including how it compares with a fully LLM-driven eval workflow on accuracy, variance, cost, and speed. From there, we hope to move Jev support from experimental to beta in the near future.
+We'll soon release benchmark results for Jev across different metrics, including how it compares with a fully LLM-driven eval workflow on accuracy, variance, cost, and speed.

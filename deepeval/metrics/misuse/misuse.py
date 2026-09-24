@@ -6,14 +6,18 @@ from deepeval.test_case import (
     SingleTurnParams,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
+    SystemOneEvalSpec,
     SystemOneVerdictSpec,
     initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
     score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
@@ -22,6 +26,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.misuse.schema import (
     Misuses,
     MisuseVerdict,
@@ -45,6 +50,10 @@ class MisuseMetric(BaseMetric):
         domain: str,  # Required parameter - no defaults
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -58,9 +67,16 @@ class MisuseMetric(BaseMetric):
         self.domain = domain.strip().lower()
         warn_score_direction_flipped("MisuseMetric")
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -102,6 +118,9 @@ class MisuseMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.misuses: List[str] = self._generate_misuses(
                     test_case.actual_output
                 )
@@ -147,6 +166,9 @@ class MisuseMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.misuses: List[str] = await self._a_generate_misuses(
                 test_case.actual_output
             )
@@ -254,6 +276,24 @@ class MisuseMetric(BaseMetric):
             items=self.misuses,
             item_key="statement",
             state={"domain": self.domain},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `input` and `actual_output`, with the chatbot's `domain` written
+        into the questions; higher probabilities mean less misuse. See
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions", domain=self.domain
+                )
+            ),
         )
 
     async def _a_generate_misuses(self, actual_output: str) -> List[str]:
