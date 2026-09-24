@@ -172,6 +172,10 @@
     "python",
     "typescript"
   ],
+  "/docs/evaluation-eval-modes": [
+    "python",
+    "typescript"
+  ],
   "/docs/evaluation-flags-and-configs": [
     "python",
     "typescript"
@@ -325,7 +329,8 @@
     "typescript"
   ],
   "/docs/metrics-jev-eval": [
-    "python"
+    "python",
+    "typescript"
   ],
   "/docs/metrics-json-correctness": [
     "python",
@@ -690,7 +695,8 @@
     "typescript"
   ],
   "/integrations/models/typesafe-ai": [
-    "python"
+    "python",
+    "typescript"
   ],
   "/integrations/models/vertex-ai": [
     "python",

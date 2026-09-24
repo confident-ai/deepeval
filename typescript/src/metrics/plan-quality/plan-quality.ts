@@ -1,12 +1,23 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
+import {
+  compactTrace,
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   TaskSchema,
   AgentPlanSchema,
@@ -23,6 +34,14 @@ const TEMPLATE_CLASS = "PlanQualityMetric";
 export type PlanQualityTemplateOverride =
   MetricTemplateOverride<"PlanQualityMetric">;
 
+const PLAN_QUALITY_LEVELS = [
+  "Inadequate plan",
+  "Weak plan",
+  "Adequate but flawed plan",
+  "Good plan",
+  "Excellent plan",
+];
+
 const NO_PLAN_REASON =
   "There were no plans to evaluate within the trace of your agent's execution. " +
   "Please check if the agent's planning or reasoning or thinking is stored in any one of the trace attributes.";
@@ -37,6 +56,10 @@ export interface PlanQualityMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -67,10 +90,7 @@ export class PlanQualityMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.requiresTrace = true;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -79,6 +99,7 @@ export class PlanQualityMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
       const json = traceJson(testCase._traceDict);
 
       const { task } = await generateWithSchema(
@@ -108,13 +129,10 @@ export class PlanQualityMetric extends BaseMetric {
         this.score = 1;
         this.reason = NO_PLAN_REASON;
       } else {
-        const { score, reason } = await generateWithSchema(
-          this,
-          this.getPrompt("evaluate_plan_quality", {
-            user_task: task,
-            agent_plan: plan.join("\n"),
-          }),
-          PlanQualityScoreSchema,
+        const { score, reason } = await this.getPlanQualityScore(
+          task,
+          plan,
+          testCase.multimodal,
         );
         this.score = this.applyStrictMode(score);
         this.reason = reason;
@@ -129,6 +147,69 @@ export class PlanQualityMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
+  }
+
+  private async getPlanQualityScore(
+    task: string,
+    plan: string[],
+    multimodal: boolean,
+  ): Promise<{ score: number; reason: string }> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec(task, plan, multimodal),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "plan quality", value),
+      };
+    }
+    return generateWithSchema(
+      this,
+      this.getPrompt("evaluate_plan_quality", {
+        user_task: task,
+        agent_plan: plan.join("\n"),
+      }),
+      PlanQualityScoreSchema,
+    );
+  }
+
+  private systemOneScoreSpec(
+    task: string,
+    plan: string[],
+    multimodal: boolean,
+  ): SystemOneScoreSpec | undefined {
+    if (multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_score"),
+      levels: PLAN_QUALITY_LEVELS,
+      state: {
+        task,
+        plan,
+      },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    const hasTrace = testCase._traceDict != null;
+    return {
+      evaluationParams: hasTrace
+        ? []
+        : [
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.TOOLS_CALLED,
+          ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          has_trace: hasTrace,
+        }),
+      ),
+      extraState: {
+        trace: hasTrace ? compactTrace(testCase._traceDict) : undefined,
+      },
+    };
   }
 
   get name(): string {

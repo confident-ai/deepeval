@@ -1,8 +1,10 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
@@ -10,8 +12,17 @@ import {
   resolveRetrievalContext,
 } from "@/metrics/utils";
 import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  splitSentences,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
+import {
   ContextualRelevancyVerdictsSchema,
   ContextualRelevancyScoreReasonSchema,
+  type ContextualRelevancyVerdict,
   type ContextualRelevancyVerdicts,
 } from "@/metrics/contextual-relevancy/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
@@ -22,10 +33,26 @@ const TEMPLATE_CLASS = "ContextualRelevancyMetric";
 export type ContextualRelevancyTemplateOverride =
   MetricTemplateOverride<"ContextualRelevancyMetric">;
 
+function systemOneRelevancyVerdict(
+  statement: string,
+  verdict: string,
+  probability: number,
+): ContextualRelevancyVerdict {
+  let reason = `P(yes)=${probability.toFixed(2)}`;
+  if (verdict === "no") {
+    reason = `'${statement}' is not relevant to the input (${reason}).`;
+  }
+  return { statement, verdict, reason };
+}
+
 export interface ContextualRelevancyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -57,10 +84,7 @@ export class ContextualRelevancyMetric extends BaseMetric {
       SingleTurnParams.INPUT,
       SingleTurnParams.RETRIEVAL_CONTEXT,
     ];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -69,6 +93,7 @@ export class ContextualRelevancyMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const retrievalContext = resolveRetrievalContext(
         testCase.retrievalContext ?? [],
@@ -92,16 +117,51 @@ export class ContextualRelevancyMetric extends BaseMetric {
     }
   }
 
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
+  }
+
+  private systemOneVerdictSpec(
+    input: string,
+    context: string,
+  ): SystemOneVerdictSpec<string, ContextualRelevancyVerdict> | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: splitSentences(context),
+      itemKey: "statement",
+      state: { input },
+      buildVerdict: systemOneRelevancyVerdict,
+    };
+  }
+
   private async generateVerdicts(
     input: string,
     context: string,
   ): Promise<ContextualRelevancyVerdicts> {
-    const prompt = this.getPrompt("generate_verdicts", {
-      input,
-      context,
-      ...contextualRelevancyVerdictVars(this.multimodal),
+    const verdicts = await generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(input, context),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          input,
+          context,
+          ...contextualRelevancyVerdictVars(this.multimodal),
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          ContextualRelevancyVerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    return generateWithSchema(this, prompt, ContextualRelevancyVerdictsSchema);
+    return { verdicts };
   }
 
   private async generateReason(input: string): Promise<string | undefined> {

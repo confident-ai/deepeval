@@ -94,8 +94,8 @@ There are **SIX** optional parameters when creating a `KnowledgeRetentionMetric`
 - [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### As a standalone
 
@@ -133,11 +133,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `KnowledgeRetentionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -146,8 +142,6 @@ The `KnowledgeRetentionMetric` score is calculated according to the following eq
 <Equation formula="\text{Knowledge Retention} = \frac{\text{Number of Assistant Turns without Knowledge Attritions}}{\text{Total Number of Assistant Turns}}" />
 
 The `KnowledgeRetentionMetric` first uses an LLM to extract knowledge supplied in `"content"` by the `"user"` role throughout `turns`, before using the same LLM to determine whether each corresponding `"assistant"` content indicates an inability to recall said knowledge.
-
-<Only id="python">
 
 ### Hybrid
 
@@ -164,8 +158,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | Across `turns`, how well does the assistant retain and respect the facts the user has already stated? (Forgets most facts → Retains every fact)          | Score | 1      |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

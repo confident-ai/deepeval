@@ -115,8 +115,8 @@ There are **SIX** optional parameters when creating a `HallucinationMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### Within components
 
@@ -222,11 +222,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `HallucinationMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -240,15 +236,13 @@ The `HallucinationMetric` uses an LLM to determine, for each context in `context
 Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric` is calculated differently since it uses `contexts` as the source of truth instead. Since `contexts` is the ideal segment of your knowledge base relevant to a specific input, the degree of hallucination can be measured by the degree of which the `contexts` is disagreed upon.
 :::
 
-<Only id="python">
-
 ### Hybrid
 
 Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the judgement is answered by Jev, a System One model, instead: one yes/no question per context, with `P(yes) >= 0.5` counted as aligned. The equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
 
 ### Jev-as-a-judge
 
-Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `actual_output` and `context` and asked three questions:
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw <Term py="actual_output" ts="actualOutput"/> and `context` and asked three questions:
 
 | Question | Type | Weight |
 | --- | --- | --- |
@@ -257,8 +251,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | How much of `actual_output` is consistent with the documents in `context`? (Contradicts them → Fully consistent) | Score | 1 |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

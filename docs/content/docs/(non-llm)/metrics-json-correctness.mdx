@@ -174,7 +174,7 @@ There are **ONE** mandatory and **SIX** optional parameters when creating an `Pr
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`. Only decides the reason for an invalid output: written by an LLM, or under `system_one` the schema validation error itself. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`. Only decides the reason for an invalid output: written by an LLM, or under `system_one` the schema validation error itself. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 :::info
 Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the <Term py="actual_output" ts="actualOutput"/> has the wrong schema, **AND** if <Term py="include_reason" ts="includeReason"/> is set to <Term py="True" ts="true"/>.

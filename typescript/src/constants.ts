@@ -18,6 +18,8 @@ export const DEEPEVAL_RESULTS_FOLDER = "DEEPEVAL_RESULTS_FOLDER";
 export const DEEPEVAL_LOCAL_STORE = "DEEPEVAL_LOCAL_STORE";
 /** `stable` (default) or `experimental`: feature channel. */
 export const DEEPEVAL_MODE = "DEEPEVAL_MODE";
+/** `llm` (default), `hybrid` or `system_one`: who decides in a judge metric. */
+export const DEEPEVAL_EVAL_MODE = "DEEPEVAL_EVAL_MODE";
 /** SQLite store: also keep the full JSON object on test case / trace / span rows. */
 export const DEEPEVAL_SQLITE_INCLUDE_ROW_JSON =
   "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON";

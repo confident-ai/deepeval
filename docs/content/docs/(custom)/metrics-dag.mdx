@@ -149,7 +149,7 @@ There are **TWO** mandatory and **EIGHT** optional parameters when creating a `D
 
 <Case id="typescript">
 
-There are **TWO** mandatory and **SIX** optional parameters when creating a `DAGMetric`:
+There are **TWO** mandatory and **EIGHT** optional parameters when creating a `DAGMetric`:
 
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
@@ -159,6 +159,8 @@ There are **TWO** mandatory and **SIX** optional parameters when creating a `DAG
 - [Optional] `strictMode`: when `true`, sets the threshold to `1`. Defaulted to `false`.
 - [Optional] `verboseMode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `false`.
 - [Optional] `showIndicator`: whether to display the progress indicator while the graph runs. Defaulted to `true`.
+- [Optional] `systemOneModel`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `evalMode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `evalMode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM or Jev decides judgement nodes. `system_one` runs as `hybrid`. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 </Case>
 
@@ -651,11 +653,7 @@ The possible outputs are constrained to the verdict strings you define.
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `DAGMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -741,13 +739,11 @@ The child metric's score and reason become the `DAGMetric` result for that path.
 Enable verbose mode to inspect the nodes, outputs, judgements, and selected verdict used during evaluation.
 :::
 
-<Only id="python">
-
 ### Hybrid
 
 Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the judgement nodes are decided by Jev, a System One model, instead of the LLM:
 
-- A `BinaryJudgementNode` becomes one yes/no question on the node's criteria (`P(yes) >= 0.5` is `True`).
+- A `BinaryJudgementNode` becomes one yes/no question on the node's criteria (`P(yes) >= 0.5` is <Term py="True" ts="true"/>).
 - A `NonBinaryJudgementNode` becomes one choice over its child verdicts.
 - `TaskNode` and `VerdictNode` stay on the LLM.
 
@@ -756,8 +752,6 @@ A node whose Jev call fails is decided by the LLM instead. You'll need to set `T
 ### Jev-as-a-judge
 
 Task nodes always need the LLM, so under the `system_one` [eval mode](/docs/evaluation-eval-modes) a `DAGMetric` runs the same way as under `hybrid`.
-
-</Only>
 
 ## Examples
 

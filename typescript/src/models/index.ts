@@ -73,6 +73,9 @@ export {
   type AISDKModelOptions,
 } from "@/models/providers/ai-sdk-model";
 
+// System One (Jev) models: calibrated decisions, no generated text.
+export * from "@/models/system-one";
+
 // Gateways
 export {
   OpenRouterModel,

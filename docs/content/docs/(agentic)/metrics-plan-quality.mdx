@@ -134,8 +134,8 @@ There are **SEVEN** optional parameters when creating a `PlanQualityMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 To learn more about how the <Term py="evals_iterator" ts="evalsIterator"/> work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
@@ -145,11 +145,7 @@ The `PlanQualityMetric` is an agentic trace-only metric, so unlike other `deepev
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `PlanQualityMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -161,8 +157,6 @@ The `PlanQualityMetric` score is calculated using the following steps:
 <Equation formula="\text{Plan Quality Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
 
 - The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and task.
-
-<Only id="python">
 
 ### Hybrid
 
@@ -179,8 +173,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | How good is the plan the agent states in `trace` (in its reasoning, thoughts or an explicit plan) for accomplishing the task the user gave in the root span's input of `trace`? (Inadequate plan, Weak plan, Adequate but flawed plan, Good plan, Excellent plan, The agent states no plan)                                                                                                                                   | Choice | 1      |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

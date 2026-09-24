@@ -2,12 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  parseQuestions,
+  runSystemOneEval,
+  systemOneProbability,
+  verdictFromProbability,
+  type SystemOneBinarySpec,
+  type SystemOneEvalSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   convertTurnToDict,
@@ -29,6 +39,10 @@ export interface ConversationCompletenessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -58,10 +72,7 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
     this.multimodalAware = true;
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -70,6 +81,7 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.userIntentions = await this.extractUserIntentions(testCase.turns);
       this.verdicts = await Promise.all(
@@ -108,6 +120,16 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
     turns: Turn[],
     intention: string,
   ): Promise<ConversationCompletenessVerdict> {
+    const p = await systemOneProbability(
+      this,
+      this.systemOneVerdictSpec(turns, intention),
+    );
+    if (p !== undefined) {
+      return {
+        verdict: verdictFromProbability(p),
+        reason: `P(yes)=${p.toFixed(2)}`,
+      };
+    }
     const prompt = this.getPrompt("generate_verdicts", {
       turns: turns.map((turn) => convertTurnToDict(turn)),
       intention,
@@ -117,6 +139,32 @@ export class ConversationCompletenessMetric extends BaseConversationalMetric {
       prompt,
       ConversationCompletenessVerdictSchema,
     );
+  }
+
+  private systemOneVerdictSpec(
+    turns: Turn[],
+    intention: string,
+  ): SystemOneBinarySpec | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      state: {
+        turns: turns.map((turn) => convertTurnToDict(turn)),
+        intention,
+      },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async generateReason(): Promise<string | undefined> {

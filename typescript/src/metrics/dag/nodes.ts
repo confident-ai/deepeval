@@ -1,6 +1,10 @@
 import { LLMTestCase, SingleTurnParams, ToolCall } from "@/test-case";
 import { resolveTemplate } from "@/templates";
 import { generateWithSchema } from "@/metrics/utils";
+import {
+  generateBinaryJudgement,
+  generateChoiceJudgement,
+} from "@/metrics/system-one/decision";
 import { G_EVAL_PARAMS } from "@/metrics/g-eval/utils";
 import {
   BinaryJudgementVerdictSchema,
@@ -191,13 +195,23 @@ export class BinaryJudgementNode extends BaseNode implements ExecutableNode {
   }
 
   async execute(ctx: NodeContext): Promise<JudgementVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "BinaryJudgement",
-      "generate_binary_verdict",
-      { criteria: this.criteria, text: this.resolveText(ctx) },
-    );
-    return generateWithSchema(ctx.metric, prompt, BinaryJudgementVerdictSchema);
+    const text = this.resolveText(ctx);
+    return generateBinaryJudgement(ctx.metric, {
+      systemOne: { instructions: this.criteria, state: { text } },
+      llm: () => {
+        const prompt = resolveTemplate(
+          "metrics",
+          "BinaryJudgement",
+          "generate_binary_verdict",
+          { criteria: this.criteria, text },
+        );
+        return generateWithSchema(
+          ctx.metric,
+          prompt,
+          BinaryJudgementVerdictSchema,
+        );
+      },
+    });
   }
 
   verboseLog(depth: number, result: unknown): string {
@@ -258,21 +272,27 @@ export class NonBinaryJudgementNode extends BaseNode implements ExecutableNode {
   }
 
   async execute(ctx: NodeContext): Promise<JudgementVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "NonBinaryJudgement",
-      "generate_non_binary_verdict",
-      {
-        criteria: this.criteria,
-        text: this.resolveText(ctx, "\n"),
+    const text = this.resolveText(ctx, "\n");
+    return generateChoiceJudgement(ctx.metric, {
+      systemOne: {
+        instructions: this.criteria,
         options: this.verdictOptions,
+        state: { text },
       },
-    );
-    return generateWithSchema(
-      ctx.metric,
-      prompt,
-      nonBinaryVerdictSchema(this.verdictOptions),
-    );
+      llm: () => {
+        const prompt = resolveTemplate(
+          "metrics",
+          "NonBinaryJudgement",
+          "generate_non_binary_verdict",
+          { criteria: this.criteria, text, options: this.verdictOptions },
+        );
+        return generateWithSchema(
+          ctx.metric,
+          prompt,
+          nonBinaryVerdictSchema(this.verdictOptions),
+        );
+      },
+    });
   }
 
   verboseLog(depth: number, result: unknown): string {

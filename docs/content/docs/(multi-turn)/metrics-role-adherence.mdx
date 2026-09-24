@@ -100,8 +100,8 @@ There are **SIX** optional parameters when creating a `RoleAdherenceMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### As a standalone
 
@@ -139,11 +139,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `RoleAdherenceMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -153,15 +149,13 @@ The `RoleAdherenceMetric` score is calculated according to the following equatio
 
 The `RoleAdherenceMetric` iterates over each assistant turn and uses an LLM to evaluate whether the content adheres to the specified <Term py="chatbot_role" ts="chatbotRole"/>, using previous conversation turns as context.
 
-<Only id="python">
-
 ### Hybrid
 
-Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), Jev, a System One model, answers one yes/no question per assistant turn: does it stay in character as the `chatbot_role`? Turns with `P(yes) < 0.5` count as out of character. The equation and the LLM-written reason are unchanged. The LLM judges all turns in one prompt, so if any Jev call fails, the LLM judges the whole conversation instead. If a Jev call fails, the LLM makes that decision instead.
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), Jev, a System One model, answers one yes/no question per assistant turn: does it stay in character as the <Term py="chatbot_role" ts="chatbotRole"/>? Turns with `P(yes) < 0.5` count as out of character. The equation and the LLM-written reason are unchanged. The LLM judges all turns in one prompt, so if any Jev call fails, the LLM judges the whole conversation instead. If a Jev call fails, the LLM makes that decision instead.
 
 ### Jev-as-a-judge
 
-Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and the `chatbot_role` and asked three questions:
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the whole conversation and the <Term py="chatbot_role" ts="chatbotRole"/> and asked three questions:
 
 | Question                                                                                                                                                         | Type  | Weight |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
@@ -170,8 +164,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | Across the assistant turns in `turns`, how consistently does the assistant adhere to the role in `chatbot_role`? (Mostly out of character → Always in character) | Score | 1      |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

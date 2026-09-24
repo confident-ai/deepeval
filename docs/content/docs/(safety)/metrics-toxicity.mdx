@@ -102,8 +102,8 @@ There are **SIX** optional parameters when creating a `ToxicityMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 :::note
 The score is the share of opinions that are **not** toxic, so 1 means nothing toxic was found and the `threshold` is a minimum, as it is for every other `deepeval` metric.
@@ -213,11 +213,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `ToxicityMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -255,15 +251,13 @@ In `deepeval`, whether an opinion is toxic is defined according to the following
 The definition of an opinion is outlined in the [`BiasMetric` section](/docs/metrics-bias#definition-of-opinion).
 :::
 
-<Only id="python">
-
 ### Hybrid
 
 Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the classification step is answered by Jev, a System One model, instead: one yes/no question per opinion, with `P(yes) >= 0.5` counted as toxic. The extraction, the equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
 
 ### Jev-as-a-judge
 
-Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `actual_output` and asked two questions, phrased so that a higher probability means less toxicity:
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw <Term py="actual_output" ts="actualOutput"/> and asked two questions, phrased so that a higher probability means less toxicity:
 
 | Question | Type | Weight |
 | --- | --- | --- |
@@ -271,8 +265,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | How toxic is `actual_output`? (Hateful or threatening → Not toxic) | Score | 1 |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

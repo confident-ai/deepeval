@@ -2,19 +2,38 @@
 id: typesafe-ai
 title: TypeSafe AI (Jev)
 sidebar_label: TypeSafe AI
-languages: [python]
+languages: [python, typescript]
 ---
 
-`deepeval` supports using [TypeSafe AI](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one), as the judge for its metrics and classifiers under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). To get started, you'll need to install the TypeSafe AI SDK and set up your API key.
+`deepeval` supports using [TypeSafe AI](https://typesafe.ai)'s Jev, a [System One model](https://docs.typesafe.ai/concepts/system-one), as the judge for its metrics<Only id="python"> and classifiers</Only> under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). To get started, you'll need to install the TypeSafe AI SDK and set up your API key.
 
 ### Setting Up Your API Key
 
 Install the TypeSafe AI SDK, then provide your `TYPESAFE_API_KEY` in the CLI:
 
+<Switch>
+
+<Case id="python">
+
 ```bash
 pip install typesafe-sdk
 export TYPESAFE_API_KEY=<your-typesafe-api-key>
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npm install @typesafe-ai/sdk
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+```
+
+</Case>
+
+</Switch>
+
+<Only id="python">
 
 Alternatively, if you're working in a notebook environment (e.g., Jupyter or Colab), set your `TYPESAFE_API_KEY` in a cell:
 
@@ -22,15 +41,37 @@ Alternatively, if you're working in a notebook environment (e.g., Jupyter or Col
 %env TYPESAFE_API_KEY=<your-typesafe-api-key>
 ```
 
-You can also save it with `deepeval`'s CLI, which accepts `--model` and `--cost-per-input-token` too (run `deepeval unset-typesafe` to remove it):
+</Only>
+
+You can also save it with `deepeval`'s CLI, which accepts `--model` and `--cost-per-input-token` too (run <Term py="deepeval unset-typesafe" ts="npx deepeval unset-typesafe"/> to remove it):
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval set-typesafe --prompt-api-key --save=dotenv
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-typesafe --prompt-api-key --save=dotenv
+```
+
+</Case>
+
+</Switch>
+
 ### In Code
 
-To use Jev for `deepeval` metrics, define a `TypeSafeModel` and pass it as the metric's `system_one_model`. By default, the `model` is set to <DefaultSystemOneModel />.
+To use Jev for `deepeval` metrics, define a `TypeSafeModel` and pass it as the metric's <Term py="system_one_model" ts="systemOneModel"/>. By default, the `model` is set to <DefaultSystemOneModel />.
+
+<Switch>
+
+<Case id="python">
 
 <Tabs items={["Python", "ENV"]}>
 <Tab value="Python">
@@ -72,6 +113,55 @@ To use Jev in every metric without passing `eval_mode`, set the eval mode once w
 
 </Tab>
 </Tabs>
+
+</Case>
+
+<Case id="typescript">
+
+<Tabs items={["TypeScript", "ENV"]}>
+<Tab value="TypeScript">
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { TypeSafeModel } from "deepeval/models";
+
+const model = new TypeSafeModel({ model: "jev-latest" });
+const answerRelevancy = new AnswerRelevancyMetric({
+  systemOneModel: model,
+  evalMode: "system_one",
+});
+```
+
+There are **ZERO** mandatory and **THREE** optional parameters when creating a `TypeSafeModel`:
+
+- [Optional] `model`: A string specifying which Jev model to use. Defaults to `TYPESAFE_MODEL_NAME` if not passed; falls back to <DefaultSystemOneModel /> if unset.
+- [Optional] `apiKey`: A string specifying your TypeSafe AI API key. Defaults to `TYPESAFE_API_KEY` if not passed; throws when the model is created if unset.
+- [Optional] `costPerInputToken`: A number specifying the cost for each input token for the provided model. Defaults to `TYPESAFE_COST_PER_INPUT_TOKEN`, then to `deepeval`'s pricing for known Jev models. Jev does not charge for output tokens.
+
+Any other option passed to `new TypeSafeModel({...})`, such as `baseURL`, is forwarded to the underlying `TypeSafeClient`.
+
+</Tab>
+<Tab value="ENV">
+
+With `TYPESAFE_API_KEY` set, pass the name of your desired Jev model as the metric's `systemOneModel`, or leave it out to use `TYPESAFE_MODEL_NAME` (falling back to <DefaultSystemOneModel />):
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  systemOneModel: "jev-latest",
+  evalMode: "system_one",
+});
+```
+
+To use Jev in every metric without passing `evalMode`, set the eval mode once with `npx deepeval set-eval-mode hybrid` or `npx deepeval set-eval-mode system_one`.
+
+</Tab>
+</Tabs>
+
+</Case>
+
+</Switch>
 
 ### Available Jev Models
 

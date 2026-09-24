@@ -290,11 +290,37 @@ print(correctness.score, correctness.reason)
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="JevEval">
+```typescript
+import { LLMTestCase, SingleTurnParams } from "deepeval/test-case";
+import { JevEval, Noul, Score } from "deepeval/metrics";
 
-Use `GEval` in the first tab to create a custom metric in the meantime.
+const testCase = new LLMTestCase({
+  input: "...",
+  actualOutput: "...",
+  expectedOutput: "...",
+});
+const correctness = new JevEval({
+  name: "Correctness",
+  evaluationParams: [
+    SingleTurnParams.ACTUAL_OUTPUT,
+    SingleTurnParams.EXPECTED_OUTPUT,
+  ],
+  questions: [
+    new Noul({
+      statement:
+        "actual_output contains no fact that contradicts expected_output.",
+      weight: 2,
+    }),
+    new Score({
+      question: "How closely does actual_output match expected_output?",
+      levels: ["Contradicts it", "Mostly wrong", "Mostly right", "Fully matches"],
+    }),
+  ],
+});
 
-</NotImplemented>
+await correctness.measure(testCase);
+console.log(correctness.score, correctness.reason);
+```
 
 </Case>
 

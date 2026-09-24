@@ -2,13 +2,23 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  splitSentences,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -35,6 +45,10 @@ export interface TurnContextualRecallMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -71,10 +85,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
       MultiTurnParams.EXPECTED_OUTCOME,
     ];
     this.windowSize = options.windowSize ?? 10;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -83,6 +94,7 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const expectedOutcome = testCase.expectedOutcome ?? "";
       const turnsWindows: Turn[][] = getTurnsInSlidingWindow(
@@ -150,12 +162,46 @@ export class TurnContextualRecallMetric extends BaseConversationalMetric {
     retrievalContext: string[],
   ): Promise<ContextualRecallVerdict[]> {
     if (retrievalContext.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      expected_outcome: expectedOutcome,
-      ...contextualRecallVerdictVars(retrievalContext, this.multimodal),
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(expectedOutcome, retrievalContext),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          expected_outcome: expectedOutcome,
+          ...contextualRecallVerdictVars(retrievalContext, this.multimodal),
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
+  }
+
+  private systemOneVerdictSpec(
+    expectedOutcome: string,
+    retrievalContext: string[],
+  ): SystemOneVerdictSpec<string, ContextualRecallVerdict> | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: splitSentences(expectedOutcome),
+      itemKey: "sentence",
+      state: { retrieval_context: retrievalContext },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async getInteractionReason(

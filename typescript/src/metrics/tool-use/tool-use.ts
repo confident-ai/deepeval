@@ -7,12 +7,22 @@ import {
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -31,12 +41,32 @@ const TEMPLATE_CLASS = "ToolUseMetric";
 
 export type ToolUseTemplateOverride = MetricTemplateOverride<"ToolUseMetric">;
 
+const TOOL_SELECTION_LEVELS = [
+  "Irrelevant or unjustified",
+  "Poor selection",
+  "Mixed selection",
+  "Mostly correct",
+  "Perfectly matched",
+];
+
+const ARGUMENT_CORRECTNESS_LEVELS = [
+  "Nonsensical or unrelated",
+  "Poor arguments",
+  "Partially correct",
+  "Mostly correct",
+  "Fully correct",
+];
+
 export interface ToolUseMetricOptions {
   /** The tools the agent had access to. Required. */
   availableTools: ToolCall[];
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -67,10 +97,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     this.availableTools = options.availableTools;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -79,6 +106,7 @@ export class ToolUseMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const userInputAndTools = this.getUserInputAndTurns(
         getUnitInteractions(testCase.turns),
@@ -151,6 +179,16 @@ export class ToolUseMetric extends BaseConversationalMetric {
   private async getToolSelectionScore(
     u: UserInputAndTools,
   ): Promise<ToolSelectionScore> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec("tool_selection", u),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "tool selection", value),
+      };
+    }
     const prompt = this.getPrompt("get_tool_selection_score", {
       user_input: u.user_messages,
       assistant_messages: u.assistant_messages,
@@ -163,6 +201,16 @@ export class ToolUseMetric extends BaseConversationalMetric {
   private async getArgumentCorrectnessScore(
     u: UserInputAndTools,
   ): Promise<ArgumentCorrectnessScore> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec("argument_correctness", u),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "argument correctness", value),
+      };
+    }
     const prompt = this.getPrompt("get_argument_correctness_score", {
       user_input: u.user_messages,
       assistant_messages: u.assistant_messages,
@@ -170,6 +218,43 @@ export class ToolUseMetric extends BaseConversationalMetric {
       available_tools: u.available_tools,
     });
     return generateWithSchema(this, prompt, ArgumentCorrectnessScoreSchema);
+  }
+
+  private systemOneScoreSpec(
+    kind: "tool_selection" | "argument_correctness",
+    u: UserInputAndTools,
+  ): SystemOneScoreSpec | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(`_experimental_system_one_${kind}_score`),
+      levels:
+        kind === "tool_selection"
+          ? TOOL_SELECTION_LEVELS
+          : ARGUMENT_CORRECTNESS_LEVELS,
+      state: {
+        user_messages: u.user_messages,
+        assistant_messages: u.assistant_messages,
+        tools_called: u.tools_called,
+        available_tools: u.available_tools,
+      },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.TOOLS_CALLED,
+      ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+      extraState: { available_tools: [...this.availableTools] },
+    };
   }
 
   private calculateScore(

@@ -52,7 +52,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
 | `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
 | `DEEPEVAL_MODE`              | `stable` / `experimental` / unset | Feature channel. `stable` (default) only runs finalised behaviour; `experimental` opts into the latest features, which may change or break between releases. Unrecognised values mean `stable`. See [DeepEval mode](#deepeval-mode). |
-| <Only id="python">`DEEPEVAL_EVAL_MODE`</Only> | <Only id="python">`llm` / `hybrid` / `system_one` / unset</Only> | <Only id="python">Who decides in LLM-as-a-judge metrics: the LLM end to end (`llm`, default), the LLM extracts and a System One model decides (`hybrid`), or a System One model runs the whole metric with no LLM at all (`system_one`). See [DeepEval eval mode](#deepeval-eval-mode).</Only> |
+| `DEEPEVAL_EVAL_MODE`         | `llm` / `hybrid` / `system_one` / unset | Who decides in LLM-as-a-judge metrics: the LLM end to end (`llm`, default), the LLM extracts and a System One model decides (`hybrid`), or a System One model runs the whole metric with no LLM at all (`system_one`). See [DeepEval eval mode](#deepeval-eval-mode). |
 | `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
 | `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
@@ -211,15 +211,17 @@ if (isExperimental()) {
 
 The value is case-insensitive. Anything other than `stable` or `experimental` falls back to `stable` with a one-time warning on stderr, so a typo can never silently enrol you. <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows the channel currently in effect and where it was set.
 
-<Only id="python">
-
 #### DeepEval eval mode
 
-`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics and classifiers, and is how [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
+`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>, and is how [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
 
 - `llm` (the default): the LLM runs the whole metric.
 - `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that decision instead.
 - `system_one`: Jev runs the whole metric in one request over the raw test case and the reason is built from its answers. No LLM is used, so no LLM key is needed.
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 export DEEPEVAL_EVAL_MODE=system_one
@@ -227,9 +229,21 @@ export TYPESAFE_API_KEY=<your-typesafe-api-key>
 deepeval test run test_llm_app.py
 ```
 
-Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An `eval_mode=` argument on a metric overrides it, and `deepeval set-eval-mode` sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
+</Case>
 
-</Only>
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+npx deepeval test run example.test.ts
+```
+
+</Case>
+
+</Switch>
+
+Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
 
 ## Logging
 

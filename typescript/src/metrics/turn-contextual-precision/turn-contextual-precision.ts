@@ -2,13 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -32,6 +41,10 @@ export interface TurnContextualPrecisionMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -68,10 +81,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
       MultiTurnParams.EXPECTED_OUTCOME,
     ];
     this.windowSize = options.windowSize ?? 10;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -80,6 +90,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const expectedOutcome = testCase.expectedOutcome ?? "";
       const turnsWindows: Turn[][] = getTurnsInSlidingWindow(
@@ -151,20 +162,58 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     retrievalContext: string[],
   ): Promise<ContextualPrecisionVerdict[]> {
     if (retrievalContext.length === 0) return [];
-    const n = retrievalContext.length;
-    const prompt = this.getPrompt("generate_verdicts", {
-      input,
-      expected_outcome: expectedOutcome,
-      document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
-      context_to_display: this.multimodal
-        ? idRetrievalContext(retrievalContext)
-        : retrievalContext,
-      multimodal_note: this.multimodal
-        ? " (which can be text or an image)"
-        : "",
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(
+        input,
+        expectedOutcome,
+        retrievalContext,
+      ),
+      llm: async () => {
+        const n = retrievalContext.length;
+        const prompt = this.getPrompt("generate_verdicts", {
+          input,
+          expected_outcome: expectedOutcome,
+          document_count_str: ` (${n} document${n > 1 ? "s" : ""})`,
+          context_to_display: this.multimodal
+            ? idRetrievalContext(retrievalContext)
+            : retrievalContext,
+          multimodal_note: this.multimodal
+            ? " (which can be text or an image)"
+            : "",
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
+  }
+
+  private systemOneVerdictSpec(
+    input: string,
+    expectedOutcome: string,
+    retrievalContext: string[],
+  ): SystemOneVerdictSpec<string, ContextualPrecisionVerdict> {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: retrievalContext,
+      itemKey: "node",
+      state: { user_message: input, assistant_output: expectedOutcome },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async getInteractionReason(

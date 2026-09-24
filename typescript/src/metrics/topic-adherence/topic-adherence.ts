@@ -2,12 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  parseQuestions,
+  runSystemOneEval,
+  systemOneProbability,
+  verdictFromProbability,
+  type SystemOneBinarySpec,
+  type SystemOneEvalSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -33,6 +43,10 @@ export interface TopicAdherenceMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -62,10 +76,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
     this.relevantTopics = options.relevantTopics;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -74,6 +85,7 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const unitInteractions = getUnitInteractions(testCase.turns);
       const qaPairs = (
@@ -120,12 +132,76 @@ export class TopicAdherenceMetric extends BaseConversationalMetric {
   }
 
   private async getQaVerdict(qaPair: QAPair): Promise<RelevancyVerdict> {
+    const specs = this.systemOneVerdictSpecs(qaPair);
+    if (specs !== undefined) {
+      const [onTopic, answered] = await Promise.all(
+        specs.map((spec) => systemOneProbability(this, spec)),
+      );
+      if (onTopic !== undefined && answered !== undefined) {
+        return this.systemOneVerdict(onTopic, answered);
+      }
+    }
     const prompt = this.getPrompt("get_qa_pair_verdict", {
       relevant_topics: this.relevantTopics,
       question: qaPair.question,
       response: qaPair.response,
     });
     return generateWithSchema(this, prompt, RelevancyVerdictSchema);
+  }
+
+  private systemOneVerdictSpecs(
+    qaPair: QAPair,
+  ): [SystemOneBinarySpec, SystemOneBinarySpec] | undefined {
+    if (this.multimodal) return undefined;
+    const state = {
+      relevant_topics: [...this.relevantTopics],
+      question: qaPair.question,
+      response: qaPair.response,
+    };
+    return [
+      {
+        instructions: this.getPrompt(
+          "_experimental_system_one_on_topic_verdict",
+        ),
+        state,
+      },
+      {
+        instructions: this.getPrompt(
+          "_experimental_system_one_answered_verdict",
+        ),
+        state,
+      },
+    ];
+  }
+
+  private systemOneVerdict(
+    onTopic: number,
+    answered: number,
+  ): RelevancyVerdict {
+    const relevant = verdictFromProbability(onTopic) === "yes";
+    const responded = verdictFromProbability(answered) === "yes";
+    let verdict: Verdict;
+    if (relevant) verdict = responded ? "TP" : "FN";
+    else verdict = responded ? "FP" : "TN";
+    return {
+      verdict,
+      reason: `P(on topic)=${onTopic.toFixed(2)}, P(answered)=${answered.toFixed(2)}`,
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          relevant_topics: [...this.relevantTopics],
+        }),
+      ),
+      extraState: { relevant_topics: [...this.relevantTopics] },
+    };
   }
 
   private calculateScore(tally: Record<Verdict, string[]>): number {

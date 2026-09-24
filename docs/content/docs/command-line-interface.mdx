@@ -17,7 +17,7 @@ import { ASSETS } from "@site/src/assets";
 - Diagnosing your environment (<Term py="deepeval diagnose" ts="npx deepeval diagnose"/>): default models, effective settings, and where each value comes from
 - Enabling/disabling debug
 - Opting into experimental features (<Term py="deepeval set-mode experimental" ts="npx deepeval set-mode experimental"/>)
-- <Only id="python">Choosing who decides in LLM-as-a-judge metrics: the LLM, or a System One model (`deepeval set-eval-mode`)</Only>
+- Choosing who decides in LLM-as-a-judge metrics: the LLM, or a System One model (<Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/>)
 - Selecting an LLM provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, OpenRouter, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
 - Listing and updating any deepeval setting (<Term py="deepeval settings -l" ts="npx deepeval settings -l"/>, <Term py="deepeval settings --set KEY=VALUE" ts="npx deepeval settings --set KEY=VALUE"/>)
@@ -411,7 +411,7 @@ The report shows:
 - **Evaluation model**: the model `deepeval` will use when a metric<Only id="python"> (or synthesizer, simulator, etc.)</Only> is constructed without an explicit model, plus the reason it won.<Only id="python"> The default embedding model is listed alongside it, and the selected text-to-speech and speech-to-text models below those, with what each is used by.</Only>
 - **Configuration sources**: the precedence order every variable is resolved against, independently (process environment → `.env.local` → `.env.<APP_ENV>` → `.env` → JSON keystore → built-in defaults), which dotenv files were loaded, and where the keystore lives.
 - **Configured settings**: every deepeval setting that is explicitly set, with secrets masked (only the last 6 characters shown) and the **winning source** for each — the report uses the same resolvers as the runtime, so what you see is what your evals get. Storage settings are included here too: `DEEPEVAL_RESULTS_FOLDER` and [`DEEPEVAL_LOCAL_STORE`](/docs/environment-variables#sqlite-local-store), so if runs are landing in `deepeval.db` instead of `test_run_*.json` files (or vice versa), this is where to confirm which value won and where it came from. <Switch><Case id="python">An unrecognised `DEEPEVAL_LOCAL_STORE` value falls back to `json` at run time with a warning on stderr, so a typo shows up here as the value that lost.</Case><Case id="typescript">A `DEEPEVAL_LOCAL_STORE=sqlite` that this Node version cannot honour (anything below Node 24) is reported as an ignored invalid value with the reason, rather than silently dropped.</Case></Switch>
-- <Switch><Case id="python">**Eval mode**: the [eval mode](/docs/evaluation-eval-modes) in effect — `llm` (default), `hybrid` or `system_one` — and where it was set. An unrecognised [`DEEPEVAL_EVAL_MODE`](/docs/environment-variables#deepeval-eval-mode) value is reported as `llm`, since that is what the runtime falls back to.</Case><Case id="typescript">**Mode**: the feature channel in effect — `stable` (default) or `experimental` — and where it was set. An unrecognised [`DEEPEVAL_MODE`](/docs/environment-variables#deepeval-mode) value is reported as `stable`, since that is what the runtime falls back to.</Case></Switch>
+- <Switch><Case id="python">**Eval mode**: the [eval mode](/docs/evaluation-eval-modes) in effect — `llm` (default), `hybrid` or `system_one` — and where it was set. An unrecognised [`DEEPEVAL_EVAL_MODE`](/docs/environment-variables#deepeval-eval-mode) value is reported as `llm`, since that is what the runtime falls back to.</Case><Case id="typescript">**Mode**: the feature channel in effect — `stable` (default) or `experimental` — and where it was set. An unrecognised [`DEEPEVAL_MODE`](/docs/environment-variables#deepeval-mode) value is reported as `stable`, since that is what the runtime falls back to. **Eval mode**: the [eval mode](/docs/evaluation-eval-modes) in effect — `llm` (default), `hybrid` or `system_one` — and where it was set, plus the Jev model and whether `TYPESAFE_API_KEY` is set when the mode uses Jev.</Case></Switch>
 - **Confident AI**: login status, masked API key, data region, and the API endpoint.<Only id="python"> The OTEL endpoint is shown too, with warnings if either endpoint looks like it belongs to a different region than your API key.</Only>
 
 Options:
@@ -549,21 +549,35 @@ npx deepeval set-mode experimental --save=dotenv
 
 To opt out, run <Term py="deepeval set-mode stable" ts="npx deepeval set-mode stable"/>.
 
-<Only id="python">
-
 ### `set-eval-mode`
 
-Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics and classifiers. This is how you bring [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, into an eval:
+Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>. This is how you bring [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, into an eval:
 
 - `llm` (the default): the LLM runs the whole metric, end to end.
-- `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that one decision instead. A missing `TYPESAFE_API_KEY` or SDK still fails when the metric is created.
+- `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that one decision instead. A missing `TYPESAFE_API_KEY`<Only id="python"> or SDK</Only> still fails when the metric is created.
 - `system_one`: Jev runs the whole metric in one request over the raw test case and the reason is built from its answers. No LLM is built or called, so no LLM key is needed. A test case too large for Jev fails with a message telling you to run it with `llm`, and any other Jev error is raised as-is.
 
-Under the hood this sets [`DEEPEVAL_EVAL_MODE`](/docs/environment-variables#deepeval-eval-mode). Unset, it means `llm`; the [feature channel](#set-mode) has no effect on it. An `eval_mode=` argument on a metric overrides it. Run `deepeval diagnose` to see the eval mode currently in effect and where it came from.
+Under the hood this sets [`DEEPEVAL_EVAL_MODE`](/docs/environment-variables#deepeval-eval-mode). Unset, it means `llm`; the [feature channel](#set-mode) has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it. Run <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> to see the eval mode currently in effect and where it came from.
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval set-eval-mode system_one --save=dotenv
 ```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-eval-mode system_one --save=dotenv
+```
+
+</Case>
+
+</Switch>
 
 | Option          | Description                                                             |
 | --------------- | ----------------------------------------------------------------------- |
@@ -571,9 +585,7 @@ deepeval set-eval-mode system_one --save=dotenv
 | `--save`, `-s`  | Persist `DEEPEVAL_EVAL_MODE` to a dotenv file. Usage: `dotenv[:path]`. |
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                      |
 
-Every built-in LLM-as-a-judge metric and classifier follows the eval mode. `GEval`, `ConversationalGEval` and `ArenaGEval` are LLM-as-a-judge by definition and ignore it; use [`JevEval`](/docs/metrics-jev-eval) for a custom metric decided by Jev. The DAG metrics' task nodes need the LLM, so under `system_one` they run as `hybrid`.
-
-</Only>
+Every built-in LLM-as-a-judge metric<Only id="python"> and classifier</Only> follows the eval mode. `GEval`, `ConversationalGEval` and `ArenaGEval` are LLM-as-a-judge by definition and ignore it; use [`JevEval`](/docs/metrics-jev-eval) for a custom metric decided by Jev. The DAG metrics' task nodes need the LLM, so under `system_one` they run as `hybrid`.
 
 ### `gate`
 

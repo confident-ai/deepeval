@@ -9,13 +9,28 @@ import {
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
-import { reprPrimitive, indentMultilineString } from "@/metrics/mcp/utils";
+import {
+  reprPrimitive,
+  indentMultilineString,
+  mcpCallsState,
+  mcpServersState,
+} from "@/metrics/mcp/utils";
+import {
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   MCPPrimitivesScoreSchema,
   MCPArgsScoreSchema,
@@ -26,10 +41,27 @@ const TEMPLATE_CLASS = "MCPUseMetric";
 
 export type MCPUseTemplateOverride = MetricTemplateOverride<"MCPUseMetric">;
 
+const PRIMITIVE_USAGE_LEVELS = [
+  "Wrong primitives",
+  "Poor choice",
+  "Reasonable choice",
+  "Best choice",
+];
+const ARGUMENT_CORRECTNESS_LEVELS = [
+  "Incorrect",
+  "Mostly incorrect",
+  "Mostly correct",
+  "Fully correct",
+];
+
 export interface MCPUseMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -69,10 +101,7 @@ export class MCPUseMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
       SingleTurnParams.MCP_SERVERS,
     ];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -81,6 +110,7 @@ export class MCPUseMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const { availablePrimitives, primitivesUsed } =
         this.getMcpInteractionText(
@@ -94,24 +124,48 @@ export class MCPUseMetric extends BaseMetric {
         actual_output: testCase.actualOutput,
       };
 
-      const primScore = await generateWithSchema(
+      const primValue = await systemOneScore(
         this,
-        this.getPrompt("get_primitive_correctness_prompt", {
-          test_case: testCaseVars,
-          available_primitives: availablePrimitives,
-          primitives_used: primitivesUsed,
-        }),
-        MCPPrimitivesScoreSchema,
+        this.systemOnePrimitivesSpec(testCase),
       );
-      const argScore = await generateWithSchema(
+      const primScore =
+        primValue !== undefined
+          ? {
+              score: primValue,
+              reason: formatDecisionReason(this, "primitive usage", primValue),
+            }
+          : await generateWithSchema(
+              this,
+              this.getPrompt("get_primitive_correctness_prompt", {
+                test_case: testCaseVars,
+                available_primitives: availablePrimitives,
+                primitives_used: primitivesUsed,
+              }),
+              MCPPrimitivesScoreSchema,
+            );
+      const argValue = await systemOneScore(
         this,
-        this.getPrompt("get_mcp_argument_correctness_prompt", {
-          test_case: testCaseVars,
-          available_primitives: availablePrimitives,
-          primitives_used: primitivesUsed,
-        }),
-        MCPArgsScoreSchema,
+        this.systemOneArgsSpec(testCase),
       );
+      const argScore =
+        argValue !== undefined
+          ? {
+              score: argValue,
+              reason: formatDecisionReason(
+                this,
+                "argument correctness",
+                argValue,
+              ),
+            }
+          : await generateWithSchema(
+              this,
+              this.getPrompt("get_mcp_argument_correctness_prompt", {
+                test_case: testCaseVars,
+                available_primitives: availablePrimitives,
+                primitives_used: primitivesUsed,
+              }),
+              MCPArgsScoreSchema,
+            );
 
       const score = Math.min(primScore.score, argScore.score);
       this.score = this.applyStrictMode(score);
@@ -159,6 +213,63 @@ export class MCPUseMetric extends BaseMetric {
     primitivesUsed += block("MCP Resources Called", mcpResourcesCalled);
     primitivesUsed += block("MCP Prompts Called", mcpPromptsCalled);
     return { availablePrimitives, primitivesUsed };
+  }
+
+  private systemOneState(testCase: LLMTestCase): Record<string, unknown> {
+    return {
+      input: testCase.input,
+      actual_output: testCase.actualOutput,
+      mcp_servers: mcpServersState(testCase.mcpServers),
+      primitives_used: mcpCallsState(
+        testCase.mcpToolsCalled?.length
+          ? testCase.mcpToolsCalled
+          : (testCase.toolsCalled ?? []),
+        testCase.mcpResourcesCalled ?? [],
+        testCase.mcpPromptsCalled ?? [],
+      ),
+    };
+  }
+
+  private systemOnePrimitivesSpec(
+    testCase: LLMTestCase,
+  ): SystemOneScoreSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_primitive_score"),
+      levels: PRIMITIVE_USAGE_LEVELS,
+      state: this.systemOneState(testCase),
+    };
+  }
+
+  private systemOneArgsSpec(
+    testCase: LLMTestCase,
+  ): SystemOneScoreSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_args_score"),
+      levels: ARGUMENT_CORRECTNESS_LEVELS,
+      state: this.systemOneState(testCase),
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.MCP_TOOLS_CALLED,
+        SingleTurnParams.MCP_RESOURCES_CALLED,
+        SingleTurnParams.MCP_PROMPTS_CALLED,
+        SingleTurnParams.TOOLS_CALLED,
+      ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+      extraState: {
+        mcp_servers: mcpServersState(testCase.mcpServers),
+      },
+    };
   }
 
   get name(): string {

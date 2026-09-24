@@ -1,13 +1,22 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import { TruthsSchema, ClaimsSchema } from "@/metrics/faithfulness/schema";
 import {
   VerdictsSchema,
@@ -49,6 +58,10 @@ export interface SummarizationMetricOptions {
   /** Number of assessment questions to generate (when none are supplied). */
   n?: number;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   /** Pre-supplied yes/no assessment questions (skips question generation). */
   assessmentQuestions?: string[];
   includeReason?: boolean;
@@ -98,10 +111,7 @@ export class SummarizationMetric extends BaseMetric {
       options.truthsExtractionLimit != null
         ? Math.max(options.truthsExtractionLimit, 0)
         : undefined;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -110,6 +120,7 @@ export class SummarizationMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       [this.truths, this.claims] = await Promise.all([
         this.generateTruths(testCase.input),
@@ -142,6 +153,22 @@ export class SummarizationMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          // An empty array is truthy in Nunjucks but falsy in Jinja, and the
+          // template's `if assessment_questions` decides a JSON comma.
+          assessment_questions: this.assessmentQuestions?.length
+            ? this.assessmentQuestions
+            : null,
+        }),
+      ),
+    };
   }
 
   // --- truths/claims (borrow Faithfulness templates) ---
@@ -179,12 +206,34 @@ export class SummarizationMetric extends BaseMetric {
     SummarizationAlignmentVerdict[]
   > {
     if (this.claims.length === 0) return [];
-    const prompt = this.getPrompt("generate_alignment_verdicts", {
-      summary_claims: this.claims,
-      original_text: this.truths.join("\n\n"),
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_alignment_verdicts", {
+          summary_claims: this.claims,
+          original_text: this.truths.join("\n\n"),
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
+  }
+
+  private systemOneVerdictSpec(): SystemOneVerdictSpec<
+    string,
+    SummarizationAlignmentVerdict
+  > {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.claims,
+      itemKey: "summary_claim",
+      state: { original_text: this.truths },
+      borderline: "idk",
+    };
   }
 
   // --- coverage ---

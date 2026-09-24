@@ -2,9 +2,11 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import { MissingTestCaseParamsError } from "@/errors";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
 } from "@/metrics/utils";
@@ -16,22 +18,49 @@ import {
   getTasks,
   taskStepsTakenText,
   availableMcpServersBlock,
+  mcpServersState,
 } from "@/metrics/mcp/utils";
+import {
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   ToolScoreSchema,
   ArgsScoreSchema,
   ReasonSchema,
   type ToolScore,
   type ArgsScore,
+  type Task,
 } from "@/metrics/mcp/schema";
 // Owns no templates: every prompt is borrowed, so there is no `evaluationTemplate`
 // (as in Python, whose constructor also has no `evaluation_template`).
 const BORROWED_TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 
+const PRIMITIVE_USAGE_LEVELS = [
+  "Wrong primitives",
+  "Poor choice",
+  "Reasonable choice",
+  "Best choice",
+];
+const ARGUMENT_CORRECTNESS_LEVELS = [
+  "Incorrect",
+  "Mostly incorrect",
+  "Mostly correct",
+  "Fully correct",
+];
+
 export interface MultiTurnMCPUseMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -55,10 +84,7 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
     });
     this.multimodalAware = true;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -73,14 +99,25 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
         throw new MissingTestCaseParamsError(msg);
       }
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const tasks = getTasks(getUnitInteractions(testCase.turns));
       const { availableTools, availableResources, availablePrompts } =
         availableMcpServersBlock(testCase.mcpServers);
 
       const toolScores = await Promise.all(
-        tasks.map((task) =>
-          generateWithSchema(
+        tasks.map(async (task) => {
+          const value = await systemOneScore(
+            this,
+            this.systemOnePrimitivesSpec(task, testCase),
+          );
+          if (value !== undefined) {
+            return {
+              score: value,
+              reason: formatDecisionReason(this, "primitive usage", value),
+            };
+          }
+          return generateWithSchema(
             this,
             this.getPrompt(
               "get_tool_correctness_score",
@@ -92,12 +129,22 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
               { templateClass: BORROWED_TEMPLATE_CLASS },
             ),
             ToolScoreSchema,
-          ),
-        ),
+          );
+        }),
       );
       const argScores = await Promise.all(
-        tasks.map((task) =>
-          generateWithSchema(
+        tasks.map(async (task) => {
+          const value = await systemOneScore(
+            this,
+            this.systemOneArgsSpec(task, testCase),
+          );
+          if (value !== undefined) {
+            return {
+              score: value,
+              reason: formatDecisionReason(this, "argument correctness", value),
+            };
+          }
+          return generateWithSchema(
             this,
             this.getPrompt(
               "get_args_correctness_score",
@@ -111,8 +158,8 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
               { templateClass: BORROWED_TEMPLATE_CLASS },
             ),
             ArgsScoreSchema,
-          ),
-        ),
+          );
+        }),
       );
 
       this.score = this.calculateScore(toolScores, argScores);
@@ -164,6 +211,75 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
       ReasonSchema,
     );
     return reason;
+  }
+
+  private systemOneTaskState(
+    task: Task,
+    testCase: ConversationalTestCase,
+  ): Record<string, unknown> {
+    return {
+      task: task.task,
+      steps_taken: task.steps_taken,
+      mcp_servers: mcpServersState(testCase.mcpServers),
+    };
+  }
+
+  private systemOnePrimitivesSpec(
+    task: Task,
+    testCase: ConversationalTestCase,
+  ): SystemOneScoreSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(
+        "_experimental_system_one_mcp_use_primitive_score",
+        {},
+        { templateClass: BORROWED_TEMPLATE_CLASS },
+      ),
+      levels: PRIMITIVE_USAGE_LEVELS,
+      state: this.systemOneTaskState(task, testCase),
+    };
+  }
+
+  private systemOneArgsSpec(
+    task: Task,
+    testCase: ConversationalTestCase,
+  ): SystemOneScoreSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(
+        "_experimental_system_one_mcp_use_args_score",
+        {},
+        { templateClass: BORROWED_TEMPLATE_CLASS },
+      ),
+      levels: ARGUMENT_CORRECTNESS_LEVELS,
+      state: this.systemOneTaskState(task, testCase),
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.MCP_TOOLS,
+        MultiTurnParams.MCP_RESOURCES,
+        MultiTurnParams.MCP_PROMPTS,
+        MultiTurnParams.TOOLS_CALLED,
+      ],
+      questions: parseQuestions(
+        this.getPrompt(
+          "_experimental_system_one_mcp_use_questions",
+          {},
+          { templateClass: BORROWED_TEMPLATE_CLASS },
+        ),
+      ),
+      extraState: {
+        mcp_servers: mcpServersState(testCase.mcpServers),
+      },
+    };
   }
 
   get name(): string {

@@ -1,13 +1,24 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  compactTrace,
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   TaskAndOutcomeSchema,
   TaskCompletionVerdictSchema,
@@ -19,12 +30,23 @@ const TEMPLATE_CLASS = "TaskCompletionMetric";
 export type TaskCompletionTemplateOverride =
   MetricTemplateOverride<"TaskCompletionMetric">;
 
+const TASK_COMPLETION_LEVELS = [
+  "Not achieved",
+  "Partly achieved",
+  "Mostly achieved",
+  "Fully achieved",
+];
+
 export interface TaskCompletionMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   /** The task to evaluate against; auto-extracted from the trace when omitted. */
   task?: string;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -57,10 +79,7 @@ export class TaskCompletionMetric extends BaseMetric {
     ];
     this.requiresTrace = true;
     this.providedTask = options.task;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -69,19 +88,13 @@ export class TaskCompletionMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const extracted = await this.extractTaskAndOutcome(testCase);
       const task = this.providedTask ?? extracted.task;
       const outcome = extracted.outcome;
 
-      const { verdict, reason } = await generateWithSchema(
-        this,
-        this.getPrompt("generate_verdict", {
-          task,
-          actual_outcome: outcome,
-        }),
-        TaskCompletionVerdictSchema,
-      );
+      const { verdict, reason } = await this.generateVerdict(task, outcome);
 
       this.score = this.applyStrictMode(verdict);
       this.reason = reason ?? undefined;
@@ -95,6 +108,68 @@ export class TaskCompletionMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
+  }
+
+  private async generateVerdict(
+    task: string,
+    outcome: string,
+  ): Promise<{ verdict: number; reason?: string | null }> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec(task, outcome),
+    );
+    if (value !== undefined) {
+      return {
+        verdict: value,
+        reason: this.includeReason
+          ? formatDecisionReason(this, "task completion", value)
+          : undefined,
+      };
+    }
+    return generateWithSchema(
+      this,
+      this.getPrompt("generate_verdict", {
+        task,
+        actual_outcome: outcome,
+      }),
+      TaskCompletionVerdictSchema,
+    );
+  }
+
+  private systemOneScoreSpec(
+    task: string,
+    outcome: string,
+  ): SystemOneScoreSpec {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_score"),
+      levels: TASK_COMPLETION_LEVELS,
+      state: { task, outcome },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    const hasTrace = testCase._traceDict != null;
+    const task = this.providedTask;
+    return {
+      evaluationParams: hasTrace
+        ? []
+        : [
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.TOOLS_CALLED,
+          ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          has_trace: hasTrace,
+          has_task: task !== undefined,
+        }),
+      ),
+      extraState: {
+        trace: hasTrace ? compactTrace(testCase._traceDict) : undefined,
+        task,
+      },
+    };
   }
 
   private async extractTaskAndOutcome(

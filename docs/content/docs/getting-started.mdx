@@ -10,8 +10,7 @@ import { Bot, FileSearch, MessagesSquare } from "lucide-react";
 
 This quickstart takes you from installing DeepEval to your first passing eval in a few
 minutes. You'll create a small test case, choose a metric, and run it with
-
-<Term py="deepeval test run" ts="npx deepeval test run" />.
+<Term py="deepeval test run" ts="npx deepeval test run"/>.
 
 By the end of this quickstart, you should be able to:
 
@@ -82,10 +81,7 @@ npx deepeval login
 
 :::
 
-For CI or other non-interactive environments, pass an existing key with
-
-<Term py="deepeval login --api-key ..." ts="npx deepeval login --api-key ..." />
-.
+For CI or other non-interactive environments, pass an existing key with <Term py="deepeval login --api-key ..." ts="npx deepeval login --api-key ..."/>.
 
 <details>
 
@@ -125,6 +121,8 @@ Run <Term py="touch test_example.py" ts="touch example.test.ts"/> in your termin
 
 <Tabs items={["LLM-as-a-judge", "Jev-as-a-judge"]}>
 <Tab value="LLM-as-a-judge">
+
+Set your `OPENAI_API_KEY` as an env variable (or [configure any other LLM](/docs/metrics-introduction#configure-llm-judges)) before running this example.
 
 <Switch>
 
@@ -193,6 +191,8 @@ Importing `deepeval/vitest` registers the `toPass()` matcher. `npx deepeval test
 </Tab>
 <Tab value="Jev-as-a-judge">
 
+Set your `TYPESAFE_API_KEY` as an env variable ([configure Jev](/docs/metrics-introduction#configure-jev)) before running this example. No LLM key is needed.
+
 <Switch>
 
 <Case id="python">
@@ -229,11 +229,44 @@ def test_correctness():
 
 <Case id="typescript">
 
-<NotImplemented id="typescript" feature="JevEval">
+```typescript title="example.test.ts"
+import { it, expect } from "vitest";
+import { LLMTestCase, SingleTurnParams } from "deepeval/test-case";
+import { JevEval, Noul, Score } from "deepeval/metrics";
+import "deepeval/vitest";
 
-Use the LLM-as-a-judge example until `JevEval` is available in TypeScript.
-
-</NotImplemented>
+it("gives medically sound advice", async () => {
+  const correctnessMetric = new JevEval({
+    name: "Correctness",
+    evaluationParams: [
+      SingleTurnParams.ACTUAL_OUTPUT,
+      SingleTurnParams.EXPECTED_OUTPUT,
+    ],
+    questions: [
+      new Noul({
+        statement:
+          "No fact in actual_output contradicts a fact in expected_output.",
+        weight: 2,
+      }),
+      new Score({
+        question:
+          "How much of the detail in expected_output is present in actual_output?",
+        levels: ["Almost none", "Some", "Most", "All of it"],
+      }),
+    ],
+    threshold: 0.5,
+  });
+  const testCase = new LLMTestCase({
+    input: "I have a persistent cough and fever. Should I be worried?",
+    // Replace this with the actual output from your LLM application
+    actualOutput:
+      "A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
+    expectedOutput:
+      "A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs.",
+  });
+  await expect(testCase).toPass([correctnessMetric]);
+});
+```
 
 </Case>
 
@@ -284,6 +317,11 @@ A [conversational test case](/docs/evaluation-multiturn-test-cases#conversationa
 />
 
 Run <Term py="touch test_example.py" ts="touch example.test.ts"/> in your terminal and paste in the following code:
+
+<Tabs items={["LLM-as-a-judge", "Jev-as-a-judge"]}>
+<Tab value="LLM-as-a-judge">
+
+Set your `OPENAI_API_KEY` as an env variable (or [configure any other LLM](/docs/metrics-introduction#configure-llm-judges)) before running this example.
 
 <Switch>
 
@@ -348,6 +386,99 @@ it("stays professional across the conversation", async () => {
 
 </Switch>
 
+</Tab>
+<Tab value="Jev-as-a-judge">
+
+Set your `TYPESAFE_API_KEY` as an env variable ([configure Jev](/docs/metrics-introduction#configure-jev)) before running this example. No LLM key is needed.
+
+<Switch>
+
+<Case id="python">
+
+```python title="test_example.py"
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
+from deepeval.metrics.jev_eval import Noul, Score
+from deepeval.metrics import ConversationalJevEval
+from deepeval import assert_test
+
+def test_professionalism():
+    professionalism_metric = ConversationalJevEval(
+        name="Professionalism",
+        evaluation_params=[MultiTurnParams.CONTENT],
+        questions=[
+            Noul("Every assistant turn in turns is polite and professional in tone.", weight=2),
+            Score(
+                "How professional is the assistant across turns?",
+                levels=["Unprofessional", "Mostly unprofessional", "Mostly professional", "Fully professional"],
+            ),
+        ],
+        threshold=0.5,
+    )
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="What is DeepEval?"),
+            Turn(role="assistant", content="DeepEval is an open-source LLM eval package.")
+        ]
+    )
+    assert_test(test_case, [professionalism_metric])
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="example.test.ts"
+import { it, expect } from "vitest";
+import {
+  ConversationalTestCase,
+  MultiTurnParams,
+  Turn,
+} from "deepeval/test-case";
+import { ConversationalJevEval, Noul, Score } from "deepeval/metrics";
+import "deepeval/vitest";
+
+it("stays professional across the conversation", async () => {
+  const professionalismMetric = new ConversationalJevEval({
+    name: "Professionalism",
+    evaluationParams: [MultiTurnParams.CONTENT],
+    questions: [
+      new Noul({
+        statement:
+          "Every assistant turn in turns is polite and professional in tone.",
+        weight: 2,
+      }),
+      new Score({
+        question: "How professional is the assistant across turns?",
+        levels: [
+          "Unprofessional",
+          "Mostly unprofessional",
+          "Mostly professional",
+          "Fully professional",
+        ],
+      }),
+    ],
+    threshold: 0.5,
+  });
+  const testCase = new ConversationalTestCase({
+    turns: [
+      new Turn({ role: "user", content: "What is DeepEval?" }),
+      new Turn({
+        role: "assistant",
+        content: "DeepEval is an open-source LLM eval package.",
+      }),
+    ],
+  });
+  await expect(testCase).toPass([professionalismMetric]);
+});
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>
+
 Then, run <Term py="deepeval test run" ts="npx deepeval test run"/> from the root directory of your project to evaluate your LLM app **end-to-end**:
 
 <Switch>
@@ -380,79 +511,6 @@ If you run more than one test run, you will be able to **catch regressions** by 
 
 </Tab>
 </Tabs>
-
-:::info
-
-Since almost all `deepeval` metrics including `GEval` are LLM-as-a-Judge metrics, you'll need to set your `OPENAI_API_KEY` as an env variable. You can also customize the model used for evals:
-
-<Switch>
-
-<Case id="python">
-
-```python
-correctness_metric = GEval(..., model="o1")
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-const correctnessMetric = new GEval({
-  // ...
-  model: "o1",
-});
-```
-
-</Case>
-
-</Switch>
-
-DeepEval also integrates with these model providers: [Ollama](https://deepeval.com/integrations/models/ollama), [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai), [Anthropic](https://deepeval.com/integrations/models/anthropic), [Gemini](https://deepeval.com/integrations/models/gemini), etc.
-
-To use **ANY** custom LLM of your choice, [check out this part of the
-docs](/guides/guides-using-custom-llms).
-
-<details>
-
-<summary>Evaluations getting "stuck"?</summary>
-
-Most likely your evaluation LLM is failing and this might be due to rate limits or insufficient quotas.
-
-<Switch>
-
-<Case id="python">
-
-By default, `deepeval` retries **transient** LLM errors once (2 attempts total):
-
-- **Retried:** network/timeout errors and **5xx** server errors.
-- **Rate limits (429):** retried unless the provider marks them non-retryable
-  (for OpenAI, `insufficient_quota` is treated as non-retryable).
-- **Backoff:** exponential with jitter (initial **1s**, base **2**, jitter **2s**, cap **5s**).
-
-You can tune these via environment flags (no code changes). See [environment variables](/docs/environment-variables) for details.
-
-</Case>
-
-<Case id="typescript">
-
-`deepeval` doesn't add its own retry layer around LLM calls — retries are handled by each provider's SDK, so configure them on the client you pass in:
-
-```typescript
-import OpenAI from "openai";
-
-const client = new OpenAI({ maxRetries: 5 });
-```
-
-See [environment variables](/docs/environment-variables) for the rest of the knobs.
-
-</Case>
-
-</Switch>
-
-</details>
-
-:::
 
 ### Save Results
 

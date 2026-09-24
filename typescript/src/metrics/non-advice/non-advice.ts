@@ -1,13 +1,22 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   AdvicesSchema,
   VerdictsSchema,
@@ -27,6 +36,10 @@ export interface NonAdviceMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -61,10 +74,7 @@ export class NonAdviceMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.adviceTypes = options.adviceTypes;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -73,6 +83,7 @@ export class NonAdviceMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.advices = await this.generateAdvices(testCase.actualOutput);
       this.verdicts = await this.generateVerdicts();
@@ -101,13 +112,46 @@ export class NonAdviceMetric extends BaseMetric {
     return advices;
   }
 
+  private systemOneVerdictSpec(): SystemOneVerdictSpec<
+    string,
+    NonAdviceVerdict
+  > {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.advices,
+      itemKey: "statement",
+      state: { advice_types: this.adviceTypes },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          advice_types: this.adviceTypes.join(", "),
+        }),
+      ),
+    };
+  }
+
   private async generateVerdicts(): Promise<NonAdviceVerdict[]> {
     if (this.advices.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      advices: this.advices,
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          advices: this.advices,
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
   }
 
   private async generateReason(): Promise<string | undefined> {

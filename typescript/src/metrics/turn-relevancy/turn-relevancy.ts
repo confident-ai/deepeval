@@ -2,12 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  parseQuestions,
+  runSystemOneEval,
+  systemOneProbability,
+  verdictFromProbability,
+  type SystemOneBinarySpec,
+  type SystemOneEvalSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -30,6 +40,10 @@ export interface TurnRelevancyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -61,10 +75,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
     this.windowSize = options.windowSize ?? 10;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -73,6 +84,7 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const unitInteractions = getUnitInteractions(testCase.turns);
       const turnsWindows: Turn[][] = getTurnsInSlidingWindow(
@@ -81,7 +93,9 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
       ).map((window) => window.flat());
 
       this.verdicts = await Promise.all(
-        turnsWindows.map((window) => this.generateVerdict(window)),
+        turnsWindows.map((window) =>
+          this.generateVerdict(window, testCase.multimodal),
+        ),
       );
       this.score = this.calculateScore();
       this.reason = await this.generateReason();
@@ -98,9 +112,46 @@ export class TurnRelevancyMetric extends BaseConversationalMetric {
     }
   }
 
-  private async generateVerdict(window: Turn[]): Promise<TurnRelevancyVerdict> {
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
+  }
+
+  private systemOneVerdictSpec(
+    slidingWindow: Record<string, unknown>[],
+    multimodal: boolean,
+  ): SystemOneBinarySpec | undefined {
+    if (multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      state: { turns: slidingWindow },
+    };
+  }
+
+  private async generateVerdict(
+    window: Turn[],
+    multimodal: boolean,
+  ): Promise<TurnRelevancyVerdict> {
+    const slidingWindow = window.map((turn) => convertTurnToDict(turn));
+    const p = await systemOneProbability(
+      this,
+      this.systemOneVerdictSpec(slidingWindow, multimodal),
+    );
+    if (p !== undefined) {
+      return {
+        verdict: verdictFromProbability(p),
+        reason: `P(yes)=${p.toFixed(2)}`,
+      };
+    }
     const prompt = this.getPrompt("generate_verdicts", {
-      sliding_window: window.map((turn) => convertTurnToDict(turn)),
+      sliding_window: slidingWindow,
     });
     return generateWithSchema(this, prompt, TurnRelevancyVerdictSchema);
   }

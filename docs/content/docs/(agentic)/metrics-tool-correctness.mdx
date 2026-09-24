@@ -30,6 +30,8 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 ## Usage
 
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
+
 The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
 
 <Tabs items={["Text Based", "Multimodal"]}>
@@ -180,8 +182,8 @@ There are **NINE** optional parameters when creating a `ToolCorrectnessMetric`:
 - [Optional] <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>: a boolean which when set to <Term py="True" ts="true"/>, will consider the ordering in which the tools were called in. For example, if `expected_tools=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery"), ToolCall(name="WebSearch")]` and `tools_called=[ToolCall(name="WebSearch"), ToolCall(name="WebSearch"),  ToolCall(name="ToolQuery")]`, the metric will consider the tool calling to be correct. Applies to the tool name matching that is always performed, and defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="should_exact_match" ts="shouldExactMatch"/>: a boolean which when set to <Term py="True" ts="true"/>, will required the <Term py="tools_called" ts="toolsCalled"/> and <Term py="expected_tools" ts="expectedTools"/> to be exactly the same. Applies to the tool name and type matching that is always performed, and additionally checks `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT` when they are included in <Term py="evaluation_params" ts="evaluationParams"/>. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM or Jev scores the tool selection check (run only when `available_tools` is given). Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM or Jev scores the tool selection check (run only when `available_tools` is given). Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 :::info
 Since <Term py="should_exact_match" ts="shouldExactMatch"/> is a stricter criteria than <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>, setting <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/> will have no effect when <Term py="should_exact_match" ts="shouldExactMatch"/> is set to <Term py="True" ts="true"/>.
@@ -289,11 +291,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `ToolCorrectnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -318,19 +316,15 @@ If <Term py="should_exact_match" ts="shouldExactMatch"/> is not specified and `T
 
 2. If the <Term py="available_tools" ts="availableTools"/> are provided, the `ToolCorrectnessMetric` also uses an LLM to find whether the <Term py="tools_called" ts="toolsCalled"/> were the most optimal for the given task using the <Term py="available_tools" ts="availableTools"/> as reference. The final score is the **minimum of both scores**. If <Term py="available_tools" ts="availableTools"/> is not provided, the LLM-based evaluation does not take place.
 
-<Only id="python">
-
 ### Hybrid
 
-Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the tool selection check in step 2 is scored by Jev, a System One model, instead of the LLM: one rating over the `input`, `tools_called` and `available_tools`, from "Misaligned" to "Fully appropriate", mapped onto 0 to 1. If the Jev call fails, the LLM scores the check instead.
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the tool selection check in step 2 is scored by Jev, a System One model, instead of the LLM: one rating over the `input`, <Term py="tools_called" ts="toolsCalled"/> and <Term py="available_tools" ts="availableTools"/>, from "Misaligned" to "Fully appropriate", mapped onto 0 to 1. If the Jev call fails, the LLM scores the check instead.
 
 ### Jev-as-a-judge
 
 Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev scores the tool selection check the same way, but no LLM is built, so a Jev error is raised.
 
 In every eval mode, the deterministic score in step 1 and the final reason never use a model.
-
-</Only>
 
 ## FAQs
 

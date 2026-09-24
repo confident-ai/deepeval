@@ -2,13 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -39,6 +48,10 @@ export interface TurnFaithfulnessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -84,10 +97,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
         ? Math.max(options.truthsExtractionLimit, 0)
         : undefined;
     this.penalizeAmbiguousClaims = options.penalizeAmbiguousClaims ?? false;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -96,6 +106,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const unitInteractions = getUnitInteractions(testCase.turns);
       const turnsWindows: Turn[][] = getTurnsInSlidingWindow(
@@ -175,12 +186,46 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     truths: string[],
   ): Promise<FaithfulnessVerdict[]> {
     if (claims.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      claims,
-      reference_context: truths.join("\n\n"),
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(claims, truths),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          claims,
+          reference_context: truths.join("\n\n"),
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
+  }
+
+  private systemOneVerdictSpec(
+    claims: string[],
+    truths: string[],
+  ): SystemOneVerdictSpec<string, FaithfulnessVerdict> {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: claims,
+      itemKey: "claim",
+      state: { reference_context: truths },
+      borderline: "idk",
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async getInteractionScoreAndReason(

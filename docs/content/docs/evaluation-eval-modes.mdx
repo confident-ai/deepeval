@@ -2,10 +2,10 @@
 id: evaluation-eval-modes
 title: Eval Modes
 sidebar_label: Eval Modes
-languages: [python]
+languages: [python, typescript]
 ---
 
-In `deepeval`, the **eval mode** decides who judges your LLM-as-a-judge metrics and classifiers: an LLM alone, an LLM and Jev together, or Jev alone. Jev is TypeSafe AI's System One model. Instead of generating text, it answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities.
+In `deepeval`, the **eval mode** decides who judges your LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>: an LLM alone, an LLM and Jev together, or Jev alone. Jev is TypeSafe AI's System One model. Instead of generating text, it answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities.
 
 ## Quick Summary
 
@@ -31,11 +31,15 @@ Under `llm`, each box is an LLM call (except the score, which is an equation). U
 
 The eval mode is resolved per metric, in this order:
 
-1. The `eval_mode` argument on the metric.
+1. The <Term py="eval_mode" ts="evalMode"/> argument on the metric.
 2. The `DEEPEVAL_EVAL_MODE` setting, set with the CLI or your environment.
 3. The default fallback (`llm`).
 
 Set it for every metric with the CLI (add `--save=dotenv` to persist it in `.env.local`):
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval set-eval-mode hybrid
@@ -43,7 +47,25 @@ deepeval set-eval-mode system_one
 deepeval set-eval-mode llm  # back to the default
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-eval-mode hybrid
+npx deepeval set-eval-mode system_one
+npx deepeval set-eval-mode llm  # back to the default
+```
+
+</Case>
+
+</Switch>
+
 Or override it for a single metric, which lets you mix modes in one run:
+
+<Switch>
+
+<Case id="python">
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -54,15 +76,49 @@ metrics = [
 ]
 ```
 
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { AnswerRelevancyMetric, FaithfulnessMetric } from "deepeval/metrics";
+
+const metrics = [
+  new FaithfulnessMetric({ evalMode: "system_one" }),
+  new AnswerRelevancyMetric({ evalMode: "llm" }),
+];
+```
+
+</Case>
+
+</Switch>
+
+<Only id="python">
+
 :::caution
 [Classifiers](/docs/classifiers-introduction) have no `hybrid` mode. Under `deepeval set-eval-mode hybrid` they run as `llm`.
 :::
 
-`hybrid` and `system_one` need a TypeSafe AI key: see [setting up Jev](/integrations/models/typesafe-ai#setting-up-your-api-key). Every metric that supports Jev also takes a `system_one_model` argument to choose the Jev model; it defaults to <DefaultSystemOneModel />.
+</Only>
+
+`hybrid` and `system_one` need a TypeSafe AI key: see [setting up Jev](/integrations/models/typesafe-ai#setting-up-your-api-key). Every metric that supports Jev also takes a <Term py="system_one_model" ts="systemOneModel"/> argument to choose the Jev model; it defaults to <DefaultSystemOneModel />.
+
+<Only id="typescript">
+
+The TypeScript SDK talks to Jev through TypeSafe AI's official client, an optional peer dependency. Install it alongside `deepeval`, then configure your key:
+
+```bash
+npm install @typesafe-ai/sdk
+npx deepeval set-typesafe --prompt-api-key
+```
+
+</Only>
 
 ### LLM-as-a-judge
 
-Under `llm`, the default, **your [LLM judge](/docs/metrics-introduction#configure-llm-judges) runs every step**. Jev is never called, and `system_one_model` is ignored.
+Under `llm`, the default, **your [LLM judge](/docs/metrics-introduction#configure-llm-judges) runs every step**: it extracts what needs judging from the test case, decides a verdict for each item, and explains the resulting score.
+
+The diagram below shows a typical extract-then-decide metric. Not every metric follows this exact algorithm (some decide in a single step, others score on a rubric), so treat it as an illustration of where the LLM is involved rather than a spec for every metric.
 
 ```mermaid
 sequenceDiagram
@@ -113,12 +169,31 @@ Yes/no answers become verdicts by thresholding $P(\text{yes})$:
 :::tip
 If a Jev call fails mid-run (rate limit, test case too large, network error), the LLM makes that decision instead. A failure that won't improve on retry, such as a rejected key, keeps the rest of that measure on the LLM. Check what fell back and why:
 
+<Switch>
+
+<Case id="python">
+
 ```python
 metric.measure(test_case)
 print(metric.system_one_fallback_reason)  # None when Jev made every decision
 ```
 
 A missing TypeSafe AI key or SDK fails when the metric is created.
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+await metric.measure(testCase);
+console.log(metric.systemOneFallbackReason); // undefined when Jev made every decision
+```
+
+A missing TypeSafe AI key fails when the metric is created; a missing `@typesafe-ai/sdk` fails on the first Jev call, and under `hybrid` that call falls back to the LLM like any other failure.
+
+</Case>
+
+</Switch>
 :::
 
 ### Jev-as-a-judge
@@ -135,38 +210,18 @@ sequenceDiagram
     Metric->>Metric: Weighted mean, reason from the answers
 ```
 
-There is no extract step: each metric is defined as a few bounded questions over the raw test case. For `FaithfulnessMetric`:
+There is no extract step. Each metric is instead defined as a handful of bounded questions (yes/no, a rating, or a choice) over the raw test case, plus the trace for agentic metrics. Every metric's page lists its questions under **"Jev-as-a-judge"** in "How Is It Calculated?".
 
-- Is every claim in `actual_output` supported by `retrieval_context`?
-- Does no claim contradict it?
-- How grounded is the output overall?
-
-Agentic metrics also send the trace, keeping each span's name, type, inputs, outputs and tool calls. Each metric's page lists its questions under **"Jev-as-a-judge"** in "How Is It Calculated?".
-
-Each answer becomes a value $v_i$ in $[0, 1]$:
-
-- **Yes/no:** $P(\text{yes})$.
-- **Rating:** the expected level divided by the top level.
-- **Choice:** the value credited to the option Jev picks. An option with no value, such as "not applicable", drops the question.
-
-The score is their weighted mean:
+Each answer is mapped onto $[0, 1]$, and the score is their weighted mean:
 
 <Equation formula="\text{score} = \frac{\displaystyle\sum_i w_i \, v_i}{\displaystyle\sum_i w_i}" />
 
-The reason is built from the same answers:
-
-```text
-Decided by jev-latest, minimum confidence 0.82.
-1. Every factual claim in `actual_output` is supported by the facts in `retrieval_context`. -> clearly holds (P(yes)=0.91, confidence=0.82, weight=2)
-2. No claim in `actual_output` contradicts the facts in `retrieval_context`. -> clearly holds (P(yes)=0.95, confidence=0.90)
-3. How much of `actual_output` is grounded in the facts in `retrieval_context`? -> "Fully grounded" (expected level=0.94 of 1.00, confidence=0.88)
-Score: 0.93 (weighted mean of 3 applicable questions).
-```
+The reason is built from the same answers rather than generated, so the same answers always produce the same reason.
 
 :::caution
 Nothing falls back to the LLM in this mode:
 
-- **Test case too large** (over 32k tokens of test case plus question, or 64k for the whole request): caught before sending, and raises an error telling you to use `eval_mode="llm"`.
+- **Test case too large** (over 32k tokens of test case plus question, or 64k for the whole request): caught before sending, and raises an error telling you to switch the metric back to `llm`.
 - **Any other Jev error** (rate limit after retries, rejected key, network error): raised as-is.
 - **Multimodal test cases**: raise up front, since Jev evaluates text.
   :::
@@ -179,13 +234,32 @@ Scores from different eval modes are not the same number: a `system_one` score c
 
 Every metric that Jev judged, in `hybrid` or `system_one`, reports `metric.confidence`: the **least decisive** of Jev's answers for that measure, from `0` (a coin flip) to `1` (certain). One question on the fence is enough to make the score worth a second look, so the minimum is reported rather than an average.
 
+<Switch>
+
+<Case id="python">
+
 ```python
 metric.measure(test_case)
 if metric.confidence is not None and metric.confidence < 0.5:
     print("Jev was unsure:", metric.reason)
 ```
 
-Ratings and choices carry the confidence Jev reports. A yes/no answer's confidence is $|2p - 1|$, which is what Jev's formula reduces to for two outcomes. Confidence measures how decisive Jev was, not whether it was right, and it never changes the score. It is `None` under `llm`.
+</Case>
+
+<Case id="typescript">
+
+```typescript
+await metric.measure(testCase);
+if (metric.confidence != null && metric.confidence < 0.5) {
+  console.log("Jev was unsure:", metric.reason);
+}
+```
+
+</Case>
+
+</Switch>
+
+Ratings and choices carry the confidence Jev reports. A yes/no answer's confidence is $|2p - 1|$, which is what Jev's formula reduces to for two outcomes. Confidence measures how decisive Jev was, not whether it was right, and it never changes the score. It is <Switch><Case id="python">`None`</Case><Case id="typescript">`undefined`</Case></Switch> under `llm`.
 
 ## Which Metrics Support Which Mode
 
@@ -198,17 +272,17 @@ Each metric's page states which eval modes it supports and how it behaves under 
 - [`TaskCompletionMetric`](/docs/metrics-task-completion): supports all three modes, with Jev giving a graded score under `hybrid`.
 
 :::info
-Not all metrics use an LLM or Jev as the judge, so the eval mode doesn't apply to them. Voice metrics such as [Audio Integrity](/docs/metrics-audio-integrity) are one example.
+Not all metrics use an LLM or Jev as the judge, so the eval mode doesn't apply to them. <Switch><Case id="python">Voice metrics such as [Audio Integrity](/docs/metrics-audio-integrity) are one example.</Case><Case id="typescript">Deterministic metrics such as [Exact Match](/docs/metrics-exact-match) are one example.</Case></Switch>
 :::
 
 ## Cost
 
-A metric's `evaluation_cost` is the sum of what its judges charge, so it depends on the eval mode:
+A metric's <Term py="evaluation_cost" ts="evaluationCost"/> is the sum of what its judges charge, so it depends on the eval mode:
 
-| Eval mode    | `evaluation_cost` includes                                                                  |
+| Eval mode    | Cost includes                                                                               |
 | ------------ | ------------------------------------------------------------------------------------------- |
 | `llm`        | LLM tokens for extracting, deciding and writing the reason                                  |
 | `hybrid`     | LLM tokens for extracting and writing the reason, plus Jev's input tokens for the decisions |
 | `system_one` | Jev's input tokens only                                                                     |
 
-Jev charges for input tokens only, not output tokens. If your LLM's pricing is unknown, as with a [custom model](/guides/guides-using-custom-llms), `evaluation_cost` is `None` under `llm` and `hybrid`.
+Jev charges for input tokens only, not output tokens. <Switch><Case id="python">If your LLM's pricing is unknown, as with a [custom model](/guides/guides-using-custom-llms), `evaluation_cost` is `None` under `llm` and `hybrid`.</Case><Case id="typescript">If your LLM's pricing is unknown, `evaluationCost` is `undefined` under `llm` and `hybrid`.</Case></Switch>

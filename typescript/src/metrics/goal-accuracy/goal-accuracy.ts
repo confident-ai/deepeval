@@ -2,12 +2,22 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   checkConversationalTestCaseParams,
   getUnitInteractions,
@@ -23,6 +33,22 @@ import { type MetricTemplateOverride } from "@/templates/override";
 
 const TEMPLATE_CLASS = "GoalAccuracyMetric";
 
+const GOAL_ACCURACY_LEVELS = [
+  "Not achieved",
+  "Weak attempt",
+  "Partially achieved",
+  "Mostly achieved",
+  "Fully achieved",
+];
+
+const PLAN_QUALITY_LEVELS = [
+  "No plan",
+  "Weak or fragmented plan, rarely followed",
+  "Partial plan, partly followed",
+  "Clear plan, mostly followed",
+  "Complete plan, fully followed",
+];
+
 export type GoalAccuracyTemplateOverride =
   MetricTemplateOverride<"GoalAccuracyMetric">;
 
@@ -30,6 +56,10 @@ export interface GoalAccuracyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -59,10 +89,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     this.multimodalAware = true;
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -71,6 +98,7 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     try {
       checkConversationalTestCaseParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const tasks = this.goalAndStepsTaken(getUnitInteractions(testCase.turns));
       [this.goalScores, this.planScores] = await Promise.all([
@@ -129,11 +157,50 @@ export class GoalAccuracyMetric extends BaseConversationalMetric {
     task: GoalSteps,
     schema: typeof GoalScoreSchema | typeof PlanScoreSchema,
   ): Promise<T> {
+    const kind = method === "get_accuracy_score" ? "goal" : "plan";
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec(kind, task),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(
+          this,
+          kind === "goal" ? "goal accuracy" : "plan quality",
+          value,
+        ),
+      } as T;
+    }
     const prompt = this.getPrompt(method, {
       task: task.user_goal,
       steps_taken: task.steps_taken.join("\n"),
     });
     return generateWithSchema(this, prompt, schema) as Promise<T>;
+  }
+
+  private systemOneScoreSpec(
+    kind: "goal" | "plan",
+    task: GoalSteps,
+  ): SystemOneScoreSpec | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(`_experimental_system_one_${kind}_score`),
+      levels: kind === "goal" ? GOAL_ACCURACY_LEVELS : PLAN_QUALITY_LEVELS,
+      state: { task: task.user_goal, steps_taken: [...task.steps_taken] },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [...this.requiredParams, MultiTurnParams.TOOLS_CALLED],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private calculateScore(): number {

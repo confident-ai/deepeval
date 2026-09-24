@@ -1,12 +1,23 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
+import {
+  compactTrace,
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   TaskSchema,
   EfficiencyVerdictSchema,
@@ -17,6 +28,14 @@ const TEMPLATE_CLASS = "StepEfficiencyMetric";
 
 export type StepEfficiencyTemplateOverride =
   MetricTemplateOverride<"StepEfficiencyMetric">;
+
+const STEP_EFFICIENCY_LEVELS = [
+  "Highly inefficient",
+  "Low efficiency",
+  "Moderate efficiency",
+  "Strong efficiency",
+  "Perfectly efficient",
+];
 
 /** Serialize the trace dict the way the templates expect (pretty JSON). */
 function traceJson(d: unknown): string {
@@ -29,6 +48,10 @@ export interface StepEfficiencyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -59,10 +82,7 @@ export class StepEfficiencyMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.requiresTrace = true;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -71,6 +91,7 @@ export class StepEfficiencyMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
       const json = traceJson(testCase._traceDict);
 
       const { task } = await generateWithSchema(
@@ -80,14 +101,7 @@ export class StepEfficiencyMetric extends BaseMetric {
         }),
         TaskSchema,
       );
-      const { score, reason } = await generateWithSchema(
-        this,
-        this.getPrompt("get_execution_efficiency", {
-          task,
-          trace_json_str: json,
-        }),
-        EfficiencyVerdictSchema,
-      );
+      const { score, reason } = await this.getScore(task, testCase, json);
 
       this.score = this.applyStrictMode(score);
       this.reason = reason;
@@ -100,6 +114,68 @@ export class StepEfficiencyMetric extends BaseMetric {
     } finally {
       this.stopProgress();
     }
+  }
+
+  private async getScore(
+    task: string,
+    testCase: LLMTestCase,
+    json: string,
+  ): Promise<{ score: number; reason: string }> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec(task, testCase),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "step efficiency", value),
+      };
+    }
+    return generateWithSchema(
+      this,
+      this.getPrompt("get_execution_efficiency", {
+        task,
+        trace_json_str: json,
+      }),
+      EfficiencyVerdictSchema,
+    );
+  }
+
+  private systemOneScoreSpec(
+    task: string,
+    testCase: LLMTestCase,
+  ): SystemOneScoreSpec | undefined {
+    if (testCase.multimodal || testCase._traceDict == null) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_score"),
+      levels: STEP_EFFICIENCY_LEVELS,
+      state: {
+        task,
+        trace: compactTrace(testCase._traceDict),
+      },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    const hasTrace = testCase._traceDict != null;
+    return {
+      evaluationParams: hasTrace
+        ? []
+        : [
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.TOOLS_CALLED,
+          ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          has_trace: hasTrace,
+        }),
+      ),
+      extraState: {
+        trace: hasTrace ? compactTrace(testCase._traceDict) : undefined,
+      },
+    };
   }
 
   get name(): string {

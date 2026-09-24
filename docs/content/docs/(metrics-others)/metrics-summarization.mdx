@@ -167,8 +167,8 @@ There are **NINE** optional parameters when instantiating an `SummarizationMetri
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/>: a number which when set, determines the maximum number of factual truths to extract from the `input`. The truths extracted will used to determine the alignment score, and will be ordered by importance, decided by your evaluation `model`. Defaulted to <Term py="None" ts="null"/>.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 :::note
 Sometimes, you may want to only consider the most important factual truths in the `input`. If this is the case, you can choose to set the <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> parameter to limit the maximum number of truths to consider during evaluation.
@@ -278,11 +278,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `SummarizationMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -343,15 +339,13 @@ console.log(metric.scoreBreakdown);
 Since the summarization score is the minimum of the alignment and coverage scores, a 0 value for either one of these scores will result in a final summarization score of 0.
 :::
 
-<Only id="python">
-
 ### Hybrid
 
 Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the alignment classification is answered by Jev, a System One model, instead: one yes/no question per summary claim, with `P(yes) > 0.65` counted as aligned, `< 0.35` as contradictory, and anything in between as borderline. The extraction, the equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead. The coverage score stays on the LLM.
 
 ### Jev-as-a-judge
 
-Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the original text (`input`) and the summary (`actual_output`) and asked:
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the original text (`input`) and the summary (<Term py="actual_output" ts="actualOutput"/>) and asked:
 
 | Question | Type | Weight |
 | --- | --- | --- |
@@ -360,11 +354,9 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | How much of the important information in the original text `input` does the summary `actual_output` preserve? (Almost none → All of it) | Score | 1 |
 | Reading only the summary `actual_output`, this question can be answered the same way as from the original text `input`: *&lt;assessment question&gt;* | Noul | 1 |
 
-The last row is repeated once per entry in `assessment_questions`, and omitted when none are given.
+The last row is repeated once per entry in <Term py="assessment_questions" ts="assessmentQuestions"/>, and omitted when none are given.
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## FAQs
 

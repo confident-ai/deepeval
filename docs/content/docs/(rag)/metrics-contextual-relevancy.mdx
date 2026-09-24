@@ -212,8 +212,8 @@ There are **SEVEN** optional parameters when creating a `ContextualRelevancyMetr
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a class of type `ContextualRelevancyTemplate`, which allows you to override the default prompt templates used to compute the `ContextualRelevancyMetric` score. You can learn what the default prompts looks like [here](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/contextual_relevancy/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section below to understand how you can tailor it to your needs. Defaulted to `deepeval`'s `ContextualRelevancyTemplate`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">[Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.</Only>
-- <Only id="python">[Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).</Only>
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### Within components
 
@@ -317,11 +317,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-<Only id="python">
-
 You can change how the `ContextualRelevancyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
-
-</Only>
 
 ### LLM-as-a-judge
 
@@ -331,15 +327,13 @@ The `ContextualRelevancyMetric` score is calculated according to the following e
 
 Although similar to how the `AnswerRelevancyMetric` is calculated, the `ContextualRelevancyMetric` first uses an LLM to extract all statements made in the <Term py="retrieval_context" ts="retrievalContext"/> instead, before using the same LLM to classify whether each statement is relevant to the `input`.
 
-<Only id="python">
-
 ### Hybrid
 
-Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), each node in the `retrieval_context` is split into sentences in code, and Jev, a System One model, answers one yes/no question per statement: is it relevant to the `input`? `P(yes) >= 0.5` counts as relevant. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), each node in the <Term py="retrieval_context" ts="retrievalContext"/> is split into sentences in code, and Jev, a System One model, answers one yes/no question per statement: is it relevant to the `input`? `P(yes) >= 0.5` counts as relevant. The equation and the LLM-written reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
 
 ### Jev-as-a-judge
 
-Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `input` and `retrieval_context` and asked three questions:
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `input` and <Term py="retrieval_context" ts="retrievalContext"/> and asked three questions:
 
 | Question                                                                                          | Type  | Weight |
 | ------------------------------------------------------------------------------------------------- | ----- | ------ |
@@ -348,8 +342,6 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
 | How much of `retrieval_context` is relevant to addressing `input`? (None of it → All of it)       | Score | 1      |
 
 <include cwd>snippets/metrics/system-one-scoring.mdx</include>
-
-</Only>
 
 ## Customize Your Template
 

@@ -251,6 +251,7 @@
     "@mastra/core": ">=1.16.0-0 <2.0.0-0",
     "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
     "@openai/agents": "^0.5.4",
+    "@typesafe-ai/sdk": ">=0.6.0",
     "ai": ">=5.0.0",
     "ollama": ">=0.5.0",
     "vitest": ">=1.0.0"
@@ -275,6 +276,9 @@
       "optional": true
     },
     "@openai/agents": {
+      "optional": true
+    },
+    "@typesafe-ai/sdk": {
       "optional": true
     },
     "ai": {

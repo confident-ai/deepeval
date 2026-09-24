@@ -1,8 +1,10 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
@@ -21,6 +23,14 @@ export interface DAGMetricOptions {
   name: string;
   dag: DeepAcyclicGraph;
   model?: DeepEvalBaseLLM | string;
+  /**
+   * The System One model (Jev) its judgement nodes ask under `hybrid` /
+   * `system_one`. A DAG has no whole-metric form, so `system_one` runs it as
+   * `hybrid`: task nodes still need the LLM.
+   */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   threshold?: number | null;
   flaky?: boolean;
   includeReason?: boolean;
@@ -60,10 +70,7 @@ export class DAGMetric extends BaseMetric {
     this.dag = options.dag;
     this.includeDagSuffix = options.includeDagSuffix ?? true;
 
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {

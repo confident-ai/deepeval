@@ -1,13 +1,22 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   StatementsSchema,
   VerdictsSchema,
@@ -26,6 +35,10 @@ export interface AnswerRelevancyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -53,10 +66,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -65,6 +75,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.statements = await this.generateStatements(testCase.actualOutput);
       this.verdicts = await this.generateVerdicts(testCase.input);
@@ -83,6 +94,28 @@ export class AnswerRelevancyMetric extends BaseMetric {
     }
   }
 
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
+  }
+
+  private systemOneVerdictSpec(
+    input: string,
+  ): SystemOneVerdictSpec<string, AnswerRelevancyVerdict> {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.statements,
+      itemKey: "statement",
+      state: { input },
+      borderline: "idk",
+    };
+  }
+
   private async generateStatements(actualOutput: string): Promise<string[]> {
     const prompt = this.getPrompt("generate_statements", {
       actual_output: actualOutput,
@@ -99,12 +132,21 @@ export class AnswerRelevancyMetric extends BaseMetric {
     input: string,
   ): Promise<AnswerRelevancyVerdict[]> {
     if (this.statements.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      input,
-      statements: this.statements,
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(input),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          input,
+          statements: this.statements,
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
   }
 
   private async generateReason(input: string): Promise<string | undefined> {

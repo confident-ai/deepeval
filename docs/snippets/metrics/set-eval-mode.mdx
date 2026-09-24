@@ -1,6 +1,8 @@
-<Only id="python">
-
 First, set the [eval mode](/docs/evaluation-eval-modes):
+
+<Switch>
+
+<Case id="python">
 
 ```bash
 deepeval set-eval-mode llm         # LLM-as-a-judge (default)
@@ -8,4 +10,16 @@ deepeval set-eval-mode hybrid      # LLM extracts, Jev decides
 deepeval set-eval-mode system_one  # Jev-as-a-judge, no LLM
 ```
 
-</Only>
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval set-eval-mode llm         # LLM-as-a-judge (default)
+npx deepeval set-eval-mode hybrid      # LLM extracts, Jev decides
+npx deepeval set-eval-mode system_one  # Jev-as-a-judge, no LLM
+```
+
+</Case>
+
+</Switch>

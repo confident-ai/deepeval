@@ -1,14 +1,23 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams, ToolCall } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   VerdictsSchema,
   ArgumentCorrectnessScoreReasonSchema,
@@ -25,6 +34,10 @@ export interface ArgumentCorrectnessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -56,10 +69,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
       SingleTurnParams.INPUT,
       SingleTurnParams.TOOLS_CALLED,
     ];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -74,6 +84,8 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
         this.verdicts = [];
         this.score = 1;
         this.reason = "No tool calls provided";
+      } else if (await runSystemOneEval(this, testCase)) {
+        return this.score as number;
       } else {
         this.verdicts = await this.generateVerdicts(
           testCase.input,
@@ -98,12 +110,43 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     input: string,
     toolsCalled: ToolCall[],
   ): Promise<ArgumentCorrectnessVerdict[]> {
-    const prompt = this.getPrompt("generate_verdicts", {
-      input,
-      stringified_tools_called: printToolsCalled(toolsCalled),
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(input, toolsCalled),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          input,
+          stringified_tools_called: printToolsCalled(toolsCalled),
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
+  }
+
+  private systemOneVerdictSpec(
+    input: string,
+    toolsCalled: ToolCall[],
+  ): SystemOneVerdictSpec<string, ArgumentCorrectnessVerdict> {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: toolsCalled.map((toolCall) => printToolsCalled([toolCall])),
+      itemKey: "tool_call",
+      state: { input },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async generateReason(input: string): Promise<string | undefined> {
