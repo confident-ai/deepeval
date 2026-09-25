@@ -12,7 +12,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
@@ -27,6 +26,7 @@ import {
   type ToolSelectionScore,
 } from "@/metrics/tool-correctness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ToolCorrectnessMetric";
 
@@ -144,8 +144,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
 
       this.toolsCalled = testCase.toolsCalled ?? [];
       this.expectedTools = testCase.expectedTools ?? [];

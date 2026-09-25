@@ -39,6 +39,7 @@ def check_conversational_test_case_params(
     require_chatbot_role: bool = False,
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
+    require_mcp_servers: bool = False,
 ):
     if multimodal:
         _reject_multimodal_without_llm(metric, model)
@@ -96,6 +97,11 @@ def check_conversational_test_case_params(
 
     if require_chatbot_role and test_case.chatbot_role is None:
         error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if require_mcp_servers and not test_case.mcp_servers:
+        error_str = f"'mcp_servers' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -184,6 +190,44 @@ def check_llm_test_case_params(
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
+
+
+def prepare_measure(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    multimodal: Optional[bool] = None,
+) -> None:
+    """What every measure does before judging: validate the test case
+    against the metric's required params and zero its cost and token
+    counters. Shared with the batched System One path in `evaluate()`, which
+    judges the metric without calling its `measure`. `multimodal` defaults
+    to the test case's own flag."""
+    if multimodal is None:
+        multimodal = test_case.multimodal
+    if isinstance(metric, BaseConversationalMetric):
+        check_conversational_test_case_params(
+            test_case,
+            metric._required_test_case_params,
+            metric,
+            metric._requires_chatbot_role,
+            metric.model,
+            multimodal,
+            require_mcp_servers=metric._requires_mcp_servers,
+        )
+    else:
+        check_llm_test_case_params(
+            test_case,
+            metric._required_params,
+            None,
+            None,
+            metric,
+            metric.model,
+            multimodal,
+        )
+    native = metric.using_native_model
+    metric.evaluation_cost = 0 if native else None
+    metric.input_tokens = 0 if native else None
+    metric.output_tokens = 0 if native else None
 
 
 def check_arena_test_case_params(

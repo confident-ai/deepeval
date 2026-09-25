@@ -4,16 +4,12 @@ import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
 import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
 import type { EvalModeName } from "@/config/eval-mode";
-import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
 } from "@/metrics/utils";
-import {
-  checkConversationalTestCaseParams,
-  getUnitInteractions,
-} from "@/metrics/conversational-utils";
+import { getUnitInteractions } from "@/metrics/conversational-utils";
 import { getTasks, taskStepsTakenText } from "@/metrics/mcp/utils";
 import {
   formatDecisionReason,
@@ -30,6 +26,7 @@ import {
   type Task,
 } from "@/metrics/mcp/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 
@@ -77,6 +74,7 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
     this.multimodalAware = true;
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
+    this.requiresMcpServers = true;
     initializeMetricModels(this, options);
   }
 
@@ -84,14 +82,7 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      if (!testCase.mcpServers || testCase.mcpServers.length === 0) {
-        const msg =
-          "'mcpServers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric.";
-        this.error = msg;
-        throw new MissingTestCaseParamsError(msg);
-      }
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const tasks = getTasks(getUnitInteractions(testCase.turns));

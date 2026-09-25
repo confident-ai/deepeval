@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
 import {
@@ -24,6 +23,7 @@ import {
   PlanAdherenceScoreSchema,
 } from "@/metrics/plan-adherence/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 // `extract_task_from_trace` lives under StepEfficiencyMetric (shared, mirrors Python).
 const TASK_TEMPLATE_CLASS = "StepEfficiencyMetric";
@@ -95,8 +95,7 @@ export class PlanAdherenceMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
       const json = traceJson(testCase._traceDict);
 

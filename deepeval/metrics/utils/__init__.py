@@ -96,6 +96,7 @@ from .test_case import (
     check_conversational_test_case_params,
     check_llm_test_case_params,
     check_arena_test_case_params,
+    prepare_measure,
 )
 from .turns import (
     format_turns,
@@ -184,6 +185,7 @@ __all__ = [
     "check_conversational_test_case_params",
     "check_llm_test_case_params",
     "check_arena_test_case_params",
+    "prepare_measure",
     # turns
     "format_turns",
     "convert_turn_to_dict",

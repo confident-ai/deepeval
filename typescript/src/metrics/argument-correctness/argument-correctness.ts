@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
   printToolsCalled,
@@ -24,6 +23,7 @@ import {
   type ArgumentCorrectnessVerdict,
 } from "@/metrics/argument-correctness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ArgumentCorrectnessMetric";
 
@@ -76,8 +76,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
 
       const toolsCalled = testCase.toolsCalled ?? [];
       if (toolsCalled.length === 0) {

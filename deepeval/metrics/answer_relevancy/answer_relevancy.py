@@ -16,7 +16,7 @@ from deepeval.metrics.utils import (
     a_run_system_one_eval,
     score_qag_verdicts,
     construct_verbose_logs,
-    check_llm_test_case_params,
+    prepare_measure,
     initialize_model,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
@@ -85,20 +85,7 @@ class AnswerRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -144,20 +131,7 @@ class AnswerRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,

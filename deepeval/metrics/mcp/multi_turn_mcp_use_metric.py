@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Union, List
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.utils import (
-    check_conversational_test_case_params,
+    prepare_measure,
     construct_verbose_logs,
     get_unit_interactions,
     initialize_model,
@@ -31,7 +31,6 @@ from deepeval.metrics.mcp.utils import (
     turn_mcp_interaction_text,
 )
 from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore, Reason
-from deepeval.errors import MissingTestCaseParamsError
 
 _MCP_TASK_COMPLETION_TEMPLATES = "MCPTaskCompletionMetric"
 
@@ -54,6 +53,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         MultiTurnParams.ROLE,
         MultiTurnParams.CONTENT,
     ]
+    _requires_mcp_servers = True
 
     def __init__(
         self,
@@ -92,18 +92,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -117,10 +106,6 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                if not test_case.mcp_servers:
-                    error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
-                    self.error = error_str
-                    raise MissingTestCaseParamsError(error_str)
                 if run_system_one_eval(self, test_case):
                     return self.score
 
@@ -166,28 +151,13 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if not test_case.mcp_servers:
-                error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
-                self.error = error_str
-                raise MissingTestCaseParamsError(error_str)
             if await a_run_system_one_eval(self, test_case):
                 return self.score
 

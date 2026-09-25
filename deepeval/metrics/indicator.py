@@ -41,6 +41,26 @@ def format_metric_description(
         return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
+def start_measure(
+    metric: BaseMetric,
+    async_mode: Optional[bool] = None,
+    in_component: bool = False,
+) -> None:
+    """Record the measure and clear per-measure System One state
+    (confidence, fallback reason) before any decision is made. Every measure
+    runs this, through `metric_progress_indicator` or the batched System One
+    path in `evaluate()`."""
+    record_metric(
+        metric.__name__,
+        async_mode=False if async_mode is None else async_mode,
+        in_component=in_component,
+        model=getattr(metric, "model", None),
+    )
+    from deepeval.metrics.utils.decision import reset_system_one_state
+
+    reset_system_one_state(metric)
+
+
 @contextmanager
 def metric_progress_indicator(
     metric: BaseMetric,
@@ -50,19 +70,7 @@ def metric_progress_indicator(
     _show_indicator: bool = True,
     _in_component: bool = False,
 ):
-    captured_async_mode = False if async_mode is None else async_mode
-    record_metric(
-        metric.__name__,
-        async_mode=captured_async_mode,
-        in_component=_in_component,
-        model=getattr(metric, "model", None),
-    )
-    # Every metric and classifier enters this indicator at the top of each
-    # measure, so it is the one place to clear per-measure System One state
-    # (confidence, fallback reason) before any decision is made.
-    from deepeval.metrics.utils.decision import reset_system_one_state
-
-    reset_system_one_state(metric)
+    start_measure(metric, async_mode=async_mode, in_component=_in_component)
     console = Console(file=sys.stderr)  # Direct output to standard error
     if _show_indicator:
         with Progress(

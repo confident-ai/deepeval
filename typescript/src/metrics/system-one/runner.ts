@@ -32,7 +32,10 @@ import {
   SystemOneContextLimitError,
   checkContextBudget,
 } from "@/models/system-one/limits";
-import type { SystemOneQuestion } from "@/models/system-one/schema";
+import type {
+  SystemOneAnswers,
+  SystemOneQuestion,
+} from "@/models/system-one/schema";
 import {
   Choice,
   Noul,
@@ -156,7 +159,7 @@ export function parseQuestions(rendered: string): JevQuestion[] {
   }
 }
 
-interface Prepared {
+export interface Prepared {
   spec: SystemOneEvalSpec;
   state: Record<string, unknown>;
   questions: Record<string, SystemOneQuestion>;
@@ -186,6 +189,20 @@ function prepare(
     }
     return undefined;
   }
+  return requestFor(metric, testCase, spec);
+}
+
+/**
+ * The state and questions `spec` sends for `testCase`, or `undefined` for a
+ * test case type Jev has no state for.
+ * @internal Shared with the batched System One path in `evaluate()`.
+ */
+export function requestFor(
+  metric: BaseMetricCore,
+  testCase: unknown,
+  spec: SystemOneEvalSpec,
+): Prepared | undefined {
+  const mode = effectiveEvalMode(metric);
   if (!metric.systemOneModel) {
     throw new DeepEvalError(
       `${EVAL_MODE_ENV_VAR}=${mode} runs ${metric.name} on a System One ` +
@@ -266,8 +283,22 @@ export async function runSystemOneEval(
     }
     throw err;
   }
-  metric.accrueCost(decision.cost);
-  recordConfidence(metric, decision.answers);
-  populate(metric, spec, outcomesFromAnswers(spec.questions, decision.answers));
+  settle(metric, spec, decision.answers, decision.cost);
   return true;
+}
+
+/**
+ * Book Jev's answers and cost for one measure and fill in every field it
+ * reports.
+ * @internal Shared with the batched System One path in `evaluate()`.
+ */
+export function settle(
+  metric: BaseMetricCore,
+  spec: SystemOneEvalSpec,
+  answers: SystemOneAnswers,
+  cost: number | null,
+): void {
+  metric.accrueCost(cost);
+  recordConfidence(metric, answers);
+  populate(metric, spec, outcomesFromAnswers(spec.questions, answers));
 }

@@ -24,6 +24,10 @@ from deepeval.evaluate.configs import (
     AsyncConfig,
 )
 from deepeval.metrics.utils import copy_metrics
+from deepeval.metrics.utils.system_one_batch import (
+    measure_system_one_batch,
+    a_measure_system_one_batch,
+)
 from deepeval.utils import (
     get_per_task_timeout_seconds,
     get_gather_timeout,
@@ -250,6 +254,19 @@ def execute_test_cases(
                         ##### Metric Calculation #####
                         new_cached_test_case = CachedTestCase()
 
+                        batched_ids = {
+                            id(metric)
+                            for metric in measure_system_one_batch(
+                                llm_metrics,
+                                test_case,
+                                cached_test_case=cached_test_case,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                show_indicator=show_metric_indicator,
+                                progress=progress,
+                            )
+                        }
+
                         for metric in llm_metrics:
                             current_index = index_of[id(metric)]
                             metric_data = None
@@ -261,15 +278,19 @@ def execute_test_cases(
                                     metric_data = cached_metric_data.metric_data
 
                             if metric_data is None:
-                                res = _execute_metric(
-                                    metric=metric,
-                                    test_case=test_case,
-                                    show_metric_indicator=show_metric_indicator,
-                                    in_component=False,
-                                    error_config=error_config,
-                                )
-                                if res == "skip":
-                                    continue
+                                if id(metric) in batched_ids:
+                                    if metric.skipped:
+                                        continue
+                                else:
+                                    res = _execute_metric(
+                                        metric=metric,
+                                        test_case=test_case,
+                                        show_metric_indicator=show_metric_indicator,
+                                        in_component=False,
+                                        error_config=error_config,
+                                    )
+                                    if res == "skip":
+                                        continue
                                 metric_data = create_metric_data(metric)
 
                             # here, we will check for an additional property on the flattened test cases to see if updating is necessary
@@ -314,17 +335,32 @@ def execute_test_cases(
                     # No caching for conversational metrics yet
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_count += 1
+                        batched_ids = {
+                            id(metric)
+                            for metric in measure_system_one_batch(
+                                conversational_metrics,
+                                test_case,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                show_indicator=show_metric_indicator,
+                                progress=progress,
+                            )
+                        }
                         for metric in conversational_metrics:
                             current_index = index_of[id(metric)]
-                            res = _execute_metric(
-                                metric=metric,
-                                test_case=test_case,
-                                show_metric_indicator=show_metric_indicator,
-                                in_component=False,
-                                error_config=error_config,
-                            )
-                            if res == "skip":
-                                continue
+                            if id(metric) in batched_ids:
+                                if metric.skipped:
+                                    continue
+                            else:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=False,
+                                    error_config=error_config,
+                                )
+                                if res == "skip":
+                                    continue
 
                             metric_data = create_metric_data(metric)
                             api_test_case.update_metric_data(metric_data)
@@ -684,8 +720,20 @@ async def _a_execute_llm_test_cases(
         new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
 
+        batched = await a_measure_system_one_batch(
+            metrics,
+            test_case,
+            cached_test_case=cached_test_case,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_metrics_indicator,
+            progress=progress,
+        )
+        if batched:
+            update_pbar(progress, pbar_test_case_id, advance=len(batched))
+        batched_ids = {id(metric) for metric in batched}
         await measure_metrics_with_indicator(
-            metrics=metrics,
+            metrics=[m for m in metrics if id(m) not in batched_ids],
             test_case=test_case,
             cached_test_case=cached_test_case,
             skip_on_missing_params=skip_on_missing_params,
@@ -820,8 +868,19 @@ async def _a_execute_conversational_test_cases(
     test_start_time = time.perf_counter()
 
     try:
+        batched = await a_measure_system_one_batch(
+            metrics,
+            test_case,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_metrics_indicator,
+            progress=progress,
+        )
+        if batched:
+            update_pbar(progress, pbar_test_case_id, advance=len(batched))
+        batched_ids = {id(metric) for metric in batched}
         await measure_metrics_with_indicator(
-            metrics=metrics,
+            metrics=[m for m in metrics if id(m) not in batched_ids],
             test_case=test_case,
             cached_test_case=None,
             skip_on_missing_params=skip_on_missing_params,

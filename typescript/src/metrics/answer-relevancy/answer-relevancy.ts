@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
@@ -24,6 +23,7 @@ import {
   type AnswerRelevancyVerdict,
 } from "@/metrics/answer-relevancy/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 // Must match the key in templates.json (and the Python metric class name).
 const TEMPLATE_CLASS = "AnswerRelevancyMetric";
@@ -73,8 +73,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.statements = await this.generateStatements(testCase.actualOutput);

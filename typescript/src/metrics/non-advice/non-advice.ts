@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
@@ -24,6 +23,7 @@ import {
   type NonAdviceVerdict,
 } from "@/metrics/non-advice/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "NonAdviceMetric";
 
@@ -81,8 +81,7 @@ export class NonAdviceMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.advices = await this.generateAdvices(testCase.actualOutput);

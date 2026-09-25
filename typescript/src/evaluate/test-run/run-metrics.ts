@@ -4,7 +4,6 @@ import { BaseMetric, BaseConversationalMetric } from "@/metrics";
 import { DeepEvalError } from "@/errors";
 import {
   getMaxConcurrent,
-  mapWithConcurrency,
   shouldIgnoreErrors,
   shouldSkipOnMissingParams,
 } from "@/env-flags";
@@ -17,7 +16,8 @@ import {
 import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
 import { ErrorConfig } from "@/evaluate/configs";
 import {
-  runMetric,
+  measureTestCase,
+  resolveCacheConfig,
   buildTestResult,
   metricMatchesCase,
 } from "@/evaluate/evaluate";
@@ -110,12 +110,12 @@ export async function evaluateCase(
   }
 
   const start = Date.now();
-  const errorConfig = runErrorConfig();
-  const metricsData = await mapWithConcurrency(
-    metrics,
-    getMaxConcurrent(),
-    (m) => runMetric(m, testCase, errorConfig, () => {}),
-  );
+  const metricsData = await measureTestCase(testCase, metrics, {
+    errorCfg: runErrorConfig(),
+    cacheCfg: resolveCacheConfig(),
+    maxConcurrent: getMaxConcurrent(),
+    onDone: () => {},
+  });
   return {
     testCase,
     metricsData,

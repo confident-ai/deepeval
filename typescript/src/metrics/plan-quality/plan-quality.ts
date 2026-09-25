@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
 } from "@/metrics/utils";
 import {
@@ -24,6 +23,7 @@ import {
   PlanQualityScoreSchema,
 } from "@/metrics/plan-quality/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 // Shared templates (mirror Python): task extraction → StepEfficiencyMetric,
 // plan extraction → PlanAdherenceMetric.
@@ -97,8 +97,7 @@ export class PlanQualityMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
       const json = traceJson(testCase._traceDict);
 
