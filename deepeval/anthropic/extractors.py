@@ -1,5 +1,5 @@
 from anthropic.types.message import Message
-from anthropic.types import ToolUseBlock
+from anthropic.types import TextBlock, ToolUseBlock
 from typing import Any, Dict
 
 from deepeval.anthropic.utils import (
@@ -65,7 +65,17 @@ def extract_messages_api_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    output = str(message_response.content[0].text)
+    # A response may hold blocks other than text — a tool call with no prose
+    # before it makes content[0] a ToolUseBlock, and extended thinking puts a
+    # ThinkingBlock in front of the answer. Reading content[0].text raised on
+    # both, and safe_extract_output_parameters swallowed it, so every tool call
+    # and every thinking response was traced with no output, no token counts
+    # and no tools_called.
+    output = "".join(
+        block.text
+        for block in message_response.content
+        if isinstance(block, TextBlock)
+    )
     prompt_tokens = message_response.usage.input_tokens
     completion_tokens = message_response.usage.output_tokens
 
@@ -86,6 +96,12 @@ def extract_messages_api_output_parameters(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+
+    # Same as the OpenAI extractor: a response that produced no text but did
+    # call tools reports the calls as its output.
+    if not output and tools_called:
+        output = tools_called
+
     return OutputParameters(
         output=output,
         prompt_tokens=prompt_tokens,
