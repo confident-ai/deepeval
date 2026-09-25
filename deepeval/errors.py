@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class DeepEvalError(Exception):
     """Base class for framework-originated errors.
     If raised and not handled, it will abort the current operation.
@@ -27,8 +24,8 @@ class SpeechHTTPError(DeepEvalError):
         self,
         message: str,
         *,
-        status_code: Optional[int] = None,
-        provider_label: Optional[str] = None,
+        status_code: int | None = None,
+        provider_label: str | None = None,
     ):
         super().__init__(message)
         self.status_code = status_code
@@ -46,13 +43,9 @@ class SpeechRateLimitError(SpeechHTTPError):
 class MissingTestCaseParamsError(DeepEvalError):
     """Required test case fields are missing."""
 
-    pass
-
 
 class MismatchedTestCaseInputsError(DeepEvalError):
     """Inputs provided to a metric or test case are inconsistent or invalid."""
-
-    pass
 
 
 class NoMetricsError(DeepEvalError):
@@ -71,4 +64,21 @@ class NoMetricsError(DeepEvalError):
     at the end of a run that quietly did nothing.
     """
 
-    pass
+
+class IncompatibleTestRunsError(DeepEvalError, ValueError):
+    """Raised when comparing historical test runs that are incompatible.
+
+    Common causes:
+      - Runs evaluated a different number of test cases.
+      - Test case inputs or definitions do not match.
+      - One or both test runs contain no test cases.
+    """
+
+
+class JudgeEvaluationError(DeepEvalError, RuntimeError):
+    """Raised when an LLM judge fails during test run comparison.
+
+    Common causes:
+      - The judge model raises an unhandled exception or network error.
+      - The judge returns unparseable or incomplete output after retry.
+    """
