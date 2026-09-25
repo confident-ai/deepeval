@@ -1,5 +1,10 @@
+import pytest
+
+from deepeval.metrics.utils import (
+    get_turns_in_sliding_window,
+    get_unit_interactions,
+)
 from deepeval.test_case import Turn
-from deepeval.metrics.utils import get_unit_interactions
 
 
 def make_turns(seq):
@@ -71,3 +76,23 @@ class TestGetUnitInteractions:
         assert [
             [(t.role, t.content) for t in unit] for unit in result
         ] == expected
+
+
+class TestGetTurnsInSlidingWindow:
+    def test_preserves_valid_windows(self):
+        turns = make_turns(
+            [("user", "u1"), ("assistant", "a1"), ("user", "u2")]
+        )
+
+        assert list(get_turns_in_sliding_window(turns, 2)) == [
+            [turns[0]],
+            [turns[0], turns[1]],
+            [turns[1], turns[2]],
+        ]
+
+    @pytest.mark.parametrize("window_size", [0, -1])
+    def test_rejects_non_positive_window_size(self, window_size):
+        turns = make_turns([("user", "u1")])
+
+        with pytest.raises(ValueError, match="window_size must be at least 1"):
+            list(get_turns_in_sliding_window(turns, window_size))
