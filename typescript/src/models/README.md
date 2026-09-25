@@ -194,8 +194,7 @@ vision-capable — see `checkMultimodalSupport` in `metrics/utils.ts`.
 
 ## Gaps & discrepancies vs Python
 
-- **Bedrock image `format` is lowercase.** Python uppercases the mime subtype
-  (`JPEG`), which the Converse API rejects; TS sends the documented lowercase value and
+- **Bedrock image `format`.** Both send the documented lowercase value; TS also
   throws for formats Bedrock doesn't accept at all.
 - **No `TEMPERATURE` global** — Python's `settings.TEMPERATURE` is written by the CLI's
   `set-*` commands; the TS CLI has no config store, so there is nothing to read. TS uses

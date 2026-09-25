@@ -207,10 +207,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 # Bedrock doesn't support external URLs - must convert everything to bytes
                 element.ensure_images_loaded()
 
+                # Converse only accepts lowercase: gif, jpeg, png, webp
                 image_format = (
-                    (element.mimeType or "image/jpeg").split("/")[-1].upper()
+                    (element.mimeType or "image/jpeg").split("/")[-1].lower()
                 )
-                image_format = "JPEG" if image_format == "JPG" else image_format
+                image_format = "jpeg" if image_format == "jpg" else image_format
 
                 try:
                     image_raw_bytes = base64.b64decode(element.dataBase64)
