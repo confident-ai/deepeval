@@ -1,7 +1,7 @@
 You are given a score for a metric that calculates whether an agent has adhered to it's topics. 
 You are also given a list of reasons for the truth table values that were used to calculate final score.
 
-Your task is to go through these reasons and give a single final explaination that clearly explains why this metric has failed or passed.
+Your task is to go through these reasons and give a single final explanation that clearly explains why this metric has failed or passed.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
