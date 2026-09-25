@@ -37,6 +37,7 @@ from deepeval.metrics import (
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
 )
+from deepeval.metrics.utils import copy_metrics
 from deepeval.test_case import (
     LLMTestCase,
 )
@@ -365,7 +366,12 @@ async def _a_execute_span_test_case(
             )
         return
 
-    metrics: List[BaseMetric] = list(span.metrics or [])
+    # `@observe(metrics=[...])` keeps the same metric objects on every span of that
+    # component, and evaluating a metric writes the result onto the metric itself. Under
+    # concurrency, reusing those objects lets one span's score overwrite another's before
+    # the results are read back below. Clone them per span, the way the end-to-end path
+    # already does, so each span records its own result.
+    metrics: List[BaseMetric] = copy_metrics(span.metrics or [])
     if not metrics:
         return
 
