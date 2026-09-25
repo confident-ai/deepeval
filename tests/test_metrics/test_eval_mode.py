@@ -697,6 +697,26 @@ REFUSAL_CASE = LLMTestCase(
 )
 
 
+def test_required_disclosure_classifier_folds_disclosures_into_labels():
+    from deepeval.classifiers import RequiredDisclosureClassifier
+
+    classifier = RequiredDisclosureClassifier(
+        disclosures=["a statement that this is not financial advice"],
+        model=CannedLLM(json.dumps({"label": "present", "reason": "found"})),
+        async_mode=False,
+    )
+    assert [label.name for label in classifier.labels] == [
+        "present",
+        "missing",
+        "partial",
+    ]
+    assert all(
+        "a statement that this is not financial advice" in label.description
+        for label in classifier.labels
+    )
+    assert classifier.classify(REFUSAL_CASE) == "present"
+
+
 def test_classifier_system_one_label_and_deterministic_reason():
     from tests.test_metrics.system_one_fakes import choice_answer
 
