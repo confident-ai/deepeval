@@ -103,13 +103,20 @@ class _ObservedAsyncGenIter:
     after ``break``), ensuring the span is always closed.
     """
 
-    __slots__ = ("_agen_iter", "_observer", "_entered", "_done")
+    __slots__ = (
+        "_agen_iter",
+        "_observer",
+        "_entered",
+        "_done",
+        "_last_value",
+    )
 
     def __init__(self, agen, observer):
         self._agen_iter = agen.__aiter__()
         self._observer = observer
         self._entered = False
         self._done = False
+        self._last_value = None
 
     def __aiter__(self):
         return self
@@ -119,17 +126,20 @@ class _ObservedAsyncGenIter:
             self._observer.__enter__()
             self._entered = True
         try:
-            return await self._agen_iter.__anext__()
+            value = await self._agen_iter.__anext__()
         except StopAsyncIteration:
             self._finish()
             raise
         except Exception as e:
             self._finish_err(e)
             raise
+        self._last_value = value
+        return value
 
     def _finish(self):
         if self._entered and not self._done:
             self._done = True
+            self._observer.result = self._last_value
             self._observer.__exit__(None, None, None)
 
     def _finish_err(self, e):

@@ -13,6 +13,7 @@
       "input": {
         "prompt": "one two three"
       },
+      "output": "three",
       "model": "async-streaming-model",
       "inputTokenCount": 3.0,
       "outputTokenCount": 3.0
@@ -26,5 +27,6 @@
   "input": {
     "prompt": "one two three"
   },
+  "output": "three",
   "status": "SUCCESS"
 }
