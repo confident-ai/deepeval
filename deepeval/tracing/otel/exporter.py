@@ -26,6 +26,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.otel.utils import (
+    decode_otel_value,
     check_pydantic_ai_agent_input_output,
     check_pydantic_ai_tools_called,
     check_pydantic_ai_trace_input_output,
@@ -98,7 +99,6 @@ class BaseSpanWrapper:
 
 
 class ConfidentSpanExporter(SpanExporter):
-
     def __init__(self, api_key: Optional[str] = None):
         record_tracing_integration(Integration.OTEL)
         peb.init_clock_bridge()
@@ -175,7 +175,6 @@ class ConfidentSpanExporter(SpanExporter):
         ################ Add Spans to Trace Manager ################
         for spans_wrappers_list in spans_wrappers_forest:
             for base_span_wrapper in spans_wrappers_list:
-
                 # get current trace
                 current_trace = trace_manager.get_trace_by_uuid(
                     base_span_wrapper.base_span.trace_uuid
@@ -250,7 +249,6 @@ class ConfidentSpanExporter(SpanExporter):
 
         # set the trace attributes (to be deprecated)
         if base_span_wrapper.trace_attributes:
-
             if base_span_wrapper.trace_attributes.name:
                 current_trace.name = base_span_wrapper.trace_attributes.name
 
@@ -307,9 +305,9 @@ class ConfidentSpanExporter(SpanExporter):
             current_trace.user_id = base_span_wrapper.trace_user_id
 
         # set the trace input and output
-        if base_span_wrapper.trace_input:
+        if base_span_wrapper.trace_input is not None:
             current_trace.input = base_span_wrapper.trace_input
-        if base_span_wrapper.trace_output:
+        if base_span_wrapper.trace_output is not None:
             current_trace.output = base_span_wrapper.trace_output
 
         # set the trace environment
@@ -351,7 +349,7 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
     def _convert_readable_span_to_base_span(
-        self, span: ReadableSpan
+        self, span: ReadableSpan, *, _live_metrics: bool = False
     ) -> BaseSpanWrapper:
 
         base_span = None
@@ -382,8 +380,16 @@ class ConfidentSpanExporter(SpanExporter):
 
         # NOTE: Confident Span is referred to as base span in this codebase
         self.__set_base_span_attributes(
-            base_span, span, base_span_status, base_span_error
+            base_span,
+            span,
+            base_span_status,
+            base_span_error,
+            _live_metrics=_live_metrics,
         )
+
+        if span.attributes.get("confident.span.content_truncated") is True:
+            base_span.metadata = dict(base_span.metadata or {})
+            base_span.metadata["confident.span.content_truncated"] = True
 
         base_span_wrapper = BaseSpanWrapper(base_span=base_span)
 
@@ -408,9 +414,9 @@ class ConfidentSpanExporter(SpanExporter):
             # (the OTLP endpoint would 500 and drop every trace in the request).
             pydantic_trace_input, pydantic_trace_output = None, None
 
-        if not base_span_wrapper.trace_input and pydantic_trace_input:
+        if base_span_wrapper.trace_input is None and pydantic_trace_input:
             base_span_wrapper.trace_input = pydantic_trace_input
-        if not base_span_wrapper.trace_output and pydantic_trace_output:
+        if base_span_wrapper.trace_output is None and pydantic_trace_output:
             base_span_wrapper.trace_output = pydantic_trace_output
 
     def __set_trace_attributes(
@@ -423,8 +429,12 @@ class ConfidentSpanExporter(SpanExporter):
         trace_environment = span.attributes.get(
             ConfidentAttr.TRACE_ENVIRONMENT, "production"
         )
-        trace_input = span.attributes.get(ConfidentAttr.TRACE_INPUT)
-        trace_output = span.attributes.get(ConfidentAttr.TRACE_OUTPUT)
+        trace_input = decode_otel_value(
+            span.attributes.get(ConfidentAttr.TRACE_INPUT)
+        )
+        trace_output = decode_otel_value(
+            span.attributes.get(ConfidentAttr.TRACE_OUTPUT)
+        )
         raw_trace_tags = span.attributes.get(ConfidentAttr.TRACE_TAGS)
         raw_trace_metadata = span.attributes.get(ConfidentAttr.TRACE_METADATA)
         raw_trace_retrieval_context = span.attributes.get(
@@ -502,6 +512,8 @@ class ConfidentSpanExporter(SpanExporter):
         span: ReadableSpan,
         base_span_status: TraceSpanStatus,
         base_span_error: Optional[str],
+        *,
+        _live_metrics: bool = False,
     ):
         span_input = span.attributes.get(ConfidentAttr.SPAN_INPUT)
         span_output = span.attributes.get(ConfidentAttr.SPAN_OUTPUT)
@@ -568,15 +580,17 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.metadata = span_metadata
         if span_integration:
             base_span.integration = span_integration
-        if span_input:
-            base_span.input = span_input
-        if span_output:
-            base_span.output = span_output
+        if span_input is not None:
+            base_span.input = decode_otel_value(span_input)
+        if span_output is not None:
+            base_span.output = decode_otel_value(span_output)
 
         # Re-attach ``BaseMetric`` instances staged via
         # ``next_*_span(metrics=[...])`` from the in-process overlay
         # (can't ride in OTel attrs). Pop = self-cleaning.
-        pending_metrics = pop_pending_metrics(base_span.uuid)
+        pending_metrics = (
+            None if _live_metrics else pop_pending_metrics(base_span.uuid)
+        )
         if pending_metrics:
             base_span.metrics = pending_metrics
 
@@ -615,7 +629,9 @@ class ConfidentSpanExporter(SpanExporter):
             input_token_count = span.attributes.get(
                 ConfidentAttr.LLM_INPUT_TOKEN_COUNT
             )
-            provider = span.attributes.get(ConfidentAttr.SPAN_PROVIDER)
+            provider = span.attributes.get(
+                ConfidentAttr.SPAN_PROVIDER
+            ) or span.attributes.get("gen_ai.provider.name")
             if not provider:
                 provider = infer_provider_from_model(model)
             if provider:
@@ -625,11 +641,11 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # fallback to gen ai attributes if not found in confident attributes
-            if not input_token_count:
+            if input_token_count is None:
                 input_token_count = span.attributes.get(
                     "gen_ai.usage.input_tokens"
                 )
-            if not output_token_count:
+            if output_token_count is None:
                 output_token_count = span.attributes.get(
                     "gen_ai.usage.output_tokens"
                 )
@@ -703,7 +719,9 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         elif span_type == "agent":
-            name = span.attributes.get(ConfidentAttr.AGENT_NAME)
+            name = span.attributes.get(
+                ConfidentAttr.AGENT_NAME
+            ) or span.attributes.get("gen_ai.agent.name")
             available_tools_attr = span.attributes.get(
                 ConfidentAttr.AGENT_AVAILABLE_TOOLS
             )

@@ -30,6 +30,11 @@ def patch_openai_classes():
     """Monkey patch OpenAI resource classes directly."""
     global _OPENAI_PATCHED
 
+    from deepeval.tracing.otel.frameworks import instrument
+
+    if instrument("openai"):
+        return
+
     # Single guard - if already patched, return immediately
     if _OPENAI_PATCHED:
         return
@@ -261,6 +266,9 @@ def __update_input_and_output_of_current_trace(
 def unpatch_openai_classes():
     """Restore OpenAI resource classes to their original state."""
     global _OPENAI_PATCHED
+    from deepeval.tracing.otel.frameworks import reset
+
+    reset("openai")
 
     # If not patched, nothing to do
     if not _OPENAI_PATCHED:
