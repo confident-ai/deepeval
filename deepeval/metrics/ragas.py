@@ -93,8 +93,8 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_precision_score = scores["context_precision"][0]
-        self.success = context_precision_score >= self.threshold
         self.score = context_precision_score
+        self.success = self.is_successful()
         return self.score
 
     async def a_measure(
@@ -169,8 +169,8 @@ class RAGASContextualRecallMetric(BaseMetric):
         )
         scores = evaluate(dataset, [context_recall], llm=chat_model)
         context_recall_score = scores["context_recall"][0]
-        self.success = context_recall_score >= self.threshold
         self.score = context_recall_score
+        self.success = self.is_successful()
         return self.score
 
     @property
@@ -245,8 +245,8 @@ class RAGASContextualEntitiesRecall(BaseMetric):
             llm=chat_model,
         )
         contextual_entity_score = scores["context_entity_recall"][0]
-        self.success = contextual_entity_score >= self.threshold
         self.score = contextual_entity_score
+        self.success = self.is_successful()
         return self.score
 
     @property
@@ -397,8 +397,8 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             embeddings=self.embeddings,
         )
         answer_relevancy_score = scores["answer_relevancy"][0]
-        self.success = answer_relevancy_score >= self.threshold
         self.score = answer_relevancy_score
+        self.success = self.is_successful()
         return self.score
 
     @property
@@ -467,8 +467,8 @@ class RAGASFaithfulnessMetric(BaseMetric):
         )
         scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
         faithfulness_score = scores["faithfulness"][0]
-        self.success = faithfulness_score >= self.threshold
         self.score = faithfulness_score
+        self.success = self.is_successful()
         return self.score
 
     @property
@@ -541,8 +541,9 @@ class RagasMetric(BaseMetric):
 
         ragas_score = sum(score_breakdown.values()) / len(score_breakdown)
 
-        self.success = ragas_score >= self.threshold
         self.score = ragas_score
+
+        self.success = self.is_successful()
         self.score_breakdown = score_breakdown
         return self.score
 
