@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any, Dict, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 from deepeval.metrics.dag.nodes import (
     BaseNode,
@@ -50,6 +58,60 @@ class _DeepAcyclicGraphRunner:
         self._verbose_log = (
             _mt_verbose_log if graph.multiturn else _st_verbose_log
         )
+        self._order = self._build_order()
+        self._score_events: List[Tuple[int, float, Optional[str]]] = []
+
+    def _build_order(self) -> Dict[Node, int]:
+        """Depth-first pre-order index for every node, roots in declaration order.
+
+        Used to pick a winner when more than one verdict assigns a score. This
+        is the order the synchronous traversal already visits nodes in, so
+        resolving on the highest index reproduces today's sync result exactly
+        while bringing the async result into line with it.
+        """
+        order: Dict[Node, int] = {}
+        seen: set = set()
+
+        def walk(node: Node) -> None:
+            if node in seen:
+                return
+            seen.add(node)
+            order[node] = len(order)
+            children = list(getattr(node, "children", None) or ())
+            child = getattr(node, "child", None)
+            if child is not None and isinstance(child, _NODE):
+                children.append(child)
+            for c in children:
+                walk(c)
+
+        for root in self.graph.root_nodes:
+            walk(root)
+        return order
+
+    def _record_score(
+        self, node: Node, score: float, reason: Optional[str]
+    ) -> None:
+        """Record a scoring verdict so a winner can be chosen deterministically.
+
+        The metric is still written on arrival, because
+        `VerdictNode._generate_reason` builds its prompt from `metric.score`.
+        What changes is that the last arrival no longer decides the result:
+        `_settle` re-applies the highest-ordered event once the traversal
+        finishes. Previously the surviving value was whichever branch completed
+        last, and `asyncio.gather` interleaves completion, so the same graph
+        with the same judgements scored differently under `async_mode=True`.
+        """
+        self._score_events.append(
+            (self._order.get(node, len(self._order)), score, reason)
+        )
+
+    def _settle(self, metric: Metric) -> None:
+        if not self._score_events:
+            return
+        _, score, reason = max(self._score_events, key=lambda e: e[0])
+        metric.score = score
+        if metric.include_reason and reason is not None:
+            metric.reason = reason
 
     def _check_remaining(self, node: Node) -> bool:
         self.remaining[node] -= 1
@@ -77,6 +139,11 @@ class _DeepAcyclicGraphRunner:
         metric.score = child_metric.score
         if metric.include_reason:
             metric.reason = child_metric.reason
+        self._record_score(
+            node,
+            child_metric.score,
+            child_metric.reason if metric.include_reason else None,
+        )
         metric._accrue_cost(child_metric.evaluation_cost)
         metric._accrue_tokens(
             child_metric.input_tokens, child_metric.output_tokens
@@ -86,6 +153,7 @@ class _DeepAcyclicGraphRunner:
     def run(self, metric: Metric, test_case: TestCase) -> None:
         for root in self.graph.root_nodes:
             self._visit(root, metric, test_case, 0)
+        self._settle(metric)
 
     def _visit(
         self, node: Node, metric: Metric, test_case: TestCase, depth: int
@@ -123,8 +191,14 @@ class _DeepAcyclicGraphRunner:
         if child is None:
             metric._verbose_steps.append(self._verbose_log(node, depth))
             metric.score = node.score / 10
-            if metric.include_reason:
-                metric.reason = node._generate_reason(metric=metric)
+            reason = (
+                node._generate_reason(metric=metric)
+                if metric.include_reason
+                else None
+            )
+            if reason is not None:
+                metric.reason = reason
+            self._record_score(node, node.score / 10, reason)
         elif isinstance(child, _NODE):
             self._visit(child, metric, test_case, depth)
         else:
@@ -138,6 +212,7 @@ class _DeepAcyclicGraphRunner:
                 for root in self.graph.root_nodes
             )
         )
+        self._settle(metric)
 
     async def _a_visit(
         self, node: Node, metric: Metric, test_case: TestCase, depth: int
@@ -179,8 +254,14 @@ class _DeepAcyclicGraphRunner:
         if child is None:
             metric._verbose_steps.append(self._verbose_log(node, depth))
             metric.score = node.score / 10
-            if metric.include_reason:
-                metric.reason = await node._a_generate_reason(metric=metric)
+            reason = (
+                await node._a_generate_reason(metric=metric)
+                if metric.include_reason
+                else None
+            )
+            if reason is not None:
+                metric.reason = reason
+            self._record_score(node, node.score / 10, reason)
         elif isinstance(child, _NODE):
             await self._a_visit(child, metric, test_case, depth)
         else:
