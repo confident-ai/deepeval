@@ -58,25 +58,31 @@ def process_hyperparameters(
     return processed_hyperparameters
 
 
-def log_hyperparameters(func):
-    test_run = global_test_run_manager.get_test_run()
+def log_hyperparameters(func=None, **logged_hyperparameters):
+    def decorator(fn):
+        test_run = global_test_run_manager.get_test_run()
 
-    def modified_hyperparameters():
-        base_hyperparameters = func()
-        return base_hyperparameters
+        def modified_hyperparameters():
+            base_hyperparameters = fn()
+            if not logged_hyperparameters:
+                return base_hyperparameters
+            merged = dict(logged_hyperparameters)
+            if isinstance(base_hyperparameters, dict):
+                merged.update(base_hyperparameters)
+            return merged
 
-    hyperparameters = process_hyperparameters(modified_hyperparameters())
-    test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+        hyperparameters = process_hyperparameters(modified_hyperparameters())
+        test_run.hyperparameters = hyperparameters
+        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-    # Define the wrapper function that will be the actual decorator
-    def wrapper(*args, **kwargs):
-        # Optional: You can decide if you want to do something else here
-        # every time the decorated function is called
-        return func(*args, **kwargs)
+        def wrapper(*args, **kwargs):
+            return fn(*args, **kwargs)
 
-    # Return the wrapper function to be used as the decorator
-    return wrapper
+        return wrapper
+
+    if func is not None:
+        return decorator(func)
+    return decorator
 
 
 def process_prompts(
