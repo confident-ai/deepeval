@@ -32,7 +32,7 @@ class MMLU(DeepEvalBaseBenchmark):
         self.tasks: List[MMLUTask] = list(MMLUTask) if tasks is None else tasks
         self.n_problems_per_task: Optional[int] = n_problems_per_task
         self.scorer = Scorer()
-        self.shots_dataset: List[Dict] = None
+        self.shots_by_task: Dict[MMLUTask, List[Dict]] = {}
         self.n_shots: int = n_shots
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
@@ -168,10 +168,10 @@ class MMLU(DeepEvalBaseBenchmark):
     ) -> Dict:
         # Define prompt template
         assert (
-            self.shots_dataset
+            task in self.shots_by_task
         ), "Example dataset is empty. Call load_benchmark."
         prompt = MMLUTemplate.generate_output(
-            train_set=self.shots_dataset,
+            train_set=self.shots_by_task[task],
             input=golden.input,
             task=task,
             n_shots=self.n_shots,
@@ -206,13 +206,13 @@ class MMLU(DeepEvalBaseBenchmark):
     ) -> List[Dict]:
         # Define prompt template
         assert (
-            self.shots_dataset
+            task in self.shots_by_task
         ), "Example dataset is empty. Call load_benchmark."
 
         prompts = []
         for golden in goldens:
             prompt = MMLUTemplate.generate_output(
-                train_set=self.shots_dataset,
+                train_set=self.shots_by_task[task],
                 input=golden.input,
                 task=task,
                 n_shots=self.n_shots,
@@ -264,14 +264,16 @@ class MMLU(DeepEvalBaseBenchmark):
         )
         self.dataset = dataset
 
-        # If dataset has not been previously loaded, construct
-        # dataset of examples and save as instance var (to save time)
-        if not self.shots_dataset:
+        # If shots for this task have not been previously loaded,
+        # construct dataset of examples from the task's dev split and
+        # save as instance var, keyed by task (each MMLU subject has its
+        # own dev split, so shots must not be shared across tasks)
+        if task not in self.shots_by_task:
             train_set = dataset["dev"]
             shots_set = []
             for data in train_set:
                 shots_set.append(data)
-            self.shots_dataset = shots_set
+            self.shots_by_task[task] = shots_set
 
         # Construct test set
         goldens: List[Golden] = []
