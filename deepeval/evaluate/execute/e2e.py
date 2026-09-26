@@ -588,7 +588,7 @@ async def a_execute_test_cases(
                 await asyncio.sleep(async_config.throttle_value)
 
             try:
-                await asyncio.wait_for(
+                ordered_results = await asyncio.wait_for(
                     asyncio.gather(*tasks),
                     timeout=get_gather_timeout(),
                 )
@@ -602,6 +602,9 @@ async def a_execute_test_cases(
 
                 if not error_config.ignore_errors:
                     raise
+
+            else:
+                return ordered_results
 
     else:
         for test_case in test_cases:
@@ -657,7 +660,7 @@ async def a_execute_test_cases(
             await asyncio.sleep(async_config.throttle_value)
 
         try:
-            await asyncio.wait_for(
+            ordered_results = await asyncio.wait_for(
                 asyncio.gather(*tasks),
                 timeout=get_gather_timeout(),
             )
@@ -669,6 +672,8 @@ async def a_execute_test_cases(
             await asyncio.gather(*tasks, return_exceptions=True)
             if not error_config.ignore_errors:
                 raise
+        else:
+            return ordered_results
 
     return test_results
 
@@ -832,6 +837,8 @@ async def _a_execute_llm_test_cases(
         )
         update_pbar(progress, pbar_id)
 
+    return create_test_result(api_test_case)
+
 
 async def _a_execute_conversational_test_cases(
     metrics: List[Union[BaseMetric, BaseConversationalMetric]],
@@ -950,6 +957,8 @@ async def _a_execute_conversational_test_cases(
             create_test_result(api_test_case, case_classifications)
         )
         update_pbar(progress, pbar_id)
+
+    return create_test_result(api_test_case)
 
 
 async def _evaluate_test_case_pairs(
