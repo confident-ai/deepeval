@@ -206,21 +206,18 @@ class GeminiModel(DeepEvalBaseLLM):
                 # Gemini doesn't support direct external URLs
                 # Must convert all images to bytes
                 if element.url and not element.local:
-                    import requests
+                    from deepeval.models.media_fetch import fetch_remote_media
 
                     settings = get_settings()
-
-                    response = requests.get(
+                    # SSRF-safe fetch (blocks internal/link-local targets and
+                    # pins the connection to the validated IP; see media_fetch).
+                    image_data, content_type = fetch_remote_media(
                         element.url,
-                        timeout=(
-                            settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                            settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                        ),
+                        connect_timeout=settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                        read_timeout=settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
                     )
-                    response.raise_for_status()
-                    image_data = response.content
-                    mime_type = response.headers.get(
-                        "content-type", element.mimeType or "image/jpeg"
+                    mime_type = (
+                        content_type or element.mimeType or "image/jpeg"
                     )
                 else:
                     element.ensure_images_loaded()
