@@ -13,9 +13,10 @@ import {
 import { Turn, resolveRetrievalContext } from "@/test-case";
 
 /**
- * Single source of truth for how a list-valued cell is flattened into a single
- * csv/jsonl cell. Every save path joins on it and every load path splits on it,
- * so a save/load round-trip is lossless. Matches Python's `DELIMITER`.
+ * CSV cells that hold a list are written as a JSON array so a "|" inside an
+ * item survives a save/load round-trip. Loaders try JSON first, then fall
+ * back to splitting on DELIMITER so files written before this change still
+ * load. Matches Python's `DELIMITER`. JSONL writes native lists.
  */
 export const DELIMITER = "|";
 
@@ -193,11 +194,45 @@ export const parseDelimited = (
   delimiter = DELIMITER,
 ): string[] => {
   if (!str) return [];
+  const trimmed = str.trim();
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map(String);
+    } catch {
+      // Fall back to the delimiter so pre-JSON files keep loading.
+    }
+  }
   return str
     .split(delimiter)
     .map((s) => s.trim())
     .filter(Boolean);
 };
+
+/** JSON array first; `|`-joined strings still load for older files. */
+export function parseListCell(
+  value: unknown,
+  delimiter = DELIMITER,
+): string[] | undefined {
+  if (value == null) return undefined;
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== "string") {
+    throw new TypeError(
+      "Expected a context field to be an array, a delimited string, or null.",
+    );
+  }
+  if (value === "") return [];
+  const trimmed = value.trim();
+  if (trimmed.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map(String);
+    } catch {
+      // Fall back to the delimiter so pre-JSON files keep loading.
+    }
+  }
+  return value.split(delimiter);
+}
 
 export const safeJsonParse = <T>(
   text: string | null | undefined,
@@ -224,20 +259,23 @@ export function serializeRetrievalContext(
   );
 }
 
-/** For a csv or jsonl cell, which holds one string rather than a list. */
+/** For a csv cell, which holds one string rather than a list. */
 export function joinRetrievalContext(
   retrievalContext: (string | RetrievedContextData)[] | undefined,
   delimiter = DELIMITER,
 ): string | undefined {
-  return serializeRetrievalContext(retrievalContext)?.join(delimiter);
+  void delimiter;
+  const serialized = serializeRetrievalContext(retrievalContext);
+  return serialized == null ? undefined : JSON.stringify(serialized);
 }
 
-/** For a csv or jsonl cell, which holds one string rather than a list. */
+/** For a csv cell, which holds one string rather than a list. */
 export function joinContext(
   context: string[] | undefined,
   delimiter = DELIMITER,
 ): string | undefined {
-  return context?.join(delimiter);
+  void delimiter;
+  return context == null ? undefined : JSON.stringify(context);
 }
 
 /** Drops unset fields, as Python's `exclude_none` model dump does. */
@@ -298,12 +336,7 @@ function parseStringList(
   value: unknown,
   delimiter: string,
 ): string[] | undefined {
-  if (value == null) return undefined;
-  if (Array.isArray(value)) return value as string[];
-  if (typeof value === "string") return value ? value.split(delimiter) : [];
-  throw new TypeError(
-    "Expected a context field to be an array, a delimited string, or null.",
-  );
+  return parseListCell(value, delimiter);
 }
 
 function parseOptionalNumber(
@@ -520,9 +553,7 @@ export function goldenFromRecord(
       keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
     ),
     inputTokenCount: parseOptionalNumber(
-      keys.inputTokenCount
-        ? pickKey(record, keys.inputTokenCount)
-        : undefined,
+      keys.inputTokenCount ? pickKey(record, keys.inputTokenCount) : undefined,
       true,
     ),
     outputTokenCount: parseOptionalNumber(
