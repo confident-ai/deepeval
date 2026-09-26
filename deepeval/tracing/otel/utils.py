@@ -318,6 +318,7 @@ def check_llm_input_from_gen_ai_attributes(
 ) -> Tuple[Optional[list], Optional[dict]]:
     input = None
     output = None
+    input_messages = []
     try:
         # check for system instructions
         system_instructions = []
@@ -330,18 +331,12 @@ def check_llm_input_from_gen_ai_attributes(
                 system_instructions_json
             )
 
-        input_messages = []
         input_messages_raw = span.attributes.get("gen_ai.input.messages")
         if input_messages_raw and isinstance(input_messages_raw, str):
             input_messages_json = json.loads(input_messages_raw)
             input_messages = _flatten_input(input_messages_json)
 
         input = system_instructions + input_messages
-
-        model_parameters = check_model_parameters(span)
-        if model_parameters:
-            input.append(model_parameters)
-
     except Exception:
         pass
     try:
@@ -350,19 +345,27 @@ def check_llm_input_from_gen_ai_attributes(
     except Exception:
         pass
 
-    if input is None and output is None:
-        try:
-            input = json.loads(span.attributes.get("events"))
-            if input and isinstance(input, list):
-                # check if the last event is a genai choice
-                last_event = input.pop()
-                if (
-                    last_event
-                    and last_event.get("event.name") == "gen_ai.choice"
-                ):
-                    output = last_event
-        except Exception:
-            pass
+    # A v1 span carries no gen_ai.*.messages; its messages live in the
+    # `events` attribute. Test the message attributes themselves rather than
+    # `input`: `input` is seeded with [] (system_instructions +
+    # input_messages) and then gains `model_request_parameters`, which every
+    # pydantic-ai model span sets, so a truthiness test on `input` would skip
+    # this fallback on exactly the spans that need it.
+    if not input_messages and not output:
+        events_input, events_output = _v1_events_to_llm_input_output(span)
+        if events_input:
+            input = (input or []) + events_input
+        if events_output:
+            output = events_output
+
+    try:
+        model_parameters = check_model_parameters(span)
+        if model_parameters:
+            if input is None:
+                input = []
+            input.append(model_parameters)
+    except Exception:
+        pass
 
     return input, output
 
@@ -629,6 +632,205 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
 
+def _v1_parts_from_content(content: Any) -> list:
+    """Rebuild v2 message parts from a v1 event's `content` field.
+
+    Both v1 writers pack content the same way: parts carry `type` renamed to
+    `kind`, and a lone text part collapses to its bare string
+    (`UserPromptPart.otel_event`) or to `{"kind": "text", "text": ...}`
+    (`ModelResponse.otel_events`). Undo that so both instrumentation versions
+    hand the parsing code below identical parts.
+    """
+    if content is None:
+        return []
+    parts = []
+    items = content if isinstance(content, list) else [content]
+    for item in items:
+        if isinstance(item, str):
+            parts.append({"type": "text", "content": item})
+            continue
+        if not isinstance(item, dict):
+            parts.append(make_json_serializable(item))
+            continue
+        kind = item.get("kind")
+        text = item.get("text")
+        if isinstance(text, str) and kind in (None, "text"):
+            # ModelResponse writes {"kind": "text", "text": ...}; v2 spells
+            # that {"type": "text", "content": ...}.
+            parts.append({"type": "text", "content": text})
+        elif isinstance(text, str):
+            # thinking and friends: v2 also keeps the payload under
+            # `content`.
+            parts.append({"type": kind or "text", "content": text})
+        elif isinstance(kind, str):
+            parts.append(
+                {
+                    "type": kind,
+                    **{k: v for k, v in item.items() if k != "kind"},
+                }
+            )
+        else:
+            parts.append(make_json_serializable(item))
+    return parts
+
+
+def _v1_message_from_payload(payload: dict, role: str) -> list:
+    """Map one v1 message payload onto the v2 ``{role, parts}`` shape."""
+    if role == "assistant":
+        parts = _v1_parts_from_content(payload.get("content"))
+        for tc in payload.get("tool_calls") or []:
+            if not isinstance(tc, dict):
+                continue
+            fn = tc.get("function") or {}
+            parts.append(
+                {
+                    "type": "tool_call",
+                    "id": tc.get("id"),
+                    "name": fn.get("name"),
+                    "arguments": fn.get("arguments"),
+                }
+            )
+        return [{"role": "assistant", "parts": parts}] if parts else []
+
+    if role == "tool":
+        # v2 puts a tool result in a `user` message with a
+        # `tool_call_response` part -- a `ModelRequest` is the only place a
+        # `ToolReturnPart` can live, and `messages_to_otel_messages` roles
+        # every non-system request part `user`. Match that so both
+        # instrumentation versions hand consumers the same roles.
+        return [
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "type": "tool_call_response",
+                        "id": payload.get("id"),
+                        "name": payload.get("name"),
+                        "result": payload.get("content"),
+                    }
+                ],
+            }
+        ]
+
+    parts = _v1_parts_from_content(payload.get("content"))
+    return [{"role": role, "parts": parts}] if parts else []
+
+
+def _events_to_normalized_messages(events: list) -> list:
+    """Convert v1 `events` attribute entries to the v2 {role, parts} shape.
+
+    pydantic-ai < 1.0.0 (default instrumentation ``version=1``,
+    ``event_mode="attributes"``) writes the conversation to the span `events`
+    attribute as ``json.dumps([InstrumentedModel.event_to_dict(e) ...])``.
+    ``event_to_dict`` spreads the event body and attributes into one flat
+    dict, so each entry is a message body plus `gen_ai.system` /
+    `gen_ai.message.index` and the OTel event name:
+      - {"content", "role": "system"|"user", "event.name": "gen_ai.*.message"}
+      - {"role": "assistant", "content", "tool_calls": [{"id", "type":
+          "function", "function": {"name", "arguments"}}]}
+      - {"content", "role": "tool", "id", "name"} -- here `name` is the
+        *tool*, so a dispatch that reads `event["name"]` before
+        `event["event.name"]` sees "get_weather" and drops the entry
+      - the trailing `gen_ai.choice` wrapper {"index", "message": {...}},
+        which is the model response and the only entry without a `role`
+
+    `opentelemetry._events.Event.__init__` seeds `attributes` with
+    ``"event.name": name``, so the name does survive `event_to_dict` and is
+    dispatched on first when it is a `gen_ai.*` name; a bare `name` never is.
+    Entries are otherwise recognised by the `role` their body carries, which
+    covers exporters that flatten the body themselves. A nested
+    {"name", "body"} entry -- the in-memory shape `messages_to_otel_events`
+    yields before `event_to_dict` -- is unwrapped too.
+    """
+    normalized = []
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        name = event.get("event.name")
+        if not isinstance(name, str) or not name.startswith("gen_ai."):
+            name = None
+        body = event.get("body")
+        if isinstance(body, dict):
+            # Nested OTel event form: {"name", "body"}; merge for the field
+            # lookups below (body fields win over top-level ones).
+            payload = {**event, **body}
+            nested_name = event.get("name")
+            if (
+                name is None
+                and isinstance(nested_name, str)
+                and nested_name.startswith("gen_ai.")
+            ):
+                name = nested_name
+        else:
+            payload = event
+
+        role = payload.get("role")
+        if name == "gen_ai.tool.message":
+            role = role or "tool"
+        elif name == "gen_ai.assistant.message":
+            role = role or "assistant"
+        elif name == "gen_ai.user.message":
+            role = role or "user"
+        elif name == "gen_ai.system.message":
+            role = role or "system"
+
+        if role is None:
+            # `gen_ai.choice` is the only v1 entry without a role; it wraps
+            # the response message.
+            inner = payload.get("message")
+            if isinstance(inner, dict):
+                normalized.extend(_v1_message_from_payload(inner, "assistant"))
+            continue
+
+        normalized.extend(_v1_message_from_payload(payload, role))
+    return normalized
+
+
+def _v1_events_to_llm_input_output(
+    span: ReadableSpan,
+) -> Tuple[list, Optional[list]]:
+    """Extract (input, output) for an LLM span from its v1 `events`.
+
+    Mirrors the v2 `gen_ai.input.messages` / `gen_ai.output.messages` pair:
+    the flattened messages are the input, and the trailing `gen_ai.choice`
+    wrapper (which holds the final response) is the output.
+    """
+    events_raw = span.attributes.get("events")
+    if events_raw is None:
+        events_raw = span.attributes.get("all_messages_events")
+    if not events_raw:
+        return [], None
+    try:
+        events = (
+            json.loads(events_raw)
+            if isinstance(events_raw, str)
+            else events_raw
+        )
+    except Exception:
+        return [], None
+    if not isinstance(events, list):
+        return [], None
+
+    events = list(events)
+    output = None
+    if events:
+        last_event = events[-1]
+        if (
+            isinstance(last_event, dict)
+            and "message" in last_event
+            and "role" not in last_event
+        ):
+            events.pop()
+            output = (
+                _flatten_input(_events_to_normalized_messages([last_event]))
+                or last_event
+            )
+
+    messages = _flatten_input(_events_to_normalized_messages(events))
+    # Unrecognised event shapes keep the raw entries rather than nothing.
+    return (messages or events), output
+
+
 def normalize_pydantic_ai_messages(span: ReadableSpan) -> list:
     """Normalize PydanticAI message attributes across instrumentation versions."""
 
@@ -667,7 +869,30 @@ def normalize_pydantic_ai_messages(span: ReadableSpan) -> list:
         output_messages = _normalize_messages(
             span.attributes.get("gen_ai.output.messages")
         )
-        return input_messages + output_messages
+        if input_messages or output_messages:
+            return input_messages + output_messages
+
+        # pydantic-ai < 1.0.0 (default instrumentation version=1) writes
+        # message data as span `events` attribute entries
+        # (gen_ai.user.message / gen_ai.assistant.message /
+        # gen_ai.tool.message) instead of the gen_ai.*.messages attributes.
+        # Convert them to the same {role, parts} shape so downstream parsing
+        # (e.g. check_pydantic_ai_tools_called) sees tool calls and results.
+        events_raw = span.attributes.get("events")
+        if events_raw is None:
+            events_raw = span.attributes.get("all_messages_events")
+        if events_raw:
+            try:
+                events = (
+                    json.loads(events_raw)
+                    if isinstance(events_raw, str)
+                    else events_raw
+                )
+                if isinstance(events, list):
+                    return _events_to_normalized_messages(events)
+            except Exception:
+                pass
+        return []
     except Exception:
         return []
 
