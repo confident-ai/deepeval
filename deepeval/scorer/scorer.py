@@ -412,9 +412,13 @@ class Scorer:
             if not target_list:
                 return 0  # Return 0 if target list is empty to avoid division by zero
 
-            # Count the number of correct matches
+            # Count the number of correct matches, once per distinct
+            # predicted item. ListOfNumbersSchema (the structured output
+            # TruthfulQA MC2 uses to produce `prediction`) has no uniqueness
+            # constraint, so a repeated correct index would otherwise be
+            # counted once per repeat and push the percentage above 100.
             correct_matches = sum(
-                1 for item in prediction_list if item in target_list
+                1 for item in set(prediction_list) if item in target_list
             )
 
             # Calculate percentage
