@@ -1,0 +1,72 @@
+---
+id: metrics-set-match
+title: Set Match
+sidebar_label: Set Match
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} referenceless={false} />
+
+The set match metric checks whether the items in your LLM's `actual_output` agree as a set with the items in `expected_output`, independent of order, duplication, and surface formatting. It is deterministic and uses no judge model, so it is reproducible and adds no evaluation cost.
+
+:::info
+The `SetMatchMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics`, so import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This metric complements [`ExactMatchMetric`](/docs/metrics-others), which compares whole strings. A multi-item answer is silently scored wrong by string matching whenever the order differs, an item is duplicated, or spacing and case vary (`"apple, banana"` vs `"Banana and apple"`), even though the underlying set is identical. `SetMatchMetric` parses both fields into normalized item sets and scores their overlap.
+:::
+
+## Required Arguments
+
+To use the `SetMatchMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `expected_output`
+
+Items are parsed by splitting on commas, semicolons, and newlines (a JSON array is parsed directly when the field is one), stripping any leading bullet or numbered-list marker, and normalizing case unless `case_sensitive` is set. When `expected_output` parses to no items the metric is not applicable and raises `ValueError` rather than returning a fabricated score.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import SetMatchMetric
+
+metric = SetMatchMetric()
+test_case = LLMTestCase(
+    input="Which countries border Germany?",
+    # Same set as the reference, different order, casing, and delimiter.
+    actual_output="Poland, FRANCE, Austria, Belgium",
+    expected_output="Belgium, Austria; France, Poland",
+)
+
+# To run the metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+## Parameters
+
+- `threshold`: the minimum score for the test case to pass. Defaulted to `1.0`, so the sets must match exactly.
+- `mode`: which overlap statistic to report, one of `"f1"`, `"recall"`, or `"precision"`. Defaulted to `"f1"`. Use `"recall"` to ask only whether every reference item appears, or `"precision"` to penalize extra items.
+- `case_sensitive`: when `True`, items are compared without lowercasing. Defaulted to `False`.
+- `parse_json_arrays`: when `True`, a field that is a JSON array (`["a", "b"]`) is parsed as its elements rather than split on punctuation. Defaulted to `True`.
+- `include_reason`: whether to build a reason listing matched, missing, and extra items. Defaulted to `True`.
+- `strict_mode`: forces the threshold to `1.0`. Defaulted to `False`.
+- `verbose_mode`: prints the parsed item sets and score. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The metric parses `expected_output` and `actual_output` into normalized item sets, then counts the matched items (the set intersection). With `matched`, the reference size `|expected|`, and the output size `|actual|`:
+
+```
+precision = matched / |actual|
+recall    = matched / |expected|
+f1        = 2 * precision * recall / (precision + recall)
+```
+
+The reported score is whichever of these `mode` selects. The default `mode="f1"` with `threshold=1.0` passes only when the two sets are identical after normalization.
