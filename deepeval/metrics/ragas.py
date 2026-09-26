@@ -1,5 +1,6 @@
 """An implementation of the Ragas metric"""
 
+import math
 from typing import Optional, Union, List
 
 
@@ -35,6 +36,34 @@ def format_ragas_metric_name(name: str):
 #############################################################
 
 
+def _record_ragas_score(
+    metric: BaseMetric, ragas_metric_name: str, score: Optional[float]
+) -> Optional[float]:
+    """Store a ragas score, treating NaN as "not measured" rather than a failure.
+
+    ragas returns NaN when it has nothing to score: no statements extracted from
+    the answer, an unparseable judge response, an empty verdict list. Any
+    comparison against the threshold is then False, so a test case that was
+    never measured is reported as one that failed. A NaN also survives the
+    `score is not None` guard the console report aggregates behind, so one
+    unmeasured metric turns the mean score for the whole run into NaN.
+
+    `BaseMetric.is_successful` already routes a metric with an `error` set, and
+    a score of None is excluded from the aggregate rather than poisoning it.
+    """
+    if score is None or math.isnan(score):
+        metric.error = (
+            f"ragas could not compute {ragas_metric_name} for this test case, "
+            "so it has no score."
+        )
+        metric.score = None
+    else:
+        metric.score = score
+    # Re-derives metric.success from the score and error just set.
+    metric.is_successful()
+    return metric.score
+
+
 class RAGASContextualPrecisionMetric(BaseMetric):
     """This metric checks the contextual precision using Ragas"""
 
@@ -51,7 +80,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         if isinstance(model, str):
             self.evaluation_model = model
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         try:
             import_ragas()
             from ragas import evaluate
@@ -93,13 +122,13 @@ class RAGASContextualPrecisionMetric(BaseMetric):
 
         # Ragas only does dataset-level comparisons
         context_precision_score = scores["context_precision"][0]
-        self.success = context_precision_score >= self.threshold
-        self.score = context_precision_score
-        return self.score
+        return _record_ragas_score(
+            self, "context_precision", context_precision_score
+        )
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
     @property
@@ -129,10 +158,10 @@ class RAGASContextualRecallMetric(BaseMetric):
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         # sends to server
         try:
             from ragas import evaluate
@@ -169,9 +198,7 @@ class RAGASContextualRecallMetric(BaseMetric):
         )
         scores = evaluate(dataset, [context_recall], llm=chat_model)
         context_recall_score = scores["context_recall"][0]
-        self.success = context_recall_score >= self.threshold
-        self.score = context_recall_score
-        return self.score
+        return _record_ragas_score(self, "context_recall", context_recall_score)
 
     @property
     def __name__(self):
@@ -200,10 +227,10 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         # sends to server
         try:
             import_ragas()
@@ -245,9 +272,9 @@ class RAGASContextualEntitiesRecall(BaseMetric):
             llm=chat_model,
         )
         contextual_entity_score = scores["context_entity_recall"][0]
-        self.success = contextual_entity_score >= self.threshold
-        self.score = contextual_entity_score
-        return self.score
+        return _record_ragas_score(
+            self, "context_entity_recall", contextual_entity_score
+        )
 
     @property
     def __name__(self):
@@ -350,10 +377,10 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         # sends to server
         try:
             import_ragas()
@@ -397,9 +424,9 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
             embeddings=self.embeddings,
         )
         answer_relevancy_score = scores["answer_relevancy"][0]
-        self.success = answer_relevancy_score >= self.threshold
-        self.score = answer_relevancy_score
-        return self.score
+        return _record_ragas_score(
+            self, "answer_relevancy", answer_relevancy_score
+        )
 
     @property
     def __name__(self):
@@ -426,10 +453,10 @@ class RAGASFaithfulnessMetric(BaseMetric):
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         # sends to server
         try:
             import_ragas()
@@ -467,9 +494,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
         )
         scores = evaluate(dataset, metrics=[faithfulness], llm=chat_model)
         faithfulness_score = scores["faithfulness"][0]
-        self.success = faithfulness_score >= self.threshold
-        self.score = faithfulness_score
-        return self.score
+        return _record_ragas_score(self, "faithfulness", faithfulness_score)
 
     @property
     def __name__(self):
@@ -498,10 +523,10 @@ class RagasMetric(BaseMetric):
 
     async def a_measure(
         self, test_case: LLMTestCase, _show_indicator: bool = False
-    ):
+    ) -> Optional[float]:
         return self.measure(test_case)
 
-    def measure(self, test_case: LLMTestCase):
+    def measure(self, test_case: LLMTestCase) -> Optional[float]:
         # sends to server
         try:
             from ragas import evaluate  # noqa: F401
@@ -539,11 +564,24 @@ class RagasMetric(BaseMetric):
             score = metric.measure(test_case)
             score_breakdown[metric.__name__] = score
 
-        ragas_score = sum(score_breakdown.values()) / len(score_breakdown)
-
-        self.success = ragas_score >= self.threshold
-        self.score = ragas_score
         self.score_breakdown = score_breakdown
+        # A sub-metric that could not be measured has no score to average in.
+        # Averaging over only the ones that did compute would report a plausible
+        # composite for a test case that was measured in part.
+        unmeasured = [
+            name for name, score in score_breakdown.items() if score is None
+        ]
+        if unmeasured:
+            self.error = (
+                "ragas could not compute "
+                + ", ".join(unmeasured)
+                + " for this test case, so there is no composite score."
+            )
+            self.score = None
+        else:
+            self.score = sum(score_breakdown.values()) / len(score_breakdown)
+        # Re-derives self.success from the score and error just set.
+        self.is_successful()
         return self.score
 
     @property
