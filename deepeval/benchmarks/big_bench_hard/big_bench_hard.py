@@ -257,7 +257,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             predictions = [str(pred) for pred in predictions]
             used_schema = False
 
-        if len(predictions) is not len(goldens):
+        if len(predictions) != len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
             )
