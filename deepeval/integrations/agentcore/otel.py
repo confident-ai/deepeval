@@ -45,7 +45,7 @@ def _require_opentelemetry() -> None:
     if not _opentelemetry_installed:
         raise ImportError(
             "OpenTelemetry SDK is not available. "
-            "Install it with: pip install opentelemetry-sdk opentelemetry-exporter-otlp-proto-http"
+            'Install it with: pip install "deepeval[otel]"'
         )
 
 
