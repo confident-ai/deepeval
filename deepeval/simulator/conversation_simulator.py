@@ -660,6 +660,13 @@ class ConversationSimulator:
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
 
+            def _call_ended() -> bool:
+                if not (voice_mode and session.connector.call_ended):
+                    return False
+                logger.info("The agent ended the call")
+                additional_metadata["Stop reason"] = "The agent ended the call"
+                return True
+
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
                 if session.is_duplex:
@@ -678,6 +685,10 @@ class ConversationSimulator:
                 )
                 if simulation_counter >= max_user_simulations:
                     logger.debug("Maximum user simulations reached")
+                    update_pbar(progress, pbar_max_user_simluations_id)
+                    break
+
+                if _call_ended():
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
 
@@ -815,6 +826,9 @@ class ConversationSimulator:
                     turns.append(assistant_turn)
 
                 await _dispatch_on_turn(on_turn, turns, index)
+
+                if _call_ended():
+                    break
 
                 exchange_seconds = time.perf_counter() - assistant_started
                 logger.debug(
@@ -1369,6 +1383,8 @@ class ConversationSimulator:
         assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:
             return assistant_turn
+        if session.connector.call_ended:
+            return Turn(role="assistant", content="")
         logger.warning(
             "Duplex exchange produced no assistant turn; inserting empty reply."
         )
