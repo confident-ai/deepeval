@@ -71,6 +71,7 @@ _MISSING = object()
 # Length of the silent uplink used to hear the agent out without speaking.
 _SILENCE_PROBE_SECONDS = 1.0
 _GREETING_TIMEOUT_S = 15.0
+_AGENT_BACKLOG_MIN_SPEECH_S = 0.3
 
 
 @dataclass
@@ -1368,6 +1369,7 @@ class ConversationSimulator:
         Returns the last assistant turn for simulation-graph routing.
         """
         call_started_at = session.started_at or time.perf_counter()
+        await self._take_agent_backlog(session, turns, call_started_at)
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
         )
@@ -1391,6 +1393,54 @@ class ConversationSimulator:
         empty = Turn(role="assistant", content="")
         turns.append(empty)
         return empty
+
+    async def _take_agent_backlog(
+        self,
+        session: _VoiceSession,
+        turns: List[Turn],
+        call_started_at: float,
+    ) -> None:
+        from deepeval.voice.connectors import audio_utils
+        from deepeval.voice.duplex import _pcm_to_audio
+
+        connector = session.connector
+        pcm = bytearray()
+        speech_len = 0
+        voiced_bytes = 0
+        voiced_at: Optional[float] = None
+        for event in connector.take_pending_agent_events():
+            if not event.audio:
+                continue
+            silent = audio_utils.is_silent(
+                event.audio, connector.silence_threshold_rms
+            )
+            if voiced_at is None:
+                if silent:
+                    continue
+                voiced_at = event.received_at or time.perf_counter()
+            pcm.extend(event.audio)
+            if not silent:
+                speech_len = len(pcm)
+                voiced_bytes += len(event.audio)
+        rate = connector.recv_sample_rate
+        if voiced_at is None or voiced_bytes / 2 / rate < (
+            _AGENT_BACKLOG_MIN_SPEECH_S
+        ):
+            return
+        audio = _pcm_to_audio(bytes(pcm[:speech_len]), rate)
+        audio.start_time = max(0.0, voiced_at - call_started_at)
+        voice = self._voice
+        text, stt_cost = await voice.stt_model.a_transcribe(
+            audio, **self._stt_kwargs(session)
+        )
+        if stt_cost is not None:
+            voice.stt_cost += stt_cost
+        index = len(turns)
+        if turns and turns[-1].role == "user":
+            index -= 1
+        turns.insert(
+            index, Turn(role="assistant", content=text or "", audio=audio)
+        )
 
     async def _run_duplex(
         self,

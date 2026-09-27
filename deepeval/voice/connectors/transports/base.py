@@ -8,6 +8,7 @@ from typing import (
     AsyncIterator,
     Callable,
     ClassVar,
+    List,
     Optional,
     Tuple,
 )
@@ -197,6 +198,9 @@ class BaseVoiceConnector(ABC):
     @property
     def call_ended(self) -> bool:
         return False
+
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        return []
 
     @property
     def signals_turn_complete(self) -> bool:

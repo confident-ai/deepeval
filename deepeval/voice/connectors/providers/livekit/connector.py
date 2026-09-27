@@ -606,16 +606,21 @@ class LiveKitConnector(BaseVoiceConnector):
         except asyncio.TimeoutError:
             pass  # no transcript published; the caller falls back to STT
 
-    def drain_downlink(self) -> None:
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        events: List[AgentEvent] = []
+        if self._out_frames is None:
+            return events
         while not self._out_frames.empty():
-            try:
-                self._out_frames.get_nowait()
-            except asyncio.QueueEmpty:
+            item = self._out_frames.get_nowait()
+            if isinstance(item, AgentEvent) and item.call_ended:
+                self._out_frames.put_nowait(item)
                 break
-        if self._call_ended:
-            self._out_frames.put_nowait(
-                AgentEvent(turn_complete=True, call_ended=True)
-            )
+            if isinstance(item, AgentEvent):
+                events.append(item)
+        return events
+
+    def drain_downlink(self) -> None:
+        self.take_pending_agent_events()
 
     def _make_input_frames(self, audio: Audio) -> List:
         rtc = self._rtc

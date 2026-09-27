@@ -168,6 +168,19 @@ class RecordingConnector:
 
         return await self._inner.stream_uplink_chunks(tapped(), **kwargs)
 
+    def take_pending_agent_events(self):
+        rate = self._inner.recv_sample_rate
+        events = self._inner.take_pending_agent_events()
+        for event in events:
+            if event.audio:
+                self._recorder.add(
+                    "agent",
+                    bytes(event.audio),
+                    rate,
+                    event.received_at or time.perf_counter(),
+                )
+        return events
+
     async def iter_agent_events(self):
         rate = self._inner.recv_sample_rate
         async for event in self._inner.iter_agent_events():
