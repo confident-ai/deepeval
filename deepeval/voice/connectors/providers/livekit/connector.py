@@ -126,6 +126,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._current_transcript: Optional[str] = None
         self._transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
+        self._call_ended = False
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -153,6 +154,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._agent_track_ready = asyncio.Event()
         self._transcript_ready = asyncio.Event()
         self._uplink = UplinkStream()
+        self._call_ended = False
         self._room = (
             self._room_arg if self._room_arg is not None else rtc.Room()
         )
@@ -160,6 +162,10 @@ class LiveKitConnector(BaseVoiceConnector):
 
         self._room.on("track_subscribed", self._on_track_subscribed)
         self._room.on("participant_connected", self._on_participant_connected)
+        self._room.on(
+            "participant_disconnected", self._on_participant_disconnected
+        )
+        self._room.on("disconnected", self._on_room_disconnected)
         self._register_transcript_handler()
 
         if not self._is_room_connected():
@@ -386,6 +392,33 @@ class LiveKitConnector(BaseVoiceConnector):
         ):
             self._agent_participant = participant
 
+    def _on_participant_disconnected(self, participant) -> None:
+        agent = self._agent_participant
+        if agent is not None and participant.identity == agent.identity:
+            self._end_call()
+
+    def _on_room_disconnected(self, *_args) -> None:
+        self._end_call()
+
+    def _end_call(self) -> None:
+        if self._call_ended:
+            return
+        self._call_ended = True
+        if self._uplink is not None:
+            self._uplink.cancel.set()
+        if self._out_frames is not None:
+            self._out_frames.put_nowait(
+                AgentEvent(
+                    turn_complete=True,
+                    call_ended=True,
+                    received_at=time.perf_counter(),
+                )
+            )
+
+    @property
+    def call_ended(self) -> bool:
+        return self._call_ended
+
     def _attach_agent_track(self, track, participant) -> None:
         rtc = self._rtc
         self._agent_track = track
@@ -579,6 +612,10 @@ class LiveKitConnector(BaseVoiceConnector):
                 self._out_frames.get_nowait()
             except asyncio.QueueEmpty:
                 break
+        if self._call_ended:
+            self._out_frames.put_nowait(
+                AgentEvent(turn_complete=True, call_ended=True)
+            )
 
     def _make_input_frames(self, audio: Audio) -> List:
         rtc = self._rtc
