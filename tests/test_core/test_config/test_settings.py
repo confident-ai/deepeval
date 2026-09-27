@@ -504,3 +504,25 @@ def test_env_openai_api_key_takes_precedence_over_legacy_keyfile(
 
     assert isinstance(s.OPENAI_API_KEY, SecretStr)
     assert s.OPENAI_API_KEY.get_secret_value() == "env-secret-key"
+
+
+def test_per_attempt_timeout_override_zero_auto_derives(monkeypatch):
+    """
+    `0` is the documented "derive it for me" sentinel for the per-attempt
+    override, so it must behave exactly like leaving it unset instead of
+    failing settings validation.
+    """
+    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "3")
+    monkeypatch.setenv("DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE", "60")
+    derived = get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS
+
+    monkeypatch.setenv("DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE", "0")
+    s = get_settings()
+    assert s.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS == derived
+    assert s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS == 60.0
+
+
+def test_per_attempt_timeout_override_negative_still_rejected(monkeypatch):
+    monkeypatch.setenv("DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE", "-1")
+    with pytest.raises(ValueError):
+        get_settings()
