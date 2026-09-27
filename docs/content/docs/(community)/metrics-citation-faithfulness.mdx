@@ -27,6 +27,8 @@ To use the `CitationFaithfulnessMetric`, you'll have to provide the following ar
 
 The `retrieval_context` passages are numbered (`[1]`, `[2]`, ...) before being shown to the judge, and the `[N]` markers in `actual_output` refer to those passage numbers.
 
+If an answer cites a passage number outside this range, the metric returns `0.0` with a reason naming the invalid marker without calling the judge. For citations within the range, the judge still checks whether each passage supports its claim.
+
 ## Usage
 
 <include cwd>snippets/metrics/set-eval-mode.mdx</include>

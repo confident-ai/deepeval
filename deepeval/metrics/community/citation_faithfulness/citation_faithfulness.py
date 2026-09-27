@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Union
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -100,6 +101,9 @@ class CitationFaithfulnessMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
+            if self._reject_invalid_citations(test_case):
+                return self.score
+
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -140,6 +144,9 @@ class CitationFaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self._reject_invalid_citations(test_case):
+                return self.score
+
             if await a_run_system_one_eval(self, test_case):
                 return self._round_system_one_score()
 
@@ -155,6 +162,41 @@ class CitationFaithfulnessMetric(BaseMetric):
                 ],
             )
             return self.score
+
+    def _invalid_citations(self, test_case: LLMTestCase) -> List[int]:
+        passage_count = len(test_case.retrieval_context)
+        invalid = set()
+        for match in re.findall(r"\[(-?[0-9]+)\]", test_case.actual_output):
+            number = int(match)
+            if not 1 <= number <= passage_count:
+                invalid.add(number)
+        return sorted(invalid)
+
+    def _reject_invalid_citations(self, test_case: LLMTestCase) -> bool:
+        invalid = self._invalid_citations(test_case)
+        if not invalid:
+            return False
+
+        markers = ", ".join(f"[{number}]" for number in invalid)
+        self.verdict = CitationFaithfulnessVerdict(
+            verdict="unfaithful",
+            reasoning=(
+                f"Citation marker(s) {markers} refer to nonexistent passages; "
+                f"retrieval_context contains "
+                f"{len(test_case.retrieval_context)} passage(s)."
+            ),
+        )
+        self.score = self._calculate_score()
+        self.reason = self._generate_reason()
+        self.success = self.is_successful()
+        self.verbose_logs = construct_verbose_logs(
+            self,
+            steps=[
+                f"Verdict:\n{self.verdict.verdict}",
+                f"Score: {self.score}\nReason: {self.reason}",
+            ],
+        )
+        return True
 
     def _build_prompt(self, test_case: LLMTestCase) -> str:
         numbered_passages = CitationFaithfulnessTemplate.number_passages(
@@ -232,6 +274,8 @@ class CitationFaithfulnessMetric(BaseMetric):
         """`system_one` eval mode: the whole metric as one Jev request over
         `input`, `actual_output` and the numbered `passages` of
         `retrieval_context`; see EXPERIMENTAL.md."""
+        if self._invalid_citations(test_case):
+            return None
         if test_case.multimodal:
             return None
         return SystemOneEvalSpec(
