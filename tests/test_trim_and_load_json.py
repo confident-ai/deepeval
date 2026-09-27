@@ -27,7 +27,10 @@ def expect_error(raw, expected_message):
 
 
 def test_valid_json_unchanged():
-    assert trim_and_load_json('{"score": 5, "reason": "ok"}') == {"score": 5, "reason": "ok"}
+    assert trim_and_load_json('{"score": 5, "reason": "ok"}') == {
+        "score": 5,
+        "reason": "ok",
+    }
 
 
 def test_surrounding_text_and_fences_trimmed():
@@ -36,13 +39,19 @@ def test_surrounding_text_and_fences_trimmed():
 
 
 def test_trailing_comma_tolerated():
-    assert trim_and_load_json('{"a": [1, 2,], "b": 3,}') == {"a": [1, 2], "b": 3}
+    assert trim_and_load_json('{"a": [1, 2,], "b": 3,}') == {
+        "a": [1, 2],
+        "b": 3,
+    }
 
 
 def test_invalid_escape_repaired():
     # the exact error class from #2280: "JSONDecodeError: Invalid \\escape"
     raw = r'{"reason": "The fee is \$500 per \(item\)", "score": 4}'
-    assert trim_and_load_json(raw) == {"reason": r"The fee is \$500 per \(item\)", "score": 4}
+    assert trim_and_load_json(raw) == {
+        "reason": r"The fee is \$500 per \(item\)",
+        "score": 4,
+    }
 
 
 def test_windows_path_escape_repaired():
@@ -61,7 +70,9 @@ def test_legal_escapes_follow_json_spec():
 def test_valid_escapes_next_to_invalid_ones_preserved():
     # a legitimate escaped backslash (\\), a newline escape (\n) and a stray \$
     raw = r'{"reason": "path \\ ok\nnext line costs \$5"}'
-    assert trim_and_load_json(raw)["reason"] == "path \\ ok\nnext line costs \\$5"
+    assert (
+        trim_and_load_json(raw)["reason"] == "path \\ ok\nnext line costs \\$5"
+    )
 
 
 def test_empty_output_gives_specific_error():
@@ -72,7 +83,10 @@ def test_empty_output_gives_specific_error():
 
 
 def test_truncated_output_gives_specific_error():
-    expect_error('{"verdict": "yes", "reason": "The answer is supported by', TRUNCATED_OUTPUT_ERROR)
+    expect_error(
+        '{"verdict": "yes", "reason": "The answer is supported by',
+        TRUNCATED_OUTPUT_ERROR,
+    )
 
 
 def test_genuinely_invalid_json_keeps_original_message():

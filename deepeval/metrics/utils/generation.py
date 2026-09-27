@@ -17,8 +17,13 @@ _VALID_ESCAPE_CHARS = set('"\\/bfnrtu')
 def _repair_escapes(text: str) -> str:
     def fix(m):
         nxt = m.group(1)
-        return m.group(0) if nxt and nxt in _VALID_ESCAPE_CHARS else "\\\\" + nxt
+        return (
+            m.group(0) if nxt and nxt in _VALID_ESCAPE_CHARS else "\\\\" + nxt
+        )
+
     return _ESCAPE_PAIR.sub(fix, text)
+
+
 _TRAILING_COMMA = re.compile(r",\s*([\]}])")
 
 EMPTY_OUTPUT_ERROR = (
@@ -34,9 +39,7 @@ TRUNCATED_OUTPUT_ERROR = (
     "(reasoning models spend part of that budget on hidden reasoning). "
     "Raise the max completion tokens on your evaluation model."
 )
-INVALID_JSON_ERROR = (
-    "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-)
+INVALID_JSON_ERROR = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
 
 
 def _fail(message: str, metric: Optional[Any]) -> None:
@@ -45,7 +48,9 @@ def _fail(message: str, metric: Optional[Any]) -> None:
     raise ValueError(message)
 
 
-def trimAndLoadJson(input_string: Optional[str], metric: Optional[Any] = None) -> Any:
+def trimAndLoadJson(
+    input_string: Optional[str], metric: Optional[Any] = None
+) -> Any:
     if input_string is None or not input_string.strip():
         _fail(EMPTY_OUTPUT_ERROR, metric)
 
@@ -74,7 +79,6 @@ def trimAndLoadJson(input_string: Optional[str], metric: Optional[Any] = None) -
             pass
 
     _fail(INVALID_JSON_ERROR, metric)
-
 
 
 SchemaType = TypeVar("SchemaType")
