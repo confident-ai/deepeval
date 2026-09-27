@@ -69,6 +69,9 @@ async def iter_downlink(queue: asyncio.Queue) -> AsyncIterator[AgentEvent]:
         item = await queue.get()
         if item is None:
             yield AgentEvent(turn_complete=True)
+        elif isinstance(item, AgentEvent) and item.call_ended:
+            queue.put_nowait(item)
+            return
         elif isinstance(item, AgentEvent):
             yield item
         elif isinstance(item, (bytes, bytearray)):
@@ -189,6 +192,10 @@ class BaseVoiceConnector(ABC):
     @property
     def supports_duplex(self) -> bool:
         """Whether the agent can be heard while the caller is speaking."""
+        return False
+
+    @property
+    def call_ended(self) -> bool:
         return False
 
     @property
