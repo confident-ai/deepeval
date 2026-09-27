@@ -22,7 +22,10 @@ class TestMcpToolResultText:
         # structuredContent is Optional and defaults to None per the MCP spec;
         # this is the shape most real tool results have.
         result = _text_result("42 degrees")
-        assert result.structuredContent is None
+        assert (
+            getattr(result, "structured_content", None) is None
+            and getattr(result, "structuredContent", None) is None
+        )
         assert mcp_tool_result_text(result) == "42 degrees"
 
     def test_joins_multiple_text_blocks(self):
