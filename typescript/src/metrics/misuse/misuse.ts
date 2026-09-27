@@ -1,13 +1,22 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
+  warnScoreDirectionFlipped,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   MisusesSchema,
   VerdictsSchema,
@@ -15,6 +24,7 @@ import {
   type MisuseVerdict,
 } from "@/metrics/misuse/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "MisuseMetric";
 
@@ -26,6 +36,10 @@ export interface MisuseMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -34,20 +48,18 @@ export interface MisuseMetricOptions {
 }
 
 /**
- * Misuse — is the `actualOutput` used outside its intended `domain`? Extract
- * misuse instances, judge each, then score = misuse / total. **Lower is better**
- * (`success = score <= threshold`).
+ * Misuse — is the `actualOutput` kept within its intended `domain`? Extract
+ * misuse instances, judge each, then score = appropriate / total. **Higher is
+ * better** (`success = score >= threshold`).
  */
 export class MisuseMetric extends BaseMetric {
   misuses: string[] = [];
   verdicts: MisuseVerdict[] = [];
   private readonly domain: string;
 
-  protected higherIsBetter = false;
-
   constructor(options: MisuseMetricOptions) {
     const strictMode = options.strictMode ?? false;
-    super(strictMode ? 0 : resolveThreshold(options.threshold, 0.5), {
+    super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
       verboseMode: options.verboseMode,
       includeReason: options.includeReason ?? true,
@@ -56,23 +68,21 @@ export class MisuseMetric extends BaseMetric {
       evaluationTemplate: options.evaluationTemplate,
     });
     this.templateClass = TEMPLATE_CLASS;
+    warnScoreDirectionFlipped("MisuseMetric");
     this.requiredParams = [
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.domain = options.domain.trim().toLowerCase();
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.misuses = await this.generateMisuses(testCase.actualOutput);
       this.verdicts = await this.generateVerdicts();
@@ -100,14 +110,44 @@ export class MisuseMetric extends BaseMetric {
     return misuses;
   }
 
+  private systemOneVerdictSpec(): SystemOneVerdictSpec<string, MisuseVerdict> {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.misuses,
+      itemKey: "statement",
+      state: { domain: this.domain },
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions", {
+          domain: this.domain,
+        }),
+      ),
+    };
+  }
+
   private async generateVerdicts(): Promise<MisuseVerdict[]> {
     if (this.misuses.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      misuses: this.misuses,
-      domain: this.domain,
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          misuses: this.misuses,
+          domain: this.domain,
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
   }
 
   private async generateReason(): Promise<string | undefined> {
@@ -129,11 +169,11 @@ export class MisuseMetric extends BaseMetric {
 
   private calculateScore(): number {
     const total = this.verdicts.length;
-    if (total === 0) return 0;
-    const misuseCount = this.verdicts.filter(
-      (v) => v.verdict.trim().toLowerCase() === "yes",
+    if (total === 0) return 1;
+    const appropriateUseCount = this.verdicts.filter(
+      (v) => v.verdict.trim().toLowerCase() !== "yes",
     ).length;
-    const score = misuseCount / total;
+    const score = appropriateUseCount / total;
     return this.applyStrictMode(score);
   }
 

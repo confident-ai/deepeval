@@ -25,6 +25,7 @@ from deepeval.metrics.utils import (
 from deepeval.progress_context import synthesizer_progress_context
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseEmbeddingModel
 from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.dataset.utils import join_context
 from deepeval.synthesizer.types import Evolution, PromptEvolution
 from deepeval.synthesizer.templates import (
     EvolutionTemplate,
@@ -1989,7 +1990,7 @@ class Synthesizer:
                                 golden.input,
                                 golden.actual_output,
                                 golden.expected_output,
-                                "|".join(golden.context),
+                                join_context(golden.context),
                                 golden.source_file,
                             ]
                         )
@@ -2007,7 +2008,7 @@ class Synthesizer:
                             [
                                 golden.scenario,
                                 golden.expected_outcome,
-                                "|".join(golden.context),
+                                join_context(golden.context),
                                 golden.additional_metadata.get(
                                     "source_files", None
                                 ),

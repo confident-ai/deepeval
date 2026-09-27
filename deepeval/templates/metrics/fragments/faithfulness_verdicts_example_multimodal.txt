@@ -7,11 +7,11 @@ Example:
 "verdicts": [
 {{
 "reason": "The claim about Barack Obama is not directly addressed in the retrieval context, and so poses no contradiction.",
-"verdict": "idk"
+"verdict": "borderline"
 }},
 {{
 "reason": "The claim about Zurich being a city in London is incorrect but does not pose a contradiction to the retrieval context.",
-"verdict": "idk"
+"verdict": "borderline"
 }},
 {{
 "verdict": "yes"

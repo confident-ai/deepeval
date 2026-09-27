@@ -1,0 +1,12 @@
+{
+  "title": "Voice",
+  "pages": [
+    "metrics-voice-naturalness",
+    "metrics-speech-intelligibility",
+    "metrics-voice-consistency",
+    "metrics-turn-taking-naturalness",
+    "metrics-agent-responsiveness",
+    "metrics-audio-integrity",
+    "metrics-voice-reliability"
+  ]
+}

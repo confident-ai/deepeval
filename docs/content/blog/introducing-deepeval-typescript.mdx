@@ -1,0 +1,298 @@
+---
+title: "DeepEval for TypeScript, now fully open-source"
+description: DeepEval's TypeScript SDK is out in beta. Every metric, model, and tracing integration you know from Python, running as a gate in your CI/CD pipeline.
+date: 2026-08-12
+authors: [penguine]
+category: announcements
+---
+
+Two months ago I wrote about [why we put TypeScript inside DeepEval's Python monorepo](/blog/typescript-in-deepeval-monorepo) instead of giving it its own repo. At the time it was still a client wrapper around Confident AI — it couldn't run a single metric.
+
+Today it can run all of them. DeepEval for TypeScript is out in beta:
+
+```bash
+npm install -D deepeval
+```
+
+The headline isn't the metrics though. It's where they run: **in CI/CD, as a gate on your pull requests.**
+
+## Evals belong in your Typescript CI pipeline
+
+The reason I keep pushing this is that an eval you run by hand is a nice number, and an eval that runs on every PR is a decision. That's the whole point of an [eval harness](/blog/what-is-an-eval-harness) — a regression in your agent should block a merge exactly like a regression in your business logic does, without anyone remembering to check.
+
+For that to happen, evals have to live where your pipeline already looks: your test suite. In Python that's Pytest. In TypeScript it's Vitest, and the surface is a single matcher — `toPass()` — on top of a test file you'd recognize without ever having used DeepEval:
+
+```typescript title="llm_app.test.ts" showLineNumbers
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "What is pi rounded to 2 decimal places?" })],
+});
+
+it.each(dataset.goldens as Golden[])(
+  "answers correctly #%$",
+  async (golden) => {
+    const testCase = new LLMTestCase({
+      input: golden.input,
+      actualOutput: await yourLlmApp(golden.input),
+    });
+    await expect(testCase).toPass([new AnswerRelevancyMetric()]);
+  }
+);
+```
+
+Then run it:
+
+```bash
+npx deepeval test run llm_app.test.ts
+```
+
+Plain `vitest` works too, but you'd be leaving most of the value on the table. `npx deepeval test run` captures a trace per test, caches metric results so a re-run doesn't re-bill you, and gives you the same flags Python users have — `--official`, `-i/--identifier`, `--max-concurrent`, `-c/--use-cache`, `--ignore-errors`.
+
+That one command is the whole integration story. It exits non-zero when a metric falls below its threshold, so any CI provider that runs a shell step already knows what to do with it:
+
+```yaml title=".github/workflows/evals.yml" {19-21}
+name: LLM App `deepeval` Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm ci
+
+      - name: Run evals
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npx deepeval test run llm_app.test.ts
+```
+
+Note what isn't in there: no `CONFIDENT_API_KEY`, no hosted service, no vendor in the critical path of your merge queue. Give it a judge key and the whole thing runs on the runner. Add the key later if you want shared reports and regression tracking across commits, and add `--official` on `main` to mark the baseline that future runs get compared against. The full walkthrough is in [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd).
+
+## Every metric, open-source
+
+This is the part I care most about, because a second language that only ships the easy half of the metric library is worse than no second language at all.
+
+**47 of DeepEval's 49 metrics are ported and open-source in TypeScript.** Not a curated subset — G-Eval with log-prob weighted scoring, DAG decision graphs, the multi-turn suite, the MCP metrics, the multimodal ones, arena comparisons. The only two that haven't landed are `AgentLoopDetectionMetric` and `ToolPermissionMetric`, and they'll be in shortly.
+
+They agree with Python because they aren't rewritten from memory. Both SDKs compile the **same language-neutral prompt templates** — one JSON bundle of judge prompts, shared by the two implementations. Only the orchestration and the output schema (Pydantic in Python, Zod in TypeScript) are written per-language. So when we change a judge prompt, both languages change together or neither does.
+
+```typescript
+import { GEval } from "deepeval/metrics";
+
+const correctness = new GEval({
+  name: "Correctness",
+  criteria: "Does the output match the expected answer?",
+  evaluationParams: ["input", "actualOutput", "expectedOutput"],
+  threshold: 0.5,
+});
+```
+
+The API is idiomatic TypeScript rather than transliterated Python — an options object instead of keyword arguments, `camelCase`, and `measure()` is always `async` (there's no sync/`a_measure` split, everything underneath is already async). Full list on the [metrics page](/docs/metrics-introduction).
+
+### The models that judge them
+
+An LLM-as-a-judge metric is only as portable as the providers it can run on, so the model layer came over too. TypeScript ships **13 model integrations**.
+
+Two notes. LiteLLM is Python-only and always will be — `AISDKModel` is the TypeScript answer to "route my judge through anything." And the default judge model is generated from Python's `DEFAULT_MODELS`, so an unconfigured metric lands on the same model in both languages.
+
+Set one once from the CLI and every metric picks it up:
+
+```bash
+npx deepeval set-anthropic --model claude-sonnet-4-5
+```
+
+## Tracing, and evals on the trace
+
+Scoring a final string is fine for a RAG pipeline. It isn't enough for an agent, where the interesting failures are in the trajectory — the tool it shouldn't have called, the plan it abandoned, the four steps it took to do one thing.
+
+So TypeScript gets tracing, with **6 framework integrations** that turn your agent's execution into a span tree with no rewriting:
+
+| Framework                                                                                         | Import                                | Setup                             |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------- |
+| [OpenAI SDK](/integrations/frameworks/openai)                                                     | `deepeval/openai`                     | `instrumentOpenAI(client)`        |
+| [LangChain](/integrations/frameworks/langchain) & [LangGraph](/integrations/frameworks/langgraph) | `deepeval/integrations/langchain`     | `new DeepEvalCallbackHandler({})` |
+| [OpenAI Agents SDK](/integrations/frameworks/openai-agents)                                       | `deepeval/integrations/openai-agents` | `new DeepEvalTracingProcessor()`  |
+| [Mastra](/integrations/frameworks/mastra)                                                         | `deepeval/integrations/mastra`        | `new DeepEvalExporter()`          |
+| [Vercel AI SDK](/integrations/frameworks/ai-sdk)                                                  | `deepeval/integrations/ai-sdk`        | `configureAiSdkTracing({})`       |
+| OpenInference (OTel)                                                                              | `deepeval/integrations/openinference` | `instrumentOpenInference({})`     |
+
+Mastra and the Vercel AI SDK are the fun ones — they have no Python counterpart at all, so for once TypeScript is ahead.
+
+The reason this matters for CI/CD is that instrumenting your agent and gating on it are the same piece of work, not two. Once the app is traced, you hand `toPass()` a golden and a task, and it runs your agent, captures the trace, and scores the whole trajectory:
+
+```typescript title="agent.test.ts" showLineNumbers
+import { TaskCompletionMetric, StepEfficiencyMetric } from "deepeval/metrics";
+import { DeepEvalCallbackHandler } from "deepeval/integrations/langchain";
+import { it, expect } from "vitest";
+import "deepeval/vitest";
+
+it.each(dataset.goldens as Golden[])(
+  "completes the task #%$",
+  async (golden) => {
+    await expect(golden).toPass(
+      [new TaskCompletionMetric(), new StepEfficiencyMetric()],
+      {
+        task: (g) =>
+          agent.invoke(
+            { messages: [{ role: "user", content: g.input }] },
+            { callbacks: [new DeepEvalCallbackHandler({})] }
+          ),
+      }
+    );
+  }
+);
+```
+
+You can also attach metrics to individual spans instead of the whole trace — [component-level evals](/docs/evaluation-component-level-llm-evals), where a retriever gets contextual precision and a tool call gets argument correctness, in the same test run.
+
+## The CLI came over too
+
+Same binary name, same commands, one `npx` in front:
+
+| Command                                 | What it does                                    |
+| --------------------------------------- | ----------------------------------------------- |
+| `npx deepeval test run`                 | Run your eval suite as a gate, locally or in CI |
+| `npx deepeval inspect`                  | Browse locally captured traces in a terminal UI |
+| `npx deepeval view`                     | Open the latest test run on Confident AI        |
+| `npx deepeval login` / `logout`         | Authenticate with Confident AI                  |
+| `npx deepeval set-openai` (and 11 more) | Configure the judge model per provider          |
+| `npx deepeval gate`                     | Run a governance policy check                   |
+| `npx deepeval diagnose`                 | Print the effective config when something's off |
+
+`npx deepeval inspect` is the one I'd try first. Traces are written to a local `.json` file on your machine by default — nothing leaves your laptop — and `inspect` renders them as a trace tree with per-span scores and metric reasons. When a coding agent is driving the loop, that's what stops it from overfitting to a number it can't see the reasoning behind.
+
+## What's missing, and why it's a beta
+
+I'd rather tell you than let you find out. Three things exist in Python and don't exist in TypeScript yet:
+
+- **Synthesizer** — generating goldens from your documents or knowledge base. Bring your own dataset for now: load goldens from a CSV, a JSON file, or Confident AI.
+- **Benchmarks** — MMLU, HellaSwag, and the rest of the foundational-model benchmark suite.
+- **Prompt optimization** — automatic prompt search against a metric.
+
+There's also no score-parity guarantee. The prompts are shared and parity-checked, but we've spot-verified numeric scores for sanity rather than asserted them equal to Python's. Don't mix languages inside one longitudinal comparison yet.
+
+That's what the beta label is for. Everything above it — metrics, models, tracing, the CI/CD gate, the CLI — is what we're asking you to actually use and break.
+
+## Getting started
+
+```bash
+npm install -D deepeval
+npx deepeval set-openai --model gpt-4.1
+npx deepeval test run llm_app.test.ts
+```
+
+Or don't write the test file yourself. Install the DeepEval skill and let your coding agent drive the [eval driven development](/blog/eval-driven-development) loop:
+
+```bash
+npx skills add confident-ai/deepeval --skill "deepeval"
+```
+
+Python still leads on behavior and TypeScript follows close behind — that hasn't changed, and one repo is what keeps "close behind" true. What changed is that "close behind" now means 47 metrics, 13 model providers, 6 tracing integrations, and a command that turns red on your pull requests, rather than a client that couldn't score anything.
+
+DeepEval is free and 100% [open-source on ⭐ GitHub](https://github.com/confident-ai/deepeval). If TypeScript is your stack, this is the release I've been wanting to write for a year — go break it and open an issue.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How do I install DeepEval for TypeScript?",
+      answer: (
+        <>
+          <code>npm install -D deepeval</code>. It's the same package name as
+          the Python one, published to npm, and it lives in the same{" "}
+          <a href="https://github.com/confident-ai/deepeval">
+            open-source repo
+          </a>{" "}
+          as Python.
+        </>
+      ),
+    },
+    {
+      question: "How do I run evals in CI/CD?",
+      answer: (
+        <>
+          Add <code>npx deepeval test run</code> as a step in your pipeline. It
+          exits non-zero when a metric falls below its threshold, so a
+          regression blocks the merge — any provider that runs a shell step
+          works. Your evals live in your test suite (DeepEval registers a{" "}
+          <code>toPass()</code> matcher for Vitest), so there's no second
+          harness to maintain.
+        </>
+      ),
+    },
+    {
+      question: "Are all the metrics available in TypeScript?",
+      answer: (
+        <>
+          47 of the 49 metrics are ported and open-source, including G-Eval,
+          DAG, the multi-turn suite, MCP, multimodal, and arena metrics. Only{" "}
+          <code>AgentLoopDetectionMetric</code> and{" "}
+          <code>ToolPermissionMetric</code> are outstanding. Both SDKs compile
+          the same language-neutral judge prompts, so behavior stays aligned.
+        </>
+      ),
+    },
+    {
+      question: "Which LLM providers can I use as a judge?",
+      answer: (
+        <>
+          Thirteen: OpenAI, Azure OpenAI, Anthropic, Gemini, Amazon Bedrock,
+          DeepSeek, Grok, Moonshot, Ollama, local OpenAI-compatible servers
+          (vLLM, LM Studio), the Vercel AI SDK, plus the OpenRouter and Portkey
+          gateways. LiteLLM stays Python-only — use the Vercel AI SDK model to
+          route through arbitrary providers.
+        </>
+      ),
+    },
+    {
+      question: "Which agent frameworks can it trace?",
+      answer: (
+        <>
+          The OpenAI SDK, LangChain and LangGraph, the OpenAI Agents SDK,
+          Mastra, the Vercel AI SDK, and any OpenInference-instrumented app over
+          OpenTelemetry. Mastra and the Vercel AI SDK have no Python
+          counterpart. Traces are captured locally and scored in the same CI run
+          that produced them.
+        </>
+      ),
+    },
+    {
+      question: "What's missing from the TypeScript SDK?",
+      answer: (
+        <>
+          Three things, which is why it's in beta: the Synthesizer (dataset
+          generation), the benchmark suite (MMLU and friends), and prompt
+          optimization. There's also no numeric score-parity guarantee with
+          Python yet, so don't mix languages inside one longitudinal comparison.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a Confident AI account?",
+      answer: (
+        <>
+          No. Provide a judge key such as <code>OPENAI_API_KEY</code> and
+          everything runs locally, with traces written to a local{" "}
+          <code>.json</code> file you can browse with{" "}
+          <code>npx deepeval inspect</code>. Adding{" "}
+          <code>CONFIDENT_API_KEY</code> is optional and only sends results to
+          the cloud.
+        </>
+      ),
+    },
+  ]}
+/>

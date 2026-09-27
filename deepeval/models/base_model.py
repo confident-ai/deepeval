@@ -1,7 +1,30 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List, Union
+from typing import (
+    Any,
+    AsyncGenerator,
+    AsyncIterable,
+    Dict,
+    Optional,
+    List,
+    Tuple,
+    Union,
+    TYPE_CHECKING,
+)
 from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from deepeval.test_case import Audio, AudioChunk
+    from deepeval.models.system_one.schema import (
+        ChoiceAnswer,
+        ChoiceQuestion,
+        NoulAnswer,
+        NoulQuestion,
+        ScoreAnswer,
+        ScoreQuestion,
+        SystemOneAnswers,
+        SystemOneQuestion,
+    )
 
 
 @dataclass
@@ -14,6 +37,9 @@ class DeepEvalModelData:
     input_price: Optional[float] = None
     output_price: Optional[float] = None
     supports_temperature: Optional[bool] = True
+    # True only when the provider lets us turn thinking on and off per request.
+    # Models that always think (and models that never do) leave this unset.
+    supports_thinking: Optional[bool] = None
 
 
 class DeepEvalBaseModel(ABC):
@@ -137,6 +163,207 @@ class DeepEvalBaseLLM(ABC):
             except TypeError:
                 pass
         return await self.a_generate(*args, **kwargs)
+
+
+class DeepEvalBaseSystemOneModel(ABC):
+    """A model that answers typed questions about a `state` with calibrated
+    probabilities instead of generating text. Metrics use it for the decision
+    step only; extraction and reasons stay on the LLM."""
+
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def decide(
+        self,
+        state: Any,
+        questions: Dict[str, "SystemOneQuestion"],
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        pass
+
+    @abstractmethod
+    async def a_decide(
+        self,
+        state: Any,
+        questions: Dict[str, "SystemOneQuestion"],
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        pass
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
+    def noul(
+        self, state: Any, questions: Dict[str, "NoulQuestion"]
+    ) -> Tuple[Dict[str, "NoulAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.nouls, cost
+
+    async def a_noul(
+        self, state: Any, questions: Dict[str, "NoulQuestion"]
+    ) -> Tuple[Dict[str, "NoulAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.nouls, cost
+
+    def choice(
+        self, state: Any, questions: Dict[str, "ChoiceQuestion"]
+    ) -> Tuple[Dict[str, "ChoiceAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.choices, cost
+
+    async def a_choice(
+        self, state: Any, questions: Dict[str, "ChoiceQuestion"]
+    ) -> Tuple[Dict[str, "ChoiceAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.choices, cost
+
+    def score(
+        self, state: Any, questions: Dict[str, "ScoreQuestion"]
+    ) -> Tuple[Dict[str, "ScoreAnswer"], Optional[float]]:
+        answers, cost = self.decide(state, questions)
+        return answers.scores, cost
+
+    async def a_score(
+        self, state: Any, questions: Dict[str, "ScoreQuestion"]
+    ) -> Tuple[Dict[str, "ScoreAnswer"], Optional[float]]:
+        answers, cost = await self.a_decide(state, questions)
+        return answers.scores, cost
+
+
+class DeepEvalBaseTTS(ABC):
+    # Sample rate of the audio this model produces. Connectors carrying
+    # synthesized speech have to know it to resample the uplink, so it is
+    # declared here rather than left for each implementation to invent.
+    sample_rate: int = 24000
+
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseTTS":
+        """Loads the text-to-speech client.
+
+        Returns:
+            A model/client object.
+        """
+        pass
+
+    @abstractmethod
+    def synthesize(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> Tuple["Audio", Optional[float]]:
+        """Synthesizes text into speech.
+
+        Returns:
+            A tuple of (Audio, cost).
+        """
+        pass
+
+    @abstractmethod
+    async def a_synthesize(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> Tuple["Audio", Optional[float]]:
+        """Synthesizes text into speech asynchronously.
+
+        Returns:
+            A tuple of (Audio, cost).
+        """
+        pass
+
+    async def a_synthesize_stream(
+        self, text: str, *args, voice: Optional[str] = None, **kwargs
+    ) -> AsyncGenerator["AudioChunk", None]:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support streaming synthesis."
+        )
+        yield  # unreachable; makes this a valid async generator
+
+    def synthesis_cost(self, text: str) -> Optional[float]:
+        """What synthesizing `text` costs.
+
+        A stream yields audio, not a cost, so callers that stream have no other
+        way to account for the spend. Speech is priced on the text going in, so
+        this can be answered without synthesizing anything.
+        """
+        return None
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
+
+
+class DeepEvalBaseSTT(ABC):
+    # Silence to append before transcribing speech that was cut off mid-word,
+    # as when a barge-in stops a voice agent. Autoregressive transcribers read a
+    # clip ending mid-syllable as an unfinished utterance and complete the word,
+    # inventing speech the caller never heard; a short tail of silence presents
+    # the clip as whole. How much is needed is a property of the transcriber,
+    # and models that do not guess at all (CTC architectures, for one) want
+    # none — leaving this at zero means the audio is transcribed untouched.
+    truncated_audio_pad_seconds: float = 0.0
+
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseSTT":
+        """Loads the speech-to-text client.
+
+        Returns:
+            A model/client object.
+        """
+        pass
+
+    @abstractmethod
+    def transcribe(
+        self, audio: "Audio", *args, **kwargs
+    ) -> Tuple[str, Optional[float]]:
+        """Transcribes speech into text.
+
+        Returns:
+            A tuple of (transcript, cost).
+        """
+        pass
+
+    @abstractmethod
+    async def a_transcribe(
+        self, audio: "Audio", *args, **kwargs
+    ) -> Tuple[str, Optional[float]]:
+        """Transcribes speech into text asynchronously.
+
+        Implementations that accept a `language` keyword should treat
+        `language="auto"` as a request to detect the language per utterance,
+        overriding any language the model was configured with.
+
+        Returns:
+            A tuple of (transcript, cost).
+        """
+        pass
+
+    async def a_transcribe_stream(
+        self, audio_stream: AsyncIterable["AudioChunk"], *args, **kwargs
+    ) -> AsyncGenerator[str, None]:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support streaming transcription."
+        )
+        yield  # unreachable; makes this a valid async generator
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
 
 
 class DeepEvalBaseEmbeddingModel(ABC):

@@ -1,0 +1,9 @@
+{
+  "SimulatorInterruptTemplate": {
+    "decide_interrupt": "You are deciding whether a simulated phone/voice caller should INTERRUPT the agent mid-speech (barge-in).\n\nInterruption level: {{ interruption_level }}\nLevel guidance: {{ prompt_bias }}\n{% if frustrated %}\n{{ frustration_block }}\n{% endif %}\nGuidelines:\n1. Read the partial agent transcript — this is what the agent has said so far, not necessarily a finished reply.\n2. Decide whether a real caller at this interruption level would cut in NOW.\n3. If you interrupt, provide a short spoken utterance (1-2 sentences in {{ language }}) the caller would say over the agent.\n4. If you should not interrupt yet, set should_interrupt to false and leave utterance null.\n\nIMPORTANT: Output a JSON object with keys:\n- `should_interrupt` (boolean)\n- `reason` (string)\n- `utterance` (string or null; required string when interrupting)\n\nLanguage: {{ language }}\n{{ persona }}\nScenario: \"{{ scenario }}\"\nPrevious Conversation:\n{{ previous_conversation }}\nPartial Agent Transcript So Far:\n\"{{ partial_agent_transcript }}\"\n\nJSON Output:\n",
+    "interruption_bias_frequent": "Interrupt aggressively on verbosity, slow pacing, digressions, or any chance to cut ahead with the user's next point. Still skip interruptions that would be nonsense mid-word.\n",
+    "interruption_bias_normal": "Interrupt when a real phone caller would naturally clarify, redirect, answer early, or cut off an obvious digression. Do not interrupt routine helpful speech.\n",
+    "interruption_bias_rare": "Only interrupt when the agent clearly errs, contradicts itself, asks something the user already answered, or is stuck. Prefer waiting through the full reply in almost all other cases.\n",
+    "interruption_frustration": "FRUSTRATION: The user already tried to speak and the agent talked over them. If you interrupt, sound briefly impatient or curt — still stay in character and on-scenario.\n"
+  }
+}

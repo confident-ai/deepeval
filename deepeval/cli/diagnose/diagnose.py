@@ -40,6 +40,7 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     KeyValues,
     ModelKeyValues,
+    SpeechKeyValues,
 )
 
 # Friendly provider labels for the model classes `initialize_model` /
@@ -59,10 +60,20 @@ _PROVIDER_BY_CLASS = {
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
+    "TypeSafeModel": "TypeSafe AI",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",
     "LocalEmbeddingModel": "Local model",
+    "OpenAITTSModel": "OpenAI",
+    "ElevenLabsTTSModel": "ElevenLabs",
+    "CartesiaTTSModel": "Cartesia",
+    "DeepgramTTSModel": "Deepgram",
+    "OpenAISTTModel": "OpenAI",
+    "ElevenLabsSTTModel": "ElevenLabs",
+    "CartesiaSTTModel": "Cartesia",
+    "DeepgramSTTModel": "Deepgram",
+    "AssemblyAISTTModel": "AssemblyAI",
 }
 
 # Settings fields worth showing in the "configured settings" table when set.
@@ -77,6 +88,12 @@ _RELEVANT_MARKERS = (
     "TEMPERATURE",
     "DEEPEVAL_DEFAULT_SAVE",
     "DEEPEVAL_RESULTS_FOLDER",
+    "DEEPEVAL_LOCAL_STORE",
+    "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
+    "DEEPEVAL_EVAL_MODE",
+    "DEEPEVAL_VOICE_FOLDER",
+    "DEEPEVAL_TTS_MODEL",
+    "DEEPEVAL_STT_MODEL",
 )
 
 
@@ -120,7 +137,12 @@ def _legacy_keystore() -> Tuple[Path, Dict[str, Any]]:
 
 def _env_key_to_json_key() -> Dict[str, str]:
     mapping: Dict[str, str] = {}
-    for enum in (KeyValues, ModelKeyValues, EmbeddingKeyValues):
+    for enum in (
+        KeyValues,
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        SpeechKeyValues,
+    ):
         for member in enum:
             mapping[member.name] = member.value
     return mapping
@@ -178,6 +200,7 @@ def resolve_setting_source(env_key: str) -> Optional[str]:
 _REGION_SOURCE_LABELS = {
     "custom_base_url": "custom CONFIDENT_BASE_URL overrides region",
     "explicit_region": "explicitly set",
+    "keystore_region": "explicitly set (legacy .deepeval keystore)",
     "api_key_prefix": "inferred from API key prefix",
     "default": "default",
 }
@@ -185,7 +208,6 @@ _REGION_SOURCE_LABELS = {
 _OTEL_HOST_REGION = {
     "otel.confident-ai.com": "US",
     "eu.otel.confident-ai.com": "EU",
-    "au.otel.confident-ai.com": "AU",
 }
 _OTEL_URL_BY_REGION = {
     region: f"https://{host}" for host, region in _OTEL_HOST_REGION.items()
@@ -209,7 +231,7 @@ def _region_warnings(
 
     key_region = _infer_region_from_api_key(api_key)
     if key_region and key_region != region:
-        article = "an" if key_region in ("EU", "AU") else "a"
+        article = "an" if key_region == "EU" else "a"
         warnings.append(
             f"Your API key prefix looks like {article} {key_region} key, but the "
             f"resolved data region is {region} ({region_source}). API calls "
@@ -311,6 +333,22 @@ def _models_section() -> Dict[str, Any]:
         "(override with embedder=... in ContextConstructionConfig)"
     )
 
+    # Reported from the selection alone: those constructors need an API key.
+    from deepeval.models.speech_selection import (
+        describe_stt_selection,
+        describe_tts_selection,
+    )
+
+    for key, (class_name, model_name) in (
+        ("tts", describe_tts_selection()),
+        ("stt", describe_stt_selection()),
+    ):
+        result[key] = {
+            "provider": _PROVIDER_BY_CLASS.get(class_name, class_name),
+            "model": model_name or "provider default",
+            "used_by": "voice simulations",
+        }
+
     return result
 
 
@@ -392,6 +430,55 @@ def _configured_settings_section() -> List[Dict[str, Any]]:
     return rows
 
 
+def _local_storage_section() -> Dict[str, Any]:
+    """Where finished test runs go, always shown (even on defaults)."""
+    from deepeval.evaluate.local_store import (
+        LOCAL_STORE_SQLITE,
+        resolve_local_store_mode,
+    )
+
+    settings = get_settings()
+    backend = resolve_local_store_mode()
+    results_folder = settings.DEEPEVAL_RESULTS_FOLDER or None
+    info: Dict[str, Any] = {
+        "backend": backend,
+        "backend_source": resolve_setting_source("DEEPEVAL_LOCAL_STORE")
+        or "built-in default",
+        "results_folder": results_folder,
+        "results_folder_source": (
+            resolve_setting_source("DEEPEVAL_RESULTS_FOLDER")
+            if results_folder
+            else None
+        ),
+    }
+    if backend == LOCAL_STORE_SQLITE:
+        from deepeval.sqlite_store import (
+            resolve_db_path,
+            resolve_include_row_json,
+        )
+
+        info["location"] = str(resolve_db_path(results_folder))
+        info["include_row_json"] = resolve_include_row_json()
+    elif results_folder:
+        info["location"] = str(Path(results_folder) / "test_run_*.json")
+    else:
+        info["location"] = (
+            f"{HIDDEN_DIR}/.latest_run_full.json (latest run only)"
+        )
+    return info
+
+
+def _eval_mode_section() -> Dict[str, Any]:
+    """Which eval mode is in effect, always shown (even on defaults)."""
+    from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
+
+    return {
+        "eval_mode": resolve_eval_mode().value,
+        "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
+        or "built-in default",
+    }
+
+
 def diagnose_command(
     json_output: bool = typer.Option(
         False,
@@ -405,6 +492,8 @@ def diagnose_command(
         "python_version": platform.python_version(),
         "python_executable": sys.executable,
         "default_models": _models_section(),
+        "local_storage": _local_storage_section(),
+        "eval_mode": _eval_mode_section(),
         "configured_settings": _configured_settings_section(),
         "setting_sources": _setting_sources_section(),
         "confident_ai": _confident_section(),
@@ -439,7 +528,12 @@ def diagnose_command(
     # Default models (global, overridable per class)
     models = report["default_models"]
     table = _kv_table("Default models")
-    for label, key in (("LLM", "llm"), ("Embeddings", "embeddings")):
+    for label, key in (
+        ("LLM", "llm"),
+        ("Embeddings", "embeddings"),
+        ("TTS", "tts"),
+        ("STT", "stt"),
+    ):
         info = models[key]
         if "error" in info:
             value = f"[red]⚠ unusable until fixed: {info['error']}[/red]"
@@ -450,6 +544,46 @@ def diagnose_command(
     console.print(
         "[dim]Global defaults: apply whenever a class is constructed without "
         "an explicit model.[/dim]\n"
+    )
+
+    # Local storage: where finished test runs land
+    storage = report["local_storage"]
+    table = _kv_table("Local storage")
+    table.add_row(
+        "Backend",
+        f"[bold]{storage['backend']}[/bold] "
+        f"[dim]({storage['backend_source']})[/dim]",
+    )
+    table.add_row("Location", storage["location"])
+    if storage["results_folder"]:
+        table.add_row(
+            "Results folder",
+            f"{storage['results_folder']} "
+            f"[dim]({storage['results_folder_source']})[/dim]",
+        )
+    if "include_row_json" in storage:
+        table.add_row(
+            "Row JSON",
+            "on" if storage["include_row_json"] else "off [dim](default)[/dim]",
+        )
+    console.print(table)
+    console.print(
+        "[dim]Change with `deepeval set-local-store <json|sqlite> "
+        "--save=dotenv`.[/dim]\n"
+    )
+
+    # Eval mode: who judges LLM-as-a-judge metrics and classifiers
+    eval_mode = report["eval_mode"]
+    table = _kv_table("Eval mode")
+    table.add_row(
+        "Eval mode",
+        f"[bold]{eval_mode['eval_mode']}[/bold] "
+        f"[dim]({eval_mode['eval_mode_source']})[/dim]",
+    )
+    console.print(table)
+    console.print(
+        "[dim]Change with `deepeval set-eval-mode <llm|hybrid|system_one> "
+        "--save=dotenv`.[/dim]\n"
     )
 
     # Configured settings and their winning sources

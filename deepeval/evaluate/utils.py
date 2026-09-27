@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import TYPE_CHECKING, Optional, List, Union
 import os
 import time
 
@@ -18,8 +18,12 @@ from deepeval.test_run import (
     LLMApiTestCase,
     ConversationalApiTestCase,
     MetricData,
+    Classification,
 )
 from deepeval.evaluate.types import TestResult
+
+if TYPE_CHECKING:
+    from deepeval.classifiers.base_classifier import BaseClassifier
 from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
 from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.tracing.types import TraceSpanStatus
@@ -87,6 +91,26 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
         )
 
 
+def create_classification(
+    classifier: "BaseClassifier", expected_label: Optional[str]
+) -> Classification:
+    """Classifier counterpart of ``create_metric_data``. ``expected_label``
+    comes from ``test_case.expected_labels[classifier.name]`` and decides
+    whether the classification carries a verdict at all."""
+    return Classification(
+        name=classifier.__name__,
+        label=None if classifier.error is not None else classifier.label,
+        expectedLabel=expected_label,
+        success=classifier.is_successful(expected_label),
+        reason=None if classifier.error is not None else classifier.reason,
+        evaluationModel=classifier.evaluation_model,
+        error=classifier.error,
+        evaluationCost=classifier.evaluation_cost,
+        inputTokenCount=classifier.input_tokens,
+        outputTokenCount=classifier.output_tokens,
+    )
+
+
 def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
     if metric.error is not None:
         return MetricData(
@@ -120,17 +144,48 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
         )
 
 
+def _local_success(
+    api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+    classifications: Optional[List[Classification]],
+) -> Optional[bool]:
+    """Case verdict as seen locally (console, `assert_test`).
+
+    Classifications are never attached to `api_test_case`, whose `success` is
+    uploaded to Confident AI. Here they are folded in the same way metrics
+    are: a failed classification fails the case, one without a verdict leaves
+    it untouched. API test cases default to `success=True` before any metric
+    runs, so with no metric data the starting point is "no verdict".
+    """
+    if not classifications:
+        return api_test_case.success
+
+    success = api_test_case.success
+    if not api_test_case.metrics_data:
+        success = None
+
+    for classification in classifications:
+        if classification.success is False:
+            return False
+        if classification.success is True and success is None:
+            success = True
+    return success
+
+
 def create_test_result(
     api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
+    classifications: Optional[List[Classification]] = None,
 ) -> TestResult:
     name = api_test_case.name
     index = api_test_case.order
+    success = _local_success(api_test_case, classifications)
+    classifications = classifications or None
 
     if isinstance(api_test_case, ConversationalApiTestCase):
         return TestResult(
             name=name,
-            success=api_test_case.success,
+            success=success,
             metrics_data=api_test_case.metrics_data,
+            classifications=classifications,
             conversational=True,
             index=index,
             metadata=api_test_case.metadata,
@@ -141,8 +196,9 @@ def create_test_result(
         if multimodal:
             return TestResult(
                 name=name,
-                success=api_test_case.success,
+                success=success,
                 metrics_data=api_test_case.metrics_data,
+                classifications=classifications,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
@@ -153,8 +209,9 @@ def create_test_result(
         else:
             return TestResult(
                 name=name,
-                success=api_test_case.success,
+                success=success,
                 metrics_data=api_test_case.metrics_data,
+                classifications=classifications,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 expected_output=api_test_case.expected_output,
@@ -254,6 +311,7 @@ def validate_assert_test_inputs(
     golden: Optional[Golden] = None,
     test_case: Optional[LLMTestCase] = None,
     metrics: Optional[List] = None,
+    classifiers: Optional[List] = None,
 ):
     # Trace-scoped shape: `assert_test(golden[, metrics])` inside a plugin-wrapped test.
     if golden and not test_case:
@@ -264,31 +322,38 @@ def validate_assert_test_inputs(
                 "All 'metrics' must be instances of 'BaseMetric' when using "
                 "`assert_test(golden=..., metrics=...)`."
             )
+        if classifiers:
+            raise ValueError(
+                "'classifiers' are not supported with `assert_test(golden=...)` yet; "
+                "pass a 'test_case' instead."
+            )
         return
 
-    if test_case and not metrics:
+    if test_case and not metrics and not classifiers:
         raise ValueError(
-            "Both 'test_case' and 'metrics' must be provided together."
+            "'test_case' must be provided together with 'metrics' and/or 'classifiers'."
         )
 
-    if test_case and metrics:
-        if (isinstance(test_case, LLMTestCase)) and not all(
-            isinstance(metric, BaseMetric) for metric in metrics
-        ):
-            raise ValueError(
-                "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
-            )
-        if isinstance(test_case, ConversationalTestCase) and not all(
-            isinstance(metric, BaseConversationalMetric) for metric in metrics
-        ):
-            raise ValueError(
-                "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
-            )
+    if test_case and (metrics or classifiers):
+        if metrics:
+            if (isinstance(test_case, LLMTestCase)) and not all(
+                isinstance(metric, BaseMetric) for metric in metrics
+            ):
+                raise ValueError(
+                    "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
+                )
+            if isinstance(test_case, ConversationalTestCase) and not all(
+                isinstance(metric, BaseConversationalMetric)
+                for metric in metrics
+            ):
+                raise ValueError(
+                    "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
+                )
         return
 
     raise ValueError(
         "You must provide either ('golden' [+ 'metrics']) from inside a "
-        "`deepeval test run` test, or ('test_case' + 'metrics')."
+        "`deepeval test run` test, or ('test_case' + 'metrics' and/or 'classifiers')."
     )
 
 
@@ -303,14 +368,19 @@ def validate_evaluate_inputs(
         ]
     ] = None,
     metric_collection: Optional[str] = None,
+    classifiers: Optional[List] = None,
 ):
-    if metric_collection is None and metrics is None:
+    if metric_collection is None and metrics is None and not classifiers:
         raise ValueError(
-            "You must provide either 'metric_collection' or 'metrics'."
+            "You must provide at least one of 'metric_collection', 'metrics' or 'classifiers'."
         )
     if metric_collection is not None and metrics is not None:
         raise ValueError(
             "You cannot provide both 'metric_collection' and 'metrics'."
+        )
+    if metric_collection is not None and classifiers:
+        raise ValueError(
+            "You cannot provide both 'metric_collection' and 'classifiers'."
         )
 
     if test_cases and metrics:
@@ -332,7 +402,7 @@ def validate_evaluate_inputs(
 
 
 def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
-    if test_result.metrics_data is None:
+    if test_result.metrics_data is None and not test_result.classifications:
         return
 
     if (
@@ -345,18 +415,38 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
 
     print("")
     print("=" * 70 + "\n")
-    print("Metrics Summary\n")
 
-    for metric_data in test_result.metrics_data:
-        successful = _is_metric_successful(metric_data)
+    if test_result.metrics_data:
+        print("Metrics Summary\n")
 
-        if not successful:
+        for metric_data in test_result.metrics_data:
+            successful = _is_metric_successful(metric_data)
+
+            if not successful:
+                print(
+                    f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+                )
+            else:
+                print(
+                    f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+                )
+
+    if test_result.classifications:
+        if test_result.metrics_data:
+            print("")
+        print("Classifiers Summary\n")
+
+        for classification in test_result.classifications:
+            if classification.error:
+                icon = "⚠️"
+            elif classification.success is None:
+                icon = "➖"
+            elif classification.success:
+                icon = "✅"
+            else:
+                icon = "❌"
             print(
-                f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
-            )
-        else:
-            print(
-                f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, reason: {metric_data.reason}, error: {metric_data.error})"
+                f"  - {icon} {classification.name} (label: {classification.label}, expected: {classification.expected_label}, evaluation model: {classification.evaluation_model}, reason: {classification.reason}, error: {classification.error})"
             )
 
     print("")

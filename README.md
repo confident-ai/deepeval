@@ -59,7 +59,7 @@
     <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=zh">中文</a>
 </p>
 
-**DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which uses LLM-as-a-judge and other NLP models that run **locally on your machine**.
+**DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which use LLM-as-a-judge and other NLP models that run **locally on your machine**.
 
 Whether you're building AI agents, RAG pipelines, or chatbots, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
 
@@ -69,12 +69,12 @@ Whether you're building AI agents, RAG pipelines, or chatbots, implemented via L
 
 Use these evaluations to determine the optimal models, prompts, and architecture to improve your AI quality, prevent prompt drifting, or even transition from OpenAI to Claude with confidence.
 
+> Jev is now available in DeepEval, both in existing metrics and the latest [JevEval.](https://deepeval.com/docs/metrics-jev-eval)
+
 > [!IMPORTANT]
 > Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the enterprise AI evals and observability platform.
 >
 > ![Demo GIF](assets/demo.gif)
-
-> Want to talk LLM evaluation, need help picking metrics, or just to say hi? [Come join our discord.](https://discord.com/invite/3SEyvpgu2f)
 
 <br />
 
@@ -84,6 +84,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 
   - **Custom, All-Purpose Metrics:**
 
+    - [JevEval](https://deepeval.com/docs/metrics-jev-eval) — a custom metric scored by Jev, a System One model that answers your questions with calibrated probabilities instead of generated text
     - [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — a research-backed LLM-as-a-judge metric for evaluating on any custom criteria with human-like accuracy
     - [DAG](https://deepeval.com/docs/metrics-dag) — DeepEval's graph-based deterministic LLM-as-a-judge metric builder
 
@@ -278,9 +279,9 @@ deepeval test run test_chatbot.py
 **Congratulations! Your test case should have passed ✅** Let's break down what happened.
 
 - The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
-- The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](https://deepeval.com/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM outputs on any custom with human-like accuracy.
+- The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](https://deepeval.com/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM outputs on any custom criteria with human-like accuracy.
 - In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
-- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test has passed or not.
+- All metric scores range from 0 - 1, which the `threshold=0.5` ultimately determines if your test has passed or not.
 
 [Read our documentation](https://deepeval.com/docs/getting-started?utm_source=GitHub) for more information!
 
@@ -620,7 +621,9 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) is the enterprise AI evals and observability platform. Product teams can evaluate AI applications before launch and monitor them in production, while platform teams define and enforce a consistent organization-wide standard. Log in from the CLI to get started:
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) — the AI observability and evaluation platform for production LLM systems. Trace agent executions, run online evals on live traffic, alert on quality regressions, and let PMs, QA, and domain experts review outputs without writing code. DeepEval traces stream to it with no code changes.
+
+Log in from the CLI to get started:
 
 ```bash
 deepeval login

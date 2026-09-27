@@ -19,6 +19,7 @@ import { Prompt } from "@/prompt";
 import { recordTracingIntegration } from "@/telemetry";
 import { Integration } from "@/tracing/integrations";
 import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
+import { ConfidentAttr } from "@/tracing/attributes";
 
 // OpenInference exporter filter to remove the parent Id for root spans
 class OpenInferenceExporterWrapper implements SpanExporter {
@@ -35,7 +36,7 @@ class OpenInferenceExporterWrapper implements SpanExporter {
     spans.forEach((span) => {
       const attrs = (span as any).attributes || {};
       if (
-        attrs["confident.internal.is_oi_span"] ||
+        attrs[ConfidentAttr.INTERNAL_IS_OI_SPAN] ||
         attrs["openinference.span.kind"]
       ) {
         const id = span.spanContext().spanId;
@@ -100,7 +101,7 @@ export class OpenInferenceFilterProcessor implements SpanProcessor {
     // Also allow spans that were flagged by OpenInferenceSpanProcessor in onStart
     if (
       attrs["openinference.span.kind"] ||
-      attrs["confident.internal.is_oi_span"]
+      attrs[ConfidentAttr.INTERNAL_IS_OI_SPAN]
     ) {
       this.underlyingProcessor.onEnd(span);
     }

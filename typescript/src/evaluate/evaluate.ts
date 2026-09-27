@@ -39,17 +39,14 @@ import {
   type Hyperparameters,
 } from "@/evaluate/hyperparameters";
 import { mapWithConcurrency, shouldUseCache } from "@/env-flags";
-import {
-  Entrypoint,
-  captureEvaluationRun,
-  recordTestCase,
-} from "@/telemetry";
+import { Entrypoint, captureEvaluationRun, recordTestCase } from "@/telemetry";
 import {
   cacheMetricData,
   ensureCacheFlushedOnExit,
   getCachedMetricData,
 } from "@/evaluate/test-run/cache";
 import { type EvaluatedCase } from "@/evaluate/types";
+import { measureSystemOneBatch } from "@/metrics/system-one/batch";
 
 type AnyTestCase = LLMTestCase | ConversationalTestCase;
 type AnyMetric = BaseMetric | BaseConversationalMetric;
@@ -199,18 +196,18 @@ async function runEvaluation(
       recordTestCase(testCase);
       const caseBar = caseBars[index];
       const caseStart = Date.now();
-      const metricsData = await mapWithConcurrency(
-        applicable,
-        asyncCfg.maxConcurrent,
-        (m) =>
-          runMetric(
-            m,
-            testCase,
-            errorCfg,
-            () => caseBar?.increment(),
-            cacheCfg,
-          ),
-      );
+      const metricsData = await measureTestCase(testCase, applicable, {
+        errorCfg,
+        cacheCfg,
+        maxConcurrent: asyncCfg.maxConcurrent,
+        onDone: (count) => caseBar?.increment(count),
+        onJevStart: multibar
+          ? (label) => {
+              const jevBar = multibar!.create(1, 0, { label });
+              return () => multibar!.remove(jevBar);
+            }
+          : undefined,
+      });
       caseBar?.update(Math.max(applicable.length, 1));
       mainBar?.increment();
       testResults.push(buildTestResult(index, testCase, metricsData));
@@ -265,6 +262,54 @@ async function runEvaluation(
   return { testResults, confidentLink: link, testRunId };
 }
 
+export interface MeasureTestCaseOptions {
+  errorCfg: Required<ErrorConfig>;
+  cacheCfg: Required<CacheConfig>;
+  maxConcurrent: number;
+  /** Called as metrics finish, with how many just did. */
+  onDone: (count: number) => void;
+  /** Show the batched Jev request(s) as one progress line; returns its clear. */
+  onJevStart?: (label: string) => () => void;
+}
+
+/**
+ * Run every metric on one test case. The test case's `system_one` metrics
+ * share one Jev request (see `measureSystemOneBatch`); the rest measure
+ * concurrently. Results keep the order of `metrics`.
+ */
+export async function measureTestCase(
+  testCase: AnyTestCase,
+  metrics: AnyMetric[],
+  options: MeasureTestCaseOptions,
+): Promise<MetricData[]> {
+  const { errorCfg, cacheCfg } = options;
+  const uncached = metrics.filter(
+    (m) => !(cacheCfg.useCache && getCachedMetricData(testCase, m)),
+  );
+  uncached.forEach(resetResult);
+  const batched = new Set(
+    await measureSystemOneBatch(uncached, testCase, {
+      ...errorCfg,
+      onStart: options.onJevStart,
+    }),
+  );
+  if (batched.size > 0) options.onDone(batched.size);
+  return mapWithConcurrency(metrics, options.maxConcurrent, async (m) =>
+    batched.has(m)
+      ? recordMetricData(m, testCase, cacheCfg)
+      : runMetric(m, testCase, errorCfg, () => options.onDone(1), cacheCfg),
+  );
+}
+
+/** Fresh state per (metric, test case). */
+function resetResult(metric: AnyMetric): void {
+  metric.score = undefined;
+  metric.success = undefined;
+  metric.reason = undefined;
+  metric.error = undefined;
+  metric.skipped = false;
+}
+
 export async function runMetric(
   metric: AnyMetric,
   testCase: AnyTestCase,
@@ -280,12 +325,7 @@ export async function runMetric(
     }
   }
 
-  // fresh state per (metric, test case)
-  metric.score = undefined;
-  metric.success = undefined;
-  metric.reason = undefined;
-  metric.error = undefined;
-  metric.skipped = false;
+  resetResult(metric);
 
   try {
     // Dispatched in `evaluate`, so the metric matches the test case type.
@@ -304,6 +344,14 @@ export async function runMetric(
     }
   }
   onDone();
+  return recordMetricData(metric, testCase, cacheCfg);
+}
+
+function recordMetricData(
+  metric: AnyMetric,
+  testCase: AnyTestCase,
+  cacheCfg: Required<CacheConfig>,
+): MetricData {
   const metricData = buildMetricData(metric);
   if (cacheCfg.writeCache) {
     cacheMetricData(testCase, metric, metricData);

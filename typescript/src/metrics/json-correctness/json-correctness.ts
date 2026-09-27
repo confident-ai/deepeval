@@ -2,9 +2,10 @@ import type { ZodType } from "zod";
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { EvalModeName } from "@/config/eval-mode";
 import { toJsonSchema } from "@/models/utils";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   checkSingleTurnParams,
   constructVerboseLogs,
@@ -25,6 +26,8 @@ export interface JsonCorrectnessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   /** Defaults to true (matches Python): requires a perfectly valid JSON. */
   strictMode?: boolean;
@@ -40,6 +43,7 @@ export interface JsonCorrectnessMetricOptions {
  */
 export class JsonCorrectnessMetric extends BaseMetric {
   private readonly expectedSchema: ZodType;
+  private validationError?: string;
 
   constructor(options: JsonCorrectnessMetricOptions) {
     const strictMode = options.strictMode ?? true;
@@ -57,10 +61,11 @@ export class JsonCorrectnessMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.expectedSchema = options.expectedSchema;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, {
+      model: options.model,
+      evalMode: options.evalMode,
+      systemOne: false,
+    });
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -86,10 +91,12 @@ export class JsonCorrectnessMetric extends BaseMetric {
   }
 
   private isValidJson(actualOutput: string): boolean {
+    this.validationError = undefined;
     try {
       this.expectedSchema.parse(JSON.parse(actualOutput));
       return true;
-    } catch {
+    } catch (e) {
+      this.validationError = e instanceof Error ? e.message : String(e);
       return false;
     }
   }
@@ -99,6 +106,7 @@ export class JsonCorrectnessMetric extends BaseMetric {
   ): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
     if (this.score === 1) return DEFAULT_CORRECT_REASON;
+    if (!this.model) return this.validationError;
 
     const prompt = this.getPrompt("generate_reason", {
       actual_output: actualOutput,

@@ -6,6 +6,7 @@ import './global.css';
 import 'katex/dist/katex.css';
 import { Geist, Space_Grotesk } from 'next/font/google';
 import UtmCapture from '@/src/layouts/UtmCapture';
+import WebMcpTools from '@/components/webmcp-tools';
 import SchemaInjector from '@/src/components/SchemaInjector/SchemaInjector';
 import { buildWebSiteSchema } from '@/src/utils/schema-helpers';
 import {
@@ -187,6 +188,7 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       </head>
       <body className="flex flex-col min-h-screen font-sans">
         <UtmCapture />
+        <WebMcpTools />
         <RootProvider search={{ hotKey: disabledSearchHotKey }}>
           <LanguageProvider>{children}</LanguageProvider>
         </RootProvider>

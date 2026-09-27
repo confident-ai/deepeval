@@ -16,6 +16,8 @@ export interface ModelData {
   /** USD per output token. */
   outputPrice?: number;
   supportsTemperature?: boolean;
+  /** Set only when thinking can be switched on and off per request. */
+  supportsThinking?: boolean;
 }
 
 /** One per Python registry. */

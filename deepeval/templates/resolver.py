@@ -7,7 +7,7 @@ from typing import Any, Dict, Literal, Optional, Set, Tuple
 
 import jinja2
 
-Feature = Literal["metrics"]
+Feature = Literal["metrics", "simulator", "classifiers"]
 
 # Keep in sync with the method keys in `templates/metrics/templates.json`.
 # `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
@@ -65,7 +65,47 @@ MetricTemplateMethod = Literal[
     "get_tool_selection_final_reason",
     "get_tool_selection_score",
     "rewrite_reason",
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    # `hybrid`: the Noul asked per QAG item or single verdict, and the
+    # Score asked where the LLM prompt returned a graded score.
+    "_experimental_system_one_verdict",
+    "_experimental_system_one_answered_verdict",
+    "_experimental_system_one_on_topic_verdict",
+    "_experimental_system_one_score",
+    "_experimental_system_one_args_score",
+    "_experimental_system_one_argument_correctness_score",
+    "_experimental_system_one_goal_score",
+    "_experimental_system_one_mcp_use_args_score",
+    "_experimental_system_one_mcp_use_primitive_score",
+    "_experimental_system_one_plan_score",
+    "_experimental_system_one_primitive_score",
+    "_experimental_system_one_tool_selection_score",
+    # `system_one`: a JSON array of Noul / Score / Choice questions that
+    # describe the whole metric as one System One request.
+    "_experimental_system_one_questions",
+    "_experimental_system_one_mcp_use_questions",
 ]
+
+# Keep in sync with the method keys in `templates/simulator/templates.json`.
+SimulatorTemplateMethod = Literal[
+    "decide_interrupt",
+    "interruption_bias_frequent",
+    "interruption_bias_normal",
+    "interruption_bias_rare",
+    "interruption_frustration",
+]
+
+# Keep in sync with the method keys in `templates/classifiers/templates.json`.
+ClassifierTemplateMethod = Literal[
+    "classify_single_turn",
+    "classify_multi_turn",
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    "_experimental_system_one_classify",
+]
+
+TemplateMethod = (
+    MetricTemplateMethod | SimulatorTemplateMethod | ClassifierTemplateMethod
+)
 
 
 class MetricTemplateNotFoundError(KeyError):
@@ -142,7 +182,7 @@ def clear_metric_template_cache() -> None:
 
 
 def get_raw_template(
-    feature: Feature, class_name: str, method: MetricTemplateMethod
+    feature: Feature, class_name: str, method: TemplateMethod
 ) -> str:
     """Return the raw (un-rendered) base template string for a class/method."""
     base = _registry.get_base_templates(feature)
@@ -184,7 +224,7 @@ def iter_base_template_methods(
 def resolve_template(
     feature: Feature,
     class_name: str,
-    method: MetricTemplateMethod,
+    method: TemplateMethod,
     *,
     multimodal: bool = False,
     strict: bool = True,
@@ -193,8 +233,9 @@ def resolve_template(
     """Render a template to a final prompt via Jinja2.
 
     `feature` selects the `templates/<feature>/templates.json` bundle (e.g.
-    "metrics"). `_fragments` (shared reusable snippets) and `multimodal` are
-    always available to the template; everything else is passed via `kwargs`.
+    "metrics" or "simulator"). For metrics, `_fragments` (shared reusable
+    snippets) and `multimodal` are always available to the template;
+    everything else is passed via `kwargs`.
     """
     fragments = _registry.get_base_templates(feature).get("_fragments", {})
     try:

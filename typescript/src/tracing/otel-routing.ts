@@ -4,12 +4,13 @@ import {
   setCurrentTrace,
   traceManager,
 } from "@/tracing/tracing";
+import { ConfidentAttr } from "@/tracing/attributes";
 
 // Where an OTel-based integration should send a span.
 export type SpanRoute = "rest" | "otlp";
 
 /** Marker attribute the interceptor stamps so later processors see the decision. */
-export const ROUTE_TO_REST_ATTRIBUTE = "confident.internal.route_to_rest";
+export const ROUTE_TO_REST_ATTRIBUTE = ConfidentAttr.INTERNAL_ROUTE_TO_REST;
 
 export interface RestRoutingOptions {
   isTestMode?: boolean;

@@ -1,6 +1,6 @@
-import os
 import warnings
 from typing import (
+    TYPE_CHECKING,
     List,
     Optional,
     Union,
@@ -24,7 +24,10 @@ from deepeval.evaluate.utils import (
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
-from deepeval.test_case.utils import check_valid_test_cases_type
+from deepeval.test_case.utils import (
+    check_valid_test_cases_type,
+    process_mcp_servers,
+)
 from deepeval.test_run.hyperparameters import (
     process_hyperparameters,
     process_prompts,
@@ -48,14 +51,23 @@ from deepeval.metrics import (
 from deepeval.metrics.utils import check_at_least_one_metric_has_threshold
 from deepeval.metrics.indicator import (
     format_metric_description,
+    format_classifier_description,
 )
+from deepeval.classifiers.base_classifier import BaseClassifier
+from deepeval.classifiers.utils import validate_classifiers
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
+    MCPServer,
+)
+from deepeval.test_case.mcp import (
+    normalize_mcp_servers,
+    validate_mcp_servers,
 )
 from deepeval.test_run import (
     global_test_run_manager,
     MetricData,
+    Classification,
 )
 from deepeval.utils import get_is_running_deepeval
 from deepeval.evaluate.types import EvaluationResult
@@ -64,6 +76,9 @@ from deepeval.evaluate.execute import (
     _assert_test_from_current_trace,
     execute_test_cases,
 )
+
+if TYPE_CHECKING:
+    from mcp.server import MCPServer as OfficialMCPServer
 
 
 def assert_test(
@@ -76,12 +91,18 @@ def assert_test(
     ] = None,
     golden: Optional[Golden] = None,
     run_async: bool = True,
+    classifiers: Optional[List[BaseClassifier]] = None,
 ):
     validate_assert_test_inputs(
         golden=golden,
         test_case=test_case,
         metrics=metrics,
+        classifiers=classifiers,
     )
+    if classifiers:
+        validate_classifiers(
+            [test_case] if test_case is not None else None, classifiers
+        )
 
     async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
     display_config = DisplayConfig(
@@ -104,14 +125,15 @@ def assert_test(
             display_config=display_config,
         )
 
-    elif test_case and metrics:
-        check_at_least_one_metric_has_threshold(metrics)
+    elif test_case and (metrics or classifiers):
+        if metrics:
+            check_at_least_one_metric_has_threshold(metrics)
         if run_async:
             loop = get_or_create_event_loop()
             test_result = loop.run_until_complete(
                 a_execute_test_cases(
                     [test_case],
-                    metrics,
+                    metrics or [],
                     error_config=error_config,
                     display_config=display_config,
                     async_config=async_config,
@@ -119,25 +141,29 @@ def assert_test(
                     identifier=get_identifier(),
                     _use_bar_indicator=True,
                     _is_assert_test=True,
+                    classifiers=classifiers,
                 )
             )[0]
         else:
             test_result = execute_test_cases(
                 [test_case],
-                metrics,
+                metrics or [],
                 error_config=error_config,
                 display_config=display_config,
                 cache_config=cache_config,
                 identifier=get_identifier(),
                 _use_bar_indicator=False,
                 _is_assert_test=True,
+                classifiers=classifiers,
             )[0]
 
-    if not test_result.success:
+    # `success is None` means nothing produced a verdict (e.g. classifiers with
+    # no expected labels); that is not a failure.
+    if test_result.success is False:
         failed_metrics_data: List[MetricData] = []
         # even for conversations, test_result right now is just the
         # result for the last message
-        for metric_data in test_result.metrics_data:
+        for metric_data in test_result.metrics_data or []:
             if metric_data.error is not None:
                 failed_metrics_data.append(metric_data)
             else:
@@ -149,21 +175,38 @@ def assert_test(
                 except Exception:
                     failed_metrics_data.append(metric_data)
 
-        failed_metrics_str = ", ".join(
-            [
-                f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
-                for metrics_data in failed_metrics_data
-            ]
-        )
+        failed_classifications: List[Classification] = [
+            classification
+            for classification in test_result.classifications or []
+            if classification.success is False
+        ]
+
+        failed_parts = [
+            f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
+            for metrics_data in failed_metrics_data
+        ]
+        failed_parts += [
+            f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+            for classification in failed_classifications
+        ]
+        failed_metrics_str = ", ".join(failed_parts)
+
+        if failed_metrics_data and failed_classifications:
+            subject = "Metrics and classifiers"
+        elif failed_classifications:
+            subject = "Classifiers"
+        else:
+            subject = "Metrics"
+
         if test_case is not None and test_case.flaky:
             # Flaky test cases don't block CI: warn (shows up in pytest's
             # warnings summary) but don't raise
             warnings.warn(
                 f"Flaky test case failed (no assertion raised): "
-                f"Metrics: {failed_metrics_str} failed."
+                f"{subject}: {failed_metrics_str} failed."
             )
         else:
-            raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
+            raise AssertionError(f"{subject}: {failed_metrics_str} failed.")
 
 
 def evaluate(
@@ -174,10 +217,12 @@ def evaluate(
             List[BaseConversationalMetric],
         ]
     ] = None,
+    classifiers: Optional[List[BaseClassifier]] = None,
     # Evals on Confident AI
     metric_collection: Optional[str] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
+    mcp_servers: Optional[List[Union[MCPServer, "OfficialMCPServer"]]] = None,
     identifier: Optional[str] = None,
     official: bool = False,
     _skip_reset: bool = False,
@@ -191,11 +236,20 @@ def evaluate(
         test_cases=test_cases,
         metrics=metrics,
         metric_collection=metric_collection,
+        classifiers=classifiers,
     )
     check_valid_test_cases_type(test_cases)
+    if classifiers:
+        validate_classifiers(test_cases, classifiers)
 
-    if metrics:
-        check_at_least_one_metric_has_threshold(metrics)
+    if mcp_servers is not None:
+        mcp_servers = normalize_mcp_servers(mcp_servers)
+        validate_mcp_servers(mcp_servers)
+    process_mcp_servers(test_cases, mcp_servers)
+
+    if metrics or classifiers:
+        if metrics:
+            check_at_least_one_metric_has_threshold(metrics)
 
         if not _skip_reset and not get_is_running_deepeval():
             global_test_run_manager.reset()
@@ -204,10 +258,16 @@ def evaluate(
 
         if display_config.show_indicator:
             console = Console()
-            for metric in metrics:
+            for metric in metrics or []:
                 console.print(
                     format_metric_description(
                         metric, async_mode=async_config.run_async
+                    )
+                )
+            for classifier in classifiers or []:
+                console.print(
+                    format_classifier_description(
+                        classifier, async_mode=async_config.run_async
                     )
                 )
 
@@ -217,22 +277,24 @@ def evaluate(
                 test_results = loop.run_until_complete(
                     a_execute_test_cases(
                         test_cases,
-                        metrics,
+                        metrics or [],
                         identifier=identifier,
                         error_config=error_config,
                         display_config=display_config,
                         cache_config=cache_config,
                         async_config=async_config,
+                        classifiers=classifiers,
                     )
                 )
             else:
                 test_results = execute_test_cases(
                     test_cases,
-                    metrics,
+                    metrics or [],
                     identifier=identifier,
                     error_config=error_config,
                     display_config=display_config,
                     cache_config=cache_config,
+                    classifiers=classifiers,
                 )
 
         end_time = time.perf_counter()
@@ -275,6 +337,15 @@ def evaluate(
         if _skip_reset:
             test_run.run_duration += run_duration
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+            return EvaluationResult(
+                test_results=test_results,
+                confident_link=None,
+                test_run_id=None,
+            )
+
+        if not metrics:
+            # Classifier-only run: classifications are local-only for now, so
+            # there is no test run to finalize or upload.
             return EvaluationResult(
                 test_results=test_results,
                 confident_link=None,

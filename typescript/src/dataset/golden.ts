@@ -1,4 +1,5 @@
 import { RetrievedContextData, ToolCall, Turn } from "@/test-case";
+import { Persona, resolvePersona } from "@/dataset/persona";
 
 export class Golden {
   id?: string;
@@ -12,6 +13,9 @@ export class Golden {
   name?: string;
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
+  tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   sourceFile?: string;
   customColumnKeyValues?: Record<string, string>;
   _datasetRank?: number;
@@ -27,6 +31,9 @@ export class Golden {
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
+    tokenCost?: number;
+    inputTokenCount?: number;
+    outputTokenCount?: number;
     additionalMetadata?: Record<string, any>;
     sourceFile?: string;
     customColumnKeyValues?: Record<string, string>;
@@ -44,6 +51,9 @@ export class Golden {
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
     this.expectedTools = params.expectedTools;
+    this.tokenCost = params.tokenCost;
+    this.inputTokenCount = params.inputTokenCount;
+    this.outputTokenCount = params.outputTokenCount;
     this.additionalMetadata = params.additionalMetadata;
     this.sourceFile = params.sourceFile;
     this.comments = params.comments;
@@ -59,6 +69,8 @@ export class ConversationalGolden {
   id?: string;
   scenario: string;
   expectedOutcome?: string;
+  persona?: Persona;
+  /** @deprecated Use `persona`. Kept in sync with `persona.characteristics`. */
   userDescription?: string;
   context?: string[];
   additionalMetadata?: Record<string, any>;
@@ -74,6 +86,8 @@ export class ConversationalGolden {
     id?: string;
     scenario: string;
     expectedOutcome?: string;
+    persona?: Persona;
+    /** @deprecated Use `persona`. */
     userDescription?: string;
     context?: string[];
     additionalMetadata?: Record<string, any>;
@@ -88,7 +102,9 @@ export class ConversationalGolden {
     this.id = params.id;
     this.scenario = params.scenario;
     this.expectedOutcome = params.expectedOutcome;
-    this.userDescription = params.userDescription;
+    const resolved = resolvePersona(params.persona, params.userDescription);
+    this.persona = resolved.persona;
+    this.userDescription = resolved.userDescription;
     this.context = params.context;
     this.additionalMetadata = params.additionalMetadata;
     this.comments = params.comments;

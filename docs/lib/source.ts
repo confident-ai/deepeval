@@ -8,11 +8,13 @@ import {
 } from 'collections/server';
 import { loader, type PageTreeTransformer } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
+import { withBetaMark } from '@/components/beta-mark';
 import { contentRouteFor, docsImageRoute, blogImageRoute } from './shared';
 import { lowerTerms } from './lang/term';
 import type { Language } from './lang/languages';
 import type { WithLanguages } from './lang/page-tree';
 import { assertPageTreeLanguages } from './lang/validate';
+
 
 /**
  * Docusaurus-style `sidebar_label` → override the sidebar node's name
@@ -61,8 +63,46 @@ const languagesTransformer: PageTreeTransformer<any> = {
   },
 };
 
+function isBetaPage(data: unknown): boolean {
+  return (data as { beta?: unknown } | undefined)?.beta === true;
+}
+
+/**
+ * Append a β mark to sidebar labels for pages (and folders whose index is)
+ * marked `beta: true`. Kept in `name` so the notebook layout's styled
+ * sidebar renderer stays intact; breadcrumbs strip it via `PlainBreadcrumb`.
+ * Schema only allows the literal `true`; omission means not-beta.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const betaTransformer: PageTreeTransformer<any> = {
+  file(node) {
+    const ref = node.$ref;
+    if (!ref) return node;
+    const file = this.storage.read(ref);
+    if (!file || file.format !== 'page') return node;
+    if (isBetaPage(file.data)) {
+      node.name = withBetaMark(node.name);
+    }
+    return node;
+  },
+  folder(node) {
+    const indexRef = node.index?.$ref;
+    if (!indexRef) return node;
+    const file = this.storage.read(indexRef);
+    if (!file || file.format !== 'page') return node;
+    if (isBetaPage(file.data)) {
+      node.name = withBetaMark(node.name);
+    }
+    return node;
+  },
+};
+
 const pageTree = {
-  transformers: [sidebarLabelTransformer, languagesTransformer],
+  transformers: [
+    sidebarLabelTransformer,
+    languagesTransformer,
+    betaTransformer,
+  ],
 };
 
 export const docsSource = loader({

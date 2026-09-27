@@ -1,0 +1,154 @@
+---
+id: metrics-speech-intelligibility
+title: Speech Intelligibility
+sidebar_label: Speech Intelligibility
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The speech intelligibility metric measures how easy your voice agent is to **hear and understand**. It analyzes the audio on each assistant turn and returns a score between 0 and 1, where a higher score indicates cleaner, louder, more listenable speech.
+
+:::note
+`SpeechIntelligibilityMetric` scores the signal, not the words. It answers "could a listener make this out?" — not "was the reply correct?". Pair it with a transcript metric such as `TurnRelevancyMetric` for the content side of the same turn.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import SpeechIntelligibilityMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks for the store's opening hours on a public holiday.",
+    expected_outcome="The agent states the holiday opening hours.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = SpeechIntelligibilityMetric(threshold=0.7)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `SpeechIntelligibilityMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.86
+print(metric.score_breakdown)
+```
+
+For `SpeechIntelligibilityMetric` the breakdown is one entry per assistant turn:
+
+```python
+{
+    "eligible_turns": 2,
+    "turns": [
+        {
+            "turn": 1,
+            "score": 0.86,
+            "estimated_snr_db": 24.1,
+            "rms_dbfs": -21.4,
+            "clipping_fraction": 0.0,
+            "dropout_events": 0,
+        }
+    ],
+}
+```
+
+`turn` counts assistant turns, so `1` is your agent's first reply.
+
+## How Is It Calculated?
+
+`SpeechIntelligibilityMetric` evaluates assistant turns only. For each decodable assistant audio clip, it decodes the clip to mono PCM samples and combines four weighted components into a turn score:
+
+<Equation formula="\text{Speech Intelligibility} = 0.4 \times \text{SNR} + 0.25 \times \text{Volume} + 0.2 \times \text{Clipping} + 0.15 \times \text{Dropouts}" />
+
+Each component is itself clamped between 0 and 1:
+
+- **SNR** rises from 0 at 3 dB to 1 at 25 dB of estimated signal-to-noise ratio.
+- **Volume** peaks when the clip averages -20 dBFS and falls off in either direction — too quiet and too hot are both penalized.
+- **Clipping** falls to 0 once about 3.3% of samples are clipped.
+- **Dropouts** lose 0.12 for each short mid-speech silence, reaching 0 at roughly nine dropouts.
+
+The conversation score is the mean of all eligible assistant-turn scores.
+
+If an assistant turn has no audio, the metric skips that turn. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
+
+:::tip
+A low score with a healthy SNR is almost always a level problem: check the `rms_dbfs` in the breakdown before you go looking at your agent's TTS settings.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from voice naturalness?",
+      answer: (
+        <>
+          Intelligibility asks whether the speech is <em>audible</em> — signal
+          level, noise, clipping, dropouts. Naturalness asks whether it sounds{" "}
+          <em>human</em> — pacing, pitch variation, repeated audio. A robotic
+          but perfectly clean voice scores well here and poorly on{" "}
+          <a href="/docs/metrics-voice-naturalness">voice naturalness</a>.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Scoring is deterministic and runs locally over the audio samples,
+          so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Do I need a transcript?",
+      answer: (
+        <>
+          No. Only the audio is analyzed, so this metric still works on turns
+          whose <code>content</code> is empty.
+        </>
+      ),
+    },
+    {
+      question: "Does the metric evaluate user audio?",
+      answer: (
+        <>
+          No. Only turns whose <code>role</code> is <code>"assistant"</code>{" "}
+          contribute to the score. The simulated caller's audio comes from your
+          own TTS model, so scoring it would measure your test harness rather
+          than your agent.
+        </>
+      ),
+    },
+  ]}
+/>

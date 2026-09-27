@@ -7,6 +7,10 @@ languages: [python]
 
 The `model_callback` is the bridge between the simulator and your LLM application. It receives the simulated user input and returns your chatbot's assistant turn.
 
+::::note
+Simulating a **voice agent** instead of a text chatbot? In [voice mode](/docs/conversation-simulator-voice-mode), `voice_config` replaces `model_callback` — the simulator talks to your agent over a live audio connection rather than a Python callback, and providing both raises an error.
+::::
+
 Only the `input` argument is required when defining your `model_callback`, but you may also define optional arguments that `deepeval` will pass by name.
 
 ```python title="main.py"

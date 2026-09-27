@@ -1,6 +1,6 @@
 {
   "name": "deepeval",
-  "version": "0.9.10",
+  "version": "0.9.20",
   "description": "The LLM Evaluation Framework for TypeScript",
   "repository": {
     "type": "git",
@@ -52,6 +52,11 @@
       "import": "./dist/prompt/index.js",
       "require": "./dist/prompt/index.js",
       "types": "./dist/prompt/index.d.ts"
+    },
+    "./sqlite-store": {
+      "import": "./dist/sqlite-store/index.js",
+      "require": "./dist/sqlite-store/index.js",
+      "types": "./dist/sqlite-store/index.d.ts"
     },
     "./openai": {
       "import": "./dist/openai/index.js",
@@ -122,6 +127,9 @@
       ],
       "prompt": [
         "dist/prompt/index.d.ts"
+      ],
+      "sqlite-store": [
+        "dist/sqlite-store/index.d.ts"
       ],
       "openai": [
         "dist/openai/index.d.ts"
@@ -243,6 +251,7 @@
     "@mastra/core": ">=1.16.0-0 <2.0.0-0",
     "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
     "@openai/agents": "^0.5.4",
+    "@typesafe-ai/sdk": ">=0.6.0",
     "ai": ">=5.0.0",
     "ollama": ">=0.5.0",
     "vitest": ">=1.0.0"
@@ -267,6 +276,9 @@
       "optional": true
     },
     "@openai/agents": {
+      "optional": true
+    },
+    "@typesafe-ai/sdk": {
       "optional": true
     },
     "ai": {

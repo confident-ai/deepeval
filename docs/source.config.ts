@@ -27,9 +27,17 @@ const languagesField = z
     message: 'listed a language twice',
   });
 
+/**
+ * `beta: true` marks a page as beta (sidebar β + title mark). Omission means
+ * not-beta — do not write `beta: false`; the schema only accepts the literal
+ * `true`, so an explicit false fails the build.
+ */
+const betaField = z.literal(true).optional();
+
 const extendedPageSchema = pageSchema.extend({
   sidebar_label: z.string().optional(),
   languages: languagesField.optional(),
+  beta: betaField,
 });
 
 /**

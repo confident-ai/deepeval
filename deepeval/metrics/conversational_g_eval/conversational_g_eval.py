@@ -11,7 +11,6 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
-    no_log_prob_support,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
@@ -27,12 +26,12 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
-    accrue_token_usage,
+    generate_rubric_score,
+    a_generate_rubric_score,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -257,51 +256,26 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
+        turns = [
+            convert_turn_to_dict(turn, self.evaluation_params)
+            for turn in test_case.turns
+        ]
         prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
             test_case_content=test_case_content,
-            turns=[
-                convert_turn_to_dict(turn, self.evaluation_params)
-                for turn in test_case.turns
-            ],
+            turns=turns,
             parameters=g_eval_params_str,
             rubric=rubric_str,
         )
-        try:
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
-
-            res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
-
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
-
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except (
-            AttributeError
-        ):  # This catches the case where a_generate_raw_response doesn't exist.
-            return await a_generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=cgschema.ReasonScore,
-                extract_schema=lambda r: (r.score, r.reason),
-                extract_json=lambda data: (data["score"], data["reason"]),
-            )
+        return await a_generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=self.generate_weighted_summed_score,
+        )
 
     def evaluate(
         self, test_case: ConversationalTestCase
@@ -313,49 +287,26 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
+        turns = [
+            convert_turn_to_dict(turn, self.evaluation_params)
+            for turn in test_case.turns
+        ]
         prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
             test_case_content=test_case_content,
-            turns=[
-                convert_turn_to_dict(turn, self.evaluation_params)
-                for turn in test_case.turns
-            ],
+            turns=turns,
             parameters=g_eval_params_str,
             rubric=rubric_str,
         )
-        try:
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
-
-            res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
-
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
-            return generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=cgschema.ReasonScore,
-                extract_schema=lambda r: (r.score, r.reason),
-                extract_json=lambda data: (data["score"], data["reason"]),
-            )
+        return generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=self.generate_weighted_summed_score,
+        )
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion

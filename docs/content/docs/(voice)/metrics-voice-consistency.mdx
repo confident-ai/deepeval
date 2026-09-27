@@ -1,0 +1,147 @@
+---
+id: metrics-voice-consistency
+title: Voice Consistency
+sidebar_label: Voice Consistency
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+
+The voice consistency metric measures whether your voice agent **sounds like the same speaker for the whole call**. It compares assistant audio across turns and returns a score between 0 and 1, where a higher score means a more stable voice.
+
+:::note
+This is the one voice metric that is inherently multi-turn: it says nothing about any single clip, only about how the clips differ from each other. It needs at least two decodable assistant turns to produce a score.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import VoiceConsistencyMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user books a table, then changes the party size twice.",
+    expected_outcome="The agent confirms the final party size.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = VoiceConsistencyMetric(threshold=0.7)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `VoiceConsistencyMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.91
+print(metric.score_breakdown)
+```
+
+For `VoiceConsistencyMetric` the breakdown carries the three component scores and the per-turn measurements they were computed from:
+
+```python
+{
+    "eligible_turns": 3,
+    "pitch_consistency": 0.94,
+    "loudness_consistency": 0.88,
+    "spectral_consistency": 0.91,
+    "turns": [
+        {
+            "turn": 1,
+            "rms_dbfs": -21.4,
+            "pitch_mean_hz": 118.2,
+            "zero_crossing_rate": 0.061,
+        }
+    ],
+}
+```
+
+Here `turn` is the turn's zero-based position in the conversation, counting user turns too — not the assistant reply number.
+
+## How Is It Calculated?
+
+`VoiceConsistencyMetric` measures three properties on every decodable assistant clip — mean pitch, loudness (`rms_dbfs`), and timbre (zero-crossing rate) — and scores how little each varies across the call:
+
+<Equation formula="\text{Voice Consistency} = 0.4 \times \text{Pitch} + 0.35 \times \text{Loudness} + 0.25 \times \text{Timbre}" />
+
+Each component is a spread measured as population standard deviation, turned into a score and clamped between 0 and 1:
+
+- **Pitch** and **timbre** are scored relative to their own mean, so they are scale-free.
+- **Loudness** is scored against a fixed 12 dB spread, so a call whose replies vary by 12 dB or more scores 0 on this component.
+
+When fewer than two turns yield a usable pitch estimate, `pitch_consistency` is `None` and the remaining two components are reweighted to 0.6 loudness / 0.4 timbre.
+
+The metric returns no score and marks the evaluation as skipped when fewer than two assistant turns contain decodable audio.
+
+:::tip
+A sudden drop here usually means something changed mid-call rather than gradually: a fallback voice after a TTS error, a different model handling one turn, or a hand-off to another agent. Compare the per-turn `rms_dbfs` and `pitch_mean_hz` values to find where it happened.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why did the metric skip my test case?",
+      answer: (
+        <>
+          It needs at least two assistant turns with decodable audio.
+          Single-exchange calls, and calls where only one reply carried audio,
+          are skipped rather than scored — consistency across one sample is not
+          a measurement.
+        </>
+      ),
+    },
+    {
+      question: "Does an emotional agent get penalized for varying its voice?",
+      answer: (
+        <>
+          Somewhat, and deliberately. The metric cannot tell intentional
+          expressiveness from an unstable voice. If your agent is designed to
+          shift tone, treat this as a regression signal against its own baseline
+          rather than expecting a near-perfect score.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Scoring is deterministic and runs locally over the audio samples,
+          so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it compare against a reference voice?",
+      answer: (
+        <>
+          No. It is referenceless — turns are compared against each other, not
+          against a target voice, so an agent that uses the wrong voice
+          consistently for a whole call still scores well.
+        </>
+      ),
+    },
+  ]}
+/>

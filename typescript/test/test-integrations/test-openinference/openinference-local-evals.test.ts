@@ -19,6 +19,7 @@ import {
   ROUTE_TO_REST_ATTRIBUTE,
 } from "@/tracing/otel-routing";
 import { nextLlmSpan, nextToolSpan, updateCurrentSpan } from "@/tracing";
+import { Prompt } from "@/prompt";
 
 class StubMetric extends BaseMetric {
   constructor(private label: string) {
@@ -113,6 +114,40 @@ describe("OpenInference local component evals", () => {
     });
 
     expect(traceManager.getSpanByUuid("s4")?.metrics).toEqual([metric]);
+  });
+
+  it("flattens a prompt staged with nextLlmSpan onto OTLP-routed attrs", async () => {
+    const prompt = new Prompt({ alias: "Test prompt" });
+    prompt.hash = "abc123";
+    prompt.version = "00.00.01";
+    prompt.label = "production";
+
+    const span = oiSpan("s8", "LLM");
+    await nextLlmSpan({ prompt }, async () => {
+      processor.onStart(span, {} as any);
+    });
+
+    // Bare caller → OTLP, so the attrs are the only carrier.
+    expect(span.attributes[ROUTE_TO_REST_ATTRIBUTE]).toBeUndefined();
+    expect(span.attributes["confident.span.prompt_alias"]).toBe(
+      "Test prompt",
+    );
+    expect(span.attributes["confident.span.prompt_commit_hash"]).toBe("abc123");
+    expect(span.attributes["confident.span.prompt_version"]).toBe("00.00.01");
+    expect(span.attributes["confident.span.prompt_label"]).toBe("production");
+  });
+
+  it("applies a prompt staged with nextLlmSpan on the REST route", async () => {
+    endEvaluation = traceManager.beginEvaluation();
+    const prompt = new Prompt({ alias: "Test prompt" });
+    prompt.hash = "abc123";
+
+    await nextLlmSpan({ prompt }, async () => {
+      processor.onStart(oiSpan("s9", "LLM"), {} as any);
+    });
+
+    const llmSpan = traceManager.getSpanByUuid("s9") as any;
+    expect(llmSpan?.prompt?._alias).toBe("Test prompt");
   });
 
   it("applies metrics staged with nextToolSpan to a tool span", async () => {

@@ -1,8 +1,8 @@
 from typing import List
 import textwrap
 
-from deepeval.utils import serialize_to_json
 from deepeval.dataset import ConversationalGolden
+from deepeval.simulator.utils import serialize_turns_for_prompt
 from deepeval.test_case import Turn
 
 
@@ -16,17 +16,29 @@ class SimulationTemplate:
     """
 
     @staticmethod
+    def _persona_block(golden: ConversationalGolden, indent: int = 12) -> str:
+        """Render the golden's persona, aligned with the prompt's indentation.
+
+        The first line inherits its indentation from the template itself, so
+        only continuation lines are padded.
+        """
+        if golden.persona is None:
+            return ""
+        block = golden.persona.prompt_block()
+        return block.replace("\n", "\n" + " " * indent)
+
+    @staticmethod
     def simulate_first_user_turn(
         golden: ConversationalGolden, language: str
     ) -> str:
         prompt = textwrap.dedent(
             f"""Pretend you are a user of an LLM app. Your goal is to start a conversation in {language} based on a scenario 
-            and user profile. The scenario defines your context and motivation for interacting with the LLM, 
-            while the user profile provides additional personal details to make the conversation realistic and relevant.
+            and persona. The scenario defines your context and motivation for interacting with the LLM, 
+            while the persona describes who you are and how you speak.
 
             Guidelines:
             1. The opening message should clearly convey the user's intent or need within the scenario.
-            2. Keep the tone warm, conversational, and natural, as if it’s from a real person seeking assistance.
+            2. Match the persona's tone faithfully. If the user is frustrated, impatient, blunt, or impolite, reflect that naturally instead of making them warm or courteous.
             3. Avoid providing excessive details upfront; the goal is to initiate the conversation and build rapport, not to solve it in the first message.
             4. The message should be concise, ideally no more than 1-3 sentences.
 
@@ -35,7 +47,10 @@ class SimulationTemplate:
             IMPORTANT: The output must be formatted as a JSON object with a single key `simulated_input`, where the value is the generated opening message in {language}.
 
             Example Language: english
-            Example User Profile: "Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839. He suffers from chronic migraines."
+            Example Persona:
+            <persona>
+            Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839. He suffers from chronic migraines.
+            </persona>
             Example Scenario: "A sick person trying to get a diagnosis for persistent headaches and fever."
             Example JSON Output:
             {{
@@ -43,7 +58,7 @@ class SimulationTemplate:
             }}
 
             Language: {language}
-            User Profile: "{golden.user_description}"             
+            {SimulationTemplate._persona_block(golden)}
             Scenario: "{golden.scenario}"
             JSON Output:
         """
@@ -56,16 +71,14 @@ class SimulationTemplate:
         turns: List[Turn],
         language: str,
     ) -> str:
-        previous_conversation = serialize_to_json(
-            turns, indent=4, ensure_ascii=False
-        )
+        previous_conversation = serialize_turns_for_prompt(turns)
         prompt = textwrap.dedent(
             f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
-            based on the provided scenario, user profile, and the previous conversation.
+            based on the provided scenario, persona, and the previous conversation.
 
             Guidelines:
-            1. Use the scenario and user profile as the guiding context for the user's next input.
+            1. Use the scenario and persona as the guiding context for the user's next input.
             2. Ensure the next input feels natural, conversational, and relevant to the last assistant reply in the conversation.
             3. Keep the tone consistent with the previous user inputs.
             4. The generated user input should be concise, ideally no more than 1-2 sentences.
@@ -76,7 +89,10 @@ class SimulationTemplate:
             where the value is the generated user input in {language}.
 
             Example Language: english
-            Example User Profile: "Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839."
+            Example Persona:
+            <persona>
+            Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839.
+            </persona>
             Example Scenario: "A user seeking tips for securing a funding round."
             Example Previous Conversation:
             [
@@ -89,7 +105,7 @@ class SimulationTemplate:
             }}
 
             Language: {language}
-            User Profile: "{golden.user_description}"
+            {SimulationTemplate._persona_block(golden)}
             Scenario: "{golden.scenario}"
             Previous Conversation:
             {previous_conversation}

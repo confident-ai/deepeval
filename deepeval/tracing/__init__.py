@@ -17,7 +17,7 @@ from .context import (
 )
 from .trace_context import trace, LlmSpanContext, AgentSpanContext
 from .types import BaseSpan, Trace
-from .tracing import observe, trace_manager
+from .tracing import observe, trace_manager, flush_traces, a_flush_traces
 from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span
 
 __all__ = [
@@ -43,6 +43,8 @@ __all__ = [
     "observe",
     "trace",
     "trace_manager",
+    "flush_traces",
+    "a_flush_traces",
     "evaluate_thread",
     "evaluate_trace",
     "evaluate_span",

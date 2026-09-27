@@ -1,0 +1,150 @@
+---
+id: metrics-voice-reliability
+title: Voice Reliability
+sidebar_label: Voice Reliability
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+
+The voice reliability metric is the **operational summary** of a call: did the agent answer, and did its audio arrive intact? It combines [agent responsiveness](/docs/metrics-agent-responsiveness) and [audio integrity](/docs/metrics-audio-integrity) into a single score between 0 and 1.
+
+:::note
+Use this as the one number to gate a CI run on. It answers "did the call work?" rather than "was the call good?" — quality lives in [voice naturalness](/docs/metrics-voice-naturalness), [speech intelligibility](/docs/metrics-speech-intelligibility), and your usual multi-turn metrics.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import VoiceReliabilityMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user calls to cancel an appointment and reschedule it.",
+    expected_outcome="The agent cancels the old appointment and books a new one.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = VoiceReliabilityMetric(threshold=0.9)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `VoiceReliabilityMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.94
+print(metric.score_breakdown)
+```
+
+For `VoiceReliabilityMetric` the breakdown nests both halves, each with its own score, critical flag, and events, so a failure can be traced without re-running the individual metrics:
+
+```python
+{
+    "critical_failure": False,
+    "responsiveness": {
+        "score": 1.0,
+        "critical_failure": False,
+        "events": [],
+    },
+    "audio_integrity": {
+        "score": 0.88,
+        "critical_failure": False,
+        "events": [
+            {"type": "abrupt_cutoff", "turn": 3, "critical": False},
+        ],
+    },
+}
+```
+
+## How Is It Calculated?
+
+`VoiceReliabilityMetric` runs the responsiveness and audio-integrity checks and averages them evenly:
+
+<Equation formula="\text{Voice Reliability} = 0.5 \times \text{Responsiveness} + 0.5 \times \text{Audio Integrity}" />
+
+**A critical failure on either side forces the score to 0**, regardless of how well the other half did. Missing agent audio, an undecodable clip, a badly looping buffer, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
+
+The two halves are the same detectors used by `AgentResponsivenessMetric` and `AudioIntegrityMetric`, so their pages document what each event means and what it costs.
+
+:::tip
+Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics-voice-naturalness) or [`SpeechIntelligibilityMetric`](/docs/metrics-speech-intelligibility) — rather than instead of one. A score of 1 here means every reply arrived with usable audio — it says nothing about whether those replies were helpful, natural, or correct.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why is my score exactly 0 instead of somewhere in between?",
+      answer: (
+        <>
+          A critical failure was detected. Check <code>critical_failure</code>{" "}
+          on each half of the breakdown to see which side it came from, then
+          read that half's <code>events</code> list for the specific failure.
+        </>
+      ),
+    },
+    {
+      question: "Should I run this as well as the two metrics it combines?",
+      answer: (
+        <>
+          Usually not both. Gate on this one and read its nested breakdown when
+          it fails — the events it reports are identical to what the individual
+          metrics would have given you. Run them separately when you want to
+          threshold the two halves differently.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Both halves are deterministic detectors that run locally, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Can this metric be skipped for want of usable audio?",
+      answer: (
+        <>
+          No. It always returns a score — a conversation with no assistant turns
+          at all is a critical audio-integrity failure and scores 0, rather than
+          being skipped as unevaluable. Only{" "}
+          <a href="/docs/metrics-voice-naturalness">VoiceNaturalnessMetric</a>,{" "}
+          <a href="/docs/metrics-speech-intelligibility">
+            SpeechIntelligibilityMetric
+          </a>
+          , <a href="/docs/metrics-voice-consistency">VoiceConsistencyMetric</a>
+          , and{" "}
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          skip a test case, and only when there is nothing in it to measure.
+        </>
+      ),
+    },
+  ]}
+/>

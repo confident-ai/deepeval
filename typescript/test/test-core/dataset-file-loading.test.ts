@@ -237,7 +237,7 @@ describe("Dataset file loading", () => {
       "test-cases.csv",
       [
         "input,actual_output,expected_output,context,tools_called",
-        `"What is the capital of Germany?","Berlin.","Berlin","Geography;Europe","[{""name"": ""search""}]"`,
+        `"What is the capital of Germany?","Berlin.","Berlin","Geography|Europe","[{""name"": ""search""}]"`,
       ].join("\n"),
     );
 

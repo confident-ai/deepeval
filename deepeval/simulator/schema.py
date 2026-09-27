@@ -22,3 +22,15 @@ class EdgeChoice(BaseModel):
 
     index: Optional[int] = None
     reason: Optional[str] = None
+
+
+class InterruptDecision(BaseModel):
+    """LLM mid-speech decision for whether the simulated user should barge in.
+
+    When `should_interrupt` is True, `utterance` must be the barge-in line the
+    user will speak over the agent.
+    """
+
+    should_interrupt: bool
+    reason: str
+    utterance: Optional[str] = None

@@ -223,7 +223,7 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 - [ ] Committed updated `templates.json`
 - [ ] New Jinja variables match what the metric passes into `self._get_prompt(...)`
 - [ ] Fragment references use names that exist under `metric_templates/fragments/`
-- [ ] Tests pass: `pytest tests/test_templates/test_metric_templates.py`
+- [ ] Tests pass: `pytest tests/test_templates/test_metric_templates.py` (metrics + simulator sync)
 
 ## Related files
 

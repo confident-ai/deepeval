@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "In every assistant turn in `turns`, the MCP tools, resources and prompts called (`mcp_tools_called`, `mcp_resources_called`, `mcp_prompts_called`, or `tools_called`) are the right ones among those in `mcp_servers` for what the user asked, with no clearly better primitive missed and no unnecessary call.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Every MCP call in `turns` passes arguments that match that primitive's input schema in `mcp_servers` and carry the values the user asked for."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how well does the assistant use the MCP servers in `mcp_servers`, in both the primitives chosen and the arguments passed, to serve the user's requests?",
+    "levels": ["Wrong use", "Poor use", "Adequate use", "Correct use"]
+  }
+]

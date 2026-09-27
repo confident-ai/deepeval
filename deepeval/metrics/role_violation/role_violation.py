@@ -6,15 +6,25 @@ from deepeval.test_case import (
     SingleTurnParams,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.role_violation.schema import (
     RoleViolationVerdict,
     Verdicts,
@@ -38,6 +48,10 @@ class RoleViolationMetric(BaseMetric):
         threshold: Optional[float] = 0.5,
         role: str = None,  # Required parameter to specify the expected role
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -54,8 +68,16 @@ class RoleViolationMetric(BaseMetric):
 
         self.threshold = 0 if strict_mode else threshold
         self.role = role
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -70,19 +92,7 @@ class RoleViolationMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -96,6 +106,9 @@ class RoleViolationMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.role_violations: List[str] = self._detect_role_violations(
                     test_case.actual_output, multimodal=test_case.multimodal
                 )
@@ -124,25 +137,16 @@ class RoleViolationMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.role_violations: List[str] = (
                 await self._a_detect_role_violations(
                     test_case.actual_output, multimodal=test_case.multimodal
@@ -172,7 +176,7 @@ class RoleViolationMetric(BaseMetric):
 
         role_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 role_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -195,7 +199,7 @@ class RoleViolationMetric(BaseMetric):
 
         role_violations = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 role_violations.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -220,14 +224,13 @@ class RoleViolationMetric(BaseMetric):
             "generate_verdicts",
             role_violations=self.role_violations,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                RoleViolationVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=RoleViolationVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self) -> List[RoleViolationVerdict]:
@@ -238,14 +241,39 @@ class RoleViolationMetric(BaseMetric):
             "generate_verdicts",
             role_violations=self.role_violations,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                RoleViolationVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=RoleViolationVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.role_violations,
+            item_key="statement",
+            state={"role": self.role},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `input` and `actual_output`, with the assigned `role` written into
+        the questions; higher probabilities mean the role was kept. See
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions", role=self.role
+                )
+            ),
         )
 
     async def _a_detect_role_violations(
@@ -290,7 +318,7 @@ class RoleViolationMetric(BaseMetric):
 
         # If any verdict indicates a role violation, score is 0, otherwise 1
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 return 0.0  # Role violation detected - no adherence
         return 1.0  # No role violation - full adherence
 

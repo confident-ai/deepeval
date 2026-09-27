@@ -40,7 +40,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | Variable                     | Values                     | Effect                                                                                                                                                        |
 | ---------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CONFIDENT_API_KEY`          | `string` / unset           | Logs in to Confident AI. Enables tracing observability, and automatically uploads test results to the cloud when an evaluation completes.                     |
-| `CONFIDENT_REGION`           | `US` / `EU` / `AU` / unset | Confident AI data region. When unset, the region is inferred from your API key prefix.                                                                        |
+| `CONFIDENT_REGION`           | <Switch><Case id="python">`US` / `EU` / unset</Case><Case id="typescript">`US` / `EU` / `AU` / unset</Case></Switch> | Confident AI data region. When unset, the region is inferred from your API key prefix.                                                                        |
 | `CONFIDENT_BASE_URL`         | `string` / unset           | Base URL for the Confident AI API server (set only when using a custom or self-hosted endpoint). Takes precedence over `CONFIDENT_REGION`.                    |
 | `CONFIDENT_DISABLE_SSL`      | `1` / `0` / unset          | Disable TLS certificate verification for requests to the Confident AI API server. Only use with self-hosted endpoints that have self-signed certificates.     |
 | `CONFIDENT_OPEN_BROWSER`     | `1` / `0` / unset          | Open a browser automatically for Confident AI links and flows. Defaults to on; set `0` on CI and headless machines.                                           |
@@ -50,6 +50,11 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_DEFAULT_SAVE`      | `dotenv[:path]` / unset    | Default persistence target for <Term py="deepeval set-* --save" ts="npx deepeval set-* --save"/> when `--save` is omitted.                                     |
 | `DEEPEVAL_FILE_SYSTEM`       | `READ_ONLY` / unset        | Stop `deepeval` writing its own files: the keystore, dotenv persistence, the metric cache, the latest test run, and the results export.                       |
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
+| `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
+| `DEEPEVAL_MODE`              | `stable` / `experimental` / unset | Feature channel. `stable` (default) only runs finalised behaviour; `experimental` opts into the latest features, which may change or break between releases. Unrecognised values mean `stable`. See [DeepEval mode](#deepeval-mode). |
+| `DEEPEVAL_EVAL_MODE`         | `llm` / `hybrid` / `system_one` / unset | Who decides in LLM-as-a-judge metrics: the LLM end to end (`llm`, default), the LLM extracts and a System One model decides (`hybrid`), or a System One model runs the whole metric with no LLM at all (`system_one`). See [DeepEval eval mode](#deepeval-eval-mode). |
+| `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
+| `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
 | `IGNORE_DEEPEVAL_ERRORS`     | `1` / `0` / unset          | Continue a run when a metric errors, instead of failing the test case.                                                                                        |
 | `SKIP_DEEPEVAL_MISSING_PARAMS` | `1` / `0` / unset        | Skip a metric when the test case is missing a parameter it requires.                                                                                          |
@@ -75,6 +80,170 @@ Under `DEEPEVAL_FILE_SYSTEM=READ_ONLY`, `deepeval` still creates a per-run tempo
 </Case>
 
 </Switch>
+
+#### SQLite local store
+
+By default every finished run is written as JSON. Set `DEEPEVAL_LOCAL_STORE=sqlite` (or run <Term py="deepeval set-local-store sqlite --save=dotenv" ts="npx deepeval set-local-store sqlite --save=dotenv"/>) to keep a queryable history of runs in a single SQLite database instead. A full comparison of the two backends, where each file lands, and how to export the database to other platforms is [here](/docs/evaluation-local-backend-storage).
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+deepeval test run test_llm_app.py
+# Test run saved to .deepeval/deepeval.db (run id 3)
+```
+
+The database lives at `deepeval.db` inside `DEEPEVAL_RESULTS_FOLDER` (or `DisplayConfig(results_folder=...)`) when set, otherwise inside the `.deepeval` cache folder. No JSON files are written in this mode, and nothing is uploaded — it is purely local storage.
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_LOCAL_STORE=sqlite
+npx deepeval test run llm_app.test.ts
+# ✅ Test run saved to: .deepeval/deepeval.db (run id 3)
+```
+
+The database lives at `deepeval.db` inside `DEEPEVAL_RESULTS_FOLDER` when set, otherwise inside the `.deepeval` cache folder. The timestamped `test_run_*.json` export is skipped in this mode; `.deepeval/.latest_test_run.json` is still written because `npx deepeval view` uploads from it.
+
+:::caution[Node.js 24 or newer]
+The TypeScript store is built on the runtime's built-in `node:sqlite` module, which is only stable from Node 24. On an older Node, setting `DEEPEVAL_LOCAL_STORE=sqlite` is rejected with an error telling you the version you are on and to either upgrade or switch back to `json` — `deepeval` never silently falls back, so your results are not quietly written somewhere else.
+:::
+
+</Case>
+
+</Switch>
+
+Each run is broken out into five tables — `test_runs`, `test_cases`, `traces`, `spans`, `metric_data` — so you can query across runs with plain SQL, while the `test_runs` row keeps the complete serialized run in `payload_json` (and, with `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON=1`, so does every test case, trace and span row). The exact `CREATE TABLE` statements are listed [here](/docs/evaluation-local-backend-storage#schema); the schema is identical in both SDKs, so a Python and a TypeScript project can share one `deepeval.db`.
+
+For example, to track a metric's average across every run:
+
+```bash
+sqlite3 .deepeval/deepeval.db \
+  "SELECT r.id, r.identifier, m.name, round(avg(m.score), 3)
+   FROM metric_data m JOIN test_runs r ON r.id = m.test_run_id
+   GROUP BY r.id, m.name ORDER BY r.id"
+```
+
+Stored runs can be listed and opened in the [<Term py="deepeval inspect" ts="npx deepeval inspect"/>](/docs/command-line-interface#inspect) TUI with the `--list` and `--run-id <id>` flags, or loaded back in code:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.sqlite_store import list_test_runs, load_test_run, resolve_db_path
+
+db = resolve_db_path()                 # honours DEEPEVAL_RESULTS_FOLDER
+runs = list_test_runs(db, limit=10)    # newest first, summary columns only
+run_id, test_run = load_test_run(db)   # latest run as a `TestRun`
+```
+
+The store uses only Python's built-in `sqlite3` module, so there is nothing extra to install and it works the same on macOS, Linux, Windows, and CI.
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { listTestRuns, loadTestRunPayload, resolveDbPath } from "deepeval/sqlite-store";
+
+const db = resolveDbPath();                    // honours DEEPEVAL_RESULTS_FOLDER
+const runs = listTestRuns(db, 10);             // newest first, summary columns only
+const { runId, payload } = loadTestRunPayload(db); // latest run
+```
+
+The store uses only Node's built-in `node:sqlite` module, so there is no native addon to compile and it works the same on macOS, Linux, Windows, and CI.
+
+</Case>
+
+</Switch>
+
+Writes are single transactions with a 30-second busy timeout, and any storage failure (read-only filesystem, locked database) is reported as a warning rather than failing the evaluation. `DEEPEVAL_FILE_SYSTEM=READ_ONLY` disables it entirely, like every other local write.
+
+#### DeepEval mode
+
+`DEEPEVAL_MODE` picks the feature channel. Leave it unset (or set it to `stable`) to get only finalised behaviour. Set it to `experimental` (or run <Term py="deepeval set-mode experimental --save=dotenv" ts="npx deepeval set-mode experimental --save=dotenv"/>) to enrol in the newest deepeval features before they are finalised — anything gated on it may change or break between releases, so keep it off in CI unless you are deliberately testing those features.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_MODE=experimental
+deepeval test run test_llm_app.py
+```
+
+In code, gate on the channel with `is_experimental()`:
+
+```python
+from deepeval.config.mode import is_experimental
+
+if is_experimental():
+    ...
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_MODE=experimental
+npx deepeval test run llm_app.test.ts
+```
+
+In code, gate on the channel with `isExperimental()`:
+
+```typescript
+import { isExperimental } from "deepeval";
+
+if (isExperimental()) {
+  // ...
+}
+```
+
+</Case>
+
+</Switch>
+
+The value is case-insensitive. Anything other than `stable` or `experimental` falls back to `stable` with a one-time warning on stderr, so a typo can never silently enrol you. <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows the channel currently in effect and where it was set.
+
+#### DeepEval eval mode
+
+`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>, and is how [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
+
+- `llm` (the default): the LLM runs the whole metric.
+- `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that decision instead.
+- `system_one`: Jev runs the whole metric in one request over the raw test case and the reason is built from its answers. No LLM is used, so no LLM key is needed.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+deepeval test run test_llm_app.py
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+npx deepeval test run example.test.ts
+```
+
+</Case>
+
+</Switch>
+
+Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
 
 ## Logging
 
@@ -208,6 +377,14 @@ Explicit constructor arguments (e.g. <Term py="OpenAIModel(api_key=...)" ts="new
 
 You can also set `TEMPERATURE` to provide a default temperature for all model instances.
 
+| Variable                  | Values            | Effect                                                                                                                                                          |
+| ------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_MODEL_THINKING` | `1` / `0` / unset | Let models that expose a thinking parameter think before answering. Thinking is **disabled by default**, so a judge spends its whole token budget on the verdict. |
+
+Thinking is off unless you set `DEEPEVAL_MODEL_THINKING=1`, and models without a thinking parameter ignore it. Enabling it raises the default output budget to make room for the reasoning, since providers count thinking tokens against the same <Term py="max_tokens" ts="maxTokens"/> ceiling as the response — an explicit value still wins, and one too small to hold both raises an error rather than returning a truncated verdict.
+
+Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way.
+
 ### Variable Options
 
 When set to `1`, `USE_{PROVIDER}_MODEL` (e.g. `USE_OPENAI_MODEL`) tells `deepeval` which provider to use for LLM-as-a-judge metrics when no model is explicitly passed.
@@ -228,7 +405,7 @@ If `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are not set, the AWS SDK defa
 | `USE_AWS_BEDROCK_MODEL`             | `1` / `0` / unset | Prefer Bedrock as the default LLM provider (where applicable).   |
 | `AWS_ACCESS_KEY_ID`                 | `string` / unset  | Optional AWS access key ID for authentication.                   |
 | `AWS_SECRET_ACCESS_KEY`             | `string` / unset  | Optional AWS secret access key for authentication.               |
-| `AWS_BEDROCK_MODEL_NAME`            | `string` / unset  | Bedrock model ID (e.g. `anthropic.claude-3-opus-20240229-v1:0`). |
+| `AWS_BEDROCK_MODEL_NAME`            | `string` / unset  | Bedrock model ID (e.g. `anthropic.claude-sonnet-4-5-20250929-v1:0`). |
 | `AWS_BEDROCK_REGION`                | `string` / unset  | AWS region (e.g. `us-east-1`).                                   |
 | `AWS_BEDROCK_COST_PER_INPUT_TOKEN`  | `float` / unset   | Optional input-token cost used for cost reporting.               |
 | `AWS_BEDROCK_COST_PER_OUTPUT_TOKEN` | `float` / unset   | Optional output-token cost used for cost reporting.              |
@@ -425,6 +602,31 @@ Azure reuses `OPENAI_COST_PER_INPUT_TOKEN` and `OPENAI_COST_PER_OUTPUT_TOKEN` fo
 | `LOCAL_EMBEDDING_API_KEY`         | `string` / unset  | Optional API key for the local embeddings endpoint (if required).                     |
 | `LOCAL_EMBEDDING_MODEL_NAME`      | `string` / unset  | Optional default local embedding model name.                                          |
 | `LOCAL_EMBEDDING_BASE_URL`        | `string` / unset  | Base URL for the local embeddings endpoint.                                           |
+
+</details>
+
+<details>
+<summary>Speech models (TTS/STT)</summary>
+
+Text-to-speech and speech-to-text are two independent families used by [voice simulation](/docs/multi-turn-conversation-simulation). One `USE_*_TTS` flag and one `USE_*_STT` flag can be on at the same time, and each family falls back to OpenAI when no flag is set. Set them with [`deepeval set-tts`](/docs/command-line-interface#model-provider-configs) and `deepeval set-stt`.
+
+| Variable               | Values            | Effect                                                                                     |
+| ---------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
+| `USE_OPENAI_TTS`       | `1` / `0` / unset | Prefer OpenAI for text-to-speech.                                                          |
+| `USE_ELEVENLABS_TTS`   | `1` / `0` / unset | Prefer ElevenLabs for text-to-speech.                                                      |
+| `USE_CARTESIA_TTS`     | `1` / `0` / unset | Prefer Cartesia for text-to-speech.                                                        |
+| `USE_DEEPGRAM_TTS`     | `1` / `0` / unset | Prefer Deepgram for text-to-speech.                                                        |
+| `DEEPEVAL_TTS_MODEL`   | `string` / unset  | Model name for the selected TTS provider (defaults to that provider's own default model).  |
+| `USE_OPENAI_STT`       | `1` / `0` / unset | Prefer OpenAI for speech-to-text.                                                          |
+| `USE_ELEVENLABS_STT`   | `1` / `0` / unset | Prefer ElevenLabs for speech-to-text.                                                      |
+| `USE_CARTESIA_STT`     | `1` / `0` / unset | Prefer Cartesia for speech-to-text.                                                        |
+| `USE_DEEPGRAM_STT`     | `1` / `0` / unset | Prefer Deepgram for speech-to-text.                                                        |
+| `USE_ASSEMBLYAI_STT`   | `1` / `0` / unset | Prefer AssemblyAI for speech-to-text.                                                      |
+| `DEEPEVAL_STT_MODEL`   | `string` / unset  | Model name for the selected STT provider (defaults to that provider's own default model).  |
+| `ELEVENLABS_API_KEY`   | `string` / unset  | ElevenLabs API key.                                                                        |
+| `CARTESIA_API_KEY`     | `string` / unset  | Cartesia API key.                                                                          |
+| `DEEPGRAM_API_KEY`     | `string` / unset  | Deepgram API key.                                                                          |
+| `ASSEMBLYAI_API_KEY`   | `string` / unset  | AssemblyAI API key.                                                                        |
 
 </details>
 

@@ -184,7 +184,7 @@ November improved observability and evaluation workflows. Tracing expanded with 
 
 October made tracing and evaluation more robust with `gen_ai.*.messages` normalization, structured message types, JSON-safe metadata, and better agent output capture across OpenAI, PydanticAI, and CrewAI. Async reliability improved with per-task timeouts and cooperative timeout budgeting so stalled work fails fast while runs finalize. Metrics gained async-by-default Hallucination evaluation, new agent-focused metrics, and configurable logging.
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v3.6.9
 
@@ -327,7 +327,7 @@ October made tracing and evaluation more robust with `gen_ai.*.messages` normali
 
 September made agent evaluation and tracing easier to adopt with expanded quickstarts and guides across LangChain, LangGraph, CrewAI, PydanticAI, and OpenAI Agents. Tracing improved with better input/output capture, OpenTelemetry/OTLP export behavior, and new APIs like `update_current_span` and `update_current_trace()`. Evaluation added G-Eval templating updates, MCP and conversational/DAG capabilities, and better dataset round-tripping.
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v2.4.8
 
@@ -688,7 +688,7 @@ July improved tracing and evaluation across agent frameworks with major upgrades
 
 June made evaluations and tracing more robust across providers and async workloads with fixes to prevent crashes and broken serialization. Tracing matured with improved OpenAI/OTEL integrations and new hooks for OpenAI Agents and LlamaIndex via `trace_manager.configure`. Evaluation added native LiteLLM support, `MultimodalGEval`, arena-style `GEval`, and `jsonl` dataset saving.
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v3.1.5
 
@@ -781,7 +781,7 @@ June made evaluations and tracing more robust across providers and async workloa
 
 May made evaluations and tracing more robust and configurable. LLM wrappers gained configurable `temperature`, new providers including Amazon Bedrock, and PEP 561 support for static analysis. Tracing improved with cleaner defaults, richer metadata, optional sampling/masking, and better OpenTelemetry interoperability while respecting opt-out more consistently.
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v2.8.5
 
@@ -893,7 +893,7 @@ May made evaluations and tracing more robust and configurable. LLM wrappers gain
 
 April made evaluations more traceable and easier to configure. Native model support expanded with Gemini and Anthropic, plus improved Azure OpenAI and Ollama setup. New metadata fields (`token_cost`, `completion_time`, `additional_metadata`) and tracing upgrades made multi-turn test generation and debugging smoother, while robustness fixes reduced import failures and crashes.
 
-### Backward Incompatible Change
+### Breaking Change
 
 #### v2.7.6
 

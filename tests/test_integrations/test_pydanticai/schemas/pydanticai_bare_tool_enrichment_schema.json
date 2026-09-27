@@ -18,7 +18,17 @@
       "output": "The result for the key 'foobar' is: resolved-value-for-foobar.",
       "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "toolsCalled": [
+        {
+          "name": "lookup",
+          "type": "FUNCTION",
+          "output": "resolved-value-for-foobar",
+          "inputParameters": {
+            "key": "foobar"
+          }
+        }
+      ]
     }
   ],
   "llmSpans": [
@@ -87,7 +97,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -98,7 +110,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "lookup": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],
@@ -161,7 +178,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -172,7 +191,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "lookup": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

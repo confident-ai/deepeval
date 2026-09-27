@@ -3,26 +3,43 @@ import {
   LLMTestCase,
   SingleTurnParams,
   ToolCallParams,
+  ToolCallType,
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  formatDecisionReason,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   ToolSelectionScoreSchema,
   type ToolSelectionScore,
 } from "@/metrics/tool-correctness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ToolCorrectnessMetric";
 
 export type ToolCorrectnessTemplateOverride =
   MetricTemplateOverride<"ToolCorrectnessMetric">;
+
+const TOOL_SELECTION_LEVELS = [
+  "Misaligned",
+  "Poor selection",
+  "Mixed selection",
+  "Mostly appropriate",
+  "Fully appropriate",
+];
 
 /** Order-insensitive deep equality (matches Python `==` on dicts/values). */
 function deepEqual(a: unknown, b: unknown): boolean {
@@ -55,6 +72,10 @@ function toolCallEquals(a: ToolCall, b: ToolCall): boolean {
   );
 }
 
+function toolCallType(tool: ToolCall): ToolCallType {
+  return tool.type ?? ToolCallType.FUNCTION;
+}
+
 /** Dedup a list of names, preserving Python `set()`-style membership. */
 function uniqueMissing(expected: string[], called: string[]): string[] {
   const calledSet = new Set(called);
@@ -69,6 +90,10 @@ export interface ToolCorrectnessMetricOptions {
   /** Which `ToolCall` fields to compare (input parameters / output). */
   evaluationParams?: ToolCallParams[];
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -112,18 +137,14 @@ export class ToolCorrectnessMetric extends BaseMetric {
     this.evaluationParams = options.evaluationParams ?? [];
     this.shouldExactMatch = options.shouldExactMatch ?? false;
     this.shouldConsiderOrdering = options.shouldConsiderOrdering ?? false;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
 
       this.toolsCalled = testCase.toolsCalled ?? [];
       this.expectedTools = testCase.expectedTools ?? [];
@@ -131,7 +152,10 @@ export class ToolCorrectnessMetric extends BaseMetric {
       const toolCallingScore = this.calculateScore();
       const toolSelectionScore: ToolSelectionScore =
         this.availableTools && this.availableTools.length > 0
-          ? await this.getToolSelectionScore(testCase.input)
+          ? await this.getToolSelectionScore(
+              testCase.input,
+              testCase.multimodal,
+            )
           : {
               score: 1,
               reason:
@@ -162,13 +186,46 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   private async getToolSelectionScore(
     userInput: string,
+    multimodal: boolean,
   ): Promise<ToolSelectionScore> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneToolSelectionSpec(userInput, multimodal),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "tool selection", value),
+      };
+    }
     const prompt = this.getPrompt("get_tool_selection_score", {
       user_input: userInput,
       tools_called: printToolsCalled(this.toolsCalled),
       available_tools: printToolsCalled(this.availableTools ?? []),
     });
     return generateWithSchema(this, prompt, ToolSelectionScoreSchema);
+  }
+
+  private systemOneToolSelectionSpec(
+    userInput: string,
+    multimodal: boolean,
+  ): SystemOneScoreSpec | undefined {
+    if (multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(
+        "_experimental_system_one_tool_selection_score",
+      ),
+      levels: TOOL_SELECTION_LEVELS,
+      state: {
+        input: userInput,
+        tools_called: this.toolsCalled,
+        available_tools: this.availableTools ?? [],
+      },
+    };
+  }
+
+  systemOneEvalSpec(_testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    return undefined;
   }
 
   // --- scoring ---
@@ -199,6 +256,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       const called = this.toolsCalled[i];
       const expected = this.expectedTools[i];
       if (called.name !== expected.name) return 0;
+      if (toolCallType(called) !== toolCallType(expected)) return 0;
       if (
         this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS) &&
         !deepEqual(called.inputParameters, expected.inputParameters)
@@ -225,6 +283,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
         if (matchedCalled.has(j)) continue;
         const called = this.toolsCalled[j];
         if (expected.name !== called.name) continue;
+        if (toolCallType(expected) !== toolCallType(called)) continue;
         let matchScore = 1;
         if (this.evaluationParams.includes(ToolCallParams.INPUT_PARAMETERS)) {
           matchScore *= this.compareDicts(
@@ -266,7 +325,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
       for (let j = 1; j <= n; j++) {
         const e = expected[i - 1];
         const c = called[j - 1];
-        if (e.name !== c.name) {
+        if (e.name !== c.name || toolCallType(e) !== toolCallType(c)) {
           dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
           continue;
         }
@@ -343,15 +402,36 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   // --- deterministic tool-calling reason ---
 
+  private getTypeMismatches(): string[] {
+    const mismatches: string[] = [];
+    for (const expected of this.expectedTools) {
+      const called = this.toolsCalled.find(
+        (c) =>
+          c.name === expected.name &&
+          toolCallType(c) !== toolCallType(expected),
+      );
+      if (called) {
+        mismatches.push(
+          `${expected.name} (expected ${toolCallType(expected)}, called ${toolCallType(called)})`,
+        );
+      }
+    }
+    return mismatches;
+  }
+
   private generateReason(): string {
     const calledNames = this.toolsCalled.map((t) => t.name);
     const expectedNames = this.expectedTools.map((t) => t.name);
+    const typeMismatches = this.getTypeMismatches();
 
     if (this.shouldExactMatch) {
       const label = this.calculateExactMatchScore()
         ? "Exact match"
         : "Not an exact match";
-      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See details above.`;
+      const mismatchClause = typeMismatches.length
+        ? ` Tool type mismatches: ${JSON.stringify(typeMismatches)}.`
+        : "";
+      return `${label}: expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}.${mismatchClause} See details above.`;
     }
 
     if (this.shouldConsiderOrdering) {
@@ -375,6 +455,8 @@ export class ToolCorrectnessMetric extends BaseMetric {
         issues.push(`missing tools ${JSON.stringify(missing)}`);
       if (outOfOrder.length)
         issues.push(`out-of-order tools ${JSON.stringify(outOfOrder)}`);
+      if (typeMismatches.length)
+        issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
       return `Incorrect tool usage: ${issues.join(" and ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
     }
 
@@ -384,7 +466,12 @@ export class ToolCorrectnessMetric extends BaseMetric {
     const missing = this.expectedTools
       .filter((e) => !this.toolsCalled.some((c) => toolCallEquals(c, e)))
       .map((t) => t.name);
-    return `Incomplete tool usage: missing tools ${JSON.stringify(missing)}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
+    const issues: string[] = [];
+    if (missing.length || !typeMismatches.length)
+      issues.push(`missing tools ${JSON.stringify(missing)}`);
+    if (typeMismatches.length)
+      issues.push(`tool type mismatches ${JSON.stringify(typeMismatches)}`);
+    return `Incomplete tool usage: ${issues.join("; ")}; expected ${JSON.stringify(expectedNames)}, called ${JSON.stringify(calledNames)}. See more details above.`;
   }
 
   private constructFinalReason(

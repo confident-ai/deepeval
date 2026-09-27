@@ -17,7 +17,7 @@ def _expose_public_api() -> None:
     # Do not do this at module level or ruff will complain with E402
     global __version__, evaluate, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
-    global instrument
+    global instrument, flush_traces, a_flush_traces
 
     from ._version import __version__ as _version
     import deepeval.evaluate as _evaluate_module
@@ -31,6 +31,10 @@ def _expose_public_api() -> None:
         log_hyperparameters as _log_hparams,
     )
     from deepeval.utils import login as _login
+    from deepeval.tracing.tracing import (
+        flush_traces as _flush_traces,
+        a_flush_traces as _a_flush_traces,
+    )
     import deepeval.telemetry as _telemetry
 
     __version__ = _version
@@ -46,6 +50,8 @@ def _expose_public_api() -> None:
     on_test_run_end = _on_end
     log_hyperparameters = _log_hparams
     login = _login
+    flush_traces = _flush_traces
+    a_flush_traces = _a_flush_traces
     telemetry = _telemetry
 
     def instrument(*args, **kwargs):
@@ -94,6 +100,8 @@ __all__ = [
     "on_test_run_end",
     "compare",
     "instrument",
+    "flush_traces",
+    "a_flush_traces",
 ]
 
 

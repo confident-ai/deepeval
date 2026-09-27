@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "In `retrieval_context`, every document useful for arriving at `expected_output` for `input` is listed before every document that is not useful.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "The first document in `retrieval_context` is useful for arriving at `expected_output` for `input`."
+  },
+  {
+    "type": "score",
+    "question": "How well are the documents in `retrieval_context` ordered, with the ones useful for arriving at `expected_output` for `input` first?",
+    "levels": ["Useful documents are all at the end", "Useful documents are mixed with irrelevant ones", "Useful documents are mostly first", "Useful documents are all first"]
+  }
+]

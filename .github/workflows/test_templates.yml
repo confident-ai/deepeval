@@ -1,0 +1,55 @@
+name: Templates Sync
+
+# Guards that compiled `templates.json` bundles (Python + TypeScript) stay in
+# sync with per-feature `.txt` sources. The check spans both packages, so it
+# lives in its own workflow rather than a language-specific test workflow.
+
+on:
+  pull_request:
+    paths:
+      - 'deepeval/**/templates/**'
+      - 'deepeval/templates/**'
+      - 'typescript/src/templates/**'
+      - 'scripts/compile_metric_templates.py'
+      - 'tests/test_templates/**'
+      - '.github/workflows/test_templates.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'deepeval/**/templates/**'
+      - 'deepeval/templates/**'
+      - 'typescript/src/templates/**'
+      - 'scripts/compile_metric_templates.py'
+      - 'tests/test_templates/**'
+      - '.github/workflows/test_templates.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # The tests only use the standard library + the compile script (also
+      # stdlib-only), so no project install is needed — just pytest.
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Sync metrics templates
+        run: >
+          pytest -vv -rA
+          tests/test_templates/test_metric_templates.py::test_metrics_templates_json_is_up_to_date
+          tests/test_templates/test_metric_templates.py::test_metrics_templates_json_is_valid_and_nonempty
+
+      - name: Sync simulator templates
+        run: >
+          pytest -vv -rA
+          tests/test_templates/test_metric_templates.py::test_simulator_templates_json_is_up_to_date
+          tests/test_templates/test_metric_templates.py::test_simulator_interrupt_templates_present

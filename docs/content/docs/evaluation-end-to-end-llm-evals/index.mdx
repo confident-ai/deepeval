@@ -44,7 +44,6 @@ For **multi-turn** apps, you populate fields on a [`ConversationalTestCase`](/do
 
 - `scenario` — what the simulated user is trying to do.
 - <Term py="expected_outcome" ts="expectedOutcome"/> — what success looks like.
-- <Term py="user_description" ts="userDescription"/> — who the user is (persona, role, constraints).
 - `turns` — the sequence of `Turn` objects (each with a `role` and `content`) that make up the conversation.
 
 Notice what's _not_ there: there's no place to describe "the retriever's prompt", "the tool argument schema", or "the inner LLM call that produced this answer." If a metric needs to score one of those things in isolation, end-to-end isn't the right fit.

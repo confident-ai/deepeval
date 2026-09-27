@@ -1,0 +1,133 @@
+---
+title: Deepgram STT
+sidebar_label: Deepgram
+languages: [python]
+---
+
+In `deepeval`, you can use Deepgram to transcribe speech into text when running [voice simulations](/docs/conversation-simulator-voice-mode). Transcription is what turns your agent's spoken replies into the `Turn.content` your multi-turn metrics judge, so its accuracy directly bounds how faithfully those metrics see the conversation.
+
+:::info
+Deepgram is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `DEEPGRAM_API_KEY` in a cell:
+
+```bash
+%env DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+### Command Line
+
+To transcribe with Deepgram in every voice simulation, run:
+
+```bash
+deepeval set-stt deepgram --model=nova-3
+```
+
+`--model` is optional and defaults to Deepgram's own default model.
+
+:::info
+The command above sets Deepgram as the default speech-to-text provider, unless overridden in Python code. To use a different one, run `deepeval set-stt` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-stt
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass a `DeepgramSTTModel` to `VoiceConfig` to transcribe with Deepgram instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import DeepgramSTTModel
+from deepeval.voice import VoiceConfig
+
+stt_model = DeepgramSTTModel(
+    model="nova-3",
+    language="en",
+)
+voice_config = VoiceConfig(
+    stt_model=stt_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `DeepgramSTTModel`:
+
+- [Optional] `model`: A string specifying the name of the transcription model to use. Defaulted to `nova-3`.
+- [Optional] `api_key`: A string specifying your Deepgram API key. Defaults to `DEEPGRAM_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the Deepgram API through. Defaulted to `https://api.deepgram.com`.
+- [Optional] `language`: A string [BCP-47](https://en.wikipedia.org/wiki/IETF_language_tag) code (e.g. `"en"`) pinning the spoken language. Pass `"auto"` to have Deepgram detect it per request instead. Defaulted to `None`, which Deepgram reads as English.
+- [Optional] `smart_format`: A boolean asking Deepgram to punctuate, capitalize and format numbers in the transcript. Defaulted to `True`.
+- [Optional] `cost_per_minute`: A float overriding the per-minute price used for cost accounting. Defaults to the built-in price for the model.
+- [Optional] `transcription_kwargs`: A dictionary of additional query parameters forwarded to Deepgram's `/v1/listen` endpoint.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+
+:::tip
+Any Deepgram parameter `deepeval` has no field for — `keyterm`, `diarize`, `redact` — can be passed through `transcription_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select Deepgram as the transcription provider:
+
+```bash
+# .env.local
+DEEPGRAM_API_KEY=<your-deepgram-api-key>
+USE_DEEPGRAM_STT=1
+DEEPEVAL_STT_MODEL=nova-3
+```
+
+`deepeval set-stt deepgram --model nova-3` writes those same variables for you. `DEEPEVAL_STT_MODEL` is optional: leave it out and transcription runs on `nova-3` anyway, since that is Deepgram's default here.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_STT_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    stt_model="nova-3",
+    ...,
+)
+```
+
+With `USE_DEEPGRAM_STT` set, a bare model name is shorthand for `DeepgramSTTModel(model=...)`. Pass the model object itself to pin a language or turn off smart formatting.
+
+</Tab>
+</Tabs>
+
+### Available Deepgram Models
+
+- `nova-3` (default)
+- `nova-3-general`
+
+Any model Deepgram's `/v1/listen` endpoint accepts will work.

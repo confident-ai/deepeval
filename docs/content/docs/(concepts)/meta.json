@@ -4,6 +4,7 @@
     "(test-cases)",
     "evaluation-datasets",
     "evaluation-llm-tracing",
+    "evaluation-voice",
     "evaluation-prompts",
     "evaluation-mcp"
   ]

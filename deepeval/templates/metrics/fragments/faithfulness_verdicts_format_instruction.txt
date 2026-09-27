@@ -11,7 +11,7 @@ Expected JSON format:
 }},
 {{
 "reason": <explanation_for_uncertainty>,
-"verdict": "idk"
+"verdict": "borderline"
 }}
 ]  
 }}
