@@ -52,6 +52,12 @@ def _is_metric_successful(metric_data: MetricData) -> bool:
     return False
 
 
+def _capture_status(metric) -> Optional[str]:
+    # "live" once the metric recorded a judge call in this run, "replay" when
+    # its state was loaded from the cache.
+    return getattr(metric, "judge_capture_status", None)
+
+
 def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:
         return MetricData(
@@ -70,6 +76,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             verboseLogs=metric.verbose_logs,
             judgePrompts=metric.judge_prompts,
             judgeResponses=metric.judge_responses,
+            judgeExchanges=metric.judge_exchanges,
+            judgeCaptureStatus=_capture_status(metric),
         )
     else:
         return MetricData(
@@ -88,6 +96,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             verboseLogs=metric.verbose_logs,
             judgePrompts=metric.judge_prompts,
             judgeResponses=metric.judge_responses,
+            judgeExchanges=metric.judge_exchanges,
+            judgeCaptureStatus=_capture_status(metric),
         )
 
 
@@ -108,6 +118,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             verboseLogs=metric.verbose_logs,
             judgePrompts=metric.judge_prompts,
             judgeResponses=metric.judge_responses,
+            judgeExchanges=metric.judge_exchanges,
+            judgeCaptureStatus=_capture_status(metric),
         )
     else:
         return MetricData(
@@ -125,6 +137,8 @@ def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:
             verboseLogs=metric.verbose_logs,
             judgePrompts=metric.judge_prompts,
             judgeResponses=metric.judge_responses,
+            judgeExchanges=metric.judge_exchanges,
+            judgeCaptureStatus=_capture_status(metric),
         )
 
 

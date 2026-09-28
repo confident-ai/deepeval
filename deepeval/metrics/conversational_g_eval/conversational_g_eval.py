@@ -24,6 +24,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.judge_capture import capture_judge_exchanges
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -272,16 +273,17 @@ class ConversationalGEval(BaseConversationalMetric):
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
 
-            res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
+            with capture_judge_exchanges() as exchanges:
+                res, cost = await self.model.a_generate_raw_response(
+                    prompt, top_logprobs=self.top_logprobs
+                )
 
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
-            
+
             raw_content = res.choices[0].message.content
-            self._record_judge_call(prompt, raw_content)
-            
+            self._record_judge_call(prompt, raw_content, exchanges)
+
             data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]
@@ -332,15 +334,16 @@ class ConversationalGEval(BaseConversationalMetric):
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
 
-            res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
+            with capture_judge_exchanges() as exchanges:
+                res, cost = self.model.generate_raw_response(
+                    prompt, top_logprobs=self.top_logprobs
+                )
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
-            
+
             raw_content = res.choices[0].message.content
-            self._record_judge_call(prompt, raw_content)
-            
+            self._record_judge_call(prompt, raw_content, exchanges)
+
             data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]

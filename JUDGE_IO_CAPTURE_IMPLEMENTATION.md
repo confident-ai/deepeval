@@ -110,6 +110,105 @@ All modified files pass Python syntax validation. The implementation:
 - Works with both sync and async evaluation paths
 - Handles both native and non-native model paths
 
+## Replayability extension
+
+The first version made judge prompts *inspectable* but not *replayable*: for
+structured-output calls `judge_responses` held a Python rendering of the parsed
+object, GEval logprobs were dropped, no provider metadata was kept, and cache
+hits returned the earlier run's captures with nothing to say no judge was called.
+The extension closes those four gaps.
+
+### What is captured now
+
+- `judge_responses[i]` is the assistant message content taken from the
+  captured response body whenever the provider exchange was captured (OpenAI
+  models). For other models it falls back to `model_dump_json()` for pydantic
+  results, else `str()`.
+- `judge_exchanges[i]` (index-aligned with `judge_prompts`, `None` when the
+  model does not expose the raw response) holds:
+  `status` (`live`/`replay`), `provider`, `request_model`, `served_model`,
+  `request_id` (`x-request-id`), `response_id`, `system_fingerprint`,
+  `finish_reason`, `usage`, `response_content`, `logprobs`, `http_status`,
+  `captured_at`, `discarded_attempts` (attempts that reached the provider but
+  were not kept), and the response body in two forms:
+  - `raw_response_body`: the HTTP entity body (after any `Content-Encoding` is
+    undone) decoded to text with the response charset. This matches the pilot
+    ledger's `response_body`; it is text, not a byte-level record.
+  - `raw_response_body_base64` and `raw_response_body_sha256`: the entity
+    body's bytes and their SHA-256, for byte-level fidelity checks.
+- `judge_capture_status` on the metric and on `MetricData`: `live` when this
+  run made the judge calls, `replay` when the result came from the cache.
+
+All three are forwarded into `MetricData` as `judgeExchanges` and
+`judgeCaptureStatus`.
+
+### How
+
+- `deepeval/judge_capture.py` holds a context-var capture scope. Metrics open
+  it around each judge call; `OpenAIModel` sees the scope and goes through the
+  SDK's `with_raw_response` mode, recording the body *before* the SDK parses
+  it. Outside a scope (direct `model.generate()` calls) the model behaves
+  exactly as before.
+- Every metric class's public `measure()` / `a_measure()` is wrapped at class
+  creation to reset the capture lists when the outermost call starts. A second
+  `measure()` on the same instance, direct or through `evaluate()`, starts from
+  empty; `measure()` delegating to `a_measure()` keeps one run together.
+- `Cache.get_metric_data` returns cache hits marked `replay` (status on
+  `MetricData` and on every exchange, `evaluation_cost` 0); the async and
+  sync evaluation paths also load those replay-marked captures onto the metric.
+- Opt-in `DEEPEVAL_JUDGE_PROVENANCE=1` adds a `template_fingerprint` to the
+  cache key. It hashes:
+  - the deepeval version;
+  - the template files: the runtime bundle `deepeval/templates` (including
+    the compiled `templates.json`), the metric's package directory, and the
+    file defining a custom `evaluation_template`;
+  - the metric's configuration: every constructor argument stored on the
+    instance (for GEval: `criteria`, `rubric`, `top_logprobs`, `strict_mode`,
+    `evaluation_params`, the judge model's name, temperature and generation
+    kwargs, ...), with the selected `evaluation_template` identified by the
+    name and source of every class in its MRO. Two template classes in the
+    same file therefore fingerprint differently.
+
+  Values the metric derives during `measure()` are left out (GEval's generated
+  `evaluation_steps`, which the existing cache check already compares, and
+  TaskCompletion's inferred `task`; an explicitly given `task` is included),
+  so a fresh and a used instance agree. The fingerprint errs towards misses:
+  values it cannot represent contribute their type only.
+- Without the flag the rubric is not part of the cache key (upstream
+  behaviour): changing it returns the earlier result, now marked `replay`.
+
+### Recomputing a GEval score from the archive
+
+```python
+import json
+from deepeval.judge_capture import rebuild_chat_completion
+from deepeval.metrics.g_eval.utils import calculate_weighted_summed_score
+
+exchange = metric_data.judge_exchanges[-1]
+raw = json.loads(exchange["response_content"])["score"]
+weighted = calculate_weighted_summed_score(raw, rebuild_chat_completion(exchange))
+low, high = score_range
+assert metric_data.score == (weighted - low) / (high - low)
+```
+
+### Note on template mutation
+
+Prompts are rendered from the compiled `deepeval/templates/metrics/templates.json`
+(built by `scripts/compile_metric_templates.py`), not from the per-metric
+`templates/*.txt` sources. Editing a `.txt` file in an installed package does
+not change any prompt a live call sends. The resolver also caches the loaded
+bundle and compiled Jinja templates per process, so an edit to
+`templates.json` during a run takes effect only after
+`deepeval.templates.resolver.clear_metric_template_cache()`. A custom
+`evaluation_template` class is the cleaner way to vary a rubric.
+
+### Tests
+
+`tests/test_core/test_judge_capture.py` (no network; real `OpenAIModel` over
+an `httpx.MockTransport`). Includes end-to-end `evaluate()` runs showing a
+cache miss and a changed prompt after a rubric change, a `top_logprobs` change
+and a switch between two template classes, and repeated direct measurement.
+
 ## Files Modified
 
 1. `deepeval/metrics/base_metric.py` - Added fields and helper method

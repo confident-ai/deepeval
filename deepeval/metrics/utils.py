@@ -22,6 +22,7 @@ from deepeval.errors import (
 )
 from deepeval.utils import convert_to_multi_modal_array, serialize_to_json
 from deepeval.config.settings import get_settings
+from deepeval.judge_capture import capture_judge_exchanges
 from deepeval.models import (
     DeepEvalBaseLLM,
     OpenAIModel,
@@ -547,17 +548,20 @@ def generate_with_schema_and_extract(
     - if schema instance -> extract_schema
       else parse JSON -> extract_json
     """
-    if metric.using_native_model:
-        result, cost = metric.model.generate_with_schema(
-            prompt, schema=schema_cls
-        )
-        metric._accrue_cost(cost)
-        accrue_token_usage(metric, cost)
-    else:
-        result = metric.model.generate_with_schema(prompt, schema=schema_cls)
-    
-    metric._record_judge_call(prompt, result)
-    
+    with capture_judge_exchanges() as exchanges:
+        if metric.using_native_model:
+            result, cost = metric.model.generate_with_schema(
+                prompt, schema=schema_cls
+            )
+            metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
+        else:
+            result = metric.model.generate_with_schema(
+                prompt, schema=schema_cls
+            )
+
+    metric._record_judge_call(prompt, result, exchanges)
+
     if isinstance(result, schema_cls):
         return extract_schema(result)
     data = trimAndLoadJson(result, metric)
@@ -572,16 +576,17 @@ async def a_generate_with_schema_and_extract(
     extract_schema: Callable[[SchemaType], ReturnType],
     extract_json: Callable[[Dict[str, Any]], ReturnType],
 ) -> ReturnType:
-    if metric.using_native_model:
-        result, cost = await metric.model.a_generate_with_schema(
-            prompt, schema=schema_cls
-        )
-        metric._accrue_cost(cost)
-        accrue_token_usage(metric, cost)
-    else:
-        result = await metric.model.a_generate_with_schema(
-            prompt, schema=schema_cls
-        )
+    with capture_judge_exchanges() as exchanges:
+        if metric.using_native_model:
+            result, cost = await metric.model.a_generate_with_schema(
+                prompt, schema=schema_cls
+            )
+            metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
+        else:
+            result = await metric.model.a_generate_with_schema(
+                prompt, schema=schema_cls
+            )
 
     # Handle models that return (result, cost) tuple even when not native
     if isinstance(result, tuple) and len(result) == 2:
@@ -591,7 +596,7 @@ async def a_generate_with_schema_and_extract(
             accrue_token_usage(metric, cost)
         result = actual_result
 
-    metric._record_judge_call(prompt, result)
+    metric._record_judge_call(prompt, result, exchanges)
 
     if isinstance(result, schema_cls):
         return extract_schema(result)

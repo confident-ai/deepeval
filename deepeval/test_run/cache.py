@@ -17,6 +17,11 @@ from deepeval.utils import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
+from deepeval.judge_capture import (
+    mark_metric_data_replay,
+    provenance_mode_enabled,
+    template_fingerprint,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +58,9 @@ class MetricConfiguration(BaseModel):
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
     ] = None
+    # Set when DEEPEVAL_JUDGE_PROVENANCE is on: hash of the judge-prompt
+    # templates and deepeval version the cached result was produced with.
+    template_fingerprint: Optional[str] = None
 
 
 class CachedMetricData(BaseModel):
@@ -325,7 +333,13 @@ class Cache:
                     cached_metric_data.metric_configuration,
                 )
             ):
-                return cached_metric_data
+                # No judge is called on a hit: say so on the returned captures.
+                return CachedMetricData(
+                    metric_data=mark_metric_data_replay(
+                        cached_metric_data.metric_data
+                    ),
+                    metric_configuration=cached_metric_data.metric_configuration,
+                )
         return None
 
     @staticmethod
@@ -376,6 +390,13 @@ class Cache:
             if metric_value != cached_value:
                 return False
 
+        if provenance_mode_enabled():
+            # Entries written without a fingerprint never match.
+            if template_fingerprint(metric) != getattr(
+                metric_configuration, "template_fingerprint", None
+            ):
+                return False
+
         return True
 
     @staticmethod
@@ -400,5 +421,8 @@ class Cache:
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
             config_kwargs[field] = value
+
+        if provenance_mode_enabled():
+            config_kwargs["template_fingerprint"] = template_fingerprint(metric)
 
         return MetricConfiguration(**config_kwargs)

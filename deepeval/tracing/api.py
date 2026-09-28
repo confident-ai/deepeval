@@ -54,6 +54,16 @@ class MetricData(BaseModel):
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
     judge_prompts: Optional[List[str]] = Field(None, alias="judgePrompts")
     judge_responses: Optional[List[str]] = Field(None, alias="judgeResponses")
+    # One entry per judge call, index-aligned with judge_prompts; None where the
+    # model does not expose the provider's raw response.
+    judge_exchanges: Optional[List[Optional[Dict[str, Any]]]] = Field(
+        None, alias="judgeExchanges"
+    )
+    # "live" when this result came from judge calls made in this run,
+    # "replay" when it was served from the cache.
+    judge_capture_status: Optional[Literal["live", "replay"]] = Field(
+        None, alias="judgeCaptureStatus"
+    )
 
 
 class BaseApiSpan(BaseModel):

@@ -14,6 +14,12 @@ from deepeval.templates.resolver import (
     resolve_template,
 )
 from deepeval.templates.template_class import filter_template_kwargs
+from deepeval.judge_capture import (
+    JudgeExchange,
+    record_judge_call,
+    reset_judge_capture,
+    wrap_measure_entry_points,
+)
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
@@ -75,12 +81,15 @@ class BaseMetric(PromptMixin):
     using_native_model: Optional[bool] = None
     judge_prompts: Optional[List[str]] = None
     judge_responses: Optional[List[str]] = None
+    judge_exchanges: Optional[List[Optional[Dict[str, Any]]]] = None
+    judge_capture_status: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
 
         observe_methods(cls)
+        wrap_measure_entry_points(cls)
 
     @abstractmethod
     def measure(self, test_case: LLMTestCase, *args, **kwargs) -> float:
@@ -125,13 +134,16 @@ class BaseMetric(PromptMixin):
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
-    def _record_judge_call(self, prompt: Any, response: Any) -> None:
-        if self.judge_prompts is None:
-            self.judge_prompts = []
-        if self.judge_responses is None:
-            self.judge_responses = []
-        self.judge_prompts.append(str(prompt))
-        self.judge_responses.append(str(response))
+    def _record_judge_call(
+        self,
+        prompt: Any,
+        response: Any,
+        exchanges: Optional[List[JudgeExchange]] = None,
+    ) -> None:
+        record_judge_call(self, prompt, response, exchanges)
+
+    def _reset_judge_capture(self) -> None:
+        reset_judge_capture(self)
 
 
 class BaseConversationalMetric(PromptMixin):
@@ -156,12 +168,15 @@ class BaseConversationalMetric(PromptMixin):
     using_native_model: Optional[bool] = None
     judge_prompts: Optional[List[str]] = None
     judge_responses: Optional[List[str]] = None
+    judge_exchanges: Optional[List[Optional[Dict[str, Any]]]] = None
+    judge_capture_status: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
 
         observe_methods(cls)
+        wrap_measure_entry_points(cls)
 
     @abstractmethod
     def measure(
@@ -210,13 +225,16 @@ class BaseConversationalMetric(PromptMixin):
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
-    def _record_judge_call(self, prompt: Any, response: Any) -> None:
-        if self.judge_prompts is None:
-            self.judge_prompts = []
-        if self.judge_responses is None:
-            self.judge_responses = []
-        self.judge_prompts.append(str(prompt))
-        self.judge_responses.append(str(response))
+    def _record_judge_call(
+        self,
+        prompt: Any,
+        response: Any,
+        exchanges: Optional[List[JudgeExchange]] = None,
+    ) -> None:
+        record_judge_call(self, prompt, response, exchanges)
+
+    def _reset_judge_capture(self) -> None:
+        reset_judge_capture(self)
 
 
 class BaseArenaMetric(PromptMixin):
@@ -234,12 +252,15 @@ class BaseArenaMetric(PromptMixin):
     using_native_model: Optional[bool] = None
     judge_prompts: Optional[List[str]] = None
     judge_responses: Optional[List[str]] = None
+    judge_exchanges: Optional[List[Optional[Dict[str, Any]]]] = None
+    judge_capture_status: Optional[str] = None
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         from deepeval.tracing.internal import observe_methods
 
         observe_methods(cls)
+        wrap_measure_entry_points(cls)
 
     @abstractmethod
     def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
@@ -276,10 +297,13 @@ class BaseArenaMetric(PromptMixin):
         if output_tokens is not None:
             self.output_tokens = (self.output_tokens or 0) + output_tokens
 
-    def _record_judge_call(self, prompt: Any, response: Any) -> None:
-        if self.judge_prompts is None:
-            self.judge_prompts = []
-        if self.judge_responses is None:
-            self.judge_responses = []
-        self.judge_prompts.append(str(prompt))
-        self.judge_responses.append(str(response))
+    def _record_judge_call(
+        self,
+        prompt: Any,
+        response: Any,
+        exchanges: Optional[List[JudgeExchange]] = None,
+    ) -> None:
+        record_judge_call(self, prompt, response, exchanges)
+
+    def _reset_judge_capture(self) -> None:
+        reset_judge_capture(self)

@@ -15,6 +15,10 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.judge_capture import (
+    judge_capture_active,
+    record_openai_exchange,
+)
 from deepeval.models.utils import (
     parse_model_name,
     require_costs,
@@ -162,7 +166,9 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         if schema:
             if self.supports_structured_outputs() is True:
-                completion = client.beta.chat.completions.parse(
+                completion = self._raw_call(
+                    client.beta.chat.completions,
+                    "parse",
                     model=self.name,
                     messages=messages,
                     response_format=schema,
@@ -179,7 +185,9 @@ class OpenAIModel(DeepEvalBaseLLM):
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
-                completion = client.beta.chat.completions.parse(
+                completion = self._raw_call(
+                    client.beta.chat.completions,
+                    "parse",
                     model=self.name,
                     messages=messages,
                     response_format={"type": "json_object"},
@@ -196,7 +204,9 @@ class OpenAIModel(DeepEvalBaseLLM):
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
-        completion = client.chat.completions.create(
+        completion = self._raw_call(
+            client.chat.completions,
+            "create",
             model=self.name,
             messages=messages,
             temperature=self.temperature,
@@ -229,7 +239,9 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         if schema:
             if self.supports_structured_outputs() is True:
-                completion = await client.beta.chat.completions.parse(
+                completion = await self._a_raw_call(
+                    client.beta.chat.completions,
+                    "parse",
                     model=self.name,
                     messages=messages,
                     response_format=schema,
@@ -246,7 +258,9 @@ class OpenAIModel(DeepEvalBaseLLM):
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
             if self.supports_json_mode() is True:
-                completion = await client.beta.chat.completions.parse(
+                completion = await self._a_raw_call(
+                    client.beta.chat.completions,
+                    "parse",
                     model=self.name,
                     messages=messages,
                     response_format={"type": "json_object"},
@@ -263,7 +277,9 @@ class OpenAIModel(DeepEvalBaseLLM):
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
 
-        completion = await client.chat.completions.create(
+        completion = await self._a_raw_call(
+            client.chat.completions,
+            "create",
             model=self.name,
             messages=messages,
             temperature=self.temperature,
@@ -283,6 +299,23 @@ class OpenAIModel(DeepEvalBaseLLM):
     ############################
     # Other generate functions #
     ############################
+
+    def _raw_call(self, resource, method: str, **kwargs):
+        # Inside a judge-capture scope, go through the SDK's raw-response mode
+        # so the exact body is recorded before the SDK parses it (structured
+        # outputs otherwise lose the wire text). Outside one, call as usual.
+        if not judge_capture_active():
+            return getattr(resource, method)(**kwargs)
+        raw = getattr(resource.with_raw_response, method)(**kwargs)
+        record_openai_exchange(raw, self.name)
+        return raw.parse()
+
+    async def _a_raw_call(self, resource, method: str, **kwargs):
+        if not judge_capture_active():
+            return await getattr(resource, method)(**kwargs)
+        raw = await getattr(resource.with_raw_response, method)(**kwargs)
+        record_openai_exchange(raw, self.name)
+        return raw.parse()
 
     def _cap_top_logprobs(self, top_logprobs: int) -> int:
         max_log_probs = self.model_data.max_log_probs
@@ -315,7 +348,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
         messages = [{"role": "user", "content": content}]
-        completion = client.chat.completions.create(
+        completion = self._raw_call(
+            client.chat.completions,
+            "create",
             model=self.name,
             messages=messages,
             temperature=self.temperature,
@@ -354,7 +389,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         else:
             content = [{"type": "text", "text": prompt}]
         messages = [{"role": "user", "content": content}]
-        completion = await client.chat.completions.create(
+        completion = await self._a_raw_call(
+            client.chat.completions,
+            "create",
             model=self.name,
             messages=messages,
             temperature=self.temperature,

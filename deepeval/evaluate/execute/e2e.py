@@ -66,6 +66,7 @@ from deepeval.evaluate.utils import (
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
+from deepeval.judge_capture import load_replayed_capture
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +200,7 @@ def execute_test_cases(
                                 )
                                 if cached_metric_data:
                                     metric_data = cached_metric_data.metric_data
+                                    load_replayed_capture(metric, metric_data)
 
                             if metric_data is None:
                                 res = _execute_metric(

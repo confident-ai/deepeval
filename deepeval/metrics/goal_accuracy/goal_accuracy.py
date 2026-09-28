@@ -1,6 +1,7 @@
 from typing import Optional, List, Union, Type
 import asyncio
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.judge_capture import capture_judge_exchanges
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     get_unit_interactions,
@@ -275,16 +276,15 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             plan_evalautions=plan_evalautions,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt)
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            self._record_judge_call(prompt, res)
-            return res
-        else:
-            res = self.model.generate(prompt)
-            self._record_judge_call(prompt, res)
-            return res
+        with capture_judge_exchanges() as exchanges:
+            if self.using_native_model:
+                res, cost = self.model.generate(prompt)
+                self._accrue_cost(cost)
+                accrue_token_usage(self, cost)
+            else:
+                res = self.model.generate(prompt)
+        self._record_judge_call(prompt, res, exchanges)
+        return res
 
     async def _a_generate_reason(
         self,
@@ -311,16 +311,15 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             plan_evalautions=plan_evalautions,
             multimodal=multimodal,
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            self._record_judge_call(prompt, res)
-            return res
-        else:
-            res = await self.model.a_generate(prompt)
-            self._record_judge_call(prompt, res)
-            return res
+        with capture_judge_exchanges() as exchanges:
+            if self.using_native_model:
+                res, cost = await self.model.a_generate(prompt)
+                self._accrue_cost(cost)
+                accrue_token_usage(self, cost)
+            else:
+                res = await self.model.a_generate(prompt)
+        self._record_judge_call(prompt, res, exchanges)
+        return res
 
     def _get_goal_accuracy_score(
         self, user_goal, steps_taken, multimodal: bool
