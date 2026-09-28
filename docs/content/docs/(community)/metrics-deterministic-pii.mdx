@@ -1,0 +1,147 @@
+---
+id: metrics-deterministic-pii
+title: Deterministic PII
+sidebar_label: Deterministic PII
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} safety={true} />
+
+The Deterministic PII metric measures whether your LLM application's `actual_output` contains personally identifiable information (PII), using regular expressions instead of an LLM judge. Use it as a fail-closed CI gate that gives the same result on every run.
+
+:::note
+The `DeterministicPIIMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost. For context-aware detection of PII that has no fixed format (names, addresses, medical details), use the LLM-judged [PII Leakage](/docs/metrics-pii-leakage) metric alongside it.
+:::
+
+## Required Arguments
+
+To use the `DeterministicPIIMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import DeterministicPIIMetric
+from deepeval.test_case import LLMTestCase
+
+metric = DeterministicPIIMetric(
+    entities=["email", "phone", "ssn", "credit_card"],
+    custom_patterns={"mrn": r"\bMRN-\d{6}\b"},
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="What is the status of my claim?",
+    actual_output="Your claim for MRN-004521 was approved.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SIX** optional parameters when creating a `DeterministicPIIMetric`:
+
+- [Optional] `entities`: a list of built-in entity types to check. Defaulted to all built-in entities: `email`, `phone`, `ssn`, `credit_card`, and `ip_address`.
+- [Optional] `custom_patterns`: a dictionary mapping an entity name to a regular expression, for PII formats specific to your domain. Names cannot collide with the selected built-in entities.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing which entity types were detected and how many times. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+At least one entity or custom pattern must be checked.
+
+### Built-in Entities
+
+| Entity | Detects |
+| --- | --- |
+| `email` | Email addresses |
+| `phone` | North American phone numbers, e.g. `(415) 555-0132` or `+1 415.555.0132` |
+| `ssn` | US Social Security numbers in `123-45-6789` form, excluding invalid ranges |
+| `credit_card` | 13 to 19 digit card numbers that pass the Luhn checksum |
+| `ip_address` | IPv4 addresses with valid octets |
+
+### As a Standalone
+
+You can also run the `DeterministicPIIMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `DeterministicPIIMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Deterministic PII Score} =
+ \begin{cases}
+ 1 & \text{if no PII is detected}, \\
+ 0 & \text{otherwise}
+ \end{cases}"
+/>
+
+Each checked entity's regular expression is run over the `actual_output`. Credit card matches must also pass the Luhn checksum to count. Any detection fails the test case, so a single leak is never averaged away.
+
+The reason and verbose logs report entity types and counts only (for example, `ssn (1)`), never the matched values, so your evaluation reports don't leak the PII a second time.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from the PII Leakage metric?",
+      answer: (
+        <>
+          <code>PIILeakageMetric</code> uses an LLM judge, so it can catch PII
+          without a fixed format, such as names or home addresses, but it costs
+          tokens and can vary between runs.{" "}
+          <code>DeterministicPIIMetric</code> only catches formatted PII, but
+          it is free, instant, and gives the same result every run. Many
+          teams run both.
+        </>
+      ),
+    },
+    {
+      question: "Does the Deterministic PII metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It runs regular expressions locally — no model, no API key, zero
+          token cost.
+        </>
+      ),
+    },
+    {
+      question: "Can it produce false positives?",
+      answer: (
+        <>
+          Yes, any pattern-based detector can. For example, a version string
+          that looks exactly like an IPv4 address will be flagged. Narrow the
+          check with <code>entities</code>, or replace a built-in with a
+          stricter pattern of your own through <code>custom_patterns</code>{" "}
+          under a different name.
+        </>
+      ),
+    },
+    {
+      question: "How do I detect PII formats that are not built in?",
+      answer: (
+        <>
+          Pass them through <code>custom_patterns</code>, for example{" "}
+          <code>{`{"mrn": r"\\bMRN-\\d{6}\\b"}`}</code> for medical record
+          numbers or a pattern for your national ID format.
+        </>
+      ),
+    },
+  ]}
+/>

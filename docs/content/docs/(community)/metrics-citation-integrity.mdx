@@ -1,0 +1,150 @@
+---
+id: metrics-citation-integrity
+title: Citation Integrity
+sidebar_label: Citation Integrity
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={true} />
+
+The Citation Integrity metric measures whether every sentence in your RAG application's `actual_output` carries a citation, and whether every citation points to a passage that actually exists in the `retrieval_context`. Use it as a deterministic CI gate against uncited claims and invented sources.
+
+:::note
+The `CitationIntegrityMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost. It checks citation _structure_ only. To check whether each cited passage actually _supports_ its claim, use the LLM-judged [Citation Faithfulness](/docs/metrics-citation-faithfulness) metric alongside it.
+:::
+
+## Required Arguments
+
+To use the `CitationIntegrityMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import CitationIntegrityMetric
+from deepeval.test_case import LLMTestCase, RetrievedContextData
+
+metric = CitationIntegrityMetric(threshold=1.0, verbose_mode=True)
+
+test_case = LLMTestCase(
+    input="Tell me about the Eiffel Tower.",
+    actual_output=(
+        "The tower is 330 metres tall [1]. "
+        "It was completed in 1889 [history]."
+    ),
+    retrieval_context=[
+        "The Eiffel Tower is 330 metres tall.",
+        RetrievedContextData(
+            context="The Eiffel Tower was completed in 1889.",
+            source="history",
+        ),
+    ],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `CitationIntegrityMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0` (every sentence must be cited).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing broken citations or how many sentences are uncited. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric, including the uncited sentences, to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### Citation Format
+
+A citation is a `[...]` marker holding one or more comma-separated references, such as `[1]`, `[1, 3]`, or `[history]`:
+
+- `[N]` refers to the N-th passage in `retrieval_context`, counting from `1`.
+- Any other reference must exactly match the `source` of a `RetrievedContextData` passage.
+- Markdown links such as `[docs](https://example.com)` are not treated as citations.
+- A citation placed after the full stop, as in `The tower is tall. [1]`, is attached to the sentence before it.
+
+### As a Standalone
+
+You can also run the `CitationIntegrityMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `CitationIntegrityMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Citation Integrity Score} =
+ \begin{cases}
+ 0 & \text{if any citation is broken}, \\
+ \frac{\text{Number of Cited Sentences}}{\text{Total Number of Sentences}} & \text{otherwise}
+ \end{cases}"
+/>
+
+The `actual_output` is split into sentences. A reference is **broken** when it matches no passage, for example `[7]` when only three passages were retrieved, or a source name that does not exist. A sentence is **cited** when it carries at least one citation and all of its references resolve.
+
+Any broken citation sets the score to `0`, because pointing to a source that was never retrieved is a fabrication, not a coverage gap. Otherwise, sentences without citations lower the score proportionally.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from the Citation Faithfulness metric?",
+      answer: (
+        <>
+          <code>CitationFaithfulnessMetric</code> uses an LLM judge to check
+          that each cited passage actually supports its claim.{" "}
+          <code>CitationIntegrityMetric</code> only checks that citations exist
+          and point to real passages, but it is free, instant, and gives the
+          same result every run. Run it first as a cheap gate, then use
+          Citation Faithfulness for semantic support.
+        </>
+      ),
+    },
+    {
+      question: "Does the Citation Integrity metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It parses citation markers and splits sentences locally — no
+          model, no API key, zero token cost.
+        </>
+      ),
+    },
+    {
+      question: "My answer has a greeting or closing line without a citation. What should I do?",
+      answer: (
+        <>
+          Every sentence counts toward the score, including lines like{" "}
+          <code>"Hope this helps!"</code>. Lower the <code>threshold</code>{" "}
+          (for example to <code>0.8</code>) to allow a small share of
+          uncited sentences, while broken citations still always fail.
+        </>
+      ),
+    },
+    {
+      question: "Why did a bracketed note fail as a broken citation?",
+      answer: (
+        <>
+          Any <code>[...]</code> marker that is not a markdown link is read as
+          a citation, so a note like <code>[sic]</code> is treated as a
+          reference to a source named <code>sic</code>. Set{" "}
+          <code>verbose_mode=True</code> to see which references were broken.
+        </>
+      ),
+    },
+  ]}
+/>
