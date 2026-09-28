@@ -1,0 +1,5 @@
+pytest>=9.0.2
+python-dotenv>=1.2.1
+openai>=2.15.0
+e2b-code-interpreter>=2.4.1
+deepeval>=3.7.9
