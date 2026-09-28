@@ -2,6 +2,7 @@
 
 import uuid as _uuid
 import time as _time
+import pytest
 import deepeval.models.llms.openai_model as openai_mod
 
 from types import SimpleNamespace
@@ -852,6 +853,27 @@ def test_gpt55_snapshot_model_data_matches_alias():
     snapshot = OPENAI_MODELS_DATA.get("gpt-5.5-2026-04-23")
 
     assert snapshot == alias
+
+
+@pytest.mark.parametrize(
+    "name, input_price, output_price",
+    [
+        ("gpt-6-sol", 2.00 / 1e6, 10.00 / 1e6),
+        ("gpt-6-luna", 0.10 / 1e6, 0.50 / 1e6),
+        ("gpt-6-astra", 10.00 / 1e6, 50.00 / 1e6),
+    ],
+)
+def test_gpt6_model_data_is_registered(name, input_price, output_price):
+    # Unregistered names fall back to default data: no structured outputs,
+    # and temperature=0 is sent, which GPT-6 rejects unless effort is "none".
+    model_data = OPENAI_MODELS_DATA.get(name)
+
+    assert model_data.supports_multimodal is True
+    assert model_data.supports_structured_outputs is True
+    assert model_data.supports_json is True
+    assert model_data.supports_temperature is False
+    assert model_data.input_price == input_price
+    assert model_data.output_price == output_price
 
 
 ##############################

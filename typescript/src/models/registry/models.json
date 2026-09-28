@@ -391,6 +391,30 @@
       "inputPrice": 5e-06,
       "outputPrice": 3e-05,
       "supportsTemperature": false
+    },
+    "gpt-6-sol": {
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
+    "gpt-6-luna": {
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.0000000000000001e-07,
+      "outputPrice": 5e-07,
+      "supportsTemperature": false
+    },
+    "gpt-6-astra": {
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 5e-05,
+      "supportsTemperature": false
     }
   },
   "anthropic": {

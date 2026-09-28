@@ -459,6 +459,30 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=5.00 / 1e6,
             output_price=30.00 / 1e6,
         ),
+        "gpt-6-sol": make_model_data(
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-6-luna": make_model_data(
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=0.10 / 1e6,
+            output_price=0.50 / 1e6,
+        ),
+        "gpt-6-astra": make_model_data(
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=10.00 / 1e6,
+            output_price=50.00 / 1e6,
+        ),
     }
 )
 
