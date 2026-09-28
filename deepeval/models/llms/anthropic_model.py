@@ -29,9 +29,12 @@ retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 
 # Anthropic's `max_tokens` caps thinking *plus* response text, and its minimum
 # thinking budget is 1024, so a thinking request needs headroom for both.
+# 8192 is a ceiling, not a spend — small verdicts cost the same as before.
+# Models that always think (e.g. claude-fable-5) need this headroom even when
+# DEEPEVAL_MODEL_THINKING is unset.
 MIN_THINKING_BUDGET_TOKENS = 1024
-DEFAULT_MAX_TOKENS = 1024
-DEFAULT_THINKING_MAX_TOKENS = 8192
+DEFAULT_MAX_TOKENS = 8192
+DEFAULT_THINKING_MAX_TOKENS = 16384
 
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
@@ -195,6 +198,13 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = chat_model.messages.create(**create_kwargs)
+        if message.stop_reason == "max_tokens" and schema is not None:
+            raise DeepEvalError(
+                f"Anthropic returned stop_reason='max_tokens' — the verdict "
+                f"JSON was cut off after {max_tokens} tokens and cannot be "
+                "parsed. Raise the budget by passing "
+                "generation_kwargs={'max_tokens': <value>} to AnthropicModel."
+            )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
@@ -241,6 +251,13 @@ class AnthropicModel(DeepEvalBaseLLM):
         ):
             create_kwargs["temperature"] = self.temperature
         message = await chat_model.messages.create(**create_kwargs)
+        if message.stop_reason == "max_tokens" and schema is not None:
+            raise DeepEvalError(
+                f"Anthropic returned stop_reason='max_tokens' — the verdict "
+                f"JSON was cut off after {max_tokens} tokens and cannot be "
+                "parsed. Raise the budget by passing "
+                "generation_kwargs={'max_tokens': <value>} to AnthropicModel."
+            )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
