@@ -256,6 +256,13 @@ def evaluate(
         set_test_run_official(official)
         start_time = time.perf_counter()
 
+        global_test_run_manager.save_to_disk = cache_config.write_cache
+        test_run = global_test_run_manager.get_test_run(identifier=identifier)
+        if hyperparameters is not None or test_run.hyperparameters is None:
+            test_run.hyperparameters = process_hyperparameters(hyperparameters)
+            test_run.prompts = process_prompts(hyperparameters)
+            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+
         if display_config.show_indicator:
             console = Console()
             for metric in metrics or []:
@@ -324,11 +331,9 @@ def evaluate(
                         f"Invalid file type: {display_config.file_type}"
                     )
 
+        # The executor can reload and merge the disk-backed test run while it
+        # evaluates cases, so use the latest instance at this merge point.
         test_run = global_test_run_manager.get_test_run()
-        if hyperparameters is not None or test_run.hyperparameters is None:
-            test_run.hyperparameters = process_hyperparameters(hyperparameters)
-            test_run.prompts = process_prompts(hyperparameters)
-
         global_test_run_manager.configure_local_store(
             results_folder=display_config.results_folder,
             results_subfolder=display_config.results_subfolder,
