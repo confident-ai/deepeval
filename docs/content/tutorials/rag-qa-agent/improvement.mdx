@@ -73,7 +73,7 @@ In the previous stages, we have evaluated our RAG agent separately for retriever
 We will iterate on different retriever hyperparameters like chunk size, embedding model, and vector store. Here's how we can do that:
 
 ```python
-from deepeval.dataset import EvaluatinDataset
+from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import (
     ContextualRelevancyMetric,
@@ -222,7 +222,7 @@ Query:
 This is a more elaborate and clear prompt template that was updated by taking the first prompt template into consideration. Now let's run iterations on our generator with the new prompt template.
 
 ```python
-from deepeval.dataset import EvaluatinDataset
+from deepeval.dataset import EvaluationDataset
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import GEval
 from langchain.llms import Ollama, OpenAI, HuggingFaceHub
