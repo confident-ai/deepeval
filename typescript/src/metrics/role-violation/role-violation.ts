@@ -147,6 +147,7 @@ export class RoleViolationMetric extends BaseMetric {
       llm: async () => {
         const prompt = this.getPrompt("generate_verdicts", {
           role_violations: this.roleViolations,
+          expected_role: this.role,
         });
         const { verdicts } = await generateWithSchema(
           this,

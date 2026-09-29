@@ -39,11 +39,7 @@ class RequiredDisclosureClassifier(Classifier):
         self.disclosures = disclosures
         super().__init__(
             name="required_disclosure",
-            labels=(
-                labels
-                if labels is not None
-                else _default_labels(disclosures=disclosures)
-            ),
+            labels=_default_labels(disclosures=disclosures),
             model=model,
             system_one_model=system_one_model,
             eval_mode=eval_mode,

@@ -142,6 +142,7 @@ export class NonAdviceMetric extends BaseMetric {
       llm: async () => {
         const prompt = this.getPrompt("generate_verdicts", {
           advices: this.advices,
+          advice_types_str: this.adviceTypes.join(", "),
         });
         const { verdicts } = await generateWithSchema(
           this,
