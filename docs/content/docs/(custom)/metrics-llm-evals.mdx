@@ -141,7 +141,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). Include only the parameters that are relevant for evaluation.
+- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). Include only the parameters that are relevant for evaluation. For single-turn G-Eval, omit it to [evaluate the trajectory](#evaluating-the-trajectory) instead.
 - [Optional] <Term py="evaluation_steps" ts="evaluationSteps"/>: a list of strings outlining the exact steps the LLM should take for evaluation. If <Term py="evaluation_steps" ts="evaluationSteps"/> is not provided, G-Eval will generate a series of <Term py="evaluation_steps" ts="evaluationSteps"/> on your behalf based on the provided `criteria`.
 - [Optional] `rubric`: a list of `Rubric`s that allows you to [confine the range](/docs/metrics-llm-evals#rubric) of the final metric score.
 - [Optional] `threshold`: the passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -558,6 +558,83 @@ for await (const golden of dataset.evalsIterator()) {
 </Case>
 
 </Switch>
+
+### Evaluating the trajectory
+
+When you leave out <Term py="evaluation_params" ts="evaluationParams"/>, single-turn `GEval` judges the whole trace, not individual test case fields. That covers every agent, LLM, tool, and retriever span with its inputs and outputs. Use it for criteria about _how_ your app reached its answer, such as tool choice, the arguments passed, or whether retrieved results were used correctly.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import observe
+from deepeval.metrics import GEval
+
+trajectory = GEval(
+    name="Tool Use",
+    criteria="Did the agent call the right tool with the right arguments, and does its final answer match what the tool returned?",
+)
+
+@observe(type="tool")
+def order_lookup(order_id: str):
+    return {"status": "in_transit"}
+
+@observe(type="agent")
+def support_agent(input: str):
+    return f"Your order is {order_lookup('1234')['status']}."
+
+dataset = EvaluationDataset(goldens=[Golden(input="Where is my order #1234?")])
+for golden in dataset.evals_iterator(metrics=[trajectory]):
+    support_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe } from "deepeval/tracing";
+import { GEval } from "deepeval/metrics";
+
+const trajectory = new GEval({
+  name: "Tool Use",
+  criteria:
+    "Did the agent call the right tool with the right arguments, and does its final answer match what the tool returned?",
+});
+
+const orderLookup = observe({
+  type: "tool",
+  fn: async (orderId: string) => ({ status: "in_transit" }),
+});
+
+const supportAgent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const { status } = await orderLookup("1234");
+    return `Your order is ${status}.`;
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Where is my order #1234?" })],
+});
+for await (const golden of dataset.evalsIterator({ metrics: [trajectory] })) {
+  await supportAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+Passed to <Term py="evals_iterator" ts="evalsIterator"/>, the metric judges the full trace. Attached to a component's `metrics` [within components](#within-components), it judges only that span and its children.
+
+:::note
+Trajectory mode needs a trace. Running it on a plain `LLMTestCase`, through `evaluate()` or `measure()`, raises a `MissingTestCaseParamsError`. The same applies to a `GEval` inside a `DAGMetric`, where no trace is passed down. A trajectory-mode `GEval` also can't be uploaded to Confident AI yet.
+:::
 
 ### As a standalone
 
