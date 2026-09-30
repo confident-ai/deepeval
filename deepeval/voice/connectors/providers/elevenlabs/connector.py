@@ -268,9 +268,11 @@ class ElevenLabsConnector(BaseWebSocketConnector):
         }
         try:
             encoded = json.dumps(message)
-        except TypeError:
+        except (TypeError, ValueError):
             # Better to hand the agent a stringified result than to leave it
-            # waiting for a message that can never be encoded.
+            # waiting for a message that can never be encoded. ValueError covers
+            # the values json refuses while walking them, a circular result
+            # being the common one, which used to escape this fallback.
             message["result"] = repr(result)
             encoded = json.dumps(message)
         await self._send(encoded)
