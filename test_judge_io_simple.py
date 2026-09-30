@@ -61,7 +61,7 @@ def test_sync_judge_io_capture():
     # The response should be stringified
     assert "Test reason" in metric.judge_responses[0]
     assert "0.8" in metric.judge_responses[0]
-    
+
     print("✓ Sync judge I/O capture test passed")
 
 
@@ -82,30 +82,30 @@ def test_multiple_judge_calls():
 
     assert metric.judge_responses is not None
     assert len(metric.judge_responses) == 2, f"Expected 2 responses, got {len(metric.judge_responses)}"
-    
+
     print("✓ Multiple judge calls test passed")
 
 
 def test_metric_data_serialization():
     """Test that judge_prompts and judge_responses are included in MetricData."""
     from deepeval.evaluate.utils import create_metric_data
-    
+
     metric = MockMetric()
     test_case = LLMTestCase(input="test", actual_output="test output")
-    
+
     metric.measure(test_case, _show_indicator=False)
-    
+
     # Create MetricData from the metric
     metric_data = create_metric_data(metric)
-    
+
     # Verify the fields are present
     assert hasattr(metric_data, 'judge_prompts'), "MetricData should have judge_prompts field"
     assert hasattr(metric_data, 'judge_responses'), "MetricData should have judge_responses field"
-    
+
     # Verify the values are correct
     assert metric_data.judge_prompts == metric.judge_prompts
     assert metric_data.judge_responses == metric.judge_responses
-    
+
     print("✓ MetricData serialization test passed")
 
 
