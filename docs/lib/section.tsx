@@ -120,10 +120,8 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🎉 NEW: Persistent local storage with SQLite.{" "}
-          <Link href="/blog/introducing-sqlite-local-storage">
-            Read the post →
-          </Link>
+          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}

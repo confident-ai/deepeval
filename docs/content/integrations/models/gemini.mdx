@@ -60,7 +60,7 @@ There are **ZERO** mandatory and **SIX** optional parameters when creating a `Ge
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; raises an error at runtime if unset.
 - [Optional] `api_key`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY` if not passed; raises an error at runtime if unset.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset. For Gemini 3 models the fallback is no temperature at all, so Google's default of `1.0` applies — Google warns that lower values can make them loop or reason worse. A temperature you pass or set in `TEMPERATURE` is always sent.
 - [Optional] `cost_per_input_token`: A float specifying the cost per input token for the provided model. Defaults to `GEMINI_COST_PER_INPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
 - [Optional] `cost_per_output_token`: A float specifying the cost per output token for the provided model. Defaults to `GEMINI_COST_PER_OUTPUT_TOKEN` if set; falls back to `deepeval`'s model cost registry, else `None`.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the Gemini API `generate_content(...)` call.
@@ -117,7 +117,7 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `
 
 - [Optional] `model`: A string specifying the name of the Gemini model to use. Defaults to `GEMINI_MODEL_NAME` if not passed; falls back to <DefaultLLMModel provider="gemini" /> if unset.
 - [Optional] `apiKey`: A string specifying the Google API key for authentication. Defaults to `GOOGLE_API_KEY`, then `GEMINI_API_KEY`, if not passed; raises an error at runtime if unset.
-- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it. For Gemini 3 models it is omitted unless you pass it or set `TEMPERATURE`, so Google's default of `1.0` applies — Google warns that lower values can make them loop or reason worse.
 - [Optional] `useVertexAI`: A boolean routing requests through Vertex AI instead of the Gemini API. Defaults to `true` when `GOOGLE_GENAI_USE_VERTEXAI` is set to the exact string `true`, else `false`.
 - [Optional] `project`: A string specifying the Google Cloud project ID for Vertex AI. Defaults to `GOOGLE_CLOUD_PROJECT` if not passed.
 - [Optional] `location`: A string specifying the Google Cloud location for Vertex AI. Defaults to `GOOGLE_CLOUD_LOCATION` if not passed.
@@ -167,6 +167,11 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Gemini models:
 
+`gemini-3.8-flash`
+`gemini-3.7-flash`
+`gemini-3.6-flash`
+`gemini-3.5-flash`
+`gemini-3.1-pro-preview`
 `gemini-3-pro-preview`
 `gemini-3-flash-preview`
 `gemini-2.5-pro`

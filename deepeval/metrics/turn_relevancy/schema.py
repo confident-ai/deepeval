@@ -1,10 +1,11 @@
-from typing import Literal, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
+from deepeval.metrics.base_metric import YesNo
 
 
 class TurnRelevancyVerdict(BaseModel):
-    verdict: Literal["yes", "no"]
+    verdict: YesNo
     reason: Optional[str] = Field(default=None)
 
 

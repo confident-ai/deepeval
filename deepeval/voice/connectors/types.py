@@ -34,6 +34,7 @@ class AgentEvent:
     # frame lands, so reading the clock at consumption time would credit the
     # agent with starting to speak later than it did.
     received_at: Optional[float] = None
+    call_ended: bool = False
 
 
 AgentCallback = Callable[

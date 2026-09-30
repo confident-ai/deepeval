@@ -244,6 +244,13 @@ class ConversationalTestCase(BaseModel):
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
+    # Classifier name -> label this test case should receive. A classifier
+    # only produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, str]] = Field(
+        default=None,
+        serialization_alias="expectedLabels",
+        validation_alias=AliasChoices("expectedLabels", "expected_labels"),
+    )
     # MCP
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
     # Modality flags

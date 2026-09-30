@@ -2,6 +2,7 @@ from .base_metric import (
     BaseMetric,
     BaseConversationalMetric,
     BaseArenaMetric,
+    Verdict,
 )
 
 from .dag.dag import DAGMetric, DeepAcyclicGraph
@@ -18,6 +19,7 @@ from .hallucination.hallucination import HallucinationMetric
 from .answer_relevancy.answer_relevancy import AnswerRelevancyMetric
 from .summarization.summarization import SummarizationMetric
 from .g_eval.g_eval import GEval, GEvalTemplate
+from .jev_eval.jev_eval import JevEval
 from .arena_g_eval.arena_g_eval import ArenaGEval
 from .faithfulness.faithfulness import FaithfulnessMetric
 from .contextual_recall.contextual_recall import ContextualRecallMetric
@@ -60,6 +62,9 @@ from .role_adherence.role_adherence import (
     RoleAdherenceMetric,
 )
 from .conversational_g_eval.conversational_g_eval import ConversationalGEval
+from .conversational_jev_eval.conversational_jev_eval import (
+    ConversationalJevEval,
+)
 from .multimodal_metrics import (
     TextToImageMetric,
     ImageEditingMetric,
@@ -82,14 +87,17 @@ __all__ = [
     "BaseMetric",
     "BaseConversationalMetric",
     "BaseArenaMetric",
+    "Verdict",
     # Non-LLM metrics
     "ExactMatchMetric",
     "PatternMatchMetric",
     # Core metrics
     "GEval",
     "GEvalTemplate",
+    "JevEval",
     "ArenaGEval",
     "ConversationalGEval",
+    "ConversationalJevEval",
     "DAGMetric",
     "DeepAcyclicGraph",
     "ConversationalDAGMetric",

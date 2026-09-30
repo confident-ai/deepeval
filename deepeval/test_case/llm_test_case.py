@@ -432,6 +432,13 @@ class LLMTestCase(BaseModel):
             "customColumnKeyValues", "custom_column_key_values"
         ),
     )
+    # Classifier name -> label this test case should receive. A classifier
+    # only produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, str]] = Field(
+        default=None,
+        serialization_alias="expectedLabels",
+        validation_alias=AliasChoices("expectedLabels", "expected_labels"),
+    )
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
@@ -615,6 +622,18 @@ class LLMTestCase(BaseModel):
             ):
                 raise TypeError(
                     "'custom_column_key_values' must be None or a Dict[str, str]"
+                )
+
+        expected_labels = data.get("expected_labels")
+        if expected_labels is None:
+            expected_labels = data.get("expectedLabels")
+        if expected_labels is not None:
+            if not isinstance(expected_labels, dict) or not all(
+                isinstance(k, str) and isinstance(v, str)
+                for k, v in expected_labels.items()
+            ):
+                raise TypeError(
+                    "'expected_labels' must be None or a Dict[str, str] mapping classifier name to label"
                 )
 
         return data

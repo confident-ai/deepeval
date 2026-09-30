@@ -40,3 +40,13 @@ export {
   type GovernanceAssessment,
   type GovernancePolicyReference,
 } from "@/governance";
+export {
+  isExperimental,
+  resolveDeepEvalMode,
+  type DeepEvalMode,
+} from "@/config/mode";
+export {
+  EvalMode,
+  resolveEvalMode,
+  type EvalModeName,
+} from "@/config/eval-mode";

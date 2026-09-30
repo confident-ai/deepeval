@@ -2,15 +2,24 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
 } from "@/metrics/utils";
 import {
-  checkConversationalTestCaseParams,
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  splitSentences,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
+import {
   getUnitInteractions,
   getTurnsInSlidingWindow,
 } from "@/metrics/conversational-utils";
@@ -22,6 +31,7 @@ import {
 } from "@/metrics/turn-contextual-relevancy/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
 import { contextualRelevancyVerdictVars } from "@/metrics/retrieval-context-display";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "TurnContextualRelevancyMetric";
 
@@ -32,6 +42,10 @@ export interface TurnContextualRelevancyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -67,18 +81,15 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
       MultiTurnParams.RETRIEVAL_CONTEXT,
     ];
     this.windowSize = options.windowSize ?? 10;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const turnsWindows: Turn[][] = getTurnsInSlidingWindow(
         getUnitInteractions(testCase.turns),
@@ -144,21 +155,56 @@ export class TurnContextualRelevancyMetric extends BaseConversationalMetric {
   ): Promise<ContextualRelevancyVerdict[]> {
     if (retrievalContext.length === 0) return [];
     const perNode = await Promise.all(
-      retrievalContext.map(async (context) => {
-        const prompt = this.getPrompt("generate_verdicts", {
-          input,
-          context,
-          ...contextualRelevancyVerdictVars(this.multimodal),
-        });
-        const { verdicts } = await generateWithSchema(
-          this,
-          prompt,
-          ContextualRelevancyVerdictsSchema,
-        );
-        return verdicts;
-      }),
+      retrievalContext.map((context) =>
+        generateQagVerdicts(this, {
+          systemOne: this.systemOneVerdictSpec(input, context),
+          llm: async () => {
+            const prompt = this.getPrompt("generate_verdicts", {
+              input,
+              context,
+              ...contextualRelevancyVerdictVars(this.multimodal),
+            });
+            const { verdicts } = await generateWithSchema(
+              this,
+              prompt,
+              ContextualRelevancyVerdictsSchema,
+            );
+            return verdicts;
+          },
+        }),
+      ),
     );
     return perNode.flat();
+  }
+
+  private systemOneVerdictSpec(
+    input: string,
+    context: string,
+  ): SystemOneVerdictSpec<string, ContextualRelevancyVerdict> | undefined {
+    if (this.multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: splitSentences(context),
+      itemKey: "statement",
+      state: { user_message: input },
+      buildVerdict: (statement, verdict, p) => ({
+        statement,
+        verdict,
+        reason: `P(yes)=${p.toFixed(2)}`,
+      }),
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async getInteractionReason(

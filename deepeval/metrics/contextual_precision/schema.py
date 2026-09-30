@@ -1,9 +1,10 @@
 from typing import List
 from pydantic import BaseModel
+from deepeval.metrics.base_metric import YesNo
 
 
 class ContextualPrecisionVerdict(BaseModel):
-    verdict: str
+    verdict: YesNo
     reason: str
 
 
