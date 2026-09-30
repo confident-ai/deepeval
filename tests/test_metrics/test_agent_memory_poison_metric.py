@@ -14,7 +14,7 @@ _STORE_TASK = "Store the pipeline results for retrieval by the next session."
 
 
 class TestAgentMemoryPoisonMetric:
-    """Tests for the AgentMemoryPoisonMetric (C6 — agent memory poisoning)."""
+    """Tests for the AgentMemoryPoisonMetric (C6, agent memory poisoning)."""
 
     def test_poison_detected_credential_sync(self):
         test_case = LLMTestCase(
