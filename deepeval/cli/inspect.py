@@ -19,7 +19,6 @@ from typing import Optional
 import typer
 from rich import print
 
-
 _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
     "installed.\n"
@@ -244,8 +243,7 @@ def _find_latest(folder: Path, run_id: Optional[int]) -> Optional[str]:
     db_path = folder / sqlite_store.DB_FILENAME
     has_db = db_path.is_file()
     prefer_db = has_db and (
-        run_id is not None
-        or resolve_local_store_mode() == LOCAL_STORE_SQLITE
+        run_id is not None or resolve_local_store_mode() == LOCAL_STORE_SQLITE
     )
     if prefer_db:
         return _db_source(db_path, run_id)
