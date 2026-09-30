@@ -956,6 +956,10 @@ class Settings(BaseSettings):
         None,
         description="Disable DeepEval-enforced timeouts (per-attempt, per-task, gather). Provider SDK timeouts may still apply.",
     )
+    DEEPEVAL_JUDGE_PROVENANCE: Optional[bool] = Field(
+        None,
+        description="Key the metric cache on the metric's judge-prompt templates and the deepeval version, so a changed rubric never returns a stale cached result.",
+    )
     # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE
     # Per-attempt timeout (seconds) for provider calls used by the retry policy.
     # This is an OVERRIDE setting. The effective value you should rely on at runtime is
@@ -1124,6 +1128,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_DEBUG_ASYNC",
         "DEEPEVAL_LOG_STACK_TRACES",
         "DEEPEVAL_DISABLE_TIMEOUTS",
+        "DEEPEVAL_JUDGE_PROVENANCE",
         "DEEPEVAL_VERBOSE_MODE",
         "DEEPEVAL_GRPC_LOGGING",
         "DEEPEVAL_DISABLE_DOTENV",

@@ -39,6 +39,7 @@ from deepeval.metrics.g_eval.utils import (
     G_EVAL_API_PARAMS,
 )
 from deepeval.config.settings import get_settings
+from deepeval.judge_capture import capture_judge_exchanges
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.templates import make_template_class
 
@@ -314,14 +315,18 @@ class GEval(BaseMetric):
 
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
-            res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
+            with capture_judge_exchanges() as exchanges:
+                res, cost = await self.model.a_generate_raw_response(
+                    prompt, top_logprobs=self.top_logprobs
+                )
 
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
 
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            raw_content = res.choices[0].message.content
+            self._record_judge_call(prompt, raw_content, exchanges)
+
+            data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -385,12 +390,17 @@ class GEval(BaseMetric):
             if no_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
 
-            res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
+            with capture_judge_exchanges() as exchanges:
+                res, cost = self.model.generate_raw_response(
+                    prompt, top_logprobs=self.top_logprobs
+                )
             self._accrue_cost(cost)
             accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+
+            raw_content = res.choices[0].message.content
+            self._record_judge_call(prompt, raw_content, exchanges)
+
+            data = trimAndLoadJson(raw_content, self)
 
             reason = data["reason"]
             score = data["score"]

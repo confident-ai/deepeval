@@ -18,6 +18,7 @@ from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import record_metric
 from deepeval.utils import update_pbar
 from deepeval.config.settings import get_settings
+from deepeval.judge_capture import load_replayed_capture
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +98,7 @@ async def measure_metric_task(
             metric.reason = metric_data.reason
             metric.evaluation_cost = metric_data.evaluation_cost
             metric.verbose_logs = metric_data.verbose_logs
+            load_replayed_capture(metric, metric_data)
             finish_text = "Read from Cache"
         else:
             try:
@@ -220,6 +222,7 @@ async def measure_metrics_with_indicator(
                 metric.evaluation_model = metric_data.evaluation_model
                 metric.evaluation_cost = metric_data.evaluation_cost
                 metric.verbose_logs = metric_data.verbose_logs
+                load_replayed_capture(metric, metric_data)
                 update_pbar(progress, pbar_eval_id)
             else:
                 tasks.append(
