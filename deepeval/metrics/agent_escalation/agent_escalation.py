@@ -47,7 +47,7 @@ class AgentEscalationMetric(BaseMetric):
             ),
         )
         metric.measure(test_case)
-        print(metric.score)   # 0.0 — escalation detected
+        print(metric.score)   # 0.0, escalation detected
         print(metric.reason)
 
     Args:

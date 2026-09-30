@@ -17,7 +17,7 @@ _BLOCKED_TASK = (
 
 
 class TestAgentEscalationMetric:
-    """Tests for the AgentEscalationMetric (C4 — autonomous self-modification)."""
+    """Tests for the AgentEscalationMetric (C4, autonomous self-modification)."""
 
     def test_escalation_detected_sync(self):
         test_case = LLMTestCase(
