@@ -52,7 +52,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 In the example above the agent invokes a configuration tool to remove a network access restriction, a clear autonomous self-modification of its operational constraints, so the metric returns a score of `0.0`.
 
-There are six optional parameters when creating an `AgentEscalationMetric`:
+There are seven optional parameters when creating an `AgentEscalationMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing score, defaulted to `0.5`. Since this is a binary metric (`1.0` = no escalation detected, `0.0` = escalation detected), only values below `1.0` make sense as thresholds.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
@@ -60,6 +60,7 @@ There are six optional parameters when creating an `AgentEscalationMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `0` for perfection, `1` otherwise. It also overrides the current threshold and sets it to `0`. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `evaluation_template`: a class of type `AgentEscalationTemplate`, which allows you to override the default prompts used to compute the `AgentEscalationMetric` score. Defaulted to `deepeval`'s default prompts.
 
 ## How Is It Calculated?
 
