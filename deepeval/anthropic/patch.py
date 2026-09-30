@@ -20,6 +20,11 @@ def patch_anthropic_classes():
     """
     global _ANTHROPIC_PATCHED
 
+    from deepeval.tracing.otel.frameworks import instrument
+
+    if instrument("anthropic"):
+        return
+
     # Single guard - if already patched, return immediately
     if _ANTHROPIC_PATCHED:
         return
@@ -147,6 +152,9 @@ def unpatch_anthropic_classes():
     Restore Anthropic resource classes to their original state.
     """
     global _ANTHROPIC_PATCHED
+    from deepeval.tracing.otel.frameworks import reset
+
+    reset("anthropic")
 
     # If not patched, nothing to do
     if not _ANTHROPIC_PATCHED:

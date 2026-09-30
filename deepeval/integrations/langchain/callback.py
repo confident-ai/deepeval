@@ -131,6 +131,9 @@ class CallbackHandler(BaseCallbackHandler):
             self.metrics = metrics
             self.metric_collection = metric_collection
             super().__init__()
+            from deepeval.tracing.otel.frameworks import bind_langchain
+
+            bind_langchain(self)
 
     def _ensure_trace(self):
         """

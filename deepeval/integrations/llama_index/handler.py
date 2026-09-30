@@ -408,6 +408,10 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
 def instrument_llama_index(dispatcher: Dispatcher):
     with capture_tracing_integration(Integration.LLAMA_INDEX):
+        from deepeval.tracing.otel.frameworks import instrument
+
+        if instrument("llamaindex", dispatcher=dispatcher, include_llm=True):
+            return None
         handler = LLamaIndexHandler()
         dispatcher.add_event_handler(handler)
         dispatcher.add_span_handler(handler)

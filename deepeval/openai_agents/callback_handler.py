@@ -58,8 +58,29 @@ class DeepEvalTracingProcessor(TracingProcessor):
         patch_default_agent_run_single_turn()
         patch_default_agent_run_single_turn_streamed()
         self.span_observers: dict[str, Observer] = {}
+        self._otel_delegate = None
+        from deepeval.tracing.otel.frameworks import instrument, _get_runtime
+
+        if instrument("openai_agents", explicit_processor=True):
+            from confident_trace.integrations.openai_agents.instrumentation import (
+                create_processor,
+            )
+
+            self._otel_delegate = create_processor(_get_runtime())
 
     def on_trace_start(self, trace: "Trace") -> None:
+        if self._otel_delegate is not None:
+            self._otel_delegate.on_trace_start(trace)
+            live = current_trace_context.get()
+            if live is not None:
+                for field, value in (
+                    ("name", trace.name),
+                    ("thread_id", trace.group_id),
+                    ("metadata", trace.metadata),
+                ):
+                    if value is not None:
+                        setattr(live, field, value)
+            return
         trace_dict = trace.export()
         _trace_uuid = trace_dict.get("id")
         _thread_id = trace_dict.get("group_id")
@@ -85,6 +106,8 @@ class DeepEvalTracingProcessor(TracingProcessor):
         )
 
     def on_trace_end(self, trace: "Trace") -> None:
+        if self._otel_delegate is not None:
+            return self._otel_delegate.on_trace_end(trace)
         trace_dict = trace.export()
         _trace_uuid = trace_dict.get("id")
         _trace_name = trace_dict.get("workflow_name")
@@ -102,6 +125,8 @@ class DeepEvalTracingProcessor(TracingProcessor):
         ):  # llm span started by
             return
 
+        if self._otel_delegate is not None:
+            return self._otel_delegate.on_span_start(span)
         span_type = self.get_span_kind(span.span_data)
         if span_type == "noop":
             return
@@ -109,13 +134,22 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
-        observer.update_span_properties = (
-            lambda span_type: update_span_properties(span_type, span.span_data)
+        observer.update_span_properties = lambda span_type: (
+            update_span_properties(span_type, span.span_data)
         )
         self.span_observers[span.span_id] = observer
         observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
+        if self._otel_delegate is not None:
+            live = current_span_context.get()
+            if (
+                isinstance(live, LlmSpan)
+                and not live._otel_bridge
+                and self.get_span_kind(span.span_data) == "llm"
+            ):
+                update_span_properties(live, span.span_data)
+            return self._otel_delegate.on_span_end(span)
         if self.get_span_kind(span.span_data) == "noop":
             return
 
@@ -137,10 +171,13 @@ class DeepEvalTracingProcessor(TracingProcessor):
             observer.__exit__(None, None, None)
 
     def force_flush(self) -> None:
-        pass
+        if self._otel_delegate is not None:
+            from deepeval.tracing.otel.frameworks import flush
+
+            flush("openai_agents")
 
     def shutdown(self) -> None:
-        pass
+        self.force_flush()
 
     def get_span_kind(self, span_data: "SpanData") -> str:
         if isinstance(span_data, AgentSpanData):

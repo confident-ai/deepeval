@@ -39,6 +39,7 @@ from deepeval.tracing.api import (
 )
 from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
+from deepeval.tracing.otel.capture import current_eval_owner, finish_capture
 from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils import copy_metrics
@@ -177,6 +178,9 @@ def execute_agentic_test_cases_from_loop(
         processed_traces: List[Trace] = []
 
         for golden in goldens:
+            eval_owner_token = current_eval_owner.set(
+                local_trace_manager.eval_session
+            )
             token = set_current_golden(golden)
             record_golden(golden)
             # yield golden
@@ -193,15 +197,34 @@ def execute_agentic_test_cases_from_loop(
                 try:
                     # yield golden to user code
                     yield golden
+                    finish_capture(
+                        local_trace_manager.eval_session,
+                        current_trace_context.get().uuid,
+                    )
                     # control has returned from user code without error, capture trace now
                     current_trace: Trace = current_trace_context.get()
                     processed_traces.append(current_trace)
                 finally:
                     # after user code returns control, always reset the context
                     reset_current_golden(token)
+                    current_eval_owner.reset(eval_owner_token)
 
             update_pbar(progress, pbar_tags_id)
             update_pbar(progress, pbar_id)
+
+            if (
+                any(metric.requires_trace for metric in (trace_metrics or []))
+                and current_trace.root_spans
+                and all(
+                    root.name == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+                    and not root.children
+                    for root in current_trace.root_spans
+                )
+            ):
+                raise DeepEvalError(
+                    "No application spans were captured for this evaluation. "
+                    "Ensure the configured tracer provider records evaluation spans."
+                )
 
             # Create empty trace api for llm api test case
             trace_api = create_api_trace(trace=current_trace, golden=golden)
@@ -399,9 +422,7 @@ def execute_agentic_test_cases_from_loop(
 
                 if requires_trace:
                     llm_test_case._trace_dict = (
-                        trace_manager.create_nested_spans_dict(
-                            current_trace.root_spans[0]
-                        )
+                        trace_manager.create_trace_metric_dict(current_trace)
                     )
 
                 if not skip_metrics_for_this_golden:
@@ -492,6 +513,7 @@ def execute_agentic_test_cases_from_loop(
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment, so state can't leak
         # into the next run.
+        finish_capture(local_trace_manager.eval_session)
         local_trace_manager.eval_session = EvalSession()
 
 
@@ -672,7 +694,6 @@ def a_execute_agentic_test_cases_from_loop(
                             meta,
                         )
                     elif exc is not None:
-
                         show_trace = bool(
                             get_settings().DEEPEVAL_LOG_STACK_TRACES
                         )
@@ -718,6 +739,9 @@ def a_execute_agentic_test_cases_from_loop(
 
         try:
             for index, golden in enumerate(goldens):
+                eval_owner_token = current_eval_owner.set(
+                    local_trace_manager.eval_session
+                )
                 token = set_current_golden(golden)
                 current_golden_ctx.update(
                     {
@@ -731,6 +755,7 @@ def a_execute_agentic_test_cases_from_loop(
                     yield golden
                 finally:
                     reset_current_golden(token)
+                    current_eval_owner.reset(eval_owner_token)
                 # if this golden created no tasks, bump bars now
                 if len(created_tasks) == prev_task_length:
                     update_pbar(progress, pbar_callback_id)
@@ -800,7 +825,6 @@ def a_execute_agentic_test_cases_from_loop(
                     asyncio.gather(*created_tasks, return_exceptions=True)
                 )
             finally:
-
                 # if it is already closed, we are done
                 if loop.is_closed():
                     return
@@ -853,6 +877,18 @@ def a_execute_agentic_test_cases_from_loop(
         # on @observe-decorated functions only become visible after user
         # code has actually run.
         session = trace_manager.eval_session
+        finish_capture(session)
+        from deepeval.tracing.otel.capture import capture_is_configured
+
+        if (
+            capture_is_configured()
+            and not session.traces_to_evaluate
+            and not session.test_case_metrics
+        ):
+            raise DeepEvalError(
+                "No traces were captured for this evaluation. Ensure the application "
+                "uses the configured tracer provider and its sampler records evaluation spans."
+            )
         if not _has_any_evaluable_metrics(
             trace_metrics=trace_metrics,
             traces=session.traces_to_evaluate,
@@ -933,6 +969,7 @@ def a_execute_agentic_test_cases_from_loop(
     finally:
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment.
+        finish_capture(local_trace_manager.eval_session)
         local_trace_manager.eval_session = EvalSession()
 
 

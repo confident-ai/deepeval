@@ -85,6 +85,8 @@ class LlmOutput(BaseModel):
 
 
 class BaseSpan(BaseModel):
+    _otel_parent: Any = PrivateAttr(default=None)
+    _otel_bridge: bool = PrivateAttr(default=False)
     model_config = make_model_config(arbitrary_types_allowed=True)
 
     uuid: str
@@ -132,7 +134,6 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-
     model: Optional[str] = None
     provider: Optional[str] = None
     prompt: Optional[Prompt] = None
