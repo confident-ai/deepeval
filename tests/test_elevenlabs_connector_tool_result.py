@@ -5,7 +5,9 @@ import json
 
 import pytest
 
-from deepeval.voice.connectors.providers.elevenlabs.connector import ElevenLabsConnector
+from deepeval.voice.connectors.providers.elevenlabs.connector import (
+    ElevenLabsConnector,
+)
 
 
 class _Recording(ElevenLabsConnector):
