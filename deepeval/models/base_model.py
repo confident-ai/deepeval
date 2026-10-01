@@ -166,7 +166,9 @@ class DeepEvalBaseLLM(ABC):
         parameters = inspect.signature(target).parameters
         if "schema" in parameters:
             return True
-        return any(p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters.values())
+        return any(
+            p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+        )
 
     async def a_generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:
