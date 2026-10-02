@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import Expectations
 import re
 import warnings
 from pydantic import (
@@ -244,6 +245,7 @@ class ConversationalTestCase(BaseModel):
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
+    expectations: Optional[Expectations] = Field(default=None)
     # Classifier name -> label this test case should receive. A classifier
     # only produces a pass/fail verdict when its name is present here.
     expected_labels: Optional[Dict[str, str]] = Field(

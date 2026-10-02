@@ -68,6 +68,18 @@ LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
+EXPECTATIONS_UPLOAD_WARNING = (
+    "Warning: Expectations are not available on Confident AI yet. "
+    "This test run was not uploaded; results are available locally."
+)
+
+
+def _has_expectations(test_run) -> bool:
+    return any(
+        case.expectations is not None
+        for cases in (test_run.test_cases, test_run.conversational_test_cases)
+        for case in cases
+    )
 
 
 class TestRunResultDisplay(Enum):
@@ -913,13 +925,18 @@ class TestRunManager:
             if index < len(test_run.test_cases) - 1:
                 self._add_separator_row(table)
 
-        table.add_row(
-            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            *[""] * (len(table.columns) - 1),
-        )
+        if not _has_expectations(test_run):
+            table.add_row(
+                "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+                *[""] * (len(table.columns) - 1),
+            )
         print(table)
 
     def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
+        if _has_expectations(test_run):
+            console.print(EXPECTATIONS_UPLOAD_WARNING)
+            return None
+
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -1193,13 +1210,18 @@ class TestRunManager:
         # carry the underlying error info (populated by ``Observer.__exit__``)
         # which the dashboard can render. Just warn so it's not mistaken
         # for a successful run.
+        has_expectations = _has_expectations(test_run)
         valid_scores = test_run.construct_metrics_scores()
         if valid_scores == 0:
             console.print(
                 "\n[bold yellow]⚠ WARNING:[/bold yellow] All metrics errored "
                 "across every test case — no metric scores were recorded. "
-                "Posting the run anyway so you can inspect the trace + span "
-                "errors on the Confident AI dashboard.\n"
+                + (
+                    "Results are available locally.\n"
+                    if has_expectations
+                    else "Posting the run anyway so you can inspect the trace + span "
+                    "errors on the Confident AI dashboard.\n"
+                )
             )
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
@@ -1234,7 +1256,13 @@ class TestRunManager:
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
         confident_enabled = is_confident()
-        if confident_enabled and self.disable_request is False:
+        if has_expectations:
+            console.print(EXPECTATIONS_UPLOAD_WARNING)
+        if (
+            confident_enabled
+            and self.disable_request is False
+            and not has_expectations
+        ):
             link, confident_test_run_id = self.post_test_run(test_run)
             self._record_confident_test_run_id(confident_test_run_id)
             return link, confident_test_run_id
@@ -1248,14 +1276,19 @@ class TestRunManager:
                 if test_run.evaluation_cost
                 else "None"
             )
-            capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+            if not has_expectations:
+                capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
                 f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
-                "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                (
+                    ""
+                    if has_expectations
+                    else "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                    "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+                ),
             )
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:

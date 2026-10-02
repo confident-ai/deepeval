@@ -25,6 +25,7 @@ An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has t
 - [Optional] <Term py="retrieval_context" ts="retrievalContext"/>
 - [Optional] <Term py="tools_called" ts="toolsCalled"/>
 - [Optional] <Term py="expected_tools" ts="expectedTools"/>
+- <Only id="python">[Optional] `expectations`</Only>
 - <Only id="python">[Optional] `expected_labels`</Only>
 - [Optional] <Term py="token_cost" ts="tokenCost"/>
 - [Optional] <Term py="completion_time" ts="completionTime"/>
@@ -368,6 +369,46 @@ const testCase = new LLMTestCase({
 </Case>
 
 </Switch>
+
+<Only id="python">
+
+### Expectations
+
+The optional `expectations` parameter describes what must happen and what must not happen for this input. Use an `Expectations` object to define success directly on the test case, without choosing a metric or providing an `expected_output`.
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import Expectations
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input="Cancel my subscription.",
+    actual_output="Please confirm that you want to cancel your subscription.",
+    expectations=Expectations(
+        must=["Ask the user to confirm the cancellation."],
+        must_not=["Claim the subscription has already been cancelled."],
+    ),
+)
+
+evaluate(test_cases=[test_case])
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `must_not`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used to evaluate conditions in `llm` mode. Defaulted to `None`, which uses the configured default evaluation model. Model names are preserved when saving a dataset; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `eval_mode`: `"llm"` or `"system_one"`, choosing how to judge the conditions. Defaulted to `None`, which uses the configured global eval mode or `llm` if none is set. An explicit global `DEEPEVAL_EVAL_MODE` setting overrides the object's `eval_mode`. Expectations do not accept `eval_mode="hybrid"`; a global `hybrid` setting resolves to `llm`, matching classifiers. In `system_one` mode, the configured default System One judge answers the conditions without calling the LLM. It requires the same System One setup as metrics and does not fall back to the LLM on errors.
+
+At least one condition in `must` or `must_not` is required to evaluate expectations.
+
+Every `must` condition must hold and every `must_not` behavior must be absent for the expectation check to pass. Results appear under **Expectations**, with a verdict and reason for each condition. When other evaluators are supplied, empty expectations produce no expectation verdict. Each condition must be a non-empty string.
+
+Both `evaluate()` and `assert_test()` check expectations automatically. If no metrics or classifiers are supplied, every test case passed to `evaluate()` must have at least one `must` or `must_not` condition. The same requirement applies to the case passed to `assert_test()`. Missing or empty expectations raise a `ValueError` before evaluation begins. You can also supply metrics or classifiers in the same run; an expectation failure fails the case alongside any other evaluation failures. Expectations currently require local evaluation and cannot be combined with `metric_collection`.
+
+`expected_output` provides a reference answer; `expectations` specifies conditions on the response or actions. They are optional independently and can coexist. To check external actions, include the observed tool calls or evaluate an observed trace. A response claiming an action happened is not proof of the action. Missing evidence produces an evaluation error rather than an assumed pass; use `ErrorConfig(ignore_errors=True)` to record the error and continue the run.
+
+</Only>
 
 ### Context
 
