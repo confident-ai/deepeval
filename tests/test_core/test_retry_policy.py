@@ -640,3 +640,13 @@ def test_retry_logging_levels_change_at_runtime(
     assert not any(r.levelno >= logging.ERROR for r in caplog.records)
     assert not any(r.levelno == logging.WARNING for r in caplog.records)
     assert all(r.exc_info is None for r in caplog.records)
+
+
+def test_timeout_error_names_the_switch_that_disables_timeouts():
+    # An unset or 0 per-attempt override derives the budget instead of disabling it,
+    # so the hint must point at DEEPEVAL_DISABLE_TIMEOUTS.
+    message = str(rp._make_timeout_error(12.5))
+
+    assert "call timed out after 12.5s" in message
+    assert "DEEPEVAL_DISABLE_TIMEOUTS" in message
+    assert "None disables" not in message
