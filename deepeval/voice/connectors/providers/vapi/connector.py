@@ -191,7 +191,7 @@ class VapiConnector(BaseWebSocketConnector):
         role = message.get("role")
         if role == "user":
             # Emitted as a fragment; the transport joins the turn's fragments.
-            return InboundEvent(user_transcript=text)
+            return InboundEvent(provider_transcription=text)
         if role != "assistant":
             return None
         self._transcript_parts.append(text)

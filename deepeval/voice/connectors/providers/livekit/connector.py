@@ -124,7 +124,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._uplink: Optional[UplinkStream] = None
         self._owns_room_connection = False
         self._current_transcript: Optional[str] = None
-        self._user_transcript_parts: List[str] = []
+        self._provider_transcription_parts: List[str] = []
         self._transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
         self._call_ended = False
@@ -154,7 +154,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._out_frames = asyncio.Queue()
         self._agent_track_ready = asyncio.Event()
         self._transcript_ready = asyncio.Event()
-        self._user_transcript_parts = []
+        self._provider_transcription_parts = []
         self._uplink = UplinkStream()
         self._call_ended = False
         self._room = (
@@ -382,11 +382,11 @@ class LiveKitConnector(BaseVoiceConnector):
         if not text:
             return
         if heard_us:
-            self._user_transcript_parts.append(text)
+            self._provider_transcription_parts.append(text)
             if self._out_frames is not None:
                 self._out_frames.put_nowait(
                     AgentEvent(
-                        user_transcript=text,
+                        provider_transcription=text,
                         received_at=time.perf_counter(),
                     )
                 )
@@ -566,7 +566,7 @@ class LiveKitConnector(BaseVoiceConnector):
             )
 
         self._current_transcript = None
-        self._user_transcript_parts = []
+        self._provider_transcription_parts = []
         self._transcript_ready.clear()
 
         input_audio_started_at = time.perf_counter()
@@ -594,7 +594,8 @@ class LiveKitConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply_audio,
             transcript=self._current_transcript,
-            user_transcript=" ".join(self._user_transcript_parts) or None,
+            provider_transcription=" ".join(self._provider_transcription_parts)
+            or None,
             latency_ms=latency_ms,
             interrupted=False,
             input_audio_started_at=input_audio_started_at,

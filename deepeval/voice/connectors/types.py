@@ -8,7 +8,7 @@ from deepeval.test_case import Audio
 class ConnectorTurn:
     audio: Audio
     transcript: Optional[str] = None  # what the agent said
-    user_transcript: Optional[str] = None  # what the agent heard us say
+    provider_transcription: Optional[str] = None  # what the agent heard us say
     latency_ms: Optional[float] = None  # user-audio-sent -> first agent audio
     interrupted: bool = False  # True when we successfully barged in (duplex)
     # Process-local monotonic capture times. The simulator converts these to
@@ -26,7 +26,7 @@ class AgentEvent:
     signals on the same stream. `transcript` is the latest partial/full text
     known so far (not necessarily a small delta).
 
-    `user_transcript` runs the other way: it is the agent's own STT of the
+    `provider_transcription` runs the other way: it is the agent's own STT of the
     caller's audio — what it heard rather than what it said — and arrives as
     one fragment per finalized segment, for the consumer to join. The two are
     kept apart because comparing them is the whole point of asking.
@@ -34,7 +34,7 @@ class AgentEvent:
 
     audio: Optional[bytes] = None  # PCM16 mono at the connector recv rate
     transcript: Optional[str] = None
-    user_transcript: Optional[str] = None
+    provider_transcription: Optional[str] = None
     turn_complete: bool = False
     # Process-local monotonic time this event arrived from the agent. The
     # consumer can be busy (synthesizing a barge, for instance) long after a

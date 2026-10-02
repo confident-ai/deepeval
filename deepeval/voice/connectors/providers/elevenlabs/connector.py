@@ -147,7 +147,7 @@ class ElevenLabsConnector(BaseWebSocketConnector):
                 "user_transcript"
             )
             heard = (heard or "").strip()
-            return InboundEvent(user_transcript=heard) if heard else None
+            return InboundEvent(provider_transcription=heard) if heard else None
 
         if msg_type == "agent_response_complete":
             return InboundEvent(turn_complete=True)

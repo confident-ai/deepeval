@@ -72,9 +72,11 @@ class Turn(BaseModel):
         default=None, validation_alias=AliasChoices("latencyMs", "latency_ms")
     )
     interrupted: Optional[bool] = Field(default=None)
-    user_transcript: Optional[str] = Field(
+    provider_transcription: Optional[str] = Field(
         default=None,
-        validation_alias=AliasChoices("userTranscript", "user_transcript"),
+        validation_alias=AliasChoices(
+            "providerTranscription", "provider_transcription"
+        ),
     )
     # RAG & tools
     retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
@@ -99,7 +101,7 @@ class Turn(BaseModel):
 
     def model_dump_for_prompt(self) -> Dict:
         """Return turn data suitable for LLM prompts, without audio bytes."""
-        return self.model_dump(exclude={"audio", "user_transcript"})
+        return self.model_dump(exclude={"audio", "provider_transcription"})
 
     @property
     def additional_metadata(self) -> Optional[Dict]:
@@ -148,8 +150,10 @@ class Turn(BaseModel):
             attrs.append(f"latency_ms={self.latency_ms!r}")
         if self.interrupted is not None:
             attrs.append(f"interrupted={self.interrupted!r}")
-        if self.user_transcript is not None:
-            attrs.append(f"user_transcript={self.user_transcript!r}")
+        if self.provider_transcription is not None:
+            attrs.append(
+                f"provider_transcription={self.provider_transcription!r}"
+            )
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:

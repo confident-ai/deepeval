@@ -115,7 +115,7 @@ def test_caller_transcripts_are_reported_as_what_the_agent_heard():
 
     heard = connector._decode_inbound(_transcript("Hi", role="user"))
 
-    assert heard.user_transcript == "Hi"
+    assert heard.provider_transcription == "Hi"
     assert heard.transcript is None
 
 
