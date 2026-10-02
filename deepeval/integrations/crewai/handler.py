@@ -26,10 +26,12 @@ try:
         CrewKickoffCompletedEvent,
         LLMCallStartedEvent,
         LLMCallCompletedEvent,
+        LLMCallFailedEvent,
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
         ToolUsageStartedEvent,
         ToolUsageFinishedEvent,
+        ToolUsageErrorEvent,
         KnowledgeRetrievalStartedEvent,
         KnowledgeRetrievalCompletedEvent,
     )
@@ -274,6 +276,40 @@ class CrewAIEventsListener(BaseEventListener):
                     if token:
                         current_span_context.reset(token)
 
+        @crewai_event_bus.on(LLMCallFailedEvent)
+        def on_llm_failed(source, event: LLMCallFailedEvent):
+            key = self.get_llm_execution_id(source, event)
+            if key in self.span_observers:
+                observer = self.span_observers.pop(key)
+                if observer:
+                    current_span = current_span_context.get()
+                    token = None
+                    span_to_close = trace_manager.get_span_by_uuid(
+                        observer.uuid
+                    )
+
+                    if span_to_close:
+                        if isinstance(span_to_close, LlmSpan):
+                            span_to_close.integration = (
+                                Integration.CREW_AI.value
+                            )
+                            if not span_to_close.provider:
+                                span_to_close.provider = (
+                                    infer_provider_from_model(
+                                        getattr(span_to_close, "model", None)
+                                    )
+                                )
+                        if (
+                            not current_span
+                            or current_span.uuid != observer.uuid
+                        ):
+                            token = current_span_context.set(span_to_close)
+
+                    error = Exception(event.error)
+                    observer.__exit__(Exception, error, None)
+                    if token:
+                        current_span_context.reset(token)
+
         @crewai_event_bus.on(AgentExecutionStartedEvent)
         def on_agent_started(source, event: AgentExecutionStartedEvent):
             current_span = current_span_context.get()
@@ -402,6 +438,15 @@ class CrewAIEventsListener(BaseEventListener):
                             output=span.output,
                         )
                     )
+
+        @crewai_event_bus.on(ToolUsageErrorEvent)
+        def on_tool_error(source, event: ToolUsageErrorEvent):
+            key = self.get_tool_stack_key(source, event.tool_name)
+            if (
+                key in self.tool_observers_stack
+                and self.tool_observers_stack[key]
+            ):
+                self.tool_observers_stack[key].pop()
 
         @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
         def on_knowledge_started(source, event: KnowledgeRetrievalStartedEvent):
