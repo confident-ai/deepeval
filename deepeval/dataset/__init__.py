@@ -1,3 +1,4 @@
+from deepeval.test_case.expectations import Expectations
 from deepeval.contextvars import get_current_golden
 from .dataset import EvaluationDataset
 from .golden import (
@@ -9,6 +10,7 @@ from .golden import (
 )
 
 __all__ = [
+    "Expectations",
     "EvaluationDataset",
     "Golden",
     "ConversationalGolden",

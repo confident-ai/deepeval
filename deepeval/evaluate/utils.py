@@ -186,6 +186,7 @@ def create_test_result(
             success=success,
             metrics_data=api_test_case.metrics_data,
             classifications=classifications,
+            expectations=api_test_case.expectations,
             conversational=True,
             index=index,
             metadata=api_test_case.metadata,
@@ -199,6 +200,7 @@ def create_test_result(
                 success=success,
                 metrics_data=api_test_case.metrics_data,
                 classifications=classifications,
+                expectations=api_test_case.expectations,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
@@ -212,6 +214,7 @@ def create_test_result(
                 success=success,
                 metrics_data=api_test_case.metrics_data,
                 classifications=classifications,
+                expectations=api_test_case.expectations,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 expected_output=api_test_case.expected_output,
@@ -329,12 +332,13 @@ def validate_assert_test_inputs(
             )
         return
 
-    if test_case and not metrics and not classifiers:
+    has_expectations = bool(getattr(test_case, "expectations", None))
+    if test_case and not metrics and not classifiers and not has_expectations:
         raise ValueError(
-            "'test_case' must be provided together with 'metrics' and/or 'classifiers'."
+            "'test_case' must provide expectations or be provided with 'metrics' and/or 'classifiers'."
         )
 
-    if test_case and (metrics or classifiers):
+    if test_case and (metrics or classifiers or has_expectations):
         if metrics:
             if (isinstance(test_case, LLMTestCase)) and not all(
                 isinstance(metric, BaseMetric) for metric in metrics
@@ -370,9 +374,21 @@ def validate_evaluate_inputs(
     metric_collection: Optional[str] = None,
     classifiers: Optional[List] = None,
 ):
-    if metric_collection is None and metrics is None and not classifiers:
+    has_expectations = any(
+        getattr(case, "expectations", None) for case in test_cases or []
+    )
+    if metric_collection is not None and has_expectations:
         raise ValueError(
-            "You must provide at least one of 'metric_collection', 'metrics' or 'classifiers'."
+            "Case expectations require local evaluation; metric_collection is not supported yet."
+        )
+    if (
+        metric_collection is None
+        and metrics is None
+        and not classifiers
+        and not has_expectations
+    ):
+        raise ValueError(
+            "You must provide case expectations or at least one of 'metric_collection', 'metrics' or 'classifiers'."
         )
     if metric_collection is not None and metrics is not None:
         raise ValueError(
