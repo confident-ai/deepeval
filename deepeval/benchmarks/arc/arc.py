@@ -9,7 +9,7 @@ from deepeval.benchmarks.base_benchmark import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.arc.mode import ARCMode
 from deepeval.benchmarks.arc.template import ARCTemplate
-from deepeval.benchmarks.schema import MultipleChoiceSchema
+from deepeval.benchmarks.schema import ARCMultipleChoiceSchema
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -46,7 +46,7 @@ class ARC(DeepEvalBaseBenchmark):
         self.verbose_mode = verbose_mode
         if not confinement_instructions:
             self.confinement_instructions = (
-                "Output 'A', 'B', 'C', or 'D'. Full answer not needed."
+                "Output 'A', 'B', 'C', 'D', or 'E'. Full answer not needed."
             )
         else:
             self.confinement_instructions = confinement_instructions
@@ -108,8 +108,8 @@ class ARC(DeepEvalBaseBenchmark):
 
         # Enforced model generation
         try:
-            res: MultipleChoiceSchema = model.generate(
-                prompt=prompt, schema=MultipleChoiceSchema
+            res: ARCMultipleChoiceSchema = model.generate(
+                prompt=prompt, schema=ARCMultipleChoiceSchema
             )
             prediction = res.answer
         except TypeError:

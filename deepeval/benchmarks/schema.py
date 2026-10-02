@@ -36,6 +36,18 @@ class TrinaryChoiceSchema(BaseModel):
     answer: Literal["A", "B", "C"]
 
 
+# ARC Models #############################
+
+
+class ARCMultipleChoiceSchema(BaseModel):
+    # A small subset of ARC items offer five options rather than four, so the
+    # gold answer can legitimately be "E". ARC cannot reuse the shared
+    # `MultipleChoiceSchema` for this: MMLU, HellaSwag and LogiQA are strictly
+    # four-option benchmarks, and widening their schema would let a model
+    # answer with an option those questions never present.
+    answer: Literal["A", "B", "C", "D", "E"]
+
+
 # MathQA Models #############################
 
 
