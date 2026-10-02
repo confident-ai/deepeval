@@ -87,6 +87,7 @@ class _AgentUtterance:
     # What has been received of the reply so far.
     pcm: bytearray = field(default_factory=bytearray)
     transcript: str = ""
+    user_transcript_parts: List[str] = field(default_factory=list)
     first_audio_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
@@ -109,6 +110,7 @@ class _AgentUtterance:
         self.awaiting_end_signal = awaiting_end_signal
         self.pcm = bytearray()
         self.transcript = ""
+        self.user_transcript_parts = []
         self.first_audio_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
@@ -470,6 +472,9 @@ class DuplexExchange:
                 audio=audio,
                 latency_ms=latency_ms,
                 interrupted=interrupted if interrupted else None,
+                user_transcript=(
+                    " ".join(utterance.user_transcript_parts) or None
+                ),
                 metadata=metadata,
             )
             # Place the reply where it began rather than at the end: a barge is
@@ -649,6 +654,11 @@ class DuplexExchange:
                 if event.transcript:
                     utterance.transcript = event.transcript
                     connector_transcript_seen = True
+
+                if event.user_transcript:
+                    utterance.user_transcript_parts.append(
+                        event.user_transcript
+                    )
 
                 if event.audio:
                     silent = audio_utils.is_silent(
