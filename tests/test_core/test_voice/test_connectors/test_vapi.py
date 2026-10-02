@@ -102,13 +102,32 @@ def test_final_transcripts_accumulate_across_one_turn():
     assert second.transcript == "Sure, one moment. Your table is booked."
 
 
-def test_partial_and_caller_transcripts_are_ignored():
+def test_partial_transcripts_are_ignored():
     connector = _connector()
 
     assert (
         connector._decode_inbound(_transcript("Sure", kind="partial")) is None
     )
-    assert connector._decode_inbound(_transcript("Hi", role="user")) is None
+
+
+def test_caller_transcripts_are_reported_as_what_the_agent_heard():
+    connector = _connector()
+
+    heard = connector._decode_inbound(_transcript("Hi", role="user"))
+
+    assert heard.user_transcript == "Hi"
+    assert heard.transcript is None
+
+
+def test_what_the_agent_heard_does_not_land_in_its_own_transcript():
+    """A caller final between two agent finals must not join the reply."""
+    connector = _connector()
+
+    connector._decode_inbound(_transcript("Sure, one moment."))
+    connector._decode_inbound(_transcript("Hi", role="user"))
+    event = connector._decode_inbound(_transcript("Your table is booked."))
+
+    assert event.transcript == "Sure, one moment. Your table is booked."
 
 
 def test_a_new_turn_starts_from_an_empty_transcript():
