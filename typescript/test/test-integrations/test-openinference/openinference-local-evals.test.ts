@@ -129,9 +129,7 @@ describe("OpenInference local component evals", () => {
 
     // Bare caller → OTLP, so the attrs are the only carrier.
     expect(span.attributes[ROUTE_TO_REST_ATTRIBUTE]).toBeUndefined();
-    expect(span.attributes["confident.span.prompt_alias"]).toBe(
-      "Test prompt",
-    );
+    expect(span.attributes["confident.span.prompt_alias"]).toBe("Test prompt");
     expect(span.attributes["confident.span.prompt_commit_hash"]).toBe("abc123");
     expect(span.attributes["confident.span.prompt_version"]).toBe("00.00.01");
     expect(span.attributes["confident.span.prompt_label"]).toBe("production");
