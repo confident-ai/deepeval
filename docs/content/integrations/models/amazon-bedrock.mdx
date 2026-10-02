@@ -131,7 +131,7 @@ There are **ZERO** mandatory and **EIGHT** optional parameters when creating an 
 - [Optional] `awsAccessKeyId`: A string specifying your AWS Access Key ID. Defaults to `AWS_ACCESS_KEY_ID` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `awsSecretAccessKey`: A string specifying your AWS Secret Access Key. Defaults to `AWS_SECRET_ACCESS_KEY` if not passed; if still omitted, falls back to the AWS default credentials chain.
 - [Optional] `awsSessionToken`: A string specifying your AWS session token for temporary credentials. Defaults to `AWS_SESSION_TOKEN` if not passed.
-- [Optional] `temperature`: A number specifying the model temperature. Defaults to `0`. Pass `null` to omit it from the request entirely, which is required by reasoning models that reject it.
+- [Optional] `temperature`: A number specifying the model temperature. Not sent unless you set it, since some Bedrock models (e.g. OpenAI GPT-6) reject the field.
 - [Optional] `costPerInputToken`: A number specifying the per-input-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 - [Optional] `costPerOutputToken`: A number specifying the per-output-token cost in USD. Defaults to the price in `deepeval`'s model cost registry, else `null`.
 
