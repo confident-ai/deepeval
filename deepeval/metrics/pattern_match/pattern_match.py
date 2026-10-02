@@ -19,20 +19,28 @@ class PatternMatchMetric(BaseMetric):
     def __init__(
         self,
         pattern: str,
+        regex: bool = True,
         ignore_case: bool = False,
         threshold: Optional[float] = 1.0,
         verbose_mode: bool = False,
         flaky: bool = False,
     ):
+        if not isinstance(pattern, str):
+            raise TypeError(
+                f"pattern must be a string, got {type(pattern).__name__}"
+            )
+
         self.pattern = pattern.strip()
+        self.regex = regex
         self.ignore_case = ignore_case
         self.verbose_mode = verbose_mode
         self.flaky = flaky
         self.threshold = threshold
 
         flags = re.IGNORECASE if ignore_case else 0
+        compiled_pattern = self.pattern if regex else re.escape(self.pattern)
         try:
-            self._compiled_pattern = re.compile(self.pattern, flags)
+            self._compiled_pattern = re.compile(compiled_pattern, flags)
         except re.error as e:
             raise ValueError(f"Invalid regex pattern: {pattern} — {e}")
 
