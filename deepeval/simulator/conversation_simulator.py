@@ -1354,6 +1354,7 @@ class ConversationSimulator:
             content=agent_text,
             audio=conn_turn.audio if replied else None,
             latency_ms=conn_turn.latency_ms if replied else None,
+            user_transcript=conn_turn.user_transcript,
         )
 
     async def _voice_duplex_exchange(

@@ -124,9 +124,12 @@ class PipecatConnector(BaseWebSocketConnector):
             return self._on_transport_message(frame.data)
         if frame.kind == "interruption":
             self._interrupted = True
-        # A `transcription` frame is Pipecat's STT of deepeval's own audio, and
-        # a `text` frame is unattributed pipeline text; neither is the agent's
-        # reply.
+        if frame.kind == "transcription":
+            # A `transcription` frame is Pipecat's STT of deepeval's own audio:
+            # what the agent heard the caller say, not its reply.
+            heard = (frame.text or "").strip()
+            return InboundEvent(user_transcript=heard) if heard else None
+        # A `text` frame is unattributed pipeline text, not the agent's reply.
         return None
 
     def _warn_non_protobuf(self, what: str) -> None:
