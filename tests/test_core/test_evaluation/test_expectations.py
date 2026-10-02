@@ -433,18 +433,29 @@ def test_expectations_and_classifiers_both_affect_success(judge, run_async):
             ("bad", "greeting"),
         ]
     ]
-    results = run(cases, run_async, classifiers=[Classifier()])
-    assert [result.success for result in results] == [True, False, False]
+    cases.append(
+        LLMTestCase(
+            input="hello",
+            actual_output="hello",
+            expected_labels={"Greeting": "greeting"},
+        )
+    )
+    results = sorted(
+        run(cases, run_async, classifiers=[Classifier()]),
+        key=lambda result: result.index,
+    )
+    assert [result.success for result in results] == [True, False, False, True]
     assert [result.classifications[0].success for result in results] == [
         True,
         False,
+        True,
         True,
     ]
 
 
 @pytest.mark.parametrize("run_async", [False, True])
 @pytest.mark.parametrize("conversational", [False, True])
-def test_no_verdict_for_cases_without_expectations(
+def test_expectations_only_run_rejects_uncovered_cases(
     judge, run_async, conversational
 ):
     if conversational:
@@ -455,10 +466,11 @@ def test_no_verdict_for_cases_without_expectations(
         plain = LLMTestCase(input="hello", actual_output="hello")
     checked = plain.model_copy(deep=True)
     checked.expectations = Expectations(must_not=["Disclose a password"])
-    results = run([plain, checked], run_async)
-    assert len(results) == 1
-    assert results[0].expectations == checked.expectations
-    assert len(judge.prompts) == 1
+    with pytest.raises(
+        ValueError, match=r"^2 test cases are missing expectations\."
+    ):
+        run([plain, checked, plain], run_async)
+    assert not judge.prompts
 
 
 @pytest.mark.parametrize("run_async", [False, True])
@@ -691,4 +703,97 @@ def test_cache_does_not_share_judge_modes(judge, monkeypatch):
     )
     assert not Cache.same_metric_configs(
         llm, Cache.create_metric_configuration(system_one)
+    )
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {},
+        {"metrics": []},
+        {"classifiers": []},
+        {"metrics": [], "classifiers": []},
+    ],
+)
+@pytest.mark.parametrize("expectations", [None, {}])
+@pytest.mark.parametrize("conversational", [False, True])
+def test_empty_evaluators_require_nonempty_expectations(
+    judge, kwargs, expectations, conversational
+):
+    case = (
+        ConversationalTestCase(
+            turns=[Turn(role="assistant", content="hello")],
+            expectations=expectations,
+        )
+        if conversational
+        else LLMTestCase(
+            input="hello", actual_output="hello", expectations=expectations
+        )
+    )
+    with pytest.raises(
+        ValueError, match=r"^1 test case is missing expectations\."
+    ):
+        run([case], **kwargs)
+    with pytest.raises(
+        ValueError, match=r"^1 test case is missing expectations\."
+    ):
+        assert_test(case, **kwargs)
+    assert not judge.prompts
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_explicit_empty_evaluators_accept_fully_covered_batch(judge, run_async):
+    cases = [
+        LLMTestCase(input="hello", actual_output="hello", expectations=value)
+        for value in [{"must": ["Greet"]}, {"must_not": ["Insult"]}]
+    ]
+    results = run(cases, run_async, metrics=[], classifiers=[])
+    assert len(results) == 2
+    assert all(result.success for result in results)
+    assert_test(cases[0], metrics=[], classifiers=[], run_async=run_async)
+    assert len(judge.prompts) == 3
+
+
+@pytest.mark.parametrize("cases", [[], None])
+def test_expectations_only_run_requires_cases(judge, cases):
+    with pytest.raises(ValueError, match="at least one test case"):
+        run(cases, metrics=[], classifiers=[])
+    assert not judge.prompts
+
+
+def test_trace_scoped_assert_requires_evaluator_or_expectations(judge):
+    from deepeval.tracing.context import current_trace_context
+    from deepeval.tracing.types import Trace, TraceSpanStatus
+
+    trace = Trace(
+        uuid="empty-trace",
+        status=TraceSpanStatus.SUCCESS,
+        root_spans=[],
+        start_time=0,
+        end_time=None,
+    )
+    token = current_trace_context.set(trace)
+    try:
+        with pytest.raises(ValueError, match="non-empty expectations"):
+            assert_test(golden=Golden(input="hello"), metrics=[])
+    finally:
+        current_trace_context.reset(token)
+    assert not judge.prompts
+
+
+@pytest.mark.parametrize("count", [1, 4])
+def test_missing_expectations_error_leads_with_count(count):
+    from deepeval.evaluate.utils import validate_expectation_coverage
+
+    cases = [LLMTestCase(input="hello") for _ in range(count)]
+    cases.insert(
+        0, LLMTestCase(input="hello", expectations={"must": ["Greet"]})
+    )
+    with pytest.raises(ValueError) as error:
+        validate_expectation_coverage(cases)
+    subject = "test case is" if count == 1 else "test cases are"
+    assert str(error.value) == (
+        f"{count} {subject} missing expectations. "
+        "Fill in non-empty expectations for these test cases and/or "
+        "provide at least one metric and/or classifier."
     )

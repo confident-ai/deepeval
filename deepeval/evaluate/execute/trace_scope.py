@@ -43,6 +43,7 @@ from deepeval.evaluate.utils import (
     create_api_trace,
     create_metric_data,
     create_test_result,
+    validate_expectation_coverage,
 )
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.api import TraceSpanApiStatus
@@ -83,6 +84,18 @@ def _assert_test_from_current_trace(
             "pytest test run with `deepeval test run`, and the test body must "
             "invoke at least one `@observe`-decorated function."
         )
+
+    # A golden may use metrics declared on the active trace or its spans,
+    # rather than passed explicitly to assert_test(). Count those too.
+    if not metrics and not current_trace.metrics and not golden.expectations:
+        spans = list(current_trace.root_spans or [])
+        while spans:
+            span = spans.pop()
+            if span.metrics:
+                break
+            spans.extend(span.children or [])
+        else:
+            validate_expectation_coverage([golden])
 
     test_run_manager = global_test_run_manager
 

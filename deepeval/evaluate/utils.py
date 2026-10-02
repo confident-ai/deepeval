@@ -310,9 +310,28 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     )
 
 
+def validate_expectation_coverage(test_cases):
+    """Every case needs a condition when no other evaluator is supplied."""
+    if not test_cases:
+        raise ValueError(
+            "Provide at least one test case with non-empty expectations "
+            "when evaluating without metrics or classifiers."
+        )
+    missing_count = sum(
+        not getattr(case, "expectations", None) for case in test_cases
+    )
+    if missing_count:
+        subject = "test case is" if missing_count == 1 else "test cases are"
+        raise ValueError(
+            f"{missing_count} {subject} missing expectations. "
+            "Fill in non-empty expectations for these test cases and/or "
+            "provide at least one metric and/or classifier."
+        )
+
+
 def validate_assert_test_inputs(
     golden: Optional[Golden] = None,
-    test_case: Optional[LLMTestCase] = None,
+    test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
     metrics: Optional[List] = None,
     classifiers: Optional[List] = None,
 ):
@@ -333,10 +352,8 @@ def validate_assert_test_inputs(
         return
 
     has_expectations = bool(getattr(test_case, "expectations", None))
-    if test_case and not metrics and not classifiers and not has_expectations:
-        raise ValueError(
-            "'test_case' must provide expectations or be provided with 'metrics' and/or 'classifiers'."
-        )
+    if test_case and not metrics and not classifiers:
+        validate_expectation_coverage([test_case])
 
     if test_case and (metrics or classifiers or has_expectations):
         if metrics:
@@ -357,7 +374,8 @@ def validate_assert_test_inputs(
 
     raise ValueError(
         "You must provide either ('golden' [+ 'metrics']) from inside a "
-        "`deepeval test run` test, or ('test_case' + 'metrics' and/or 'classifiers')."
+        "`deepeval test run` test, or a 'test_case' with expectations, "
+        "'metrics', or 'classifiers'."
     )
 
 
@@ -381,15 +399,8 @@ def validate_evaluate_inputs(
         raise ValueError(
             "Case expectations require local evaluation; metric_collection is not supported yet."
         )
-    if (
-        metric_collection is None
-        and metrics is None
-        and not classifiers
-        and not has_expectations
-    ):
-        raise ValueError(
-            "You must provide case expectations or at least one of 'metric_collection', 'metrics' or 'classifiers'."
-        )
+    if not metric_collection and not metrics and not classifiers:
+        validate_expectation_coverage(test_cases)
     if metric_collection is not None and metrics is not None:
         raise ValueError(
             "You cannot provide both 'metric_collection' and 'metrics'."

@@ -263,7 +263,7 @@ test_case = ConversationalTestCase(
 evaluate(test_cases=[test_case])
 ```
 
-No metric is required. `evaluate()` and `assert_test()` check all `must` and `must_not` conditions across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions; missing evidence produces an evaluation error.
+No metric is required. If no metrics or classifiers are supplied, every test case passed to `evaluate()` must have at least one `must` or `must_not` condition. The same requirement applies to the case passed to `assert_test()`. Missing or empty expectations raise a `ValueError` before evaluation begins. `evaluate()` and `assert_test()` check all `must` and `must_not` conditions across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions; missing evidence produces an evaluation error.
 
 The object has the same [parameters and evaluation behavior as single-turn expectations](/docs/evaluation-test-cases#expectations), including optional `model` and `eval_mode`. Only `llm` and `system_one` are supported. The global eval mode takes precedence; global `hybrid` resolves to `llm`.
 
