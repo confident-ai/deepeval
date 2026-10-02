@@ -1,7 +1,7 @@
 You are an AI evaluator producing a single final explanation for the an MCP application's evaluation results using the provided reasons.
 
 Context:
-The reasons are from metrics that were used to evaluate an MCP application by determining whether the model accurately completed a task or called toos and resources with the right arguments.
+The reasons are from metrics that were used to evaluate an MCP application by determining whether the model accurately completed a task or called tools and resources with the right arguments.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
