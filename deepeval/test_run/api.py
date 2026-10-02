@@ -1,4 +1,4 @@
-from deepeval.test_case.expectations import Expectations
+from deepeval.dataset.expectations import Expectations
 from pydantic import BaseModel, Field
 from typing import Optional, List, Union, Dict
 

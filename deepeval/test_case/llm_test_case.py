@@ -1,4 +1,4 @@
-from .expectations import Expectations
+from deepeval.dataset.expectations import Expectations
 from pydantic import (
     Field,
     BaseModel,

@@ -1314,7 +1314,7 @@ For single-turn `Golden`s:
 
 ```python
 from pydantic import BaseModel
-from deepeval.test_case import Expectations
+from deepeval.dataset import Expectations
 
 class Golden(BaseModel):
     input: str
@@ -1381,7 +1381,7 @@ For multi-turn `ConversationalGolden`s:
 
 ```python
 from pydantic import BaseModel
-from deepeval.test_case import Expectations
+from deepeval.dataset import Expectations
 
 class ConversationalGolden(BaseModel):
     scenario: str
@@ -1455,8 +1455,6 @@ golden = Golden(
     expectations=Expectations(
         must=["Ask the user to confirm the cancellation."],
         must_not=["Claim the subscription has already been cancelled."],
-        model="gpt-4.1",
-        eval_mode="llm",
     ),
 )
 
@@ -1477,9 +1475,9 @@ conversational_golden = ConversationalGolden(
 
 The built-in golden-to-test-case conversion helpers and conversation simulator carry expectations onto the resulting test cases. `evals_iterator()` also checks a golden's expectations automatically against the observed run. When constructing a test case yourself, pass `expectations=golden.expectations`; `evaluate()` or `assert_test()` can then evaluate it without an explicit metric.
 
-`must` and `must_not` are lists of non-empty strings. Optional `model` and `eval_mode` configure the judge. Only `llm` and `system_one` are supported; the global eval mode overrides the object's setting, with global `hybrid` resolving to `llm`. See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the full parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples.
+`must` and `must_not` are lists of non-empty strings. See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the full parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples.
 
-Expectations survive local JSON, JSONL, and CSV save/load. The `expectations` field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell. Model names and eval modes are serialized; custom model instances serialize as `null` and must be reattached after loading.
+Expectations survive local JSON, JSONL, and CSV save/load. The `expectations` field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell.
 
 </Only>
 

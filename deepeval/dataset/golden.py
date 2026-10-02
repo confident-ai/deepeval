@@ -16,9 +16,9 @@ from deepeval.test_case import (
     Turn,
     MLLMImage,
     RetrievedContextData,
-    Expectations,
 )
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from .expectations import Expectations
 
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]

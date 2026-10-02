@@ -1,4 +1,4 @@
-from deepeval.test_case.expectations import expectation_evidence
+from deepeval.dataset.expectations import expectation_evidence
 import logging
 import sys
 import json

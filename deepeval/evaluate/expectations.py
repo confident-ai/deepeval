@@ -28,7 +28,7 @@ from deepeval.metrics.utils.generation import (
     generate_with_schema_and_extract,
 )
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
-from deepeval.test_case.expectations import expectation_evidence
+from deepeval.dataset.expectations import expectation_evidence
 
 
 _JUDGING_INSTRUCTIONS = (

@@ -1,4 +1,4 @@
-from deepeval.test_case.expectations import Expectations
+from deepeval.dataset.expectations import Expectations
 import warnings
 
 from .llm_test_case import (
