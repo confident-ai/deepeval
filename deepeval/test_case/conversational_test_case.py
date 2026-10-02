@@ -99,9 +99,6 @@ class Turn(BaseModel):
 
     def model_dump_for_prompt(self) -> Dict:
         """Return turn data suitable for LLM prompts, without audio bytes."""
-        # `user_transcript` describes the transport rather than the
-        # conversation, and every conversational metric reads this dump — one
-        # that wants to judge transcription asks for the field by name.
         return self.model_dump(exclude={"audio", "user_transcript"})
 
     @property
