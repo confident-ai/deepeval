@@ -107,8 +107,6 @@ export async function ollamaMessages(prompt: string): Promise<Part[]> {
 
 /**
  * The Converse API rejects anything outside this set, and it is case-sensitive.
- * Python uppercases the subtype here, which the service refuses; TS sends the
- * documented lowercase value.
  */
 const BEDROCK_IMAGE_FORMATS = new Set(["png", "jpeg", "gif", "webp"]);
 
