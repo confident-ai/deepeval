@@ -16,6 +16,7 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 - [Optional] `expected_outcome`
 - [Optional] `context`
 - [Optional] `chatbot_role`
+- <Only id="python">[Optional] `expectations`</Only>
 - <Only id="python">[Optional] `expected_labels`</Only>
 
 :::note
@@ -74,7 +75,7 @@ The `turns` parameter in a conversational test case is vital to specifying the r
 
 While a [single-turn test case](/docs/evaluation-test-cases) represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
 
-A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
+When evaluating a `ConversationalTestCase` with metrics, use **conversational metrics.**
 
 <Switch>
 
@@ -229,6 +230,44 @@ const testCase = new ConversationalTestCase({
 </Case>
 
 </Switch>
+
+<Only id="python">
+
+### Expectations
+
+Set `expectations` to an `Expectations` object to define requirements for the **whole conversation**, including its actions and final state. `expected_outcome` describes the desired end state; expectations can also specify the steps required to reach it. Either field can be supplied independently.
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import ConversationalTestCase, Expectations, ToolCall, Turn
+
+test_case = ConversationalTestCase(
+    expected_outcome="The subscription is cancelled with the user's consent.",
+    turns=[
+        Turn(role="user", content="Cancel my subscription."),
+        Turn(role="assistant", content="Please confirm you want to cancel."),
+        Turn(role="user", content="Yes, cancel it."),
+        Turn(
+            role="assistant",
+            content="Your subscription has been cancelled.",
+            tools_called=[ToolCall(name="cancel_subscription", output={"cancelled": True})],
+        ),
+    ],
+    expectations=Expectations(
+        must=["Obtain the user's confirmation before calling cancel_subscription."],
+        must_not=["Claim that a refund was issued."],
+        eval_mode="llm",
+    ),
+)
+
+evaluate(test_cases=[test_case])
+```
+
+No metric is required. `evaluate()` and `assert_test()` check all `must` and `must_not` conditions across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions; missing evidence produces an evaluation error.
+
+The object has the same [parameters and evaluation behavior as single-turn expectations](/docs/evaluation-test-cases#expectations), including optional `model` and `eval_mode`. Only `llm` and `system_one` are supported. The global eval mode takes precedence; global `hybrid` resolves to `llm`.
+
+</Only>
 
 ### Chatbot Role
 

@@ -88,11 +88,20 @@ class PassingMetric(BaseMetric):
         return self.measure(test_case)
 
 
+@pytest.fixture(autouse=True)
+def expectation_mode(monkeypatch):
+    from deepeval.config.settings import get_settings
+
+    monkeypatch.setattr(get_settings(), "DEEPEVAL_EVAL_MODE", None)
+
+
 @pytest.fixture
 def judge(monkeypatch):
     module = importlib.import_module("deepeval.evaluate.expectations")
     judge = Judge()
-    monkeypatch.setattr(module, "initialize_model", lambda: (judge, False))
+    monkeypatch.setattr(
+        module, "initialize_model", lambda *args, **kwargs: (judge, False)
+    )
     global_test_run_manager.reset()
     monkeypatch.setattr(
         global_test_run_manager,
@@ -450,3 +459,236 @@ def test_no_verdict_for_cases_without_expectations(
     assert len(results) == 1
     assert results[0].expectations == checked.expectations
     assert len(judge.prompts) == 1
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_each_case_uses_its_own_model(judge, monkeypatch, run_async):
+    from deepeval.metrics.utils import initialize_model
+    from tests.test_metrics.system_one_fakes import CannedLLM
+
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    monkeypatch.setattr(module, "initialize_model", initialize_model)
+    models = [
+        CannedLLM(
+            json.dumps(
+                {
+                    "verdicts": [
+                        {
+                            "id": "must[0]",
+                            "status": status,
+                            "reason": "custom judge",
+                            "evidence": "response",
+                        }
+                    ]
+                }
+            ),
+            name=name,
+        )
+        for name, status in [("first-judge", "pass"), ("second-judge", "fail")]
+    ]
+    cases = [
+        LLMTestCase(
+            input="hello",
+            actual_output="hello",
+            expectations=Expectations(
+                must=["Greet"], model=model, eval_mode="llm"
+            ),
+        )
+        for model in models
+    ]
+    results = run(cases, run_async)
+    assert [result.success for result in results] == [True, False]
+    assert [result.metrics_data[0].evaluation_model for result in results] == [
+        "first-judge",
+        "second-judge",
+    ]
+    assert all(len(model.prompts) == 1 for model in models)
+    assert not judge.prompts
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+@pytest.mark.parametrize("conversational", [False, True])
+def test_system_one_mode(judge, monkeypatch, run_async, conversational):
+    from deepeval.metrics.utils import initialize_model
+    from tests.test_metrics.system_one_fakes import (
+        FakeSystemOneModel,
+        answer_everything,
+        ExplodingLLM,
+    )
+
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    system_one = FakeSystemOneModel(answer_fn=answer_everything())
+    monkeypatch.setattr(module, "initialize_model", initialize_model)
+    monkeypatch.setattr(
+        module, "initialize_system_one_model", lambda *args: system_one
+    )
+    expectations = Expectations(
+        must=["Greet"],
+        must_not=["Insult"],
+        model=ExplodingLLM(),
+        eval_mode="system_one",
+    )
+    case = (
+        ConversationalTestCase(
+            turns=[Turn(role="assistant", content="hello")],
+            expectations=expectations,
+        )
+        if conversational
+        else LLMTestCase(
+            input="hello", actual_output="hello", expectations=expectations
+        )
+    )
+    results = run([case], run_async)
+    assert results[0].success
+    assert len(system_one.calls) == 1
+    assert not judge.prompts
+
+
+@pytest.mark.parametrize(
+    "global_mode,local_mode",
+    [
+        ("llm", "system_one"),
+        ("system_one", "llm"),
+        ("hybrid", "llm"),
+        ("hybrid", "system_one"),
+    ],
+)
+def test_global_mode_overrides_object(
+    judge, monkeypatch, global_mode, local_mode
+):
+    from deepeval.config.settings import get_settings
+    from deepeval.config.eval_mode import EvalMode
+    from tests.test_metrics.system_one_fakes import (
+        FakeSystemOneModel,
+        answer_everything,
+    )
+    from deepeval.evaluate.expectations import _SingleTurnExpectations
+
+    monkeypatch.setattr(get_settings(), "DEEPEVAL_EVAL_MODE", global_mode)
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    fake = FakeSystemOneModel(answer_fn=answer_everything())
+    monkeypatch.setattr(
+        module, "initialize_system_one_model", lambda *args: fake
+    )
+    evaluator = _SingleTurnExpectations(
+        Expectations(
+            must=["Greet"], model="configured-name", eval_mode=local_mode
+        )
+    )
+    assert evaluator.eval_mode is (
+        EvalMode.LLM if global_mode == "hybrid" else EvalMode(global_mode)
+    )
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_system_one_missing_evidence_is_an_error(judge, monkeypatch, run_async):
+    from deepeval.metrics.utils import initialize_model
+    from deepeval.models.system_one.schema import ChoiceAnswer, SystemOneAnswers
+    from tests.test_metrics.system_one_fakes import (
+        FakeSystemOneModel,
+        ExplodingLLM,
+    )
+
+    def answer(questions):
+        return SystemOneAnswers(
+            choices={
+                key: ChoiceAnswer(
+                    choice="unable_to_evaluate",
+                    probabilities={
+                        "pass": 0,
+                        "fail": 0,
+                        "unable_to_evaluate": 1,
+                    },
+                    confidence=1,
+                )
+                for key in questions
+            }
+        )
+
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    monkeypatch.setattr(module, "initialize_model", initialize_model)
+    monkeypatch.setattr(
+        module,
+        "initialize_system_one_model",
+        lambda *args: FakeSystemOneModel(answer_fn=answer),
+    )
+    case = LLMTestCase(
+        input="cancel",
+        actual_output="done",
+        expectations=Expectations(
+            must=["Cancel"], model=ExplodingLLM(), eval_mode="system_one"
+        ),
+    )
+    result = run(
+        [case], run_async, error_config=ErrorConfig(ignore_errors=True)
+    )[0]
+    assert not result.success
+    assert "Unable to evaluate expectations" in result.metrics_data[0].error
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_system_one_failure_does_not_fall_back(judge, monkeypatch, run_async):
+    from deepeval.metrics.utils import initialize_model
+    from tests.test_metrics.system_one_fakes import (
+        CannedLLM,
+        ExplodingSystemOneModel,
+    )
+
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    llm = CannedLLM('{"verdict":"pass","reason":"fallback"}')
+    system_one = ExplodingSystemOneModel(ConnectionError("unavailable"))
+    monkeypatch.setattr(module, "initialize_model", initialize_model)
+    monkeypatch.setattr(
+        module, "initialize_system_one_model", lambda *args: system_one
+    )
+    case = LLMTestCase(
+        input="hello",
+        actual_output="hello",
+        expectations=Expectations(
+            must=["Greet"], model=llm, eval_mode="system_one"
+        ),
+    )
+    with pytest.raises(ConnectionError, match="unavailable"):
+        run([case], run_async)
+    assert not llm.prompts
+
+
+def test_expectation_judge_config_validation_and_serialization():
+    from tests.test_metrics.system_one_fakes import ExplodingLLM
+
+    value = Expectations(
+        must=["Greet"], model="model-name", eval_mode="system_one"
+    )
+    assert Expectations.model_validate_json(value.model_dump_json()) == value
+    value.model = ExplodingLLM()
+    assert json.loads(value.model_dump_json())["model"] is None
+    for invalid in [
+        {"model": object()},
+        {"eval_mode": "typo"},
+        {"eval_mode": "hybrid"},
+    ]:
+        with pytest.raises(ValidationError):
+            Expectations(**invalid)
+
+
+def test_cache_does_not_share_judge_modes(judge, monkeypatch):
+    from deepeval.evaluate.expectations import _SingleTurnExpectations
+    from deepeval.test_run.cache import Cache
+    from tests.test_metrics.system_one_fakes import (
+        FakeSystemOneModel,
+        answer_everything,
+    )
+
+    module = importlib.import_module("deepeval.evaluate.expectations")
+    monkeypatch.setattr(
+        module,
+        "initialize_system_one_model",
+        lambda *args: FakeSystemOneModel(answer_fn=answer_everything()),
+    )
+    llm = _SingleTurnExpectations(Expectations(must=["Greet"], eval_mode="llm"))
+    system_one = _SingleTurnExpectations(
+        Expectations(must=["Greet"], eval_mode="system_one")
+    )
+    assert not Cache.same_metric_configs(
+        llm, Cache.create_metric_configuration(system_one)
+    )

@@ -1,6 +1,7 @@
 from deepeval.evaluate.expectations import (
     with_expectation_evaluators,
     metrics_for_expectations,
+    has_metrics_for_case,
 )
 import logging
 
@@ -549,7 +550,7 @@ async def a_execute_test_cases(
                 record_test_case(test_case)
                 if isinstance(test_case, LLMTestCase):
                     if (
-                        not metrics_for_expectations(llm_metrics, test_case)
+                        not has_metrics_for_case(llm_metrics, test_case)
                         and not classifiers
                     ):
                         update_pbar(progress, pbar_id)
@@ -581,7 +582,7 @@ async def a_execute_test_cases(
 
                 elif isinstance(test_case, ConversationalTestCase):
                     if (
-                        not metrics_for_expectations(
+                        not has_metrics_for_case(
                             conversational_metrics, test_case
                         )
                         and not classifiers
@@ -635,7 +636,7 @@ async def a_execute_test_cases(
             record_test_case(test_case)
             if isinstance(test_case, LLMTestCase):
                 if (
-                    not metrics_for_expectations(llm_metrics, test_case)
+                    not has_metrics_for_case(llm_metrics, test_case)
                     and not classifiers
                 ):
                     continue
@@ -664,9 +665,7 @@ async def a_execute_test_cases(
 
             elif isinstance(test_case, ConversationalTestCase):
                 if (
-                    not metrics_for_expectations(
-                        conversational_metrics, test_case
-                    )
+                    not has_metrics_for_case(conversational_metrics, test_case)
                     and not classifiers
                 ):
                     continue
