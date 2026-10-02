@@ -162,6 +162,18 @@ class MMLU(DeepEvalBaseBenchmark):
             return DeepEvalBaseBenchmarkResult(
                 overall_accuracy=overall_accuracy
             )
+        
+    def _normalize_prediction(self, prediction: object) -> str:
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
+
+        raw_prediction = str(prediction)
+        extracted_answer = MMLUTemplate.extract_answer(raw_prediction)
+
+        if extracted_answer is not None:
+            return extracted_answer
+        
+        return raw_prediction.strip()
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
@@ -190,10 +202,8 @@ class MMLU(DeepEvalBaseBenchmark):
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
 
-        # For native models, shouldn't happen but just in case
-        if isinstance(prediction, tuple):
-            prediction = prediction[0]
-        prediction = str(prediction)
+        
+        prediction = self._normalize_prediction(prediction)
 
         # Define Metric
         score = self.scorer.exact_match_score(
@@ -233,20 +243,20 @@ class MMLU(DeepEvalBaseBenchmark):
         except TypeError:
             prompts = [
                 prompt
-                + "\n\nOutput 'A', 'B', 'C', or 'D'. Full answer not needed."
+                + f"\n\n{self.confinement_instructions}"
                 for prompt in prompts
             ]
             predictions = model.batch_generate(prompts)
 
-        if len(predictions) is not len(goldens):
+        if len(predictions) != len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
             )
 
         res = []
-        for i in range(len(predictions)):
-            prediction = predictions[i]
-            golden = goldens[i]
+        for golden, raw_prediction in zip(goldens, predictions):
+            prediction = self._normalize_prediction(raw_prediction)
+
             # Define Metric
             score = self.scorer.exact_match_score(
                 golden.expected_output, prediction
