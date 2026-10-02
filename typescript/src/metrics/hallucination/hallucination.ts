@@ -80,11 +80,12 @@ export class HallucinationMetric extends BaseMetric {
       prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
+      const contexts = testCase.context ?? [];
       this.verdicts = await this.generateVerdicts(
         testCase.actualOutput,
-        testCase.context ?? [],
+        contexts,
       );
-      this.score = this.calculateScore();
+      this.score = this.calculateScore(contexts.length);
       this.reason = await this.generateReason();
       this.success = this.isSuccessful();
 
@@ -167,8 +168,10 @@ export class HallucinationMetric extends BaseMetric {
     return reason;
   }
 
-  private calculateScore(): number {
-    const total = this.verdicts.length;
+  private calculateScore(expectedCount: number): number {
+    // Judge every item that was up for judgment: a truncated or empty
+    // verdict list must count against the score, not shrink the denominator.
+    const total = Math.max(this.verdicts.length, expectedCount);
     if (total === 0) return 1;
     const alignedCount = this.verdicts.filter(
       (v) => v.verdict.trim().toLowerCase() !== "no",
