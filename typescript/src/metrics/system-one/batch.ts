@@ -281,7 +281,16 @@ function settleRequest(
     request.entries.map((entry) => Object.keys(entry.questions).length),
   );
   request.entries.forEach((entry, j) => {
-    settle(entry.metric, entry.spec, request.answersFor(answers, j), shares[j]);
+    try {
+      settle(
+        entry.metric,
+        entry.spec,
+        request.answersFor(answers, j),
+        shares[j],
+      );
+    } catch (error) {
+      fail(entry.metric, error, options);
+    }
   });
 }
 

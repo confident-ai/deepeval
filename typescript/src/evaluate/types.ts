@@ -1,3 +1,4 @@
+import type { Expectations } from "@/dataset/expectations";
 import { z } from "zod";
 import {
   Turn,
@@ -41,6 +42,7 @@ export function aggregateSuccess(metricsData: MetricData[]): boolean {
 }
 
 export interface TestResult {
+  expectations?: Expectations;
   name: string;
   success: boolean;
   metricsData: MetricData[] | null;

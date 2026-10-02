@@ -25,7 +25,7 @@ An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has t
 - [Optional] <Term py="retrieval_context" ts="retrievalContext"/>
 - [Optional] <Term py="tools_called" ts="toolsCalled"/>
 - [Optional] <Term py="expected_tools" ts="expectedTools"/>
-- <Only id="python">[Optional] `expectations`</Only>
+- [Optional] `expectations`
 - <Only id="python">[Optional] `expected_labels`</Only>
 - [Optional] <Term py="token_cost" ts="tokenCost"/>
 - [Optional] <Term py="completion_time" ts="completionTime"/>
@@ -370,9 +370,11 @@ const testCase = new LLMTestCase({
 
 </Switch>
 
-<Only id="python">
-
 ### Expectations
+
+<Switch>
+
+<Case id="python">
 
 The optional `expectations` parameter describes what must happen and what must not happen for this input. Use an `Expectations` object to define success directly on the test case, without choosing a metric or providing an `expected_output`.
 
@@ -408,7 +410,47 @@ Both `evaluate()` and `assert_test()` check expectations automatically. If no me
 
 `expected_output` provides a reference answer; `expectations` specifies conditions on the response or actions. They are optional independently and can coexist. To check external actions, include the observed tool calls or evaluate an observed trace. A response claiming an action happened is not proof of the action. Missing evidence produces an evaluation error rather than an assumed pass; use `ErrorConfig(ignore_errors=True)` to record the error and continue the run.
 
-</Only>
+</Case>
+
+<Case id="typescript">
+
+The optional `expectations` parameter describes what must happen and what must not happen for this input, without choosing a metric or providing an `expectedOutput`.
+
+```typescript
+import { evaluate } from "deepeval";
+import { Expectations } from "deepeval/dataset";
+import { LLMTestCase } from "deepeval/test-case";
+
+const testCase = new LLMTestCase({
+  input: "Cancel my subscription.",
+  actualOutput: "Please confirm that you want to cancel your subscription.",
+  expectations: new Expectations({
+    must: ["Ask the user to confirm the cancellation."],
+    mustNot: ["Claim the subscription has already been cancelled."],
+  }),
+});
+
+await evaluate([testCase]);
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `mustNot`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used in `llm` mode. Uses the configured default evaluation model when omitted. Model names survive dataset save/load; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `evalMode`: `"llm"` or `"system_one"`. Uses the configured global eval mode or `llm` when omitted. An explicit global `DEEPEVAL_EVAL_MODE` overrides this setting; global `hybrid` resolves to `llm`. Expectations do not accept `"hybrid"` directly. In `system_one` mode, the default System One judge answers the conditions without an LLM or fallback.
+
+At least one condition in `must` or `mustNot` is required to evaluate expectations.
+
+`evaluate()` and `expect(testCase).toPass()` check expectations automatically. If no metrics are supplied, every test case needs non-empty expectations; missing expectations raise an `Error` before evaluation begins. Every required condition must hold and every prohibited behavior must be absent. Results appear under **Expectations**, with a verdict and reason for each condition. You can also supply metrics in the same run.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet. Missing evidence produces an evaluation error; use `errorConfig: { ignoreErrors: true }` to record it and continue.
+
+`expectedOutput` provides a reference answer; `expectations` specifies conditions on the response or actions. They can coexist or be supplied independently. Include observed tool calls or evaluate an observed trace when checking external actions. A response claiming an action happened is not proof.
+
+</Case>
+
+</Switch>
 
 ### Context
 

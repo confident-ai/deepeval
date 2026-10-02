@@ -16,7 +16,7 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 - [Optional] `expected_outcome`
 - [Optional] `context`
 - [Optional] `chatbot_role`
-- <Only id="python">[Optional] `expectations`</Only>
+- [Optional] `expectations`
 - <Only id="python">[Optional] `expected_labels`</Only>
 
 :::note
@@ -231,9 +231,11 @@ const testCase = new ConversationalTestCase({
 
 </Switch>
 
-<Only id="python">
-
 ### Expectations
+
+<Switch>
+
+<Case id="python">
 
 Set `expectations` to an `Expectations` object to define requirements for the **whole conversation**, including its actions and final state. `expected_outcome` describes the desired end state; expectations can also specify the steps required to reach it. Either field can be supplied independently.
 
@@ -274,7 +276,56 @@ There are **FOUR** optional parameters when creating an `Expectations` object:
 
 At least one condition in `must` or `must_not` is required to evaluate expectations.
 
-</Only>
+</Case>
+
+<Case id="typescript">
+
+Set `expectations` to define requirements for the **whole conversation**, including its actions and final state. `expectedOutcome` describes the desired end state; expectations can also specify the steps required to reach it. Either field can be supplied independently.
+
+```typescript
+import { evaluate } from "deepeval";
+import { Expectations } from "deepeval/dataset";
+import { ConversationalTestCase, ToolCall, Turn } from "deepeval/test-case";
+
+const testCase = new ConversationalTestCase({
+  expectedOutcome: "The subscription is cancelled with the user's consent.",
+  turns: [
+    new Turn({ role: "user", content: "Cancel my subscription." }),
+    new Turn({ role: "assistant", content: "Please confirm you want to cancel." }),
+    new Turn({ role: "user", content: "Yes, cancel it." }),
+    new Turn({
+      role: "assistant",
+      content: "Your subscription has been cancelled.",
+      toolsCalled: [new ToolCall({ name: "cancel_subscription", output: { cancelled: true } })],
+    }),
+  ],
+  expectations: new Expectations({
+    must: ["Obtain the user's confirmation before calling cancel_subscription."],
+    mustNot: ["Claim that a refund was issued."],
+  }),
+});
+
+await evaluate([testCase]);
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `mustNot`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used in `llm` mode. Uses the configured default evaluation model when omitted. Model names survive dataset save/load; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `evalMode`: `"llm"` or `"system_one"`. Uses the configured global eval mode or `llm` when omitted. An explicit global `DEEPEVAL_EVAL_MODE` overrides this setting; global `hybrid` resolves to `llm`. Expectations do not accept `"hybrid"` directly. In `system_one` mode, the default System One judge answers the conditions without an LLM or fallback.
+
+At least one condition in `must` or `mustNot` is required to evaluate expectations.
+
+`evaluate()` and `expect(testCase).toPass()` check expectations automatically. If no metrics are supplied, every test case needs non-empty expectations; missing expectations raise an `Error` before evaluation begins. Every required condition must hold and every prohibited behavior must be absent. Results appear under **Expectations**, with a verdict and reason for each condition. You can also supply metrics in the same run.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet. Missing evidence produces an evaluation error; use `errorConfig: { ignoreErrors: true }` to record it and continue.
+
+Conditions apply across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions.
+
+</Case>
+
+</Switch>
 
 ### Chatbot Role
 
