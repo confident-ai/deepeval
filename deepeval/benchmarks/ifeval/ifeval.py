@@ -8,6 +8,8 @@ from tqdm import tqdm
 import re
 import json
 
+import pandas as pd
+
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmark,
