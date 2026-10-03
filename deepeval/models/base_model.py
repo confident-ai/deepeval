@@ -152,16 +152,23 @@ class DeepEvalBaseLLM(ABC):
         if schema is not None:
             try:
                 return self.generate(*args, schema=schema, **kwargs)
-            except TypeError:
-                pass  # this means provider doesn't accept schema kwarg
+            except TypeError as e:
+                # Only fall back when the binding itself rejected the `schema`
+                # kwarg (no deeper frame). A TypeError raised *inside*
+                # generate() is a real bug: swallowing it here silently
+                # retried without the schema and returned plain text,
+                # masking the root cause and doubling the LLM cost.
+                if e.__traceback__.tb_next is not None:
+                    raise
         return self.generate(*args, **kwargs)
 
     async def a_generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:
             try:
                 return await self.a_generate(*args, schema=schema, **kwargs)
-            except TypeError:
-                pass
+            except TypeError as e:
+                if e.__traceback__.tb_next is not None:
+                    raise
         return await self.a_generate(*args, **kwargs)
 
 
