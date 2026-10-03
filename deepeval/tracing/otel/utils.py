@@ -1,7 +1,7 @@
 import json
 from threading import Lock
 
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, Union
 from opentelemetry.sdk.trace.export import ReadableSpan
 
 try:
@@ -224,7 +224,7 @@ def pop_pending_metrics(uuid: str) -> Optional[List[Any]]:
         return _pending_metrics_overlay.pop(uuid, None)
 
 
-def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
+def to_hex_string(id_value: Union[int, bytes], length: int = 32) -> str:
     """
     Convert a trace ID or span ID to a hex string.
 
