@@ -298,6 +298,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         plan_scores: List[PlanScore],
         multimodal: bool,
     ):
+        if self.include_reason is False:
+            return None
+
         goal_evaluations = ""
         for goal_score in goal_scores:
             goal_evaluations += (
@@ -332,6 +335,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         plan_scores: List[PlanScore],
         multimodal: bool,
     ):
+        if self.include_reason is False:
+            return None
+
         goal_evaluations = ""
         for goal_score in goal_scores:
             goal_evaluations += (
