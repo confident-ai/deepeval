@@ -258,7 +258,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             predictions = model.batch_generate(prompts)
             predictions = [str(pred) for pred in predictions]
 
-        if len(predictions) is not len(goldens):
+        if len(predictions) != len(goldens):
             raise ValueError(
                 "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
             )
