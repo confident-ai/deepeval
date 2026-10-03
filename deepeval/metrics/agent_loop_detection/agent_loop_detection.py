@@ -291,6 +291,37 @@ class AgentLoopDetectionMetric(BaseMetric):
         traverse(trace_dict)
         return spans
 
+    @staticmethod
+    def _args_signature(input_val) -> Tuple[str, ...]:
+        """Return a canonical, order-insensitive signature for tool arguments.
+
+        Tool inputs are frequently nested JSON objects. The naive
+        ``sorted((str(k), str(v)))`` encoding is *not* canonical: ``str()`` of
+        a nested dict preserves insertion order, so two semantically identical
+        argument objects with different key order hash differently and are
+        treated as *different* tool calls — silently missing real repetition
+        (which is the point of this metric). We serialize with
+        ``json.dumps(..., sort_keys=True)`` so dict objects are canonicalized
+        while list order (which is significant) is preserved.
+
+        **Backward compatible:** only the internal repetition signature
+        changes; inputs that shared a signature before still share one, and
+        calls that were previously distinct-but-identical now collapse into
+        the same signature (strictly fewer false negatives).
+        """
+        if input_val is None:
+            return ("",)
+        if isinstance(input_val, str):
+            # A string might itself be a JSON blob; try to canonicalize it.
+            try:
+                input_val = json.loads(input_val)
+            except Exception:
+                return (input_val,)
+        try:
+            return (json.dumps(input_val, sort_keys=True, default=str),)
+        except (TypeError, ValueError):
+            return (str(input_val),)
+
     def _score_tool_repetition(self, tool_spans: list) -> Tuple[float, str]:
         if not tool_spans:
             return 1.0, "No tool spans found."
@@ -298,22 +329,8 @@ class AgentLoopDetectionMetric(BaseMetric):
         tool_counts = {}
         for span in tool_spans:
             name = span.get("name", "")
-
             input_val = span.get("input", {})
-            if isinstance(input_val, str):
-                try:
-                    input_val = json.loads(input_val)
-                except Exception:
-                    pass
-
-            if isinstance(input_val, dict):
-                args_tuple = tuple(
-                    sorted((str(k), str(v)) for k, v in input_val.items())
-                )
-            else:
-                args_tuple = (str(input_val),)
-
-            call_hash = (name, args_tuple)
+            call_hash = (name, self._args_signature(input_val))
             tool_counts[call_hash] = tool_counts.get(call_hash, 0) + 1
 
         max_reps = max(tool_counts.values()) if tool_counts else 0
