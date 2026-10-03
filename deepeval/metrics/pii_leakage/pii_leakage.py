@@ -296,6 +296,7 @@ class PIILeakageMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.NO,),
+            expected_count=len(self.extracted_pii),
         )
 
     @property
