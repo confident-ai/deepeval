@@ -58,38 +58,38 @@ def test_non_positive_n_problems_would_corrupt_scoring(n_problems):
 # --------------------------------------------------------------------------- #
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
 @pytest.mark.parametrize("n_problems", [0, -1, -5])
 def test_non_positive_n_problems_is_rejected(
-    benchmark, kwargs, full_size, n_problems
+    benchmark_cls, kwargs, full_size, n_problems
 ):
     with pytest.raises(ValueError, match="n_problems must be >= 1"):
-        benchmark(n_problems=n_problems, **kwargs)
+        benchmark_cls(n_problems=n_problems, **kwargs)
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
-def test_n_problems_above_maximum_is_rejected(benchmark, kwargs, full_size):
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
+def test_n_problems_above_maximum_is_rejected(benchmark_cls, kwargs, full_size):
     with pytest.raises(ValueError, match="n_problems"):
-        benchmark(n_problems=full_size + 1, **kwargs)
+        benchmark_cls(n_problems=full_size + 1, **kwargs)
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
-def test_n_problems_boundaries_are_accepted(benchmark, kwargs, full_size):
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
+def test_n_problems_boundaries_are_accepted(benchmark_cls, kwargs, full_size):
     # 1 and the full size are both legitimate; the guard must not narrow the
     # range that already worked.
-    assert benchmark(n_problems=1, **kwargs).n_problems == 1
-    assert benchmark(n_problems=full_size, **kwargs).n_problems == full_size
+    assert benchmark_cls(n_problems=1, **kwargs).n_problems == 1
+    assert benchmark_cls(n_problems=full_size, **kwargs).n_problems == full_size
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
-def test_non_int_n_problems_is_rejected(benchmark, kwargs, full_size):
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
+def test_non_int_n_problems_is_rejected(benchmark_cls, kwargs, full_size):
     # A float silently produces `TypeError: slice indices must be integers`
     # much later, inside evaluate(); bool is an int subclass and n_problems=True
     # would mean "1 problem", which is never what the caller meant.
     with pytest.raises(TypeError, match="n_problems must be an int"):
-        benchmark(n_problems=2.5, **kwargs)
+        benchmark_cls(n_problems=2.5, **kwargs)
     with pytest.raises(TypeError, match="n_problems must be an int"):
-        benchmark(n_problems=True, **kwargs)
+        benchmark_cls(n_problems=True, **kwargs)
 
 
 # --------------------------------------------------------------------------- #
@@ -97,23 +97,23 @@ def test_non_int_n_problems_is_rejected(benchmark, kwargs, full_size):
 # --------------------------------------------------------------------------- #
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
 @pytest.mark.parametrize("n_shots", [-1, -3])
-def test_negative_n_shots_is_rejected(benchmark, kwargs, full_size, n_shots):
+def test_negative_n_shots_is_rejected(benchmark_cls, kwargs, full_size, n_shots):
     with pytest.raises(ValueError, match="n_shots must be >= 0"):
-        benchmark(n_shots=n_shots, **kwargs)
+        benchmark_cls(n_shots=n_shots, **kwargs)
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
-def test_zero_n_shots_is_accepted(benchmark, kwargs, full_size):
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
+def test_zero_n_shots_is_accepted(benchmark_cls, kwargs, full_size):
     # 0 is a real configuration -- zero-shot -- and must stay allowed.
-    assert benchmark(n_shots=0, **kwargs).n_shots == 0
+    assert benchmark_cls(n_shots=0, **kwargs).n_shots == 0
 
 
-@pytest.mark.parametrize("benchmark,kwargs,full_size", BENCHMARKS, ids=IDS)
-def test_n_shots_above_maximum_is_rejected(benchmark, kwargs, full_size):
+@pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
+def test_n_shots_above_maximum_is_rejected(benchmark_cls, kwargs, full_size):
     with pytest.raises(ValueError, match="n_shots"):
-        benchmark(n_shots=99, **kwargs)
+        benchmark_cls(n_shots=99, **kwargs)
 
 
 # --------------------------------------------------------------------------- #
