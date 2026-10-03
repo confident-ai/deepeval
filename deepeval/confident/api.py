@@ -245,15 +245,18 @@ class Api:
     def _http_request(
         self, method: str, url: str, headers=None, json=None, params=None
     ):
-        session = requests.Session()
-        return session.request(
-            method=method,
-            url=url,
-            headers=headers,
-            json=json,
-            params=params,
-            verify=self.verify_ssl,
-        )
+        # Context-managed so the connection pool is released eagerly instead of
+        # leaking a socket per request (this is the hot path for cloud sync,
+        # and the retry decorator multiplies it).
+        with requests.Session() as session:
+            return session.request(
+                method=method,
+                url=url,
+                headers=headers,
+                json=json,
+                params=params,
+                verify=self.verify_ssl,
+            )
 
     def _handle_response(
         self, response_data: Union[dict, Any]
