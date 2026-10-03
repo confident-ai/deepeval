@@ -118,12 +118,24 @@ def camel_to_snake(name: str) -> str:
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
+# Keys whose values hold user data (their own keys are not field names), so
+# they must come back exactly as they were sent.
+_USER_DATA_KEYS = {
+    "additionalMetadata",
+    "metadata",
+    "customColumnKeyValues",
+    "expectedLabels",
+    "inputParameters",
+    "output",
+}
+
+
 def convert_keys_to_snake_case(data: Any) -> Any:
     if isinstance(data, dict):
         new_dict = {}
         for k, v in data.items():
             new_key = camel_to_snake(k)
-            if k == "additionalMetadata" or k == "metadata":
+            if k in _USER_DATA_KEYS:
                 new_dict[new_key] = (
                     v  # Convert key but do not recurse into value
                 )
