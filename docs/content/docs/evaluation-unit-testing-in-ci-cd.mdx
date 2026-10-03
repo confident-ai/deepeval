@@ -7,7 +7,7 @@ languages: [python, typescript]
 
 import { ASSETS } from "@site/src/assets";
 
-Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions before they ship. `deepeval` plugs into <Term py="pytest" ts="vitest"/> via <Term py="assert_test()" ts="expect(testCase).toPass()"/> and the <Term py="deepeval test run" ts="npx deepeval test run"/> command, so every push (or every PR) runs the same evals you'd run locally — single-turn or multi-turn, end-to-end or component-level.
+Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions before they ship. `deepeval` plugs into <Term py="pytest" ts="vitest"/> via <Term py="assert_test()" ts="expect(testCase).toPass()"/> and the <Term py="deepeval test run" ts="npx deepeval test run"/> command, so every push (or every PR) runs the same evals you'd run locally — single-turn or multi-turn, end-to-end or component-level. For a walkthrough that compares runs against a baseline, see the [regression testing in CI/CD guide](/guides/guides-regression-testing-in-cicd).
 
 ## How It Works
 
