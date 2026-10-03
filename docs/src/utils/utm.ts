@@ -25,16 +25,21 @@
  *   utm_campaign = inbound visitor campaign carried via last_touch
  *   utm_term     = inbound visitor term carried via last_touch
  *   ref_page    = window.location.pathname at click time (always)
- *   site_path   = the docs pages this tab read, ">" separated
- *                 (app.confident-ai.com only)
+ *   site_path   = where this tab arrived from and the docs pages it read,
+ *                 ">" separated, on all three browser-clickable hosts
+ *                 (CONFIDENT_HOSTNAMES). The marketing site seeds its own
+ *                 trail from it, so one trail can span deepeval.com and
+ *                 confident-ai.com.
  *
  * `utm_campaign` and `utm_term` come from the visitor's stored last_touch
  * (captured from the URL on their most recent UTM landing). This lets a Google
  * ad campaign survive the deepeval-docs hop into app.confident-ai.com.
  *
  * `site_path` comes from the per-tab trail that UtmCapture records in
- * sessionStorage on every route change (see visitor-attribution.ts). It is
- * stamped on app.confident-ai.com links only, and only when the tab has one.
+ * sessionStorage on every route change (see visitor-attribution.ts), prefixed
+ * with the markers that name the arrival site and this site. It is stamped on
+ * every browser-clickable Confident AI host, and only when the tab has an
+ * arrival or a trail to send.
  *
  * Programmatic hosts (api.*, eu.api.*, au.api.*, deepeval.*, eu.deepeval.*,
  * au.deepeval.*, otel.*, eu.otel.*, au.otel.*) are intentionally excluded
@@ -61,29 +66,29 @@ export const CONFIDENT_HOSTS_BY_NAME = {
 
 export type ConfidentHost = keyof typeof CONFIDENT_HOSTS_BY_NAME;
 
-/** Hostname of CONFIDENT_HOSTS_BY_NAME.APP, for URL#hostname comparison. */
-export const APP_HOSTNAME = new URL(CONFIDENT_HOSTS_BY_NAME.APP).hostname;
-/** Query param that carries the per-tab docs trail. APP_HOSTNAME links only. */
+/** Query param that carries the per-tab docs trail. Confident hosts only. */
 export const SITE_PATH_PARAM = 'site_path';
 
+/** Hostname-only set used by both runtime guards (URL#hostname comparison). */
+export const CONFIDENT_HOSTNAMES: ReadonlySet<string> = new Set(
+  Object.values(CONFIDENT_HOSTS_BY_NAME).map((u) => new URL(u).hostname),
+);
+
 /**
- * Stamp the trail onto an app link. Kept apart from the utm assembly so a
- * failure here can never cost the utm params: the trail is optional.
+ * Stamp the trail onto a Confident AI link. Every line sits inside the try,
+ * including the host test: this step is optional and must never cost the utm
+ * params assembled around it.
  */
 export function appendSitePath(u: URL): void {
-  if (u.hostname !== APP_HOSTNAME || u.searchParams.has(SITE_PATH_PARAM)) return;
   try {
+    if (!CONFIDENT_HOSTNAMES.has(u.hostname)) return;
+    if (u.searchParams.has(SITE_PATH_PARAM)) return;
     const sitePath = getDocsSessionPathCompact();
     if (sitePath) u.searchParams.set(SITE_PATH_PARAM, sitePath);
   } catch {
     // the trail is optional; the utm params must still ship
   }
 }
-
-/** Hostname-only set used by both runtime guards (URL#hostname comparison). */
-export const CONFIDENT_HOSTNAMES: ReadonlySet<string> = new Set(
-  Object.values(CONFIDENT_HOSTS_BY_NAME).map((u) => new URL(u).hostname),
-);
 
 const SOURCE = 'deepeval';
 const DEFAULT_MEDIUM = 'docs';
@@ -108,9 +113,10 @@ export interface AppendOpts {
  *   - URL is not a Confident AI host (CONFIDENT_HOSTNAMES)
  *   - The corresponding param is already set on the URL (caller wins)
  *
- * Browser-only — pulls last_touch from localStorage, the page trail from
- * sessionStorage (app host only), and current pathname from window.location.
- * SSR-safe (returns input unchanged when window is undefined).
+ * Browser-only — pulls last_touch from localStorage, the page trail and the
+ * arrival host from sessionStorage (every browser-clickable Confident AI
+ * host), and the current pathname from window.location. SSR-safe (returns
+ * input unchanged when window is undefined).
  */
 export function appendDeepEvalAttribution(
   url: string,
