@@ -278,6 +278,23 @@ class Api:
 
         return api_response.data, api_response.link
 
+    @staticmethod
+    def _http_error_message(
+        status_code: int, error_data: Any, text: str
+    ) -> str:
+        """Build the error for a non-200 reply whose body is not the Confident
+        ``{"success": false, "error": ...}`` envelope (a proxy, gateway, or
+        framework rejection such as ``{"detail": "Not authenticated"}``)."""
+        detail = text
+        if isinstance(error_data, dict):
+            detail = (
+                error_data.get("error")
+                or error_data.get("detail")
+                or error_data.get("message")
+                or text
+            )
+        return f"Confident AI request failed with HTTP {status_code}: {detail}"
+
     def send_request(
         self,
         method: HttpMethods,
@@ -315,16 +332,17 @@ class Api:
         else:
             try:
                 error_data = res.json()
-                return self._handle_response(error_data)
-            except (ValueError, ConfidentApiError) as e:
-                if isinstance(e, ConfidentApiError):
-                    raise e
-                error_message = (
-                    error_data.get("error", res.text)
-                    if "error_data" in locals()
-                    else res.text
-                )
-                raise Exception(error_message)
+            except ValueError:
+                error_data = None
+
+            if error_data is not None:
+                # Raises ConfidentApiError for a {"success": false} envelope;
+                # any other body must not be returned as successful data.
+                self._handle_response(error_data)
+
+            raise ConfidentApiError(
+                self._http_error_message(res.status_code, error_data, res.text)
+            )
 
     async def a_send_request(
         self,
@@ -363,13 +381,17 @@ class Api:
                 else:
                     try:
                         error_data = await res.json()
-                        return self._handle_response(error_data)
-                    except (aiohttp.ContentTypeError, ConfidentApiError) as e:
-                        if isinstance(e, ConfidentApiError):
-                            raise e
-                        error_message = (
-                            error_data.get("error", await res.text())
-                            if "error_data" in locals()
-                            else await res.text()
+                    except (aiohttp.ContentTypeError, ValueError):
+                        error_data = None
+
+                    if error_data is not None:
+                        # Raises ConfidentApiError for a {"success": false}
+                        # envelope; any other body must not be returned as
+                        # successful data.
+                        self._handle_response(error_data)
+
+                    raise ConfidentApiError(
+                        self._http_error_message(
+                            res.status, error_data, await res.text()
                         )
-                        raise Exception(error_message)
+                    )
