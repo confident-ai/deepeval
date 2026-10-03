@@ -16,6 +16,7 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     convert_turn_to_dict,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
@@ -68,6 +69,56 @@ def test_calculate_weighted_summed_score_with_single_score_token():
     raw_response = create_raw_response([create_token("6", "4")])
 
     assert calculate_weighted_summed_score(6, raw_response) == 4
+
+
+def test_calculate_weighted_summed_score_zero_sum_probability():
+    raw_response = create_raw_response(
+        [
+            SimpleNamespace(
+                token="5",
+                top_logprobs=[SimpleNamespace(token="non_decimal", logprob=0)],
+            )
+        ]
+    )
+
+    assert calculate_weighted_summed_score(5, raw_response) == 5
+
+
+class FakeModel(DeepEvalBaseLLM):
+    def __init__(self):
+        pass
+
+    def load_model(self):
+        return None
+
+    def generate(self, prompt: str) -> str:
+        return ""
+
+    async def a_generate(self, prompt: str) -> str:
+        return ""
+
+    def get_model_name(self) -> str:
+        return "fake"
+
+
+def test_conversational_geval_delegates_weighted_summed_score():
+    from deepeval.metrics import ConversationalGEval
+
+    metric = ConversationalGEval(
+        name="test_convo",
+        evaluation_params=[MultiTurnParams.CONTENT],
+        criteria="criteria",
+        model=FakeModel(),
+    )
+    raw_response = create_raw_response(
+        [
+            create_token("10", "2"),
+            create_token("reasoning_text", "reasoning_text"),
+            create_token("10", "10"),
+        ]
+    )
+
+    assert metric.generate_weighted_summed_score(10, raw_response) == 10
 
 
 def test_geval_accepts_metadata_and_tags():
