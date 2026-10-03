@@ -328,14 +328,14 @@ class Scorer(BaseScorer):
         actual = await self.a_generate(prompt_configuration.prompts, golden)
         test_case = self._golden_to_test_case(golden, actual)
 
-        per_metric: Dict[str, float] = {}
+        # One entry per metric instance. Keying by class name would let two
+        # metrics of the same class (for example two GEvals with different
+        # criteria) overwrite each other, so only the last one would count.
+        scores: List[float] = []
         for metric in metrics:
             score = await _a_measure_no_indicator(metric, test_case)
-            per_metric[metric.__class__.__name__] = float(score)
-        score = (
-            sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
-        )
-        return score
+            scores.append(float(score))
+        return sum(scores) / len(scores) if scores else 0.0
 
     def _score_one(
         self,
@@ -346,14 +346,11 @@ class Scorer(BaseScorer):
         actual = self.generate(prompt_configuration.prompts, golden)
         test_case = self._golden_to_test_case(golden, actual)
 
-        per_metric: Dict[str, float] = {}
+        scores: List[float] = []
         for metric in metrics:
             score = _measure_no_indicator(metric, test_case)
-            per_metric[metric.__class__.__name__] = float(score)
-        score = (
-            sum(per_metric.values()) / len(per_metric) if per_metric else 0.0
-        )
-        return score
+            scores.append(float(score))
+        return sum(scores) / len(scores) if scores else 0.0
 
     def _select_module_id_from_prompts(
         self, prompts_by_module: Dict[ModuleId, Prompt]
