@@ -3,7 +3,12 @@ import os
 import tempfile
 import json
 import csv
-from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
+from deepeval.dataset import (
+    EvaluationDataset,
+    Golden,
+    ConversationalGolden,
+    Persona,
+)
 from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
 from deepeval.test_case import (
     Turn,
@@ -273,6 +278,60 @@ class TestSaveAndLoad:
                 assert loaded.custom_column_key_values == {
                     "owner": "platform"
                 }, fmt
+
+    def test_save_as_round_trips_persona(self):
+        """A persona drives the simulator (speaks_first, muted, hold_timeout,
+        voice), but only the json and jsonl writers emitted it: save_as("csv")
+        had no persona column, so a CSV dataset came back with just the
+        deprecated `user_description` and default behavior for every caller."""
+        persona = Persona(
+            name="Ada",
+            characteristics="blunt and impatient",
+            voice="nova",
+            speaks_first=False,
+            muted=True,
+            hold_timeout=12.5,
+        )
+        golden = ConversationalGolden(
+            scenario="Book a flight",
+            expected_outcome="Booked",
+            turns=[Turn(role="user", content="Hi")],
+            persona=persona,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for fmt, loader in (
+                ("json", "add_goldens_from_json_file"),
+                ("csv", "add_goldens_from_csv_file"),
+                ("jsonl", "add_goldens_from_jsonl_file"),
+            ):
+                path = EvaluationDataset([golden]).save_as(
+                    fmt, directory=tmpdir, file_name=f"persona_{fmt}"
+                )
+                reloaded = EvaluationDataset()
+                getattr(reloaded, loader)(path)
+                assert reloaded.goldens[0].persona == persona, fmt
+
+    def test_csv_without_a_persona_column_keeps_user_description(self):
+        """Files written before personas existed carry only `user_description`;
+        the absent column must upgrade to a persona rather than become a
+        persona of defaults."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, "legacy.csv")
+            with open(path, "w", newline="", encoding="utf-8") as file:
+                writer = csv.writer(file)
+                writer.writerow(
+                    ["scenario", "expected_outcome", "user_description"]
+                )
+                writer.writerow(["Refund", "Refunded", "An impatient caller."])
+
+            reloaded = EvaluationDataset()
+            reloaded.add_goldens_from_csv_file(path)
+
+            golden = reloaded.goldens[0]
+            assert golden.persona == Persona(
+                characteristics="An impatient caller."
+            )
 
     def test_save_as_round_trips_retrieval_context_data(self):
         """save_as serializes a RetrievedContextData (a type-allowed member of
