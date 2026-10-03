@@ -3,10 +3,12 @@
 # Source: https://github.com/tingofurro/summac
 ###############################################
 
-import nltk
-import os
 import json
+import os
+
+import nltk
 import torch
+
 from deepeval import utils as utils_misc
 
 model_map = {
@@ -89,9 +91,9 @@ class _SummaCImager:
             )
             and len(self.grans) <= 2
         ), "Unrecognized `granularity` %s" % (granularity)
-        assert (
-            model_name in model_map.keys()
-        ), "Unrecognized model name: `%s`" % (model_name)
+        assert model_name in model_map, "Unrecognized model name: `%s`" % (
+            model_name
+        )
 
         self.model_name = model_name
         if model_name != "decomp":
@@ -130,8 +132,8 @@ class _SummaCImager:
         else:
             try:
                 from transformers import (
-                    AutoTokenizer,
                     AutoModelForSequenceClassification,
+                    AutoTokenizer,
                 )
             except ModuleNotFoundError:
                 print(
@@ -316,14 +318,14 @@ class _SummaCConv(torch.nn.Module):
             "ecn",
         ], "Unrecognized nli_labels argument %s" % (nli_labels)
 
-        super(SummaCConv, self).__init__()
+        super().__init__()
         self.device = device
         self.models = models
 
         self.imagers = []
         for model_name in models:
             self.imagers.append(
-                SummaCImager(
+                _SummaCImager(
                     model_name=model_name, granularity=granularity, **kwargs
                 )
             )
