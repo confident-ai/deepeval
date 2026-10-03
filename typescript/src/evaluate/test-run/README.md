@@ -174,7 +174,7 @@ adoption at all.
 `evalsIterator` and Mastra's `DeepEvalExporter` write to. Whichever runs last
 wins, and the per-test `endTraceCapture()` clears it outright. Calling
 `evalsIterator` inside a test file therefore misbehaves. This is
-[gap 6 in the integrations README](../../integrations/README.md#6-evalsiterator-and-mastra-fight-over-one-capture-sink),
+[gap 6 in the integrations README](../../integrations/README.md#6-evalsiterator-mastra-and-the-test-runner-fight-over-one-capture-sink),
 now with a third consumer — it needs a subscriber list rather than one slot.
 
 ### 11. `chatbotRole` is dropped from conversational uploads
