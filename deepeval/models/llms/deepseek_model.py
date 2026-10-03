@@ -128,6 +128,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
             completion = client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": prompt}],
+                temperature=self.temperature,
                 **self.generation_kwargs,
             )
             output = completion.choices[0].message.content
@@ -163,6 +164,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
             completion = await client.chat.completions.create(
                 model=self.name,
                 messages=[{"role": "user", "content": prompt}],
+                temperature=self.temperature,
                 **self.generation_kwargs,
             )
             output = completion.choices[0].message.content

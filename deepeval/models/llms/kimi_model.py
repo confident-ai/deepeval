@@ -134,6 +134,7 @@ class KimiModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.name,
             messages=[{"role": "user", "content": content}],
+            temperature=self.temperature,
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -179,6 +180,7 @@ class KimiModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.name,
             messages=[{"role": "user", "content": content}],
+            temperature=self.temperature,
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
