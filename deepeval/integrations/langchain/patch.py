@@ -1,6 +1,6 @@
 import functools
 from deepeval.metrics import BaseMetric
-from deepeval.tracing.context import current_span_context
+from deepeval.tracing.context import update_current_span
 from typing import List, Optional, Callable
 from langchain_core.tools import tool as original_tool, BaseTool
 
@@ -33,9 +33,12 @@ def _patch_tool_decorator(
 
     @functools.wraps(original_func)
     def wrapper(*args, **kwargs):
-        current_span = current_span_context.get()
-        current_span.metrics = metrics
-        current_span.metric_collection = metric_collection
+        # update_current_span is a no-op without an active span and
+        # skips None values, so metrics staged on the tool span
+        # aren't clobbered.
+        update_current_span(
+            metrics=metrics, metric_collection=metric_collection
+        )
         res = original_func(*args, **kwargs)
         return res
 
