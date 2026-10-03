@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Union, Dict, Optional, List
 from deepeval.test_run import global_test_run_manager
 from deepeval.prompt import Prompt
@@ -58,25 +59,40 @@ def process_hyperparameters(
     return processed_hyperparameters
 
 
-def log_hyperparameters(func):
-    test_run = global_test_run_manager.get_test_run()
+def log_hyperparameters(*args, **kwargs):
+    def decorator(func):
+        test_run = global_test_run_manager.get_test_run()
 
-    def modified_hyperparameters():
-        base_hyperparameters = func()
-        return base_hyperparameters
+        combined_hyperparameters = dict(kwargs)
+        func_result = func()
+        if func_result is not None:
+            if not isinstance(func_result, dict):
+                raise TypeError(
+                    "Hyperparameters function must return a dictionary or None"
+                )
+            combined_hyperparameters.update(func_result)
 
-    hyperparameters = process_hyperparameters(modified_hyperparameters())
-    test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+        hyperparameters = process_hyperparameters(
+            combined_hyperparameters if combined_hyperparameters else None
+        )
+        test_run.hyperparameters = hyperparameters
+        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-    # Define the wrapper function that will be the actual decorator
-    def wrapper(*args, **kwargs):
-        # Optional: You can decide if you want to do something else here
-        # every time the decorated function is called
-        return func(*args, **kwargs)
+        @wraps(func)
+        def wrapper(*fn_args, **fn_kwargs):
+            return func(*fn_args, **fn_kwargs)
 
-    # Return the wrapper function to be used as the decorator
-    return wrapper
+        return wrapper
+
+    if len(args) == 1 and callable(args[0]) and not kwargs:
+        return decorator(args[0])
+    elif len(args) == 0:
+        return decorator
+    else:
+        raise TypeError(
+            "log_hyperparameters can only be used as a decorator "
+            "(@log_hyperparameters, @log_hyperparameters(), or @log_hyperparameters(**kwargs))."
+        )
 
 
 def process_prompts(
