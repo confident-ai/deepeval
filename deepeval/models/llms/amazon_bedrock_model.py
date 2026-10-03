@@ -60,6 +60,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         # Backwards compatibility for renamed params
         if model is None and "model" in alias_values:
             model = alias_values["model"]
+        if region is None and "region" in alias_values:
+            region = alias_values["region"]
         if (
             cost_per_input_token is None
             and "cost_per_input_token" in alias_values

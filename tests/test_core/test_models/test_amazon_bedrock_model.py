@@ -245,3 +245,30 @@ def test_bedrock_user_supplied_costs_are_written_to_model_data(
     cost = model.calculate_cost(input_tokens=1000, output_tokens=500)
     assert cost is not None
     assert cost == 1000 * 0.003 + 500 * 0.006
+
+
+################################
+# deprecated keyword aliases   #
+################################
+
+
+@patch("deepeval.models.llms.amazon_bedrock_model.require_dependency")
+def test_bedrock_region_name_alias_populates_region(mock_require_dep, settings):
+    """
+    ``region_name`` is declared as an alias of ``region`` in ``_ALIAS_MAP``, so
+    ``normalize_kwargs_and_extract_aliases`` pops it out of ``kwargs`` into
+    ``alias_values["region"]``. ``__init__`` must copy that value onto
+    ``region`` (as it already does for the ``model`` and ``*_token_cost``
+    aliases); otherwise the argument is dropped and the settings fallback wins.
+    """
+    mock_require_dep.return_value = MagicMock()
+
+    with settings.edit(persist=False):
+        settings.AWS_BEDROCK_REGION = "eu-central-1"
+
+    model = AmazonBedrockModel(
+        model="my-custom-unregistered-model",
+        region_name="us-west-2",
+    )
+
+    assert model.region == "us-west-2"
