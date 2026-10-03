@@ -2627,12 +2627,12 @@ version = "1.72.0"
 description = "Common protobufs used in Google APIs"
 optional = false
 python-versions = ">=3.7"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "googleapis_common_protos-1.72.0-py3-none-any.whl", hash = "sha256:4299c5a82d5ae1a9702ada957347726b167f9f8d1fc352477702a1e851ff4038"},
     {file = "googleapis_common_protos-1.72.0.tar.gz", hash = "sha256:e55a601c1b32b52d7a3e65f43563e2aa61bcd737998ee672ac9b951cd49319f5"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 grpcio = {version = ">=1.44.0,<2.0.0", optional = true, markers = "extra == \"grpc\""}
@@ -2886,7 +2886,7 @@ version = "1.78.0"
 description = "HTTP/2-based RPC framework"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "dev", "integrations"]
+groups = ["dev", "integrations"]
 files = [
     {file = "grpcio-1.78.0-cp310-cp310-linux_armv7l.whl", hash = "sha256:7cc47943d524ee0096f973e1081cb8f4f17a4615f2116882a5f1416e4cfe92b5"},
     {file = "grpcio-1.78.0-cp310-cp310-macosx_11_0_universal2.whl", hash = "sha256:c3f293fdc675ccba4db5a561048cca627b5e7bd1c8a6973ffedabe7d116e22e2"},
@@ -3269,7 +3269,7 @@ files = [
     {file = "importlib_metadata-8.7.1-py3-none-any.whl", hash = "sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151"},
     {file = "importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 zipp = ">=3.20"
@@ -6094,7 +6094,7 @@ files = [
     {file = "opentelemetry_api-1.39.1-py3-none-any.whl", hash = "sha256:2edd8463432a7f8443edce90972169b195e7d6a05500cd29e6d13898187c9950"},
     {file = "opentelemetry_api-1.39.1.tar.gz", hash = "sha256:fbde8c80e1b937a2c61f20347e91c0c18a1940cecf012d62e65a7caf08967c9c"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 importlib-metadata = ">=6.0,<8.8.0"
@@ -6163,12 +6163,12 @@ version = "1.39.1"
 description = "OpenTelemetry Protobuf encoding"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "opentelemetry_exporter_otlp_proto_common-1.39.1-py3-none-any.whl", hash = "sha256:08f8a5862d64cc3435105686d0216c1365dc5701f86844a8cd56597d0c764fde"},
     {file = "opentelemetry_exporter_otlp_proto_common-1.39.1.tar.gz", hash = "sha256:763370d4737a59741c89a67b50f9e39271639ee4afc999dadfe768541c027464"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 opentelemetry-proto = "1.39.1"
@@ -6205,14 +6205,14 @@ gcp-auth = ["opentelemetry-exporter-credential-provider-gcp (>=0.59b0)"]
 name = "opentelemetry-exporter-otlp-proto-http"
 version = "1.39.1"
 description = "OpenTelemetry Collector Protobuf over HTTP Exporter"
-optional = false
+optional = true
 python-versions = ">=3.9"
-groups = ["integrations"]
-markers = "python_version >= \"3.10\" and python_version < \"3.15\""
+groups = ["main", "integrations"]
 files = [
     {file = "opentelemetry_exporter_otlp_proto_http-1.39.1-py3-none-any.whl", hash = "sha256:d9f5207183dd752a412c4cd564ca8875ececba13be6e9c6c370ffb752fd59985"},
     {file = "opentelemetry_exporter_otlp_proto_http-1.39.1.tar.gz", hash = "sha256:31bdab9745c709ce90a49a0624c2bd445d31a28ba34275951a6a362d16a0b9cb"},
 ]
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 googleapis-common-protos = ">=1.52,<2.0"
@@ -6251,12 +6251,12 @@ version = "1.39.1"
 description = "OpenTelemetry Python Proto"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "opentelemetry_proto-1.39.1-py3-none-any.whl", hash = "sha256:22cdc78efd3b3765d09e68bfbd010d4fc254c9818afd0b6b423387d9dee46007"},
     {file = "opentelemetry_proto-1.39.1.tar.gz", hash = "sha256:6c8e05144fc0d3ed4d22c2289c6b126e03bcd0e6a7da0f16cedd2e1c2772e2c8"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 protobuf = ">=5.0,<7.0"
@@ -6291,7 +6291,7 @@ files = [
     {file = "opentelemetry_sdk-1.39.1-py3-none-any.whl", hash = "sha256:4d5482c478513ecb0a5d938dcc61394e647066e0cc2676bee9f3af3f3f45f01c"},
     {file = "opentelemetry_sdk-1.39.1.tar.gz", hash = "sha256:cf4d4563caf7bff906c9f7967e2be22d0d6b349b908be0d90fb21c8e9c995cc6"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 opentelemetry-api = "1.39.1"
@@ -6309,7 +6309,7 @@ files = [
     {file = "opentelemetry_semantic_conventions-0.60b1-py3-none-any.whl", hash = "sha256:9fa8c8b0c110da289809292b0591220d3a7b53c1526a23021e977d68597893fb"},
     {file = "opentelemetry_semantic_conventions-0.60b1.tar.gz", hash = "sha256:87c228b5a0669b748c76d76df6c364c369c28f1c465e50f661e39737e84bc953"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.dependencies]
 opentelemetry-api = "1.39.1"
@@ -7368,7 +7368,7 @@ version = "6.33.5"
 description = ""
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "protobuf-6.33.5-cp310-abi3-win32.whl", hash = "sha256:d71b040839446bac0f4d162e758bea99c8251161dae9d0983a3b88dee345153b"},
     {file = "protobuf-6.33.5-cp310-abi3-win_amd64.whl", hash = "sha256:3093804752167bcab3998bec9f1048baae6e29505adaf1afd14a37bddede533c"},
@@ -7381,7 +7381,7 @@ files = [
     {file = "protobuf-6.33.5-py3-none-any.whl", hash = "sha256:69915a973dd0f60f31a08b8318b73eab2bd6a392c79184b3612226b0a3f8ec02"},
     {file = "protobuf-6.33.5.tar.gz", hash = "sha256:6ddcac2a081f8b7b9642c09406bc6a4290128fce5f471cddd165960bb9119e5c"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [[package]]
 name = "ptyprocess"
@@ -11065,7 +11065,7 @@ files = [
     {file = "zipp-3.23.0-py3-none-any.whl", hash = "sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e"},
     {file = "zipp-3.23.0.tar.gz", hash = "sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
+markers = {main = "extra == \"otel\"", integrations = "python_version >= \"3.10\" and python_version < \"3.15\""}
 
 [package.extras]
 check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \"cygwin\""]
@@ -11190,8 +11190,9 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 
 [extras]
 inspect = ["pyperclip", "textual"]
+otel = ["opentelemetry-api", "opentelemetry-exporter-otlp-proto-http", "opentelemetry-sdk"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "01aa6352de506ef5ffdfa71c8c068af1ee42b1190219f4e6623de09c6227d724"
+content-hash = "813866a8bacfeb91b4d18fc0fa9652ebe7678a371323abb6e8e0f856327e0262"

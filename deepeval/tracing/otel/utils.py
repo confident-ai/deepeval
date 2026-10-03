@@ -2,7 +2,11 @@ import json
 from threading import Lock
 
 from typing import Dict, List, Optional, Tuple, Any
-from opentelemetry.sdk.trace.export import ReadableSpan
+
+try:
+    from opentelemetry.sdk.trace.export import ReadableSpan
+except ImportError:
+    ReadableSpan = Any  # type: ignore[assignment]
 
 try:
     from opentelemetry.attributes import BoundedAttributes
