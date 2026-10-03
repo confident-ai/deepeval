@@ -10,7 +10,8 @@
       "endTime": "2026-02-27T11:14:37.421Z",
       "input": {
         "data": "test"
-      }
+      },
+      "output": "Async End"
     },
     {
       "uuid": "efcd5bec-24a2-44b7-b29d-a45555f36c82",
@@ -36,5 +37,6 @@
   "input": {
     "data": "test"
   },
+  "output": "Async End",
   "status": "SUCCESS"
 }

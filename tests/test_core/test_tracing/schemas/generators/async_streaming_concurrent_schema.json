@@ -10,7 +10,8 @@
       "endTime": "2026-02-27T11:14:37.528Z",
       "input": {
         "data": "a b c"
-      }
+      },
+      "output": "Fetched: c"
     }
   ],
   "agentSpans": [],
@@ -23,5 +24,6 @@
   "input": {
     "data": "a b c"
   },
+  "output": "Fetched: c",
   "status": "SUCCESS"
 }

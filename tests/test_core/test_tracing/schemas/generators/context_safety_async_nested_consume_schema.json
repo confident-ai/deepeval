@@ -42,6 +42,12 @@
       "endTime": "2026-02-27T11:14:38.051Z",
       "input": {
         "message": "hello world"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "hello world"
+        }
       }
     }
   ],
