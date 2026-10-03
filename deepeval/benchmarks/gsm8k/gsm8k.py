@@ -9,6 +9,7 @@ from deepeval.benchmarks.base_benchmark import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
 from deepeval.benchmarks.schema import NumberSchema
+from deepeval.benchmarks.utils import validate_n_problems, validate_n_shots
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -25,7 +26,8 @@ class GSM8K(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 15, "GSM8K only supports n_shots <= 15"
+        n_shots = validate_n_shots(n_shots, 15, "GSM8K")
+        n_problems = validate_n_problems(n_problems, 1319, "GSM8K")
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.shots_dataset: List[Dict] = None
