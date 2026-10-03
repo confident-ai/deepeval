@@ -238,7 +238,12 @@ class Scorer:
 
     @classmethod
     def hallucination_score(
-        cls, source: str, prediction: str, model: Optional[str] = None
+        cls,
+        source: str,
+        prediction: str,
+        model: Optional[str] = None,
+        trust_remote_code: Optional[bool] = None,
+        **kwargs,
     ) -> float:
         """Calculate the hallucination score of a prediction compared to a source text.
 
@@ -248,6 +253,10 @@ class Scorer:
         Args:
             source (str): The source document where the information is summarized from.
             prediction (str): The generated summary that is validated against the source summary.
+            model (Optional[str], optional): Hugging Face CrossEncoder model name.
+            trust_remote_code (Optional[bool], optional): Forwarded to CrossEncoder.
+                Defaults to True for the default Vectara model and False otherwise.
+            **kwargs: Additional arguments forwarded to sentence_transformers.CrossEncoder.
 
         Returns:
             float: The computed hallucination score. Lower values indicate greater hallucination.
@@ -260,7 +269,11 @@ class Scorer:
             print(
                 f"Vectera Hallucination detection model can not be loaded.\n{e}"
             )
-        scorer = HallucinationModel(model_name=model)
+        scorer = HallucinationModel(
+            model_name=model,
+            trust_remote_code=trust_remote_code,
+            **kwargs,
+        )
         return scorer.model.predict([source, prediction])
 
     @classmethod
