@@ -1,7 +1,12 @@
 import os
 import pytest
 from deepeval.metrics import ToolCorrectnessMetric
-from deepeval.test_case import LLMTestCase, ToolCall, ToolCallType
+from deepeval.test_case import (
+    LLMTestCase,
+    ToolCall,
+    ToolCallParams,
+    ToolCallType,
+)
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -128,3 +133,58 @@ class TestToolCorrectnessMetricType:
         metric.measure(test_case, _show_indicator=False)
 
         assert metric.score == 1.0
+
+
+def _book(**params):
+    return ToolCall(name="book", input_parameters=params)
+
+
+def _measure(expected, called):
+    metric = ToolCorrectnessMetric(
+        async_mode=False,
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+    )
+    metric.measure(
+        LLMTestCase(
+            input="Book two rooms",
+            actual_output="book(); book()",
+            tools_called=called,
+            expected_tools=expected,
+        ),
+        _show_indicator=False,
+    )
+    return metric.score
+
+
+class TestToolCorrectnessMetricAssignment:
+    """In the default (unordered) mode each expected call is paired with at
+    most one actual call. The pairing must be the best available one, so the
+    score cannot depend on the order expected_tools happen to be listed in."""
+
+    EXPECTED = [_book(a=1, b=1, c=1), _book(a=1, b=1, c=2)]
+    CALLED = [_book(a=1, b=1, c=2), _book(a=1, b=5, c=5)]
+
+    def test_score_does_not_depend_on_expected_order(self):
+        forward = _measure(self.EXPECTED, self.CALLED)
+        reverse = _measure(self.EXPECTED[::-1], self.CALLED)
+        assert forward == pytest.approx(reverse)
+
+    def test_partial_credit_uses_best_pairing(self):
+        # Best pairing: expected[1] -> called[0] (3/3), expected[0] ->
+        # called[1] (1/3). Greedy took expected[0] -> called[0] (2/3) and left
+        # expected[1] with called[1] (1/3), scoring 0.5.
+        assert _measure(self.EXPECTED, self.CALLED) == pytest.approx(2 / 3)
+
+    def test_score_does_not_depend_on_called_order(self):
+        forward = _measure(self.EXPECTED, self.CALLED)
+        reverse = _measure(self.EXPECTED, self.CALLED[::-1])
+        assert forward == pytest.approx(reverse)
+
+    def test_more_calls_than_expected(self):
+        called = self.CALLED + [_book(a=1, b=1, c=1)]
+        assert _measure(self.EXPECTED, called) == pytest.approx(1.0)
+
+    def test_fewer_calls_than_expected(self):
+        assert _measure(self.EXPECTED, [_book(a=1, b=1, c=2)]) == pytest.approx(
+            0.5
+        )
