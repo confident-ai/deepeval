@@ -3,7 +3,7 @@ import asyncio
 import pytest
 import tenacity
 
-from deepeval.evaluate import execute as execute_module
+from deepeval.evaluate import evaluate, execute as execute_module
 from deepeval.test_case import LLMTestCase
 from deepeval.evaluate.configs import (
     ErrorConfig,
@@ -11,6 +11,10 @@ from deepeval.evaluate.configs import (
     CacheConfig,
     AsyncConfig,
 )
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import observe
+from deepeval.test_run import global_test_run_manager
+from deepeval.utils import get_gather_timeout
 from tests.test_core.stubs import _SleepyMetric, _PerAttemptTimeoutMetric
 
 
@@ -263,3 +267,132 @@ def test_disable_timeouts_disables_per_attempt_sync(settings):
         display_config=display_config,
         cache_config=cache_config,
     )
+
+
+def test_gather_timeout_budgets_one_per_task_timeout_per_round(settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 10
+        settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE = 2
+
+    # omitted: a single task's budget, as before
+    assert get_gather_timeout() == 12
+    # 20 tasks through 4 slots is 5 rounds, 21 tasks is 6
+    assert get_gather_timeout(n_tasks=20, max_concurrent=4) == 52
+    assert get_gather_timeout(n_tasks=21, max_concurrent=4) == 62
+    # all tasks fit in one round
+    assert get_gather_timeout(n_tasks=3, max_concurrent=20) == 12
+    # never below a single task's budget
+    assert get_gather_timeout(n_tasks=0, max_concurrent=4) == 12
+
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DISABLE_TIMEOUTS = True
+    assert get_gather_timeout(n_tasks=20, max_concurrent=4) is None
+
+
+@pytest.mark.parametrize("show_indicator", [False, True])
+def test_evaluate_runs_rounds_of_max_concurrent_past_one_task_budget(
+    settings, show_indicator
+):
+    """
+    8 cases x 0.5s through 2 slots is 4 rounds (~2s). Each case fits its 1s
+    budget, so the batch must not be cut off at one task's budget (1.1s).
+    """
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
+        settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE = 0.1
+
+    global_test_run_manager.reset()
+    result = evaluate(
+        test_cases=[
+            LLMTestCase(input=f"q{i}", actual_output="a") for i in range(8)
+        ],
+        metrics=[_SleepyMetric(sleep_s=0.5, succeed=True)],
+        async_config=AsyncConfig(max_concurrent=2),
+        display_config=DisplayConfig(
+            show_indicator=show_indicator, print_results=False
+        ),
+        error_config=ErrorConfig(ignore_errors=False),
+    )
+
+    assert len(result.test_results) == 8
+    assert all(r.success for r in result.test_results)
+
+
+def test_evals_iterator_runs_rounds_of_max_concurrent_past_one_task_budget(
+    settings,
+):
+    """
+    Same as above for the async evals_iterator: its app phase (8 goldens x
+    0.5s) and its eval phase (8 traces x 0.5s) each take 4 rounds through
+    2 slots.
+    """
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
+        settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE = 0.1
+
+    @observe()
+    async def app(q):
+        await asyncio.sleep(0.5)
+        return "a"
+
+    global_test_run_manager.reset()
+    dataset = EvaluationDataset(
+        goldens=[Golden(input=f"q{i}") for i in range(8)]
+    )
+    for golden in dataset.evals_iterator(
+        metrics=[_SleepyMetric(sleep_s=0.5, succeed=True)],
+        async_config=AsyncConfig(max_concurrent=2),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        error_config=ErrorConfig(ignore_errors=False),
+    ):
+        dataset.evaluate(asyncio.create_task(app(golden.input)))
+
+    test_cases = global_test_run_manager.get_test_run().test_cases
+    assert len(test_cases) == 8
+    assert all(tc.success for tc in test_cases)
+
+
+class _IgnoresPerTaskDeadlineMetric(_SleepyMetric):
+    """Swallows its per-task cancellation and keeps hanging."""
+
+    async def a_measure(self, test_case, *args, **kwargs):
+        try:
+            await super().a_measure(test_case, *args, **kwargs)
+        except asyncio.CancelledError:
+            await super().a_measure(test_case, *args, **kwargs)
+
+
+@pytest.mark.asyncio
+async def test_gather_timeout_stops_tasks_that_ignore_per_task_deadline(
+    settings,
+):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 0.5
+        settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE = 0.2
+
+    t0 = time.perf_counter()
+    try:
+        with pytest.raises((asyncio.TimeoutError, TimeoutError)):
+            await execute_module.a_execute_test_cases(
+                test_cases=[
+                    LLMTestCase(input=f"q{i}", actual_output="a")
+                    for i in range(4)
+                ],
+                metrics=[_IgnoresPerTaskDeadlineMetric(sleep_s=30)],
+                async_config=AsyncConfig(max_concurrent=2),
+                display_config=DisplayConfig(
+                    show_indicator=False, verbose_mode=False
+                ),
+                cache_config=CacheConfig(write_cache=False, use_cache=False),
+                error_config=ErrorConfig(ignore_errors=False),
+            )
+        # 2 rounds x 0.5s + 0.2s, not the 60s the metric hangs for
+        assert 1.1 <= time.perf_counter() - t0 < 2
+    finally:
+        # the hung metrics outlive the gather; stop them leaking into later tests
+        leftover = [
+            t for t in asyncio.all_tasks() if t is not asyncio.current_task()
+        ]
+        for t in leftover:
+            t.cancel()
+        await asyncio.gather(*leftover, return_exceptions=True)
