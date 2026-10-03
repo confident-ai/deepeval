@@ -99,7 +99,9 @@ def test_non_int_n_problems_is_rejected(benchmark_cls, kwargs, full_size):
 
 @pytest.mark.parametrize("benchmark_cls,kwargs,full_size", BENCHMARKS, ids=IDS)
 @pytest.mark.parametrize("n_shots", [-1, -3])
-def test_negative_n_shots_is_rejected(benchmark_cls, kwargs, full_size, n_shots):
+def test_negative_n_shots_is_rejected(
+    benchmark_cls, kwargs, full_size, n_shots
+):
     with pytest.raises(ValueError, match="n_shots must be >= 0"):
         benchmark_cls(n_shots=n_shots, **kwargs)
 
