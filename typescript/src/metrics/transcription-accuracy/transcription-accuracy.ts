@@ -2,12 +2,21 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   TranscriptionAccuracyScoreReasonSchema,
   VerdictsSchema,
@@ -25,6 +34,8 @@ export interface TranscriptionAccuracyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -78,7 +89,7 @@ export class TranscriptionAccuracyMetric extends BaseConversationalMetric {
       MultiTurnParams.ROLE,
       MultiTurnParams.PROVIDER_TRANSCRIPTION,
     ];
-    initializeMetricModels(this, { ...options, systemOne: false });
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
@@ -86,6 +97,7 @@ export class TranscriptionAccuracyMetric extends BaseConversationalMetric {
     await this.startProgress();
     try {
       prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.exchanges = getTranscribedExchanges(testCase.turns);
       this.verdicts = await this.generateVerdicts();
@@ -104,13 +116,45 @@ export class TranscriptionAccuracyMetric extends BaseConversationalMetric {
     }
   }
 
+  private systemOneVerdictSpec(): SystemOneVerdictSpec<
+    TranscribedExchange,
+    TranscriptionAccuracyVerdict
+  > {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.exchanges,
+      itemKey: "exchange",
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    return {
+      evaluationParams: this.requiredParams,
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+      extraState: { exchanges: getTranscribedExchanges(testCase.turns) },
+    };
+  }
+
   private async generateVerdicts(): Promise<TranscriptionAccuracyVerdict[]> {
     if (this.exchanges.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      exchanges: this.exchanges,
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          exchanges: this.exchanges,
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
   }
 
   private async generateReason(): Promise<string | undefined> {

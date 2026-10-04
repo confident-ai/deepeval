@@ -6,19 +6,26 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     a_generate_qag_verdicts,
     a_generate_with_schema_and_extract,
+    a_run_system_one_eval,
     construct_verbose_logs,
     generate_qag_verdicts,
     generate_with_schema_and_extract,
     initialize_model,
+    initialize_system_one_model,
+    parse_questions,
     prepare_measure,
+    run_system_one_eval,
     score_qag_verdicts,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
     Verdicts,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.templates import make_template_class
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -30,14 +37,6 @@ TranscriptionAccuracyTemplate = make_template_class(
 
 
 def get_transcribed_exchanges(turns: List[Turn]) -> List[Dict[str, str]]:
-    """Pair what the caller said with what the agent's STT made of it.
-
-    The caller's turns are joined rather than read one at a time: a barge-in
-    appends a second user turn before the agent answers, so the transcription
-    the agent reports covers everything it heard since it last spoke. An
-    assistant turn without a transcription leaves its exchange unmeasurable,
-    and the caller speech before it is dropped with it.
-    """
     exchanges: List[Dict[str, str]] = []
     spoken: List[str] = []
     for turn in turns:
@@ -68,6 +67,10 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -78,10 +81,16 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
         ] = TranscriptionAccuracyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        # No `eval_mode`: the judge compares two transcripts, which System One
-        # has no form for, so this metric always needs the LLM.
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -109,6 +118,9 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.exchanges = get_transcribed_exchanges(test_case.turns)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
@@ -137,6 +149,9 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.exchanges = get_transcribed_exchanges(test_case.turns)
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -165,6 +180,7 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             verdict_cls=TranscriptionAccuracyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
 
     def _generate_verdicts(self) -> List[TranscriptionAccuracyVerdict]:
@@ -178,6 +194,27 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             verdict_cls=TranscriptionAccuracyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
+        )
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.exchanges,
+            item_key="exchange",
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+            extra_state={
+                "exchanges": get_transcribed_exchanges(test_case.turns)
+            },
         )
 
     def _mistranscriptions(self) -> List[str]:
