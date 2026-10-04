@@ -1,0 +1,198 @@
+---
+id: metrics-token-budget
+title: Token Budget
+sidebar_label: Token Budget
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} agent={true} referenceless={true} />
+
+The Token Budget metric is a **fully deterministic** (no LLM required) agentic metric that gates an agent run against token and/or cost budgets. It walks the agent's full execution trace, sums token usage and cost across every LLM span, and checks the totals against the budgets you set — returning a score from **0.0** (far over budget) to **1.0** (within every budget).
+
+::::info
+Token Budget analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is fully deterministic, it runs in production without any API key or LLM call.
+::::
+
+## Required Arguments
+
+The `TokenBudgetMetric` is a **trace-only** metric. It reads token counts and per-token pricing from the LLM spans in the agent trace and does **not** require `tools_called` or `expected_tools`. It only requires the standard trace-based fields:
+
+- `input`
+- `actual_output`
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `TokenBudgetMetric()` to your `evals_iterator`.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics.community import TokenBudgetMetric
+
+
+@observe()
+def my_agent(input: str) -> str:
+    # Your agent logic here (LLM calls recorded via @observe llm spans)
+    result = "..."
+    update_current_trace(input=input, output=result)
+    return result
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
+
+# Initialize metric — no model or API key needed. Fail runs that exceed
+# 10k total tokens OR $0.05 in cost.
+budget_metric = TokenBudgetMetric(max_total_tokens=10000, max_cost=0.05)
+
+# Evaluate
+for golden in dataset.evals_iterator(metrics=[budget_metric]):
+    my_agent(golden.input)
+```
+
+There are **EIGHT** optional parameters when creating a `TokenBudgetMetric` (at least one budget must be set):
+
+- [Optional] `max_total_tokens`: a float capping `input + output` tokens summed across all LLM spans. Defaulted to `None` (disabled).
+- [Optional] `max_input_tokens`: a float capping input (prompt) tokens only. Defaulted to `None` (disabled).
+- [Optional] `max_output_tokens`: a float capping output (completion) tokens only. Defaulted to `None` (disabled).
+- [Optional] `max_cost`: a float capping the total dollar cost across all LLM spans. Defaulted to `None` (disabled).
+- [Optional] `threshold`: a float representing the minimum passing score, defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which when `True` generates a human-readable reason for the score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 if every budget is respected, 0 if any is breached. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+
+::::caution
+`TokenBudgetMetric` raises a `ValueError` if you construct it without at least one of `max_total_tokens`, `max_input_tokens`, `max_output_tokens`, or `max_cost` — there is nothing to gate against otherwise.
+::::
+
+::::info
+The `TokenBudgetMetric` does **not** accept a `model` parameter. Every value it needs is read directly from the trace and summed — an LLM would add nothing. See [Why no `model` parameter?](#why-no-model-parameter) for the design rationale.
+::::
+
+To learn more about how the `evals_iterator` works, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+
+### As a standalone
+
+You can also run `TokenBudgetMetric` on a single test case as a standalone, one-off execution:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import TokenBudgetMetric
+
+# test_case._trace_dict must be populated from @observe tracing
+metric = TokenBudgetMetric(max_total_tokens=10000, max_cost=0.05)
+metric.measure(test_case)
+
+print(metric.score)         # e.g. 0.67
+print(metric.reason)        # e.g. "total tokens 15000 exceeded budget 10000 (1.50x budget)."
+print(metric.score_breakdown)
+```
+
+::::caution
+Running as a standalone is useful for debugging or building a custom pipeline, but you will **NOT** get the benefits of testing reports, Confident AI platform integration, or the optimizations (speed, caching, computation) that `evaluate()` or `deepeval test run` offer.
+::::
+
+## How Is It Calculated?
+
+The `TokenBudgetMetric` scores each enabled budget with a **graded ratio** and takes the **minimum** across them:
+
+<Equation formula="\text{Budget Score} = \min_{b \, \in \, \text{enabled}} \begin{cases} 1.0 & \text{if } \text{spent}_b \le \text{limit}_b \\ \dfrac{\text{limit}_b}{\text{spent}_b} & \text{if } \text{spent}_b > \text{limit}_b \end{cases}" />
+
+For each enabled budget, the metric computes `spent / limit`. A run under budget scores **1.0**; a run over budget degrades as `limit / spent`, so being twice over budget scores **0.5**, three times over scores **0.33**. The overall score is the **minimum** across all enabled budgets — a single breached budget fails the run, which is the correct behavior for a gate.
+
+| Budget | Enabled when | What it sums |
+|---|---|---|
+| Total tokens | `max_total_tokens` set | `input_token_count + output_token_count` across all LLM spans |
+| Input tokens | `max_input_tokens` set | `input_token_count` across all LLM spans |
+| Output tokens | `max_output_tokens` set | `output_token_count` across all LLM spans |
+| Cost | `max_cost` set | `Σ (input_token_count · cost_per_input_token + output_token_count · cost_per_output_token)` |
+
+### Cost accounting
+
+The trace dict exposes `cost_per_input_token` and `cost_per_output_token` as **per-token rates**, not totals. A span's cost is therefore:
+
+```
+input_token_count  * cost_per_input_token
++ output_token_count * cost_per_output_token
+```
+
+A span only contributes to the cost total when **both** the token count and its matching per-token rate are present. Spans that report token counts but no per-token rate are counted as **unpriced** and are surfaced in the reason so a cheap-looking run is never silently trusted.
+
+### Handling missing token data
+
+Token counts on a trace span are optional — a span from an integration that does not record usage will have no token fields at all. Such spans contribute **0** to the token sums but are counted as **untokened** and reported in the reason (e.g. `"2 of 5 LLM spans had no token data."`). The score is never silently computed on partial data without saying so.
+
+## Score Interpretation
+
+| Score range | Interpretation |
+|---|---|
+| `1.0` | Within every enabled budget |
+| `0.5–1.0` | Mildly over one or more budgets |
+| `0.0–0.5` | Substantially over budget (2x+) — investigate the run |
+
+**Example: within budget**
+```
+Token Budget
+Score:  1.0
+Reason: All token and cost budgets respected.
+```
+
+**Example: over budget**
+```
+Token Budget
+Score:  0.67
+Reason: total tokens 15000 exceeded budget 10000 (1.50x budget).
+        cost $0.075000 exceeded budget $0.050000 (1.50x budget).
+```
+
+## Score Breakdown
+
+The `score_breakdown` attribute exposes per-budget detail and diagnostics after evaluation:
+
+```python
+metric = TokenBudgetMetric(max_total_tokens=1000, max_cost=0.02)
+
+# After measure() runs:
+print(metric.score_breakdown)
+# {
+#     "total_tokens": {"spent": 1500, "limit": 1000, "ratio": 1.5, "sub_score": 0.667},
+#     "cost": {"spent": 0.025, "limit": 0.02, "ratio": 1.25, "sub_score": 0.8},
+#     "most_expensive_span": {"name": "gen", "cost": 0.025},
+#     "llm_span_count": 1,
+#     "untokened_spans": 0,
+#     "unpriced_spans": 0,
+# }
+```
+
+`most_expensive_span` flags the single priciest LLM span so you know where to look first. `untokened_spans` and `unpriced_spans` tell you how much of the run was measurable.
+
+## Limitations & Design Decisions
+
+### Why no `model` parameter?
+
+This metric is **fully deterministic by design**. Token counts and per-token rates are read straight from the trace and summed — there is nothing for an LLM to judge. This means:
+
+- **Zero cost** — runs in production without API keys or network calls.
+- **Deterministic** — identical traces always produce identical scores (critical for CI/CD gates).
+- **Zero latency** — no LLM round-trip; the metric completes in milliseconds.
+
+### No latency / duration budget
+
+This metric gates **tokens and cost only** — it cannot gate wall-clock latency. When the trace dict is built, `create_nested_spans_dict` strips `start_time` and `end_time` from every span (along with `uuid` and `status`), so span timing is simply not available to any trace-based metric. Token counts and per-token pricing **do** survive, which is what makes token and cost budgeting possible. This is an honest, hard constraint of the trace format — not an oversight.
+
+### Cost requires per-token rates
+
+The `max_cost` budget is only meaningful when your integration populates `cost_per_input_token` and `cost_per_output_token` on its LLM spans. An integration that records token counts but not pricing will produce accurate **token** budgets but a **cost** of `0` for those spans — which the metric reports as `unpriced_spans` rather than pretending the run was free. If you rely on `max_cost`, verify your integration sets per-token pricing.
+
+### Token counts are provider-reported
+
+The metric is only as accurate as the token counts recorded on the trace. It sums what the integration reported; it does not re-tokenize inputs or outputs.
+
+### Traces with no LLM spans
+
+If a trace contains no LLM spans at all (for example a tool-only agent turn), there is nothing to measure against the budget. The metric scores such a run `1.0` — an agent may legitimately make no LLM calls — but the reason explicitly states `"No LLM spans found in the trace; token/cost budgets could not be measured."` rather than falsely claiming the budget was respected. Check `score_breakdown["llm_span_count"]` if you need to distinguish "measured and passed" from "nothing to measure".
+
+---
+
+::::note Community Metric
+`TokenBudgetMetric` was contributed by [Jeel Thummar](https://github.com/Jeel3011). It complements DeepEval's cost-tracking work by turning per-run token and cost usage into a deterministic pass/fail gate you can enforce in CI or production.
+::::
