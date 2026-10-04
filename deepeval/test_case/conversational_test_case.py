@@ -33,6 +33,7 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
+    PROVIDER_TRANSCRIPTION = "provider_transcription"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
