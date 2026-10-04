@@ -1121,9 +1121,8 @@ class TestRunManager:
             self.last_saved_path = path
             print(f"Test run saved at {path}")
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {target_dir}: {e}",
-                file=sys.stderr,
+            sys.stderr.write(
+                f"Warning: failed to save test run to {target_dir}: {e}\n"
             )
 
     def _save_test_run_to_sqlite(self):
@@ -1146,9 +1145,8 @@ class TestRunManager:
         try:
             run_id = sqlite_store.write_test_run(self.test_run, db_path)
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {db_path}: {e}",
-                file=sys.stderr,
+            sys.stderr.write(
+                f"Warning: failed to save test run to {db_path}: {e}\n"
             )
             return
 
