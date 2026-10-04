@@ -1,0 +1,88 @@
+---
+id: metrics-fluency-coherence
+title: Fluency and Coherence
+sidebar_label: Fluency Coherence
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={true} referenceless={true} rag={false} />
+
+The Fluency and Coherence metric rates how readable and logically ordered `actual_output` is: an LLM judge scores 1 (broken) to 5 (polished), normalized to `0.0`–`1.0`. Anything here can also be expressed as a custom `GEval` criterion — use this metric for a zero-setup readability gate.
+
+## Required Arguments
+
+To use the `FluencyCoherenceMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import FluencyCoherenceMetric
+from deepeval.test_case import LLMTestCase
+
+metric = FluencyCoherenceMetric(threshold=0.5)
+
+test_case = LLMTestCase(
+    input="Tell me about Paris.",
+    actual_output="Paris is lovely in spring.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `FluencyCoherenceMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any custom LLM model of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution within the `measure()` method. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `FluencyCoherenceMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The judge's 1–5 rating maps linearly onto the metric score:
+
+<Equation
+  formula="\text{Fluency} = \frac{\text{rating} - 1}{4}"
+/>
+
+A polished answer scores `1.0`, an average-but-awkward one around `0.5`, and a broken one `0.0`. The reason always carries the raw rating alongside the judge's sentence.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use GEval instead?",
+      answer: (
+        <>
+          When readability needs your own rubric (tone, grade level,
+          brand voice). This metric's fixed 1–5 scale is the fast path;
+          a custom GEval criterion is the tailored one.
+        </>
+      ),
+    },
+  ]}
+/>

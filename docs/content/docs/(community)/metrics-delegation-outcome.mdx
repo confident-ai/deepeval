@@ -1,0 +1,102 @@
+---
+id: metrics-delegation-outcome
+title: Delegation Outcome
+sidebar_label: Delegation Outcome
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Delegation Outcome metric checks whether the sub-agents a main agent handed work to finished without errors. It applies the `ToolOutcomeMetric` approach to agent spans instead of tool spans: the score is the share of delegated agents that ran clean. Use it as a multi-agent coordination gate.
+
+:::note
+The `DelegationOutcomeMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `DelegationOutcomeMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+The metric additionally requires trace data from `@observe` (it sets `requires_trace=True`). The root span is the delegation owner and is not scored — only nested agents count. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import DelegationOutcomeMetric
+from deepeval.test_case import LLMTestCase
+
+metric = DelegationOutcomeMetric(ignore_recovered_failures=True)
+
+test_case = LLMTestCase(
+    input="Research and draft the report.",
+    actual_output="Report done.",
+)
+
+# To run metric as a standalone (needs test_case._trace_dict from @observe)
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SIX** optional parameters when creating a `DelegationOutcomeMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `1.0` (every delegation must succeed).
+- [Optional] `ignore_recovered_failures`: when `True`, an errored agent is forgiven if a later span for the same agent succeeded. Defaulted to `False`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing failed agents. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `DelegationOutcomeMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `DelegationOutcomeMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Delegation Success Rate} = \frac{\text{Agents Without Errors}}{\text{Total Delegated Agents}}"
+/>
+
+With no delegated agents the score is `1.0` — nothing was handed off, so nothing could fail. Unlike `ToolCorrectnessMetric` (were the right tools called?), this metric checks whether the agents that ran actually *worked*.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Tool Outcome?",
+      answer: (
+        <>
+          Tool Outcome scores tool spans; Delegation Outcome scores
+          agent spans. In a multi-agent trace, a tool can succeed while
+          its owning sub-agent still errors (for example on bad
+          handoff), and this metric catches that.
+        </>
+      ),
+    },
+    {
+      question: "Why is the root agent excluded?",
+      answer: (
+        <>
+          The root owns the delegation the way a manager owns a task:
+          its failure is the run failing, not a coordination failure.
+          Score the delegates to measure coordination.
+        </>
+      ),
+    },
+  ]}
+/>
