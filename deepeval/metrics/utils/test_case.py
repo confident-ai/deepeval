@@ -110,6 +110,13 @@ def check_conversational_test_case_params(
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
+    if MultiTurnParams.PROVIDER_TRANSCRIPTION in test_case_params and not any(
+        turn.provider_transcription is not None for turn in test_case.turns
+    ):
+        error_str = f"No turn in the conversational test case has a 'provider_transcription', which the '{metric.__name__}' metric needs. Only voice connectors that report the agent's own transcription of the caller populate it, so a phone call or a text conversation will never have one."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
 
 def check_llm_test_case_params(
     test_case: LLMTestCase,

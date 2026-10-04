@@ -26,6 +26,9 @@ from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
+from .transcription_accuracy.transcription_accuracy import (
+    TranscriptionAccuracyMetric,
+)
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .tool_permission.tool_permission import ToolPermissionMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
@@ -145,6 +148,7 @@ __all__ = [
     "TurnContextualPrecisionMetric",
     "TurnContextualRecallMetric",
     "TurnContextualRelevancyMetric",
+    "TranscriptionAccuracyMetric",
     # Multimodal metrics
     "TextToImageMetric",
     "ImageEditingMetric",
