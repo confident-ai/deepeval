@@ -107,9 +107,18 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            if hasattr(tool.result, "structuredContent") and tool.result.structuredContent:
-                result = tool.result.structuredContent.get("result", tool.result.structuredContent)
-            elif hasattr(tool.result, "content") and isinstance(tool.result.content, list) and len(tool.result.content) > 0:
+            if (
+                hasattr(tool.result, "structuredContent")
+                and tool.result.structuredContent
+            ):
+                result = tool.result.structuredContent.get(
+                    "result", tool.result.structuredContent
+                )
+            elif (
+                hasattr(tool.result, "content")
+                and isinstance(tool.result.content, list)
+                and len(tool.result.content) > 0
+            ):
                 first_content = tool.result.content[0]
                 if hasattr(first_content, "text"):
                     result = first_content.text
