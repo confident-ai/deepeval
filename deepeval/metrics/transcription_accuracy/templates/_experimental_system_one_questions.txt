@@ -1,16 +1,16 @@
 [
   {
     "type": "noul",
-    "statement": "In every entry of `exchanges`, `transcribed` captures what the caller said in `spoken`; differences are limited to punctuation, capitalisation, sentence splitting, numbers written as digits rather than words, dropped filler words, or the same utterance repeated twice.",
-    "weight": 2
+    "statement": "In most entries of `exchanges`, `transcribed` captures what the caller said in `spoken`; the differences there are limited to punctuation, capitalisation, sentence splitting, numbers written as digits rather than words, dropped filler words, or the same utterance repeated twice."
   },
   {
     "type": "noul",
-    "statement": "No entry of `exchanges` has a name, number, date or duration whose value differs between `spoken` and `transcribed`, a negation gained or lost, or an empty `transcribed` where something was spoken."
+    "statement": "No entry of `exchanges` has a name, number, date or duration whose value differs between `spoken` and `transcribed`, a negation gained or lost, or an empty `transcribed` where the caller spoke."
   },
   {
     "type": "score",
     "question": "Across `exchanges`, how faithfully did `transcribed` capture what the caller said in `spoken`?",
-    "levels": ["Mostly mis-heard", "Several turns mis-heard", "Mostly heard correctly", "Every turn heard correctly"]
+    "levels": ["Mostly mis-heard", "Several turns mis-heard", "Mostly heard correctly", "Every turn heard correctly"],
+    "weight": 2
   }
 ]

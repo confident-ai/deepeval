@@ -124,6 +124,14 @@ export class TranscriptionAccuracyMetric extends BaseConversationalMetric {
       instructions: this.getPrompt("_experimental_system_one_verdict"),
       items: this.exchanges,
       itemKey: "exchange",
+      buildVerdict: (exchange, verdict, p) => ({
+        verdict,
+        reason: `${
+          verdict.trim().toLowerCase() === "no"
+            ? `The caller said ${JSON.stringify(exchange.spoken)} but the agent heard ${JSON.stringify(exchange.transcribed)}.`
+            : `The agent heard ${JSON.stringify(exchange.spoken)} faithfully.`
+        } (P(yes)=${p.toFixed(2)})`,
+      }),
     };
   }
 

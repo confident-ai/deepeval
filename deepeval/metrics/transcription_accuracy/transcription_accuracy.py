@@ -56,6 +56,21 @@ def get_transcribed_exchanges(turns: List[Turn]) -> List[Dict[str, str]]:
     return exchanges
 
 
+def _verdict_for_exchange(
+    exchange: Dict[str, str], verdict: Verdict, probability: float
+) -> TranscriptionAccuracyVerdict:
+    if verdict == Verdict.NO:
+        detail = (
+            f"The caller said {exchange['spoken']!r} but the agent heard "
+            f"{exchange['transcribed']!r}."
+        )
+    else:
+        detail = f"The agent heard {exchange['spoken']!r} faithfully."
+    return TranscriptionAccuracyVerdict(
+        verdict=verdict, reason=f"{detail} (P(yes)={probability:.2f})"
+    )
+
+
 class TranscriptionAccuracyMetric(BaseConversationalMetric):
     _required_test_case_params = [
         MultiTurnParams.CONTENT,
@@ -202,6 +217,7 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             instructions=self._get_prompt("_experimental_system_one_verdict"),
             items=self.exchanges,
             item_key="exchange",
+            build_verdict=_verdict_for_exchange,
         )
 
     def _system_one_eval_spec(
