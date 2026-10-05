@@ -18,7 +18,6 @@ import {
 export enum MultiTurnParams {
   ROLE = "role",
   CONTENT = "content",
-  PROVIDER_TRANSCRIPT = "providerTranscript",
   METADATA = "metadata",
   TAGS = "tags",
   SCENARIO = "scenario",
@@ -40,7 +39,6 @@ export class Turn {
   role: "user" | "assistant";
   content: string;
   userId?: string;
-  providerTranscript?: string;
   retrievalContext?: (string | RetrievedContextData)[];
   toolsCalled?: ToolCall[];
   mcpToolsCalled?: MCPToolCall[];
@@ -52,7 +50,6 @@ export class Turn {
     role: "user" | "assistant";
     content: string;
     userId?: string;
-    providerTranscript?: string;
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
     mcpToolsCalled?: MCPToolCall[];
@@ -63,7 +60,6 @@ export class Turn {
     this.role = params.role;
     this.content = params.content;
     this.userId = params.userId;
-    this.providerTranscript = params.providerTranscript;
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
     this.mcpToolsCalled = params.mcpToolsCalled;

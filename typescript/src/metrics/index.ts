@@ -21,11 +21,6 @@ export {
   type TurnRelevancyTemplateOverride,
 } from "@/metrics/turn-relevancy";
 export {
-  TranscriptionAccuracyMetric,
-  type TranscriptionAccuracyMetricOptions,
-  type TranscriptionAccuracyTemplateOverride,
-} from "@/metrics/transcription-accuracy";
-export {
   TurnFaithfulnessMetric,
   type TurnFaithfulnessMetricOptions,
   type TurnFaithfulnessTemplateOverride,

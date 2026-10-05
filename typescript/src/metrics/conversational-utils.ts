@@ -70,14 +70,6 @@ export function checkConversationalTestCaseParams(
   if (!testCase.turns || testCase.turns.length === 0) {
     fail("'turns' in conversational test case cannot be empty.");
   }
-  if (
-    requiredParams.includes(MultiTurnParams.PROVIDER_TRANSCRIPT) &&
-    !testCase.turns.some((turn) => turn.providerTranscript != null)
-  ) {
-    fail(
-      `No turn in the conversational test case has a 'providerTranscript', which the '${metric.name}' metric needs. Only voice connectors that report the agent's own transcription of the caller populate it, so a phone call or a text conversation will never have one.`,
-    );
-  }
 }
 
 /**
@@ -105,10 +97,6 @@ export function convertTurnToDict(
   > = {
     [MultiTurnParams.ROLE]: { key: "role", get: () => turn.role },
     [MultiTurnParams.CONTENT]: { key: "content", get: () => turn.content },
-    [MultiTurnParams.PROVIDER_TRANSCRIPT]: {
-      key: "provider_transcript",
-      get: () => turn.providerTranscript,
-    },
     [MultiTurnParams.RETRIEVAL_CONTEXT]: {
       key: "retrieval_context",
       get: () => turn.retrievalContext,

@@ -44,7 +44,6 @@ import {
   TurnContextualRecallMetric,
   TurnContextualRelevancyMetric,
   TurnFaithfulnessMetric,
-  TranscriptionAccuracyMetric,
   TurnRelevancyMetric,
 } from "@/metrics";
 import { DeepEvalBaseLLM, type GenerationResult } from "@/models";
@@ -165,25 +164,6 @@ const ragConversation = () =>
       }),
     ],
     expectedOutcome: "Einstein won the Nobel Prize. He was born in Ulm.",
-  });
-
-/** A voice call where the agent reports what its STT made of the caller. */
-const voiceConversation = () =>
-  new ConversationalTestCase({
-    turns: [
-      new Turn({ role: "user", content: "Siobhan Kavanagh here." }),
-      new Turn({
-        role: "assistant",
-        content: "Hello Siobhan!",
-        providerTranscript: "Siobhan Cavanaugh here.",
-      }),
-      new Turn({ role: "user", content: "I can start in two weeks." }),
-      new Turn({
-        role: "assistant",
-        content: "Noted.",
-        providerTranscript: "I can start in two weeks.",
-      }),
-    ],
   });
 
 const supportConversation = () =>
@@ -537,22 +517,6 @@ const CASES: Case[] = [
       fallback: REASON,
       llmScore: 0,
       jevCalls: 2,
-    },
-  },
-  {
-    id: "TranscriptionAccuracy",
-    metric: (o) => new TranscriptionAccuracyMetric(o),
-    testCase: voiceConversation,
-    hybrid: {
-      decisionKey: "You are judging how accurately a voice agent",
-      routes: [
-        [
-          "You are judging how accurately a voice agent",
-          { verdicts: [{ verdict: "no", reason: "r" }] },
-        ],
-      ],
-      fallback: REASON,
-      llmScore: 0,
     },
   },
   {
