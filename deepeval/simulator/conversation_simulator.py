@@ -585,10 +585,11 @@ class ConversationSimulator:
                 **additional_metadata,
             },
             comments=golden.comments,
-            _dataset_rank=golden._dataset_rank,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        conversational_test_case._dataset_rank = golden._dataset_rank
+        conversational_test_case._dataset_alias = golden._dataset_alias
+        conversational_test_case._dataset_id = golden._dataset_id
+        conversational_test_case._dataset_version = golden._dataset_version
         if on_simulation_complete:
             on_simulation_complete(conversational_test_case, index)
         return conversational_test_case
@@ -891,10 +892,11 @@ class ConversationSimulator:
                 **additional_metadata,
             },
             comments=golden.comments,
-            _dataset_rank=golden._dataset_rank,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        conversational_test_case._dataset_rank = golden._dataset_rank
+        conversational_test_case._dataset_alias = golden._dataset_alias
+        conversational_test_case._dataset_id = golden._dataset_id
+        conversational_test_case._dataset_version = golden._dataset_version
         conversational_test_case.call_recording_path = call_recording_path
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()

@@ -164,6 +164,7 @@ class EvaluationDataset:
 
                 golden._dataset_alias = self._alias
                 golden._dataset_id = self._id
+                golden._dataset_version = self._version
                 golden._dataset_rank = len(goldens)
                 if self._multi_turn:
                     self._add_conversational_golden(golden)
@@ -198,6 +199,7 @@ class EvaluationDataset:
 
             test_case._dataset_alias = self._alias
             test_case._dataset_id = self._id
+            test_case._dataset_version = self._version
             if isinstance(test_case, LLMTestCase):
                 test_case._dataset_rank = len(llm_test_cases)
                 llm_test_cases.append(test_case)
@@ -214,6 +216,7 @@ class EvaluationDataset:
     ):
         test_case._dataset_alias = self._alias
         test_case._dataset_id = self._id
+        test_case._dataset_version = self._version
         if isinstance(test_case, LLMTestCase):
             if self._conversational_goldens or self._conversational_test_cases:
                 raise TypeError(
@@ -1039,7 +1042,7 @@ class EvaluationDataset:
             if auto_convert_goldens_to_test_cases:
                 if not self._multi_turn:
                     llm_test_cases = convert_goldens_to_test_cases(
-                        response.goldens, alias, response.id
+                        response.goldens, alias, response.id, response.version
                     )
                     self._llm_test_cases.extend(llm_test_cases)
                 else:
@@ -1048,6 +1051,7 @@ class EvaluationDataset:
                             response.conversational_goldens,
                             alias,
                             response.id,
+                            response.version,
                         )
                     )
                     self._conversational_test_cases.extend(
@@ -1062,6 +1066,7 @@ class EvaluationDataset:
                 for golden in self.goldens:
                     golden._dataset_alias = alias
                     golden._dataset_id = response.id
+                    golden._dataset_version = response.version
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")

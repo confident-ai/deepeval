@@ -183,6 +183,7 @@ class TestRun(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
+    dataset_version: Optional[str] = Field(None, alias="datasetVersion")
     official: bool = False
 
     def add_test_case(
@@ -208,6 +209,8 @@ class TestRun(BaseModel):
 
         if self.dataset_id is None:
             self.dataset_id = test_case._dataset_id
+            # Taken with the id so the version always belongs to that dataset.
+            self.dataset_version = test_case._dataset_version
 
     @staticmethod
     def _assign_unique_orders(test_cases):
