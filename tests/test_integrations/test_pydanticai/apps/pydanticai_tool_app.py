@@ -5,6 +5,7 @@ Complexity: MEDIUM - Tests tool calling functionality
 Uses deterministic settings (temperature=0) for reproducible traces.
 """
 
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 
@@ -31,7 +32,7 @@ def create_tool_agent(
             "You are a calculator assistant. Use the calculate tool "
             "for math operations. Be concise."
         ),
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="tool_agent",
     )
 

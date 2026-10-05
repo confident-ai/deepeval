@@ -4,7 +4,7 @@ title: Contextual Precision
 sidebar_label: Contextual Precision
 languages: [python, typescript]
 ---
-<MetricTagsDisplayer singleTurn={true} rag={true} referenceBased={true} />
+<MetricTagsDisplayer jev={true} singleTurn={true} rag={true} referenceBased={true} />
 
 The contextual precision metric uses LLM-as-a-judge to measure your RAG pipeline's retriever by evaluating whether nodes in your <Term py="retrieval_context" ts="retrievalContext"/> that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s contextual precision metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
@@ -26,6 +26,8 @@ To use the `ContextualPrecisionMetric`, you'll have to provide the following arg
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `ContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based and multimodal test cases:
 
@@ -192,7 +194,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **EIGHT** optional parameters when creating a `ContextualPrecisionMetric`:
+There are **TEN** optional parameters when creating a `ContextualPrecisionMetric`:
 
 </Case>
 
@@ -214,6 +216,8 @@ There are **SEVEN** optional parameters when creating a `ContextualPrecisionMetr
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: a class of type `ContextualPrecisionTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualPrecisionMetric` score. Defaulted to `deepeval`'s `ContextualPrecisionTemplate`.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
+- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### Within components
 
@@ -317,6 +321,10 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
+You can change how the `ContextualPrecisionMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+### LLM-as-a-judge
+
 The `ContextualPrecisionMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Contextual Precision} = \frac{1}{\text{Number of Relevant Nodes}} \sum_{k=1}^{n} \left( \frac{\text{Number of Relevant Nodes Up to Position } k}{k} \times r_{k} \right)" />
@@ -335,6 +343,22 @@ The `ContextualPrecisionMetric` first uses an LLM to determine for each node in 
 - **Rewards Relevant Ordering**: WCP can handle varying degrees of relevance (e.g., "highly relevant", "somewhat relevant", "not relevant"). This is in contrast to metrics like precision, which treats all retrieved nodes as equally important.
 
 A higher contextual precision score represents a greater ability of the retrieval system to correctly rank relevant nodes higher in the <Term py="retrieval_context" ts="retrievalContext"/>.
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the relevance judgement is answered by Jev, a System One model, instead: one yes/no question per node, with `P(yes) >= 0.5` counted as relevant. The equation and the reason are unchanged. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the raw `input`, <Term py="expected_output" ts="expectedOutput"/> and the ordered <Term py="retrieval_context" ts="retrievalContext"/> and asked three questions about the ordering:
+
+| Question | Type | Weight |
+| --- | --- | --- |
+| In `retrieval_context`, every document useful for arriving at `expected_output` for `input` is listed before every document that is not useful. | Noul | 2 |
+| The first document in `retrieval_context` is useful for arriving at `expected_output` for `input`. | Noul | 1 |
+| How well are the documents in `retrieval_context` ordered, with the ones useful for arriving at `expected_output` for `input` first? (Useful documents are all at the end → Useful documents are all first) | Score | 1 |
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
 
 ## Customize Your Template
 

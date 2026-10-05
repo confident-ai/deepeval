@@ -1,5 +1,5 @@
 import type { ZodType } from "zod";
-import { parseBool } from "@/config/utils";
+import { parseBool, parseNumber } from "@/config/utils";
 import {
   DeepEvalBaseLLM,
   type ExtraGenerationParams,
@@ -83,13 +83,26 @@ export class GeminiModel extends DeepEvalBaseLLM {
     return this.client;
   }
 
+  /**
+   * Google warns that temperatures below the default 1.0 make Gemini 3 models
+   * loop or reason worse, so they get the default unless a temperature was
+   * explicitly configured, which is always sent.
+   */
+  private resolveGeminiTemperature(): number | undefined {
+    if (this.temperature === null) return undefined;
+    if (this.modelData.supportsTemperature === false) {
+      return this.temperature ?? parseNumber(process.env.TEMPERATURE);
+    }
+    return this.resolveTemperature();
+  }
+
   async generate<T = string>(
     prompt: string,
     schema?: ZodType<T>,
   ): Promise<GenerationResult<T>> {
     const client = await this.getClient();
 
-    const temperature = this.resolveTemperature();
+    const temperature = this.resolveGeminiTemperature();
     const config: Record<string, unknown> = {
       ...(temperature !== undefined && { temperature }),
     };

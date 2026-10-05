@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class DeepEvalError(Exception):
     """Base class for framework-originated errors.
     If raised and not handled, it will abort the current operation.
@@ -10,6 +13,34 @@ class UserAppError(Exception):
     """Represents exceptions thrown by user LLM apps/tools.
     We record these on traces or spans and keep the overall evaluation run alive.
     """
+
+
+class SpeechHTTPError(DeepEvalError):
+    """A speech (TTS/STT) provider returned a non-2xx response.
+
+    Defined here rather than beside the transport that raises it so
+    `deepeval.models.retry_policy` can classify it without importing
+    `deepeval.models.speech`, whose providers import the retry policy.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: Optional[int] = None,
+        provider_label: Optional[str] = None,
+    ):
+        super().__init__(message)
+        self.status_code = status_code
+        self.provider_label = provider_label
+
+
+class SpeechAuthError(SpeechHTTPError):
+    """Speech provider credentials were rejected (401/403). Never retryable."""
+
+
+class SpeechRateLimitError(SpeechHTTPError):
+    """A speech provider is rate limiting (429). Usually worth retrying."""
 
 
 class MissingTestCaseParamsError(DeepEvalError):

@@ -68,6 +68,18 @@ LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
+EXPECTATIONS_UPLOAD_WARNING = (
+    "Warning: Expectations are not available on Confident AI yet. "
+    "This test run was not uploaded; results are available locally."
+)
+
+
+def _has_expectations(test_run) -> bool:
+    return any(
+        case.expectations is not None
+        for cases in (test_run.test_cases, test_run.conversational_test_cases)
+        for case in cases
+    )
 
 
 class TestRunResultDisplay(Enum):
@@ -471,8 +483,10 @@ class TestRunManager:
         self.results_folder: Optional[str] = None
         self.results_subfolder: Optional[str] = None
         # Timestamped export if one was written, else rolling snapshot.
-        # Consumed by the post-run inspect prompt.
+        # Consumed by the post-run inspect prompt. In sqlite mode this is
+        # the `.db` path and `last_saved_run_id` identifies the row.
         self.last_saved_path: Optional[Path] = None
+        self.last_saved_run_id: Optional[int] = None
 
     def reset(self):
         self.test_run = None
@@ -482,6 +496,7 @@ class TestRunManager:
         self.results_folder = None
         self.results_subfolder = None
         self.last_saved_path = None
+        self.last_saved_run_id = None
 
     def configure_local_store(
         self,
@@ -500,6 +515,7 @@ class TestRunManager:
         # could linger and mislead the inspect prompt into offering a stale
         # file. Clear it whenever a new run configures its local store.
         self.last_saved_path = None
+        self.last_saved_run_id = None
 
     def set_test_run(self, test_run: TestRun):
         self.test_run = test_run
@@ -596,10 +612,12 @@ class TestRunManager:
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
+        # Classifier-only results are local for now, so a case with no metric
+        # data and no trace has nothing to add to the (uploadable) test run.
         if (
             api_test_case.metrics_data is not None
             and len(api_test_case.metrics_data) == 0
-            and api_test_case.trace is None
+            and getattr(api_test_case, "trace", None) is None
         ):
             return
 
@@ -907,13 +925,18 @@ class TestRunManager:
             if index < len(test_run.test_cases) - 1:
                 self._add_separator_row(table)
 
-        table.add_row(
-            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            *[""] * (len(table.columns) - 1),
-        )
+        if not _has_expectations(test_run):
+            table.add_row(
+                "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+                *[""] * (len(table.columns) - 1),
+            )
         print(table)
 
     def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
+        if _has_expectations(test_run):
+            console.print(EXPECTATIONS_UPLOAD_WARNING)
+            return None
+
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -1050,18 +1073,30 @@ class TestRunManager:
     def save_test_run_locally(self):
         """Persist the current TestRun to disk.
 
-        Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
-        Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json` to
-        `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
+        `DEEPEVAL_LOCAL_STORE=json` (default):
+            Always writes a rolling snapshot to `.deepeval/.latest_run_full.json`.
+            Additionally writes a timestamped `test_run_<YYYYMMDD_HHMMSS>.json`
+            to `results_folder` (or `DEEPEVAL_RESULTS_FOLDER`) when set.
+
+        `DEEPEVAL_LOCAL_STORE=sqlite`:
+            Inserts the run (test cases, traces, spans, metrics) into
+            `deepeval.db` under `results_folder` / `DEEPEVAL_RESULTS_FOLDER`,
+            falling back to the hidden cache dir. No JSON files are written.
         """
         if self.test_run is None:
             return
 
         from deepeval.evaluate.local_store import (
+            LOCAL_STORE_SQLITE,
+            resolve_local_store_mode,
             resolve_target_dir,
             write_rolling_test_run,
             write_test_run,
         )
+
+        if resolve_local_store_mode() == LOCAL_STORE_SQLITE:
+            self._save_test_run_to_sqlite()
+            return
 
         rolling_path = write_rolling_test_run(self.test_run)
         if rolling_path is not None:
@@ -1088,6 +1123,61 @@ class TestRunManager:
         except Exception as e:
             print(
                 f"Warning: failed to save test run to {target_dir}: {e}",
+                file=sys.stderr,
+            )
+
+    def _save_test_run_to_sqlite(self):
+        """SQLite branch of `save_test_run_locally`.
+
+        Any storage failure (read-only FS, locked DB on Windows, network
+        mount refusing locks, schema from a newer deepeval, ...) is reported
+        as a warning: the evaluation already finished and its results were
+        printed, so persistence must never turn into an exception.
+        """
+        if is_read_only_env():
+            return
+
+        from deepeval import sqlite_store
+
+        db_path = sqlite_store.resolve_db_path(
+            results_folder=self.results_folder,
+            results_subfolder=self.results_subfolder,
+        )
+        try:
+            run_id = sqlite_store.write_test_run(self.test_run, db_path)
+        except Exception as e:
+            print(
+                f"Warning: failed to save test run to {db_path}: {e}",
+                file=sys.stderr,
+            )
+            return
+
+        self.last_saved_path = db_path
+        self.last_saved_run_id = run_id
+        print(f"Test run saved to {db_path} (run id {run_id})")
+
+    def _record_confident_test_run_id(
+        self, confident_test_run_id: Optional[str]
+    ) -> None:
+        """SQLite mode only: stamp the row written by `save_test_run_locally`
+        with the id Confident AI assigned, so local and cloud runs can be
+        matched later. Never raises; the upload already succeeded."""
+        if not confident_test_run_id or self.last_saved_run_id is None:
+            return
+        if self.last_saved_path is None:
+            return
+        try:
+            from deepeval import sqlite_store
+
+            sqlite_store.set_confident_test_run_id(
+                self.last_saved_path,
+                self.last_saved_run_id,
+                confident_test_run_id,
+            )
+        except Exception as e:
+            print(
+                f"Warning: could not record Confident AI test run id in "
+                f"{self.last_saved_path}: {e}",
                 file=sys.stderr,
             )
 
@@ -1120,13 +1210,18 @@ class TestRunManager:
         # carry the underlying error info (populated by ``Observer.__exit__``)
         # which the dashboard can render. Just warn so it's not mistaken
         # for a successful run.
+        has_expectations = _has_expectations(test_run)
         valid_scores = test_run.construct_metrics_scores()
         if valid_scores == 0:
             console.print(
                 "\n[bold yellow]⚠ WARNING:[/bold yellow] All metrics errored "
                 "across every test case — no metric scores were recorded. "
-                "Posting the run anyway so you can inspect the trace + span "
-                "errors on the Confident AI dashboard.\n"
+                + (
+                    "Results are available locally.\n"
+                    if has_expectations
+                    else "Posting the run anyway so you can inspect the trace + span "
+                    "errors on the Confident AI dashboard.\n"
+                )
             )
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
@@ -1161,8 +1256,16 @@ class TestRunManager:
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
         confident_enabled = is_confident()
-        if confident_enabled and self.disable_request is False:
-            return self.post_test_run(test_run)
+        if has_expectations:
+            console.print(EXPECTATIONS_UPLOAD_WARNING)
+        if (
+            confident_enabled
+            and self.disable_request is False
+            and not has_expectations
+        ):
+            link, confident_test_run_id = self.post_test_run(test_run)
+            self._record_confident_test_run_id(confident_test_run_id)
+            return link, confident_test_run_id
         else:
             self.save_test_run(
                 LATEST_TEST_RUN_FILE_PATH,
@@ -1173,14 +1276,19 @@ class TestRunManager:
                 if test_run.evaluation_cost
                 else "None"
             )
-            capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+            if not has_expectations:
+                capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
                 f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
-                "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                (
+                    ""
+                    if has_expectations
+                    else "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                    "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n"
+                ),
             )
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:

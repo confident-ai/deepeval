@@ -18,7 +18,19 @@
       "output": "9 multiplied by 6 is 54.",
       "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "output": 54.0,
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 9,
+            "b": 6
+          }
+        }
+      ]
     }
   ],
   "llmSpans": [
@@ -98,7 +110,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -109,7 +123,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "calculate": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],
@@ -183,7 +202,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -194,7 +215,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "calculate": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

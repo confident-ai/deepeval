@@ -48,6 +48,7 @@ class InboundEvent:
 
     audio: Optional[bytes] = None
     transcript: Optional[str] = None
+    provider_transcript: Optional[str] = None
     turn_complete: bool = False
     pong_reply: Optional[Union[str, bytes]] = None
     ready: bool = False
@@ -75,6 +76,7 @@ class WebSocketMessageSchema(BaseModel):
     receive_audio_key: str = Field(default="audio", min_length=1)
     binary_inbound: bool = False
     receive_transcript_key: Optional[str] = None
+    receive_provider_transcript_key: Optional[str] = None
 
     # End of turn: the value under `type_key` that means the agent is done.
     # Without one, only silence is left to infer it from.
@@ -138,8 +140,15 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._inbound: Optional[asyncio.Queue] = None
         self._ready: Optional[asyncio.Event] = None
         self._current_transcript: Optional[str] = None
+        self._provider_transcript_parts: List[str] = []
         self._interrupted: bool = False
         self._uplink: Optional[UplinkStream] = None
+
+        # Set while deepeval is running something on the agent's behalf, so the
+        # turn engine knows the resulting silence is not the agent finishing.
+        self._tool_hold: Optional[asyncio.Event] = None
+        self._tools_running: int = 0
+        self._tool_spans: List[Tuple[float, float]] = []
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -175,7 +184,11 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._ready = asyncio.Event()
         self._uplink = UplinkStream()
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._interrupted = False
+        self._tool_hold = asyncio.Event()
+        self._tools_running = 0
+        self._tool_spans = []
 
         self._session = aiohttp.ClientSession()
         url = await self._open_session()
@@ -209,6 +222,32 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         else:
             await self._ws.send_str(message)
 
+    def _hold_turn(self, active: bool) -> None:
+        """Mark the start or end of work the agent is waiting on.
+
+        Counted rather than a plain flag, because an agent may have more than
+        one tool call outstanding and the turn stays held until the last one
+        answers.
+        """
+        if self._tool_hold is None:
+            return
+        if active:
+            self._tools_running += 1
+            self._tool_hold.set()
+        else:
+            self._tools_running = max(0, self._tools_running - 1)
+            if self._tools_running == 0:
+                self._tool_hold.clear()
+
+    def _tool_time_between(self, start: float, end: float) -> float:
+        """Wall time spent running tools within `[start, end]`."""
+        total = 0.0
+        for began, ended in self._tool_spans:
+            overlap = min(ended, end) - max(began, start)
+            if overlap > 0:
+                total += overlap
+        return total
+
     async def _reader_loop(self) -> None:
         try:
             async for msg in self._ws:
@@ -226,6 +265,16 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                         await self._inbound.put(
                             AgentEvent(
                                 transcript=event.transcript,
+                                received_at=received_at,
+                            )
+                        )
+                    if event.provider_transcript:
+                        self._provider_transcript_parts.append(
+                            event.provider_transcript
+                        )
+                        await self._inbound.put(
+                            AgentEvent(
+                                provider_transcript=event.provider_transcript,
                                 received_at=received_at,
                             )
                         )
@@ -425,7 +474,9 @@ class BaseWebSocketConnector(BaseVoiceConnector):
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         self.drain_downlink()
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._interrupted = False
+        self._tool_spans = []
 
         pcm = self._prepare_outbound_pcm(audio, trailing_silence=True)
         sent_chunks = 0
@@ -445,6 +496,8 @@ class BaseWebSocketConnector(BaseVoiceConnector):
             end_of_turn_silence_ms=self.end_of_turn_silence_ms,
             frame_gap_timeout_s=self._frame_gap_timeout_s,
             max_turn_timeout_s=self.max_turn_timeout_s,
+            silence_threshold_rms=self.silence_threshold_rms,
+            hold_event=self._tool_hold,
         )
 
         pcm24 = audio_utils.resample_pcm16(
@@ -461,11 +514,15 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                 else None
             ),
         )
-        latency_ms = (
-            (first_audio_at - sent_at) * 1000.0
-            if first_audio_at is not None
-            else None
-        )
+        latency_ms = None
+        if first_audio_at is not None:
+            # Time the agent spent blocked on one of its client tools is our
+            # handler's, not the agent's, so it is not charged to its response
+            # time.
+            elapsed = (first_audio_at - sent_at) - self._tool_time_between(
+                sent_at, first_audio_at
+            )
+            latency_ms = max(elapsed, 0.0) * 1000.0
         if not agent_pcm and not self._current_transcript:
             logger.warning(
                 "%s: agent returned no audio and no transcript this turn "
@@ -481,6 +538,8 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply,
             transcript=self._current_transcript,
+            provider_transcript=" ".join(self._provider_transcript_parts)
+            or None,
             latency_ms=latency_ms,
             interrupted=self._interrupted,
             input_audio_started_at=input_audio_started_at,
@@ -532,6 +591,7 @@ class WebSocketConnector(BaseWebSocketConnector):
         receive_audio_key: str = "audio",
         binary_inbound: bool = False,
         receive_transcript_key: Optional[str] = None,
+        receive_provider_transcript_key: Optional[str] = None,
         turn_complete_type: Optional[str] = None,
         type_key: str = "type",
         init_messages: Optional[List[Union[str, dict]]] = None,
@@ -541,15 +601,16 @@ class WebSocketConnector(BaseWebSocketConnector):
         super().__init__(sample_rate=sample_rate, **base_kwargs)
         self.url = url
         self.headers = headers
-        # The nine message-shape arguments describe one thing — the agent's
+        # The ten message-shape arguments describe one thing — the agent's
         # dialect — and are kept as one, validated together rather than
-        # scattered across the connector as nine unchecked strings.
+        # scattered across the connector as ten unchecked strings.
         self.schema = WebSocketMessageSchema(
             send_key=send_key,
             binary_outbound=binary_outbound,
             receive_audio_key=receive_audio_key,
             binary_inbound=binary_inbound,
             receive_transcript_key=receive_transcript_key,
+            receive_provider_transcript_key=receive_provider_transcript_key,
             turn_complete_type=turn_complete_type,
             type_key=type_key,
             init_messages=init_messages or [],
@@ -599,6 +660,10 @@ class WebSocketConnector(BaseWebSocketConnector):
             transcript = schema.read(message, schema.receive_transcript_key)
             if transcript:
                 event.transcript = transcript
+        if schema.receive_provider_transcript_key:
+            heard = schema.read(message, schema.receive_provider_transcript_key)
+            if heard:
+                event.provider_transcript = heard
         if (
             schema.turn_complete_type is not None
             and message.get(schema.type_key) == schema.turn_complete_type

@@ -28,6 +28,8 @@ class TestLLMTestCaseInitialization:
         assert test_case.comments is None
         assert test_case.expected_tools is None
         assert test_case.token_cost is None
+        assert test_case.input_token_count is None
+        assert test_case.output_token_count is None
         assert test_case.completion_time is None
         assert test_case.name is None
         assert test_case.tags is None
@@ -63,6 +65,8 @@ class TestLLMTestCaseInitialization:
             comments="This is a test case",
             expected_tools=[tool_call],
             token_cost=0.05,
+            input_token_count=150,
+            output_token_count=50,
             completion_time=1.25,
             name="ML Question Test",
             tags=["machine-learning", "AI", "test"],
@@ -91,6 +95,8 @@ class TestLLMTestCaseInitialization:
         assert len(test_case.expected_tools) == 1
         assert test_case.expected_tools[0] == tool_call
         assert test_case.token_cost == 0.05
+        assert test_case.input_token_count == 150
+        assert test_case.output_token_count == 50
         assert test_case.completion_time == 1.25
         assert test_case.name == "ML Question Test"
         assert test_case.tags == ["machine-learning", "AI", "test"]
@@ -110,6 +116,8 @@ class TestLLMTestCaseCamelCaseInitialization:
         metadata_dict = {"source": "camelCase test", "version": 2.0}
         comments_text = "This is a camelCase test case"
         token_cost_value = 0.08
+        input_token_count_value = 120
+        output_token_count_value = 80
         completion_time_value = 2.5
         name_text = "AI Question Test CamelCase"
         tags_list = ["artificial-intelligence", "camelCase", "test"]
@@ -135,6 +143,8 @@ class TestLLMTestCaseCamelCaseInitialization:
             comments=comments_text,
             expectedTools=[tool_call],  # camelCase
             tokenCost=token_cost_value,  # camelCase
+            inputTokenCount=input_token_count_value,  # camelCase
+            outputTokenCount=output_token_count_value,  # camelCase
             completionTime=completion_time_value,  # camelCase
             name=name_text,
             tags=tags_list,
@@ -153,6 +163,8 @@ class TestLLMTestCaseCamelCaseInitialization:
         assert len(test_case.expected_tools) == 1
         assert test_case.expected_tools[0] == tool_call
         assert test_case.token_cost == token_cost_value
+        assert test_case.input_token_count == input_token_count_value
+        assert test_case.output_token_count == output_token_count_value
         assert test_case.completion_time == completion_time_value
         assert test_case.name == name_text
         assert test_case.tags == tags_list
@@ -627,6 +639,8 @@ class TestSerialization:
             tools_called=[ToolCall(name="tool")],
             expected_tools=[ToolCall(name="expected_tool")],
             token_cost=0.05,
+            input_token_count=100,
+            output_token_count=25,
             completion_time=1.0,
         )
 
@@ -640,6 +654,8 @@ class TestSerialization:
         assert "toolsCalled" in model_dict
         assert "expectedTools" in model_dict
         assert "tokenCost" in model_dict
+        assert "inputTokenCount" in model_dict
+        assert "outputTokenCount" in model_dict
         assert "completionTime" in model_dict
 
     def test_metadata_serialization(self):
@@ -680,6 +696,24 @@ class TestSerialization:
 
         assert model_dict["metadata"] == metadata
         assert "additionalMetadata" not in model_dict
+
+    def test_token_counts_propagate_to_api_test_case(self):
+        test_case = LLMTestCase(
+            input="test",
+            token_cost=0.05,
+            input_token_count=100,
+            output_token_count=25,
+        )
+
+        api_test_case = create_api_test_case(test_case)
+        assert api_test_case.token_cost == 0.05
+        assert api_test_case.input_token_count == 100
+        assert api_test_case.output_token_count == 25
+
+        model_dict = api_test_case.model_dump(by_alias=True)
+        assert model_dict["tokenCost"] == 0.05
+        assert model_dict["inputTokenCount"] == 100
+        assert model_dict["outputTokenCount"] == 25
 
     def test_flaky_propagates_to_api_test_case(self):
         default_test_case = LLMTestCase(input="test")

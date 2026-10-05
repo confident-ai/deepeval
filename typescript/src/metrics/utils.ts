@@ -24,6 +24,15 @@ import {
 import { DeepEvalError, MissingTestCaseParamsError } from "@/errors";
 import { extractJson } from "@/models/utils";
 import { BaseMetricCore } from "@/metrics/base-metrics";
+import {
+  EVAL_MODE_ENV_VAR,
+  EvalMode,
+  resolveEvalMode,
+  usesSystemOne,
+  type EvalModeName,
+} from "@/config/eval-mode";
+import { DeepEvalBaseSystemOneModel } from "@/models/system-one/base-system-one-model";
+import { TypeSafeModel } from "@/models/system-one/typesafe-model";
 
 // Canonical helper lives in test-case (used by serialization boundaries too).
 export { resolveRetrievalContext } from "@/test-case";
@@ -70,6 +79,79 @@ export function initializeModel(model?: DeepEvalBaseLLM | string): {
 }
 
 /**
+ * Build the System One model a metric decides with, or `undefined` when its
+ * eval mode never calls one. Under `llm` nothing is built, so a missing
+ * TypeSafe key is not an error; under `hybrid` and `system_one` a missing key
+ * fails here, at construction, rather than mid-evaluation.
+ */
+export function initializeSystemOneModel(
+  model: DeepEvalBaseSystemOneModel | string | undefined,
+  evalMode: EvalModeName,
+): DeepEvalBaseSystemOneModel | undefined {
+  if (!usesSystemOne(evalMode)) return undefined;
+  if (model instanceof DeepEvalBaseSystemOneModel) return model;
+  if (model !== undefined && typeof model !== "string") {
+    throw new TypeError(
+      "Unsupported type for systemOneModel. Expected undefined, a string, " +
+        "or a DeepEvalBaseSystemOneModel.",
+    );
+  }
+  try {
+    return new TypeSafeModel({ model });
+  } catch (e) {
+    throw new DeepEvalError(
+      `${EVAL_MODE_ENV_VAR}=${evalMode} routes metric decisions to TypeSafe ` +
+        `AI Jev, but it is not usable: ${(e as Error).message} Configure it ` +
+        "with `npx deepeval set-typesafe --prompt-api-key` or switch back " +
+        `with \`npx deepeval set-eval-mode ${EvalMode.LLM}\`.`,
+    );
+  }
+}
+
+export interface MetricModelOptions {
+  model?: DeepEvalBaseLLM | string;
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  evalMode?: EvalModeName;
+  /**
+   * `false` for a metric that never asks Jev (JSON Correctness): no System
+   * One model is built in any mode, and `system_one` only means "no LLM".
+   */
+  systemOne?: boolean;
+}
+
+/**
+ * Resolve a metric's eval mode and both of its models in one place. Under
+ * `system_one` a metric with a whole-metric form builds no LLM (Jev runs the
+ * whole metric and nothing falls back), so a missing LLM key is not an error.
+ * A metric without one (DAG, whose task nodes need the LLM) runs as `hybrid`
+ * there and always gets its LLM. Metrics that take no `systemOneModel` option
+ * get the default TypeSafe model when their mode needs one.
+ */
+export function initializeMetricModels(
+  metric: BaseMetricCore,
+  options: MetricModelOptions,
+): void {
+  const evalMode = resolveEvalMode(options.evalMode);
+  const asksJev = options.systemOne ?? true;
+  metric.evalMode = evalMode;
+  metric.systemOneModel = asksJev
+    ? initializeSystemOneModel(options.systemOneModel, evalMode)
+    : undefined;
+  const hasWholeMetricForm =
+    metric.systemOneEvalSpec !== BaseMetricCore.prototype.systemOneEvalSpec;
+  if (evalMode === EvalMode.SYSTEM_ONE && (hasWholeMetricForm || !asksJev)) {
+    metric.model = undefined;
+    metric.usingNativeModel = true;
+    metric.evaluationModel = metric.systemOneModel?.getModelName();
+    return;
+  }
+  const { model, usingNativeModel } = initializeModel(options.model);
+  metric.model = model;
+  metric.usingNativeModel = usingNativeModel;
+  metric.evaluationModel = model.getModelName();
+}
+
+/**
  * Render an LLM call against a zod schema and accrue its cost onto the metric.
  * Returns the validated, typed object (the TS analogue of Python's
  * `generate_with_schema_and_extract`).
@@ -80,6 +162,14 @@ export async function generateWithSchema<T>(
   schema: ZodType<T>,
 ): Promise<T> {
   if (!metric.model) {
+    if (metric.evalMode === EvalMode.SYSTEM_ONE) {
+      throw new DeepEvalError(
+        `${metric.name} runs on System One under ${EVAL_MODE_ENV_VAR}=` +
+          `${EvalMode.SYSTEM_ONE} and has no LLM for this step. Switch it ` +
+          `back with \`evalMode: "${EvalMode.LLM}"\` or ` +
+          `\`npx deepeval set-eval-mode ${EvalMode.LLM}\`.`,
+      );
+    }
     throw new Error("This metric has no model configured.");
   }
   const { output, cost } = await metric.model.generate(prompt, schema);
@@ -150,7 +240,13 @@ export function checkMultimodalSupport(metric: BaseMetricCore): void {
   if (model?.supportsMultimodal()) return;
 
   if (!model) {
-    const err = `The '${metric.name}' metric has no evaluation model and cannot evaluate multimodal test cases.`;
+    // A metric has no LLM only when a System One model (Jev) is judging it,
+    // and Jev reads text only.
+    const err = metric.systemOneModel
+      ? `${metric.name} is judged by System One (Jev) in this eval mode, and ` +
+        `Jev evaluates text only. Run multimodal test cases with ` +
+        `\`evalMode: "llm"\` or \`evalMode: "hybrid"\`.`
+      : `The '${metric.name}' metric has no evaluation model and cannot evaluate multimodal test cases.`;
     metric.error = err;
     throw new DeepEvalError(err);
   }

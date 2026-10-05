@@ -45,9 +45,16 @@ from deepeval.tracing.otel.context_aware_processor import (
 )
 from deepeval.tracing.trace_context import trace
 
-
 _span_id_counter = count(start=1)
 _trace_id_counter = count(start=1)
+
+
+@pytest.fixture(autouse=True)
+def no_trace_uploads(monkeypatch):
+    # Unit tests using with trace() must not enqueue real backend requests.
+    monkeypatch.setattr(
+        "deepeval.tracing.tracing.trace_manager.post_trace", lambda trace: None
+    )
 
 
 def _make_mock_span(operation_name=None, agent_name=None, tool_name=None):
@@ -554,6 +561,8 @@ class TestContextAwareSpanProcessorRouting:
         processor = ContextAwareSpanProcessor.__new__(ContextAwareSpanProcessor)
         processor._api_key = "test-key"
         processor._rest_processor = MagicMock()
+        processor._rest_exporter = MagicMock()
+        processor._rest_exporter.force_flush.return_value = True
         processor._otlp_processor = MagicMock()
         return processor, processor._rest_processor, processor._otlp_processor
 
@@ -780,6 +789,7 @@ class TestContextAwareSpanProcessorRouting:
 
         assert processor.force_flush(timeout_millis=5000) is True
         rest.force_flush.assert_called_once_with(5000)
+        processor._rest_exporter.force_flush.assert_called_once_with(5000)
         otlp.force_flush.assert_called_once_with(5000)
 
         processor.shutdown()

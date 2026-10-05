@@ -7,7 +7,7 @@ import typer
 import webbrowser
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 from pydantic.fields import FieldInfo
 from enum import Enum
 from pathlib import Path
@@ -34,6 +34,7 @@ from deepeval.key_handler import (
     KEY_FILE_HANDLER,
     ModelKeyValues,
     EmbeddingKeyValues,
+    SpeechKeyValues,
 )
 from deepeval.test_run.test_run import (
     global_test_run_manager,
@@ -102,6 +103,31 @@ USE_EMBED_KEYS = [
     for key in Settings.model_fields
     if key.startswith("USE_") and key in EmbeddingKeyValues.__members__
 ]
+USE_TTS_KEYS = [
+    key
+    for key in Settings.model_fields
+    if key.startswith("USE_") and key.endswith("_TTS")
+]
+USE_STT_KEYS = [
+    key
+    for key in Settings.model_fields
+    if key.startswith("USE_") and key.endswith("_STT")
+]
+
+
+def is_openai_configured() -> bool:
+    s = get_settings()
+    v = s.OPENAI_API_KEY
+    if isinstance(v, SecretStr):
+        try:
+            if v.get_secret_value().strip():
+                return True
+        except Exception:
+            pass
+    elif v and str(v).strip():
+        return True
+    env = os.getenv("OPENAI_API_KEY")
+    return bool(env and env.strip())
 
 
 def handle_save_result(
@@ -286,28 +312,36 @@ def unset_environ_in_store(
 
 def _as_legacy_use_key(
     k: str,
-) -> Union[ModelKeyValues, EmbeddingKeyValues, None]:
+) -> Union[ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues, None]:
     if k in ModelKeyValues.__members__:
         return ModelKeyValues[k]
     if k in EmbeddingKeyValues.__members__:
         return EmbeddingKeyValues[k]
+    if k in SpeechKeyValues.__members__:
+        return SpeechKeyValues[k]
     return None
 
 
 def switch_model_provider(
-    target: Union[ModelKeyValues, EmbeddingKeyValues],
+    target: Union[ModelKeyValues, EmbeddingKeyValues, SpeechKeyValues],
     save: Optional[str] = None,
 ) -> Tuple[bool, Optional[str]]:
     """
-    Ensure exactly one USE_* flag is enabled.
+    Ensure exactly one USE_* flag is enabled within the target's family.
     We *unset* all other USE_* keys (instead of writing explicit "NO") to:
       - keep dotenv clean
       - preserve Optional[bool] semantics (unset vs explicit false)
     """
-    keys_to_clear = (
-        USE_LLM_KEYS if isinstance(target, ModelKeyValues) else USE_EMBED_KEYS
-    )
     target_key = target.name  # or _to_str_key(target)
+
+    if target_key.endswith("_TTS"):
+        keys_to_clear = USE_TTS_KEYS
+    elif target_key.endswith("_STT"):
+        keys_to_clear = USE_STT_KEYS
+    elif isinstance(target, ModelKeyValues):
+        keys_to_clear = USE_LLM_KEYS
+    else:
+        keys_to_clear = USE_EMBED_KEYS
 
     if target_key not in keys_to_clear:
         raise ValueError(f"{target} is not a recognized USE_* model key")

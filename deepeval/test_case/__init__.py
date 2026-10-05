@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import Expectations
 import warnings
 
 from .llm_test_case import (
@@ -27,6 +28,7 @@ from .mcp import (
 )
 
 __all__ = [
+    "Expectations",
     "LLMTestCase",
     "SingleTurnParams",
     "ToolCall",

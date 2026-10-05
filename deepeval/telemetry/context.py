@@ -9,6 +9,7 @@ policy.
 
 import atexit
 import logging
+import os
 import threading
 import uuid
 from collections import Counter
@@ -22,6 +23,7 @@ from deepeval.telemetry.judge import describe_judge
 from deepeval.telemetry.properties import (
     EventProperties,
     FlushReason,
+    LocalStore,
     Outcome,
     TurnKind,
 )
@@ -128,6 +130,7 @@ class RunAccumulator:
             traced_here = max(trace_total - self.traces_at_entry, 0)
             return EventProperties(
                 entrypoint=self.entrypoint,
+                local_store=_local_store_state(),
                 run_id=self.run_id or None,
                 test_case_count=self.test_cases,
                 golden_count=self.goldens,
@@ -158,6 +161,25 @@ def _tracing_state() -> Tuple[bool, int]:
         return bool(trace_manager.tracing_enabled), len(trace_manager.traces)
     except Exception:
         return False, 0
+
+
+def _local_store_state() -> Optional[LocalStore]:
+    """The configured results backend. Quiet: never warns or raises."""
+    try:
+        from deepeval.evaluate.local_store import (
+            _LOCAL_STORE_ENV_VAR,
+            LOCAL_STORE_SQLITE,
+            normalize_local_store_mode,
+        )
+
+        mode = normalize_local_store_mode(os.getenv(_LOCAL_STORE_ENV_VAR))
+        if mode is None:
+            return None
+        return (
+            LocalStore.SQLITE if mode == LOCAL_STORE_SQLITE else LocalStore.JSON
+        )
+    except Exception:
+        return None
 
 
 def current_run() -> Optional[RunAccumulator]:

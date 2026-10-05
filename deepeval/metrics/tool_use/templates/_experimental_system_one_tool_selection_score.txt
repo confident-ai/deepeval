@@ -1,0 +1,1 @@
+How well do the tools in `tools_called`, which the assistant called while writing `assistant_messages`, match what `user_messages` asked for, given the tools in `available_tools`? Unnecessary, redundant or unrelated calls, and a better-suited available tool that was ignored, count against it.

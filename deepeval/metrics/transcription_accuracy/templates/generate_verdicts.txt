@@ -1,0 +1,48 @@
+You are judging how accurately a voice agent's speech-to-text heard a caller.
+
+Each exchange below has three fields:
+- 'spoken': what the caller actually said, word for word.
+- 'transcribed': what the agent's own speech-to-text made of that speech. This is the thing you are judging.
+- 'agent_reply': what the agent said back. It is context only — never judge the quality of the reply.
+
+Exchanges: {{ exchanges }}
+
+For each exchange, decide whether 'transcribed' faithfully captures what was said in 'spoken'.
+
+Do NOT count any of these as errors — they are the same utterance written differently:
+- Punctuation, capitalisation, and sentence splitting ("Yes, could you" vs "Yes. Could you").
+- Numbers written as digits or as words ("fifteen years" vs "15 years", "thirty days" vs "30 days").
+- Filler words, stutters, or backchannels that were dropped ("um", "uh", "you know").
+- Spelling variants of the same word, contractions, and obvious formatting of dates, times, money or units.
+- The same words repeated twice, which some speech-to-text engines emit for one utterance.
+
+DO count these as errors — they change what the agent was told:
+- A name, place, company or other proper noun heard as a different word ("Kavanagh" heard as "Cavanaugh").
+- A number, quantity, date or duration that differs in value ("fifteen" heard as "fifty", "two weeks" heard as "two months").
+- A negation gained or lost ("I can't start" heard as "I can start").
+- Words or whole clauses missing or invented such that the meaning changes.
+- An empty 'transcribed' when something was spoken, which means the agent heard nothing at all.
+
+For each exchange, in the order given, return:
+- "verdict": "yes" if 'transcribed' faithfully captures what was spoken, "no" if it does not.
+- "reason": when the verdict is "no", quote what was spoken and what was heard instead, and say what it changed. When the verdict is "yes", say briefly why any differences are harmless.
+
+You MUST return exactly one verdict per exchange, in the same order as the exchanges given.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key. No words or explanation is needed.
+**
+
+Example JSON:
+{
+  "verdicts": [
+    {
+      "reason": "The caller said 'Siobhan Kavanagh' but the agent heard 'Siobhan Cavanaugh', so it has the wrong surname for the candidate.",
+      "verdict": "no"
+    },
+    {
+      "reason": "Only the punctuation and the digits differ; every word was heard correctly.",
+      "verdict": "yes"
+    }
+  ]
+}

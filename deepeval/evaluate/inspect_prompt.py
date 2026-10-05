@@ -57,6 +57,10 @@ def maybe_offer_inspect_tui(
         return
 
     saved_path: Path = test_run_manager.last_saved_path  # type: ignore[assignment]
+    # In sqlite mode `last_saved_path` is the .db and the run is addressed
+    # as `<db>#<run_id>` (see `deepeval.sqlite_store.format_source`).
+    run_id = getattr(test_run_manager, "last_saved_run_id", None)
+    source = f"{saved_path}#{run_id}" if run_id is not None else str(saved_path)
     console = Console()
 
     try:
@@ -79,14 +83,14 @@ def maybe_offer_inspect_tui(
     if answer in {"n", "no"}:
         console.print(
             f"[dim]→ You can inspect later with: "
-            f"[bold]deepeval inspect {saved_path}[/bold][/dim]"
+            f"[bold]deepeval inspect {source}[/bold][/dim]"
         )
         return
 
     try:
         from deepeval.inspect import run_inspect
 
-        run_inspect(str(saved_path))
+        run_inspect(source)
     except ImportError as e:
         # ``deepeval.inspect.__init__`` defers the heavy Textual / pyperclip
         # imports until ``run_inspect`` is invoked, so the ImportError fires

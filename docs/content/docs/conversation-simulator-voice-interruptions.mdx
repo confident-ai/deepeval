@@ -6,7 +6,7 @@ languages: [python]
 beta: true
 ---
 
-By default [voice mode](/docs/conversation-simulator-voice-mode) is **half-duplex**: the simulated user finishes speaking, then waits for the agent via `exchange_turn`. Give the caller's [persona](/docs/conversation-simulator-voice-personas) an `interruption_behavior` to exercise barge-in — the same connector session, driven with concurrent uplink and downlink instead.
+By default the simulated caller never interrupts: it finishes speaking, then waits for the agent to finish before replying. Give the caller's [persona](/docs/conversation-simulator-voice-personas) an `interruption_behavior` to exercise barge-in — the same connector session, driven with concurrent uplink and downlink, plus a judge deciding when to cut in.
 
 :::tip
 For the conceptual model (uplink / downlink, half-duplex vs duplex), see [Voice concepts — Interruptions](/docs/evaluation-voice#interruptions).
@@ -14,7 +14,7 @@ For the conceptual model (uplink / downlink, half-duplex vs duplex), see [Voice 
 
 ## How It Works
 
-With interruptions enabled, the simulator no longer uses `exchange_turn()`. It drives the same connector with concurrent uplink and downlink:
+With interruptions enabled, the simulator no longer uses `exchange_turn()`. It drives the same connector with concurrent uplink and downlink through the **duplex exchange**:
 
 1. **Speak the user turn.** TTS synthesizes the simulated user's message; the connector pushes it with `stream_uplink` (cancelable) without waiting for the agent to finish.
 2. **Listen on the downlink.** `iter_agent_events()` streams agent audio and partial transcripts as they arrive.
@@ -53,6 +53,8 @@ sequenceDiagram
     Connector-->>Simulator: agent turn ends - interrupted or complete
     Note over Simulator: Record turns - mark interrupted on success
 ```
+
+On a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) this exchange runs for every conversation; the judge in step 3 only runs when the persona has an `interruption_behavior`.
 
 ## Setup Interruptions
 
@@ -104,7 +106,7 @@ That decision is content-based — e.g. the agent contradicted itself, asked som
 - `"normal"` — interrupt when a real caller would clarify, redirect, answer early, or cut an obvious digression — not on routine helpful speech. Up to **4** barges per conversation and **2** per agent utterance (~40 chars / 1s between polls).
 - `"frequent"` — interrupt aggressively on verbosity, slow pacing, digressions, or chances to cut ahead — still skip nonsense mid-word cuts. Up to **8** per conversation and **3** per agent utterance (~20 chars / 0.5s between polls).
 
-Leave `Persona.interruption_behavior` unset (or set it to `None`) for half-duplex — the simulator uses `exchange_turn`, never barges in, and `Turn.interrupted` stays unset.
+Leave `Persona.interruption_behavior` unset (or set it to `None`) and the caller never barges in — `Turn.interrupted` stays unset.
 
 The only randomness in the loop is a small delay before retrying after double-talk. That varies _when_ a retry may fire, not _whether_ the judge chose to interrupt in the first place.
 
@@ -130,5 +132,7 @@ Use `frequency` to control how readily the caller interrupts and `overlap` to co
 
 - Assistant turns cut short by a successful barge get `interrupted=True`.
 - Frustrated barges (grace miss) surface on user turns via `metadata`: `barge_in`, `frustrated`, and `grace_missed_ms`.
+- Every barge is a user `Turn` and counts toward `max_user_simulations`.
+- `Turn.latency_ms` is clamped at zero when the agent was already talking before the caller finished.
 
 The rest of the conversation is still a normal `ConversationalTestCase` — see [What a voice simulation produces](/docs/conversation-simulator-voice-mode#what-a-voice-simulation-produces).
