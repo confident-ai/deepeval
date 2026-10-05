@@ -1,3 +1,4 @@
+import inspect
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -149,12 +150,25 @@ class DeepEvalBaseLLM(ABC):
         return None
 
     def generate_with_schema(self, *args, schema=None, **kwargs):
-        if schema is not None:
-            try:
-                return self.generate(*args, schema=schema, **kwargs)
-            except TypeError:
-                pass  # this means provider doesn't accept schema kwarg
+        if schema is not None and self._accepts_schema():
+            return self.generate(*args, schema=schema, **kwargs)
         return self.generate(*args, **kwargs)
+
+    def _accepts_schema(self, async_: bool = False) -> bool:
+        """Whether the generate method takes a ``schema`` argument.
+
+        Asking the signature instead of catching TypeError: a provider that does
+        accept ``schema`` but raises TypeError inside its own code would otherwise
+        be mistaken for one that does not, and the caller's schema would be
+        silently dropped on the retry.
+        """
+        target = self.a_generate if async_ else self.generate
+        parameters = inspect.signature(target).parameters
+        if "schema" in parameters:
+            return True
+        return any(
+            p.kind is inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+        )
 
     async def a_generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:
