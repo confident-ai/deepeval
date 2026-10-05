@@ -94,7 +94,7 @@ class GSM8K(DeepEvalBaseBenchmark):
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset is not None
         ), "Example dataset is empty. Call load_benchmark."
         prompt: dict = GSM8KTemplate.generate_output(
             train_set=self.shots_dataset,
