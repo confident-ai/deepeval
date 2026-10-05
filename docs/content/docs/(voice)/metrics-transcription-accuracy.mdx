@@ -11,7 +11,7 @@ beta: true
 The transcription accuracy metric measures whether your voice agent's **own speech-to-text** heard the caller correctly. It compares what the caller said against the transcription the agent's connector reported for that speech, so a reply that looks wrong can be traced to a mis-heard word rather than to the LLM behind it.
 
 :::note
-This is the metric for the case where an agent answers sensibly but answers the wrong question. If the caller says one thing and the agent hears another, every downstream turn is coherent and every downstream turn is wrong, nothing in the conversation text alone would tell you why.
+This is the metric for the case where an agent answers sensibly but answers the wrong question. If the caller says one thing and the agent hears another, every downstream turn will be coherent and wrong, nothing in the conversation text alone would tell you why.
 :::
 
 ## Required Arguments
