@@ -1,0 +1,130 @@
+---
+title: OpenAI TTS
+sidebar_label: OpenAI
+languages: [python]
+---
+
+In `deepeval`, you can use OpenAI to convert text into speech when running [voice simulations](/docs/conversation-simulator-voice-mode). Synthesis is what speaks the simulated user's messages to your agent, so its clarity is what your agent's own speech recognition has to work with.
+
+:::tip
+OpenAI is the default TTS for voice simulations, so if you're happy with `gpt-4o-mini-tts` speaking in the `alloy` voice you only need an `OPENAI_API_KEY`.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```bash
+%env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### Command Line
+
+To speak with OpenAI in every voice simulation, run:
+
+```bash
+deepeval set-tts openai --model=tts-1-hd
+```
+
+`--model` is optional and defaults to OpenAI's own default model.
+
+:::info
+OpenAI is already the text-to-speech provider when nothing is selected, so this command matters mainly for pinning a model, or for switching back after another provider was set. Clearing the selection entirely also lands on OpenAI:
+
+```bash
+deepeval unset-tts
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass an `OpenAITTSModel` to `VoiceConfig` to synthesize with a model other than the default, or to pick a voice:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import OpenAITTSModel
+from deepeval.voice import VoiceConfig
+
+tts_model = OpenAITTSModel(
+    model="gpt-4o-mini-tts",
+    voice="coral",
+)
+voice_config = VoiceConfig(
+    tts_model=tts_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAITTSModel`:
+
+- [Optional] `model`: A string specifying the name of the speech model to use. Defaulted to `gpt-4o-mini-tts`.
+- [Optional] `api_key`: A string specifying your OpenAI API key. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the OpenAI API through. Defaulted to `None`.
+- [Optional] `voice`: A string naming the OpenAI voice to speak in, such as `"alloy"`, `"onyx"`, or `"shimmer"`. Defaulted to `alloy`.
+- [Optional] `response_format`: A string audio format for synthesized turns — one of `"wav"`, `"mp3"`, `"opus"`, `"aac"`, `"flac"`, or `"pcm"`. Defaulted to `"wav"`.
+- [Optional] `cost_per_1m_chars`: A float overriding the per-character price used for cost accounting. Defaults to the built-in price for the model.
+- [Optional] `generation_kwargs`: A dictionary of additional parameters forwarded to OpenAI's `audio.speech.create(...)` call.
+
+:::tip
+Any `**kwargs` you would like to send with each synthesis request can be passed through the `generation_kwargs` parameter. Anything else you pass goes to the OpenAI client constructor instead, which is where options like `organization` or `timeout` belong.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key:
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+DEEPEVAL_TTS_MODEL=tts-1-hd
+```
+
+OpenAI is the speech provider when no `USE_*_TTS` flag is set, so `USE_OPENAI_TTS=1` is only needed to switch back after selecting another provider. `deepeval set-tts openai --model tts-1-hd` writes both for you.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_TTS_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    tts_model="tts-1-hd",
+    ...,
+)
+```
+
+A bare model name is shorthand for `OpenAITTSModel(model=...)`, so you can leave `tts_model` out entirely and synthesis still runs on `gpt-4o-mini-tts`. Pass the model object itself to pick a voice.
+
+</Tab>
+</Tabs>
+
+### Available OpenAI Models
+
+- `gpt-4o-mini-tts` (default)
+- `tts-1`
+- `tts-1-hd`

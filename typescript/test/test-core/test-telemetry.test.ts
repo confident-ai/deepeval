@@ -16,6 +16,7 @@ import {
   Entrypoint,
   Event,
   FlushReason,
+  LocalStore,
   Outcome,
   Runtime,
   TelemetryKey,
@@ -244,6 +245,37 @@ describe("the Evaluation event", () => {
     expect(
       Object.keys(backend.only()).filter((key) => key.startsWith("$")),
     ).toEqual([]);
+  });
+
+  describe("local store backend", () => {
+    const saved = process.env.DEEPEVAL_LOCAL_STORE;
+    afterEach(() => {
+      if (saved === undefined) delete process.env.DEEPEVAL_LOCAL_STORE;
+      else process.env.DEEPEVAL_LOCAL_STORE = saved;
+    });
+
+    it("reports json by default", () => {
+      delete process.env.DEEPEVAL_LOCAL_STORE;
+      telemetry.captureEvaluationRun(Entrypoint.EVALUATE, () => {});
+      expect(backend.only()["eval.local_store"]).toBe(LocalStore.JSON);
+    });
+
+    it("reports sqlite when opted in, and nothing about its contents", () => {
+      // Read from configuration only, so it must not trip the Node gate.
+      process.env.DEEPEVAL_LOCAL_STORE = "sqlite";
+      telemetry.captureEvaluationRun(Entrypoint.EVALUATE, () => {});
+      const props = backend.only();
+      expect(props["eval.local_store"]).toBe(LocalStore.SQLITE);
+      expect(Object.keys(props).some((k) => k.startsWith("sqlite"))).toBe(
+        false,
+      );
+    });
+
+    it("omits an unrecognised value", () => {
+      process.env.DEEPEVAL_LOCAL_STORE = "postgres";
+      telemetry.captureEvaluationRun(Entrypoint.EVALUATE, () => {});
+      expect(backend.only()).not.toHaveProperty("eval.local_store");
+    });
   });
 });
 
@@ -593,6 +625,7 @@ describe("parity with Python's wire vocabulary", () => {
     ["outcomes", telemetry.Outcome],
     ["turnKinds", telemetry.TurnKind],
     ["flushReasons", telemetry.FlushReason],
+    ["localStores", telemetry.LocalStore],
     ["loginPromptSurfaces", telemetry.LoginPromptSurface],
     ["loginOutcomes", telemetry.LoginOutcome],
     ["loginMethods", telemetry.LoginMethod],

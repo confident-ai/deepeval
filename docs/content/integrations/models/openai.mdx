@@ -18,13 +18,13 @@ DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env
 OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-Alternative (Shell/CI)
+**Alternative (Shell/CI):**
 
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-Alternative (notebook)
+**Alternative (notebook):**
 
 If you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
 
@@ -85,6 +85,16 @@ model = OpenAIModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
+
+- [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
+- [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
+- [Optional] `base_url`: A string specifying your OpenAI URL.
+- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
+
 </Tab>
 <Tab value="ENV">
 
@@ -100,16 +110,6 @@ answer_relevancy = AnswerRelevancyMetric(
 
 </Tab>
 </Tabs>
-
-There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
-
-- [Optional] `model`: A string specifying the name of the GPT model to use. Defaulted to `OPENAI_MODEL_NAME` if not set; falls back to <DefaultLLMModel />.
-- [Optional] `api_key`: A string specifying the OpenAI API key for authentication. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if unset.
-- [Optional] `base_url`: A string specifying your OpenAI URL.
-- [Optional] `temperature`: A float specifying the model temperature. Defaults to `TEMPERATURE` if not passed; falls back to `0.0` if unset.
-- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model. Defaults to `OPENAI_COST_PER_INPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model. Defaults to `OPENAI_COST_PER_OUTPUT_TOKEN` if available in `deepeval`'s model cost registry, else `None`.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters forwarded to the OpenAI `chat.completions.create(...)` and `beta.chat.completions.parse(...)` calls.
 
 </Case>
 
@@ -130,22 +130,6 @@ const model = new OpenAIModel({
 });
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
-
-</Tab>
-<Tab value="ENV">
-
-`deepeval` by default uses OpenAI models for evaluations, you can simply pass the name of your desired model in metric initialization and set the `OPENAI_API_KEY` to use OpenAI models:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: "gpt-4.1",
-});
-```
-
-</Tab>
-</Tabs>
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenAIModel`:
 
@@ -168,6 +152,22 @@ const model = new OpenAIModel({
 });
 ```
 
+</Tab>
+<Tab value="ENV">
+
+`deepeval` by default uses OpenAI models for evaluations, you can simply pass the name of your desired model in metric initialization and set the `OPENAI_API_KEY` to use OpenAI models:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: "gpt-4.1",
+});
+```
+
+</Tab>
+</Tabs>
+
 </Case>
 
 </Switch>
@@ -188,6 +188,14 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-6-astra`
+- `gpt-6-sol`
+- `gpt-6-luna`
+- `gpt-5.6-sol`
+- `gpt-5.6-terra`
+- `gpt-5.6-luna`
+- `gpt-5.5`
+- `gpt-5.4`
 - `gpt-5`
 - `gpt-5-mini`
 - `gpt-5-nano`
@@ -213,7 +221,11 @@ Below is a list of commonly used OpenAI models:
 <Case id="python">
 
 :::caution[G-Eval requires log probabilities]
-`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+:::
+
+:::note[Reasoning models]
+Reasoning models such as the GPT-5 and GPT-6 families reject `temperature` values other than the default. `deepeval` omits the parameter for the models it recognizes, so a `temperature` you pass is ignored for them.
 :::
 
 </Case>

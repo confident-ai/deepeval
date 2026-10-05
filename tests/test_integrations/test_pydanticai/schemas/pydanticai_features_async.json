@@ -19,7 +19,17 @@
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1"
+      "metricCollection": "agent_metrics_async_v1",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "output": "Processed: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ]
     }
   ],
   "llmSpans": [
@@ -88,7 +98,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -99,7 +111,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "special_tool": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],
@@ -162,7 +179,9 @@
                 "with_native": null,
                 "tool_kind": null,
                 "return_schema": null,
-                "include_return_schema": null
+                "include_return_schema": null,
+                "capability_id": null,
+                "toolset_id": "<agent>"
               }
             ],
             "native_tools": [],
@@ -173,7 +192,12 @@
             "allow_text_output": true,
             "allow_image_output": false,
             "instruction_parts": null,
-            "thinking": null
+            "thinking": null,
+            "tool_visibility": {
+              "special_tool": "visible"
+            },
+            "revealed_tool_names": [],
+            "deferred_capability_ids": []
           }
         }
       ],

@@ -38,6 +38,7 @@ class Prop(str, Enum):
     ASYNC_MODE = "eval.async_mode"
     IN_COMPONENT = "eval.in_component"
     FLUSH_REASON = "eval.flush_reason"
+    LOCAL_STORE = "eval.local_store"
     # judge
     PROVIDER = "judge.provider"
     MODEL = "judge.model"
@@ -109,6 +110,17 @@ class TurnKind(str, Enum):
     SINGLE_TURN = "single_turn"
     MULTI_TURN = "multi_turn"
     MIXED = "mixed"
+
+
+class LocalStore(str, Enum):
+    """Which local backend the run's results are written to.
+
+    Read from configuration, never from the stored run, so it counts how many
+    evaluations use each backend and nothing else.
+    """
+
+    JSON = "json"
+    SQLITE = "sqlite"
 
 
 class FlushReason(str, Enum):
@@ -204,6 +216,7 @@ class EventProperties:
     async_mode: Optional[bool] = None
     in_component: Optional[bool] = None
     flush_reason: Optional[FlushReason] = None
+    local_store: Optional[LocalStore] = None
     # judge
     provider: Optional[str] = None
     model: Optional[str] = None
@@ -272,6 +285,7 @@ _FIELD_TO_PROP: Dict[str, Prop] = {
     "async_mode": Prop.ASYNC_MODE,
     "in_component": Prop.IN_COMPONENT,
     "flush_reason": Prop.FLUSH_REASON,
+    "local_store": Prop.LOCAL_STORE,
     "provider": Prop.PROVIDER,
     "model": Prop.MODEL,
     "tracing_enabled": Prop.TRACING_ENABLED,

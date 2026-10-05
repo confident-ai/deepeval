@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from deepeval.metrics.base_metric import YesNoBorderline
+from typing import List, Optional
 from enum import Enum
 
 
@@ -9,8 +10,7 @@ class ScoreType(Enum):
 
 
 class SummarizationAlignmentVerdict(BaseModel):
-    # yes, no, or idk
-    verdict: Literal["yes", "no", "idk"]
+    verdict: YesNoBorderline
     reason: Optional[str] = Field(default=None)
 
 

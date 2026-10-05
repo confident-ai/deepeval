@@ -7,7 +7,7 @@ from typing import Any, Dict, Literal, Optional, Set, Tuple
 
 import jinja2
 
-Feature = Literal["metrics", "simulator"]
+Feature = Literal["metrics", "simulator", "classifiers"]
 
 # Keep in sync with the method keys in `templates/metrics/templates.json`.
 # `class_name` stays `str` on purpose: callers pass `self.__class__.__name__`,
@@ -65,6 +65,25 @@ MetricTemplateMethod = Literal[
     "get_tool_selection_final_reason",
     "get_tool_selection_score",
     "rewrite_reason",
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    # `hybrid`: the Noul asked per QAG item or single verdict, and the
+    # Score asked where the LLM prompt returned a graded score.
+    "_experimental_system_one_verdict",
+    "_experimental_system_one_answered_verdict",
+    "_experimental_system_one_on_topic_verdict",
+    "_experimental_system_one_score",
+    "_experimental_system_one_args_score",
+    "_experimental_system_one_argument_correctness_score",
+    "_experimental_system_one_goal_score",
+    "_experimental_system_one_mcp_use_args_score",
+    "_experimental_system_one_mcp_use_primitive_score",
+    "_experimental_system_one_plan_score",
+    "_experimental_system_one_primitive_score",
+    "_experimental_system_one_tool_selection_score",
+    # `system_one`: a JSON array of Noul / Score / Choice questions that
+    # describe the whole metric as one System One request.
+    "_experimental_system_one_questions",
+    "_experimental_system_one_mcp_use_questions",
 ]
 
 # Keep in sync with the method keys in `templates/simulator/templates.json`.
@@ -76,7 +95,17 @@ SimulatorTemplateMethod = Literal[
     "interruption_frustration",
 ]
 
-TemplateMethod = MetricTemplateMethod | SimulatorTemplateMethod
+# Keep in sync with the method keys in `templates/classifiers/templates.json`.
+ClassifierTemplateMethod = Literal[
+    "classify_single_turn",
+    "classify_multi_turn",
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    "_experimental_system_one_classify",
+]
+
+TemplateMethod = (
+    MetricTemplateMethod | SimulatorTemplateMethod | ClassifierTemplateMethod
+)
 
 
 class MetricTemplateNotFoundError(KeyError):

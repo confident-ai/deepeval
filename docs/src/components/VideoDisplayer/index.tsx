@@ -4,6 +4,8 @@ import React from "react";
 import { Compass } from "lucide-react";
 import styles from "./VideoDisplayer.module.scss";
 import { PrimaryButton } from "@site/src/components/Buttons";
+import MascotPeek from "@site/src/components/MascotPeek";
+import { CAST } from "@site/src/components/Mascot/_cast";
 
 const ENTERPRISE_HREF = "/enterprise";
 
@@ -55,13 +57,15 @@ const VideoDisplayer: React.FC<VideoDisplayerProps> = ({
           <p className={styles.description}>{description}</p>
         </div>
         <div className={styles.cta}>
-          <PrimaryButton
-            href={ENTERPRISE_HREF}
-            startIcon={<Compass aria-hidden />}
-            shortkey="E"
-          >
-            {ctaText}
-          </PrimaryButton>
+          <MascotPeek mascot={CAST.classic}>
+            <PrimaryButton
+              href={ENTERPRISE_HREF}
+              startIcon={<Compass aria-hidden />}
+              shortkey="E"
+            >
+              {ctaText}
+            </PrimaryButton>
+          </MascotPeek>
         </div>
       </div>
     </div>

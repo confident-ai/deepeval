@@ -28,6 +28,8 @@ import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
 import { BetaBadge } from "@/components/beta-mark";
 import { PlainBreadcrumb } from "@/components/plain-breadcrumb";
+import MascotPeek from "@/src/components/MascotPeek";
+import { CAST } from "@/src/components/Mascot/_cast";
 import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
@@ -120,10 +122,8 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          💥 BREAKING CHANGE: All metric scores are now HIGHER THE BETTER.{" "}
-          <Link href="/changelog/changelog-2026#breaking-change">
-            Read changelog →
-          </Link>
+          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
@@ -198,7 +198,13 @@ export function createSection(config: SectionConfig) {
       >
         <PageLanguageScope languages={page.data.languages}>
           <TocLanguageSync />
-          <DocsTitle>{page.data.title}</DocsTitle>
+          <DocsTitle>
+            {page.data.peek === true ? (
+              <MascotPeek mascot={CAST.classic}>{page.data.title}</MascotPeek>
+            ) : (
+              page.data.title
+            )}
+          </DocsTitle>
           <DocsDescription className="mb-0 text-[15px] font-light">
             {page.data.description}
           </DocsDescription>

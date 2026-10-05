@@ -13,10 +13,16 @@ import { Entrypoint, Event } from "@/telemetry/events";
 import { describeJudge } from "@/telemetry/judge";
 import {
   FlushReason,
+  LocalStore,
   Outcome,
   TurnKind,
   type EventProperties,
 } from "@/telemetry/properties";
+import { DEEPEVAL_LOCAL_STORE } from "@/constants";
+import {
+  LOCAL_STORE_SQLITE,
+  normalizeLocalStoreMode,
+} from "@/sqlite-store/mode";
 
 const logger = getLogger("telemetry");
 
@@ -40,6 +46,19 @@ function resolveTurnKind(kinds: Set<TurnKind>): TurnKind | undefined {
   if (kinds.size === 0) return undefined;
   if (kinds.size === 1) return [...kinds][0];
   return TurnKind.MIXED;
+}
+
+/** The configured results backend. Quiet: never warns or throws. */
+function localStoreState(): LocalStore | undefined {
+  try {
+    const mode = normalizeLocalStoreMode(
+      process.env[DEEPEVAL_LOCAL_STORE] ?? "",
+    );
+    if (mode === undefined) return undefined;
+    return mode === LOCAL_STORE_SQLITE ? LocalStore.SQLITE : LocalStore.JSON;
+  } catch {
+    return undefined;
+  }
 }
 
 function tracingState(): { enabled: boolean; traceCount: number } {
@@ -114,6 +133,7 @@ export class RunAccumulator {
     const tracedHere = Math.max(traceCount - this.tracesAtEntry, 0);
     return {
       entrypoint: this.entrypoint,
+      localStore: localStoreState(),
       runId: this.runId || undefined,
       testCaseCount: this.testCases,
       goldenCount: this.goldens,

@@ -1564,6 +1564,12 @@ def observe(
 
                 # Construct complete kwargs dictionary & pass all kwargs with consistent naming
                 complete_kwargs = dict(bound_args.arguments)
+
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(
+                        complete_kwargs["self"]
+                    )
+
                 observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names

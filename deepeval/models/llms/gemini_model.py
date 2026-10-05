@@ -96,10 +96,15 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             self.api_key = settings.GOOGLE_API_KEY
 
+        self._temperature_configured = True
         if temperature is not None:
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
             temperature = settings.TEMPERATURE
+        elif self.model_data.supports_temperature is False:
+            # Nothing configured: leave Google's default (1.0) in place.
+            self._temperature_configured = False
+            temperature = 1.0
         else:
             temperature = 0.0
 
@@ -274,7 +279,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 ),
             )
@@ -285,7 +290,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 contents=prompt,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 ),
             )
@@ -318,7 +323,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 ),
             )
@@ -329,7 +334,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 contents=prompt,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 ),
             )
@@ -338,6 +343,14 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
     # Utilities
     ###############################################
+
+    def _temperature_kwargs(self) -> Dict:
+        # Google warns that temperatures below the default 1.0 make Gemini 3
+        # models loop or reason worse, so they get the default unless a
+        # temperature was explicitly configured.
+        if not self._temperature_configured:
+            return {}
+        return {"temperature": self.temperature}
 
     def calculate_cost(
         self, input_tokens: int, output_tokens: int
@@ -353,6 +366,10 @@ class GeminiModel(DeepEvalBaseLLM):
         usage = getattr(response, "usage_metadata", None)
         input_tokens = getattr(usage, "prompt_token_count", None)
         output_tokens = getattr(usage, "candidates_token_count", None)
+        # Thinking tokens are billed at the output rate but reported separately.
+        thoughts_tokens = getattr(usage, "thoughts_token_count", None)
+        if isinstance(thoughts_tokens, int) and thoughts_tokens > 0:
+            output_tokens = (output_tokens or 0) + thoughts_tokens
         if input_tokens is not None and output_tokens is not None:
             cost = self.calculate_cost(input_tokens, output_tokens)
             if cost is not None:

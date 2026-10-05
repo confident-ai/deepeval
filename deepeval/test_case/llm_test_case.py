@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import Expectations
 from pydantic import (
     Field,
     BaseModel,
@@ -394,6 +395,16 @@ class LLMTestCase(BaseModel):
         serialization_alias="tokenCost",
         validation_alias=AliasChoices("tokenCost", "token_cost"),
     )
+    input_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="inputTokenCount",
+        validation_alias=AliasChoices("inputTokenCount", "input_token_count"),
+    )
+    output_token_count: Optional[int] = Field(
+        default=None,
+        serialization_alias="outputTokenCount",
+        validation_alias=AliasChoices("outputTokenCount", "output_token_count"),
+    )
     completion_time: Optional[float] = Field(
         default=None,
         serialization_alias="completionTime",
@@ -421,6 +432,14 @@ class LLMTestCase(BaseModel):
         validation_alias=AliasChoices(
             "customColumnKeyValues", "custom_column_key_values"
         ),
+    )
+    expectations: Optional[Expectations] = Field(default=None)
+    # Classifier name -> label this test case should receive. A classifier
+    # only produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, str]] = Field(
+        default=None,
+        serialization_alias="expectedLabels",
+        validation_alias=AliasChoices("expectedLabels", "expected_labels"),
     )
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
@@ -607,6 +626,18 @@ class LLMTestCase(BaseModel):
                     "'custom_column_key_values' must be None or a Dict[str, str]"
                 )
 
+        expected_labels = data.get("expected_labels")
+        if expected_labels is None:
+            expected_labels = data.get("expectedLabels")
+        if expected_labels is not None:
+            if not isinstance(expected_labels, dict) or not all(
+                isinstance(k, str) and isinstance(v, str)
+                for k, v in expected_labels.items()
+            ):
+                raise TypeError(
+                    "'expected_labels' must be None or a Dict[str, str] mapping classifier name to label"
+                )
+
         return data
 
     def _get_images_mapping(self) -> Dict[str, MLLMImage]:
@@ -736,12 +767,20 @@ class Audio:
         self.dataBase64 = base64.b64encode(raw).decode("ascii")
 
     def get_bytes(self) -> bytes:
-        """Return the raw audio bytes (local files are loaded in __post_init__)."""
+        """Return the raw audio bytes (local files are loaded in __post_init__,
+        remote URLs are downloaded and cached on first access)."""
         if self.dataBase64 is None:
-            raise ValueError(
-                "No audio bytes available; this Audio is a remote URL. "
-                "Fetch it before calling get_bytes()."
-            )
+            if not self.url or self.local is not False:
+                raise ValueError(
+                    "No audio bytes available; this Audio has neither bytes "
+                    "nor a remote URL to fetch them from."
+                )
+            import requests
+
+            response = requests.get(self.url, timeout=60)
+            response.raise_for_status()
+            self.dataBase64 = base64.b64encode(response.content).decode("ascii")
+            return response.content
         return base64.b64decode(self.dataBase64)
 
     @classmethod

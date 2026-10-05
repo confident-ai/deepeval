@@ -1,0 +1,1 @@
+Does `ai_message`, the assistant's reply after `previous_turns`, stay in character as the role described in `chatbot_role`, in persona, tone and behaviour? Answer no if it breaks character or acts against the role.

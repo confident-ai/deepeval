@@ -35,12 +35,18 @@ class RecordingTTS:
     def __init__(self):
         self.calls: List[dict] = []
 
+    def supports_streaming(self) -> bool:
+        return False
+
     async def a_synthesize(self, text: str, **kwargs):
         self.calls.append({"text": text, **kwargs})
         return _wav_audio(), None
 
 
 class RecordingSTT:
+    def supports_streaming(self) -> bool:
+        return False
+
     def __init__(self, transcripts: Optional[List[str]] = None):
         self.calls: List[dict] = []
         self.transcripts = list(transcripts or [])

@@ -10,6 +10,7 @@ from deepeval.telemetry import (
     Event,
     EventProperties,
     FlushReason,
+    LocalStore,
     Outcome,
     Runtime,
     TelemetryKey,
@@ -166,6 +167,29 @@ class TestEvaluationEvent:
 
         assert [k for k in backend.only() if k.startswith("$")] == []
 
+    def test_reports_the_json_backend_by_default(self, backend, monkeypatch):
+        monkeypatch.delenv("DEEPEVAL_LOCAL_STORE", raising=False)
+        with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+            pass
+        assert backend.only()["eval.local_store"] == LocalStore.JSON.value
+
+    def test_reports_the_sqlite_backend_when_opted_in(
+        self, backend, monkeypatch
+    ):
+        """Only which backend is configured goes out -- never what it holds."""
+        monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "sqlite")
+        with telemetry.capture_evaluation_run(Entrypoint.EVALUATE):
+            pass
+        props = backend.only()
+        assert props["eval.local_store"] == LocalStore.SQLITE.value
+        assert not any(k.startswith("sqlite") for k in props)
+
+    def test_an_unrecognised_backend_value_is_omitted(self, monkeypatch):
+        """Settings rejects a bad value before any run starts; the telemetry
+        reader is still defensive and stays quiet rather than guessing."""
+        monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "postgres")
+        assert context_mod._local_store_state() is None
+
 
 class TestRunId:
     def test_each_run_gets_its_own_id(self, backend):
@@ -223,6 +247,46 @@ class TestRunId:
                 raise ValueError("boom")
 
         assert backend.events == []
+
+
+class TestSdkLogging:
+    """Our PostHog client must be quiet without touching a user's own client."""
+
+    class _Lane:
+        pass
+
+    class _FakeClient:
+        def __init__(self):
+            self._lanes = [TestSdkLogging._Lane(), TestSdkLogging._Lane()]
+
+    def test_redirects_only_our_clients_log_lines(self):
+        import logging
+
+        from deepeval.telemetry import client as client_mod
+
+        shared = logging.getLogger("posthog")
+        before = (shared.level, list(shared.handlers), list(shared.filters))
+
+        fake = self._FakeClient()
+        client_mod._quiet_sdk_logging(fake)
+
+        ours = logging.getLogger(client_mod._SDK_LOGGER_NAME)
+        assert fake.log is ours
+        assert all(lane.log is ours for lane in fake._lanes)
+        # The SDK's budget message is a WARNING; ours drops it.
+        assert not ours.isEnabledFor(logging.WARNING)
+        assert ours.isEnabledFor(logging.ERROR)
+        # The logger every other PostHog client uses is exactly as it was.
+        assert (
+            shared.level,
+            list(shared.handlers),
+            list(shared.filters),
+        ) == before
+
+    def test_tolerates_unknown_sdk_internals(self):
+        from deepeval.telemetry import client as client_mod
+
+        client_mod._quiet_sdk_logging(object())  # no attributes to set
 
 
 class TestOutcome:

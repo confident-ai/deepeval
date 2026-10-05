@@ -2,10 +2,56 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Any, Dict, List
+
+from pydantic import BaseModel
 
 from deepeval.metrics.mcp.schema import Task
 from deepeval.test_case import MCPServer, MCPToolCall
+
+
+def _primitive_state(primitive: object) -> Any:
+    if isinstance(primitive, BaseModel):
+        return primitive.model_dump(mode="json", exclude_none=True)
+    if isinstance(primitive, (dict, list, str)):
+        return primitive
+    return repr(primitive)
+
+
+def mcp_servers_state(mcp_servers: List[MCPServer]) -> List[Dict[str, Any]]:
+    """The MCP servers as System One state: each server's name and the
+    tools, resources and prompts it exposes, as structured data."""
+    servers = []
+    for mcp_server in mcp_servers or []:
+        server: Dict[str, Any] = {"server_name": mcp_server.server_name}
+        for key in (
+            "available_tools",
+            "available_resources",
+            "available_prompts",
+        ):
+            primitives = getattr(mcp_server, key) or []
+            if primitives:
+                server[key] = [_primitive_state(p) for p in primitives]
+        servers.append(server)
+    return servers
+
+
+def mcp_calls_state(
+    mcp_tools_called: List[object],
+    mcp_resources_called: List[object],
+    mcp_prompts_called: List[object],
+) -> Dict[str, Any]:
+    """The MCP primitives an agent called, as System One state."""
+    calls = {
+        "mcp_tools_called": mcp_tools_called,
+        "mcp_resources_called": mcp_resources_called,
+        "mcp_prompts_called": mcp_prompts_called,
+    }
+    return {
+        key: [_primitive_state(c) for c in value]
+        for key, value in calls.items()
+        if value
+    }
 
 
 def indent_multiline_string(s: object, indent_level: int = 4) -> str:

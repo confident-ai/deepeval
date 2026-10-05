@@ -1,3 +1,4 @@
+import { Expectations, type ExpectationsOptions } from "@/dataset/expectations";
 import { Golden, ConversationalGolden } from "@/dataset/golden";
 import { Persona, personaFromRecord } from "@/dataset/persona";
 import {
@@ -27,11 +28,15 @@ export function convertTestCasesToGoldens(testCases: LLMTestCase[]): Golden[] {
       new Golden({
         input: llmTestCase.input,
         actualOutput: llmTestCase.actualOutput,
+        expectations: llmTestCase.expectations,
         expectedOutput: llmTestCase.expectedOutput,
         context: llmTestCase.context,
         retrievalContext: resolveRetrievalContext(llmTestCase.retrievalContext),
         toolsCalled: llmTestCase.toolsCalled,
         expectedTools: llmTestCase.expectedTools,
+        tokenCost: llmTestCase.tokenCost,
+        inputTokenCount: llmTestCase.inputTokenCount,
+        outputTokenCount: llmTestCase.outputTokenCount,
         additionalMetadata: llmTestCase.additionalMetadata,
       }),
     );
@@ -48,12 +53,16 @@ export function convertGoldensToTestCases(
     return createLLMTestCase({
       input: golden.input,
       actualOutput: golden.actualOutput || "",
+      expectations: golden.expectations,
       expectedOutput: golden.expectedOutput,
       context: golden.context,
       retrievalContext: golden.retrievalContext,
       additionalMetadata: golden.additionalMetadata,
       toolsCalled: golden.toolsCalled,
       expectedTools: golden.expectedTools,
+      tokenCost: golden.tokenCost,
+      inputTokenCount: golden.inputTokenCount,
+      outputTokenCount: golden.outputTokenCount,
       name: golden.name,
       comments: golden.comments,
       _datasetRank: index,
@@ -75,6 +84,7 @@ export function convertConvoTestCasesToConvoGoldens(
     return new ConversationalGolden({
       scenario: testCase.scenario,
       turns: testCase.turns,
+      expectations: testCase.expectations,
       expectedOutcome: testCase.expectedOutcome,
       // A test case only carries the flattened text, so rebuild it as a
       // persona rather than tripping the `userDescription` deprecation.
@@ -97,6 +107,7 @@ export function convertConvoGoldensToConvoTestCases(
       turns: golden.turns,
       scenario: golden.scenario,
       userDescription: golden.userDescription,
+      expectations: golden.expectations,
       expectedOutcome: golden.expectedOutcome,
       context: golden.context,
       name: golden.name,
@@ -110,6 +121,7 @@ export function convertConvoGoldensToConvoTestCases(
 }
 
 function createLLMTestCase(params: {
+  expectations?: Expectations;
   input: string;
   actualOutput: string;
   expectedOutput?: string;
@@ -121,6 +133,8 @@ function createLLMTestCase(params: {
   comments?: string;
   reasoning?: string;
   tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   completionTime?: number;
   name?: string;
   _datasetRank?: number;
@@ -131,6 +145,7 @@ function createLLMTestCase(params: {
 }
 
 function createConversationalTestCase(params: {
+  expectations?: Expectations;
   turns?: Turn[];
   chatbotRole?: string;
   scenario?: string;
@@ -298,6 +313,26 @@ function parseStringList(
   );
 }
 
+function parseOptionalNumber(
+  value: unknown,
+  wholeNumber = false,
+): number | undefined {
+  if (value == null || value === "") return undefined;
+  const parsed = Number(value);
+  if (
+    !Number.isFinite(parsed) ||
+    parsed < 0 ||
+    (wholeNumber && !Number.isInteger(parsed))
+  ) {
+    throw new TypeError(
+      wholeNumber
+        ? "Expected a non-negative whole number."
+        : "Expected a non-negative number.",
+    );
+  }
+  return parsed;
+}
+
 export function parseToolCalls(value: unknown): ToolCall[] | undefined {
   if (value == null) return undefined;
   const raw = typeof value === "string" ? trimAndLoadJson(value) : value;
@@ -389,6 +424,7 @@ export function parseTurns(value: unknown): Turn[] {
 }
 
 export interface GoldenKeyNames {
+  expectations?: string;
   input: string;
   actualOutput: string;
   expectedOutput: string;
@@ -396,6 +432,9 @@ export interface GoldenKeyNames {
   retrievalContext: string;
   toolsCalled: string;
   expectedTools: string;
+  tokenCost?: string;
+  inputTokenCount?: string;
+  outputTokenCount?: string;
   comments: string;
   name: string;
   sourceFile: string;
@@ -409,6 +448,7 @@ export interface GoldenKeyNames {
 }
 
 export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
+  expectations: "expectations",
   input: "input",
   actualOutput: "actual_output",
   expectedOutput: "expected_output",
@@ -416,6 +456,9 @@ export const DEFAULT_GOLDEN_KEY_NAMES: GoldenKeyNames = {
   retrievalContext: "retrieval_context",
   toolsCalled: "tools_called",
   expectedTools: "expected_tools",
+  tokenCost: "token_cost",
+  inputTokenCount: "input_token_count",
+  outputTokenCount: "output_token_count",
   comments: "comments",
   name: "name",
   sourceFile: "source_file",
@@ -434,6 +477,14 @@ export function goldenFromRecord(
   keys: GoldenKeyNames,
   delimiters: { context: string; retrievalContext: string },
 ): Golden | ConversationalGolden {
+  const rawExpectations = pickKey(record, keys.expectations ?? "expectations");
+  const expectations = rawExpectations
+    ? new Expectations(
+        (typeof rawExpectations === "string"
+          ? JSON.parse(rawExpectations)
+          : rawExpectations) as ExpectationsOptions,
+      )
+    : undefined;
   const context = parseStringList(
     pickKey(record, keys.context),
     delimiters.context,
@@ -452,6 +503,7 @@ export function goldenFromRecord(
     const turns = pickKey(record, keys.turns);
     const persona = personaFromRecord(pickKey(record, keys.persona));
     return new ConversationalGolden({
+      expectations,
       scenario: String(scenario),
       turns: turns ? parseTurns(turns) : [],
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
@@ -470,6 +522,7 @@ export function goldenFromRecord(
   }
 
   return new Golden({
+    expectations,
     input: pickKey(record, keys.input) as string,
     actualOutput: pickKey(record, keys.actualOutput) as string | undefined,
     expectedOutput: pickKey(record, keys.expectedOutput) as string | undefined,
@@ -482,6 +535,19 @@ export function goldenFromRecord(
     ),
     toolsCalled: parseToolCalls(pickKey(record, keys.toolsCalled)),
     expectedTools: parseToolCalls(pickKey(record, keys.expectedTools)),
+    tokenCost: parseOptionalNumber(
+      keys.tokenCost ? pickKey(record, keys.tokenCost) : undefined,
+    ),
+    inputTokenCount: parseOptionalNumber(
+      keys.inputTokenCount ? pickKey(record, keys.inputTokenCount) : undefined,
+      true,
+    ),
+    outputTokenCount: parseOptionalNumber(
+      keys.outputTokenCount
+        ? pickKey(record, keys.outputTokenCount)
+        : undefined,
+      true,
+    ),
     additionalMetadata,
     customColumnKeyValues,
     comments,
