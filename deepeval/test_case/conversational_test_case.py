@@ -153,9 +153,7 @@ class Turn(BaseModel):
         if self.interrupted is not None:
             attrs.append(f"interrupted={self.interrupted!r}")
         if self.provider_transcript is not None:
-            attrs.append(
-                f"provider_transcript={self.provider_transcript!r}"
-            )
+            attrs.append(f"provider_transcript={self.provider_transcript!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
