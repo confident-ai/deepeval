@@ -86,7 +86,7 @@ The metrics use different parts of the same `ConversationalTestCase`:
 - `VoiceConsistencyMetric` compares assistant audio across multiple turns.
 - `TurnTakingNaturalnessMetric` reconstructs the call timeline from each `Turn.audio.start_time` and `Audio.duration`, using `Turn.role` to identify the speaker.
 - `AgentResponsivenessMetric` examines the ordered transcript and audio turns for missing responses and reprompts.
-- `TranscriptionAccuracyMetric` reads no audio at all: it pairs each user `Turn.content` with the `Turn.provider_transcription` the agent reported for it.
+- `TranscriptionAccuracyMetric` reads no audio at all: it pairs each user `Turn.content` with the `Turn.provider_transcript` the agent reported for it.
 
 An audio clip without `start_time` can still be evaluated for how it sounded. It cannot be used to infer silence or overlap honestly, so timing metrics skip test cases whose audio has no call-relative placement.
 

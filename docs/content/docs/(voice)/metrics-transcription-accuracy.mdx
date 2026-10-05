@@ -20,10 +20,10 @@ To use the `TranscriptionAccuracyMetric`, you'll have to provide the following a
 
 - `turns`
 
-You must provide the `role` and `content` for every turn, and <Term py="provider_transcription" ts="providerTranscription"/> on at least one `"assistant"` turn. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+You must provide the `role` and `content` for every turn, and <Term py="provider_transcript" ts="providerTranscript"/> on at least one `"assistant"` turn. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 :::caution
-Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate <Term py="provider_transcription" ts="providerTranscription"/>. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed.
+Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate <Term py="provider_transcript" ts="providerTranscript"/>. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed.
 :::
 
 ## Usage
@@ -47,7 +47,7 @@ convo_test_case = ConversationalTestCase(
         Turn(
             role="assistant",
             content="Great to meet you Siobhan, two weeks works.",
-            provider_transcription="Siobhan Cavanaugh here, I can start in two weeks.",
+            provider_transcript="Siobhan Cavanaugh here, I can start in two weeks.",
         ),
     ]
 )
@@ -75,7 +75,7 @@ const convoTestCase = new ConversationalTestCase({
     new Turn({
       role: "assistant",
       content: "Great to meet you Siobhan, two weeks works.",
-      providerTranscription: "Siobhan Cavanaugh here, I can start in two weeks.",
+      providerTranscript: "Siobhan Cavanaugh here, I can start in two weeks.",
     }),
   ],
 });
@@ -92,7 +92,7 @@ await evaluate([convoTestCase], [metric]);
 
 </Switch>
 
-In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and <Term py="provider_transcription" ts="providerTranscription"/> holding what the agent reported hearing:
+In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and <Term py="provider_transcript" ts="providerTranscript"/> holding what the agent reported hearing:
 
 <Switch>
 
@@ -195,7 +195,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a <Term py="provider_transcription" ts="providerTranscription"/> is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
+The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a <Term py="provider_transcript" ts="providerTranscript"/> is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
 
 You can change how the `TranscriptionAccuracyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
 
@@ -243,7 +243,7 @@ Under `system_one` Jev gives one holistic judgement of the call, whereas the LLM
 <FAQs
   qas={[
     {
-      question: "Where does `provider_transcription` come from?",
+      question: "Where does `provider_transcript` come from?",
       answer: (
         <>
           From the voice agent itself, through its connector — it is the agent's
