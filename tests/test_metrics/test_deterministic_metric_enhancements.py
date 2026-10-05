@@ -20,7 +20,7 @@ import pytest
 
 from deepeval.metrics import ExactMatchMetric, PatternMatchMetric
 from deepeval.metrics.exact_match.exact_match import ExactMatchMetric as EMM
-from deepeval.metrics.utils import MissingTestCaseParamsError
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.test_case import LLMTestCase
 
 
