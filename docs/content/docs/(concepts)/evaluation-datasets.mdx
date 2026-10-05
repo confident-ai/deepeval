@@ -1314,6 +1314,7 @@ For single-turn `Golden`s:
 
 ```python
 from pydantic import BaseModel
+from deepeval.dataset import Expectations
 
 class Golden(BaseModel):
     input: str
@@ -1322,6 +1323,7 @@ class Golden(BaseModel):
     expected_tools: Optional[List[ToolCall]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
     expected_labels: Optional[Dict[str, str]] = None
+    expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
@@ -1379,6 +1381,7 @@ For multi-turn `ConversationalGolden`s:
 
 ```python
 from pydantic import BaseModel
+from deepeval.dataset import Expectations
 
 class ConversationalGolden(BaseModel):
     scenario: str
@@ -1387,6 +1390,7 @@ class ConversationalGolden(BaseModel):
     context: Optional[List[str]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
     expected_labels: Optional[Dict[str, str]] = None
+    expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
@@ -1436,6 +1440,88 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
 - Continue from a specific turn when test cases usually fail at the last turn where agents are calling multiple tools
 
 :::
+
+### Expectations on Goldens
+
+<Switch>
+
+<Case id="python">
+
+Both `Golden` and `ConversationalGolden` accept an optional `expectations` object. Store the conditions that must hold and the behaviors that must be absent alongside the input or scenario, before generating any responses.
+
+```python
+from deepeval.dataset import ConversationalGolden, EvaluationDataset, Expectations, Golden
+
+golden = Golden(
+    input="Cancel my subscription.",
+    expectations=Expectations(
+        must=["Ask the user to confirm the cancellation."],
+        must_not=["Claim the subscription has already been cancelled."],
+    ),
+)
+
+dataset = EvaluationDataset(goldens=[golden])
+
+# Use conversational goldens in a separate multi-turn dataset.
+conversational_golden = ConversationalGolden(
+    scenario="A user asks to cancel a subscription, then confirms the request.",
+    expected_outcome="The subscription is cancelled with the user's consent.",
+    expectations=Expectations(
+        must=["Obtain confirmation before cancelling the subscription."],
+        must_not=["Claim that a refund was issued."],
+    ),
+)
+```
+
+`expected_output` remains a reference answer for a single-turn golden, and `expected_outcome` remains the desired end state for a conversational golden. Expectations describe the conditions used to judge the resulting case, including actions and their ordering. You can supply expectations without either reference field.
+
+The built-in golden-to-test-case conversion helpers and conversation simulator carry expectations onto the resulting test cases. `evals_iterator()` also checks a golden's expectations automatically against the observed run. When constructing a test case yourself, pass `expectations=golden.expectations`; `evaluate()` or `assert_test()` can then evaluate it without an explicit metric.
+
+`must` and `must_not` are lists of non-empty strings. See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the full parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples.
+
+Expectations survive local JSON, JSONL, and CSV save/load. The `expectations` field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell.
+
+</Case>
+
+<Case id="typescript">
+
+Both `Golden` and `ConversationalGolden` accept an optional `expectations` object. Store requirements alongside the input or scenario before generating responses.
+
+```typescript
+import { ConversationalGolden, EvaluationDataset, Expectations, Golden } from "deepeval/dataset";
+
+const golden = new Golden({
+  input: "Cancel my subscription.",
+  expectations: new Expectations({
+    must: ["Ask the user to confirm the cancellation."],
+    mustNot: ["Claim the subscription has already been cancelled."],
+  }),
+});
+
+const dataset = new EvaluationDataset({ goldens: [golden] });
+
+// Use conversational goldens in a separate multi-turn dataset.
+const conversationalGolden = new ConversationalGolden({
+  scenario: "A user asks to cancel a subscription, then confirms the request.",
+  expectedOutcome: "The subscription is cancelled with the user's consent.",
+  expectations: new Expectations({
+    must: ["Obtain confirmation before cancelling the subscription."],
+    mustNot: ["Claim that a refund was issued."],
+  }),
+});
+```
+
+`expectedOutput` remains a reference answer for a single-turn golden, and `expectedOutcome` remains the desired end state for a conversational golden. Expectations describe conditions used to judge the resulting case, including actions and ordering. You can supply expectations without either reference field.
+
+Golden-to-test-case conversion and conversation simulation carry expectations to the resulting cases. `evalsIterator()` also checks expectations against the observed run. When constructing a test case yourself, pass `expectations: golden.expectations`; `evaluate()` or `expect(testCase).toPass()` can then evaluate it without an explicit metric.
+
+See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples. Expectations survive local JSON, JSONL, and CSV save/load. The field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet.
+
+</Case>
+
+</Switch>
 
 ## FAQs
 

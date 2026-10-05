@@ -186,6 +186,7 @@ def create_test_result(
             success=success,
             metrics_data=api_test_case.metrics_data,
             classifications=classifications,
+            expectations=api_test_case.expectations,
             conversational=True,
             index=index,
             metadata=api_test_case.metadata,
@@ -199,6 +200,7 @@ def create_test_result(
                 success=success,
                 metrics_data=api_test_case.metrics_data,
                 classifications=classifications,
+                expectations=api_test_case.expectations,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 conversational=False,
@@ -212,6 +214,7 @@ def create_test_result(
                 success=success,
                 metrics_data=api_test_case.metrics_data,
                 classifications=classifications,
+                expectations=api_test_case.expectations,
                 input=api_test_case.input,
                 actual_output=api_test_case.actual_output,
                 expected_output=api_test_case.expected_output,
@@ -307,9 +310,28 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     )
 
 
+def validate_expectation_coverage(test_cases):
+    """Every case needs a condition when no other evaluator is supplied."""
+    if not test_cases:
+        raise ValueError(
+            "Provide at least one test case with non-empty expectations "
+            "when evaluating without metrics or classifiers."
+        )
+    missing_count = sum(
+        not getattr(case, "expectations", None) for case in test_cases
+    )
+    if missing_count:
+        subject = "test case is" if missing_count == 1 else "test cases are"
+        raise ValueError(
+            f"{missing_count} {subject} missing expectations. "
+            "Fill in non-empty expectations for these test cases and/or "
+            "provide at least one metric and/or classifier."
+        )
+
+
 def validate_assert_test_inputs(
     golden: Optional[Golden] = None,
-    test_case: Optional[LLMTestCase] = None,
+    test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
     metrics: Optional[List] = None,
     classifiers: Optional[List] = None,
 ):
@@ -329,12 +351,11 @@ def validate_assert_test_inputs(
             )
         return
 
+    has_expectations = bool(getattr(test_case, "expectations", None))
     if test_case and not metrics and not classifiers:
-        raise ValueError(
-            "'test_case' must be provided together with 'metrics' and/or 'classifiers'."
-        )
+        validate_expectation_coverage([test_case])
 
-    if test_case and (metrics or classifiers):
+    if test_case and (metrics or classifiers or has_expectations):
         if metrics:
             if (isinstance(test_case, LLMTestCase)) and not all(
                 isinstance(metric, BaseMetric) for metric in metrics
@@ -353,7 +374,8 @@ def validate_assert_test_inputs(
 
     raise ValueError(
         "You must provide either ('golden' [+ 'metrics']) from inside a "
-        "`deepeval test run` test, or ('test_case' + 'metrics' and/or 'classifiers')."
+        "`deepeval test run` test, or a 'test_case' with expectations, "
+        "'metrics', or 'classifiers'."
     )
 
 
@@ -370,10 +392,15 @@ def validate_evaluate_inputs(
     metric_collection: Optional[str] = None,
     classifiers: Optional[List] = None,
 ):
-    if metric_collection is None and metrics is None and not classifiers:
+    has_expectations = any(
+        getattr(case, "expectations", None) for case in test_cases or []
+    )
+    if metric_collection is not None and has_expectations:
         raise ValueError(
-            "You must provide at least one of 'metric_collection', 'metrics' or 'classifiers'."
+            "Case expectations require local evaluation; metric_collection is not supported yet."
         )
+    if not metric_collection and not metrics and not classifiers:
+        validate_expectation_coverage(test_cases)
     if metric_collection is not None and metrics is not None:
         raise ValueError(
             "You cannot provide both 'metric_collection' and 'metrics'."

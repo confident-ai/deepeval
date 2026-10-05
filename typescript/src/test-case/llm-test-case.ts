@@ -1,4 +1,9 @@
 import {
+  Expectations,
+  ExpectationsOptions,
+  resolveExpectations,
+} from "@/dataset/expectations";
+import {
   MCPServer,
   MCPToolCall,
   MCPResourceCall,
@@ -92,6 +97,7 @@ export function resolveRetrievalContext(
 }
 
 export class LLMTestCase {
+  expectations?: Expectations;
   input: string;
   actualOutput: string;
   expectedOutput?: string;
@@ -120,6 +126,7 @@ export class LLMTestCase {
   _datasetId?: string;
 
   constructor(params: {
+    expectations?: Expectations | ExpectationsOptions;
     input: string;
     actualOutput: string;
     expectedOutput?: string;
@@ -145,6 +152,7 @@ export class LLMTestCase {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.expectations = resolveExpectations(params.expectations);
     this.input = params.input;
     this.actualOutput = params.actualOutput;
     this.expectedOutput = params.expectedOutput;

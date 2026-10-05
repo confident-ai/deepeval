@@ -125,8 +125,8 @@ def assert_test(
             display_config=display_config,
         )
 
-    elif test_case and (metrics or classifiers):
-        if metrics:
+    elif test_case and (metrics or classifiers or test_case.expectations):
+        if metrics and not test_case.expectations:
             check_at_least_one_metric_has_threshold(metrics)
         if run_async:
             loop = get_or_create_event_loop()
@@ -247,8 +247,9 @@ def evaluate(
         validate_mcp_servers(mcp_servers)
     process_mcp_servers(test_cases, mcp_servers)
 
-    if metrics or classifiers:
-        if metrics:
+    has_expectations = any(case.expectations for case in test_cases)
+    if metrics or classifiers or has_expectations:
+        if metrics and not has_expectations:
             check_at_least_one_metric_has_threshold(metrics)
 
         if not _skip_reset and not get_is_running_deepeval():
@@ -343,7 +344,7 @@ def evaluate(
                 test_run_id=None,
             )
 
-        if not metrics:
+        if not metrics and not has_expectations:
             # Classifier-only run: classifications are local-only for now, so
             # there is no test run to finalize or upload.
             return EvaluationResult(

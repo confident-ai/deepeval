@@ -74,6 +74,8 @@ function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
 }
 
 export interface PersistedCase {
+  /** Local-only marker; never part of an API entry. */
+  hasExpectations?: boolean;
   conversational: boolean;
   entry: Record<string, unknown>;
   metricsData: MetricData[];
@@ -94,6 +96,7 @@ export function buildTestCaseEntry(
 
   if (testCase instanceof ConversationalTestCase) {
     return {
+      ...(testCase.expectations != null ? { hasExpectations: true } : {}),
       conversational: true,
       metricsData,
       datasetAlias,
@@ -117,6 +120,7 @@ export function buildTestCaseEntry(
   }
 
   return {
+    ...(testCase.expectations != null ? { hasExpectations: true } : {}),
     conversational: false,
     metricsData,
     datasetAlias,
@@ -156,6 +160,12 @@ async function sendTestRun(
   runDuration: number,
   { official, silent, identifier, hyperparameters }: PostTestRunOptions,
 ): Promise<{ link: string | null; testRunId: string | null }> {
+  if (persisted.some((c) => c.hasExpectations)) {
+    console.warn(
+      "Warning: Expectations are not available on Confident AI yet. This test run was not uploaded; results are available locally.",
+    );
+    return { link: null, testRunId: null };
+  }
   const apiKey = process.env.CONFIDENT_API_KEY;
   if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
     return { link: null, testRunId: null };

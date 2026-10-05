@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import Expectations
 from pydantic import (
     Field,
     BaseModel,
@@ -432,6 +433,7 @@ class LLMTestCase(BaseModel):
             "customColumnKeyValues", "custom_column_key_values"
         ),
     )
+    expectations: Optional[Expectations] = Field(default=None)
     # Classifier name -> label this test case should receive. A classifier
     # only produces a pass/fail verdict when its name is present here.
     expected_labels: Optional[Dict[str, str]] = Field(

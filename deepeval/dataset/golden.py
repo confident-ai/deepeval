@@ -11,8 +11,14 @@ from pydantic import (
 )
 from typing import Literal, Optional, Dict, List, Tuple
 from typing import Union
-from deepeval.test_case import ToolCall, Turn, MLLMImage, RetrievedContextData
+from deepeval.test_case import (
+    ToolCall,
+    Turn,
+    MLLMImage,
+    RetrievedContextData,
+)
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from .expectations import Expectations
 
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]
@@ -217,6 +223,7 @@ class Golden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
+    expectations: Optional[Expectations] = Field(default=None)
     expected_labels: Optional[Dict[str, str]] = Field(
         default=None,
         serialization_alias="expectedLabels",
@@ -333,6 +340,7 @@ class ConversationalGolden(BaseModel):
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
     )
+    expectations: Optional[Expectations] = Field(default=None)
     expected_labels: Optional[Dict[str, str]] = Field(
         default=None,
         serialization_alias="expectedLabels",

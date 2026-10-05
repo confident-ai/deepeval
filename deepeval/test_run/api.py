@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import Expectations
 from pydantic import BaseModel, Field
 from typing import Optional, List, Union, Dict
 
@@ -29,6 +30,7 @@ class Classification(BaseModel):
 
 
 class LLMApiTestCase(BaseModel):
+    expectations: Optional[Expectations] = None
     name: str
     input: str
     actual_output: Optional[str] = Field(None, alias="actualOutput")
@@ -123,6 +125,7 @@ class TurnApi(BaseModel):
 
 
 class ConversationalApiTestCase(BaseModel):
+    expectations: Optional[Expectations] = None
     name: str
     success: bool
     metrics_data: List[MetricData] = Field(alias="metricsData")
