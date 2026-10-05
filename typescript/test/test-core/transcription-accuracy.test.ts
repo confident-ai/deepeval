@@ -52,12 +52,12 @@ const measure = async (
   return { metric, model };
 };
 
-const exchange = (index: number, providerTranscription?: string) => [
+const exchange = (index: number, providerTranscript?: string) => [
   new Turn({ role: "user", content: `question ${index}` }),
   new Turn({
     role: "assistant",
     content: `answer ${index}`,
-    providerTranscription: providerTranscription ?? `question ${index}`,
+    providerTranscript: providerTranscript ?? `question ${index}`,
   }),
 ];
 
@@ -69,7 +69,7 @@ describe("pairing caller speech with what the agent heard", () => {
         new Turn({
           role: "assistant",
           content: "Two weeks works.",
-          providerTranscription: "I can start in two months",
+          providerTranscript: "I can start in two months",
         }),
       ]),
     ).toEqual([
@@ -90,7 +90,7 @@ describe("pairing caller speech with what the agent heard", () => {
       new Turn({
         role: "assistant",
         content: "Understood.",
-        providerTranscription: "hold on i meant two weeks",
+        providerTranscript: "hold on i meant two weeks",
       }),
     ]);
 
@@ -106,7 +106,7 @@ describe("pairing caller speech with what the agent heard", () => {
       new Turn({
         role: "assistant",
         content: "measured reply",
-        providerTranscription: "second question",
+        providerTranscript: "second question",
       }),
     ]);
 
@@ -119,7 +119,7 @@ describe("pairing caller speech with what the agent heard", () => {
         new Turn({
           role: "assistant",
           content: "Hello, how can I help?",
-          providerTranscription: "",
+          providerTranscript: "",
         }),
         new Turn({ role: "user", content: "hi" }),
       ]),
@@ -133,7 +133,7 @@ describe("pairing caller speech with what the agent heard", () => {
       new Turn({
         role: "assistant",
         content: "Sorry?",
-        providerTranscription: "",
+        providerTranscript: "",
       }),
     ]);
 
@@ -176,7 +176,7 @@ describe("the prompt", () => {
         new Turn({
           role: "assistant",
           content: "Hello Siobhan!",
-          providerTranscription: "Siobhan Cavanaugh",
+          providerTranscript: "Siobhan Cavanaugh",
         }),
       ],
       ["no"],

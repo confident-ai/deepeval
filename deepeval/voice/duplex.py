@@ -87,7 +87,7 @@ class _AgentUtterance:
     # What has been received of the reply so far.
     pcm: bytearray = field(default_factory=bytearray)
     transcript: str = ""
-    provider_transcription_parts: List[str] = field(default_factory=list)
+    provider_transcript_parts: List[str] = field(default_factory=list)
     first_audio_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
@@ -110,7 +110,7 @@ class _AgentUtterance:
         self.awaiting_end_signal = awaiting_end_signal
         self.pcm = bytearray()
         self.transcript = ""
-        self.provider_transcription_parts = []
+        self.provider_transcript_parts = []
         self.first_audio_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
@@ -472,8 +472,8 @@ class DuplexExchange:
                 audio=audio,
                 latency_ms=latency_ms,
                 interrupted=interrupted if interrupted else None,
-                provider_transcription=(
-                    " ".join(utterance.provider_transcription_parts) or None
+                provider_transcript=(
+                    " ".join(utterance.provider_transcript_parts) or None
                 ),
                 metadata=metadata,
             )
@@ -655,9 +655,9 @@ class DuplexExchange:
                     utterance.transcript = event.transcript
                     connector_transcript_seen = True
 
-                if event.provider_transcription:
-                    utterance.provider_transcription_parts.append(
-                        event.provider_transcription
+                if event.provider_transcript:
+                    utterance.provider_transcript_parts.append(
+                        event.provider_transcript
                     )
 
                 if event.audio:

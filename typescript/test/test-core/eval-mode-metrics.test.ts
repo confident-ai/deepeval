@@ -175,13 +175,13 @@ const voiceConversation = () =>
       new Turn({
         role: "assistant",
         content: "Hello Siobhan!",
-        providerTranscription: "Siobhan Cavanaugh here.",
+        providerTranscript: "Siobhan Cavanaugh here.",
       }),
       new Turn({ role: "user", content: "I can start in two weeks." }),
       new Turn({
         role: "assistant",
         content: "Noted.",
-        providerTranscription: "I can start in two weeks.",
+        providerTranscript: "I can start in two weeks.",
       }),
     ],
   });

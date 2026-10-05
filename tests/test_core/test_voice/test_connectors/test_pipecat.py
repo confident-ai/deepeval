@@ -135,7 +135,7 @@ def test_pipeline_text_is_not_mistaken_for_the_agents_reply():
 
     heard = connector._decode_inbound(_string_frame(3, "book a table"))
 
-    assert heard.provider_transcription == "book a table"
+    assert heard.provider_transcript == "book a table"
     assert heard.transcript is None
     assert connector._decode_inbound(_string_frame(1, "some text")) is None
     assert connector._current_transcript is None

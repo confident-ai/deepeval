@@ -224,13 +224,13 @@ def voice_conv_tc() -> ConversationalTestCase:
             Turn(
                 role="assistant",
                 content="Hello Siobhan!",
-                provider_transcription="Siobhan Cavanaugh here.",
+                provider_transcript="Siobhan Cavanaugh here.",
             ),
             Turn(role="user", content="I can start in two weeks."),
             Turn(
                 role="assistant",
                 content="Noted.",
-                provider_transcription="I can start in two weeks.",
+                provider_transcript="I can start in two weeks.",
             ),
         ],
     )

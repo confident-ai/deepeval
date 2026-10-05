@@ -44,11 +44,11 @@ def get_transcribed_exchanges(turns: List[Turn]) -> List[Dict[str, str]]:
             if turn.content:
                 spoken.append(turn.content)
             continue
-        if turn.provider_transcription is not None and spoken:
+        if turn.provider_transcript is not None and spoken:
             exchanges.append(
                 {
                     "spoken": " ".join(spoken),
-                    "transcribed": turn.provider_transcription,
+                    "transcribed": turn.provider_transcript,
                     "agent_reply": turn.content,
                 }
             )
@@ -75,7 +75,7 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
     _required_test_case_params = [
         MultiTurnParams.CONTENT,
         MultiTurnParams.ROLE,
-        MultiTurnParams.PROVIDER_TRANSCRIPTION,
+        MultiTurnParams.PROVIDER_TRANSCRIPT,
     ]
 
     def __init__(

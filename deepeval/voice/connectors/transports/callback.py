@@ -205,11 +205,11 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             if isinstance(result, ConnectorTurn):
                 reply_audio = result.audio
                 transcript = result.transcript
-                provider_transcription = result.provider_transcription
+                provider_transcript = result.provider_transcript
             else:
                 reply_audio = result
                 transcript = None
-                provider_transcription = None
+                provider_transcript = None
 
             reply_pcm, reply_rate, reply_ch = audio_utils.wav_bytes_to_pcm16(
                 reply_audio.get_bytes()
@@ -226,10 +226,10 @@ class CallbackVoiceConnector(BaseVoiceConnector):
                         received_at=time.perf_counter(),
                     )
                 )
-            if provider_transcription:
+            if provider_transcript:
                 await self._events.put(
                     AgentEvent(
-                        provider_transcription=provider_transcription,
+                        provider_transcript=provider_transcript,
                         received_at=time.perf_counter(),
                     )
                 )
@@ -293,7 +293,7 @@ class CallbackVoiceConnector(BaseVoiceConnector):
             return ConnectorTurn(
                 audio=agent_audio,
                 transcript=reply,
-                provider_transcription=user_text,
+                provider_transcript=user_text,
             )
 
         return cls(agent, sample_rate=tts.sample_rate, **kwargs)

@@ -48,7 +48,7 @@ class InboundEvent:
 
     audio: Optional[bytes] = None
     transcript: Optional[str] = None
-    provider_transcription: Optional[str] = None
+    provider_transcript: Optional[str] = None
     turn_complete: bool = False
     pong_reply: Optional[Union[str, bytes]] = None
     ready: bool = False
@@ -76,7 +76,7 @@ class WebSocketMessageSchema(BaseModel):
     receive_audio_key: str = Field(default="audio", min_length=1)
     binary_inbound: bool = False
     receive_transcript_key: Optional[str] = None
-    receive_provider_transcription_key: Optional[str] = None
+    receive_provider_transcript_key: Optional[str] = None
 
     # End of turn: the value under `type_key` that means the agent is done.
     # Without one, only silence is left to infer it from.
@@ -140,7 +140,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._inbound: Optional[asyncio.Queue] = None
         self._ready: Optional[asyncio.Event] = None
         self._current_transcript: Optional[str] = None
-        self._provider_transcription_parts: List[str] = []
+        self._provider_transcript_parts: List[str] = []
         self._interrupted: bool = False
         self._uplink: Optional[UplinkStream] = None
 
@@ -184,7 +184,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._ready = asyncio.Event()
         self._uplink = UplinkStream()
         self._current_transcript = None
-        self._provider_transcription_parts = []
+        self._provider_transcript_parts = []
         self._interrupted = False
         self._tool_hold = asyncio.Event()
         self._tools_running = 0
@@ -268,13 +268,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                                 received_at=received_at,
                             )
                         )
-                    if event.provider_transcription:
-                        self._provider_transcription_parts.append(
-                            event.provider_transcription
+                    if event.provider_transcript:
+                        self._provider_transcript_parts.append(
+                            event.provider_transcript
                         )
                         await self._inbound.put(
                             AgentEvent(
-                                provider_transcription=event.provider_transcription,
+                                provider_transcript=event.provider_transcript,
                                 received_at=received_at,
                             )
                         )
@@ -474,7 +474,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         self.drain_downlink()
         self._current_transcript = None
-        self._provider_transcription_parts = []
+        self._provider_transcript_parts = []
         self._interrupted = False
         self._tool_spans = []
 
@@ -538,7 +538,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply,
             transcript=self._current_transcript,
-            provider_transcription=" ".join(self._provider_transcription_parts)
+            provider_transcript=" ".join(self._provider_transcript_parts)
             or None,
             latency_ms=latency_ms,
             interrupted=self._interrupted,
@@ -591,7 +591,7 @@ class WebSocketConnector(BaseWebSocketConnector):
         receive_audio_key: str = "audio",
         binary_inbound: bool = False,
         receive_transcript_key: Optional[str] = None,
-        receive_provider_transcription_key: Optional[str] = None,
+        receive_provider_transcript_key: Optional[str] = None,
         turn_complete_type: Optional[str] = None,
         type_key: str = "type",
         init_messages: Optional[List[Union[str, dict]]] = None,
@@ -610,7 +610,7 @@ class WebSocketConnector(BaseWebSocketConnector):
             receive_audio_key=receive_audio_key,
             binary_inbound=binary_inbound,
             receive_transcript_key=receive_transcript_key,
-            receive_provider_transcription_key=receive_provider_transcription_key,
+            receive_provider_transcript_key=receive_provider_transcript_key,
             turn_complete_type=turn_complete_type,
             type_key=type_key,
             init_messages=init_messages or [],
@@ -660,12 +660,12 @@ class WebSocketConnector(BaseWebSocketConnector):
             transcript = schema.read(message, schema.receive_transcript_key)
             if transcript:
                 event.transcript = transcript
-        if schema.receive_provider_transcription_key:
+        if schema.receive_provider_transcript_key:
             heard = schema.read(
-                message, schema.receive_provider_transcription_key
+                message, schema.receive_provider_transcript_key
             )
             if heard:
-                event.provider_transcription = heard
+                event.provider_transcript = heard
         if (
             schema.turn_complete_type is not None
             and message.get(schema.type_key) == schema.turn_complete_type

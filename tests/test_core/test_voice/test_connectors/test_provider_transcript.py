@@ -1,6 +1,6 @@
 """What the agent heard the caller say, read off each connector.
 
-`Turn.provider_transcription` is the agent's own STT of the caller's audio:
+`Turn.provider_transcript` is the agent's own STT of the caller's audio:
 the hypothesis a transcription-accuracy metric scores against what was
 actually spoken. It sits on the assistant turn that answers that speech, and
 is kept apart from `content`, the agent's own words, because comparing the two
@@ -62,7 +62,7 @@ def test_elevenlabs_reports_what_it_heard_the_caller_say():
         )
     )
 
-    assert event.provider_transcription == "I can start in two weeks"
+    assert event.provider_transcript == "I can start in two weeks"
     assert event.transcript is None
 
 
@@ -79,7 +79,7 @@ def test_elevenlabs_keeps_the_agents_own_reply_out_of_what_it_heard():
     )
 
     assert event.transcript == "Noted."
-    assert event.provider_transcription is None
+    assert event.provider_transcript is None
 
 
 def test_elevenlabs_ignores_an_empty_caller_transcript():
@@ -105,14 +105,14 @@ def test_a_custom_agent_can_name_where_it_reports_what_it_heard():
     connector = WebSocketConnector(
         "wss://agent.example/socket",
         receive_transcript_key="reply.text",
-        receive_provider_transcription_key="heard.text",
+        receive_provider_transcript_key="heard.text",
     )
 
     event = connector._decode_inbound(
         json.dumps({"heard": {"text": "fifteen years"}})
     )
 
-    assert event.provider_transcription == "fifteen years"
+    assert event.provider_transcript == "fifteen years"
     assert event.transcript is None
 
 
@@ -125,7 +125,7 @@ def test_a_custom_agent_that_names_no_such_key_reports_nothing_heard():
         json.dumps({"heard": {"text": "fifteen years"}})
     )
 
-    assert event.provider_transcription is None
+    assert event.provider_transcript is None
 
 
 # ------------------------------------------------------------------ callback
@@ -151,7 +151,7 @@ async def test_a_text_agent_reports_the_text_it_was_handed():
 
     turn = await connector.agent(_audio())
 
-    assert turn.provider_transcription == "fifty years"
+    assert turn.provider_transcript == "fifty years"
     assert turn.transcript == "You said fifty years"
 
 
@@ -163,7 +163,7 @@ async def test_duplex_records_what_the_agent_heard_on_the_reply_it_prompted():
         return ConnectorTurn(
             audio=reply,
             transcript="Two weeks works.",
-            provider_transcription="I can start in two months",
+            provider_transcript="I can start in two months",
         )
 
     connector = CallbackVoiceConnector(agent)
@@ -201,7 +201,7 @@ async def test_duplex_records_what_the_agent_heard_on_the_reply_it_prompted():
     # What was said and what was heard disagree, which is the case the metric
     # exists to find: the reply is coherent, the hearing is not.
     assert assistant.content == "Two weeks works."
-    assert assistant.provider_transcription == "I can start in two months"
+    assert assistant.provider_transcript == "I can start in two months"
     assert turns[0].content == "I can start in two weeks"
 
 
@@ -213,12 +213,12 @@ def test_what_the_agent_heard_stays_out_of_metric_prompts():
     turn = Turn(
         role="assistant",
         content="Two weeks works.",
-        provider_transcription="I can start in two months",
+        provider_transcript="I can start in two months",
     )
 
     dumped = turn.model_dump_for_prompt()
 
-    assert "provider_transcription" not in dumped
+    assert "provider_transcript" not in dumped
     assert dumped["content"] == "Two weeks works."
 
 
@@ -226,11 +226,11 @@ def test_what_the_agent_heard_survives_a_round_trip():
     turn = Turn(
         role="assistant",
         content="Two weeks works.",
-        provider_transcription="I can start in two months",
+        provider_transcript="I can start in two months",
     )
 
     assert (
-        Turn.model_validate(turn.model_dump()).provider_transcription
+        Turn.model_validate(turn.model_dump()).provider_transcript
         == "I can start in two months"
     )
     assert (
@@ -238,12 +238,12 @@ def test_what_the_agent_heard_survives_a_round_trip():
             {
                 "role": "assistant",
                 "content": "Two weeks works.",
-                "providerTranscription": "I can start in two months",
+                "providerTranscript": "I can start in two months",
             }
-        ).provider_transcription
+        ).provider_transcript
         == "I can start in two months"
     )
 
 
 def test_a_turn_without_one_defaults_to_none():
-    assert Turn(role="user", content="Hello").provider_transcription is None
+    assert Turn(role="user", content="Hello").provider_transcript is None

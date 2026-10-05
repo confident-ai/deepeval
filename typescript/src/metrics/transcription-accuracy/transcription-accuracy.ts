@@ -57,10 +57,10 @@ export function getTranscribedExchanges(turns: Turn[]): TranscribedExchange[] {
       if (turn.content) spoken.push(turn.content);
       continue;
     }
-    if (turn.providerTranscription != null && spoken.length > 0) {
+    if (turn.providerTranscript != null && spoken.length > 0) {
       exchanges.push({
         spoken: spoken.join(" "),
-        transcribed: turn.providerTranscription,
+        transcribed: turn.providerTranscript,
         agent_reply: turn.content,
       });
     }
@@ -87,7 +87,7 @@ export class TranscriptionAccuracyMetric extends BaseConversationalMetric {
     this.requiredParams = [
       MultiTurnParams.CONTENT,
       MultiTurnParams.ROLE,
-      MultiTurnParams.PROVIDER_TRANSCRIPTION,
+      MultiTurnParams.PROVIDER_TRANSCRIPT,
     ];
     initializeMetricModels(this, options);
   }

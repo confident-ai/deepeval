@@ -72,7 +72,7 @@ def test_a_caller_turn_pairs_with_the_reply_that_transcribed_it():
             Turn(
                 role="assistant",
                 content="Two weeks works.",
-                provider_transcription="I can start in two months",
+                provider_transcript="I can start in two months",
             ),
         ]
     )
@@ -96,7 +96,7 @@ def test_consecutive_caller_turns_are_one_exchange():
             Turn(
                 role="assistant",
                 content="Understood.",
-                provider_transcription="hold on i meant two weeks",
+                provider_transcript="hold on i meant two weeks",
             ),
         ]
     )
@@ -116,7 +116,7 @@ def test_a_reply_without_a_transcription_takes_its_caller_turn_with_it():
             Turn(
                 role="assistant",
                 content="measured reply",
-                provider_transcription="second question",
+                provider_transcript="second question",
             ),
         ]
     )
@@ -130,7 +130,7 @@ def test_an_agent_that_speaks_first_opens_no_exchange():
             Turn(
                 role="assistant",
                 content="Hello, how can I help?",
-                provider_transcription="",
+                provider_transcript="",
             ),
             Turn(role="user", content="hi"),
         ]
@@ -144,7 +144,7 @@ def test_an_empty_transcription_is_still_judged():
     exchanges = get_transcribed_exchanges(
         [
             Turn(role="user", content="I can start in two weeks"),
-            Turn(role="assistant", content="Sorry?", provider_transcription=""),
+            Turn(role="assistant", content="Sorry?", provider_transcript=""),
         ]
     )
 
@@ -163,7 +163,7 @@ def test_the_score_is_the_share_of_faithfully_heard_turns():
             Turn(
                 role="assistant",
                 content=f"answer {index}",
-                provider_transcription=f"question {index}",
+                provider_transcript=f"question {index}",
             )
         )
 
@@ -180,7 +180,7 @@ def test_a_conversation_heard_perfectly_scores_one():
             Turn(
                 role="assistant",
                 content="Noted.",
-                provider_transcription="I can start in two weeks.",
+                provider_transcript="I can start in two weeks.",
             ),
         ],
         ["yes"],
@@ -197,7 +197,7 @@ def test_strict_mode_clamps_anything_short_of_perfect_to_zero():
             Turn(
                 role="assistant",
                 content=f"answer {index}",
-                provider_transcription=f"question {index}",
+                provider_transcript=f"question {index}",
             )
         )
 
@@ -217,7 +217,7 @@ def test_the_judge_is_shown_what_was_spoken_and_what_was_heard():
             Turn(
                 role="assistant",
                 content="Hello Siobhan!",
-                provider_transcription="Siobhan Cavanaugh",
+                provider_transcript="Siobhan Cavanaugh",
             ),
         ],
         ["no"],
@@ -250,7 +250,7 @@ def test_a_conversation_with_no_transcription_anywhere_is_refused():
             )
         )
 
-    assert "provider_transcription" in str(excinfo.value)
+    assert "provider_transcript" in str(excinfo.value)
 
 
 def test_one_transcribed_turn_is_enough_to_run():
@@ -262,7 +262,7 @@ def test_one_transcribed_turn_is_enough_to_run():
             Turn(
                 role="assistant",
                 content="measured",
-                provider_transcription="second",
+                provider_transcript="second",
             ),
         ],
         ["yes"],

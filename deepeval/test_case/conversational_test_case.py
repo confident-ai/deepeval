@@ -33,7 +33,7 @@ from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
-    PROVIDER_TRANSCRIPTION = "provider_transcription"
+    PROVIDER_TRANSCRIPT = "provider_transcript"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
@@ -73,10 +73,10 @@ class Turn(BaseModel):
         default=None, validation_alias=AliasChoices("latencyMs", "latency_ms")
     )
     interrupted: Optional[bool] = Field(default=None)
-    provider_transcription: Optional[str] = Field(
+    provider_transcript: Optional[str] = Field(
         default=None,
         validation_alias=AliasChoices(
-            "providerTranscription", "provider_transcription"
+            "providerTranscript", "provider_transcript"
         ),
     )
     # RAG & tools
@@ -102,7 +102,7 @@ class Turn(BaseModel):
 
     def model_dump_for_prompt(self) -> Dict:
         """Return turn data suitable for LLM prompts, without audio bytes."""
-        return self.model_dump(exclude={"audio", "provider_transcription"})
+        return self.model_dump(exclude={"audio", "provider_transcript"})
 
     @property
     def additional_metadata(self) -> Optional[Dict]:
@@ -151,9 +151,9 @@ class Turn(BaseModel):
             attrs.append(f"latency_ms={self.latency_ms!r}")
         if self.interrupted is not None:
             attrs.append(f"interrupted={self.interrupted!r}")
-        if self.provider_transcription is not None:
+        if self.provider_transcript is not None:
             attrs.append(
-                f"provider_transcription={self.provider_transcription!r}"
+                f"provider_transcript={self.provider_transcript!r}"
             )
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
