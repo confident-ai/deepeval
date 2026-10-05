@@ -36,6 +36,7 @@ from deepeval.metrics import (
     ToolCorrectnessMetric,
     ToolUseMetric,
     TopicAdherenceMetric,
+    TranscriptionAccuracyMetric,
     TurnContextualRecallMetric,
     TurnContextualRelevancyMetric,
     TurnRelevancyMetric,
@@ -212,6 +213,26 @@ def rag_conv_tc() -> ConversationalTestCase:
             ),
         ],
         expected_outcome="Einstein won the Nobel Prize. He was born in Ulm.",
+    )
+
+
+def voice_conv_tc() -> ConversationalTestCase:
+    """A voice call where the agent reports what its STT made of the caller."""
+    return ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="Siobhan Kavanagh here."),
+            Turn(
+                role="assistant",
+                content="Hello Siobhan!",
+                provider_transcript="Siobhan Cavanaugh here.",
+            ),
+            Turn(role="user", content="I can start in two weeks."),
+            Turn(
+                role="assistant",
+                content="Noted.",
+                provider_transcript="I can start in two weeks.",
+            ),
+        ],
     )
 
 
@@ -413,6 +434,19 @@ CASES = [
         ],
         llm_score=0.0,
         hybrid_jev_calls=2,
+    ),
+    Case(
+        "TranscriptionAccuracy",
+        TranscriptionAccuracyMetric,
+        voice_conv_tc,
+        decision_key="You are judging how accurately a voice agent",
+        routes=[
+            (
+                "You are judging how accurately a voice agent",
+                json.dumps({"verdicts": [{"verdict": "no", "reason": "r"}]}),
+            )
+        ],
+        llm_score=0.0,
     ),
     Case(
         "TurnContextualRecall",
