@@ -146,24 +146,22 @@ class OllamaModel(DeepEvalBaseLLM):
                 )
             elif isinstance(element, MLLMImage):
                 if element.url and not element.local:
-                    import requests
                     from PIL import Image
                     import io
+                    from deepeval.models.media_fetch import fetch_remote_media
 
                     settings = get_settings()
                     try:
-                        response = requests.get(
+                        # SSRF-safe fetch (blocks internal/link-local targets and
+                        # pins the connection to the validated IP; see media_fetch).
+                        content, _ = fetch_remote_media(
                             element.url,
-                            stream=True,
-                            timeout=(
-                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                            ),
+                            connect_timeout=settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                            read_timeout=settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
                         )
-                        response.raise_for_status()
 
                         # Convert to JPEG and encode
-                        image = Image.open(io.BytesIO(response.content))
+                        image = Image.open(io.BytesIO(content))
                         buffered = io.BytesIO()
 
                         # Convert RGBA/LA/P to RGB for JPEG
@@ -173,7 +171,7 @@ class OllamaModel(DeepEvalBaseLLM):
                         image.save(buffered, format="JPEG")
                         img_b64 = base64.b64encode(buffered.getvalue()).decode()
 
-                    except (requests.exceptions.RequestException, OSError) as e:
+                    except OSError as e:
                         print(f"Image fetch/encode failed: {e}")
                         raise
                 else:
