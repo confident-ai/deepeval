@@ -1147,3 +1147,122 @@ class TestDAGMetric:
     def test_dag_metric_via_evaluate(self):
         metric = DAGMetric(name="Refund Period", dag=self._build_dag())
         evaluate([self._test_case()], [metric])
+
+
+class MultiScoringBranchModel(DeepEvalBaseLLM):
+    """Deterministic judge that sends every branch down its True arm."""
+
+    def __init__(self):
+        super().__init__(model="multi-scoring-branch-model")
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        if schema.__name__ == "TaskNodeOutput":
+            return schema(output=["only-part"])
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="yes")
+        if schema.__name__ == "MetricScoreReason":
+            return schema(reason="because")
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return "multi-scoring-branch-model"
+
+
+def build_two_scoring_branch_dag(deep_first: bool) -> DeepAcyclicGraph:
+    """A DAG in which two verdicts both assign a score.
+
+    One branch is two judgements deep and scores 10, the other is one
+    judgement deep and scores 5. Both fire, so the result depends on how the
+    runner resolves competing verdicts.
+    """
+    inner = BinaryJudgementNode(
+        criteria="inner?",
+        children=[
+            VerdictNode(verdict=True, score=10),
+            VerdictNode(verdict=False, score=0),
+        ],
+    )
+    deep = BinaryJudgementNode(
+        criteria="outer?",
+        children=[
+            VerdictNode(verdict=True, child=inner),
+            VerdictNode(verdict=False, score=0),
+        ],
+    )
+    shallow = BinaryJudgementNode(
+        criteria="shallow?",
+        children=[
+            VerdictNode(verdict=True, score=5),
+            VerdictNode(verdict=False, score=0),
+        ],
+    )
+    root = TaskNode(
+        instructions="Split the output.",
+        output_label="Parts",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        children=[deep, shallow] if deep_first else [shallow, deep],
+    )
+    return DeepAcyclicGraph(root_nodes=[root])
+
+
+class TestCompetingScoringVerdicts:
+    """A score assigned by two branches must not depend on `async_mode`.
+
+    Both verdicts write to `metric.score`, so the surviving value used to be
+    whichever finished last. `asyncio.gather` interleaves completion, so the
+    same graph with the same judgements scored differently sync vs async.
+    """
+
+    @staticmethod
+    def _measure(dag: DeepAcyclicGraph, async_mode: bool) -> float:
+        metric = DAGMetric(
+            name="competing",
+            dag=dag,
+            model=MultiScoringBranchModel(),
+            async_mode=async_mode,
+        )
+        metric.measure(
+            LLMTestCase(input="in", actual_output="out"),
+            _show_indicator=False,
+        )
+        return metric.score
+
+    @pytest.mark.parametrize("deep_first", [True, False])
+    def test_sync_and_async_agree(self, deep_first):
+        sync = self._measure(build_two_scoring_branch_dag(deep_first), False)
+        asy = self._measure(build_two_scoring_branch_dag(deep_first), True)
+        assert sync == asy
+
+    @pytest.mark.parametrize("async_mode", [True, False])
+    def test_resolves_on_declaration_order(self, async_mode):
+        # The later branch in declaration order wins, which is what the
+        # synchronous traversal has always produced.
+        deep_first = build_two_scoring_branch_dag(True)
+        shallow_first = build_two_scoring_branch_dag(False)
+        assert self._measure(deep_first, async_mode) == 0.5
+        assert self._measure(shallow_first, async_mode) == 1.0
+
+    @pytest.mark.parametrize("async_mode", [True, False])
+    def test_single_scoring_branch_is_unaffected(self, async_mode):
+        shallow = BinaryJudgementNode(
+            criteria="shallow?",
+            children=[
+                VerdictNode(verdict=True, score=5),
+                VerdictNode(verdict=False, score=0),
+            ],
+        )
+        root = TaskNode(
+            instructions="Split the output.",
+            output_label="Parts",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+            children=[shallow],
+        )
+        dag = DeepAcyclicGraph(root_nodes=[root])
+        assert self._measure(dag, async_mode) == 0.5
