@@ -430,8 +430,7 @@
     "typescript"
   ],
   "/docs/metrics-transcription-accuracy": [
-    "python",
-    "typescript"
+    "python"
   ],
   "/docs/metrics-turn-contextual-precision": [
     "python",

@@ -2,7 +2,7 @@
 id: metrics-transcription-accuracy
 title: Transcription Accuracy
 sidebar_label: Transcription Accuracy
-languages: [python, typescript]
+languages: [python]
 beta: true
 ---
 
@@ -20,10 +20,10 @@ To use the `TranscriptionAccuracyMetric`, you'll have to provide the following a
 
 - `turns`
 
-You must provide the `role` and `content` for every turn, and <Term py="provider_transcript" ts="providerTranscript"/> on at least one `"assistant"` turn. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+You must provide the `role` and `content` for every turn, and `provider_transcript` on at least one `"assistant"` turn. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 :::caution
-Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate <Term py="provider_transcript" ts="providerTranscript"/>. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed.
+Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate `provider_transcript`. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed.
 :::
 
 ## Usage
@@ -31,10 +31,6 @@ Only [voice connectors](/docs/conversation-simulator-voice-connectors) that repo
 <include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 The `TranscriptionAccuracyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
-
-<Switch>
-
-<Case id="python">
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -60,43 +56,7 @@ metric = TranscriptionAccuracyMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { Turn, ConversationalTestCase } from "deepeval/test-case";
-import { TranscriptionAccuracyMetric } from "deepeval/metrics";
-import { evaluate } from "deepeval";
-
-const convoTestCase = new ConversationalTestCase({
-  turns: [
-    new Turn({ role: "user", content: "Siobhan Kavanagh here, I can start in two weeks." }),
-    new Turn({
-      role: "assistant",
-      content: "Great to meet you Siobhan, two weeks works.",
-      providerTranscript: "Siobhan Cavanaugh here, I can start in two weeks.",
-    }),
-  ],
-});
-const metric = new TranscriptionAccuracyMetric({ threshold: 0.5 });
-
-// To run metric as a standalone
-// await metric.measure(convoTestCase);
-// console.log(metric.score, metric.reason);
-
-await evaluate([convoTestCase], [metric]);
-```
-
-</Case>
-
-</Switch>
-
-In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and <Term py="provider_transcript" ts="providerTranscript"/> holding what the agent reported hearing:
-
-<Switch>
-
-<Case id="python">
+In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and `provider_transcript` holding what the agent reported hearing:
 
 ```python
 from deepeval.dataset import ConversationalGolden
@@ -118,54 +78,21 @@ test_cases = simulator.simulate([golden])
 evaluate(test_cases=test_cases, metrics=[TranscriptionAccuracyMetric()])
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-// Voice simulation is Python-only today; evaluate the turns it produced, or
-// build the ConversationalTestCase from your own call recordings.
-```
-
-</Case>
-
-</Switch>
-
-<Switch>
-
-<Case id="python">
-
 There are **NINE** optional parameters when creating a `TranscriptionAccuracyMetric`:
 
-</Case>
-
-<Case id="typescript">
-
-There are **EIGHT** optional parameters when creating a `TranscriptionAccuracyMetric`:
-
-</Case>
-
-</Switch>
-
-- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
-- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
-- <Only id="python">
-    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-  </Only>
-- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
-- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
-- [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
-- [Optional] <Term py="eval_mode" ts="evalMode"/>: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 ### As a standalone
 
 You can also run the `TranscriptionAccuracyMetric` on a single test case as a standalone, one-off execution.
-
-<Switch>
-
-<Case id="python">
 
 ```python
 ...
@@ -174,28 +101,13 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
-</Case>
-
-<Case id="typescript">
-
-```typescript
-...
-
-await metric.measure(convoTestCase);
-console.log(metric.score, metric.reason);
-```
-
-</Case>
-
-</Switch>
-
 :::caution
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?
 
-The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a <Term py="provider_transcript" ts="providerTranscript"/> is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
+The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a `provider_transcript` is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
 
 You can change how the `TranscriptionAccuracyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
 
