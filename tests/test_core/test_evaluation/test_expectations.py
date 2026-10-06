@@ -38,6 +38,7 @@ from deepeval.test_run.cache import (
 class Judge:
     def __init__(self):
         self.prompts = []
+        self.reason_prompts = []
         self.status = "pass"
         self.invalid_ids = False
 
@@ -45,6 +46,9 @@ class Judge:
         return "stub-expectation-judge"
 
     def generate_with_schema(self, prompt, schema):
+        if "verdicts" not in schema.model_fields:
+            self.reason_prompts.append(prompt)
+            return schema.model_validate({"reason": "stub reason"})
         self.prompts.append(prompt)
         requirements = json.loads(
             prompt.split("Requirements: ", 1)[1].split("\nObserved case: ")[0]
@@ -185,7 +189,8 @@ def test_expectations_only_and_failure(judge, run_async, show_indicator):
     assert len(judge.prompts) == 2
     assert all(len(r.metrics_data) == 1 for r in results)
     assert results[0].expectations == cases[0].expectations
-    assert "must_not[0]" in results[0].metrics_data[0].reason
+    assert results[0].metrics_data[0].reason == "stub reason"
+    assert "Disclose a password" in judge.reason_prompts[0]
     assert (
         results[0].metrics_data[0].evaluation_model == "stub-expectation-judge"
     )
@@ -476,24 +481,27 @@ def test_expectations_only_run_rejects_uncovered_cases(
 @pytest.mark.parametrize("run_async", [False, True])
 def test_each_case_uses_its_own_model(judge, monkeypatch, run_async):
     from deepeval.metrics.utils import initialize_model
-    from tests.test_metrics.system_one_fakes import CannedLLM
+    from tests.test_metrics.system_one_fakes import ScriptedLLM
 
     module = importlib.import_module("deepeval.evaluate.expectations")
     monkeypatch.setattr(module, "initialize_model", initialize_model)
     models = [
-        CannedLLM(
-            json.dumps(
-                {
-                    "verdicts": [
-                        {
-                            "id": "must[0]",
-                            "status": status,
-                            "reason": "custom judge",
-                            "evidence": "response",
-                        }
-                    ]
-                }
-            ),
+        ScriptedLLM(
+            [
+                json.dumps(
+                    {
+                        "verdicts": [
+                            {
+                                "id": "must[0]",
+                                "status": status,
+                                "reason": "custom judge",
+                                "evidence": "response",
+                            }
+                        ]
+                    }
+                ),
+                json.dumps({"reason": "custom reason"}),
+            ],
             name=name,
         )
         for name, status in [("first-judge", "pass"), ("second-judge", "fail")]
@@ -514,8 +522,30 @@ def test_each_case_uses_its_own_model(judge, monkeypatch, run_async):
         "first-judge",
         "second-judge",
     ]
-    assert all(len(model.prompts) == 1 for model in models)
+    assert all(len(model.prompts) == 2 for model in models)
+    assert [result.metrics_data[0].reason for result in results] == [
+        "custom reason",
+        "custom reason",
+    ]
     assert not judge.prompts
+
+
+def test_measure_exposes_verdicts_in_condition_order(judge):
+    from deepeval.evaluate.expectations import _SingleTurnExpectations
+
+    case = LLMTestCase(
+        input="hello",
+        actual_output="hello",
+        expectations={"must": ["Greet"], "must_not": ["Insult"]},
+    )
+    evaluator = _SingleTurnExpectations(case.expectations)
+    evaluator.measure(case)
+    assert [(v.id, v.status) for v in evaluator.verdicts] == [
+        ("must[0]", "pass"),
+        ("must_not[0]", "pass"),
+    ]
+    assert evaluator.reason == "stub reason"
+    assert "Greet" in judge.reason_prompts[0]
 
 
 @pytest.mark.parametrize("run_async", [False, True])
