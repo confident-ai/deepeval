@@ -44,13 +44,19 @@ _JUDGING_INSTRUCTIONS = (
     "unable_to_evaluate; do not invent evidence or assume success. "
 )
 
-_REASON_INSTRUCTIONS = (
-    "Given whether a test case met its requirements and the verdict for each "
-    "requirement, write a CONCISE, human-readable reason for the result. "
-    "Lead with any requirement that failed and why, then briefly note what "
-    "passed. Refer to each requirement by what it asks for, never by its id. "
-    'Return JSON with a "reason" key.\n'
-)
+_REASON_INSTRUCTIONS = """Given the score (1 only if every requirement below held) and each requirement's judged outcome, CONCISELY explain WHY the LLM system met or missed its expectations.
+
+Explain the behavior behind the outcome, don't list the requirements: lead with what failed and why, and name a shared cause once. Ground it in the evidence and refer to requirements by what they ask for, never by id.
+
+**
+IMPORTANT: Return only JSON with a 'reason' key.
+Example JSON:
+{
+  "reason": "The score is <score> because <your_reason>."
+}
+**
+
+"""
 
 
 class _Verdict(BaseModel):
@@ -171,8 +177,9 @@ class _ExpectationEvaluator:
         ]
         return (
             _REASON_INSTRUCTIONS
-            + f"Requirements met: {self.success}\n"
-            f"Verdicts: {json.dumps(verdicts, ensure_ascii=False)}"
+            + f"Score:\n{self.score}\n\n"
+            f"Requirements:\n{json.dumps(verdicts, ensure_ascii=False)}\n\n"
+            "JSON:\n"
         )
 
     def _system_one_eval_spec(self, test_case):
