@@ -3,6 +3,7 @@
   "pages": [
     "metrics-llm-evals",
     "metrics-jev-eval",
+    "metrics-judge-eval",
     "metrics-dag",
     "metrics-conversational-dag",
     "metrics-arena-g-eval",

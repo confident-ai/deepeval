@@ -1,0 +1,184 @@
+---
+id: metrics-judge-eval
+title: JudgeEval
+sidebar_label: JudgeEval
+languages: [python, typescript]
+---
+
+<MetricTagsDisplayer singleTurn={true} custom={true} />
+
+JudgeEval is a custom metric where **you write the judge prompt yourself**. Your prompt can have `{{variables}}`, and each variable points to a spot in the test case data, such as the first message in the input or the arguments of a tool call. JudgeEval fills in the variables, sends your prompt to the judge LLM, and turns the score it returns into a number from 0 to 1.
+
+:::tip
+If you would rather describe what to check in one line and let an LLM write the evaluation steps for you, use [`GEval`](/docs/metrics-llm-evals). JudgeEval is for when you already have a judge prompt and want it used exactly as written.
+:::
+
+## Usage
+
+Here we build a **Help Decline Quality** metric that reads the question and the answer out of OpenAI style messages:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.metrics import JudgeEval
+from deepeval.metrics.judge_eval import (
+    JudgeEvalField,
+    JudgeEvalMessage,
+    JudgeEvalRole,
+    JudgeEvalVariable,
+)
+
+decline_quality = JudgeEval(
+    name="Help Decline Quality",
+    messages=[
+        JudgeEvalMessage(
+            role=JudgeEvalRole.SYSTEM,
+            content="You review answers from a payroll help assistant.",
+        ),
+        JudgeEvalMessage(
+            role=JudgeEvalRole.USER,
+            content="QUESTION:\n{{question}}\n\nANSWER:\n{{answer}}\n\nIf the answer declines to help, check that it explains why and points to a next step.",
+        ),
+    ],
+    variables={
+        "question": JudgeEvalVariable(
+            field=JudgeEvalField.INPUT, path=["messages", 0, "content"]
+        ),
+        "answer": JudgeEvalVariable(
+            field=JudgeEvalField.OUTPUT, path=["messages", -1, "content"]
+        ),
+    },
+    score_range=(1, 5),
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import {
+  JudgeEval,
+  JudgeEvalField,
+  JudgeEvalRole,
+} from "deepeval/metrics";
+
+const declineQuality = new JudgeEval({
+  name: "Help Decline Quality",
+  messages: [
+    {
+      role: JudgeEvalRole.SYSTEM,
+      content: "You review answers from a payroll help assistant.",
+    },
+    {
+      role: JudgeEvalRole.USER,
+      content:
+        "QUESTION:\n{{question}}\n\nANSWER:\n{{answer}}\n\nIf the answer declines to help, check that it explains why and points to a next step.",
+    },
+  ],
+  variables: {
+    question: { field: JudgeEvalField.INPUT, path: ["messages", 0, "content"] },
+    answer: { field: JudgeEvalField.OUTPUT, path: ["messages", -1, "content"] },
+  },
+  scoreRange: [1, 5],
+});
+```
+
+</Case>
+
+</Switch>
+
+There are **TWO** mandatory and <Switch><Case id="python">**NINE**</Case><Case id="typescript">**EIGHT**</Case></Switch> optional parameters when creating a JudgeEval metric:
+
+- `name`: name of custom metric.
+- `messages`: the judge prompt, as a list of messages with a `role` (`SYSTEM`, `USER` or `ASSISTANT`) and `content`. A system message is only allowed first. The messages are joined into one prompt, with each one labelled by its role.
+- [Optional] `variables`: maps each `{{variable}}` in the messages to the data it should be filled with. Every variable used in the messages must be mapped. See [mapping variables](#mapping-variables).
+- [Optional] <Term py="score_range" ts="scoreRange"/>: the lowest and highest score the judge can give, as whole numbers. The score is scaled to 0 to 1, so with a range of 1 to 5 a judge score of 4 becomes 0.75. Defaulted to <Term py="(0, 10)" ts="[0, 10]"/>.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `threshold`: the passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] <Term py="top_logprobs" ts="topLogprobs"/>: how many score token options to weigh, on models that return log probabilities. Defaulted to `20`.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, asks the judge for either the lowest or the highest score, and gives 1 only for the highest. It also sets the threshold to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">[Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.</Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the filled in prompt, score and reason to the console. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+
+:::note
+You do not need to tell the judge how to format its answer. JudgeEval adds a short block after your prompt asking for a JSON object with a `score` inside <Term py="score_range" ts="scoreRange"/> and a `reason`.
+:::
+
+As with every `deepeval` metric, JudgeEval returns a score from 0 to 1 and is successful when that score is equal to or greater than `threshold`:
+
+<Switch>
+
+<Case id="python">
+
+```python
+import json
+
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input=json.dumps({"messages": [{"role": "user", "content": "Can you run payroll for me?"}]}),
+    actual_output=json.dumps({"messages": [{"role": "assistant", "content": "I can't run payroll, but you can start a pay run from Payroll > Pay runs."}]}),
+)
+
+evaluate(test_cases=[test_case], metrics=[decline_quality])
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { LLMTestCase } from "deepeval/test-case";
+import { evaluate } from "deepeval";
+
+const testCase = new LLMTestCase({
+  input: JSON.stringify({
+    messages: [{ role: "user", content: "Can you run payroll for me?" }],
+  }),
+  actualOutput: JSON.stringify({
+    messages: [
+      {
+        role: "assistant",
+        content:
+          "I can't run payroll, but you can start a pay run from Payroll > Pay runs.",
+      },
+    ],
+  }),
+});
+
+await evaluate([testCase], [declineQuality]);
+```
+
+</Case>
+
+</Switch>
+
+## Mapping variables
+
+Each variable has a `field` and an optional `path`.
+
+The `field` picks which part of the test case to read:
+
+| Field          | Reads                                                                      |
+| -------------- | -------------------------------------------------------------------------- |
+| `INPUT`        | <Term py="input" ts="input"/>, parsed as JSON when it is valid JSON         |
+| `OUTPUT`       | <Term py="actual_output" ts="actualOutput"/>, parsed as JSON when it is valid JSON |
+| `METADATA`     | <Term py="metadata" ts="additionalMetadata"/>                               |
+| `TOOLS_CALLED` | <Term py="tools_called" ts="toolsCalled"/>, as a list of tool call objects  |
+
+The `path` walks into that value, one step at a time:
+
+- A string reads a key, for example `"messages"`.
+- A number reads a list item. `0` is the first item and `-1` is the last.
+- `"*"` reads every item in a list and returns them as a list.
+
+For example, <Term py='["messages", "*", "content"]' ts='["messages", "*", "content"]'/> gives the content of every message. A string value that holds JSON is parsed before the next step, so paths can reach inside it.
+
+Leave `path` out to use the whole field. Text is used as is, and anything else is turned into JSON text. If the path finds nothing, the variable is filled with an empty string and the judge still runs.
+
+Tool calls use the same keys in both SDKs (`name`, `description`, `type`, `reasoning`, `output` and `input_parameters`), so a path like <Term py='["*", "input_parameters"]' ts='["*", "input_parameters"]'/> works the same in Python and TypeScript.
