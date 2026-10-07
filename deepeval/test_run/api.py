@@ -80,7 +80,6 @@ class LLMApiTestCase(BaseModel):
         else:
             self.metrics_data.append(metric_data)
         if metric_data.expectations_data is not None:
-            # Cached results zero the cost on the metric data only.
             self.expectations_data = metric_data.expectations_data.model_copy(
                 update={"evaluation_cost": metric_data.evaluation_cost}
             )

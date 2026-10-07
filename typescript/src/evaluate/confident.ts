@@ -91,7 +91,6 @@ export function buildTestCaseEntry(
   const evaluationCost = caseCost(metricsData);
   const metricsDataApi = withoutExpectations(metricsData).map(convertMetricData);
   const expectationsMetric = metricsData.find((m) => m.expectationsData);
-  // Cached results zero the cost on the metric data only.
   const expectationsData = expectationsMetric && {
     ...expectationsMetric.expectationsData,
     evaluationCost: expectationsMetric.evaluationCost,
