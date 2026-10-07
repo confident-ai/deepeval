@@ -20,8 +20,7 @@ from deepeval.test_case import (
 DELIMITER = "|"
 TOOLS_DELIMITER = ";"
 
-# The judge model and eval mode configure local runs only; Confident AI judges
-# expectations with its own settings, so they never leave the machine.
+
 _LOCAL_ONLY_EXPECTATION_FIELDS = ("model", "eval_mode")
 
 
