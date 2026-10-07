@@ -221,6 +221,15 @@ export {
   type ConversationalJevEvalOptions,
 } from "@/metrics/conversational-jev-eval";
 export {
+  JudgeEval,
+  type JudgeEvalOptions,
+  JudgeEvalField,
+  JudgeEvalRole,
+  type JudgeEvalMessage,
+  type JudgeEvalPathSegment,
+  type JudgeEvalVariable,
+} from "@/metrics/judge-eval";
+export {
   JsonCorrectnessMetric,
   type JsonCorrectnessMetricOptions,
   type JsonCorrectnessTemplateOverride,
