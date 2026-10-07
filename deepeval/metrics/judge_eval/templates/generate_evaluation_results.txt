@@ -1,0 +1,19 @@
+{{ prompt }}
+
+---
+
+Follow the instructions above to judge the content, then return a JSON object with two fields:
+
+- `"score"`: {% if strict_mode %}either {{ score_range[0] }} or {{ score_range[1] }}{% else %}an integer between {{ score_range[0] }} and {{ score_range[1] }} (inclusive){% endif %}, where {{ score_range[1] }} is the best result and {{ score_range[0] }} is the worst.
+- `"reason"`: a brief explanation for the score, grounded in the content above. Do **not** quote the score itself in the explanation.
+
+Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+**Example JSON:**
+{
+  "reason": "your concise and informative reason here",
+  "score": {{ score_range[0] }}
+}
+
+JSON:
