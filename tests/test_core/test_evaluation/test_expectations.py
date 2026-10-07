@@ -827,3 +827,177 @@ def test_missing_expectations_error_leads_with_count(count):
         "Fill in non-empty expectations for these test cases and/or "
         "provide at least one metric and/or classifier."
     )
+
+
+def _uploaded_test_cases():
+    body = global_test_run_manager.get_test_run().model_dump(
+        by_alias=True, exclude_none=True
+    )
+    return body.get("testCases", []) + body.get("conversationalTestCases", [])
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+@pytest.mark.parametrize("conversational", [False, True])
+def test_upload_sends_expectations_data_not_metric(
+    judge, run_async, conversational
+):
+    expectations = {"must": ["Greet the user"], "must_not": ["Insult"]}
+    case = (
+        ConversationalTestCase(
+            turns=[Turn(role="user", content="hello")],
+            expectations=expectations,
+        )
+        if conversational
+        else LLMTestCase(
+            input="hello", actual_output="hello", expectations=expectations
+        )
+    )
+    metrics = [] if conversational else [PassingMetric()]
+    results = run([case], run_async, metrics=metrics)
+
+    # Locally the check still reports like any metric.
+    assert "Expectations" in [m.name for m in results[0].metrics_data]
+
+    [uploaded] = _uploaded_test_cases()
+    assert "expectations" not in uploaded
+    assert "Expectations" not in [
+        m["name"] for m in uploaded.get("metricsData", [])
+    ]
+    expectations_data = uploaded["expectationsData"]
+    assert expectations_data["success"] is True
+    assert expectations_data["reason"] == "stub reason"
+    assert expectations_data["evaluationModel"] == "stub-expectation-judge"
+    assert [
+        (v["kind"], v["condition"], v["status"])
+        for v in expectations_data["verdicts"]
+    ] == [("MUST", "Greet the user", "pass"), ("MUST_NOT", "Insult", "pass")]
+
+
+def test_upload_keeps_verdicts_when_expectations_error(judge):
+    judge.status = "unable_to_evaluate"
+    case = LLMTestCase(
+        input="hello",
+        actual_output="hello",
+        expectations={"must": ["Greet the user"]},
+    )
+    run([case], error_config=ErrorConfig(ignore_errors=True))
+
+    [uploaded] = _uploaded_test_cases()
+    expectations_data = uploaded["expectationsData"]
+    assert expectations_data["success"] is False
+    assert "Unable to evaluate expectations" in expectations_data["error"]
+    assert [v["status"] for v in expectations_data["verdicts"]] == [
+        "unable_to_evaluate"
+    ]
+
+
+def test_cached_expectations_upload_with_zero_cost():
+    from deepeval.test_run.api import LLMApiTestCase
+    from deepeval.tracing.api import ExpectationsData, MetricData
+
+    metric_data = MetricData(
+        name="Expectations",
+        success=True,
+        evaluationCost=0.01,
+        expectationsData=ExpectationsData(success=True, evaluationCost=0.01),
+    )
+    cached = MetricData.model_validate(
+        json.loads(metric_data.model_dump_json(by_alias=True))
+    )
+    cached.evaluation_cost = 0
+    api_test_case = LLMApiTestCase(name="case", input="hello", order=0)
+    api_test_case.update_metric_data(cached)
+
+    uploaded = api_test_case.model_dump(by_alias=True, exclude_none=True)
+    assert uploaded["metricsData"] == []
+    assert uploaded["expectationsData"]["evaluationCost"] == 0
+
+
+def test_trace_upload_drops_expectations_metric():
+    from deepeval.tracing.api import ExpectationsData, MetricData, TraceApi
+
+    trace = TraceApi(
+        uuid="trace",
+        startTime="start",
+        endTime="end",
+        metricsData=[
+            MetricData(name="Existing metric", success=True),
+            MetricData(
+                name="Expectations",
+                success=True,
+                expectationsData=ExpectationsData(success=True),
+            ),
+        ],
+    )
+    uploaded = trace.model_dump(by_alias=True, exclude_none=True)
+    assert [m["name"] for m in uploaded["metricsData"]] == ["Existing metric"]
+
+
+class _CapturingApi:
+    def __init__(self, response=None):
+        self.bodies = []
+        self.response = response
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    def send_request(self, method, endpoint, body=None, **kwargs):
+        self.bodies.append(body)
+        return self.response, None
+
+
+@pytest.mark.parametrize("conversational", [False, True])
+def test_push_and_queue_keep_judge_config_local(monkeypatch, conversational):
+    import deepeval.dataset.dataset as dataset_module
+
+    api = _CapturingApi()
+    monkeypatch.setattr(dataset_module, "Api", api)
+    expectations = Expectations(
+        must=["Cite a source"],
+        must_not=["Mention competitors"],
+        model="gpt-4o",
+        eval_mode="llm",
+    )
+    golden = (
+        ConversationalGolden(scenario="hello", expectations=expectations)
+        if conversational
+        else Golden(input="hello", expectations=expectations)
+    )
+    dataset = EvaluationDataset(goldens=[golden])
+    dataset.push("alias")
+    dataset.queue("alias", [golden], print_response=False)
+    golden.id = "golden-id"
+    dataset.update_golden(golden, alias="alias")
+
+    key = "conversationalGoldens" if conversational else "goldens"
+    sent = [api.bodies[0][key][0], api.bodies[1][key][0], api.bodies[2]]
+    for golden_body in sent:
+        assert golden_body["expectations"] == {
+            "must": ["Cite a source"],
+            "mustNot": ["Mention competitors"],
+        }
+    # The user's golden keeps its local judge configuration.
+    assert golden.expectations.model == "gpt-4o"
+    assert golden.expectations.eval_mode == "llm"
+
+
+@pytest.mark.parametrize("conversational", [False, True])
+def test_pull_reads_expectations(monkeypatch, conversational):
+    import deepeval.dataset.dataset as dataset_module
+
+    golden = {
+        "expectations": {"must": ["Cite a source"], "mustNot": ["Insult"]}
+    }
+    golden.update({"scenario": "hello"} if conversational else {"input": "hi"})
+    key = "conversationalGoldens" if conversational else "goldens"
+    monkeypatch.setattr(
+        dataset_module,
+        "Api",
+        _CapturingApi(response={"id": "dataset", key: [golden]}),
+    )
+    dataset = EvaluationDataset()
+    dataset.pull("alias")
+
+    [pulled] = dataset.goldens
+    assert pulled.expectations.must == ["Cite a source"]
+    assert pulled.expectations.must_not == ["Insult"]
