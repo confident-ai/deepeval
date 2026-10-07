@@ -55,7 +55,7 @@ def test_thegrid_model_raises_if_model_missing(settings):
         TheGridModel(model=None)
 
     msg = str(exc.value)
-    assert "The Grid is missing a required parameter" in msg
+    assert "The Grid AI is missing a required parameter" in msg
     assert "THEGRID_MODEL_NAME" in msg
     assert "model" in msg
 
@@ -68,7 +68,7 @@ def test_thegrid_model_rejects_negative_temperature(settings):
 
 
 def test_thegrid_model_cost_is_unknown_without_user_pricing(settings):
-    """The Grid publishes no per-token price, so cost stays unresolved."""
+    """The Grid AI publishes no per-token price, so cost stays unresolved."""
     _seed_settings(settings)
 
     model = TheGridModel()

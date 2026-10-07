@@ -57,7 +57,7 @@ def set_thegrid_model_env(
     api_key = None
     if prompt_api_key:
         api_key = coerce_blank_to_none(
-            typer.prompt("The Grid API key", hide_input=True)
+            typer.prompt("The Grid AI API key", hide_input=True)
         )
 
     model = coerce_blank_to_none(model)
@@ -78,7 +78,7 @@ def set_thegrid_model_env(
     effective_model = settings.THEGRID_MODEL_NAME
     if not effective_model:
         raise typer.BadParameter(
-            "The Grid model name is not set. Pass --model (or set THEGRID_MODEL_NAME).",
+            "The Grid AI model name is not set. Pass --model (or set THEGRID_MODEL_NAME).",
             param_hint="--model",
         )
     _handle_save_result(
@@ -88,7 +88,7 @@ def set_thegrid_model_env(
         save=save,
         quiet=quiet,
         success_msg=(
-            f":raising_hands: Congratulations! You're now using The Grid `{escape(effective_model)}` for all evals that require an LLM."
+            f":raising_hands: Congratulations! You're now using The Grid AI `{escape(effective_model)}` for all evals that require an LLM."
         ),
     )
 
@@ -99,7 +99,7 @@ def unset_thegrid_model_env(
         None,
         "-s",
         "--save",
-        help="Remove only the The Grid related environment variables from a dotenv file. "
+        help="Remove only the The Grid AI related environment variables from a dotenv file. "
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
     clear_secrets: bool = typer.Option(
@@ -131,7 +131,7 @@ def unset_thegrid_model_env(
         updates=updates,
         save=save,
         quiet=quiet,
-        updated_msg="Removed The Grid model environment variables from {path}.",
+        updated_msg="Removed The Grid AI model environment variables from {path}.",
         tip_msg=None,
     ):
         if is_openai_configured():
@@ -140,5 +140,5 @@ def unset_thegrid_model_env(
             )
         else:
             print(
-                "The The Grid model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+                "The The Grid AI model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
             )

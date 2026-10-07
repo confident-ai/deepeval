@@ -10,9 +10,9 @@ from deepeval.utils import require_param
 
 
 class TheGridModel(DeepEvalOpenAICompatibleModel):
-    """The Grid inference marketplace (https://thegrid.ai), reached through the OpenAI SDK.
+    """The Grid AI inference marketplace (https://thegrid.ai), reached through the OpenAI SDK.
 
-    The Grid serves models from several labs behind one OpenAI-Chat-Completions
+    The Grid AI serves models from several labs behind one OpenAI-Chat-Completions
     compatible endpoint, so generation, structured outputs, retries and cost
     accounting all come from ``DeepEvalOpenAICompatibleModel``; this class only
     resolves configuration.
@@ -21,13 +21,13 @@ class TheGridModel(DeepEvalOpenAICompatibleModel):
     ``text-standard``, ``code-prime`` and ``agent-max`` each route to a current
     model for that tier. ``GET https://api.thegrid.ai/v1/models`` lists them.
 
-    Like the other gateways, The Grid publishes no per-token price through its
+    Like the other gateways, The Grid AI publishes no per-token price through its
     API, so cost is resolved from user-supplied ``cost_per_*_token`` values and
     is otherwise unknown.
     """
 
     PROVIDER_SLUG = PS.THEGRID
-    PROVIDER_LABEL = "The Grid"
+    PROVIDER_LABEL = "The Grid AI"
     API_KEY_ENV_VAR = "THEGRID_API_KEY"
     API_KEY_PARAM_HINT = "`api_key` to TheGridModel(...)"
 
@@ -63,7 +63,7 @@ class TheGridModel(DeepEvalOpenAICompatibleModel):
         # the tier must be chosen explicitly.
         model = require_param(
             model,
-            provider_label="The Grid",
+            provider_label="The Grid AI",
             env_var_name="THEGRID_MODEL_NAME",
             param_hint="model",
         )

@@ -754,28 +754,28 @@ class Settings(BaseSettings):
     PORTKEY_PROVIDER_NAME: Optional[str] = Field(
         None, description="Provider name/routing hint for Portkey."
     )
-    # The Grid
+    # The Grid AI
     USE_THEGRID_MODEL: Optional[bool] = Field(
-        None, description="Select The Grid as the active LLM provider."
+        None, description="Select The Grid AI as the active LLM provider."
     )
     THEGRID_API_KEY: Optional[SecretStr] = Field(
-        None, description="The Grid API key."
+        None, description="The Grid AI API key."
     )
     THEGRID_MODEL_NAME: Optional[str] = Field(
         None,
-        description="The Grid instrument, e.g. text-standard or agent-max.",
+        description="The Grid AI instrument, e.g. text-standard or agent-max.",
     )
     THEGRID_BASE_URL: Optional[AnyUrl] = Field(
         None,
-        description="The Grid base URL (defaults to https://api.thegrid.ai/v1).",
+        description="The Grid AI base URL (defaults to https://api.thegrid.ai/v1).",
     )
     THEGRID_COST_PER_INPUT_TOKEN: Optional[float] = Field(
         None,
-        description="Optional input token cost; The Grid publishes no per-token price.",
+        description="Optional input token cost; The Grid AI publishes no per-token price.",
     )
     THEGRID_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None,
-        description="Optional output token cost; The Grid publishes no per-token price.",
+        description="Optional output token cost; The Grid AI publishes no per-token price.",
     )
     # OpenRouter
     USE_OPENROUTER_MODEL: Optional[bool] = None

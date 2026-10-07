@@ -61,7 +61,7 @@ _PROVIDER_BY_CLASS = {
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
     "TypeSafeModel": "TypeSafe AI",
-    "TheGridModel": "The Grid",
+    "TheGridModel": "The Grid AI",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",

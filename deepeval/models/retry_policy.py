@@ -772,7 +772,7 @@ DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
 KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
 LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
 OPENROUTER_ERROR_POLICY = OPENAI_ERROR_POLICY
-# The Grid is reached through the OpenAI SDK (OpenAI-compatible gateway), so it
+# The Grid AI is reached through the OpenAI SDK (OpenAI-compatible gateway), so it
 # shares OpenAI's error taxonomy.
 THEGRID_ERROR_POLICY = OPENAI_ERROR_POLICY
 
