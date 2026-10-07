@@ -162,13 +162,6 @@ class MIPROV2(BaseAlgorithm):
         self._iteration_log = []
         self._config_cache.clear()
 
-        self._update_step(
-            f"Generating {self.num_candidates} diverse instructions..."
-        )
-        self.candidates = self.proposer.propose(
-            prompt, goldens, self.num_candidates
-        )
-
         # Phase 1: Propose & Bootstrap
         self._update_step(
             f"Generating {self.num_candidates} diverse instructions..."
