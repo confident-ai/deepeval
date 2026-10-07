@@ -7,11 +7,11 @@ languages: [python, typescript]
 
 import { ASSETS } from "@site/src/assets";
 
-<MetricTagsDisplayer multiTurn={true} custom={true} />
+<MetricTagsDisplayer jev={true} multiTurn={true} custom={true} />
 
 The conversational deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for multi-turn evaluation with the help of using LLM-as-a-judge.
 
-The `ConversationalDAGMetric` gives you more deterministic control over scoring than [`ConversationalGEval`](/docs/metrics-conversational-g-eval) by breaking complex criteria into focused decisions and mapping their outcomes to scores you define. You can also use `ConversationalGEval`, or any other multi-turn metric in `deepeval`, within your `ConversationalDAGMetric`.
+The `ConversationalDAGMetric` gives you more deterministic control over scoring than [`ConversationalGEval`](/docs/metrics-llm-evals) by breaking complex criteria into focused decisions and mapping their outcomes to scores you define. You can also use `ConversationalGEval`, or any other multi-turn metric in `deepeval`, within your `ConversationalDAGMetric`.
 
 :::tip
 For a complete walkthrough that builds a conversational DAG from start to finish, see the [multi-turn walkthrough in the Building a DAG Metric guide](/guides/guides-dag-metric#multi-turn-walkthrough).
@@ -46,6 +46,8 @@ To use a `ConversationalDAGMetric`, create a [`ConversationalTestCase`](/docs/ev
 You'll also need to supply any additional arguments such as <Term py="retrieval_context" ts="retrievalContext"/> and <Term py="tools_called" ts="toolsCalled"/> in your `turns` if your evaluation criteria depends on these parameters.
 
 ## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
 Simply create a direct acyclic graph to define your evaluation trajectory using the nodes available in a top-down fashion, and pass it to `ConversationalDAGMetric`:
 
@@ -129,7 +131,7 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **TWO** mandatory and **SEVEN** optional parameters when creating a `ConversationalDAGMetric`:
+There are **TWO** mandatory and **EIGHT** optional parameters when creating a `ConversationalDAGMetric`:
 
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
@@ -142,12 +144,14 @@ There are **TWO** mandatory and **SEVEN** optional parameters when creating a `C
   </Only>
 - [Optional] `verbose_mode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM or Jev decides judgement nodes. `system_one` runs as `hybrid`. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 </Case>
 
 <Case id="typescript">
 
-There are **TWO** mandatory and **SIX** optional parameters when creating a `ConversationalDAGMetric`:
+There are **TWO** mandatory and **EIGHT** optional parameters when creating a `ConversationalDAGMetric`:
 
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
@@ -157,6 +161,8 @@ There are **TWO** mandatory and **SIX** optional parameters when creating a `Con
 - [Optional] `strictMode`: when `true`, sets the threshold to `1`. Defaulted to `false`.
 - [Optional] `verboseMode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `false`.
 - [Optional] `showIndicator`: whether to display the progress indicator while the graph runs. Defaulted to `true`.
+- [Optional] `systemOneModel`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `evalMode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `evalMode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM or Jev decides judgement nodes. `system_one` runs as `hybrid`. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 </Case>
 
@@ -554,9 +560,13 @@ There is no need to specify the options of what to output in the `criteria`.
 
 ## How Is It Calculated?
 
+You can change how the `ConversationalDAGMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+### LLM-as-a-judge
+
 Unlike metrics that derive a score from one holistic evaluation, a `ConversationalDAGMetric` calculates its result by following the structure of the graph you define. The evaluation model makes decisions at judgement nodes, while the selected verdict path determines whether the DAG returns a fixed score or continues into another metric.
 
-### Execution Order
+#### Execution Order
 
 The graph executes in dependency order. Task nodes first produce evidence, judgement nodes evaluate their criteria, and the selected verdict determines whether evaluation ends or continues.
 
@@ -576,11 +586,11 @@ Independent branches always execute concurrently.
 
 </Switch>
 
-### Branch Selection
+#### Branch Selection
 
 Only the verdict matching a judgement node's output is followed. A binary judgement selects its <Term py="True" ts="true"/> or <Term py="False" ts="false"/> verdict, while a non-binary judgement selects one of its configured string verdicts.
 
-### Score Calculation
+#### Score Calculation
 
 A terminal verdict's `score` is normalized from the `0`–`10` range to the metric's `0`–`1` range:
 
@@ -588,7 +598,7 @@ A terminal verdict's `score` is normalized from the `0`–`10` range to the metr
 
 For example, `score=10` produces `1.0`, while `score=4` produces `0.4`. The resulting score passes when it meets the metric's `threshold`.
 
-### Child Metric Execution
+#### Child Metric Execution
 
 A verdict can continue into a `ConversationalGEval` or another `BaseConversationalMetric` instead of assigning a score:
 
@@ -635,6 +645,20 @@ The child metric's score and reason become the `ConversationalDAGMetric` result 
 :::note
 Enable verbose mode to inspect the nodes, outputs, judgements, and selected verdict used during evaluation.
 :::
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the judgement nodes are decided by Jev, a System One model, instead of the LLM:
+
+- A `ConversationalBinaryJudgementNode` becomes one yes/no question on the node's criteria (`P(yes) >= 0.5` is <Term py="True" ts="true"/>).
+- A `ConversationalNonBinaryJudgementNode` becomes one choice over its child verdicts.
+- `ConversationalTaskNode` and `ConversationalVerdictNode` stay on the LLM.
+
+A node whose Jev call fails is decided by the LLM instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up-your-api-key).
+
+### Jev-as-a-judge
+
+Task nodes always need the LLM, so under the `system_one` [eval mode](/docs/evaluation-eval-modes) a `ConversationalDAGMetric` runs the same way as under `hybrid`.
 
 ## Examples
 
@@ -731,7 +755,7 @@ For a complete runnable example, see the [multi-turn walkthrough in the Building
         <>
           When a single holistic score hides what matters — e.g. the request was
           satisfied but the assistant was rude. A{" "}
-          <a href="/docs/metrics-conversational-g-eval">ConversationalGEval</a>{" "}
+          <a href="/docs/metrics-llm-evals">ConversationalGEval</a>{" "}
           averages that into one fuzzy score; a DAG checks satisfaction and tone
           on separate deterministic branches.
         </>

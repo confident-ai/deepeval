@@ -2,7 +2,9 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
-import { initializeModel, constructVerboseLogs } from "@/metrics/utils";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
+import { initializeMetricModels, constructVerboseLogs } from "@/metrics/utils";
 import { checkConversationalTestCaseParams } from "@/metrics/conversational-utils";
 import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import { DeepAcyclicGraph } from "@/metrics/dag/graph";
@@ -19,6 +21,14 @@ export interface ConversationalDAGMetricOptions {
   name: string;
   dag: DeepAcyclicGraph;
   model?: DeepEvalBaseLLM | string;
+  /**
+   * The System One model (Jev) its judgement nodes ask under `hybrid` /
+   * `system_one`. A DAG has no whole-metric form, so `system_one` runs it as
+   * `hybrid`: task nodes still need the LLM.
+   */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   threshold?: number | null;
   flaky?: boolean;
   includeReason?: boolean;
@@ -57,10 +67,7 @@ export class ConversationalDAGMetric extends BaseConversationalMetric {
     this.dag = options.dag;
     this.includeDagSuffix = options.includeDagSuffix ?? true;
 
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {

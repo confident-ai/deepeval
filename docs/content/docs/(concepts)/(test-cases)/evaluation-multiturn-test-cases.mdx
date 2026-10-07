@@ -9,13 +9,15 @@ import { ASSETS } from "@site/src/assets";
 
 ## Quick Summary
 
-A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **FIVE** parameters:
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has the following parameters:
 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
 - [Optional] `context`
 - [Optional] `chatbot_role`
+- [Optional] `expectations`
+- <Only id="python">[Optional] `expected_labels`</Only>
 
 :::note
 `deepeval` makes the assumption that a multi-turn use case are mainly conversational chatbots. Agents on the other hand, should be evaluated via [component-level evaluation](/docs/evaluation-component-level-llm-evals) instead, where each component in your agentic workflow is assessed individually.
@@ -73,7 +75,7 @@ The `turns` parameter in a conversational test case is vital to specifying the r
 
 While a [single-turn test case](/docs/evaluation-test-cases) represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
 
-A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
+When evaluating a `ConversationalTestCase` with metrics, use **conversational metrics.**
 
 <Switch>
 
@@ -115,7 +117,7 @@ Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly
 
 ### Turns
 
-The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-conversational-g-eval), you might also want to supply different parameters to a `Turn`. A `Turn` is made up of the following parameters:
+The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-llm-evals), you might also want to supply different parameters to a `Turn`. A `Turn` is made up of the following parameters:
 
 ```python
 class Turn:
@@ -229,6 +231,102 @@ const testCase = new ConversationalTestCase({
 
 </Switch>
 
+### Expectations
+
+<Switch>
+
+<Case id="python">
+
+Set `expectations` to an `Expectations` object to define requirements for the **whole conversation**, including its actions and final state. `expected_outcome` describes the desired end state; expectations can also specify the steps required to reach it. Either field can be supplied independently.
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import Expectations
+from deepeval.test_case import ConversationalTestCase, ToolCall, Turn
+
+test_case = ConversationalTestCase(
+    expected_outcome="The subscription is cancelled with the user's consent.",
+    turns=[
+        Turn(role="user", content="Cancel my subscription."),
+        Turn(role="assistant", content="Please confirm you want to cancel."),
+        Turn(role="user", content="Yes, cancel it."),
+        Turn(
+            role="assistant",
+            content="Your subscription has been cancelled.",
+            tools_called=[ToolCall(name="cancel_subscription", output={"cancelled": True})],
+        ),
+    ],
+    expectations=Expectations(
+        must=["Obtain the user's confirmation before calling cancel_subscription."],
+        must_not=["Claim that a refund was issued."],
+    ),
+)
+
+evaluate(test_cases=[test_case])
+```
+
+No metric is required. If no metrics or classifiers are supplied, every test case passed to `evaluate()` must have at least one `must` or `must_not` condition. The same requirement applies to the case passed to `assert_test()`. Missing or empty expectations raise a `ValueError` before evaluation begins. `evaluate()` and `assert_test()` check all `must` and `must_not` conditions across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions; missing evidence produces an evaluation error.
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `must_not`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used to evaluate conditions in `llm` mode. Defaulted to `None`, which uses the configured default evaluation model. Model names are preserved when saving a dataset; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `eval_mode`: `"llm"` or `"system_one"`, choosing how to judge the conditions. Defaulted to `None`, which uses the configured global eval mode or `llm` if none is set. An explicit global `DEEPEVAL_EVAL_MODE` setting overrides the object's `eval_mode`. Expectations do not accept `eval_mode="hybrid"`; a global `hybrid` setting resolves to `llm`, matching classifiers. In `system_one` mode, the configured default System One judge answers the conditions without calling the LLM. It requires the same System One setup as metrics and does not fall back to the LLM on errors.
+
+At least one condition in `must` or `must_not` is required to evaluate expectations.
+
+</Case>
+
+<Case id="typescript">
+
+Set `expectations` to define requirements for the **whole conversation**, including its actions and final state. `expectedOutcome` describes the desired end state; expectations can also specify the steps required to reach it. Either field can be supplied independently.
+
+```typescript
+import { evaluate } from "deepeval";
+import { Expectations } from "deepeval/dataset";
+import { ConversationalTestCase, ToolCall, Turn } from "deepeval/test-case";
+
+const testCase = new ConversationalTestCase({
+  expectedOutcome: "The subscription is cancelled with the user's consent.",
+  turns: [
+    new Turn({ role: "user", content: "Cancel my subscription." }),
+    new Turn({ role: "assistant", content: "Please confirm you want to cancel." }),
+    new Turn({ role: "user", content: "Yes, cancel it." }),
+    new Turn({
+      role: "assistant",
+      content: "Your subscription has been cancelled.",
+      toolsCalled: [new ToolCall({ name: "cancel_subscription", output: { cancelled: true } })],
+    }),
+  ],
+  expectations: new Expectations({
+    must: ["Obtain the user's confirmation before calling cancel_subscription."],
+    mustNot: ["Claim that a refund was issued."],
+  }),
+});
+
+await evaluate([testCase]);
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `mustNot`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used in `llm` mode. Uses the configured default evaluation model when omitted. Model names survive dataset save/load; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `evalMode`: `"llm"` or `"system_one"`. Uses the configured global eval mode or `llm` when omitted. An explicit global `DEEPEVAL_EVAL_MODE` overrides this setting; global `hybrid` resolves to `llm`. Expectations do not accept `"hybrid"` directly. In `system_one` mode, the default System One judge answers the conditions without an LLM or fallback.
+
+At least one condition in `must` or `mustNot` is required to evaluate expectations.
+
+`evaluate()` and `expect(testCase).toPass()` check expectations automatically. If no metrics are supplied, every test case needs non-empty expectations; missing expectations raise an `Error` before evaluation begins. Every required condition must hold and every prohibited behavior must be absent. Results appear under **Expectations**, with a verdict and reason for each condition. You can also supply metrics in the same run.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet. Missing evidence produces an evaluation error; use `errorConfig: { ignoreErrors: true }` to record it and continue.
+
+Conditions apply across the conversation. Make timing explicit: "before cancelling", "after confirmation", or "by the end of the conversation". Include tool calls on the relevant `Turn` when judging actions.
+
+</Case>
+
+</Switch>
+
 ### Chatbot Role
 
 The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
@@ -297,6 +395,26 @@ const testCase = new ConversationalTestCase({
 :::info
 A single-turn `LLMTestCase` also contains `context`.
 :::
+
+<Only id="python">
+
+### Expected Labels
+
+The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this conversation should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    scenario="User asks to cancel a subscription.",
+    turns=[Turn(...)],
+    expected_labels={"resolution": "resolved"},
+)
+```
+
+Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning.
+
+</Only>
 
 ## Including Images
 

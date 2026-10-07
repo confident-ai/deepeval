@@ -119,9 +119,9 @@ const CARDS: Card[] = [
   },
   {
     icon: <ConversationalEvalsGlyph />,
-    heading: "Native conversational evals",
+    heading: "Native conversational and voice evals",
     description:
-      "Role adherence, knowledge retention, and conversation completeness — dedicated metrics built for multi-turn from day one.",
+      "Role adherence, knowledge retention, conversation completeness, and voice quality — dedicated metrics built for multi-turn text and voice from day one.",
   },
   {
     icon: <MultiModalGlyph />,

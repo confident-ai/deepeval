@@ -60,6 +60,7 @@ _PROVIDER_BY_CLASS = {
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
+    "TypeSafeModel": "TypeSafe AI",
     "TheGridModel": "The Grid",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
@@ -88,6 +89,9 @@ _RELEVANT_MARKERS = (
     "TEMPERATURE",
     "DEEPEVAL_DEFAULT_SAVE",
     "DEEPEVAL_RESULTS_FOLDER",
+    "DEEPEVAL_LOCAL_STORE",
+    "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
+    "DEEPEVAL_EVAL_MODE",
     "DEEPEVAL_VOICE_FOLDER",
     "DEEPEVAL_TTS_MODEL",
     "DEEPEVAL_STT_MODEL",
@@ -427,6 +431,55 @@ def _configured_settings_section() -> List[Dict[str, Any]]:
     return rows
 
 
+def _local_storage_section() -> Dict[str, Any]:
+    """Where finished test runs go, always shown (even on defaults)."""
+    from deepeval.evaluate.local_store import (
+        LOCAL_STORE_SQLITE,
+        resolve_local_store_mode,
+    )
+
+    settings = get_settings()
+    backend = resolve_local_store_mode()
+    results_folder = settings.DEEPEVAL_RESULTS_FOLDER or None
+    info: Dict[str, Any] = {
+        "backend": backend,
+        "backend_source": resolve_setting_source("DEEPEVAL_LOCAL_STORE")
+        or "built-in default",
+        "results_folder": results_folder,
+        "results_folder_source": (
+            resolve_setting_source("DEEPEVAL_RESULTS_FOLDER")
+            if results_folder
+            else None
+        ),
+    }
+    if backend == LOCAL_STORE_SQLITE:
+        from deepeval.sqlite_store import (
+            resolve_db_path,
+            resolve_include_row_json,
+        )
+
+        info["location"] = str(resolve_db_path(results_folder))
+        info["include_row_json"] = resolve_include_row_json()
+    elif results_folder:
+        info["location"] = str(Path(results_folder) / "test_run_*.json")
+    else:
+        info["location"] = (
+            f"{HIDDEN_DIR}/.latest_run_full.json (latest run only)"
+        )
+    return info
+
+
+def _eval_mode_section() -> Dict[str, Any]:
+    """Which eval mode is in effect, always shown (even on defaults)."""
+    from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
+
+    return {
+        "eval_mode": resolve_eval_mode().value,
+        "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
+        or "built-in default",
+    }
+
+
 def diagnose_command(
     json_output: bool = typer.Option(
         False,
@@ -440,6 +493,8 @@ def diagnose_command(
         "python_version": platform.python_version(),
         "python_executable": sys.executable,
         "default_models": _models_section(),
+        "local_storage": _local_storage_section(),
+        "eval_mode": _eval_mode_section(),
         "configured_settings": _configured_settings_section(),
         "setting_sources": _setting_sources_section(),
         "confident_ai": _confident_section(),
@@ -490,6 +545,46 @@ def diagnose_command(
     console.print(
         "[dim]Global defaults: apply whenever a class is constructed without "
         "an explicit model.[/dim]\n"
+    )
+
+    # Local storage: where finished test runs land
+    storage = report["local_storage"]
+    table = _kv_table("Local storage")
+    table.add_row(
+        "Backend",
+        f"[bold]{storage['backend']}[/bold] "
+        f"[dim]({storage['backend_source']})[/dim]",
+    )
+    table.add_row("Location", storage["location"])
+    if storage["results_folder"]:
+        table.add_row(
+            "Results folder",
+            f"{storage['results_folder']} "
+            f"[dim]({storage['results_folder_source']})[/dim]",
+        )
+    if "include_row_json" in storage:
+        table.add_row(
+            "Row JSON",
+            "on" if storage["include_row_json"] else "off [dim](default)[/dim]",
+        )
+    console.print(table)
+    console.print(
+        "[dim]Change with `deepeval set-local-store <json|sqlite> "
+        "--save=dotenv`.[/dim]\n"
+    )
+
+    # Eval mode: who judges LLM-as-a-judge metrics and classifiers
+    eval_mode = report["eval_mode"]
+    table = _kv_table("Eval mode")
+    table.add_row(
+        "Eval mode",
+        f"[bold]{eval_mode['eval_mode']}[/bold] "
+        f"[dim]({eval_mode['eval_mode_source']})[/dim]",
+    )
+    console.print(table)
+    console.print(
+        "[dim]Change with `deepeval set-eval-mode <llm|hybrid|system_one> "
+        "--save=dotenv`.[/dim]\n"
     )
 
     # Configured settings and their winning sources

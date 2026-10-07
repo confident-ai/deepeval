@@ -1,3 +1,4 @@
+import json
 import re
 import warnings
 from dataclasses import dataclass
@@ -10,8 +11,14 @@ from pydantic import (
 )
 from typing import Literal, Optional, Dict, List, Tuple
 from typing import Union
-from deepeval.test_case import ToolCall, Turn, MLLMImage, RetrievedContextData
+from deepeval.test_case import (
+    ToolCall,
+    Turn,
+    MLLMImage,
+    RetrievedContextData,
+)
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
+from .expectations import Expectations
 
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]
@@ -76,8 +83,8 @@ class Persona(BaseModel):
     they are trying to do. Keep behavioral traits here and task instructions
     on the golden.
 
-    `name` and `characteristics` apply to every simulation. Every field below
-    `characteristics` is voice-only and is ignored by text simulations.
+    `name`, `characteristics` and `metadata` apply to every simulation. Every
+    field below `metadata` is voice-only and is ignored by text simulations.
     """
 
     name: Optional[str] = Field(default=None)
@@ -85,6 +92,7 @@ class Persona(BaseModel):
     # speaking style, filler words — who the user is, never what they want.
     # Successor to `ConversationalGolden.user_description`.
     characteristics: str
+    metadata: Optional[Dict] = Field(default=None)
 
     # --- voice only: behavior ---
     interruption_behavior: Optional[InterruptionBehavior] = Field(default=None)
@@ -108,6 +116,10 @@ class Persona(BaseModel):
         if self.name:
             sections.append(f"Name: {self.name}")
         sections.append(self.characteristics.strip())
+        if self.metadata:
+            sections.append(
+                "Details:\n" + json.dumps(self.metadata, indent=2, default=str)
+            )
 
         behavior: List[str] = []
         if self.interruption_behavior is not None:
@@ -202,9 +214,7 @@ class Golden(BaseModel):
     output_token_count: Optional[int] = Field(
         default=None,
         serialization_alias="outputTokenCount",
-        validation_alias=AliasChoices(
-            "outputTokenCount", "output_token_count"
-        ),
+        validation_alias=AliasChoices("outputTokenCount", "output_token_count"),
     )
     source_file: Optional[str] = Field(
         default=None, serialization_alias="sourceFile"
@@ -212,6 +222,12 @@ class Golden(BaseModel):
     name: Optional[str] = Field(default=None)
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
+    )
+    expectations: Optional[Expectations] = Field(default=None)
+    expected_labels: Optional[Dict[str, str]] = Field(
+        default=None,
+        serialization_alias="expectedLabels",
+        validation_alias=AliasChoices("expectedLabels", "expected_labels"),
     )
     multimodal: bool = Field(False, exclude=True)
     images_mapping: Dict[str, MLLMImage] = Field(
@@ -323,6 +339,12 @@ class ConversationalGolden(BaseModel):
     name: Optional[str] = Field(default=None)
     custom_column_key_values: Optional[Dict[str, str]] = Field(
         default=None, serialization_alias="customColumnKeyValues"
+    )
+    expectations: Optional[Expectations] = Field(default=None)
+    expected_labels: Optional[Dict[str, str]] = Field(
+        default=None,
+        serialization_alias="expectedLabels",
+        validation_alias=AliasChoices("expectedLabels", "expected_labels"),
     )
     turns: Optional[List[Turn]] = Field(default=None)
     multimodal: bool = Field(False, exclude=True)

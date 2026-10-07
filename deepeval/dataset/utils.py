@@ -119,6 +119,7 @@ def convert_test_cases_to_goldens(
             "input_token_count": test_case.input_token_count,
             "output_token_count": test_case.output_token_count,
             "additional_metadata": test_case.metadata,
+            "expectations": test_case.expectations,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -145,6 +146,8 @@ def convert_goldens_to_test_cases(
             name=golden.name,
             comments=golden.comments,
             metadata=golden.additional_metadata,
+            expected_labels=golden.expected_labels,
+            expectations=golden.expectations,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
@@ -175,6 +178,7 @@ def convert_convo_test_cases_to_convo_goldens(
             ),
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
+            "expectations": test_case.expectations,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
@@ -196,6 +200,8 @@ def convert_convo_goldens_to_convo_test_cases(
             name=golden.name,
             metadata=golden.additional_metadata,
             comments=golden.comments,
+            expected_labels=golden.expected_labels,
+            expectations=golden.expectations,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,

@@ -176,18 +176,23 @@ class VapiConnector(BaseWebSocketConnector):
         return None
 
     def _on_transcript(self, message: dict) -> Optional[InboundEvent]:
-        """Collect the agent's final transcripts for the turn in progress.
+        """Collect the final transcripts for the turn in progress.
 
         Vapi emits one per utterance rather than one per turn, so a two
         sentence reply arrives as two finals and the last one on its own would
-        record half of what the agent said.
+        record half of what the agent said. `role` says whose words they are:
+        the agent's own reply, or Vapi's STT of the caller.
         """
-        if message.get("role") != "assistant":
-            return None
         if message.get("transcriptType") != "final":
             return None
         text = (message.get("transcript") or "").strip()
         if not text:
+            return None
+        role = message.get("role")
+        if role == "user":
+            # Emitted as a fragment; the transport joins the turn's fragments.
+            return InboundEvent(provider_transcript=text)
+        if role != "assistant":
             return None
         self._transcript_parts.append(text)
         return InboundEvent(transcript=" ".join(self._transcript_parts))

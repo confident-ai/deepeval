@@ -21,6 +21,10 @@ class VapiIdentity(Enum):
     ASYNC_CLIENT = "AsyncVapi"
 
 
+class WebRTCIdentity(Enum):
+    PEER_CONNECTION = "RTCPeerConnection"
+
+
 class PipecatIdentity(Enum):
     PIPELINE = "Pipeline"
     TASK = "PipelineTask"
@@ -60,6 +64,11 @@ _REDIRECTS = {
         "VoiceConfig received a Vapi client. Pass "
         "`VapiConnector(assistant_id=...)` instead."
     ),
+    WebRTCIdentity.PEER_CONNECTION: (
+        "VoiceConfig received an aiortc `RTCPeerConnection`. Pass "
+        "`WebRTCConnector(signaling_url=...)` instead, which builds and "
+        "negotiates its own peer connection with your agent."
+    ),
 }
 
 # Pipecat's pipeline objects and its WebSocket transports all mean the same
@@ -85,7 +94,13 @@ def _root_module(cls: type) -> str:
 def _identify(
     obj: Any,
 ) -> Optional[
-    Union[ElevenLabsIdentity, LiveKitIdentity, PipecatIdentity, VapiIdentity]
+    Union[
+        ElevenLabsIdentity,
+        LiveKitIdentity,
+        PipecatIdentity,
+        VapiIdentity,
+        WebRTCIdentity,
+    ]
 ]:
     """Name the vendor class `obj` is, without importing the vendor package.
 
@@ -112,6 +127,10 @@ def _identify(
             for identity in PipecatIdentity:
                 if name == identity.value:
                     return identity
+        if root == "aiortc":
+            for identity in WebRTCIdentity:
+                if name == identity.value:
+                    return identity
     return None
 
 
@@ -132,6 +151,6 @@ def validate_connector(connector: Any) -> BaseVoiceConnector:
     raise DeepEvalError(
         f"VoiceConfig cannot use {type(connector).__name__!r} as a connector. "
         "Pass an `ElevenLabsConnector`, `LiveKitConnector`, `VapiConnector`, "
-        "`PipecatConnector`, `WebSocketConnector`, `CallbackVoiceConnector`, "
-        "or your own `BaseVoiceConnector` subclass."
+        "`PipecatConnector`, `WebSocketConnector`, `WebRTCConnector`, "
+        "`CallbackVoiceConnector`, or your own `BaseVoiceConnector` subclass."
     )

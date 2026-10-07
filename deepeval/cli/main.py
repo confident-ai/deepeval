@@ -65,6 +65,22 @@ class Regions(Enum):
     EU = "EU"
 
 
+class LocalStores(Enum):
+    JSON = "json"
+    SQLITE = "sqlite"
+
+
+class Modes(Enum):
+    STABLE = "stable"
+    EXPERIMENTAL = "experimental"
+
+
+class EvalModes(Enum):
+    LLM = "llm"
+    HYBRID = "hybrid"
+    SYSTEM_ONE = "system_one"
+
+
 def version_callback(value: Optional[bool] = None) -> None:
     if not value:
         return
@@ -137,6 +153,169 @@ def set_confident_region_command(
         success_msg=(
             f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
         ),
+    )
+
+
+@app.command(name="set-local-store")
+def set_local_store_command(
+    backend: LocalStores = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="Where finished test runs are saved locally: 'json' (default) or 'sqlite'.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose the local backend for test runs (sets DEEPEVAL_LOCAL_STORE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_LOCAL_STORE = backend.value
+
+    handled, path, updates = edit_ctx.result
+
+    if backend == LocalStores.SQLITE:
+        success_msg = (
+            ":floppy_disk: Test runs will now be saved to deepeval.db "
+            "(SQLite). Run `deepeval inspect --list` to browse them."
+        )
+    else:
+        success_msg = (
+            ":page_facing_up: Test runs will now be saved as JSON files "
+            "(the default)."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
+    )
+
+
+@app.command(name="set-mode")
+def set_mode_command(
+    mode: Modes = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="Feature channel: 'stable' (default) or 'experimental' (opt into the latest features, which may not be stable yet).",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose the deepeval feature channel (sets DEEPEVAL_MODE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_MODE = mode.value
+
+    handled, path, updates = edit_ctx.result
+
+    if mode == Modes.EXPERIMENTAL:
+        success_msg = (
+            ":test_tube: You're now on the experimental channel. Features "
+            "behind it may change or break between releases; run "
+            "`deepeval set-mode stable` to opt out."
+        )
+    else:
+        success_msg = (
+            ":white_check_mark: You're now on the stable channel (the default)."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
+    )
+
+
+@app.command(name="set-eval-mode")
+def set_eval_mode_command(
+    mode: EvalModes = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="Who decides in LLM-as-a-judge metrics: 'llm' (default, the LLM "
+        "runs the whole chain), 'hybrid' (the LLM extracts, a System One "
+        "model decides, the LLM covers any decision whose Jev call fails) or "
+        "'system_one' (a System One model runs the whole metric in one "
+        "request, with no LLM and no fallback).",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose who decides in LLM-as-a-judge metrics (sets DEEPEVAL_EVAL_MODE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_EVAL_MODE = mode.value
+
+    handled, path, updates = edit_ctx.result
+
+    if mode == EvalModes.SYSTEM_ONE:
+        success_msg = (
+            ":brain: Eval mode is now `system_one`: built-in metrics and "
+            "classifiers are decided entirely by your System One model (Jev) "
+            "in one request, with no LLM and no fallback (DAG metrics run as "
+            "`hybrid`, since their task nodes need the LLM). Make sure "
+            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
+            "`deepeval set-eval-mode llm` to switch back."
+        )
+    elif mode == EvalModes.HYBRID:
+        success_msg = (
+            ":test_tube: Eval mode is now `hybrid`: the LLM extracts and "
+            "explains, your System One model (Jev) takes the decision points, "
+            "and the LLM covers any decision whose Jev call fails. Make sure "
+            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
+            "`deepeval set-eval-mode llm` to switch back."
+        )
+    else:
+        success_msg = (
+            ":white_check_mark: Eval mode is now `llm` (the default): the "
+            "LLM runs every metric end to end."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
     )
 
 
@@ -587,7 +766,6 @@ def unset_debug(
 
 # Last, so provider commands list after the core ones in `deepeval --help`.
 from deepeval.cli import providers  # noqa: E402,F401
-
 
 if __name__ == "__main__":
     app()

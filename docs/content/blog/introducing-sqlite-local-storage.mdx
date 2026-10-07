@@ -1,0 +1,91 @@
+---
+title: "Introducing persistent local storage in DeepEval, with SQLite"
+description: DeepEval can now save every test run to a single SQLite database instead of a pile of JSON files. Query your eval history with SQL, share it between Python and TypeScript, and keep all of it on your own machine.
+date: 2026-09-14
+authors: [penguine]
+category: announcements
+---
+
+**DeepEval has always been local-first, and always will be.** What "written to your own disk" actually meant, though, was a JSON file per run sitting in a folder, which is perfectly fine when you want to look at one run and gets old pretty quickly once you have fifty of them.
+
+So as of today you can point DeepEval at a database instead:
+
+<Tabs items={["Python", "TypeScript"]}>
+<Tab value="Python">
+
+```bash
+deepeval set-local-store sqlite
+```
+
+</Tab>
+<Tab value="TypeScript">
+
+```bash
+npx deepeval set-local-store sqlite
+```
+
+</Tab>
+</Tabs>
+
+That's it. Time to go learn some SQL.
+
+## Why we built this
+
+We see this a lot, especially with enterprises: a team just getting started on evals, with one app and a handful of test cases, who don't need a full evaluation and observability platform yet. They just need to run DeepEval, keep the results, and come back to them next week.
+
+The "keep the results" part is where it used to get awkward. A folder of JSON files is fine for a day and painful for a quarter, and the only real alternative was signing up for [Confident AI](https://www.confident-ai.com) before you'd figured out whether you needed it, which felt like the wrong order of operations to us too.
+
+Persistent local storage is meant to fix that. You can run everything locally for as long as you like, query the history with SQL, vibe-code a little dashboard over `deepeval.db` if that's your thing, or wire it into whatever BI tool your company already pays for. None of that is a compromise, and none of it leaves your machine.
+
+Then when it eventually scales out of control, because now there are more apps and more people and someone wants regression tracking across commits and a place to share a failing test case, the same test runs upload as they are. We already built that part. You just don't have to start there.
+
+:::note
+If you're already past that point and need production monitoring, alerts, or a team looking at the same traces, [Confident AI](https://www.confident-ai.com) is still the best option. Local storage is for the stretch before that, not a replacement for it.
+:::
+
+## What you can actually do with it
+
+Before this, if you wanted to know anything about more than one run, you were parsing JSON. Glob the folder, load each file, walk `testCases[*].metricsData[*]`, keep a dict of scores by metric name, and write the same throwaway script again a month later because you didn't keep the last one. Every question cost a script.
+
+Now the whole history is a database, so you can:
+
+- Search across every run you've ever done in one query, whether that's fifty rows or a few million spans
+- Join test cases to their traces, traces to their spans, and spans to the metric results that scored them
+- Pull it straight into pandas, DuckDB or a notebook, and export any query to CSV with the `sqlite3` CLI
+- Build your own UI on top of it, hosted locally, using nothing but the eval data already on your disk
+
+Here's the query I'd wanted for a long time, which is a metric's average score across every run I've ever done:
+
+```sql
+SELECT r.id, r.identifier, m.name, round(avg(m.score), 3) AS avg_score
+FROM metric_data m JOIN test_runs r ON r.id = m.test_run_id
+WHERE m.owner_type = 'test_case'
+GROUP BY r.id, m.name ORDER BY r.id;
+```
+
+Token usage per judge model, errored traces grouped by name, the lowest-scoring spans in your latest run, all of it is one `SELECT` away now. The [local backend storage](/docs/evaluation-local-backend-storage) page has the full schema and a handful of these ready to copy.
+
+As for why SQLite specifically, mostly because it's already on your machine. Python ships `sqlite3` in the standard library and Node 24 ships `node:sqlite`, so there's nothing to install and no server to run, and a `.db` file is about the most portable thing you can hand to another tool.
+
+## What's in the database
+
+Five tables, and the design rule was simple enough: the columns are the fields you'd actually filter and join on, and the whole run is always kept intact somewhere.
+
+- `test_runs` is one row per run, plus a `payload_json` column holding the complete run. That's what `deepeval inspect` reads back, so nothing ever gets lost to normalization.
+- `test_cases` covers both single-turn and multi-turn cases, with turns reachable through SQLite's `json_each`.
+- `traces` and `spans` hold the span tree from your `@observe`d apps, and LLM spans get model, provider and token counts as real columns.
+- `metric_data` is one row per metric result, with the score, threshold, reason and cost.
+
+Voice is not supported yet since it's still in beta (a post on this coming soon). If you're running voice simulations you'll get the scores and transcripts in the database, but the audio itself isn't stored anywhere yet.
+
+The schema is versioned, which means that when a newer DeepEval opens an older file it just upgrades it in place, in one transaction, the first time it touches it. You never have to run a migration yourself.
+
+## How does this affect you?
+
+If you're on JSON storage today, which is everyone, then not at all unless you want it to. JSON is still the default and nothing about your setup moves. Your `test_run_*.json` files keep landing where they always have, `deepeval inspect` keeps opening them, and you can ignore this whole post if you like.
+
+If you do want to try SQLite, it's one command and you can switch back just as easily. Both backends store the same data, so you're not committing to anything or losing anything either way. And if you're logged in to Confident AI, runs still upload exactly as they did before regardless of which local backend you pick. The `test_runs` row even records the Confident AI id it got back, so you can match up the local and cloud copies whenever you need to.
+
+That's about it. Run `deepeval diagnose` to see which backend you're on, `deepeval inspect --list` to browse what's stored, and go write some SQL.
+
+How do you see yourself using this? Open a [GitHub issue](https://github.com/confident-ai/deepeval/issues) and throw us some ideas.

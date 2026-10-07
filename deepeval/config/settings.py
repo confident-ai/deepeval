@@ -367,6 +367,47 @@ class Settings(BaseSettings):
         description="If set, export a timestamped JSON of the latest test run into this folder (created if missing).",
     )
 
+    # Backend used to persist finished test runs locally. `json` (default)
+    # keeps the rolling `.latest_run_full.json` + timestamped
+    # `test_run_<ts>.json` exports; `sqlite` writes runs, test cases, traces,
+    # spans and metrics into `deepeval.db` (in DEEPEVAL_RESULTS_FOLDER when
+    # set, else the cache folder).
+    DEEPEVAL_LOCAL_STORE: Optional[Literal["json", "sqlite"]] = Field(
+        "json",
+        description="Local test run store backend: 'json' (default) or 'sqlite'. SQLite writes to deepeval.db inside DEEPEVAL_RESULTS_FOLDER (or the cache folder).",
+    )
+
+    # Feature channel. `stable` (default) only runs finalised behaviour;
+    # `experimental` opts into the newest deepeval features, which may change
+    # or break between releases. Unset or unrecognised values mean `stable`.
+    DEEPEVAL_MODE: Optional[Literal["stable", "experimental"]] = Field(
+        None,
+        description="DeepEval feature channel: 'stable' (default) or 'experimental'. Experimental enrols you into the latest features, which may not be stable yet.",
+    )
+
+    # Who decides in an LLM-as-a-judge metric (`deepeval set-eval-mode`).
+    # `llm`: the LLM runs the whole chain. `hybrid`: the LLM extracts, a
+    # System One model (Jev) takes the decision points, falling back to the
+    # LLM for a decision whose Jev call fails. `system_one`: Jev runs the
+    # whole chain in one request, with no LLM and no fallback. Unset means
+    # `llm`; the DEEPEVAL_MODE feature channel does not affect it. See
+    # deepeval.config.eval_mode.
+    DEEPEVAL_EVAL_MODE: Optional[Literal["llm", "hybrid", "system_one"]] = (
+        Field(
+            None,
+            description="Who decides in LLM-as-a-judge metrics: 'llm' (default), 'hybrid' (LLM extracts, System One decides, LLM covers failed decisions) or 'system_one' (System One runs the whole metric, no LLM, no fallback).",
+        )
+    )
+
+    # SQLite store only. When truthy, `test_cases`, `traces` and `spans` rows
+    # also store their full serialized object in `payload_json` (the
+    # `test_runs` row always does). Off by default: it roughly doubles the
+    # database footprint.
+    DEEPEVAL_SQLITE_INCLUDE_ROW_JSON: Optional[bool] = Field(
+        None,
+        description="SQLite store: also keep the full JSON object on every test case, trace and span row (payload_json). Larger database; off by default.",
+    )
+
     # When set, overrides the default DeepEval cache directory
     DEEPEVAL_CACHE_FOLDER: Optional[Path] = Field(
         ".deepeval",
@@ -756,6 +797,20 @@ class Settings(BaseSettings):
         None, description="vLLM API key (if required by your vLLM gateway)."
     )
     VLLM_MODEL_NAME: Optional[str] = Field(None, description="vLLM model name.")
+
+    # TypeSafe AI (System One). No USE_* flag: whether Jev takes part in a
+    # metric is decided by DEEPEVAL_EVAL_MODE, alongside the active LLM.
+    TYPESAFE_API_KEY: Optional[SecretStr] = Field(
+        None, description="TypeSafe AI API key."
+    )
+    TYPESAFE_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="TypeSafe AI System One model name (e.g. 'jev-latest').",
+    )
+    TYPESAFE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="TypeSafe AI input token cost (used for cost reporting).",
+    )
 
     #
     # Speech Keys (TTS/STT)
@@ -1155,6 +1210,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_MODEL_THINKING",
         "DEEPEVAL_UPDATE_WARNING_OPT_IN",
         "ENABLE_DEEPEVAL_CACHE",
+        "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
         "GOOGLE_GENAI_USE_VERTEXAI",
         "IGNORE_DEEPEVAL_ERRORS",
         "SKIP_DEEPEVAL_MISSING_PARAMS",
@@ -1269,6 +1325,40 @@ class Settings(BaseSettings):
         raise ValueError(
             "DEEPEVAL_FILE_SYSTEM must be READ_ONLY (case-insensitive)."
         )
+
+    @field_validator("DEEPEVAL_LOCAL_STORE", mode="before")
+    @classmethod
+    def _normalize_local_store(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip().lower()
+        if not s:
+            return None
+        if s in {"json", "sqlite", "sqlite3", "db"}:
+            return "sqlite" if s != "json" else "json"
+        raise ValueError(
+            f"DEEPEVAL_LOCAL_STORE must be 'json' or 'sqlite' (case-insensitive), got {s!r}."
+        )
+
+    @field_validator("DEEPEVAL_MODE", mode="before")
+    @classmethod
+    def _normalize_deepeval_mode(cls, v):
+        # Lenient on purpose: the mode must never break settings loading, and
+        # anything unrecognised means `stable` (see deepeval.config.mode).
+        from deepeval.config.mode import normalize_deepeval_mode
+
+        mode = normalize_deepeval_mode(v)
+        return mode.value if mode is not None else None
+
+    @field_validator("DEEPEVAL_EVAL_MODE", mode="before")
+    @classmethod
+    def _normalize_eval_mode(cls, v):
+        # Same leniency as DEEPEVAL_MODE: unrecognised means unset, and the
+        # resolver falls back to the DEEPEVAL_MODE-derived default.
+        from deepeval.config.eval_mode import normalize_eval_mode
+
+        mode = normalize_eval_mode(v)
+        return mode.value if mode is not None else None
 
     @field_validator("CONFIDENT_REGION", mode="before")
     @classmethod

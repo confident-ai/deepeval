@@ -42,7 +42,7 @@ sequenceDiagram
     STT-->>Simulator: assistant transcript
 ```
 
-On a **full-duplex** connector such as `LiveKitConnector`, the caller keeps listening while it speaks, so nothing the agent says mid-turn is lost; on connectors that can't carry both voices at once, such as `CallbackVoiceConnector`, each side takes a turn. Neither makes the caller interrupt — for barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
+On a **full-duplex** connector such as `LiveKitConnector` or `WebRTCConnector`, the caller keeps listening while it speaks, so nothing the agent says mid-turn is lost; on connectors that can't carry both voices at once, such as `CallbackVoiceConnector`, each side takes a turn. Neither makes the caller interrupt — for barge-in, see [Interruptions](/docs/conversation-simulator-voice-interruptions).
 
 Who does the talking on the simulated side — their voice, their temperament, the noise around them — comes from the golden's [`Persona`](/docs/conversation-simulator-voice-personas).
 

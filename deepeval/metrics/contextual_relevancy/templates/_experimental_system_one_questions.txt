@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every statement in `retrieval_context` is relevant to addressing `input`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Every node in `retrieval_context` contains at least one statement relevant to addressing `input`."
+  },
+  {
+    "type": "score",
+    "question": "How much of `retrieval_context` is relevant to addressing `input`?",
+    "levels": ["None of it", "Less than half", "Most of it", "All of it"]
+  }
+]
