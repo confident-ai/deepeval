@@ -15,6 +15,7 @@ import {
   ArenaCaseResult,
   ContestantRun,
   aggregateSuccess,
+  withoutExpectations,
 } from "@/evaluate/types";
 import {
   processHyperparameters,
@@ -51,7 +52,7 @@ function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
     { scores: number[]; passes: number; fails: number; errors: number }
   >();
   for (const { metricsData } of cases) {
-    for (const m of metricsData) {
+    for (const m of withoutExpectations(metricsData)) {
       if (m.skipped) continue;
       const e = map.get(m.name) ?? {
         scores: [],
@@ -74,8 +75,6 @@ function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
 }
 
 export interface PersistedCase {
-  /** Local-only marker; never part of an API entry. */
-  hasExpectations?: boolean;
   conversational: boolean;
   entry: Record<string, unknown>;
   metricsData: MetricData[];
@@ -90,13 +89,18 @@ export function buildTestCaseEntry(
 ): PersistedCase {
   const success = aggregateSuccess(metricsData);
   const evaluationCost = caseCost(metricsData);
-  const metricsDataApi = metricsData.map(convertMetricData);
+  const metricsDataApi = withoutExpectations(metricsData).map(convertMetricData);
+  const expectationsMetric = metricsData.find((m) => m.expectationsData);
+  // Cached results zero the cost on the metric data only.
+  const expectationsData = expectationsMetric && {
+    ...expectationsMetric.expectationsData,
+    evaluationCost: expectationsMetric.evaluationCost,
+  };
   const datasetAlias = testCase._datasetAlias;
   const datasetId = testCase._datasetId;
 
   if (testCase instanceof ConversationalTestCase) {
     return {
-      ...(testCase.expectations != null ? { hasExpectations: true } : {}),
       conversational: true,
       metricsData,
       datasetAlias,
@@ -107,6 +111,7 @@ export function buildTestCaseEntry(
         success,
         flaky: testCase.flaky,
         metricsData: metricsDataApi,
+        expectationsData,
         runDuration,
         evaluationCost,
         order,
@@ -120,7 +125,6 @@ export function buildTestCaseEntry(
   }
 
   return {
-    ...(testCase.expectations != null ? { hasExpectations: true } : {}),
     conversational: false,
     metricsData,
     datasetAlias,
@@ -138,6 +142,7 @@ export function buildTestCaseEntry(
       success,
       flaky: testCase.flaky,
       metricsData: metricsDataApi,
+      expectationsData,
       runDuration,
       evaluationCost,
       order,
@@ -160,12 +165,6 @@ async function sendTestRun(
   runDuration: number,
   { official, silent, identifier, hyperparameters }: PostTestRunOptions,
 ): Promise<{ link: string | null; testRunId: string | null }> {
-  if (persisted.some((c) => c.hasExpectations)) {
-    console.warn(
-      "Warning: Expectations are not available on Confident AI yet. This test run was not uploaded; results are available locally.",
-    );
-    return { link: null, testRunId: null };
-  }
   const apiKey = process.env.CONFIDENT_API_KEY;
   if (!apiKey || apiKey.trim() === "" || persisted.length === 0) {
     return { link: null, testRunId: null };

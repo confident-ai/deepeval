@@ -1,4 +1,5 @@
 import {
+  buildExpectationsData,
   withExpectations,
   validateExpectationCoverage,
 } from "@/evaluate/expectations";
@@ -376,7 +377,7 @@ export function resolveCacheConfig(): Required<CacheConfig> {
 }
 
 function buildMetricData(metric: BaseMetricCore): MetricData {
-  return {
+  const metricData: MetricData = {
     name: metric.name,
     threshold: metric.threshold,
     // Score-only leaves `success` undefined; that absence is the verdict.
@@ -391,6 +392,8 @@ function buildMetricData(metric: BaseMetricCore): MetricData {
     error: metric.error,
     skipped: metric.skipped,
   };
+  const expectationsData = buildExpectationsData(metric, metricData);
+  return expectationsData ? { ...metricData, expectationsData } : metricData;
 }
 
 export function buildTestResult(
