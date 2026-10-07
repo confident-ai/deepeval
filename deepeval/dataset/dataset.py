@@ -24,6 +24,7 @@ from deepeval.dataset.utils import (
     persona_kwargs,
     serialize_persona,
     serialize_retrieval_context,
+    strip_local_expectation_fields,
     join_context,
     join_retrieval_context,
     reconstruct_retrieval_context,
@@ -973,6 +974,10 @@ class EvaluationDataset:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
 
+        strip_local_expectation_fields(
+            body.get("goldens") or body.get("conversationalGoldens") or []
+        )
+
         _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
@@ -1126,6 +1131,9 @@ class EvaluationDataset:
         except AttributeError:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
+        strip_local_expectation_fields(
+            body.get("goldens") or body.get("conversationalGoldens") or []
+        )
 
         _, link = api.send_request(
             method=HttpMethods.POST,
@@ -1174,6 +1182,7 @@ class EvaluationDataset:
         except AttributeError:
             # Pydantic version below 2.0
             golden_body = golden.dict(by_alias=True, exclude_none=True)
+        strip_local_expectation_fields([golden_body])
         golden_body["finalized"] = finalized
 
         api.send_request(
