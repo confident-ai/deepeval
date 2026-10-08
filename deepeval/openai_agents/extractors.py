@@ -153,6 +153,8 @@ def update_span_properties_from_generation_span_data(
 ):
     # Extract usage tokens
     usage = generation_span_data.usage
+    input_tokens = None
+    output_tokens = None
     if usage:
         output_tokens = usage.get("output_tokens")
         input_tokens = usage.get("input_tokens")
@@ -172,6 +174,7 @@ def update_span_properties_from_generation_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
+    span.metadata = span.metadata or {}
     span.metadata["invocation_params"] = {
         "model_config": make_json_serializable(
             generation_span_data.model_config
