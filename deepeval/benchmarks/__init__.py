@@ -1,5 +1,6 @@
 from .big_bench_hard.big_bench_hard import BigBenchHard
 from .mmlu.mmlu import MMLU
+from .mmlu_pro.mmlu_pro import MMLUPro
 from .hellaswag.hellaswag import HellaSwag
 from .drop.drop import DROP
 from .truthful_qa.truthful_qa import TruthfulQA
@@ -19,6 +20,7 @@ from .ifeval.ifeval import IFEval
 __all__ = [
     "BigBenchHard",
     "MMLU",
+    "MMLUPro",
     "HellaSwag",
     "DROP",
     "TruthfulQA",
