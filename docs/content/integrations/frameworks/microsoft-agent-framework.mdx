@@ -1,0 +1,127 @@
+---
+id: microsoft-agent-framework
+title: Microsoft Agent Framework
+sidebar_label: Microsoft Agent Framework
+---
+
+<IntegrationTagsDisplayer otel={true} cicdEvals={true} traceability={true} />
+
+[Microsoft Agent Framework](https://github.com/microsoft/agent-framework) is
+a Python and .NET framework for building agents and multi-agent workflows.
+DeepEval's Python integration translates its native OpenTelemetry GenAI spans
+into evaluable agent, LLM, and tool spans.
+
+## Getting started
+
+<Steps>
+
+<Step>
+
+### Installation
+
+```bash
+pip install -U deepeval agent-framework
+```
+
+The integration requires Python 3.10 or newer.
+
+</Step>
+
+<Step>
+
+### Instrument your agent
+
+Call `instrument_microsoft_agent_framework(...)` before creating or running
+an agent:
+
+```python title="microsoft_agent.py" showLineNumbers
+from agent_framework.openai import OpenAIChatClient
+
+from deepeval.integrations.microsoft_agent_framework import (
+    instrument_microsoft_agent_framework,
+)
+
+instrument_microsoft_agent_framework()
+
+agent = OpenAIChatClient().as_agent(
+    name="support_agent",
+    instructions="You are a helpful support agent.",
+)
+
+response = await agent.run("Where is my order?")
+```
+
+This preserves the Agent Framework span hierarchy:
+
+```text
+Trace
+└── Agent: support_agent
+    ├── LLM: model call
+    ├── Tool: tool call
+    └── LLM: final response
+```
+
+</Step>
+
+</Steps>
+
+## Capture message and tool content
+
+Agent Framework treats prompts, responses, tool arguments, and tool results
+as sensitive telemetry. DeepEval therefore leaves them disabled by default.
+Enable them explicitly in development or test environments:
+
+```python
+instrument_microsoft_agent_framework(capture_content=True)
+```
+
+Without content capture, traces still include their hierarchy, timing,
+provider, model, token usage, and error information.
+
+## Trace configuration
+
+Static trace defaults can be passed when instrumentation is configured:
+
+```python
+instrument_microsoft_agent_framework(
+    name="customer-support",
+    thread_id="conversation-123",
+    user_id="user-456",
+    tags=["agent-framework"],
+    environment="development",
+)
+```
+
+When `thread_id` is omitted, the integration uses
+`gen_ai.conversation.id` emitted by Agent Framework. Runtime values supplied
+by `@observe`, `with trace(...)`, or `update_current_trace(...)` take
+precedence over instrumentation defaults.
+
+Use `next_agent_span(...)`, `next_llm_span(...)`, and
+`next_tool_span(...)` to attach metrics or expected values to the next
+framework-created component span.
+
+## Evaluate agent runs
+
+Agent Framework calls can be evaluated with `evals_iterator`:
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import TaskCompletionMetric
+
+dataset = EvaluationDataset(
+    goldens=[Golden(input="Help me return my order.")]
+)
+
+for golden in dataset.evals_iterator(metrics=[TaskCompletionMetric()]):
+    await agent.run(golden.input)
+```
+
+The same instrumentation also works under `deepeval test run`.
+
+## Scope
+
+The integration targets the Python SDK and its public OpenTelemetry semantic
+conventions. Standard agent, chat, and tool spans emitted from workflows are
+captured automatically; workflow-specific executor and checkpoint semantics
+are not currently mapped to dedicated DeepEval span types.

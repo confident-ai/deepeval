@@ -213,20 +213,38 @@ def _get_tool_name(span) -> Optional[str]:
 def _parse_genai_content(raw: Any) -> Optional[str]:
     if raw is None:
         return None
-    if not isinstance(raw, str):
-        return str(raw)
-    try:
-        data = json.loads(raw)
-        if isinstance(data, list) and data:
-            first = data[0]
-            if isinstance(first, dict):
-                return first.get("text") or first.get("content") or str(first)
-            return str(first)
-        if isinstance(data, dict):
-            return data.get("text") or data.get("content") or str(data)
+    data = raw
+    if isinstance(raw, str):
+        try:
+            data = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return raw
+
+    if isinstance(data, list) and data:
+        first = data[0]
+        if isinstance(first, dict):
+            return _parse_genai_content(first)
+        return str(first)
+    if isinstance(data, dict):
+        direct = data.get("text") or data.get("content")
+        if isinstance(direct, str):
+            return direct
+        if direct is not None:
+            return _parse_genai_content(direct)
+
+        # Microsoft Agent Framework serializes message content as
+        # ``{"role": ..., "parts": [{"type": "text", "content": ...}]}``.
+        parts = data.get("parts")
+        if isinstance(parts, list):
+            values = [
+                value
+                for part in parts
+                if (value := _parse_genai_content(part)) is not None
+            ]
+            if values:
+                return "\n".join(values)
         return str(data)
-    except (json.JSONDecodeError, TypeError):
-        return raw
+    return str(data)
 
 
 def _extract_messages(span) -> tuple[Optional[str], Optional[str]]:
@@ -400,7 +418,23 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
     if not isinstance(input_params, dict):
         input_params = {"input": input_params}
 
-    return ToolCall(name=tool_name, input_parameters=input_params)
+    output_raw = attrs.get("gen_ai.tool.call.result")
+    if output_raw is None:
+        output_raw = attrs.get("gen_ai.tool.output")
+    try:
+        output = (
+            json.loads(output_raw)
+            if isinstance(output_raw, str)
+            else output_raw
+        )
+    except Exception:
+        output = output_raw
+
+    return ToolCall(
+        name=tool_name,
+        input_parameters=input_params,
+        output=output,
+    )
 
 
 # Settings: trace-level kwargs only. Span-level config goes on
@@ -484,6 +518,8 @@ class StrandsInstrumentationSettings:
 
 
 class StrandsSpanInterceptor(SpanProcessor):
+    integration = Integration.STRANDS
+    thread_id_attribute_keys = ("session.id",)
 
     def __init__(self, settings_instance: StrandsInstrumentationSettings):
         self.settings = settings_instance
@@ -792,15 +828,15 @@ class StrandsSpanInterceptor(SpanProcessor):
                 self.settings.environment,
             )
 
-        # Default thread_id from Strands' ``session.id`` if nothing else set
-        # it. Strands' custom-attribute docs recommend ``trace_attributes={
-        # "session.id": ...}``.
+        # Framework-provided conversation/session IDs are the final fallback.
         if not (span.attributes or {}).get(ConfidentAttr.TRACE_THREAD_ID):
-            session_id = (span.attributes or {}).get("session.id")
-            if session_id:
-                self._set_attr_post_end(
-                    span, ConfidentAttr.TRACE_THREAD_ID, session_id
-                )
+            for key in self.thread_id_attribute_keys:
+                thread_id = (span.attributes or {}).get(key)
+                if thread_id:
+                    self._set_attr_post_end(
+                        span, ConfidentAttr.TRACE_THREAD_ID, thread_id
+                    )
+                    break
 
     def _serialize_framework_attrs(self, span) -> None:
         """Translate Strands GenAI / Traceloop attrs into ``confident.*``.
@@ -814,7 +850,7 @@ class StrandsSpanInterceptor(SpanProcessor):
             self._set_attr_post_end(span, ConfidentAttr.SPAN_TYPE, span_type)
         if not attrs.get(ConfidentAttr.SPAN_INTEGRATION):
             self._set_attr_post_end(
-                span, ConfidentAttr.SPAN_INTEGRATION, Integration.STRANDS.value
+                span, ConfidentAttr.SPAN_INTEGRATION, self.integration.value
             )
 
         input_text, output_text = _extract_messages(span)
@@ -866,6 +902,8 @@ class StrandsSpanInterceptor(SpanProcessor):
                 ConfidentAttr.SPAN_PROVIDER
             ):
                 provider = _get_attr(span, "gen_ai.response.provider")
+                if not provider:
+                    provider = _get_attr(span, "gen_ai.provider.name")
                 if not provider:
                     provider = infer_provider_from_model(model)
                 if provider:
@@ -926,9 +964,9 @@ class StrandsSpanInterceptor(SpanProcessor):
                 [t.model_dump_json() for t in tools_called],
             )
 
-        if (
-            span_type == SpanType.AGENT.value
-            and ConfidentAttr.SPAN_NAME not in attrs
+        if span_type == SpanType.AGENT.value and (
+            ConfidentAttr.SPAN_NAME not in attrs
+            or attrs.get(ConfidentAttr.SPAN_NAME) == span.name
         ):
             agent_name = _get_agent_name(span)
             if agent_name:
