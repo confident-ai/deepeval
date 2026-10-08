@@ -119,3 +119,17 @@ class TestAsyncGenerator:
         result = []
         async for item in async_streaming_concurrent("a b c"):
             result.append(item)
+
+    @pytest.mark.asyncio
+    async def test_async_streaming_records_last_yielded_output(
+        self, completed_traces
+    ):
+        result = []
+        async for chunk in async_streaming_processor("alpha beta gamma"):
+            result.append(chunk)
+
+        assert result == ["<alpha>", "<beta>", "<gamma>"]
+        assert len(completed_traces) == 1
+        trace = completed_traces[0]
+        assert [span.output for span in trace.root_spans] == ["<gamma>"]
+        assert trace.output == "<gamma>"
