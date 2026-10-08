@@ -615,10 +615,13 @@ async def a_execute_test_cases(
 
                 await asyncio.sleep(async_config.throttle_value)
 
+            gather_timeout = get_gather_timeout(
+                len(tasks), async_config.max_concurrent
+            )
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*tasks),
-                    timeout=get_gather_timeout(),
+                    timeout=gather_timeout,
                 )
             except (asyncio.TimeoutError, TimeoutError) as e:
                 for t in tasks:
@@ -626,7 +629,7 @@ async def a_execute_test_cases(
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
 
-                _log_gather_timeout(logger, exc=e)
+                _log_gather_timeout(logger, timeout=gather_timeout, exc=e)
 
                 if not error_config.ignore_errors:
                     raise
@@ -697,7 +700,9 @@ async def a_execute_test_cases(
         try:
             await asyncio.wait_for(
                 asyncio.gather(*tasks),
-                timeout=get_gather_timeout(),
+                timeout=get_gather_timeout(
+                    len(tasks), async_config.max_concurrent
+                ),
             )
         except (asyncio.TimeoutError, TimeoutError):
             # Cancel any still-pending tasks and drain them
@@ -1051,7 +1056,7 @@ async def _evaluate_test_case_pairs(
     try:
         await asyncio.wait_for(
             asyncio.gather(*tasks),
-            timeout=get_gather_timeout(),
+            timeout=get_gather_timeout(len(tasks), max_concurrent),
         )
     except (asyncio.TimeoutError, TimeoutError):
         # Cancel any still-pending tasks and drain them

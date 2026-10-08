@@ -1068,7 +1068,6 @@ class Settings(BaseSettings):
     )
 
     # Buffer time for gathering results from all tasks, added to the longest task duration
-    # Increase if many tasks are running concurrently
     # DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: confloat(ge=0) = (
     #     30  # 15s seemed like not enough. we may make this computed later.
     # )

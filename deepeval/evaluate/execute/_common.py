@@ -21,7 +21,6 @@ from deepeval.errors import MissingTestCaseParamsError
 from deepeval.utils import (
     format_error_text,
     are_timeouts_disabled,
-    get_gather_timeout_seconds,
 )
 from deepeval.metrics import (
     BaseMetric,
@@ -69,6 +68,7 @@ def _timeout_msg(action: str, seconds: float) -> str:
 def _log_gather_timeout(
     logger,
     *,
+    timeout: Optional[float],
     exc: Optional[BaseException] = None,
     pending: Optional[int] = None,
 ) -> None:
@@ -89,7 +89,7 @@ def _log_gather_timeout(
                 "To give tasks more time, consider increasing "
                 "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or "
                 "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE.",
-                get_gather_timeout_seconds(),
+                timeout,
                 pending,
             )
 
@@ -99,7 +99,7 @@ def _log_gather_timeout(
                 "To give tasks more time, consider increasing "
                 "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or "
                 "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE.",
-                get_gather_timeout_seconds(),
+                timeout,
             )
 
 

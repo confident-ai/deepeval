@@ -750,11 +750,14 @@ def a_execute_agentic_test_cases_from_loop(
         if created_tasks:
             # Only await tasks we created on this loop in this run.
             # This will prevent re-awaiting and avoids cross loop "future belongs to a different loop" errors
+            gather_timeout = get_gather_timeout(
+                len(created_tasks), async_config.max_concurrent
+            )
             try:
                 loop.run_until_complete(
                     asyncio.wait_for(
                         asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=get_gather_timeout(),
+                        timeout=gather_timeout,
                     )
                 )
 
@@ -764,7 +767,12 @@ def a_execute_agentic_test_cases_from_loop(
                 settings = get_settings()
                 pending = [t for t in created_tasks if not t.done()]
 
-                _log_gather_timeout(logger, exc=e, pending=len(pending))
+                _log_gather_timeout(
+                    logger,
+                    timeout=gather_timeout,
+                    exc=e,
+                    pending=len(pending),
+                )
 
                 # Log the elapsed time for each task that was pending
                 for t in pending:
@@ -1020,7 +1028,7 @@ async def _a_evaluate_traces(
     try:
         await asyncio.wait_for(
             asyncio.gather(*eval_tasks),
-            timeout=get_gather_timeout(),
+            timeout=get_gather_timeout(len(eval_tasks), max_concurrent),
         )
     except (asyncio.TimeoutError, TimeoutError):
         for t in eval_tasks:
