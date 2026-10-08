@@ -1,0 +1,130 @@
+---
+id: metrics-latency-budget
+title: Latency Budget
+sidebar_label: Latency Budget
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The Latency Budget metric measures whether your LLM application's `completion_time` stays within a maximum latency SLO. Use it as a deterministic CI gate for production latency budgets.
+
+:::note
+The `LatencyBudgetMetric` does **not** rely on an LLM for evaluation. It compares `completion_time` against `max_completion_time`, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `LatencyBudgetMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `completion_time`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import LatencyBudgetMetric
+from deepeval.test_case import LLMTestCase
+
+metric = LatencyBudgetMetric(
+    max_completion_time=10.0,  # seconds
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="What is my refund status?",
+    actual_output="Your refund is being processed.",
+    completion_time=4.2,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** required and **FIVE** optional parameters when creating a `LatencyBudgetMetric`:
+
+- `max_completion_time`: the maximum allowed completion time in **seconds**. Must be greater than `0`.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0` (must be within budget to pass).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason describing the latency outcome. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `LatencyBudgetMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `LatencyBudgetMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Latency Budget Score} =
+ \begin{cases}
+ 1 & \text{if } t \le T_{\max}, \\
+ \max(0,\, T_{\max}/t) & \text{otherwise}
+ \end{cases}"
+/>
+
+where \(t\) is `completion_time` and \(T_{\max}\) is `max_completion_time`. For example, finishing in twice the budget yields a score of `0.5`. The metric is successful when the score is greater than or equal to the `threshold`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Latency Budget metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. The <code>LatencyBudgetMetric</code> is a plain numeric comparison
+          of <code>completion_time</code> against <code>max_completion_time</code>{" "}
+          — no model, no API key, zero token cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "What unit is completion_time in?",
+      answer: (
+        <>
+          Seconds. Set <code>max_completion_time</code> in the same unit (for
+          example, <code>10.0</code> for a 10-second p95-style gate).
+        </>
+      ),
+    },
+    {
+      question: "How should I populate completion_time on the test case?",
+      answer: (
+        <>
+          Measure end-to-end latency of the system under test (or pull it from
+          your tracing stack) and set{" "}
+          <code>LLMTestCase(completion_time=...)</code>. DeepEval already
+          stores this field; this metric is what scores it.
+        </>
+      ),
+    },
+    {
+      question: "When should I use strict_mode?",
+      answer: (
+        <>
+          Use <code>strict_mode=True</code> when any overrun should fail hard
+          with score <code>0</code>. Without it, overruns get partial credit
+          (for example, 2× the budget scores <code>0.5</code>), which is useful
+          if you lower the threshold for soft regression tracking.
+        </>
+      ),
+    },
+  ]}
+/>

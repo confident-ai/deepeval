@@ -1,0 +1,125 @@
+---
+id: metrics-tool-outcome
+title: Tool Outcome
+sidebar_label: Tool Outcome
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} agent={true} referenceless={true} />
+
+The Tool Outcome metric measures whether the tools your agent called actually **executed without errors**. Unlike the `ToolCorrectnessMetric`, which checks whether the _expected_ tools were called, or the `ToolPermissionMetric`, which checks whether the called tools were _allowed_, this metric checks whether the called tools _worked_.
+
+::::info
+Tool Outcome reads your **agent's execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). It does **not** rely on an LLM, so it is deterministic, requires no API key, and has zero token cost.
+::::
+
+## Required Arguments
+
+The `ToolOutcomeMetric` is a **trace-only** metric. It reads the tool spans recorded by `@observe(type="tool")` and only requires the standard trace-based fields:
+
+- `input`
+- `actual_output`
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing), decorate your tools with `@observe(type="tool")`, and supply the `ToolOutcomeMetric()` to your `evals_iterator`.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics.community import ToolOutcomeMetric
+
+
+@observe(type="tool")
+def check_order_status(order_id: str) -> str:
+    # Any exception raised here is recorded as a tool error
+    return f"Order {order_id} has shipped."
+
+
+@observe()
+def my_agent(input: str) -> str:
+    try:
+        result = check_order_status("A-1042")
+    except Exception:
+        result = "Sorry, I couldn't look up your order."
+    update_current_trace(input=input, output=result)
+    return result
+
+
+dataset = EvaluationDataset(goldens=[Golden(input="Where is my order?")])
+
+tool_outcome = ToolOutcomeMetric(threshold=1.0)
+
+for golden in dataset.evals_iterator(metrics=[tool_outcome]):
+    my_agent(golden.input)
+```
+
+There are **SIX** optional parameters when creating a `ToolOutcomeMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0` (any tool error fails).
+- [Optional] `ignore_recovered_failures`: a boolean which when set to `True`, does not count an errored tool call if a later call to the same tool succeeded, for example a retry after a timeout. Defaulted to `False`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason listing which tools errored and how many times. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric, including each tool's error message, to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `ToolOutcomeMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Tool Outcome Score} = \frac{\text{Number of Tool Calls Without an Error}}{\text{Total Number of Tool Calls}}" />
+
+A tool call counts as errored when its span recorded an `error`, which happens when the decorated tool raises an exception. When no tools were called, the score is `1`. When no trace is available, the score is `0` and the reason explains that tracing is required.
+
+With `ignore_recovered_failures=True`, an errored call is forgiven when a later call to the **same** tool, in trace order, succeeded. A success _before_ the failure, or a success of a _different_ tool, does not count as recovery.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from the Tool Correctness and Tool Permission metrics?",
+      answer: (
+        <>
+          <code>ToolCorrectnessMetric</code> checks whether the agent called
+          the tools it was <em>expected</em> to call, and{" "}
+          <code>ToolPermissionMetric</code> checks whether it stayed within the
+          tools it was <em>allowed</em> to call.{" "}
+          <code>ToolOutcomeMetric</code> checks whether those calls{" "}
+          <em>succeeded</em>. An agent can pick the right tool with the right
+          arguments and still fail because the tool timed out.
+        </>
+      ),
+    },
+    {
+      question: "My agent catches the tool's exception. Is it still counted?",
+      answer: (
+        <>
+          Yes. The error is recorded on the tool span when the decorated
+          function raises, even if the agent catches the exception afterwards
+          and recovers gracefully. That is intentional: silent tool failures
+          are exactly what this metric surfaces.
+        </>
+      ),
+    },
+    {
+      question: "Should I count failures that a retry recovered?",
+      answer: (
+        <>
+          By default every error counts, which matches a raw tool error rate.
+          If you only care about failures the user could have noticed, set{" "}
+          <code>ignore_recovered_failures=True</code>.
+        </>
+      ),
+    },
+    {
+      question: "Does the Tool Outcome metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It counts errored tool spans in the trace — no model, no API key,
+          zero token cost.
+        </>
+      ),
+    },
+  ]}
+/>
