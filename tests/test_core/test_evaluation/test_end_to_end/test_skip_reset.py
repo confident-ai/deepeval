@@ -4,11 +4,12 @@ import pytest
 from unittest.mock import patch
 
 from deepeval.evaluate import evaluate
-from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
+from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
 from deepeval.evaluate.types import EvaluationResult
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.test_run import global_test_run_manager
+from deepeval.test_run.cache import global_test_run_cache_manager
 
 
 class _AlwaysPassMetric(BaseMetric):
@@ -170,6 +171,36 @@ class TestSkipResetTrue:
         )
         test_run = global_test_run_manager.get_test_run()
         assert test_run.hyperparameters is not None
+
+    @pytest.mark.parametrize("run_async", [False, True])
+    @pytest.mark.parametrize("write_cache", [False, True])
+    def test_cache_uses_current_hyperparameters(self, run_async, write_cache):
+        cache_config = CacheConfig(write_cache=write_cache, use_cache=True)
+        with patch.object(
+            global_test_run_cache_manager,
+            "get_cached_test_case",
+            return_value=None,
+        ) as cache_read, patch.object(
+            global_test_run_cache_manager, "cache_test_case"
+        ) as cache_write:
+            for model in ("first", "second"):
+                evaluate(
+                    test_cases=[_make_case("same")],
+                    metrics=[_AlwaysPassMetric()],
+                    hyperparameters={"model": model},
+                    _skip_reset=True,
+                    display_config=_QUIET_DISPLAY,
+                    async_config=AsyncConfig(run_async=run_async),
+                    cache_config=cache_config,
+                )
+
+        expected = [{"model": "first"}, {"model": "second"}]
+        assert [call.args[1] for call in cache_read.call_args_list] == expected
+        assert [
+            call.args[2]
+            for call in cache_write.call_args_list
+            if not call.kwargs.get("to_temp")
+        ] == expected
 
     def test_run_duration_accumulates(self):
         evaluate(
