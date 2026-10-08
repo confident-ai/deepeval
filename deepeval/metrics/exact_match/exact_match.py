@@ -45,8 +45,8 @@ class ExactMatchMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            expected = test_case.expected_output.strip()
-            actual = test_case.actual_output.strip()
+            expected = test_case.expected_output
+            actual = test_case.actual_output
 
             if expected == actual:
                 self.score = self.precision = self.recall = self.f1 = 1.0
