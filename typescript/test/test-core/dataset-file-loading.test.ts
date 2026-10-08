@@ -363,6 +363,42 @@ describe("Dataset file loading", () => {
     },
   );
 
+  test.each(["jsonl", "csv"] as const)(
+    "round trips a '|' inside list fields through %s",
+    async (fileType) => {
+      const context = ["cat access.log | grep ERROR", "no pipe here"];
+      const retrievalContext = [
+        "| Plan | Price |\n| --- | --- |\n| Pro | $20 |",
+        "plain chunk",
+      ];
+      const dataset = new EvaluationDataset({
+        goldens: [
+          new Golden({
+            input: "How much is Pro?",
+            actualOutput: "$20",
+            context,
+            retrievalContext,
+          }),
+        ],
+      });
+
+      const filePath = await dataset.saveAs({
+        fileType,
+        directory: path.join(tempDir, "saved"),
+        fileName: `pipe-${fileType}`,
+      });
+
+      const reloaded = new EvaluationDataset();
+      if (fileType === "jsonl")
+        await reloaded.addGoldensFromJSONL({ filePath });
+      else await reloaded.addGoldensFromCSV({ filePath });
+
+      const golden = reloaded.goldens[0] as Golden;
+      expect(golden.context).toEqual(context);
+      expect(golden.retrievalContext).toEqual(retrievalContext);
+    },
+  );
+
   test.each(["json", "jsonl", "csv"] as const)(
     "round trips multi-turn goldens through %s",
     async (fileType) => {

@@ -27,6 +27,7 @@ from deepeval.dataset.utils import (
     strip_local_expectation_fields,
     join_context,
     join_retrieval_context,
+    parse_list_cell,
     reconstruct_retrieval_context,
     trimAndLoadJson,
 )
@@ -342,14 +343,16 @@ class EvaluationDataset:
         contexts = _parse_column(
             df,
             context_col_name,
-            lambda value: value.split(context_col_delimiter) if value else [],
+            lambda value: (
+                parse_list_cell(value, context_col_delimiter) if value else []
+            ),
         )
         retrieval_contexts = _parse_column(
             df,
             retrieval_context_col_name,
             lambda value: (
                 reconstruct_retrieval_context(
-                    value.split(retrieval_context_col_delimiter)
+                    parse_list_cell(value, retrieval_context_col_delimiter)
                 )
                 if value
                 else []
@@ -562,14 +565,16 @@ class EvaluationDataset:
         contexts = _parse_column(
             df,
             context_col_name,
-            lambda value: value.split(context_col_delimiter) if value else [],
+            lambda value: (
+                parse_list_cell(value, context_col_delimiter) if value else []
+            ),
         )
         retrieval_contexts = _parse_column(
             df,
             retrieval_context_col_name,
             lambda value: (
                 reconstruct_retrieval_context(
-                    value.split(retrieval_context_col_delimiter)
+                    parse_list_cell(value, retrieval_context_col_delimiter)
                 )
                 if value
                 else []
@@ -839,7 +844,7 @@ class EvaluationDataset:
             if isinstance(value, list):
                 return value
             if isinstance(value, str):
-                return value.split(delimiter) if value else []
+                return parse_list_cell(value, delimiter)
             raise TypeError(
                 "Expected context fields in JSONL goldens to be a list, string, or null."
             )
@@ -1619,10 +1624,10 @@ class EvaluationDataset:
                             ),
                         }
                     else:
-                        retrieval_context = join_retrieval_context(
+                        retrieval_context = serialize_retrieval_context(
                             golden.retrieval_context
                         )
-                        context = join_context(golden.context)
+                        context = golden.context
 
                         # Convert ToolCall lists to list[dict]
                         def _dump_tools(tools):
