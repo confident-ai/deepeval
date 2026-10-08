@@ -1,5 +1,9 @@
 import { isVerboseMode } from "@/env-flags";
 import { DeepEvalBaseLLM } from "@/models";
+import type { EvalModeName } from "@/config/eval-mode";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one/base-system-one-model";
+import type { QuestionOutcome } from "@/metrics/jev-eval/questions";
+import type { SystemOneEvalSpec } from "@/metrics/system-one/runner";
 import { SingleTurnParams } from "@/test-case";
 import { inComponentScope, recordMetric } from "@/telemetry";
 import { observeMethods } from "@/tracing/internal";
@@ -45,7 +49,7 @@ export abstract class BaseMetricCore {
   /** `null` = score-only: scores, but gives no verdict. */
   threshold: number | null;
   score?: number;
-  scoreBreakdown?: Record<string, any>;
+  scoreBreakdown?: Record<string, any> | Array<Record<string, any>>;
   reason?: string;
   success?: boolean;
   evaluationModel?: string;
@@ -62,6 +66,21 @@ export abstract class BaseMetricCore {
   requiresTrace: boolean = false;
   model?: DeepEvalBaseLLM;
   usingNativeModel?: boolean = undefined;
+  /** Who decides: set by metrics that take an `evalMode` option. */
+  evalMode?: EvalModeName;
+  /** The Jev model under `hybrid` / `system_one`; unset under `llm`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel;
+  /** The least decisive Jev answer in this measure, when Jev decided. */
+  confidence?: number | null;
+  /** Why `hybrid` handed one or more decisions to the LLM in this measure. */
+  systemOneFallbackReason?: string | null;
+  /** Per-question outcomes when Jev decided the whole measure. */
+  systemOneOutcomes?: QuestionOutcome[] | null;
+  /**
+   * @internal `hybrid` only: an earlier Jev call in this measure failed in a
+   * way that will not improve on retry (auth), so stay on the LLM.
+   */
+  _systemOneDisabled: boolean = false;
   /** Direction of the threshold comparison; the safety metrics flip it. */
   protected higherIsBetter: boolean = true;
   /** Set from `testCase.multimodal` by the param-check helpers. */
@@ -177,16 +196,20 @@ export abstract class BaseMetricCore {
     );
   }
 
+  /**
+   * The metric as one System One request: which test case fields to send and
+   * which questions to ask. Override to run under `system_one` eval mode;
+   * metrics that don't (DAG, user subclasses) run as `hybrid` there.
+   * @internal Called by the System One runner.
+   */
+  systemOneEvalSpec(_testCase: unknown): SystemOneEvalSpec | undefined {
+    return undefined;
+  }
+
   protected async startProgress(): Promise<void> {
     // Before the indicator check, which a batch run turns off: this is the one
     // call every metric makes on its way into `measure()`, bare or not.
-    recordMetric(this.name, {
-      // Every TypeScript metric is async; `describe()` reports the same.
-      asyncMode: true,
-      inComponent: inComponentScope(),
-      model: this.model,
-    });
-
+    startMeasure(this);
     if (!this.showIndicator) return;
     const ora = (await import("ora")).default;
     const messageTail = this.describe();
@@ -232,8 +255,28 @@ export abstract class BaseMetricCore {
   }
 }
 
+/**
+ * Record the measure and clear per-measure System One bookkeeping so a reused
+ * metric starts clean. Every measure runs this, through `startProgress` or the
+ * batched System One path in `evaluate()`.
+ * @internal
+ */
+export function startMeasure(metric: BaseMetricCore): void {
+  metric.confidence = undefined;
+  metric.systemOneFallbackReason = undefined;
+  metric.systemOneOutcomes = undefined;
+  metric._systemOneDisabled = false;
+  recordMetric(metric.name, {
+    // Every TypeScript metric is async; `describe()` reports the same.
+    asyncMode: true,
+    inComponent: inComponentScope(),
+    model: metric.model,
+  });
+}
+
 export abstract class BaseMetric extends BaseMetricCore {
-  protected requiredParams: Array<SingleTurnParams> = [];
+  /** @internal Read by `prepareMeasure`. */
+  requiredParams: Array<SingleTurnParams> = [];
 
   abstract measure(testCase: any, ...args: any[]): number | Promise<number>;
 }

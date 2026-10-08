@@ -1,7 +1,13 @@
+import {
+  Expectations,
+  ExpectationsOptions,
+  resolveExpectations,
+} from "@/dataset/expectations";
 import { RetrievedContextData, ToolCall, Turn } from "@/test-case";
 import { Persona, resolvePersona } from "@/dataset/persona";
 
 export class Golden {
+  expectations?: Expectations;
   id?: string;
   input: string;
   actualOutput?: string;
@@ -13,6 +19,9 @@ export class Golden {
   name?: string;
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
+  tokenCost?: number;
+  inputTokenCount?: number;
+  outputTokenCount?: number;
   sourceFile?: string;
   customColumnKeyValues?: Record<string, string>;
   _datasetRank?: number;
@@ -20,6 +29,7 @@ export class Golden {
   _datasetId?: string;
 
   constructor(params: {
+    expectations?: Expectations | ExpectationsOptions;
     id?: string;
     input: string;
     actualOutput?: string;
@@ -28,6 +38,9 @@ export class Golden {
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
     expectedTools?: ToolCall[];
+    tokenCost?: number;
+    inputTokenCount?: number;
+    outputTokenCount?: number;
     additionalMetadata?: Record<string, any>;
     sourceFile?: string;
     customColumnKeyValues?: Record<string, string>;
@@ -37,6 +50,7 @@ export class Golden {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.expectations = resolveExpectations(params.expectations);
     this.id = params.id;
     this.input = params.input;
     this.actualOutput = params.actualOutput;
@@ -45,6 +59,9 @@ export class Golden {
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
     this.expectedTools = params.expectedTools;
+    this.tokenCost = params.tokenCost;
+    this.inputTokenCount = params.inputTokenCount;
+    this.outputTokenCount = params.outputTokenCount;
     this.additionalMetadata = params.additionalMetadata;
     this.sourceFile = params.sourceFile;
     this.comments = params.comments;
@@ -57,6 +74,7 @@ export class Golden {
 }
 
 export class ConversationalGolden {
+  expectations?: Expectations;
   id?: string;
   scenario: string;
   expectedOutcome?: string;
@@ -74,6 +92,7 @@ export class ConversationalGolden {
   _datasetId?: string;
 
   constructor(params: {
+    expectations?: Expectations | ExpectationsOptions;
     id?: string;
     scenario: string;
     expectedOutcome?: string;
@@ -90,6 +109,7 @@ export class ConversationalGolden {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.expectations = resolveExpectations(params.expectations);
     this.id = params.id;
     this.scenario = params.scenario;
     this.expectedOutcome = params.expectedOutcome;

@@ -4,10 +4,13 @@ from deepeval.voice.connectors.transports import (
     CallbackVoiceConnector,
     BaseWebSocketConnector,
     WebSocketConnector,
+    WebRTCConnector,
 )
 from deepeval.voice.connectors.providers import (
     ElevenLabsConnector,
     LiveKitConnector,
+    PipecatConnector,
+    VapiConnector,
 )
 
 __all__ = [
@@ -19,4 +22,7 @@ __all__ = [
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
+    "WebRTCConnector",
+    "PipecatConnector",
+    "VapiConnector",
 ]

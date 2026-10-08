@@ -1,4 +1,9 @@
-"""Load `test_run_*.json` files into nested `Trace` / `BaseSpan` view models.
+"""Load saved test runs into nested `Trace` / `BaseSpan` view models.
+
+Sources are either a `test_run_*.json` file or a SQLite store addressed as
+`<path>/deepeval.db#<run_id>` (`#<run_id>` optional: latest run). Both
+resolve to the same `TestRun` dict, so everything below `_load_payload`
+is shared.
 
 The on-disk shape is `TraceApi`: five flat span buckets linked via
 `parentUuid`. The loader pops the buckets, validates each span dict
@@ -59,20 +64,42 @@ def find_latest_test_run(folder: str | Path) -> Path:
     return candidates[0]
 
 
-def load_test_run(path: str | Path) -> List[Trace]:
-    p = Path(path)
-    try:
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError) as e:
-        raise InspectLoadError(f"Failed to read test run from {p}: {e}") from e
+def _load_payload(source: str | Path) -> Dict[str, Any]:
+    """Resolve `source` (JSON file or `<db>#<run_id>`) to a `TestRun` dict."""
+    from deepeval import sqlite_store
+
+    parsed = sqlite_store.parse_source(source)
+    if parsed is not None:
+        db_path, run_id = parsed
+        try:
+            _, data = sqlite_store.load_test_run_payload(db_path, run_id)
+        except (FileNotFoundError, LookupError) as e:
+            raise InspectLoadError(str(e)) from e
+        except Exception as e:  # sqlite3.Error, json errors, ...
+            raise InspectLoadError(
+                f"Failed to read test run from {source}: {e}"
+            ) from e
+    else:
+        p = Path(source)
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            raise InspectLoadError(
+                f"Failed to read test run from {p}: {e}"
+            ) from e
 
     if not isinstance(data, dict):
         raise InspectLoadError(
-            f"Expected the top-level JSON in {p} to be an object; "
+            f"Expected the test run in {source} to be an object; "
             f"got {type(data).__name__}."
         )
+    return data
 
+
+def traces_from_test_run_dict(
+    data: Dict[str, Any], source: str = "test run"
+) -> List[Trace]:
     traces: List[Trace] = []
     for case in data.get("testCases", []):
         trace_dict = case.get("trace") if isinstance(case, dict) else None
@@ -81,10 +108,16 @@ def load_test_run(path: str | Path) -> List[Trace]:
 
     if not traces:
         raise NoTracesError(
-            f"{p} contains no traces. `deepeval inspect` shows trace "
-            "trees; runs without tracing data have nothing to display."
+            f"Unable to inspect {source}: this test run has no traces.\n"
+            "See stored runs with `deepeval inspect --list`, or "
+            "`deepeval inspect --help` for options."
         )
     return traces
+
+
+def load_test_run(path: str | Path) -> List[Trace]:
+    data = _load_payload(path)
+    return traces_from_test_run_dict(data, source=str(path))
 
 
 def _parse_trace(trace_dict: Dict[str, Any]) -> Trace:
@@ -133,22 +166,27 @@ def _has_known_parent(span: BaseSpan, by_uuid: Dict[str, BaseSpan]) -> bool:
 
 
 def run_id_from_path(path: str | Path) -> str:
+    from deepeval import sqlite_store
+
+    parsed = sqlite_store.parse_source(path)
+    if parsed is not None:
+        db_path, run_id = parsed
+        return (
+            f"{db_path.name}#{run_id}" if run_id is not None else db_path.name
+        )
     return Path(path).stem
 
 
 def summarize_test_run(path: str | Path) -> Optional[Dict[str, Any]]:
     """Run-level pass/fail + duration counts for the header bar.
 
-    Returns `None` if the file can't be opened — the header then falls
+    Returns `None` if the source can't be read — the header then falls
     back to showing just the run id and trace count.
     """
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return None
-    if not isinstance(data, dict):
+        data = _load_payload(path)
+    except InspectLoadError:
         return None
 
     return {

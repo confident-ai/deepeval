@@ -21,6 +21,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 
 from deepeval import assert_test
@@ -29,14 +30,13 @@ from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing.context import next_agent_span
 
-
 RUN_ID = f"{Path(__file__).stem}-{uuid.uuid4().hex[:8]}"
 
 
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise. Reply with one short sentence.",
-    instrument=DeepEvalInstrumentationSettings(),
+    capabilities=[Instrumentation(settings=DeepEvalInstrumentationSettings())],
 )
 
 

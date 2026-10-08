@@ -987,6 +987,82 @@ except Exception:
     OLLAMA_ERROR_POLICY = None
 
 
+####################
+# Speech providers #
+####################
+# The speech providers (ElevenLabs, Deepgram, Cartesia, AssemblyAI) are reached
+# over plain HTTP rather than through vendor SDKs, so there are no provider
+# exception classes to classify. The speech transport raises its own hierarchy
+# instead, already split along the lines this policy needs, so one policy serves
+# all four. Imported from `deepeval.errors` rather than from the transport that
+# raises them, which would import the providers, which import this module.
+
+try:
+    from deepeval.errors import (
+        SpeechAuthError,
+        SpeechHTTPError,
+        SpeechRateLimitError,
+    )
+
+    def _aiohttp_net_excs() -> tuple[type, ...]:
+        try:
+            import aiohttp
+        except Exception:
+            return ()
+        names = (
+            "ClientConnectionError",
+            "ClientPayloadError",
+            "ServerTimeoutError",
+            "ServerDisconnectedError",
+        )
+        return tuple(getattr(aiohttp, n) for n in names if hasattr(aiohttp, n))
+
+    SPEECH_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(SpeechAuthError,),
+        rate_limit_excs=(SpeechRateLimitError,),
+        network_excs=_aiohttp_net_excs() + _requests_net_excs(),
+        # Checked after the two above, so the base class here only ever sees
+        # statuses that are neither auth nor rate limit.
+        http_excs=(SpeechHTTPError,),
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:  # pragma: no cover - aiohttp/requests are core deps
+    SPEECH_ERROR_POLICY = None
+
+
+###################
+# TypeSafe Policy #
+###################
+# SDK errors carry `.status`, not `.status_code`, so 5xx (incl. 529 Overloaded)
+# is retried via the `TypeSafeInternalServerError` class rather than `http_excs`.
+
+try:
+    module = require_dependency(
+        "typesafe_sdk",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install typesafe-sdk`.",
+    )
+
+    TYPESAFE_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(
+            module.TypeSafeAuthenticationError,
+            module.TypeSafePermissionDeniedError,
+        ),
+        rate_limit_excs=(module.TypeSafeRateLimitError,),
+        network_excs=(
+            module.TypeSafeAPIConnectionError,
+            module.TypeSafeAPITimeoutError,
+            module.TypeSafeInternalServerError,
+        ),
+        http_excs=(),
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:  # TypeSafe optional
+    TYPESAFE_ERROR_POLICY = None
+
+
 # Map provider slugs to their policy objects.
 # It is OK if some are None, we'll treat that as no Error Policy / Tenacity
 _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
@@ -1003,6 +1079,11 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
     PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
     PS.PORTKEY.value: PORTKEY_ERROR_POLICY,
+    PS.TYPESAFE.value: TYPESAFE_ERROR_POLICY,
+    PS.ASSEMBLYAI.value: SPEECH_ERROR_POLICY,
+    PS.CARTESIA.value: SPEECH_ERROR_POLICY,
+    PS.DEEPGRAM.value: SPEECH_ERROR_POLICY,
+    PS.ELEVENLABS.value: SPEECH_ERROR_POLICY,
 }
 
 
@@ -1026,6 +1107,11 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
     PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
     PS.PORTKEY.value: _opt_pred(PORTKEY_ERROR_POLICY),
+    PS.TYPESAFE.value: _opt_pred(TYPESAFE_ERROR_POLICY),
+    PS.ASSEMBLYAI.value: _opt_pred(SPEECH_ERROR_POLICY),
+    PS.CARTESIA.value: _opt_pred(SPEECH_ERROR_POLICY),
+    PS.DEEPGRAM.value: _opt_pred(SPEECH_ERROR_POLICY),
+    PS.ELEVENLABS.value: _opt_pred(SPEECH_ERROR_POLICY),
 }
 
 
@@ -1050,4 +1136,6 @@ __all__ = [
     "GOOGLE_ERROR_POLICY",
     "GROK_ERROR_POLICY",
     "LOCAL_ERROR_POLICY",
+    "SPEECH_ERROR_POLICY",
+    "TYPESAFE_ERROR_POLICY",
 ]

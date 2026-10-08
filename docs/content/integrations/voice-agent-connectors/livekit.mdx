@@ -1,0 +1,117 @@
+---
+title: LiveKit Agents
+sidebar_label: LiveKit
+languages: [python]
+---
+
+In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against a LiveKit agent. `deepeval` joins your agent's room as another participant and trades audio with it over WebRTC, so the agent has to be deployed and able to join a room.
+
+:::note
+Before getting started, make sure you have LiveKit's SDKs installed. They will not be installed automatically with DeepEval, you need to install them separately:
+
+```bash
+pip install livekit livekit-api
+```
+
+:::
+
+### Setting Up Your Credentials
+
+A LiveKit agent has no id you can dial — it's a worker [dispatched](https://docs.livekit.io/agents/server/agent-dispatch/) into a [room](https://docs.livekit.io/intro/basics/connect/). So instead of naming the agent, you give `deepeval` credentials for your LiveKit project and it mints a token and creates a room. DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=<your-livekit-api-key>
+LIVEKIT_API_SECRET=<your-livekit-api-secret>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export LIVEKIT_URL=wss://your-project.livekit.cloud
+export LIVEKIT_API_KEY=<your-livekit-api-key>
+export LIVEKIT_API_SECRET=<your-livekit-api-secret>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your credentials in a cell:
+
+```bash
+%env LIVEKIT_URL=wss://your-project.livekit.cloud
+%env LIVEKIT_API_KEY=<your-livekit-api-key>
+%env LIVEKIT_API_SECRET=<your-livekit-api-secret>
+```
+
+### In Code
+
+Pass a `LiveKitConnector` to `VoiceConfig`, naming the agent to dispatch into the room:
+
+```python
+from deepeval.voice import LiveKitConnector, VoiceConfig
+
+connector = LiveKitConnector(
+    url="wss://your-project.livekit.cloud",
+    api_key="your-api-key",
+    api_secret="your-api-secret",
+    agent_name="restaurant-agent",
+)
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
+
+:::caution
+No argument is mandatory on its own, but the connector needs some way to reach the room — either the three connection values, or a `token`, or a connected `room`:
+:::
+
+There are **ZERO** mandatory and **ELEVEN** optional parameters when creating a `LiveKitConnector`.
+
+- [Optional] `url`: A string LiveKit server URL. Defaults to `LIVEKIT_URL`, and is required unless `room` is already connected.
+- [Optional] `api_key`: A string LiveKit API key. Defaults to `LIVEKIT_API_KEY`, and is required to mint a token.
+- [Optional] `api_secret`: A string LiveKit API secret. Defaults to `LIVEKIT_API_SECRET`, and is required to mint a token.
+- [Optional] `room`: An [`rtc.Room`](https://docs.livekit.io/reference/python/livekit/rtc/room.html) to use instead of creating one, connected or not. Defaulted to `None`.
+- [Optional] `token`: A LiveKit [access token](https://docs.livekit.io/frontends/reference/tokens-grants/) you minted yourself, used instead of `api_key` and `api_secret`. Defaulted to `None`.
+- [Optional] `room_name`: A string naming the room to join. Defaulted to `None`, which creates a room for the session.
+- [Optional] `identity`: A string participant identity for the simulator. Defaulted to `"deepeval-test"`.
+- [Optional] `agent_name`: A string naming the agent to [dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) into the room. Defaulted to `None`, which leaves your existing routing to place the agent there.
+- [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"balanced"`.
+- [Optional] `connect_timeout_s`: A float number of seconds to wait when establishing the room connection. Defaulted to `15.0`.
+- [Optional] `transcript_grace_s`: A float number of seconds to wait after your agent stops speaking for its transcript to arrive. Defaulted to `1.5`.
+
+`room_name` and `agent_name` are what actually find your agent. Omit `room_name` and the connector creates a room; set `agent_name` and LiveKit dispatches that agent into it.
+
+:::tip
+A LiveKit room carries a bare audio track with nothing to say when a turn is over, so `turn_detection` matters more here than on transports that close each turn explicitly. Pick the preset by listening to your agent's longest natural pause.
+:::
+
+### Bringing Your Own Room
+
+If your test setup already joined a room, hand that over instead and skip the credentials:
+
+```python
+from livekit import rtc
+from deepeval.voice import LiveKitConnector, VoiceConfig
+
+room = rtc.Room()
+await room.connect("wss://your-project.livekit.cloud", your_token)
+
+voice_config = VoiceConfig(
+    connector=LiveKitConnector(room=room),
+    ...,
+)
+```
+
+Concurrent conversations each get their own session, cloned from the connector you passed. A connector holding a room you connected yourself can't be cloned, so give `VoiceConfig` a zero-argument callable that builds a fresh connector instead of the connector itself.
+
+`deepeval` publishes a microphone track, listens for the agent, and leaves the room as it found it — a room you connected stays connected afterwards, with just the simulated microphone removed. An unconnected room gets connected using the parameters above.
+
+:::note
+`deepeval` reads your agent's own transcript from LiveKit's [`lk.transcription`](https://docs.livekit.io/agents/multimodality/text/) text stream, so on turns where one arrives within `transcript_grace_s` the words the agent actually spoke become the assistant `Turn.content` and no transcription runs. Turns without one still fall back to your [speech-to-text model](/integrations/stt/openai), which `VoiceConfig` resolves either way — so it still needs to be configured, credentials included, even for an agent that publishes every transcript.
+:::
+
+For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).

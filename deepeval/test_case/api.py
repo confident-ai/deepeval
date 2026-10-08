@@ -53,6 +53,7 @@ def create_api_test_case(
 
         api_test_case = ConversationalApiTestCase(
             name=name,
+            expectations=test_case.expectations,
             success=True,
             metricsData=[],
             runDuration=0,
@@ -101,6 +102,7 @@ def create_api_test_case(
 
         api_test_case = LLMApiTestCase(
             name=name,
+            expectations=test_case.expectations,
             input=test_case.input,
             actualOutput=test_case.actual_output,
             expectedOutput=test_case.expected_output,
@@ -110,6 +112,8 @@ def create_api_test_case(
             toolsCalled=test_case.tools_called,
             expectedTools=test_case.expected_tools,
             tokenCost=test_case.token_cost,
+            inputTokenCount=test_case.input_token_count,
+            outputTokenCount=test_case.output_token_count,
             completionTime=test_case.completion_time,
             success=success,
             metricsData=metrics_data,

@@ -16,6 +16,12 @@ from deepeval.metrics.utils import (
     copy_metrics,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    generate_binary_judgement,
+    a_generate_binary_judgement,
+    generate_choice_judgement,
+    a_generate_choice_judgement,
+    SystemOneBinarySpec,
+    SystemOneChoiceSpec,
 )
 from deepeval.test_case import (
     ConversationalTestCase,
@@ -319,18 +325,18 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         parents: Optional[List[ConversationalBaseNode]],
         outputs: Dict[ConversationalBaseNode, Any],
     ) -> BinaryJudgementVerdict:
+        text = self._resolve_text(test_case, parents, outputs)
         prompt = self._get_prompt(
             "generate_binary_verdict",
             template_class="BinaryJudgement",
             criteria=self.criteria,
-            text=self._resolve_text(test_case, parents, outputs),
+            text=text,
         )
-        return generate_with_schema_and_extract(
+        return generate_binary_judgement(
             metric=metric,
             prompt=prompt,
             schema_cls=BinaryJudgementVerdict,
-            extract_schema=lambda s: s,
-            extract_json=lambda data: BinaryJudgementVerdict(**data),
+            system_one=self._experimental_system_one_spec(text),
         )
 
     async def _a_execute(
@@ -340,18 +346,23 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         parents: Optional[List[ConversationalBaseNode]],
         outputs: Dict[ConversationalBaseNode, Any],
     ) -> BinaryJudgementVerdict:
+        text = self._resolve_text(test_case, parents, outputs)
         prompt = self._get_prompt(
             "generate_binary_verdict",
             template_class="BinaryJudgement",
             criteria=self.criteria,
-            text=self._resolve_text(test_case, parents, outputs),
+            text=text,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_binary_judgement(
             metric=metric,
             prompt=prompt,
             schema_cls=BinaryJudgementVerdict,
-            extract_schema=lambda s: s,
-            extract_json=lambda data: BinaryJudgementVerdict(**data),
+            system_one=self._experimental_system_one_spec(text),
+        )
+
+    def _experimental_system_one_spec(self, text: str) -> SystemOneBinarySpec:
+        return SystemOneBinarySpec(
+            instructions=self.criteria, state={"text": text}
         )
 
 
@@ -429,19 +440,20 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         parents: Optional[List[ConversationalBaseNode]],
         outputs: Dict[ConversationalBaseNode, Any],
     ) -> Any:
+        text = self._resolve_text(test_case, parents, outputs)
         prompt = self._get_prompt(
             "generate_non_binary_verdict",
             template_class="NonBinaryJudgement",
             criteria=self.criteria,
-            text=self._resolve_text(test_case, parents, outputs),
+            text=text,
             options=self._verdict_options,
         )
-        return generate_with_schema_and_extract(
+        return generate_choice_judgement(
             metric=metric,
             prompt=prompt,
             schema_cls=self._verdict_schema,
-            extract_schema=lambda s: s,
-            extract_json=lambda data: self._verdict_schema(**data),
+            options=self._verdict_options,
+            system_one=self._experimental_system_one_spec(text),
         )
 
     async def _a_execute(
@@ -451,19 +463,27 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         parents: Optional[List[ConversationalBaseNode]],
         outputs: Dict[ConversationalBaseNode, Any],
     ) -> Any:
+        text = self._resolve_text(test_case, parents, outputs)
         prompt = self._get_prompt(
             "generate_non_binary_verdict",
             template_class="NonBinaryJudgement",
             criteria=self.criteria,
-            text=self._resolve_text(test_case, parents, outputs),
+            text=text,
             options=self._verdict_options,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_choice_judgement(
             metric=metric,
             prompt=prompt,
             schema_cls=self._verdict_schema,
-            extract_schema=lambda s: s,
-            extract_json=lambda data: self._verdict_schema(**data),
+            options=self._verdict_options,
+            system_one=self._experimental_system_one_spec(text),
+        )
+
+    def _experimental_system_one_spec(self, text: str) -> SystemOneChoiceSpec:
+        return SystemOneChoiceSpec(
+            instructions=self.criteria,
+            options=self._verdict_options,
+            state={"text": text},
         )
 
 

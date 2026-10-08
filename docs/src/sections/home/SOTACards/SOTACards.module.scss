@@ -25,16 +25,39 @@
   padding: 1.25rem 1.15rem 1.4rem;
   box-sizing: border-box;
 
-  &:not(:last-child) {
+  /* Second row: dividers between the three narrow cards. */
+  &:not(.cardWide):not(:last-child) {
     border-right: 1px solid var(--color-fd-border);
   }
 
   @media (max-width: 720px) {
-    &:not(:last-child) {
+    &:not(.cardWide):not(:last-child) {
       border-right: none;
+    }
+    &:not(:last-child) {
       border-bottom: 1px solid var(--color-fd-border);
     }
   }
+}
+
+/* First row: one card spanning the full width. */
+.cardWide {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-fd-primary);
+  border: 1px solid var(--color-fd-primary);
 }
 
 .iconWrap {
@@ -293,6 +316,55 @@
   }
 }
 
+/* -------------------- JevEval: probability bars settling on values -------------------- */
+
+.jevMark {
+  fill: currentColor;
+  opacity: 0.35;
+  animation: jevMarkLight 2.8s ease-in-out infinite;
+}
+
+.jevTrack {
+  fill: none;
+  stroke: var(--color-fd-border);
+  stroke-width: 1;
+}
+
+.jevFill {
+  fill: currentColor;
+  opacity: 0.85;
+  transform-origin: left center;
+  transform-box: fill-box;
+  animation: jevFillGrow 2.8s ease-in-out infinite;
+}
+
+@keyframes jevMarkLight {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  25%,
+  85% {
+    opacity: 1;
+  }
+}
+
+@keyframes jevFillGrow {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.3;
+  }
+  35%,
+  85% {
+    transform: scaleX(1);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.3;
+  }
+}
+
 /* Respect reduced-motion preferences. */
 @media (prefers-reduced-motion: reduce) {
   .cotNode,
@@ -302,8 +374,14 @@
   .dagNodeFinal,
   .dagEdge,
   .qagDoc,
-  .qagPulse {
+  .qagPulse,
+  .jevMark,
+  .jevFill {
     animation: none;
+  }
+
+  .jevMark {
+    opacity: 0.9;
   }
 
   .cotNode,

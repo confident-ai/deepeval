@@ -20,6 +20,18 @@ from deepeval.test_case import (
 DELIMITER = "|"
 TOOLS_DELIMITER = ";"
 
+
+_LOCAL_ONLY_EXPECTATION_FIELDS = ("model", "eval_mode")
+
+
+def strip_local_expectation_fields(golden_bodies: List[Dict[str, Any]]):
+    for golden_body in golden_bodies:
+        expectations = golden_body.get("expectations")
+        if not expectations:
+            continue
+        for field in _LOCAL_ONLY_EXPECTATION_FIELDS:
+            expectations.pop(field, None)
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -115,7 +127,11 @@ def convert_test_cases_to_goldens(
             "retrieval_context": test_case.retrieval_context,
             "tools_called": test_case.tools_called,
             "expected_tools": test_case.expected_tools,
+            "token_cost": test_case.token_cost,
+            "input_token_count": test_case.input_token_count,
+            "output_token_count": test_case.output_token_count,
             "additional_metadata": test_case.metadata,
+            "expectations": test_case.expectations,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -136,9 +152,14 @@ def convert_goldens_to_test_cases(
             retrieval_context=golden.retrieval_context,
             tools_called=golden.tools_called,
             expected_tools=golden.expected_tools,
+            token_cost=golden.token_cost,
+            input_token_count=golden.input_token_count,
+            output_token_count=golden.output_token_count,
             name=golden.name,
             comments=golden.comments,
             metadata=golden.additional_metadata,
+            expected_labels=golden.expected_labels,
+            expectations=golden.expectations,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
@@ -169,6 +190,7 @@ def convert_convo_test_cases_to_convo_goldens(
             ),
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
+            "expectations": test_case.expectations,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
@@ -190,6 +212,8 @@ def convert_convo_goldens_to_convo_test_cases(
             name=golden.name,
             metadata=golden.additional_metadata,
             comments=golden.comments,
+            expected_labels=golden.expected_labels,
+            expectations=golden.expectations,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,

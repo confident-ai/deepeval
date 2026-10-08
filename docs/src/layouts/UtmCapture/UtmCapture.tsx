@@ -5,7 +5,7 @@
  * architecture used by confident-landing's <UtmCapture> (see
  * confident-landing/components/UtmCapture/UtmCapture.tsx).
  *
- * ─── Two responsibilities ───────────────────────────────────────────────────
+ * ─── Three responsibilities ──────────────────────────────────────────────────
  *
  * 1. INBOUND: on mount (and on SPA route changes), call captureVisitorUtms to
  *    read the current URL's `utm_*` params and persist them in localStorage as
@@ -24,8 +24,18 @@
  *      utm_campaign = last_touch.utm_campaign     (visitor-derived)
  *      utm_term     = last_touch.utm_term         (visitor-derived)
  *      ref_page     = window.location.pathname
+ *      site_path    = the docs pages this tab read, ">" separated
+ *                     (app.confident-ai.com only)
  *
  *    Caller-set params on the existing href are preserved (we never clobber).
+ *    The two params this listener owns itself, ref_page and site_path, are
+ *    re-stamped on every click, so an anchor that survives a route change
+ *    (a target=_blank button) never carries a stale page or trail.
+ *
+ * 3. TRAIL: on mount and on every SPA route change (the history.pushState /
+ *    replaceState patch plus popstate), call recordDocsPageView to append the
+ *    current pathname to a per-tab sessionStorage trail. Outbound links to
+ *    app.confident-ai.com carry it as `site_path` (see visitor-attribution.ts).
  *
  * ─── Why click-time, not React event handlers ───────────────────────────────
  * Document-level capture-phase listeners on `mousedown`, `auxclick`, and
@@ -51,18 +61,22 @@
 
 import { useEffect } from "react";
 import {
+  appendSitePath,
   CONFIDENT_HOSTNAMES,
+  SITE_PATH_PARAM,
   type UtmMedium,
 } from "@/src/utils/utm";
 import {
   captureVisitorUtms,
   getLastTouchParams,
+  recordDocsPageView,
 } from "@/src/utils/visitor-attribution";
 
 const SOURCE = "deepeval";
 const DEFAULT_MEDIUM: UtmMedium = "docs";
 const CLASS_PREFIX = "utm--";
 const FALLBACK_CONTENT = "inline_link";
+const stampedAnchors = new WeakSet<HTMLAnchorElement>();
 
 function resolveUtmContent(anchor: HTMLAnchorElement): string {
   const explicit =
@@ -123,9 +137,15 @@ function stampAnchor(anchor: HTMLAnchorElement | null): void {
     }
   }
 
+  if (stampedAnchors.has(anchor)) {
+    u.searchParams.delete("ref_page");
+    u.searchParams.delete(SITE_PATH_PARAM);
+  }
   if (!u.searchParams.has("ref_page")) {
     u.searchParams.set("ref_page", window.location.pathname);
   }
+  appendSitePath(u);
+  stampedAnchors.add(anchor);
 
   anchor.setAttribute("href", u.toString());
 }
@@ -139,9 +159,22 @@ function handleEvent(e: Event): void {
   stampAnchor(anchor);
 }
 
+function captureAndRecord(): void {
+  try {
+    captureVisitorUtms();
+  } catch {
+    // never let attribution errors break navigation
+  }
+  try {
+    recordDocsPageView(window.location.pathname);
+  } catch {
+    // the trail is optional
+  }
+}
+
 const UtmCapture = () => {
   useEffect(() => {
-    captureVisitorUtms();
+    captureAndRecord();
 
     const originalPushState = history.pushState;
     const originalReplaceState = history.replaceState;
@@ -151,11 +184,7 @@ const UtmCapture = () => {
       ...args: Parameters<History["pushState"]>
     ) {
       const result = originalPushState.apply(this, args);
-      try {
-        captureVisitorUtms();
-      } catch {
-        // never let attribution errors break navigation
-      }
+      captureAndRecord();
       return result;
     };
 
@@ -164,20 +193,12 @@ const UtmCapture = () => {
       ...args: Parameters<History["replaceState"]>
     ) {
       const result = originalReplaceState.apply(this, args);
-      try {
-        captureVisitorUtms();
-      } catch {
-        // never let attribution errors break navigation
-      }
+      captureAndRecord();
       return result;
     };
 
     const handlePopState = () => {
-      try {
-        captureVisitorUtms();
-      } catch {
-        // swallow — see above
-      }
+      captureAndRecord();
     };
 
     const handleKeydown = (e: KeyboardEvent) => {

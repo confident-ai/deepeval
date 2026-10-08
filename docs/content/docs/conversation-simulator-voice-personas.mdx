@@ -36,19 +36,20 @@ persona = Persona(
 )
 ```
 
-There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Persona`:
+There is **ONE** mandatory and **NINE** optional parameters when creating a `Persona`:
 
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
+- [Optional] `metadata`: a dictionary of structured facts about the caller (an account number, a resume, an order) that the simulator can draw on. Defaulted to `None`.
 - [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
-- [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that enables duplex barge-in, or `None` for half-duplex. Defaulted to `None`.
+- [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
 - [Optional] `muted`: a boolean which when set to `True` makes the caller stay completely silent for the whole call. Defaulted to `False`.
 - [Optional] `background_noise`: a [`BackgroundNoiseSettings`](#background-noise) that loops ambient audio underneath the caller's speech. Defaulted to `None`.
 - [Optional] `multilingual_stt`: a boolean which when set to `True` asks your `stt_model` to detect the agent's language per utterance instead of locking to one. Defaulted to `False`.
 - [Optional] `hold_timeout`: a float number of seconds of agent silence or hold music before the caller hangs up. Defaulted to `None`.
 
-Only `name` and `characteristics` apply to text simulations. Everything else is voice-only and is ignored when you simulate with a `model_callback`.
+Only `name`, `characteristics` and `metadata` apply to text simulations. Everything else is voice-only and is ignored when you simulate with a `model_callback`.
 
 :::caution
 `persona` supersedes the deprecated `user_description` on `ConversationalGolden`. Passing `user_description` still works and is promoted to `Persona(characteristics=...)` for you.
@@ -109,7 +110,7 @@ persona = Persona(
 
 There is **ONE** mandatory and **ONE** optional parameter when creating a `BackgroundNoiseSettings`:
 
-- `audio`: a path to a `.wav` or `.mp3` file, which is looped for the length of the call.
+- `audio`: a path or `http(s)` URL to a `.wav` or `.mp3` file, which is looped for the length of the call.
 - [Optional] `volume`: a float between `0.0` and `1.0` for how loudly the noise is mixed in. Defaulted to `0.3`.
 
 :::tip
@@ -128,6 +129,8 @@ persona = Persona(
     speaks_first=False,
 )
 ```
+
+On a full-duplex connector the caller waits [`hold_timeout`](#hanging-up-on-hold-music) seconds for the greeting (15 when unset), then speaks first anyway.
 
 ### Silent Callers
 
@@ -156,7 +159,7 @@ By default the caller "hears" your agent in whatever language your `stt_model` i
 
 ### Interruptions
 
-`interruption_behavior` turns the call **duplex**: instead of politely waiting for each reply, the caller can cut in mid-sentence while the agent is still speaking.
+`interruption_behavior` gives the caller permission to **barge in**: instead of politely waiting for each reply, they can cut in mid-sentence while the agent is still speaking.
 
 ```python
 from deepeval.dataset import Persona, InterruptionBehavior
@@ -167,7 +170,7 @@ persona = Persona(
 )
 ```
 
-`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` keeps the conversation half-duplex.
+`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` means the caller never cuts in — on a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) it still hears everything the agent says while it talks.
 
 ::::tip
 Barge-in is a whole simulation mode of its own — how the judge decides to interrupt, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).

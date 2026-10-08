@@ -391,6 +391,60 @@
       "inputPrice": 5e-06,
       "outputPrice": 3e-05,
       "supportsTemperature": false
+    },
+    "gpt-5.6-sol": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 4e-06,
+      "outputPrice": 2e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.6-terra": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1.2e-05,
+      "supportsTemperature": false
+    },
+    "gpt-5.6-luna": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2.0000000000000002e-07,
+      "outputPrice": 1.2e-06,
+      "supportsTemperature": false
+    },
+    "gpt-6-astra": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 5e-05,
+      "supportsTemperature": false
+    },
+    "gpt-6-sol": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
+    "gpt-6-luna": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1.0000000000000001e-07,
+      "outputPrice": 5e-07,
+      "supportsTemperature": false
     }
   },
   "anthropic": {
@@ -421,7 +475,7 @@
     "claude-3-5-sonnet-20240620": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05
@@ -429,7 +483,7 @@
     "claude-3-5-sonnet-20241022": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05
@@ -437,15 +491,15 @@
     "claude-3-5-haiku-20241022": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
-      "inputPrice": 1e-06,
-      "outputPrice": 5e-06
+      "inputPrice": 8.000000000000001e-07,
+      "outputPrice": 4e-06
     },
     "claude-3-7-sonnet-20250219": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05,
@@ -454,7 +508,7 @@
     "claude-opus-4-20250514": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1.5e-05,
       "outputPrice": 7.5e-05,
@@ -472,7 +526,7 @@
     "claude-sonnet-4-20250514": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05,
@@ -550,7 +604,7 @@
     "claude-3-5-sonnet": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05
@@ -558,15 +612,15 @@
     "claude-3-5-haiku": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
-      "inputPrice": 1e-06,
-      "outputPrice": 5e-06
+      "inputPrice": 8.000000000000001e-07,
+      "outputPrice": 4e-06
     },
     "claude-opus-4": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1.5e-05,
       "outputPrice": 7.5e-05,
@@ -575,7 +629,7 @@
     "claude-sonnet-4": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05,
@@ -638,17 +692,35 @@
       "supportsTemperature": false,
       "supportsThinking": true
     },
+    "claude-opus-5-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 4e-06,
+      "outputPrice": 2e-05,
+      "supportsTemperature": false
+    },
     "claude-sonnet-5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 3e-06,
-      "outputPrice": 1.5e-05,
+      "inputPrice": 2e-06,
+      "outputPrice": 1e-05,
       "supportsTemperature": false,
       "supportsThinking": true
     },
     "claude-fable-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 1e-05,
+      "outputPrice": 5e-05,
+      "supportsTemperature": false
+    },
+    "claude-fable-5-1": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
@@ -678,7 +750,7 @@
     "claude-3-7-sonnet-latest": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05,
@@ -687,7 +759,7 @@
     "claude-3-5-sonnet-latest": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 3e-06,
       "outputPrice": 1.5e-05
@@ -695,10 +767,10 @@
     "claude-3-5-haiku-latest": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
-      "supportsStructuredOutputs": true,
+      "supportsStructuredOutputs": false,
       "supportsJson": true,
-      "inputPrice": 1e-06,
-      "outputPrice": 5e-06
+      "inputPrice": 8.000000000000001e-07,
+      "outputPrice": 4e-06
     },
     "claude-3-opus-latest": {
       "supportsLogProbs": false,
@@ -779,32 +851,34 @@
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 1.5e-07,
-      "outputPrice": 6e-07
+      "inputPrice": 3e-07,
+      "outputPrice": 2.5e-06
     },
     "gemini-2.5-flash-lite": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 7.5e-08,
-      "outputPrice": 3e-07
+      "inputPrice": 1.0000000000000001e-07,
+      "outputPrice": 4.0000000000000003e-07
     },
     "gemini-3-pro": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 1.25e-06,
-      "outputPrice": 1e-05
+      "inputPrice": 2e-06,
+      "outputPrice": 1.2e-05,
+      "supportsTemperature": false
     },
     "gemini-3-pro-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 1.25e-06,
-      "outputPrice": 1e-05
+      "inputPrice": 2e-06,
+      "outputPrice": 1.2e-05,
+      "supportsTemperature": false
     },
     "gemini-3.1-pro-preview": {
       "supportsLogProbs": false,
@@ -812,15 +886,35 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
-      "outputPrice": 1.2e-05
+      "outputPrice": 1.2e-05,
+      "supportsTemperature": false
     },
     "gemini-3.6-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
-      "inputPrice": 1.5e-06,
-      "outputPrice": 7.5e-06
+      "inputPrice": 7.5e-07,
+      "outputPrice": 3.75e-06,
+      "supportsTemperature": false
+    },
+    "gemini-3.7-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-07,
+      "outputPrice": 3.75e-06,
+      "supportsTemperature": false
+    },
+    "gemini-3.8-flash": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 7.5e-07,
+      "outputPrice": 3.75e-06,
+      "supportsTemperature": false
     },
     "gemini-3.5-flash": {
       "supportsLogProbs": false,
@@ -828,7 +922,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-06,
-      "outputPrice": 9e-06
+      "outputPrice": 9e-06,
+      "supportsTemperature": false
     },
     "gemini-3.5-flash-lite": {
       "supportsLogProbs": false,
@@ -836,7 +931,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-07,
-      "outputPrice": 2.5e-06
+      "outputPrice": 2.5e-06,
+      "supportsTemperature": false
     },
     "gemini-3-flash-preview": {
       "supportsLogProbs": false,
@@ -844,7 +940,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-07,
-      "outputPrice": 3e-06
+      "outputPrice": 3e-06,
+      "supportsTemperature": false
     },
     "gemini-3.1-flash-lite": {
       "supportsLogProbs": false,
@@ -852,7 +949,8 @@
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2.5e-07,
-      "outputPrice": 1.5e-06
+      "outputPrice": 1.5e-06,
+      "supportsTemperature": false
     },
     "gemini-pro": {
       "supportsLogProbs": false,

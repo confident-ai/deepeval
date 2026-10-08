@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every assistant turn in `turns` stays in character as the role described in `chatbot_role`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No assistant turn in `turns` breaks character or acts against the persona, tone or behaviour set out in `chatbot_role`, even when the user pushes it to."
+  },
+  {
+    "type": "score",
+    "question": "Across the assistant turns in `turns`, how consistently does the assistant adhere to the role in `chatbot_role`?",
+    "levels": ["Mostly out of character", "Often out of character", "Rarely out of character", "Always in character"]
+  }
+]

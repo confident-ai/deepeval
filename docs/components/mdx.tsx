@@ -6,6 +6,7 @@ import type { MDXComponents } from "mdx/types";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { Term } from "@/components/lang/term";
 import { DefaultLLMModel } from "@/components/lang/default-llm-model";
+import { DefaultSystemOneModel } from "@/components/lang/default-system-one-model";
 import { Switch, Case } from "@/components/lang/switch";
 import { Only } from "@/components/lang/only";
 import { NotImplemented } from "@/components/lang/not-implemented";
@@ -17,6 +18,7 @@ import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import ClassifierTagsDisplayer from "@site/src/components/ClassifierTagsDisplayer";
 import IntegrationTagsDisplayer from "@site/src/components/IntegrationTagsDisplayer";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import FeatureComparisonTable from "@site/src/components/FeatureComparisonTable";
@@ -48,6 +50,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Equation,
     Mermaid,
     MetricTagsDisplayer,
+    ClassifierTagsDisplayer,
     IntegrationTagsDisplayer,
     AgentTraceTerminal,
     FeatureComparisonTable,
@@ -61,6 +64,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     EnterprisePlatformMockup,
     RepoContributors,
     DefaultLLMModel,
+    DefaultSystemOneModel,
     Term,
     Switch,
     Case,

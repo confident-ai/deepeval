@@ -14,7 +14,7 @@ import {
 import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import { LLMTestCase, ToolCall, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetric } from "@/metrics/base-metrics";
-import type { MetricData } from "@/evaluate/types";
+import { type MetricData, withoutExpectations } from "@/evaluate/types";
 import { Prompt } from "@/prompt";
 import {
   SpanApiType,
@@ -857,7 +857,7 @@ export class TraceManager {
       output: trace.output,
       toolsCalled: trace.toolsCalled,
       metricCollection: trace.metricCollection,
-      metricsData: trace.metricsData,
+      metricsData: trace.metricsData && withoutExpectations(trace.metricsData),
       confidentApiKey: trace.confidentApiKey,
       status:
         trace.status === TraceSpanStatus.SUCCESS

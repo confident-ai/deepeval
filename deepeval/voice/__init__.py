@@ -12,6 +12,9 @@ from deepeval.voice.connectors import (
     BaseWebSocketConnector,
     ElevenLabsConnector,
     WebSocketConnector,
+    WebRTCConnector,
+    PipecatConnector,
+    VapiConnector,
 )
 
 __all__ = [
@@ -31,6 +34,9 @@ __all__ = [
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
+    "WebRTCConnector",
+    "PipecatConnector",
+    "VapiConnector",
 ]
 
 # Resolved lazily: these live with `Persona` in `deepeval.dataset`, which

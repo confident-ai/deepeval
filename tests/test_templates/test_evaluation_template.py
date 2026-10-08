@@ -240,6 +240,11 @@ class TestNamingRule:
     def test_every_bundled_method_is_exposed(self, key):
         template = make_template_class(key)
         for method in BUNDLE[key]:
+            # `_`-prefixed keys (e.g. `_experimental_*`) are private to the
+            # bundle and intentionally not exposed for override.
+            if method.startswith("_"):
+                assert not hasattr(template, method)
+                continue
             assert callable(getattr(template, method))
 
 

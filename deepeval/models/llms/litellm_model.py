@@ -267,8 +267,13 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
 
     def get_model_name(self) -> str:
         from litellm import get_llm_provider
+        from litellm.types.router import GenericLiteLLMParams
 
-        provider = get_llm_provider(self.name)
+        provider = get_llm_provider(
+            self.name,
+            api_base=self.base_url,
+            litellm_params=GenericLiteLLMParams(**self.kwargs),
+        )
         return f"{self.name} ({provider})"
 
     def load_model(self, async_mode: bool = False):

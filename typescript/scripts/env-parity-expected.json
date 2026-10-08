@@ -57,8 +57,25 @@
         ]
       },
       "voiceSimulation": {
-        "$comment": "Voice mode is Python-only: there is no VoiceConfig, connector, or TTS/STT model in typescript/src, so there is no audio for TS to write anywhere.",
-        "names": ["DEEPEVAL_VOICE_FOLDER"]
+        "$comment": "Voice mode is Python-only: there is no VoiceConfig, connector, or TTS/STT model in typescript/src, so there is no audio for TS to write anywhere and no speech provider for it to authenticate against.",
+        "names": [
+          "ASSEMBLYAI_API_KEY",
+          "CARTESIA_API_KEY",
+          "DEEPEVAL_STT_MODEL",
+          "DEEPEVAL_TTS_MODEL",
+          "DEEPEVAL_VOICE_FOLDER",
+          "DEEPGRAM_API_KEY",
+          "ELEVENLABS_API_KEY",
+          "USE_ASSEMBLYAI_STT",
+          "USE_CARTESIA_STT",
+          "USE_CARTESIA_TTS",
+          "USE_DEEPGRAM_STT",
+          "USE_DEEPGRAM_TTS",
+          "USE_ELEVENLABS_STT",
+          "USE_ELEVENLABS_TTS",
+          "USE_OPENAI_STT",
+          "USE_OPENAI_TTS"
+        ]
       },
       "other": ["DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING"]
     },
