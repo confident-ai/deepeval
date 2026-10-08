@@ -19,7 +19,8 @@ from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.tracing.types import LlmSpan
 from deepeval.tracing.integrations import Integration, Provider
-from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.tracing import Observer, trace_manager
+from deepeval.openai.stream import AsyncTracedStream, TracedStream
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -132,6 +133,47 @@ def _patch_async_openai_client_method(
 
         llm_context = current_llm_context.get()
 
+        if kwargs.get("stream"):
+            observer = _stream_observer(input_parameters, llm_context)
+            parent_span = current_span_context.get()
+            parent_trace = current_trace_context.get()
+            observer.__enter__()
+            span = current_span_context.get()
+            trace = current_trace_context.get()
+            try:
+                response = await orig_method(*args, **kwargs)
+                if not hasattr(response, "__anext__"):
+                    output_parameters = safe_extract_output_parameters(
+                        is_completion_method, response, input_parameters
+                    )
+                    _update_all_attributes(
+                        input_parameters,
+                        output_parameters,
+                        llm_context.expected_tools,
+                        llm_context.expected_output,
+                        llm_context.context,
+                        llm_context.retrieval_context,
+                        llm_context,
+                    )
+                    observer.__exit__(None, None, None)
+                    return response
+            except BaseException as exc:
+                observer.__exit__(type(exc), exc, exc.__traceback__)
+                raise
+            finally:
+                current_span_context.set(parent_span)
+                current_trace_context.set(parent_trace)
+            return AsyncTracedStream(
+                response,
+                observer,
+                span,
+                trace,
+                is_completion_method,
+                input_parameters,
+                llm_context,
+                _update_all_attributes,
+            )
+
         @observe(
             type="llm",
             model=input_parameters.model,
@@ -171,6 +213,47 @@ def _patch_sync_openai_client_method(
 
         llm_context = current_llm_context.get()
 
+        if kwargs.get("stream"):
+            observer = _stream_observer(input_parameters, llm_context)
+            parent_span = current_span_context.get()
+            parent_trace = current_trace_context.get()
+            observer.__enter__()
+            span = current_span_context.get()
+            trace = current_trace_context.get()
+            try:
+                response = orig_method(*args, **kwargs)
+                if not hasattr(response, "__next__"):
+                    output_parameters = safe_extract_output_parameters(
+                        is_completion_method, response, input_parameters
+                    )
+                    _update_all_attributes(
+                        input_parameters,
+                        output_parameters,
+                        llm_context.expected_tools,
+                        llm_context.expected_output,
+                        llm_context.context,
+                        llm_context.retrieval_context,
+                        llm_context,
+                    )
+                    observer.__exit__(None, None, None)
+                    return response
+            except BaseException as exc:
+                observer.__exit__(type(exc), exc, exc.__traceback__)
+                raise
+            finally:
+                current_span_context.set(parent_span)
+                current_trace_context.set(parent_trace)
+            return TracedStream(
+                response,
+                observer,
+                span,
+                trace,
+                is_completion_method,
+                input_parameters,
+                llm_context,
+                _update_all_attributes,
+            )
+
         @observe(
             type="llm",
             model=input_parameters.model,
@@ -198,6 +281,16 @@ def _patch_sync_openai_client_method(
     return patched_sync_openai_method
 
 
+def _stream_observer(input_parameters, llm_context):
+    return Observer(
+        "llm",
+        func_name="llm_generation",
+        metrics=llm_context.metrics,
+        metric_collection=llm_context.metric_collection,
+        observe_kwargs={"model": input_parameters.model},
+    )
+
+
 def _update_all_attributes(
     input_parameters: InputParameters,
     output_parameters: OutputParameters,
@@ -205,6 +298,7 @@ def _update_all_attributes(
     expected_output: str,
     context: List[str],
     retrieval_context: List[str],
+    llm_context=None,
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
@@ -218,7 +312,7 @@ def _update_all_attributes(
         retrieval_context=retrieval_context,
     )
 
-    llm_context = current_llm_context.get()
+    llm_context = llm_context or current_llm_context.get()
 
     update_llm_span(
         input_token_count=output_parameters.prompt_tokens,
