@@ -212,3 +212,25 @@ def test_litellm_model_name_resolves_provider_with_configured_region(
     assert calls["model"] == "bedrock_mantle/openai.gpt-oss-120b"
     assert calls["api_base"] is None
     assert calls["litellm_params"] == {"aws_region_name": "us-east-1"}
+
+
+def test_litellm_temperature_omitted_by_default(settings):
+    """
+    When no temperature is specified and Settings.TEMPERATURE is unset,
+    temperature should be None and omitted from completion params.
+    """
+    model = _mk_litellm_model(settings)
+    assert model.temperature is None
+    params = model._completion_params([{"type": "text", "text": "hello"}])
+    assert "temperature" not in params
+
+
+def test_litellm_temperature_explicit_included(settings):
+    """
+    When temperature is explicitly provided, it must be included in completion params.
+    """
+    model = _mk_litellm_model(settings, temperature=0.7)
+    assert model.temperature == 0.7
+    params = model._completion_params([{"type": "text", "text": "hello"}])
+    assert params["temperature"] == 0.7
+

@@ -94,8 +94,8 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
             temperature = settings.TEMPERATURE
-        else:
-            temperature = 0.0
+        # else: leave as None so `temperature` is only sent to the client when
+        # explicitly configured — some models (e.g. reasoning models) reject it.
 
         model = require_param(
             model,
@@ -104,7 +104,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
             param_hint="model",
         )
 
-        if temperature < 0:
+        if temperature is not None and temperature < 0:
             raise DeepEvalError("Temperature must be >= 0.")
         self.temperature = temperature
 
@@ -206,8 +206,9 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         params: Dict[str, Any] = {
             "model": self.name,
             "messages": [{"role": "user", "content": content}],
-            "temperature": self.temperature,
         }
+        if self.temperature is not None:
+            params["temperature"] = self.temperature
         if self.api_key:
             params["api_key"] = require_secret_api_key(
                 self.api_key,
