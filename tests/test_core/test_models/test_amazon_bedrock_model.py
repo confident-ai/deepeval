@@ -91,6 +91,20 @@ def test_get_model_name_returns_name():
     assert model.get_model_name() == "my-model"
 
 
+@pytest.mark.parametrize(
+    "mime_type, expected",
+    [("image/png", "png"), ("image/jpeg", "jpeg"), ("image/jpg", "jpeg")],
+)
+def test_generate_payload_sends_lowercase_image_format(mime_type, expected):
+    from deepeval.test_case import MLLMImage
+
+    image = MLLMImage(dataBase64="aGVsbG8=", mimeType=mime_type)
+    payload = _mk_model({}).generate_payload(["describe", image])
+
+    # Converse rejects anything but gif, jpeg, png, webp (case-sensitive)
+    assert payload["messages"][0]["content"][1]["image"]["format"] == expected
+
+
 @pytest.mark.asyncio
 async def test_bedrock_a_generate_skips_reasoning_content_and_reads_text_block(
     monkeypatch,
