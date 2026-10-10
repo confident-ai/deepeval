@@ -61,11 +61,21 @@ def fake_av():
 class FakeTrack:
     kind = "audio"
 
-    def __init__(self, frames):
+    def __init__(self, frames, *, ends_when_drained: bool = True):
         self._frames = list(frames)
+        self._ended = asyncio.Event()
+        if ends_when_drained:
+            self._ended.set()
+
+    def end(self) -> None:
+        self._ended.set()
 
     async def recv(self):
         if not self._frames:
+            # A real agent track ends when the call ends, not right after its
+            # last frame; hold here until the test ends the track so events
+            # queued meanwhile (e.g. a transcript) keep their order.
+            await self._ended.wait()
             raise RuntimeError("track ended")
         await asyncio.sleep(0)
         return self._frames.pop(0)
@@ -93,6 +103,7 @@ class FakeChannel:
 class FakePeerConnection:
     instances = []
     agent_frames = []
+    agent_track_ends_when_drained = True
     connects = True
 
     def __init__(self, configuration=None):
@@ -133,7 +144,11 @@ class FakePeerConnection:
     def _establish(self):
         self.connectionState = "connected"
         self.handlers["connectionstatechange"]()
-        self.handlers["track"](FakeTrack(type(self).agent_frames))
+        self.agent_track = FakeTrack(
+            type(self).agent_frames,
+            ends_when_drained=type(self).agent_track_ends_when_drained,
+        )
+        self.handlers["track"](self.agent_track)
         for channel in self.channels:
             channel.open()
 
@@ -182,6 +197,7 @@ def agent_frame(pcm: bytes) -> FakeAudioFrame:
 @pytest.fixture
 def fake_stack(monkeypatch):
     FakePeerConnection.instances = []
+    FakePeerConnection.agent_track_ends_when_drained = True
     aiortc = types.SimpleNamespace(
         RTCPeerConnection=FakePeerConnection,
         RTCSessionDescription=lambda sdp, type: types.SimpleNamespace(
@@ -306,10 +322,15 @@ async def test_connect_posts_the_offer_and_waits_for_the_agent(fake_stack):
 
 async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     FakePeerConnection.agent_frames = [agent_frame(b"\x02\x00" * 480)]
+    # Keep the agent track open until the transcript has been delivered;
+    # otherwise the track-ended `turn_complete` can be queued before the
+    # transcript and the loop below stops early (deterministic on 3.11).
+    FakePeerConnection.agent_track_ends_when_drained = False
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+    pc.agent_track.end()
 
     events = []
     async for event in connector.iter_agent_events():
