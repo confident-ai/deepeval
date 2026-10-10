@@ -141,6 +141,7 @@ def convert_goldens_to_test_cases(
     goldens: List[Golden],
     _alias: Optional[str] = None,
     _id: Optional[str] = None,
+    _version: Optional[str] = None,
 ) -> List[LLMTestCase]:
     test_cases = []
     for index, golden in enumerate(goldens):
@@ -160,10 +161,11 @@ def convert_goldens_to_test_cases(
             metadata=golden.additional_metadata,
             expected_labels=golden.expected_labels,
             expectations=golden.expectations,
-            _dataset_alias=_alias,
-            _dataset_id=_id,
-            _dataset_rank=index,
         )
+        test_case._dataset_alias = _alias
+        test_case._dataset_id = _id
+        test_case._dataset_version = _version
+        test_case._dataset_rank = index
         test_cases.append(test_case)
     return test_cases
 
@@ -200,6 +202,7 @@ def convert_convo_goldens_to_convo_test_cases(
     goldens: List[ConversationalGolden],
     _alias: Optional[str] = None,
     _id: Optional[str] = None,
+    _version: Optional[str] = None,
 ) -> List[ConversationalTestCase]:
     test_cases = []
     for index, golden in enumerate(goldens):
@@ -214,10 +217,11 @@ def convert_convo_goldens_to_convo_test_cases(
             comments=golden.comments,
             expected_labels=golden.expected_labels,
             expectations=golden.expectations,
-            _dataset_alias=_alias,
-            _dataset_id=_id,
-            _dataset_rank=index,
         )
+        test_case._dataset_alias = _alias
+        test_case._dataset_id = _id
+        test_case._dataset_version = _version
+        test_case._dataset_rank = index
         test_cases.append(test_case)
     return test_cases
 

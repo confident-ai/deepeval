@@ -129,9 +129,10 @@ async def _a_execute_agentic_test_case(
             metadata=golden.additional_metadata,
             comments=golden.comments,
             name=golden.name,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        test_case._dataset_alias = golden._dataset_alias
+        test_case._dataset_id = golden._dataset_id
+        test_case._dataset_version = golden._dataset_version
         current_trace.metrics = with_expectation_evaluators(
             current_trace.metrics, [test_case]
         )
@@ -275,9 +276,10 @@ async def _a_execute_agentic_test_case(
                         expected_tools=None,
                         comments=golden.comments,
                         name=golden.name,
-                        _dataset_alias=golden._dataset_alias,
-                        _dataset_id=golden._dataset_id,
                     )
+                    test_case._dataset_alias = golden._dataset_alias
+                    test_case._dataset_id = golden._dataset_id
+                    test_case._dataset_version = golden._dataset_version
                 if trace is not None and trace_api is None:
                     trace_api = create_api_trace(trace, golden)
 

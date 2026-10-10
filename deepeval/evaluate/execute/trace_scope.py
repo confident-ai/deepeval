@@ -162,10 +162,11 @@ def _assert_test_from_current_trace(
         expected_tools=current_trace.expected_tools,
         comments=golden.comments,
         name=golden.name,
-        _dataset_alias=golden._dataset_alias,
-        _dataset_id=golden._dataset_id,
-        _dataset_rank=golden._dataset_rank,
     )
+    test_case._dataset_alias = golden._dataset_alias
+    test_case._dataset_id = golden._dataset_id
+    test_case._dataset_version = golden._dataset_version
+    test_case._dataset_rank = golden._dataset_rank
     metrics = with_expectation_evaluators(metrics, [test_case])
     api_test_case = create_api_test_case(
         test_case=test_case,
