@@ -1,0 +1,105 @@
+---
+id: metrics-classic-text-overlap
+title: Classic Text Overlap (BLEU, ROUGE, BERTScore, Pass@k)
+sidebar_label: Classic Overlap
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={false} rag={false} />
+
+Classic text-overlap and code-pass metrics as metric classes: `BleuMetric`, `RougeMetric`, `BertScoreMetric`, and `PassAtKMetric`. They wrap the helpers in `deepeval/scorer/scorer.py` so overlap scores work inside `evaluate()` with thresholds, reasons, and verbose logs. Prefer judged metrics for open-ended text; use these for translation-, summarization-, and code-style tasks with tight references.
+
+:::note
+These metrics do **not** call an LLM judge, so they are deterministic and need no API key. `BleuMetric` needs `nltk` (+ `punkt` data), `RougeMetric` needs `rouge-score`, `BertScoreMetric` needs `bert_score` and `torch` (plus a model download), and `PassAtKMetric` needs `numpy`. Missing packages raise a `ValueError` telling you what to install.
+:::
+
+## Required Arguments
+
+You'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `actual_output`
+- `expected_output`
+
+`PassAtKMetric` additionally needs `n` (samples) and `c` (correct), passed to `measure` or via `metadata` (`pass_at_k_n` / `pass_at_k_c`).
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import BleuMetric, PassAtKMetric, RougeMetric
+from deepeval.test_case import LLMTestCase
+
+rouge = RougeMetric(score_type="rougeL", threshold=0.5)
+code_gate = PassAtKMetric(k=1)
+
+test_case = LLMTestCase(
+    input="Summarize.",
+    actual_output="The cat sat on the mat.",
+    expected_output="The cat sat on the mat.",
+    metadata={"pass_at_k_n": 4, "pass_at_k_c": 2},
+)
+
+# To run a metric as a standalone
+# rouge.measure(test_case)
+# code_gate.measure(test_case)  # reads n/c from metadata
+# print(rouge.score, rouge.reason)
+
+evaluate(test_cases=[test_case], metrics=[rouge, code_gate])
+```
+
+Each class takes its type parameter plus the standard options:
+
+- `BleuMetric(bleu_type="bleu1")` — one of `bleu1`–`bleu4`.
+- `RougeMetric(score_type="rougeL")` — one of `rouge1`, `rouge2`, `rougeL`.
+- `BertScoreMetric(model_name="microsoft/deberta-large-mnli")` — reports mean F1.
+- `PassAtKMetric(k=1)` — `k` must not exceed `n`.
+- Standard options on each: `threshold` (default `0.5`), `include_reason`, `strict_mode`, `verbose_mode`, `flaky`.
+
+### As a Standalone
+
+You can also run these metrics on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+- **BLEU / ROUGE**: n-gram overlap F-measures of `actual_output` against `expected_output`, via `Scorer.sentence_bleu_score` / `Scorer.rouge_score`.
+- **BERTScore**: mean F1 of contextual-embedding similarity, via `Scorer.bert_score`.
+- **Pass@k**: the probability a random size-`k` subset of `n` samples contains a correct one:
+
+<Equation
+  formula="\text{pass@k} = 1 - \prod_{i=n-c+1}^{n} (1 - k / i), \quad \text{(1.0 when } n - c < k\text{)}"
+/>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "When should I use these instead of judged metrics?",
+      answer: (
+        <>
+          When references are tight: translations, transcriptions,
+          extracted values, and code with unit tests. For open-ended
+          answers, overlap punishes good paraphrases — use a judged
+          metric there.
+        </>
+      ),
+    },
+    {
+      question: "Why is there no metric for BERTScore in core deepeval?",
+      answer: (
+        <>
+          It exists as <code>Scorer.bert_score</code> but core
+          maintainers favor judged metrics. This wrapper exists for
+          teams that already gate on it.
+        </>
+      ),
+    },
+  ]}
+/>
