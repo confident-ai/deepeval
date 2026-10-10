@@ -1,16 +1,16 @@
 import pytest
 import uuid
-from unittest.mock import patch
 from pydantic import ValidationError
 
 from deepeval.test_case import (
     LLMTestCase,
+    MLLMImage,
+    RetrievedContextData,
     ToolCall,
     SingleTurnParams,
     ToolCallParams,
 )
 from deepeval.test_case.api import create_api_test_case
-from deepeval.test_case.mcp import MCPServer
 
 
 class TestLLMTestCaseInitialization:
@@ -628,6 +628,87 @@ class TestEdgeCases:
 
 
 class TestSerialization:
+
+    @pytest.fixture
+    def image(self):
+        return MLLMImage(
+            dataBase64=(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lE"
+                "QVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+            ),
+            mimeType="image/png",
+        )
+
+    @pytest.mark.parametrize("structured", [False, True])
+    def test_retrieval_context_images_propagate_to_api_test_case(
+        self, structured, image
+    ):
+        context = f"Retrieved page: {image}"
+        retrieved = (
+            RetrievedContextData(context=context, source="synthetic page")
+            if structured
+            else context
+        )
+        test_case = LLMTestCase(
+            input="What is shown?", retrieval_context=[retrieved]
+        )
+
+        body = create_api_test_case(test_case).model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+
+        assert test_case.multimodal is True
+        assert body["retrievalContext"] == [context]
+        assert set(body["imagesMapping"]) == {image._id}
+        assert (
+            body["imagesMapping"][image._id]["dataBase64"] == image.dataBase64
+        )
+        assert body["imagesMapping"][image._id]["mimeType"] == "image/png"
+
+    def test_mixed_retrieval_context_images_are_collected_once(self, image):
+        structured_image = image
+        string_image = MLLMImage(
+            dataBase64=image.dataBase64, mimeType=image.mimeType
+        )
+        context = RetrievedContextData(
+            context=f"Structured page: {structured_image}",
+            source="synthetic page",
+        )
+        test_case = LLMTestCase(
+            input="What is shown?",
+            retrieval_context=[context, f"Plain page: {string_image}", context],
+        )
+
+        body = create_api_test_case(test_case).model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+
+        assert set(body["imagesMapping"]) == {
+            structured_image._id,
+            string_image._id,
+        }
+        assert body["retrievalContext"] == [
+            context.context,
+            f"Plain page: {string_image}",
+            context.context,
+        ]
+
+    @pytest.mark.parametrize("structured", [False, True])
+    def test_text_only_retrieval_context_has_no_image_mapping(self, structured):
+        retrieved = (
+            RetrievedContextData(context="Text only", source="synthetic page")
+            if structured
+            else "Text only"
+        )
+        test_case = LLMTestCase(input="Question", retrieval_context=[retrieved])
+
+        body = create_api_test_case(test_case).model_dump(
+            mode="json", by_alias=True, exclude_none=True
+        )
+
+        assert test_case.multimodal is False
+        assert body["retrievalContext"] == ["Text only"]
+        assert "imagesMapping" not in body
 
     def test_serialization_aliases(self):
         test_case = LLMTestCase(

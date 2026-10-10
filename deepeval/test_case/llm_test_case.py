@@ -651,11 +651,17 @@ class LLMTestCase(BaseModel):
                 matches = re.findall(pattern, s)
                 image_ids.update(matches)
 
-        def extract_ids_from_list(lst: Optional[List[str]]) -> None:
-            """Helper to extract image IDs from a list of strings."""
+        def extract_ids_from_list(
+            lst: Optional[List[Union[str, RetrievedContextData]]],
+        ) -> None:
+            """Helper to extract image IDs from strings or retrieved contexts."""
             if lst is not None:
                 for item in lst:
-                    extract_ids_from_string(item)
+                    extract_ids_from_string(
+                        item.context
+                        if isinstance(item, RetrievedContextData)
+                        else item
+                    )
 
         extract_ids_from_string(self.input)
         extract_ids_from_string(self.actual_output)
