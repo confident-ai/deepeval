@@ -99,7 +99,7 @@ deepeval.login("your-confident-api-key")
 Or through the CLI:
 
 ```bash
-deepeval login --confident-api-key "your-confident-api-key"
+deepeval login --api-key "your-confident-api-key"
 ```
 
 :::note[Login persistence]
@@ -108,7 +108,7 @@ To change the target, use `--save`, e.g.:
 
 ```bash
 # custom path
-deepeval login --confident-api-key "ck_..." --save dotenv:.env.custom
+deepeval login --api-key "ck_..." --save dotenv:.env.custom
 ```
 
 For compatibility, the key is saved under `api_key` and `CONFIDENT_API_KEY`.
