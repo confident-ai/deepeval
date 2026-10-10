@@ -85,9 +85,9 @@ class Scorer:
         tokenized_prediction = word_tokenize(prediction)
         bleu_weight_map = {
             "bleu1": (1, 0, 0, 0),
-            "bleu2": (0, 1, 0, 0),
-            "bleu3": (0, 0, 1, 0),
-            "bleu4": (0, 0, 0, 1),
+            "bleu2": (0.5, 0.5, 0, 0),
+            "bleu3": (1 / 3, 1 / 3, 1 / 3, 0),
+            "bleu4": (0.25, 0.25, 0.25, 0.25),
         }
         return sentence_bleu(
             tokenized_targets,
