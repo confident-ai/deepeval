@@ -383,7 +383,7 @@ You can also set `TEMPERATURE` to provide a default temperature for all model in
 
 Thinking is off unless you set `DEEPEVAL_MODEL_THINKING=1`, and models without a thinking parameter ignore it. Enabling it raises the default output budget to make room for the reasoning, since providers count thinking tokens against the same <Term py="max_tokens" ts="maxTokens"/> ceiling as the response — an explicit value still wins, and one too small to hold both raises an error rather than returning a truncated verdict.
 
-Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way.
+Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way. Claude Opus 4.7 and later reject a fixed thinking budget, so for them `deepeval` turns on adaptive thinking instead and lets the model decide how much to reason.
 
 ### Variable Options
 

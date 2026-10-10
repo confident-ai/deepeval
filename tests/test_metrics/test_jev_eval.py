@@ -3,6 +3,7 @@ model, so no network, API key or LLM is needed: JevEval never calls one."""
 
 import pytest
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import JevEval
 from deepeval.metrics.jev_eval import Choice, Noul, Score
 from deepeval.metrics.jev_eval.utils import (
@@ -513,13 +514,73 @@ def test_empty_questions_rejected():
         )
 
 
-def test_missing_evaluation_params_rejected():
-    with pytest.raises(ValueError):
+def test_empty_evaluation_params_rejected():
+    with pytest.raises(ValueError, match="empty list"):
         JevEval(
             name="x",
+            evaluation_params=[],
             questions=[Noul("a")],
             system_one_model=FakeSystemOneModel(SystemOneAnswers()),
         )
+
+
+###############################################
+# Trajectory mode (no evaluation_params)
+###############################################
+
+TRACE = {
+    "name": "support_agent",
+    "type": "agent",
+    "input": {"input": "Where is my order #1234?"},
+    "output": "Your order is in transit.",
+    "inputTokenCount": 40,
+    "children": [
+        {
+            "name": "order_lookup",
+            "type": "tool",
+            "input": {"order_id": "1234"},
+            "output": {"status": "in_transit"},
+            "children": [],
+        }
+    ],
+}
+
+
+def trajectory_metric(**kwargs) -> JevEval:
+    return JevEval(
+        name="Tool Use",
+        questions=[Noul("The agent called order_lookup before answering.")],
+        system_one_model=FakeSystemOneModel(
+            SystemOneAnswers(nouls={"q_0": NoulAnswer(probability=0.9)})
+        ),
+        **kwargs,
+    )
+
+
+def test_requires_trace_follows_evaluation_params():
+    assert trajectory_metric().requires_trace
+    assert not make_metric().requires_trace
+
+
+@pytest.mark.parametrize("async_mode", [True, False])
+def test_trajectory_mode_sends_compact_trace(async_mode):
+    metric = trajectory_metric(async_mode=async_mode)
+    test_case = LLMTestCase(input="None")
+    test_case._trace_dict = TRACE
+
+    assert metric.measure(test_case) == pytest.approx(0.9)
+
+    ((state, _),) = metric.system_one_model.calls
+    assert set(state) == {"trace"}
+    assert state["trace"]["children"][0]["name"] == "order_lookup"
+    assert "inputTokenCount" not in state["trace"]
+
+
+def test_trajectory_mode_without_trace_raises():
+    metric = trajectory_metric()
+    with pytest.raises(MissingTestCaseParamsError, match="evaluates the trace"):
+        metric.measure(LLMTestCase(input="hi", actual_output="there"))
+    assert metric.system_one_model.calls == []
 
 
 def test_wrong_question_type_rejected():

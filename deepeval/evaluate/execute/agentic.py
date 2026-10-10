@@ -1,3 +1,4 @@
+from deepeval.evaluate.expectations import with_expectation_evaluators
 import logging
 
 from rich.progress import (
@@ -114,6 +115,7 @@ async def _a_execute_agentic_test_case(
 
         test_case = LLMTestCase(
             input=golden.input,
+            expectations=golden.expectations,
             actual_output=(
                 str(current_trace.output)
                 if current_trace.output is not None
@@ -127,8 +129,12 @@ async def _a_execute_agentic_test_case(
             metadata=golden.additional_metadata,
             comments=golden.comments,
             name=golden.name,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
+        )
+        test_case._dataset_alias = golden._dataset_alias
+        test_case._dataset_id = golden._dataset_id
+        test_case._dataset_version = golden._dataset_version
+        current_trace.metrics = with_expectation_evaluators(
+            current_trace.metrics, [test_case]
         )
         api_test_case = create_api_test_case(
             test_case=test_case,
@@ -260,6 +266,7 @@ async def _a_execute_agentic_test_case(
                 if test_case is None:
                     test_case = LLMTestCase(
                         input=golden.input,
+                        expectations=golden.expectations,
                         actual_output=None,
                         expected_output=None,
                         context=None,
@@ -269,9 +276,10 @@ async def _a_execute_agentic_test_case(
                         expected_tools=None,
                         comments=golden.comments,
                         name=golden.name,
-                        _dataset_alias=golden._dataset_alias,
-                        _dataset_id=golden._dataset_id,
                     )
+                    test_case._dataset_alias = golden._dataset_alias
+                    test_case._dataset_id = golden._dataset_id
+                    test_case._dataset_version = golden._dataset_version
                 if trace is not None and trace_api is None:
                     trace_api = create_api_trace(trace, golden)
 
@@ -468,9 +476,14 @@ async def _a_execute_trace_test_case(
     requires_trace = any(metric.requires_trace for metric in metrics)
 
     llm_test_case = None
-    if trace.input:
+    if trace.input or api_test_case.expectations:
         llm_test_case = LLMTestCase(
-            input=str(trace.input),
+            input=(
+                str(trace.input)
+                if trace.input is not None
+                else api_test_case.input
+            ),
+            expectations=api_test_case.expectations,
             actual_output=(
                 str(trace.output) if trace.output is not None else None
             ),

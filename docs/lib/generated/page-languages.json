@@ -429,6 +429,9 @@
     "python",
     "typescript"
   ],
+  "/docs/metrics-transcription-accuracy": [
+    "python"
+  ],
   "/docs/metrics-turn-contextual-precision": [
     "python",
     "typescript"

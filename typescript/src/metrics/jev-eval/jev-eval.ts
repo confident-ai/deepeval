@@ -3,6 +3,8 @@ import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseSystemOneModel } from "@/models/system-one/base-system-one-model";
 import { checkSingleTurnParams, constructVerboseLogs } from "@/metrics/utils";
 import { formatSystemOneReason } from "@/metrics/system-one/reason";
+import { compactTrace } from "@/metrics/system-one/runner";
+import { MissingTestCaseParamsError } from "@/errors";
 import type {
   JevQuestion,
   QuestionOutcome,
@@ -22,8 +24,11 @@ import {
 
 export interface JevEvalOptions {
   name: string;
-  /** The test case fields your questions refer to. */
-  evaluationParams: SingleTurnParams[];
+  /**
+   * The test case fields your questions refer to. Omit to evaluate the whole
+   * trace (or the span subtree the metric is attached to).
+   */
+  evaluationParams?: SingleTurnParams[];
   questions: JevQuestion[];
   /** Defaults to a `TypeSafeModel` built from TYPESAFE_* settings. */
   systemOneModel?: DeepEvalBaseSystemOneModel | string;
@@ -45,16 +50,16 @@ export interface JevEvalOptions {
  */
 export class JevEval extends BaseMetric {
   readonly metricName: string;
-  evaluationParams: SingleTurnParams[];
+  evaluationParams?: SingleTurnParams[];
   questions: JevQuestion[];
   declare systemOneModel: DeepEvalBaseSystemOneModel;
   private readonly includeJevEvalSuffix: boolean;
 
   constructor(options: JevEvalOptions) {
-    if (!options.evaluationParams || options.evaluationParams.length === 0) {
+    if (options.evaluationParams && options.evaluationParams.length === 0) {
       throw new Error(
-        "evaluationParams cannot be empty; list the test case fields your " +
-          "questions refer to.",
+        "evaluationParams cannot be an empty list; list the test case fields " +
+          "your questions refer to, or omit it to evaluate the trace.",
       );
     }
     const strictMode = options.strictMode ?? false;
@@ -66,8 +71,11 @@ export class JevEval extends BaseMetric {
       flaky: options.flaky,
     });
     this.metricName = options.name;
-    this.evaluationParams = [...options.evaluationParams];
-    this.requiredParams = this.evaluationParams;
+    this.evaluationParams = options.evaluationParams && [
+      ...options.evaluationParams,
+    ];
+    this.requiredParams = this.evaluationParams ?? [];
+    this.requiresTrace = !this.evaluationParams;
     this.questions = validateQuestions(options.questions);
     this.systemOneModel = initializeJevModel(options.systemOneModel);
     this.evaluationModel = this.systemOneModel.getModelName();
@@ -85,9 +93,18 @@ export class JevEval extends BaseMetric {
         throw new Error(this.error);
       }
       checkSingleTurnParams(testCase, this.requiredParams, this);
+      if (!this.evaluationParams && testCase._traceDict == null) {
+        this.error =
+          `The '${this.name}' metric has no evaluationParams, so it evaluates the trace, ` +
+          "but this test case has none. Run it on a traced component (`observe` or " +
+          "`evalsIterator`), or pass evaluationParams to evaluate a plain LLMTestCase.";
+        throw new MissingTestCaseParamsError(this.error);
+      }
       this.evaluationCost = 0;
 
-      const state = constructSingleTurnState(this.evaluationParams, testCase);
+      const state = this.evaluationParams
+        ? constructSingleTurnState(this.evaluationParams, testCase)
+        : { trace: compactTrace(testCase._traceDict) };
       const { answers, cost } = await this.systemOneModel.decide(
         state,
         buildQuestions(this.questions),
