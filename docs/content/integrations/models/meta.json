@@ -13,6 +13,7 @@
     "grok",
     "moonshot",
     "portkey",
+    "thegrid",
     "vllm",
     "lmstudio",
     "litellm",
