@@ -1,7 +1,8 @@
+import { z } from "zod";
 import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import {
   interpolateText,
-  outputSchemaToJsonSchema,
+  constructToolInputSchema,
   generateOutputSchema,
 } from "@/prompt/utils";
 import {
@@ -47,37 +48,17 @@ export class Tool {
   private _data: NormalizedToolData;
 
   constructor(data: ToolData) {
-    const validatedInput = ToolDataSchema.parse(data);
-
-    let normalizedSchema: OutputSchema;
-
-    if (
-      "fields" in validatedInput.structuredSchema &&
-      Array.isArray(validatedInput.structuredSchema.fields)
-    ) {
-      normalizedSchema = OutputSchemaSchema.parse(
-        validatedInput.structuredSchema,
-      );
-    } else {
-      const schemaDef = SchemaDefinitionSchema.parse(
-        validatedInput.structuredSchema,
-      );
-      normalizedSchema = {
-        name: schemaDef.name,
-        fields: generateOutputSchema(schemaDef.name, schemaDef.fields),
-      };
-    }
-
+    const { inputSchema, ...validatedInput } = ToolDataSchema.parse(data);
     this._data = NormalizedToolDataSchema.parse({
-      id: validatedInput.id,
-      name: validatedInput.name,
-      description: validatedInput.description,
-      mode: validatedInput.mode,
-      structuredSchema: normalizedSchema,
+      ...validatedInput,
+      schema:
+        inputSchema instanceof z.ZodType
+          ? constructToolInputSchema(inputSchema)
+          : inputSchema,
     });
   }
 
-  public get id(): string {
+  public get id(): string | undefined {
     return this._data.id;
   }
 
@@ -93,12 +74,12 @@ export class Tool {
     return this._data.mode;
   }
 
-  public get structuredSchema(): OutputSchema {
-    return this._data.structuredSchema;
+  public get inputSchema(): Record<string, unknown> {
+    return this._data.schema;
   }
 
-  public get inputSchema(): Record<string, any> {
-    return outputSchemaToJsonSchema(this._data.structuredSchema);
+  public get version(): string | undefined {
+    return this._data.version;
   }
 
   public toJSON(): NormalizedToolData {
@@ -224,16 +205,8 @@ export class Prompt {
       Array.isArray(validatedResponse.data.tools)
     ) {
       this._tools = validatedResponse.data.tools.map(
-        (t: NormalizedToolData) => {
-          // Convert NormalizedToolData back to Tool
-          return new Tool({
-            id: t.id,
-            name: t.name,
-            description: t.description,
-            mode: t.mode,
-            structuredSchema: t.structuredSchema,
-          });
-        },
+        ({ schema, ...tool }: NormalizedToolData) =>
+          new Tool({ ...tool, inputSchema: schema }),
       );
     } else {
       this._tools = null;

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { randomUUID } from "crypto";
 
 export const SchemaDataTypeEnum = z.enum([
   "STRING",
@@ -66,8 +65,6 @@ export const OutputSchemaSchema = z.object({
 
 export type OutputSchema = z.infer<typeof OutputSchemaSchema>;
 
-export type StructuredSchemaField = OutputSchemaField;
-
 export const ModelSettingsSchema = z.object({
   provider: z.string().optional(),
   name: z.string().optional(),
@@ -98,24 +95,23 @@ export const SchemaDefinitionSchema = z.object({
 export type SchemaDefinition = z.infer<typeof SchemaDefinitionSchema>;
 
 export const ToolDataSchema = z.object({
-  id: z
-    .string()
-    .optional()
-    .default(() => randomUUID()),
+  id: z.string().optional(),
   name: z.string(),
   description: z.string().optional().nullable(),
   mode: ToolModeEnum,
-  structuredSchema: z.union([OutputSchemaSchema, SchemaDefinitionSchema]),
+  inputSchema: z.union([
+    z.instanceof(z.ZodType),
+    z.record(z.string(), z.unknown()),
+  ]),
+  version: z.string().optional(),
 });
 
 export type ToolData = z.infer<typeof ToolDataSchema>;
 
-export const NormalizedToolDataSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  mode: ToolModeEnum,
-  structuredSchema: OutputSchemaSchema,
+export const NormalizedToolDataSchema = ToolDataSchema.omit({
+  inputSchema: true,
+}).extend({
+  schema: z.record(z.string(), z.unknown()),
 });
 
 export type NormalizedToolData = z.infer<typeof NormalizedToolDataSchema>;

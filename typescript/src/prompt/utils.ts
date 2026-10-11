@@ -1,11 +1,10 @@
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import {
   SchemaDataType,
   OutputSchemaField,
   OutputSchemaFieldSchema,
   OutputSchema,
-  OutputSchemaSchema,
-  StructuredSchemaField,
 } from "@/prompt/types";
 
 export function interpolateMustache(
@@ -152,132 +151,173 @@ export function generateOutputSchema(
   return fields;
 }
 
-export function outputSchemaToJsonSchema(
-  schema: OutputSchema | null | undefined,
-): Record<string, any> {
-  if (!schema || !schema.fields || schema.fields.length === 0) {
-    return {
-      type: "object",
-      properties: {},
-      additionalProperties: false,
-    };
+type JsonSchemaNode = Record<string, unknown>;
+
+const TOOL_SCHEMA_KEYWORDS = new Set([
+  "type",
+  "description",
+  "enum",
+  "properties",
+  "items",
+  "required",
+]);
+
+const TOOL_SCHEMA_ANNOTATIONS = new Set([
+  "$schema",
+  "title",
+  "default",
+  "examples",
+]);
+
+const UNION_KEYWORDS = ["anyOf", "oneOf", "allOf"];
+
+const isNullSchema = (node: JsonSchemaNode): boolean =>
+  Object.keys(node).length === 1 && node.type === "null";
+
+function inlineToolSchemaRef(
+  node: JsonSchemaNode,
+  defs: Record<string, JsonSchemaNode>,
+  location: string,
+  expanding: string[],
+): [JsonSchemaNode, string[]] {
+  const { $ref, ...rest } = node;
+  const name = String($ref).split("/").pop() ?? "";
+  if (expanding.includes(name)) {
+    throw new Error(
+      `${location} refers to '${name}' recursively, which a tool schema can't express.`,
+    );
   }
-
-  OutputSchemaSchema.parse(schema);
-
-  const childrenMap: Record<string, OutputSchemaField[]> = {};
-  const rootFields: OutputSchemaField[] = [];
-
-  for (const field of schema.fields) {
-    if (field.parentId) {
-      if (!childrenMap[field.parentId]) {
-        childrenMap[field.parentId] = [];
-      }
-      childrenMap[field.parentId].push(field);
-    } else {
-      rootFields.push(field);
-    }
-  }
-
-  function mapType(
-    dtype: (typeof SchemaDataType)[keyof typeof SchemaDataType],
-  ): string {
-    const mapping: Record<string, string> = {
-      STRING: "string",
-      INTEGER: "integer",
-      FLOAT: "number",
-      BOOLEAN: "boolean",
-      OBJECT: "object",
-      ARRAY: "array",
-      NULL: "null",
-    };
-    return mapping[dtype] || "string";
-  }
-
-  function buildNode(fieldList: OutputSchemaField[]): Record<string, any> {
-    const properties: Record<string, any> = {};
-    const requiredFields: string[] = [];
-
-    for (const field of fieldList) {
-      const fieldSchema: Record<string, any> = {
-        type: mapType(field.type),
-      };
-
-      if (field.description) {
-        fieldSchema.description = field.description;
-      }
-
-      if (field.type === "ARRAY") {
-        const children = childrenMap[field.id] || [];
-        if (children.length > 0) {
-          const itemField = children[0];
-          const itemSchema: Record<string, any> = {
-            type: mapType(itemField.type),
-          };
-          if (itemField.type === "OBJECT") {
-            const objChildren = childrenMap[itemField.id] || [];
-            if (objChildren.length > 0) {
-              const nested = buildNode(objChildren);
-              itemSchema.properties = nested.properties;
-              if (nested.required && nested.required.length > 0) {
-                itemSchema.required = nested.required;
-              }
-              itemSchema.additionalProperties = false;
-            } else {
-              itemSchema.properties = {};
-              itemSchema.additionalProperties = false;
-            }
-          }
-          fieldSchema.items = itemSchema;
-        } else {
-          fieldSchema.items = {};
-        }
-      } else if (field.type === "OBJECT") {
-        const children = childrenMap[field.id] || [];
-        if (children.length > 0) {
-          const nested = buildNode(children);
-          fieldSchema.properties = nested.properties;
-          if (nested.required && nested.required.length > 0) {
-            fieldSchema.required = nested.required;
-          }
-          fieldSchema.additionalProperties = false;
-        } else {
-          fieldSchema.properties = {};
-          fieldSchema.additionalProperties = false;
-        }
-      }
-
-      properties[field.name] = fieldSchema;
-      if (field.required) {
-        requiredFields.push(field.name);
-      }
-    }
-
-    const result: Record<string, any> = {
-      type: "object",
-      properties: properties,
-      additionalProperties: false,
-    };
-
-    if (requiredFields.length > 0) {
-      result.required = requiredFields;
-    }
-
-    return result;
-  }
-
-  return buildNode(rootFields);
+  return [{ ...defs[name], ...rest }, [...expanding, name]];
 }
 
-export function fieldsToJsonSchema(
-  fields: StructuredSchemaField[],
-): Record<string, any> {
-  const schema: OutputSchema = {
-    fields: fields,
-    name: null,
-    id: null,
+function unwrapToolSchemaUnion(
+  node: JsonSchemaNode,
+  keyword: string,
+  location: string,
+): JsonSchemaNode {
+  const { [keyword]: branches, ...rest } = node;
+  const typed = (branches as JsonSchemaNode[]).filter(
+    (branch) => !isNullSchema(branch),
+  );
+  if (typed.length !== 1) {
+    throw new Error(
+      `${location} is a union of several types. A tool schema supports only an optional or nullable field of one type.`,
+    );
+  }
+  return { ...typed[0], ...rest };
+}
+
+function resolveToolSchemaNode(
+  node: JsonSchemaNode,
+  defs: Record<string, JsonSchemaNode>,
+  location: string,
+  expanding: string[],
+): [JsonSchemaNode, string[]] {
+  let resolved = node;
+  let refs = expanding;
+  for (;;) {
+    if ("$ref" in resolved) {
+      [resolved, refs] = inlineToolSchemaRef(resolved, defs, location, refs);
+      continue;
+    }
+    const keyword = UNION_KEYWORDS.find((union) => union in resolved);
+    if (!keyword) {
+      return [resolved, refs];
+    }
+    resolved = unwrapToolSchemaUnion(resolved, keyword, location);
+  }
+}
+
+function dropSafeIntegerBounds(node: JsonSchemaNode): JsonSchemaNode {
+  const { minimum, maximum, ...rest } = node;
+  return {
+    ...rest,
+    ...(minimum !== undefined && minimum !== Number.MIN_SAFE_INTEGER
+      ? { minimum }
+      : {}),
+    ...(maximum !== undefined && maximum !== Number.MAX_SAFE_INTEGER
+      ? { maximum }
+      : {}),
   };
-  return outputSchemaToJsonSchema(schema);
 }
 
-export type { OutputSchemaField, OutputSchema, StructuredSchemaField };
+function normalizeToolSchemaNode(
+  node: JsonSchemaNode,
+  defs: Record<string, JsonSchemaNode>,
+  path: string[],
+  expanding: string[],
+): JsonSchemaNode {
+  const location = ["root", ...path].join(".");
+  const [resolved, refs] = resolveToolSchemaNode(
+    node,
+    defs,
+    location,
+    expanding,
+  );
+  const {
+    const: constValue,
+    additionalProperties = false,
+    ...rest
+  } = dropSafeIntegerBounds(resolved);
+
+  if (additionalProperties !== false) {
+    throw new Error(
+      `${location} is a free-form record. Describe its keys with z.object instead.`,
+    );
+  }
+
+  const normalized: JsonSchemaNode = {
+    ...Object.fromEntries(
+      Object.entries(rest).filter(
+        ([keyword]) => !TOOL_SCHEMA_ANNOTATIONS.has(keyword),
+      ),
+    ),
+    ...(constValue !== undefined ? { enum: [constValue] } : {}),
+  };
+
+  const unsupported = Object.keys(normalized)
+    .filter((keyword) => !TOOL_SCHEMA_KEYWORDS.has(keyword))
+    .sort();
+  if (unsupported.length > 0) {
+    throw new Error(
+      `${location} uses ${unsupported.join(", ")}, which a tool schema doesn't support. Use only ${[...TOOL_SCHEMA_KEYWORDS].sort().join(", ")}.`,
+    );
+  }
+  if (!("type" in normalized)) {
+    throw new Error(`${location} has no type. Give the field a concrete type.`);
+  }
+
+  if (normalized.properties) {
+    normalized.properties = Object.fromEntries(
+      Object.entries(
+        normalized.properties as Record<string, JsonSchemaNode>,
+      ).map(([name, child]) => [
+        name,
+        normalizeToolSchemaNode(child, defs, [...path, name], refs),
+      ]),
+    );
+  }
+  if (normalized.items) {
+    normalized.items = normalizeToolSchemaNode(
+      normalized.items as JsonSchemaNode,
+      defs,
+      [...path, "items"],
+      refs,
+    );
+  }
+  return normalized;
+}
+
+export function constructToolInputSchema(schema: z.ZodType): JsonSchemaNode {
+  const { $defs = {}, ...root } = z.toJSONSchema(schema, {
+    io: "input",
+  }) as JsonSchemaNode;
+  return normalizeToolSchemaNode(
+    root,
+    $defs as Record<string, JsonSchemaNode>,
+    [],
+    [],
+  );
+}
+
+export type { OutputSchemaField, OutputSchema };
