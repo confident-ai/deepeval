@@ -401,23 +401,24 @@ There are **TWO** output settings you can associate with a prompt:
 
 ### Tools
 
-The tools in a prompt are used to specify the tools your agent has access to, all tools are identified using their name and hence must be unique.
+The tools in a prompt are used to specify the tools your agent has access to. Tools are identified by their name, which must be unique in your project, and pushing a tool with an existing name updates that tool. Each change to a tool's input schema or mode saves a new version of it, and every prompt commit keeps the versions it was pushed with.
 
 ```python
+from typing import Literal
 from deepeval.prompt import Prompt, Tool
 from deepeval.prompt.api import ToolMode
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class ToolInputSchema(BaseModel):
-    result: str
-    confidence: float
+    query: str = Field(description="What to search the internet for")
+    region: Literal["us", "eu"] = Field(description="Which region's results to return")
 
 prompt = Prompt(alias="YOUR-PROMPT-ALIAS")
 tool = Tool(
     name="ExploreTool",
     description="Tool used for browsing the internet",
     mode=ToolMode.STRICT,
-    structured_schema=ToolInputSchema,
+    input_schema=ToolInputSchema,
 )
 
 prompt.push(
@@ -425,18 +426,21 @@ prompt.push(
     tools=[tool]
 )
 
-# You can also update an existing tool by using the new tool in the push / update method:
+# To update a tool, push it again under the same name
 tool2 = Tool(
-    name="ExploreTool", # Must have the same name to update a tool
+    name="ExploreTool",
     description="Tool used for browsing the internet",
     mode=ToolMode.ALLOW_ADDITIONAL,
-    structured_schema=ToolInputSchema,
+    input_schema=ToolInputSchema,
 )
 
-prompt.update(
+prompt.push(
+    text="This is a prompt with a tool",
     tools=[tool2]
 )
 ```
+
+`input_schema` takes a pydantic model, which `deepeval` converts to JSON Schema, or a JSON Schema `dict`, the same shape OpenAI accepts as `parameters` and Anthropic as `input_schema`. Either way it can only use `type`, `properties`, `required`, `items`, `description` and `enum`; whether the model may pass extra properties is set by `mode`.
 
 ## FAQs
 
