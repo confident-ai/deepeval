@@ -161,9 +161,11 @@ third_test_case = LLMTestCase(input="Describe the effects of global warming.",
                               actual_output="Global warming leads to colder winters.",
                               expected_output="Global warming causes more extreme weather, including hotter summers, rising sea levels, and increased frequency of extreme weather events.")
 
-test_cases = [first_test_test_case, second_test_case, third_test_case]
+test_cases = [first_test_case, second_test_case, third_test_case]
 
-dataset = EvaluationDataset(test_cases=test_cases)
+dataset = EvaluationDataset()
+for test_case in test_cases:
+    dataset.add_test_case(test_case)
 ```
 
 Having a benchmark helps guide the development of your metric, and the primary method to align your evaluations with this baseline is by adjusting your `evaluation_steps`, as detailed in step 3 above.
