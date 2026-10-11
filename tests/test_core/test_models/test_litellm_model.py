@@ -233,4 +233,3 @@ def test_litellm_temperature_explicit_included(settings):
     assert model.temperature == 0.7
     params = model._completion_params([{"type": "text", "text": "hello"}])
     assert params["temperature"] == 0.7
-
