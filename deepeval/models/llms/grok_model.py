@@ -116,8 +116,9 @@ class GrokModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+            chat_message = user(*content)
         else:
-            content = [{"type": "text", "text": prompt}]
+            chat_message = user(prompt)
 
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
@@ -125,7 +126,7 @@ class GrokModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(content))
+        chat.append(chat_message)
 
         if schema and self.supports_structured_outputs() is True:
             response, structured_output = chat.parse(schema)
@@ -162,8 +163,9 @@ class GrokModel(DeepEvalBaseLLM):
         if check_if_multimodal(prompt):
             prompt = convert_to_multi_modal_array(input=prompt)
             content = self.generate_content(prompt)
+            chat_message = user(*content)
         else:
-            content = [{"type": "text", "text": prompt}]
+            chat_message = user(prompt)
 
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
@@ -171,7 +173,7 @@ class GrokModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(content))
+        chat.append(chat_message)
 
         if schema and self.supports_structured_outputs() is True:
             response, structured_output = await chat.parse(schema)
@@ -196,29 +198,25 @@ class GrokModel(DeepEvalBaseLLM):
     def generate_content(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ):
+        try:
+            from xai_sdk.chat import image, text
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
         content = []
         for element in multimodal_input:
             if isinstance(element, str):
-                content.append({"type": "text", "text": element})
+                content.append(text(element))
             elif isinstance(element, MLLMImage):
                 if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
+                    content.append(image(element.url))
                 else:
                     element.ensure_images_loaded()
                     data_uri = (
                         f"data:{element.mimeType};base64,{element.dataBase64}"
                     )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
+                    content.append(image(data_uri))
         return content
 
     ###############################################
