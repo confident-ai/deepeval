@@ -19,6 +19,7 @@ import {
   MODE_STABLE,
   normalizeDeepEvalMode,
 } from "@/config/mode";
+import { SUPPORTED_EVAL_MODES, normalizeEvalMode } from "@/config/eval-mode";
 import { Environment } from "@/tracing/utils";
 
 export interface SettingFieldMeta {
@@ -139,6 +140,23 @@ export const settingsSchema = z.object({
     .optional()
     .describe(
       "DeepEval feature channel: stable (default) or experimental. Experimental enrols you into the latest features, which may not be stable yet.",
+    ),
+  DEEPEVAL_EVAL_MODE: z
+    .string()
+    .transform((value, ctx) => {
+      const mode = normalizeEvalMode(value);
+      if (mode === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          message: `Expected one of ${SUPPORTED_EVAL_MODES.join(", ")}.`,
+        });
+        return z.NEVER;
+      }
+      return mode;
+    })
+    .optional()
+    .describe(
+      "Who decides in LLM-as-a-judge metrics: llm (default), hybrid (LLM extracts and explains, System One decides) or system_one (System One runs the whole metric).",
     ),
   DEEPEVAL_LOCAL_STORE: z
     .string()
@@ -414,6 +432,17 @@ export const settingsSchema = z.object({
   OPENROUTER_COST_PER_OUTPUT_TOKEN: optionalNumber().describe(
     "USD per output token for the OpenRouter model.",
   ),
+
+  // TypeSafe AI (System One)
+  TYPESAFE_API_KEY: secretString("TypeSafe AI API key (System One / Jev)."),
+  TYPESAFE_MODEL_NAME: optionalString().describe(
+    "TypeSafe System One model name (default: jev-latest).",
+  ),
+  TYPESAFE_COST_PER_INPUT_TOKEN: z.coerce
+    .number()
+    .min(0)
+    .optional()
+    .describe("USD per input token for the TypeSafe System One model."),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

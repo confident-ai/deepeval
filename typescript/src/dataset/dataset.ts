@@ -1,3 +1,4 @@
+import { validateExpectationCoverage } from "@/evaluate/expectations";
 import fs from "node:fs";
 import path from "node:path";
 import Papa from "papaparse";
@@ -5,6 +6,7 @@ import Papa from "papaparse";
 import {
   convertGoldensToTestCases,
   convertConvoGoldensToConvoTestCases,
+  stripLocalExpectationFields,
   stripPrivateFields,
   parseDelimited,
   safeJsonParse,
@@ -97,6 +99,7 @@ const SINGLE_TURN_COLUMNS = [
   "output_token_count",
   "additional_metadata",
   "custom_column_key_values",
+  "expectations",
 ];
 
 const MULTI_TURN_COLUMNS = [
@@ -109,6 +112,7 @@ const MULTI_TURN_COLUMNS = [
   "comments",
   "additional_metadata",
   "custom_column_key_values",
+  "expectations",
 ];
 
 /** Local-time `YYYYMMDD_HHMMSS`, matching Python's default file name. */
@@ -142,6 +146,7 @@ function singleTurnRecord(golden: Golden): Record<string, unknown> {
     output_token_count: golden.outputTokenCount ?? null,
     additional_metadata: golden.additionalMetadata ?? null,
     custom_column_key_values: golden.customColumnKeyValues ?? null,
+    expectations: golden.expectations?.toJSON() ?? null,
   };
 }
 
@@ -159,6 +164,7 @@ function multiTurnRecord(
     comments: golden.comments ?? null,
     additional_metadata: golden.additionalMetadata ?? null,
     custom_column_key_values: golden.customColumnKeyValues ?? null,
+    expectations: golden.expectations?.toJSON() ?? null,
   };
 }
 
@@ -179,6 +185,7 @@ function singleTurnCsvRow(golden: Golden): (string | null)[] {
     golden.outputTokenCount == null ? null : String(golden.outputTokenCount),
     asJsonCell(golden.additionalMetadata),
     asJsonCell(golden.customColumnKeyValues),
+    asJsonCell(golden.expectations),
   ];
 }
 
@@ -193,6 +200,7 @@ function multiTurnCsvRow(golden: ConversationalGolden): (string | null)[] {
     golden.comments ?? null,
     asJsonCell(golden.additionalMetadata),
     asJsonCell(golden.customColumnKeyValues),
+    asJsonCell(golden.expectations),
   ];
 }
 
@@ -469,6 +477,7 @@ export class EvaluationDataset {
                 comments: goldenData.comments,
                 name: goldenData.name,
                 customColumnKeyValues: goldenData.customColumnKeyValues,
+                expectations: goldenData.expectations,
               }),
           )
         : undefined,
@@ -491,6 +500,7 @@ export class EvaluationDataset {
                 comments: goldenData.comments,
                 name: goldenData.name,
                 customColumnKeyValues: goldenData.customColumnKeyValues,
+                expectations: goldenData.expectations,
                 turns: goldenData.turns
                   ? parseTurns(goldenData.turns)
                   : undefined,
@@ -567,6 +577,7 @@ export class EvaluationDataset {
     }
     const body = stripPrivateFields(JSON.parse(JSON.stringify(apiDataset)));
     this.stripGoldenIds(body);
+    stripLocalExpectationFields(body.goldens ?? body.conversationalGoldens);
     console.log(`Pushing '${alias}' to Confident AI...`);
     const result = await api.sendRequest(
       HttpMethods.POST,
@@ -656,6 +667,7 @@ export class EvaluationDataset {
     };
     const body = stripPrivateFields(apiDataset);
     this.stripGoldenIds(body);
+    stripLocalExpectationFields(body.goldens ?? body.conversationalGoldens);
 
     console.log(
       `Queueing ${goldens.length} golden(s) to '${alias}' on Confident AI...`,
@@ -724,6 +736,7 @@ export class EvaluationDataset {
     const api = new Api();
     const body = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
     delete body.id;
+    stripLocalExpectationFields([body]);
     body.finalized = finalized;
     await api.sendRequest(
       HttpMethods.PUT,
@@ -769,6 +782,7 @@ export class EvaluationDataset {
     inputCol = "input",
     actualOutputCol = "actual_output",
     expectedOutputCol = "expected_output",
+    expectationsCol = "expectations",
     contextCol = "context",
     contextDelimiter = DELIMITER,
     retrievalContextCol = "retrieval_context",
@@ -782,6 +796,7 @@ export class EvaluationDataset {
     inputCol?: string;
     actualOutputCol?: string;
     expectedOutputCol?: string;
+    expectationsCol?: string;
     contextCol?: string;
     contextDelimiter?: string;
     retrievalContextCol?: string;
@@ -812,6 +827,9 @@ export class EvaluationDataset {
         input: row[inputCol],
         actualOutput: row[actualOutputCol],
         expectedOutput: cell(row, expectedOutputCol),
+        expectations: cell(row, expectationsCol)
+          ? JSON.parse(cell(row, expectationsCol)!)
+          : undefined,
         context:
           context === undefined
             ? undefined
@@ -1099,6 +1117,11 @@ export class EvaluationDataset {
         const traceGolden = golden as Golden;
 
         const primary = primaryTraceFor(newTraces);
+        if (golden.expectations?.hasConditions && !primary) {
+          throw new Error(
+            "Unable to evaluate expectations: no observed trace was captured.",
+          );
+        }
 
         for (const trace of newTraces) {
           // Trace-level metrics judge the turn, so they belong to the reported
@@ -1115,6 +1138,8 @@ export class EvaluationDataset {
             s + countTraceMetrics(t, t === primary ? traceGolden : undefined),
           0,
         );
+        if (total === 0 && metrics.length === 0)
+          validateExpectationCoverage([golden]);
         const evalBar = multibar?.create(Math.max(total, 1), 0, {
           label: `     🎯 Evaluating component(s) (#${count})`,
         });
@@ -1138,6 +1163,7 @@ export class EvaluationDataset {
         if (primary) {
           const rootOutput = primary.output ?? primary.rootSpans?.[0]?.output;
           const testCase = new LLMTestCase({
+            expectations: traceGolden.expectations,
             input: traceGolden.input,
             actualOutput:
               rootOutput != null
@@ -1218,6 +1244,9 @@ export class EvaluationDataset {
           .reduce((s, m) => s + (m.evaluationCost ?? 0), 0);
         const passed = results.filter((r) => r.success).length;
         printCompletionSummary({
+          showLoginPrompt: !allCases.some(
+            (c) => c.testCase.expectations != null,
+          ),
           runDuration,
           tokenCost,
           passed,

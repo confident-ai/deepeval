@@ -157,6 +157,7 @@ export class ConversationSimulator {
       turns,
       scenario: golden.scenario,
       userDescription: golden.userDescription,
+      expectations: golden.expectations,
       expectedOutcome: golden.expectedOutcome,
       context: golden.context,
       name: golden.name,

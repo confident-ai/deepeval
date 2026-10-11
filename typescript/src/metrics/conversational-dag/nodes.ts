@@ -1,6 +1,10 @@
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { resolveTemplate } from "@/templates";
 import { generateWithSchema } from "@/metrics/utils";
+import {
+  generateBinaryJudgement,
+  generateChoiceJudgement,
+} from "@/metrics/system-one/decision";
 import { CONVERSATIONAL_G_EVAL_PARAMS } from "@/metrics/conversational-g-eval/utils";
 import {
   BinaryJudgementVerdictSchema,
@@ -248,13 +252,23 @@ export class ConversationalBinaryJudgementNode
   }
 
   async execute(ctx: NodeContext): Promise<JudgementVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "ConversationalBinaryJudgement",
-      "generate_binary_verdict",
-      { criteria: this.criteria, text: this.resolveText(ctx) },
-    );
-    return generateWithSchema(ctx.metric, prompt, BinaryJudgementVerdictSchema);
+    const text = this.resolveText(ctx);
+    return generateBinaryJudgement(ctx.metric, {
+      systemOne: { instructions: this.criteria, state: { text } },
+      llm: () => {
+        const prompt = resolveTemplate(
+          "metrics",
+          "ConversationalBinaryJudgement",
+          "generate_binary_verdict",
+          { criteria: this.criteria, text },
+        );
+        return generateWithSchema(
+          ctx.metric,
+          prompt,
+          BinaryJudgementVerdictSchema,
+        );
+      },
+    });
   }
 
   verboseLog(depth: number, result: unknown): string {
@@ -324,22 +338,32 @@ export class ConversationalNonBinaryJudgementNode
   }
 
   async execute(ctx: NodeContext): Promise<JudgementVerdict> {
-    const prompt = resolveTemplate(
-      "metrics",
-      "ConversationalNonBinaryJudgement",
-      "generate_non_binary_verdict",
-      {
-        criteria: this.criteria,
-        text: this.resolveText(ctx),
+    const text = this.resolveText(ctx);
+    return generateChoiceJudgement(ctx.metric, {
+      systemOne: {
+        instructions: this.criteria,
         options: this.verdictOptions,
-        example_verdict_option: this.verdictOptions[0],
+        state: { text },
       },
-    );
-    return generateWithSchema(
-      ctx.metric,
-      prompt,
-      nonBinaryVerdictSchema(this.verdictOptions),
-    );
+      llm: () => {
+        const prompt = resolveTemplate(
+          "metrics",
+          "ConversationalNonBinaryJudgement",
+          "generate_non_binary_verdict",
+          {
+            criteria: this.criteria,
+            text,
+            options: this.verdictOptions,
+            example_verdict_option: this.verdictOptions[0],
+          },
+        );
+        return generateWithSchema(
+          ctx.metric,
+          prompt,
+          nonBinaryVerdictSchema(this.verdictOptions),
+        );
+      },
+    });
   }
 
   verboseLog(depth: number, result: unknown): string {

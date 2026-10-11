@@ -374,7 +374,7 @@ def test_anthropic_disables_thinking_by_default(mock_require_dep, settings):
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_thinking_enabled_sends_budget(mock_require_dep, settings):
     model, client = _anthropic_model(
-        mock_require_dep, settings, "claude-opus-5", thinking=True
+        mock_require_dep, settings, "claude-opus-4-6", thinking=True
     )
 
     model.generate("prompt", schema=_Verdict)
@@ -401,7 +401,25 @@ def test_anthropic_thinking_raises_when_budget_cannot_fit(
     )
 
     with pytest.raises(DeepEvalError, match="max_tokens"):
-        AnthropicModel(model="claude-opus-5", max_tokens=512)
+        AnthropicModel(model="claude-opus-4-6", max_tokens=512)
+
+
+@pytest.mark.parametrize(
+    "model_name",
+    ["claude-opus-4-7", "claude-opus-4-8", "claude-opus-5", "claude-sonnet-5"],
+)
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_thinking_is_adaptive_on_newer_models(
+    mock_require_dep, model_name, settings
+):
+    """These models reject `thinking.type: "enabled"` with a budget."""
+    model, client = _anthropic_model(
+        mock_require_dep, settings, model_name, thinking=True
+    )
+
+    model.generate("prompt", schema=_Verdict)
+    assert client.create_kwargs["thinking"] == {"type": "adaptive"}
+    assert "temperature" not in client.create_kwargs
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
@@ -415,6 +433,27 @@ def test_anthropic_omits_thinking_for_models_without_the_parameter(
 
     model.generate("prompt", schema=_Verdict)
     assert "thinking" not in client.create_kwargs
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_opus_5_5_sends_no_temperature_or_thinking(
+    mock_require_dep, settings
+):
+    """claude-opus-5-5 rejects `temperature` and a disabled thinking block."""
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+
+    client = _MessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+    )
+    model = AnthropicModel(model="claude-opus-5-5", temperature=0)
+
+    _, cost = model.generate("prompt", schema=_Verdict)
+    assert "temperature" not in client.create_kwargs
+    assert "thinking" not in client.create_kwargs
+    assert cost == pytest.approx(10 * 4e-06 + 20 * 2e-05)
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
@@ -443,7 +482,7 @@ def test_anthropic_explicit_thinking_kwarg_wins(mock_require_dep, settings):
 def test_anthropic_thinking_enabled_raises_max_tokens_default(
     mock_require_dep, settings
 ):
-    """Thinking needs headroom the 1024 default does not have."""
+    """Thinking needs headroom on top of the plain default."""
     thinking_model, _ = _anthropic_model(
         mock_require_dep, settings, "claude-opus-5", thinking=True
     )
@@ -484,12 +523,119 @@ def test_anthropic_raises_when_response_has_no_text_block(
         model.generate("prompt", schema=_Verdict)
 
 
+@pytest.mark.parametrize(
+    "model_name, input_price, output_price",
+    [
+        ("claude-fable-5-1", 10.00, 50.00),
+        ("claude-sonnet-5", 2.00, 10.00),
+        ("claude-3-5-haiku", 0.80, 4.00),
+    ],
+)
+def test_anthropic_prices_match_pricing_page(
+    model_name, input_price, output_price
+):
+    from deepeval.models.llms.constants import ANTHROPIC_MODELS_DATA
+
+    assert model_name in ANTHROPIC_MODELS_DATA
+    model_data = ANTHROPIC_MODELS_DATA.get(model_name)
+    assert model_data.input_price == pytest.approx(input_price / 1e6)
+    assert model_data.output_price == pytest.approx(output_price / 1e6)
+
+
+class _FakeBadRequestError(Exception):
+    pass
+
+
+def _structured_anthropic_model(mock_require_dep, settings, model):
+    anthropic_model, client = _anthropic_model(
+        mock_require_dep, settings, model
+    )
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+        BadRequestError=_FakeBadRequestError,
+        transform_schema=lambda schema: {"title": schema.__name__},
+    )
+    return anthropic_model, client
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_sends_output_schema_for_supported_models(
+    mock_require_dep, settings
+):
+    model, client = _structured_anthropic_model(
+        mock_require_dep, settings, "claude-opus-5"
+    )
+
+    verdict, _ = model.generate("prompt", schema=_Verdict)
+
+    assert client.create_kwargs["output_config"] == {
+        "format": {"type": "json_schema", "schema": {"title": "_Verdict"}}
+    }
+    assert verdict.verdict == "yes"
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_omits_output_schema_without_schema_or_for_legacy_models(
+    mock_require_dep, settings
+):
+    model, client = _structured_anthropic_model(
+        mock_require_dep, settings, "claude-opus-5"
+    )
+    model.generate("prompt")
+    assert "output_config" not in client.create_kwargs
+
+    legacy, legacy_client = _structured_anthropic_model(
+        mock_require_dep, settings, "claude-3-5-sonnet"
+    )
+    legacy.generate("prompt", schema=_Verdict)
+    assert "output_config" not in legacy_client.create_kwargs
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_falls_back_to_text_json_when_schema_rejected(
+    mock_require_dep, settings
+):
+    model, client = _structured_anthropic_model(
+        mock_require_dep, settings, "claude-opus-5"
+    )
+    calls = []
+    original_create = client._create
+
+    def _create(**create_kwargs):
+        calls.append(create_kwargs)
+        if "output_config" in create_kwargs:
+            raise _FakeBadRequestError("schema not supported")
+        return original_create(**create_kwargs)
+
+    client.messages = SimpleNamespace(create=_create)
+
+    verdict, _ = model.generate("prompt", schema=_Verdict)
+    assert verdict.verdict == "yes"
+    assert [("output_config" in c) for c in calls] == [True, False]
+
+    model.generate("prompt", schema=_Verdict)
+    assert "output_config" not in calls[-1]
+    assert len(calls) == 3
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_default_max_tokens_fits_long_verdict_lists(
+    mock_require_dep, settings
+):
+    model, _ = _anthropic_model(mock_require_dep, settings, "claude-opus-5")
+    legacy, _ = _anthropic_model(mock_require_dep, settings, "claude-3-haiku")
+
+    assert model._max_tokens == DEFAULT_MAX_TOKENS == 8192
+    assert legacy._max_tokens == 4096
+
+
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
 async def test_anthropic_thinking_applies_to_a_generate(
     mock_require_dep, settings
 ):
     model, client = _anthropic_model(
-        mock_require_dep, settings, "claude-opus-5", thinking=True
+        mock_require_dep, settings, "claude-opus-4-6", thinking=True
     )
 
     async def _acreate(**create_kwargs):

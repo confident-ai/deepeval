@@ -208,6 +208,19 @@ export {
   type Rubric,
 } from "@/metrics/g-eval";
 export {
+  JevEval,
+  type JevEvalOptions,
+  Noul,
+  Score,
+  Choice,
+  type JevQuestion,
+  type QuestionOutcome,
+} from "@/metrics/jev-eval";
+export {
+  ConversationalJevEval,
+  type ConversationalJevEvalOptions,
+} from "@/metrics/conversational-jev-eval";
+export {
   JsonCorrectnessMetric,
   type JsonCorrectnessMetricOptions,
   type JsonCorrectnessTemplateOverride,

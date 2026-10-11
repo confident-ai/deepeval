@@ -10,7 +10,8 @@ from deepeval.metrics.utils import (
     initialize_model,
     initialize_system_one_model,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics import DeepAcyclicGraph
 from deepeval.metrics.dag.utils import (
@@ -27,6 +28,10 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         name: str,
         dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         threshold: Optional[float] = 0.5,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -43,8 +48,12 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         self._verbose_steps: List[str] = []
         self.dag = copy_graph(dag)
         self.name = name
+        # See `DAGMetric`: no whole-chain form; task nodes need the LLM.
+        self.eval_mode = resolve_eval_mode(eval_mode)
         self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason

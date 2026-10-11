@@ -1,1 +1,0 @@
-Does the conversation in `turns` (with the conversation-level fields in `test_case`) satisfy the evaluation `step`? Judge this step on its own, using `evaluation_steps` only as context.

@@ -10,7 +10,8 @@ from deepeval.metrics.utils import (
     initialize_model,
     initialize_system_one_model,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 from deepeval.metrics.dag.graph import DeepAcyclicGraph
@@ -28,6 +29,10 @@ class DAGMetric(BaseMetric):
         name: str,
         dag: DeepAcyclicGraph,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         threshold: Optional[float] = 0.5,
         include_reason: bool = True,
         async_mode: bool = True,
@@ -47,8 +52,14 @@ class DAGMetric(BaseMetric):
         self._verbose_steps: List[str] = []
         self.dag = copy_graph(dag)
         self.name = name
+        # A DAG has no whole-chain System One form (the user defines the
+        # graph), so under `system_one` its judgement nodes ask Jev with no
+        # fallback, and task nodes still need the LLM: it is always built.
+        self.eval_mode = resolve_eval_mode(eval_mode)
         self.model, self.using_native_model = initialize_model(model)
-        self.system_one_model = initialize_system_one_model()
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
         self.evaluation_model = self.model.get_model_name()
         self.threshold = 1 if strict_mode else threshold
         self.include_reason = include_reason

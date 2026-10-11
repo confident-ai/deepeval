@@ -20,6 +20,18 @@ from deepeval.utils import convert_to_multi_modal_array
 from .models import MULTIMODAL_SUPPORTED_MODELS
 
 
+def _reject_multimodal_without_llm(metric, model: Optional[DeepEvalBaseLLM]):
+    """A metric has no LLM only when a System One model (Jev) is judging it,
+    and Jev reads text only."""
+    if model is None:
+        name = getattr(metric, "__name__", type(metric).__name__)
+        raise ValueError(
+            f"{name} is judged by System One (Jev) in this eval mode, and Jev "
+            f"evaluates text only. Run multimodal test cases with "
+            f'`eval_mode="llm"` or `eval_mode="hybrid"`.'
+        )
+
+
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
     test_case_params: List[MultiTurnParams],
@@ -27,8 +39,10 @@ def check_conversational_test_case_params(
     require_chatbot_role: bool = False,
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
+    require_mcp_servers: bool = False,
 ):
     if multimodal:
+        _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []
@@ -86,8 +100,20 @@ def check_conversational_test_case_params(
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
+    if require_mcp_servers and not test_case.mcp_servers:
+        error_str = f"'mcp_servers' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
     if len(test_case.turns) == 0:
         error_str = "'turns' in conversational test case cannot be empty."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if MultiTurnParams.PROVIDER_TRANSCRIPT in test_case_params and not any(
+        turn.provider_transcript is not None for turn in test_case.turns
+    ):
+        error_str = f"No turn in the conversational test case has a 'provider_transcript', which the '{metric.__name__}' metric needs. Only voice connectors that report the agent's own transcription of the caller populate it, so a phone call or a text conversation will never have one."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
@@ -102,6 +128,7 @@ def check_llm_test_case_params(
     multimodal: Optional[bool] = False,
 ):
     if multimodal:
+        _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []
@@ -170,6 +197,44 @@ def check_llm_test_case_params(
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
+
+
+def prepare_measure(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    multimodal: Optional[bool] = None,
+) -> None:
+    """What every measure does before judging: validate the test case
+    against the metric's required params and zero its cost and token
+    counters. Shared with the batched System One path in `evaluate()`, which
+    judges the metric without calling its `measure`. `multimodal` defaults
+    to the test case's own flag."""
+    if multimodal is None:
+        multimodal = test_case.multimodal
+    if isinstance(metric, BaseConversationalMetric):
+        check_conversational_test_case_params(
+            test_case,
+            metric._required_test_case_params,
+            metric,
+            metric._requires_chatbot_role,
+            metric.model,
+            multimodal,
+            require_mcp_servers=metric._requires_mcp_servers,
+        )
+    else:
+        check_llm_test_case_params(
+            test_case,
+            metric._required_params,
+            None,
+            None,
+            metric,
+            metric.model,
+            multimodal,
+        )
+    native = metric.using_native_model
+    metric.evaluation_cost = 0 if native else None
+    metric.input_tokens = 0 if native else None
+    metric.output_tokens = 0 if native else None
 
 
 def check_arena_test_case_params(

@@ -1,0 +1,213 @@
+---
+id: metrics-transcription-accuracy
+title: Transcription Accuracy
+sidebar_label: Transcription Accuracy
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer jev={true} multiTurn={true} chatbot={true} referenceless={true} />
+
+The transcription accuracy metric measures whether your voice agent's **own speech-to-text** heard the caller correctly. It compares what the caller said against the transcription the agent's connector reported for that speech, so a reply that looks wrong can be traced to a mis-heard word rather than to the LLM behind it.
+
+:::note
+This is the metric for the case where an agent answers sensibly but answers the wrong question. If the caller says one thing and the agent hears another, every downstream turn will be coherent and wrong, nothing in the conversation text alone would tell you why.
+:::
+
+## Required Arguments
+
+To use the `TranscriptionAccuracyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+
+You must provide the `role` and `content` for every turn, and `provider_transcript` on at least one `"assistant"` turn. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
+:::caution
+Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate `provider_transcript`. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed.
+:::
+
+## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
+
+The `TranscriptionAccuracyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TranscriptionAccuracyMetric
+from deepeval import evaluate
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="Siobhan Kavanagh here, I can start in two weeks."),
+        Turn(
+            role="assistant",
+            content="Great to meet you Siobhan, two weeks works.",
+            provider_transcript="Siobhan Cavanaugh here, I can start in two weeks.",
+        ),
+    ]
+)
+metric = TranscriptionAccuracyMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and `provider_transcript` holding what the agent reported hearing:
+
+```python
+from deepeval.dataset import ConversationalGolden
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+golden = ConversationalGolden(
+    scenario="A recruiter's voice agent screens a candidate for a backend role.",
+    expected_outcome="The candidate states their name and their notice period.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+evaluate(test_cases=test_cases, metrics=[TranscriptionAccuracyMetric()])
+```
+
+There are **NINE** optional parameters when creating a `TranscriptionAccuracyMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
+
+### As a standalone
+
+You can also run the `TranscriptionAccuracyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated?
+
+The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a `provider_transcript` is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
+
+You can change how the `TranscriptionAccuracyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+### LLM-as-a-judge
+
+The `TranscriptionAccuracyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Transcription Accuracy} = \frac{\text{Number of Exchanges Heard Faithfully}}{\text{Total Number of Exchanges}}" />
+
+An LLM judges each exchange, and deliberately **does not** count these as errors, because they are the same utterance written differently:
+
+- Punctuation, capitalisation and sentence splitting — `"Yes, could you"` vs `"Yes. Could you"`
+- Numbers as digits rather than words — `"fifteen years"` vs `"15 years"`
+- Dropped filler words, and the same utterance emitted twice by the speech-to-text engine
+
+It **does** count these, because they change what the agent was told:
+
+- A name or other proper noun heard as a different word — `"Kavanagh"` vs `"Cavanaugh"`
+- A number, date or duration whose value differs — `"fifteen"` vs `"fifty"`, `"two weeks"` vs `"two months"`
+- A negation gained or lost — `"I can't start"` vs `"I can start"`
+- An empty transcription where the caller spoke, which means the agent heard nothing at all
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the verdict for each exchange is answered by Jev, a System One model, instead: one yes/no question per exchange on whether the transcription captures what was spoken, with `P(yes) >= 0.5` counted as faithful. The equation and the LLM-written reason are unchanged, and the reason still quotes the words that differed. If a Jev call fails, the LLM makes that decision instead.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the paired `exchanges` and asked three questions:
+
+| Question                                                                                                                                                  | Type  | Weight |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| In most entries of `exchanges`, `transcribed` captures what the caller said in `spoken`; the differences there are harmless.                               | Noul  | 1      |
+| No entry of `exchanges` has a name, number, date or duration whose value differs, a negation gained or lost, or an empty `transcribed` where the caller spoke. | Noul  | 1      |
+| Across `exchanges`, how faithfully did `transcribed` capture what the caller said in `spoken`? (Mostly mis-heard → Every turn heard correctly)             | Score | 2      |
+
+:::note
+Under `system_one` Jev gives one holistic judgement of the call, whereas the LLM chain scores each exchange and takes the fraction. The two Noul questions are all-or-nothing, so a call with any meaning-altering error scores lower here than the fraction would suggest. Keep this metric on one eval mode when comparing results across runs.
+:::
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Where does `provider_transcript` come from?",
+      answer: (
+        <>
+          From the voice agent itself, through its connector — it is the agent's
+          own speech-to-text output, not something deepeval transcribed. The{" "}
+          <a href="/docs/integrations-voice-agent-connectors-livekit">LiveKit</a>,{" "}
+          <a href="/docs/integrations-voice-agent-connectors-elevenlabs">
+            ElevenLabs
+          </a>
+          , <a href="/docs/integrations-voice-agent-connectors-vapi">Vapi</a> and{" "}
+          <a href="/docs/integrations-voice-agent-connectors-pipecat">Pipecat</a>{" "}
+          connectors all report it when the agent publishes one.
+        </>
+      ),
+    },
+    {
+      question: "Why does the metric raise instead of returning 0?",
+      answer: (
+        <>
+          Because a conversation with no transcription anywhere is one the
+          metric cannot measure, not one the agent failed. Scoring it 0 would
+          make every phone call fail a metric that never had an input. An empty
+          transcription on a turn where the caller <em>did</em> speak is a real
+          failure and is scored as one.
+        </>
+      ),
+    },
+    {
+      question: "My transcription looks perfect but the score is below 1 — why?",
+      answer: (
+        <>
+          Read <code>metric.reason</code>: it quotes what was spoken and what
+          was heard for each exchange it failed. The usual cause is a proper
+          noun — names are 10 to 100 times rarer in speech-to-text training data
+          than common words, so they are where engines fail first, and a wrong
+          surname reads as plausible until you compare the two strings.
+        </>
+      ),
+    },
+    {
+      question: "Should I run this alongside my other conversational metrics?",
+      answer: (
+        <>
+          Yes. This metric says nothing about whether the agent's replies were
+          good — only whether it heard the caller. Pair it with{" "}
+          <a href="/docs/metrics-turn-relevancy">TurnRelevancyMetric</a> or{" "}
+          <a href="/docs/metrics-conversation-completeness">
+            ConversationCompletenessMetric
+          </a>
+          , and read this one first when they fail: a low score here explains a
+          low score there.
+        </>
+      ),
+    },
+  ]}
+/>

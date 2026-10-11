@@ -1,0 +1,1 @@
+Do the assistant turns in `turns` satisfy `intention`? Answer no if the assistant ignored, refused or only partly addressed it.

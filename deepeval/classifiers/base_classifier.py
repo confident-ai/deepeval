@@ -9,6 +9,7 @@ from deepeval.metrics.base_metric import PromptMixin
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 if TYPE_CHECKING:
+    from deepeval.config.eval_mode import EvalMode
     from deepeval.models import DeepEvalBaseLLM
     from deepeval.models.base_model import DeepEvalBaseSystemOneModel
 
@@ -92,8 +93,13 @@ class BaseClassifier(PromptMixin):
     skipped = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
-    # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+    # System One (Jev); mirrors `BaseMetric`. See EXPERIMENTAL.md.
+    eval_mode: Optional[EvalMode] = None
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
+    confidence: Optional[float] = None
+    system_one_fallback_reason: Optional[str] = None
+    _system_one_outcomes: Optional[list] = None
+    _system_one_disabled: bool = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

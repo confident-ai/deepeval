@@ -1,5 +1,7 @@
 import { Cloud } from "lucide-react";
 import { PrimaryButton } from "@/src/components/Buttons";
+import MascotPeek from "@/src/components/MascotPeek";
+import { CAST } from "@/src/components/Mascot/_cast";
 import { CONFIDENT_HOSTS_BY_NAME } from "@/src/utils/utm";
 import { externalRelForOutboundHref } from "@/src/utils/outbound-link-rel";
 import styles from "./CloudPlatformCallout.module.scss";
@@ -17,15 +19,17 @@ const CloudPlatformCallout: React.FC = () => {
         </span>
       </span>
       <span className={styles.cta}>
-        <PrimaryButton
-          href={CONFIDENT_HOSTS_BY_NAME.APP}
-          target="_blank"
-          rel={externalRelForOutboundHref(CONFIDENT_HOSTS_BY_NAME.APP)}
-          aria-label="Explore Cloud Platform"
-          data-utm-content="toc_cloud_platform"
-        >
-          Launch Platform
-        </PrimaryButton>
+        <MascotPeek mascot={CAST.classic}>
+          <PrimaryButton
+            href={CONFIDENT_HOSTS_BY_NAME.APP}
+            target="_blank"
+            rel={externalRelForOutboundHref(CONFIDENT_HOSTS_BY_NAME.APP)}
+            aria-label="Explore Cloud Platform"
+            data-utm-content="toc_cloud_platform"
+          >
+            Launch Platform
+          </PrimaryButton>
+        </MascotPeek>
       </span>
     </div>
   );

@@ -1,10 +1,13 @@
+import {
+  withExpectations,
+  validateExpectationCoverage,
+} from "@/evaluate/expectations";
 import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import { Golden } from "@/dataset";
 import { BaseMetric, BaseConversationalMetric } from "@/metrics";
 import { DeepEvalError } from "@/errors";
 import {
   getMaxConcurrent,
-  mapWithConcurrency,
   shouldIgnoreErrors,
   shouldSkipOnMissingParams,
 } from "@/env-flags";
@@ -17,11 +20,13 @@ import {
 import { checkAtLeastOneMetricHasThreshold } from "@/metrics/utils";
 import { ErrorConfig } from "@/evaluate/configs";
 import {
-  runMetric,
+  measureTestCase,
+  resolveCacheConfig,
   buildTestResult,
   metricMatchesCase,
 } from "@/evaluate/evaluate";
 import {
+  countTraceMetrics,
   evaluateTrace,
   primaryTraceFor,
   turnTestCase,
@@ -90,9 +95,8 @@ export async function evaluateCase(
   testCase: AnyTestCase,
   metrics: AnyMetric[],
 ): Promise<EvaluatedCase> {
-  if (!metrics || metrics.length === 0) {
-    throw new DeepEvalError("toPass requires at least one metric.");
-  }
+  if (!metrics?.length) validateExpectationCoverage([testCase]);
+  metrics = withExpectations(metrics ?? [], testCase);
   checkAtLeastOneMetricHasThreshold(metrics);
   const mismatched = metrics.filter((m) => !metricMatchesCase(m, testCase));
   if (mismatched.length > 0) {
@@ -110,12 +114,12 @@ export async function evaluateCase(
   }
 
   const start = Date.now();
-  const errorConfig = runErrorConfig();
-  const metricsData = await mapWithConcurrency(
-    metrics,
-    getMaxConcurrent(),
-    (m) => runMetric(m, testCase, errorConfig, () => {}),
-  );
+  const metricsData = await measureTestCase(testCase, metrics, {
+    errorCfg: runErrorConfig(),
+    cacheCfg: resolveCacheConfig(),
+    maxConcurrent: getMaxConcurrent(),
+    onDone: () => {},
+  });
   return {
     testCase,
     metricsData,
@@ -167,6 +171,11 @@ export async function runCallbackMetrics(
   }
 
   const primary = primaryTraceFor(traces);
+  if (golden?.expectations?.hasConditions && !primary) {
+    throw new DeepEvalError(
+      "Unable to evaluate expectations: no observed trace was captured.",
+    );
+  }
   if (traces.length > 1) {
     console.warn(
       `\n⚠ The callback produced ${traces.length} traces. Trace-level metrics ` +
@@ -195,6 +204,14 @@ export async function runCallbackMetrics(
     }
   }
 
+  if (
+    !traces.some(
+      (trace) =>
+        countTraceMetrics(trace, trace === primary ? golden : undefined) > 0,
+    )
+  ) {
+    validateExpectationCoverage([golden ?? {}]);
+  }
   const allMetrics: MetricData[] = [];
   let turnCase: EvaluatedCase | undefined;
 

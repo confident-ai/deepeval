@@ -24,6 +24,7 @@ from deepeval.dataset.utils import (
     persona_kwargs,
     serialize_persona,
     serialize_retrieval_context,
+    strip_local_expectation_fields,
     join_context,
     join_retrieval_context,
     parse_list_cell,
@@ -165,6 +166,7 @@ class EvaluationDataset:
 
                 golden._dataset_alias = self._alias
                 golden._dataset_id = self._id
+                golden._dataset_version = self._version
                 golden._dataset_rank = len(goldens)
                 if self._multi_turn:
                     self._add_conversational_golden(golden)
@@ -199,6 +201,7 @@ class EvaluationDataset:
 
             test_case._dataset_alias = self._alias
             test_case._dataset_id = self._id
+            test_case._dataset_version = self._version
             if isinstance(test_case, LLMTestCase):
                 test_case._dataset_rank = len(llm_test_cases)
                 llm_test_cases.append(test_case)
@@ -215,6 +218,7 @@ class EvaluationDataset:
     ):
         test_case._dataset_alias = self._alias
         test_case._dataset_id = self._id
+        test_case._dataset_version = self._version
         if isinstance(test_case, LLMTestCase):
             if self._conversational_goldens or self._conversational_test_cases:
                 raise TypeError(
@@ -373,7 +377,14 @@ class EvaluationDataset:
             lambda value: ast.literal_eval(value) if value else None,
         )
 
+        expectations_values = _parse_column(
+            df,
+            "expectations",
+            lambda value: trimAndLoadJson(value) if value else None,
+        )
+
         for (
+            expectations,
             input,
             actual_output,
             expected_output,
@@ -383,6 +394,7 @@ class EvaluationDataset:
             expected_tools,
             metadata,
         ) in zip(
+            expectations_values,
             inputs,
             actual_outputs,
             expected_outputs,
@@ -394,6 +406,7 @@ class EvaluationDataset:
         ):
             self.add_test_case(
                 LLMTestCase(
+                    expectations=expectations,
                     input=input,
                     actual_output=actual_output,
                     expected_output=expected_output,
@@ -474,6 +487,7 @@ class EvaluationDataset:
 
             self.add_test_case(
                 LLMTestCase(
+                    expectations=json_obj.get("expectations"),
                     input=input,
                     actual_output=actual_output,
                     expected_output=expected_output,
@@ -607,7 +621,14 @@ class EvaluationDataset:
         expected_outcomes = get_column_data(df, expected_outcome_col_name)
         user_descriptions = get_column_data(df, user_description_col_name)
 
+        expectations_values = _parse_column(
+            df,
+            "expectations",
+            lambda value: trimAndLoadJson(value) if value else None,
+        )
+
         for (
+            expectations,
             input,
             actual_output,
             expected_output,
@@ -628,6 +649,7 @@ class EvaluationDataset:
             expected_outcome,
             user_description,
         ) in zip(
+            expectations_values,
             inputs,
             actual_outputs,
             expected_outputs,
@@ -652,6 +674,7 @@ class EvaluationDataset:
                 parsed_turns = parse_turns(turns) if turns else []
                 self.add_golden(
                     ConversationalGolden(
+                        expectations=expectations,
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
@@ -666,6 +689,7 @@ class EvaluationDataset:
             else:
                 self.add_golden(
                     Golden(
+                        expectations=expectations,
                         input=input,
                         actual_output=actual_output,
                         expected_output=expected_output,
@@ -734,6 +758,7 @@ class EvaluationDataset:
 
                 self.add_golden(
                     ConversationalGolden(
+                        expectations=json_obj.get("expectations"),
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
@@ -768,6 +793,7 @@ class EvaluationDataset:
 
                 self.add_golden(
                     Golden(
+                        expectations=json_obj.get("expectations"),
                         input=input,
                         actual_output=actual_output,
                         expected_output=expected_output,
@@ -869,6 +895,7 @@ class EvaluationDataset:
 
                 self.add_golden(
                     ConversationalGolden(
+                        expectations=json_obj.get("expectations"),
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
@@ -912,6 +939,7 @@ class EvaluationDataset:
 
                 self.add_golden(
                     Golden(
+                        expectations=json_obj.get("expectations"),
                         input=input,
                         actual_output=actual_output,
                         expected_output=expected_output,
@@ -953,6 +981,10 @@ class EvaluationDataset:
         except AttributeError:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
+
+        strip_local_expectation_fields(
+            body.get("goldens") or body.get("conversationalGoldens") or []
+        )
 
         _, link = api.send_request(
             method=HttpMethods.POST,
@@ -1020,7 +1052,7 @@ class EvaluationDataset:
             if auto_convert_goldens_to_test_cases:
                 if not self._multi_turn:
                     llm_test_cases = convert_goldens_to_test_cases(
-                        response.goldens, alias, response.id
+                        response.goldens, alias, response.id, response.version
                     )
                     self._llm_test_cases.extend(llm_test_cases)
                 else:
@@ -1029,6 +1061,7 @@ class EvaluationDataset:
                             response.conversational_goldens,
                             alias,
                             response.id,
+                            response.version,
                         )
                     )
                     self._conversational_test_cases.extend(
@@ -1043,6 +1076,7 @@ class EvaluationDataset:
                 for golden in self.goldens:
                     golden._dataset_alias = alias
                     golden._dataset_id = response.id
+                    golden._dataset_version = response.version
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -1107,6 +1141,9 @@ class EvaluationDataset:
         except AttributeError:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
+        strip_local_expectation_fields(
+            body.get("goldens") or body.get("conversationalGoldens") or []
+        )
 
         _, link = api.send_request(
             method=HttpMethods.POST,
@@ -1155,6 +1192,7 @@ class EvaluationDataset:
         except AttributeError:
             # Pydantic version below 2.0
             golden_body = golden.dict(by_alias=True, exclude_none=True)
+        strip_local_expectation_fields([golden_body])
         golden_body["finalized"] = finalized
 
         api.send_request(
@@ -1285,6 +1323,7 @@ class EvaluationDataset:
                     comments=golden.comments,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
+                    expectations=golden.expectations,
                 )
                 for golden in self.goldens
             ]
@@ -1303,6 +1342,7 @@ class EvaluationDataset:
                     expected_tools=golden.expected_tools,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
+                    expectations=golden.expectations,
                 )
                 for golden in self.goldens
             ]
@@ -1353,6 +1393,11 @@ class EvaluationDataset:
                                 "comments": golden.comments,
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
+                                "expectations": (
+                                    golden.expectations.model_dump()
+                                    if golden.expectations is not None
+                                    else None
+                                ),
                             }
                         )
                 else:
@@ -1401,6 +1446,11 @@ class EvaluationDataset:
                                 "output_token_count": golden.output_token_count,
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
+                                "expectations": (
+                                    golden.expectations.model_dump()
+                                    if golden.expectations is not None
+                                    else None
+                                ),
                             }
                         )
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
@@ -1421,6 +1471,7 @@ class EvaluationDataset:
                             "comments",
                             "additional_metadata",
                             "custom_column_key_values",
+                            "expectations",
                         ]
                     )
                     for golden in goldens:
@@ -1456,6 +1507,11 @@ class EvaluationDataset:
                                 golden.comments,
                                 additional_metadata,
                                 custom_cols,
+                                (
+                                    golden.expectations.model_dump_json()
+                                    if golden.expectations is not None
+                                    else None
+                                ),
                             ]
                         )
                 else:
@@ -1476,6 +1532,7 @@ class EvaluationDataset:
                             "output_token_count",
                             "additional_metadata",
                             "custom_column_key_values",
+                            "expectations",
                         ]
                     )
                     for golden in goldens:
@@ -1538,6 +1595,11 @@ class EvaluationDataset:
                                 golden.output_token_count,
                                 additional_metadata,
                                 custom_cols,
+                                (
+                                    golden.expectations.model_dump_json()
+                                    if golden.expectations is not None
+                                    else None
+                                ),
                             ]
                         )
         elif file_type == "jsonl":
@@ -1560,6 +1622,11 @@ class EvaluationDataset:
                             "comments": golden.comments,
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
+                            "expectations": (
+                                golden.expectations.model_dump()
+                                if golden.expectations is not None
+                                else None
+                            ),
                         }
                     else:
                         retrieval_context = serialize_retrieval_context(
@@ -1605,6 +1672,11 @@ class EvaluationDataset:
                             "output_token_count": golden.output_token_count,
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
+                            "expectations": (
+                                golden.expectations.model_dump()
+                                if golden.expectations is not None
+                                else None
+                            ),
                         }
 
                     file.write(json.dumps(record, ensure_ascii=False) + "\n")

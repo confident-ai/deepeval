@@ -166,7 +166,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                     model=self.name,
                     messages=messages,
                     response_format=schema,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
@@ -183,7 +183,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                     model=self.name,
                     messages=messages,
                     response_format={"type": "json_object"},
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
@@ -199,7 +199,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.name,
             messages=messages,
-            temperature=self.temperature,
+            **self._temperature_kwargs(),
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -233,7 +233,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                     model=self.name,
                     messages=messages,
                     response_format=schema,
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
@@ -250,7 +250,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                     model=self.name,
                     messages=messages,
                     response_format={"type": "json_object"},
-                    temperature=self.temperature,
+                    **self._temperature_kwargs(),
                     **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
@@ -266,7 +266,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.name,
             messages=messages,
-            temperature=self.temperature,
+            **self._temperature_kwargs(),
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -318,7 +318,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.name,
             messages=messages,
-            temperature=self.temperature,
+            **self._temperature_kwargs(),
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
@@ -357,7 +357,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.name,
             messages=messages,
-            temperature=self.temperature,
+            **self._temperature_kwargs(),
             logprobs=True,
             top_logprobs=top_logprobs,
             **self.generation_kwargs,
@@ -394,6 +394,12 @@ class OpenAIModel(DeepEvalBaseLLM):
     #############
     # Utilities #
     #############
+
+    def _temperature_kwargs(self) -> Dict:
+        # Reasoning models reject `temperature` outright, even at its default.
+        if self.model_data.supports_temperature is False:
+            return {}
+        return {"temperature": self.temperature}
 
     def calculate_cost(
         self, input_tokens: int, output_tokens: int

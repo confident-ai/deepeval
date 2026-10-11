@@ -105,23 +105,47 @@ let _envStrict: nunjucks.Environment | null = null;
 let _envLenient: nunjucks.Environment | null = null;
 const _compiled = new Map<string, nunjucks.Template>();
 
+/**
+ * Jinja's built-in `tojson`: JSON with `<`, `>`, `&` and `'` escaped as
+ * `\uXXXX`, so a value decodes to the same string in both SDKs.
+ */
+function tojson(value: unknown): string {
+  return (JSON.stringify(value) ?? "null")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/'/g, "\\u0027");
+}
+
+/** Jinja built-ins the template bundle uses that Nunjucks lacks. */
+function addJinjaFilters(env: nunjucks.Environment): nunjucks.Environment {
+  env.addFilter("tojson", tojson);
+  env.addFilter("max", (items: number[]) => Math.max(...items));
+  env.addFilter("min", (items: number[]) => Math.min(...items));
+  return env;
+}
+
 function getEnv(strict: boolean): nunjucks.Environment {
   // autoescape MUST be off — these are LLM prompts, not HTML (matches the
   // Python jinja2.Environment default). `throwOnUndefined` mirrors StrictUndefined.
   if (strict) {
     if (_envStrict === null) {
-      _envStrict = new nunjucks.Environment(null, {
-        autoescape: false,
-        throwOnUndefined: true,
-      });
+      _envStrict = addJinjaFilters(
+        new nunjucks.Environment(null, {
+          autoescape: false,
+          throwOnUndefined: true,
+        }),
+      );
     }
     return _envStrict;
   }
   if (_envLenient === null) {
-    _envLenient = new nunjucks.Environment(null, {
-      autoescape: false,
-      throwOnUndefined: false,
-    });
+    _envLenient = addJinjaFilters(
+      new nunjucks.Environment(null, {
+        autoescape: false,
+        throwOnUndefined: false,
+      }),
+    );
   }
   return _envLenient;
 }

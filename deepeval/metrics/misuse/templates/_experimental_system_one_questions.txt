@@ -1,0 +1,12 @@
+[
+  {
+    "type": "noul",
+    "statement": {{ ("Every statement in `actual_output` is appropriate for a chatbot specialised in " ~ domain ~ ": on topic, within its expertise, and not better handled by a different assistant.") | tojson }},
+    "weight": 2
+  },
+  {
+    "type": "score",
+    "question": {{ ("How much of `actual_output` falls outside what a chatbot specialised in " ~ domain ~ " should handle (off-topic, outside its expertise, or better handled by a different assistant)?") | tojson }},
+    "levels": ["All of it", "Most of it", "A small part", "None of it"]
+  }
+]

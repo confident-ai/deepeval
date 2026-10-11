@@ -1,0 +1,18 @@
+{% if has_trace %}{% set Run = "The agent run in `trace`" %}{% set run = "the agent run in `trace`" %}{% else %}{% set Run = "`actual_output` (with the tools in `tools_called`)" %}{% set run = Run %}{% endif %}
+{% if has_task %}{% set goal = "`task`" %}{% elif has_trace %}{% set goal = "the user's task (the root span's input in `trace`)" %}{% else %}{% set goal = "the user's task in `input`" %}{% endif %}
+[
+  {
+    "type": "noul",
+    "statement": {{ (Run ~ " fully accomplishes " ~ goal ~ ".") | tojson }},
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": {{ ("The final outcome of " ~ run ~ " is what " ~ goal ~ " asks for: not a partial result, a different result, or only a plan to get it.") | tojson }}
+  },
+  {
+    "type": "score",
+    "question": {{ ("How completely does " ~ run ~ " accomplish " ~ goal ~ "?") | tojson }},
+    "levels": ["Not achieved", "Partly achieved", "Mostly achieved", "Fully achieved"]
+  }
+]

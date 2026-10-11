@@ -1,0 +1,1 @@
+How correct are the arguments of the MCP calls the agent made in `steps_taken`: do they match each primitive's input schema in `mcp_servers` (required fields present, right names and types, well formed) and carry the values the user's `task` calls for?

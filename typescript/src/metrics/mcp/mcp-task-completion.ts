@@ -2,33 +2,52 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
-import { MissingTestCaseParamsError } from "@/errors";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
 } from "@/metrics/utils";
-import {
-  checkConversationalTestCaseParams,
-  getUnitInteractions,
-} from "@/metrics/conversational-utils";
+import { getUnitInteractions } from "@/metrics/conversational-utils";
 import { getTasks, taskStepsTakenText } from "@/metrics/mcp/utils";
+import {
+  formatDecisionReason,
+  parseQuestions,
+  runSystemOneEval,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   TaskScoreSchema,
   ReasonSchema,
   type TaskScore,
+  type Task,
 } from "@/metrics/mcp/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "MCPTaskCompletionMetric";
 
 export type MCPTaskCompletionTemplateOverride =
   MetricTemplateOverride<"MCPTaskCompletionMetric">;
 
+const TASK_COMPLETION_LEVELS = [
+  "Not completed",
+  "Partly completed",
+  "Mostly completed",
+  "Fully completed",
+];
+
 export interface MCPTaskCompletionMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -55,37 +74,20 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
     this.multimodalAware = true;
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    this.requiresMcpServers = true;
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      if (!testCase.mcpServers || testCase.mcpServers.length === 0) {
-        const msg =
-          "'mcpServers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric.";
-        this.error = msg;
-        throw new MissingTestCaseParamsError(msg);
-      }
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const tasks = getTasks(getUnitInteractions(testCase.turns));
       const taskScores = await Promise.all(
-        tasks.map((task) =>
-          generateWithSchema(
-            this,
-            this.getPrompt("get_task_completion_score", {
-              task,
-              steps_taken: taskStepsTakenText(task),
-            }),
-            TaskScoreSchema,
-          ),
-        ),
+        tasks.map((task) => this.getTaskScore(task, testCase.multimodal)),
       );
 
       const mean =
@@ -104,6 +106,61 @@ export class MCPTaskCompletionMetric extends BaseConversationalMetric {
     } finally {
       this.stopProgress();
     }
+  }
+
+  private async getTaskScore(
+    task: Task,
+    multimodal: boolean,
+  ): Promise<TaskScore> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneScoreSpec(task, multimodal),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "task completion", value),
+      };
+    }
+    return generateWithSchema(
+      this,
+      this.getPrompt("get_task_completion_score", {
+        task,
+        steps_taken: taskStepsTakenText(task),
+      }),
+      TaskScoreSchema,
+    );
+  }
+
+  private systemOneScoreSpec(
+    task: Task,
+    multimodal: boolean,
+  ): SystemOneScoreSpec | undefined {
+    if (multimodal) return undefined;
+    return {
+      instructions: this.getPrompt("_experimental_system_one_score"),
+      levels: TASK_COMPLETION_LEVELS,
+      state: { task: task.task, steps_taken: task.steps_taken },
+    };
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.MCP_TOOLS,
+        MultiTurnParams.MCP_RESOURCES,
+        MultiTurnParams.MCP_PROMPTS,
+        MultiTurnParams.TOOLS_CALLED,
+      ],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async generateReason(

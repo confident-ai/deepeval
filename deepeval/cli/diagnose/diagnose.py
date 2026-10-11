@@ -90,7 +90,7 @@ _RELEVANT_MARKERS = (
     "DEEPEVAL_RESULTS_FOLDER",
     "DEEPEVAL_LOCAL_STORE",
     "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
-    "DEEPEVAL_MODE",
+    "DEEPEVAL_EVAL_MODE",
     "DEEPEVAL_VOICE_FOLDER",
     "DEEPEVAL_TTS_MODEL",
     "DEEPEVAL_STT_MODEL",
@@ -468,14 +468,13 @@ def _local_storage_section() -> Dict[str, Any]:
     return info
 
 
-def _mode_section() -> Dict[str, Any]:
-    """Which feature channel is in effect, always shown (even on defaults)."""
-    from deepeval.config.mode import MODE_ENV_VAR, resolve_deepeval_mode
+def _eval_mode_section() -> Dict[str, Any]:
+    """Which eval mode is in effect, always shown (even on defaults)."""
+    from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
 
-    mode = resolve_deepeval_mode()
     return {
-        "mode": mode.value,
-        "mode_source": resolve_setting_source(MODE_ENV_VAR)
+        "eval_mode": resolve_eval_mode().value,
+        "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
         or "built-in default",
     }
 
@@ -494,7 +493,7 @@ def diagnose_command(
         "python_executable": sys.executable,
         "default_models": _models_section(),
         "local_storage": _local_storage_section(),
-        "mode": _mode_section(),
+        "eval_mode": _eval_mode_section(),
         "configured_settings": _configured_settings_section(),
         "setting_sources": _setting_sources_section(),
         "confident_ai": _confident_section(),
@@ -573,24 +572,19 @@ def diagnose_command(
         "--save=dotenv`.[/dim]\n"
     )
 
-    # Feature channel: stable (default) or experimental
-    mode = report["mode"]
-    table = _kv_table("Mode")
+    # Eval mode: who judges LLM-as-a-judge metrics and classifiers
+    eval_mode = report["eval_mode"]
+    table = _kv_table("Eval mode")
     table.add_row(
-        "Channel",
-        f"[bold]{mode['mode']}[/bold] [dim]({mode['mode_source']})[/dim]",
+        "Eval mode",
+        f"[bold]{eval_mode['eval_mode']}[/bold] "
+        f"[dim]({eval_mode['eval_mode_source']})[/dim]",
     )
     console.print(table)
-    if mode["mode"] == "experimental":
-        console.print(
-            "[dim]Experimental features may change or break between releases. "
-            "Opt out with `deepeval set-mode stable --save=dotenv`.[/dim]\n"
-        )
-    else:
-        console.print(
-            "[dim]Change with `deepeval set-mode <stable|experimental> "
-            "--save=dotenv`.[/dim]\n"
-        )
+    console.print(
+        "[dim]Change with `deepeval set-eval-mode <llm|hybrid|system_one> "
+        "--save=dotenv`.[/dim]\n"
+    )
 
     # Configured settings and their winning sources
     rows = report["configured_settings"]

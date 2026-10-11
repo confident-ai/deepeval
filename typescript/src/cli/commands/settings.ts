@@ -23,6 +23,11 @@ import {
   normalizeDeepEvalMode,
 } from "@/config/mode";
 import {
+  EvalMode,
+  SUPPORTED_EVAL_MODES,
+  normalizeEvalMode,
+} from "@/config/eval-mode";
+import {
   badParameter,
   handleSaveResult,
   printTable,
@@ -274,6 +279,57 @@ export function registerSettingsCommands(program: Command): void {
               "`npx deepeval set-mode stable` to opt out."
             : "✅ You're now on the stable channel (the default).",
       });
+    });
+
+  program
+    .command("set-eval-mode")
+    .description(
+      "Choose who decides in LLM-as-a-judge metrics (sets DEEPEVAL_EVAL_MODE).",
+    )
+    .argument(
+      "<mode>",
+      `Who decides: '${EvalMode.LLM}' (default, the LLM runs the whole chain), ` +
+        `'${EvalMode.HYBRID}' (the LLM extracts, a System One model decides, ` +
+        `the LLM covers any decision whose Jev call fails) or ` +
+        `'${EvalMode.SYSTEM_ONE}' (a System One model runs the whole metric ` +
+        `in one request, with no LLM and no fallback).`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((mode: string, options) => {
+      const normalized = normalizeEvalMode(mode);
+      if (normalized === undefined) {
+        badParameter(
+          `Eval mode must be one of ${SUPPORTED_EVAL_MODES.join(", ")}.`,
+        );
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_EVAL_MODE = normalized;
+        },
+        { save },
+      );
+
+      const successMessage =
+        normalized === EvalMode.SYSTEM_ONE
+          ? "🧠 Eval mode is now `system_one`: built-in metrics are decided " +
+            "entirely by your System One model (Jev) in one request, with no " +
+            "LLM and no fallback (DAG metrics run as `hybrid`, since their " +
+            "task nodes need the LLM). Make sure TYPESAFE_API_KEY is set " +
+            "(`npx deepeval set-typesafe`); run `npx deepeval set-eval-mode " +
+            "llm` to switch back."
+          : normalized === EvalMode.HYBRID
+            ? "🧪 Eval mode is now `hybrid`: the LLM extracts and explains, " +
+              "your System One model (Jev) takes the decision points, and the " +
+              "LLM covers any decision whose Jev call fails. Make sure " +
+              "TYPESAFE_API_KEY is set (`npx deepeval set-typesafe`); run " +
+              "`npx deepeval set-eval-mode llm` to switch back."
+            : "✅ Eval mode is now `llm` (the default): the LLM runs every " +
+              "metric end to end.";
+
+      handleSaveResult({ result, save, quiet: options.quiet, successMessage });
     });
 
   program

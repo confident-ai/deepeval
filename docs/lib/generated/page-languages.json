@@ -68,19 +68,7 @@
   "/docs/classifiers-clarification": [
     "python"
   ],
-  "/docs/classifiers-classifier": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-escalation": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-instruction-completeness": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-resolution": [
-    "python"
-  ],
-  "/docs/classifiers-conversation-scope-adherence": [
+  "/docs/classifiers-custom": [
     "python"
   ],
   "/docs/classifiers-data-leakage": [
@@ -105,6 +93,9 @@
     "python"
   ],
   "/docs/classifiers-required-disclosure": [
+    "python"
+  ],
+  "/docs/classifiers-resolution": [
     "python"
   ],
   "/docs/classifiers-response-language": [
@@ -178,6 +169,10 @@
     "typescript"
   ],
   "/docs/evaluation-end-to-end-single-turn": [
+    "python",
+    "typescript"
+  ],
+  "/docs/evaluation-eval-modes": [
     "python",
     "typescript"
   ],
@@ -306,10 +301,6 @@
     "python",
     "typescript"
   ],
-  "/docs/metrics-conversational-g-eval": [
-    "python",
-    "typescript"
-  ],
   "/docs/metrics-custom": [
     "python"
   ],
@@ -334,6 +325,10 @@
     "typescript"
   ],
   "/docs/metrics-introduction": [
+    "python",
+    "typescript"
+  ],
+  "/docs/metrics-jev-eval": [
     "python",
     "typescript"
   ],
@@ -433,6 +428,9 @@
   "/docs/metrics-toxicity": [
     "python",
     "typescript"
+  ],
+  "/docs/metrics-transcription-accuracy": [
+    "python"
   ],
   "/docs/metrics-turn-contextual-precision": [
     "python",
@@ -544,6 +542,13 @@
     "python"
   ],
   "/guides/guides-dag-metric": [
+    "python"
+  ],
+  "/guides/guides-g-eval-examples": [
+    "python",
+    "typescript"
+  ],
+  "/guides/guides-jev-eval-examples": [
     "python"
   ],
   "/guides/guides-multi-turn-evaluation": [
@@ -693,7 +698,8 @@
     "typescript"
   ],
   "/integrations/models/typesafe-ai": [
-    "python"
+    "python",
+    "typescript"
   ],
   "/integrations/models/vertex-ai": [
     "python",

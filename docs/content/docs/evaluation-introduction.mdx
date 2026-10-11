@@ -7,40 +7,86 @@ languages: [python, typescript]
 
 ## Quick Summary
 
-Evaluation refers to the process of testing your LLM application outputs, and requires the following components:
+Evaluation refers to the process of testing your LLM application outputs. At the top level, there are **TWO** types of LLM apps:
 
-- Test cases
+- **Single-turn**: Each interaction is one input and one output, such as a RAG QA app or a one-shot agent.
+- **Multi-turn**: Each interaction is a back-and-forth conversation, such as a chatbot or a customer support agent.
+
+Either type can also vary in:
+
+- **Modality**: Inputs and outputs can be text, images, voice, or video.
+- **Data access**: Your LLM app can pull in external data through tool calls, RAG, or MCP.
+
+Here's what an ideal evaluation workflow looks like using `deepeval`, and the components it requires, for each type. Multi-turn LLM apps have an extra simulation step that generates conversations for you to evaluate:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+- Test cases (`LLMTestCase`s)
 - Metrics
-- Evaluation dataset
+- Evaluation dataset of `Golden`s
 - <Only id="python">[Optional] [Classifiers](/docs/classifiers-introduction), which label each test case from a closed set instead of scoring it</Only>
-
-Here's a diagram of what an ideal evaluation workflow looks like using `deepeval`:
 
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
     participant DS as EvaluationDataset
-    participant M as Metrics
     participant App as LLMApp
-    participant DE as `deepeval`
+    participant DE as deepeval
 
-    Dev->>DS: Generate or load dataset
-    Dev->>M: Define evaluation metrics
+    Dev->>DS: Generate or load goldens
     loop Evaluate, improve, re-run
-        DS->>App: Run LLM app on dataset
-        App->>DE: Produce outputs to evaluate
-        DE->>Dev: Report failing cases + metric scores
+        DS->>App: Run LLM app on each golden
+        App->>DE: Produce test cases to evaluate
+        DE->>DE: Run evals using metrics
+        DE->>Dev: Report failing test cases + metric scores
         Dev->>App: Improve prompts, tools, or logic
     end
 ```
 
-There are **TWO** types of LLM evaluations in `deepeval`:
+</Tab>
+<Tab value="Multi-Turn">
+
+- Test cases (`ConversationalTestCase`s)
+- Multi-turn metrics
+- Evaluation dataset of `ConversationalGolden`s
+- Conversation simulator, which turns each `ConversationalGolden` into a conversation
+- <Only id="python">[Optional] [Classifiers](/docs/classifiers-introduction), which label each test case from a closed set instead of scoring it</Only>
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant DS as EvaluationDataset
+    participant Sim as ConversationSimulator
+    participant App as LLMApp
+    participant DE as deepeval
+
+    Dev->>DS: Generate or load conversational goldens
+    loop Evaluate, improve, re-run
+        DS->>Sim: Provide scenarios to simulate
+        loop Each turn
+            Sim->>App: Send simulated user message
+            App->>Sim: Return assistant response
+        end
+        Sim->>DE: Produce conversational test cases
+        DE->>DE: Run evals using metrics
+        DE->>Dev: Report failing test cases + metric scores
+        Dev->>App: Improve prompts, tools, or logic
+    end
+```
+
+</Tab>
+</Tabs>
+
+There are **THREE** types of LLM evaluations in `deepeval`:
 
 - [End-to-end evaluation](/docs/evaluation-end-to-end-llm-evals): The overall input and outputs of your LLM system.
 
+- [Trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals): The complete chain of decisions and actions your agent takes, evaluated as one unit.
+
 - [Component-level evaluation](/docs/evaluation-component-level-llm-evals): The individual inner workings of your LLM system.
 
-Both can be done using either <Term py="deepeval test run" ts="npx deepeval test run"/> in CI/CD pipelines, or via the `evaluate()` function in your scripts.
+All three can be done using either <Term py="deepeval test run" ts="npx deepeval test run"/> in CI/CD pipelines, or via the `evaluate()` function in your scripts.
 
 :::note
 Your test cases will typically be in a single <Term py="test_example.py" ts="example.test.ts"/> file, and executing them will be as easy as running one command:
@@ -67,13 +113,16 @@ npx deepeval test run example.test.ts
 
 :::
 
-## Test Run
+## Evals
 
-Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports) on the cloud.
+Evals are what score your LLM application in `deepeval`. There are two kinds:
 
-## Metrics
+- [Metrics](/docs/metrics-introduction), which are **quantitative** evals that score each test case.
+- <Only id="python">[Classifiers](/docs/classifiers-introduction), which are **categorical** evals that label each test case from a closed set.</Only>
 
-`deepeval` offers 30+ evaluation metrics, most of which are evaluated using LLMs (visit the [metrics section](/docs/metrics-introduction#types-of-metrics) to learn why).
+### Metrics
+
+Metrics are quantitative evals: each one returns a score between 0 and 1 along with a reason, and passes or fails against a `threshold`. `deepeval` offers 30+ metrics, most of which are evaluated using LLMs (visit the [metrics section](/docs/metrics-introduction#types-of-metrics) to learn why).
 
 <Switch>
 
@@ -99,53 +148,44 @@ const answerRelevancyMetric = new AnswerRelevancyMetric();
 
 </Switch>
 
-You'll need to create a test case to run `deepeval`'s metrics.
+<Only id="python">
 
-## Test Cases
+### Classifiers
 
-In `deepeval`, a test case represents an [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) and allows you to use evaluation metrics you have defined to unit test LLM applications.
+Classifiers are categorical evals: instead of a score, they label each test case with one option from a closed set, such as whether your LLM app `refused` a request. Visit the [classifiers section](/docs/classifiers-introduction) to learn when to use them over metrics.
+
+```python
+from deepeval.classifiers import RefusalClassifier
+
+refusal_classifier = RefusalClassifier()
+```
+
+:::tip
+Both metrics and classifiers are judged by an LLM by default. Set the [eval mode](/docs/evaluation-eval-modes) to choose between using an LLM as a judge, Jev as a judge, or both together.
+:::
+
+</Only>
+
+You'll need to create a test case to run `deepeval`'s evals.
+
+## Test Run
+
+Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports) on the cloud.
+
+### Test Cases
+
+In `deepeval`, a test case represents an [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) and allows you to use the evals you have defined to unit test LLM applications. Single-turn LLM apps are evaluated with an `LLMTestCase`, while multi-turn LLM apps, such as chatbots, are evaluated with a `ConversationalTestCase`:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
 
 <Switch>
 
 <Case id="python">
 
 ```python
-from deepeval.test_case import LLMTestCase
-
-test_case = LLMTestCase(
-  input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
-  retrieval_context=["Joe Biden serves as the current president of America."]
-)
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { LLMTestCase } from "deepeval/test-case";
-
-const testCase = new LLMTestCase({
-  input: "Who is the current president of the United States of America?",
-  actualOutput: "Joe Biden",
-  retrievalContext: ["Joe Biden serves as the current president of America."],
-});
-```
-
-</Case>
-
-</Switch>
-
-In this example, `input` mimics an user interaction with a RAG-based LLM application, where <Term py="actual_output" ts="actualOutput"/> is the output of your LLM application and <Term py="retrieval_context" ts="retrievalContext"/> is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
-
-<Switch>
-
-<Case id="python">
-
-```python
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
 
 answer_relevancy_metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(
@@ -180,6 +220,65 @@ console.log(answerRelevancyMetric.score);
 </Case>
 
 </Switch>
+
+In this example, `input` mimics an user interaction with a RAG-based LLM application, where <Term py="actual_output" ts="actualOutput"/> is the output of your LLM application and <Term py="retrieval_context" ts="retrievalContext"/> is the retrieved nodes in your RAG pipeline.
+
+</Tab>
+<Tab value="Multi-Turn">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.metrics import ConversationCompletenessMetric
+from deepeval.test_case import ConversationalTestCase, Turn
+
+conversation_completeness_metric = ConversationCompletenessMetric()
+test_case = ConversationalTestCase(
+  scenario="User wants to cancel their subscription.",
+  turns=[
+    Turn(role="user", content="I want to cancel my plan."),
+    Turn(role="assistant", content="Done. Your plan is cancelled effective today."),
+  ]
+)
+
+conversation_completeness_metric.measure(test_case)
+print(conversation_completeness_metric.score)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ConversationCompletenessMetric } from "deepeval/metrics";
+import { ConversationalTestCase, Turn } from "deepeval/test-case";
+
+const conversationCompletenessMetric = new ConversationCompletenessMetric();
+const testCase = new ConversationalTestCase({
+  scenario: "User wants to cancel their subscription.",
+  turns: [
+    new Turn({ role: "user", content: "I want to cancel my plan." }),
+    new Turn({
+      role: "assistant",
+      content: "Done. Your plan is cancelled effective today.",
+    }),
+  ],
+});
+
+await conversationCompletenessMetric.measure(testCase);
+console.log(conversationCompletenessMetric.score);
+```
+
+</Case>
+
+</Switch>
+
+In this example, `turns` is the conversation between a user and your chatbot, and `scenario` describes what the user is trying to achieve.
+
+</Tab>
+</Tabs>
 
 A test case **passes** only if every metric that carries a verdict succeeds. Two flags let you control which verdicts count:
 
@@ -253,7 +352,84 @@ await evaluate(dataset.testCases, [answerRelevancyMetric]);
 You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert individual test cases.
 :::
 
-## Synthesizer
+### Goldens
+
+A golden is a test case that hasn't been run through your LLM application yet. It holds the input and the expected results, and becomes a test case once your LLM app produces an output for it. Single-turn LLM apps use a `Golden`, while multi-turn LLM apps use a `ConversationalGolden`, which the [simulator](#simulator) turns into a full conversation:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import Golden
+
+golden = Golden(
+  input="Who is the current president of the United States of America?",
+  expected_output="Joe Biden"
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Golden } from "deepeval/dataset";
+
+const golden = new Golden({
+  input: "Who is the current president of the United States of America?",
+  expectedOutput: "Joe Biden",
+});
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="Multi-Turn">
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import ConversationalGolden
+
+golden = ConversationalGolden(
+  scenario="User wants to cancel their subscription.",
+  expected_outcome="The plan is cancelled and the user receives a confirmation."
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ConversationalGolden } from "deepeval/dataset";
+
+const golden = new ConversationalGolden({
+  scenario: "User wants to cancel their subscription.",
+  expectedOutcome: "The plan is cancelled and the user receives a confirmation.",
+});
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>
+
+## Synthetic Data
+
+`deepeval` can generate the data you evaluate with, so you don't have to write every golden or conversation by hand.
+
+### Synthesizer
 
 <Switch>
 
@@ -286,6 +462,66 @@ dataset = EvaluationDataset(goldens=goldens)
 It generates synthetic goldens for you when you have neither production data nor a golden dataset. Until it lands, build your `EvaluationDataset` from goldens you write by hand or [pull one from Confident AI](/docs/evaluation-datasets) — everything else on this page works the same.
 
 </NotImplemented>
+
+</Case>
+
+</Switch>
+
+### Simulator
+
+The simulator is only relevant if you're evaluating a multi-turn LLM app, such as a chatbot. It takes your `ConversationalGolden`s, role-plays a user in each scenario, and records your chatbot's responses turn by turn, producing `ConversationalTestCase`s for you to evaluate.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import ConversationalGolden
+from deepeval.simulator import ConversationSimulator
+from deepeval.test_case import Turn
+
+async def model_callback(input: str) -> Turn:
+  return Turn(role="assistant", content=your_chatbot(input))
+
+simulator = ConversationSimulator(model_callback=model_callback)
+test_cases = simulator.simulate(
+  conversational_goldens=[
+    ConversationalGolden(
+      scenario="User wants to cancel their subscription.",
+      expected_outcome="The plan is cancelled and the user receives a confirmation."
+    )
+  ]
+)
+```
+
+:::info
+The `ConversationSimulator` supports personas, custom stopping logic, and voice agents. You can learn more about it [here.](/docs/conversation-simulator)
+:::
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { ConversationalGolden } from "deepeval/dataset";
+import { ConversationSimulator } from "deepeval";
+import { Turn } from "deepeval/test-case";
+
+const simulator = new ConversationSimulator({
+  modelCallback: async ({ input }) =>
+    new Turn({ role: "assistant", content: await yourChatbot(input) }),
+});
+
+const testCases = await simulator.simulate({
+  conversationalGoldens: [
+    new ConversationalGolden({
+      scenario: "User wants to cancel their subscription.",
+      expectedOutcome:
+        "The plan is cancelled and the user receives a confirmation.",
+    }),
+  ],
+});
+```
 
 </Case>
 
@@ -389,7 +625,7 @@ Importing `deepeval/vitest` registers the `toPass()` matcher. `npx deepeval test
 
 </Switch>
 
-You can find the full documentation on running evals in CI/CD, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines) and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
+You can find the full documentation on running evals in CI/CD, for [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines), [trajectory-based](/docs/evaluation-trajectory-based-llm-evals#in-cicd), and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
 
 You can include the command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
 

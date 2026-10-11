@@ -65,12 +65,25 @@ MetricTemplateMethod = Literal[
     "get_tool_selection_final_reason",
     "get_tool_selection_score",
     "rewrite_reason",
-    # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    # `hybrid`: the Noul asked per QAG item or single verdict, and the
+    # Score asked where the LLM prompt returned a graded score.
     "_experimental_system_one_verdict",
-    "_experimental_system_one_strict_verdict",
-    "_experimental_system_one_step_verdict",
-    "_experimental_system_one_rubric_score",
-    "_experimental_system_one_reason",
+    "_experimental_system_one_answered_verdict",
+    "_experimental_system_one_on_topic_verdict",
+    "_experimental_system_one_score",
+    "_experimental_system_one_args_score",
+    "_experimental_system_one_argument_correctness_score",
+    "_experimental_system_one_goal_score",
+    "_experimental_system_one_mcp_use_args_score",
+    "_experimental_system_one_mcp_use_primitive_score",
+    "_experimental_system_one_plan_score",
+    "_experimental_system_one_primitive_score",
+    "_experimental_system_one_tool_selection_score",
+    # `system_one`: a JSON array of Noul / Score / Choice questions that
+    # describe the whole metric as one System One request.
+    "_experimental_system_one_questions",
+    "_experimental_system_one_mcp_use_questions",
 ]
 
 # Keep in sync with the method keys in `templates/simulator/templates.json`.
@@ -86,9 +99,8 @@ SimulatorTemplateMethod = Literal[
 ClassifierTemplateMethod = Literal[
     "classify_single_turn",
     "classify_multi_turn",
-    # Experimental (DEEPEVAL_MODE=experimental); see EXPERIMENTAL.md.
+    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
     "_experimental_system_one_classify",
-    "_experimental_system_one_reason",
 ]
 
 TemplateMethod = (

@@ -29,3 +29,5 @@ export {
   convertToMultiModalArray,
   type MLLMImageParams,
 } from "@/test-case/mllm-image";
+
+export { Expectations, type ExpectationsOptions } from "@/dataset/expectations";

@@ -1,0 +1,1 @@
+Is the last `assistant` turn in `turns` relevant to the conversation so far, judged using the earlier turns as context? Answer yes for vague replies to vague user turns such as greetings; answer no only if it is completely irrelevant to what the user said.

@@ -1,3 +1,4 @@
+from deepeval.dataset.expectations import expectation_evidence
 import logging
 import sys
 import json
@@ -157,6 +158,11 @@ class TestRunCacheManager:
             ),
             "hyperparameters": hyperparameters,
         }
+        if test_case.expectations:
+            cache_dict["expectations"] = test_case.expectations.model_dump(
+                mode="json"
+            )
+            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_case = cached_test_run.get_cached_api_test_case(
             test_case_cache_key
@@ -187,6 +193,11 @@ class TestRunCacheManager:
             ),
             "hyperparameters": hyperparameters,
         }
+        if test_case.expectations:
+            cache_dict["expectations"] = test_case.expectations.model_dump(
+                mode="json"
+            )
+            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (

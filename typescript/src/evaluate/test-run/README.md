@@ -23,23 +23,23 @@ as the backlog for closing parity.
 
 ## Capability matrix
 
-| Capability                      | Python                                      | TypeScript                | Gap                                             |
-| ------------------------------- | ------------------------------------------- | ------------------------- | ----------------------------------------------- |
-| Runner invocation               | `pytest.main()` in-process                  | `startVitest()` in-process | —                                               |
-| Assertion API                   | `assert_test(test_case, metrics)`           | `expect(tc).toPass([...])` | —                                               |
-| Trace-scoped assertion          | `assert_test(golden=...)`                   | `expect(golden).toPass()`  | —                                               |
-| Parallel workers                | `-n` (xdist) + portalocker                  | Vitest pools + per-pid JSONL | —                                             |
-| Plugin auto-registration        | `pytest11` entry point                      | per-file `import "deepeval/vitest"` | [8](#8-no-auto-registration)          |
-| Test name in results            | pytest nodeid                               | **`test_case_<n>`**        | [3](#3-the-test-name-is-never-captured)         |
-| `--ignore-errors` / `--skip-…`  | Yes                                         | **Hardcoded strict**       | [2](#2-error-handling-is-hardcoded-to-strict)   |
-| Metric cache (`-c`)             | `.deepeval-cache.json`                      | **None**                   | [5](#5-no-metric-cache)                         |
-| Display filter (`-d`)           | `all` / `failing` / `passing`               | **None**                   | [7](#7-missing-cli-flags)                       |
-| Repeat (`-r`), bail (`-x`), `-m`| Yes                                         | **None**                   | [7](#7-missing-cli-flags)                       |
-| Batched upload                  | 40 LLM / 20 conversational, POST + PUTs     | **Single POST**            | [4](#4-single-shot-upload-that-fails-silently)  |
-| Deferred upload when logged out | `.latest_test_run.json` + `deepeval view`   | **Results deleted**        | [6](#6-results-are-destroyed-when-not-logged-in)|
-| Post-run hook                   | `@deepeval.on_test_run_end`                 | **None**                   | [7](#7-missing-cli-flags)                       |
-| Hyperparameter logging          | `@deepeval.log_hyperparameters`             | `logHyperparameters()`     | —                                               |
-| Run telemetry                   | `capture_evaluation_run(Entrypoint.PYTEST)` | **None**                   | [9](#9-no-run-telemetry)                        |
+| Capability                       | Python                                      | TypeScript                          | Gap                                              |
+| -------------------------------- | ------------------------------------------- | ----------------------------------- | ------------------------------------------------ |
+| Runner invocation                | `pytest.main()` in-process                  | `startVitest()` in-process          | —                                                |
+| Assertion API                    | `assert_test(test_case, metrics)`           | `expect(tc).toPass([...])`          | —                                                |
+| Trace-scoped assertion           | `assert_test(golden=...)`                   | `expect(golden).toPass()`           | —                                                |
+| Parallel workers                 | `-n` (xdist) + portalocker                  | Vitest pools + per-pid JSONL        | —                                                |
+| Plugin auto-registration         | `pytest11` entry point                      | per-file `import "deepeval/vitest"` | [8](#8-no-auto-registration)                     |
+| Test name in results             | pytest nodeid                               | **`test_case_<n>`**                 | [3](#3-the-test-name-is-never-captured)          |
+| `--ignore-errors` / `--skip-…`   | Yes                                         | **Hardcoded strict**                | [2](#2-error-handling-is-hardcoded-to-strict)    |
+| Metric cache (`-c`)              | `.deepeval-cache.json`                      | **None**                            | [5](#5-no-metric-cache)                          |
+| Display filter (`-d`)            | `all` / `failing` / `passing`               | **None**                            | [7](#7-missing-cli-flags)                        |
+| Repeat (`-r`), bail (`-x`), `-m` | Yes                                         | **None**                            | [7](#7-missing-cli-flags)                        |
+| Batched upload                   | 40 LLM / 20 conversational, POST + PUTs     | **Single POST**                     | [4](#4-single-shot-upload-that-fails-silently)   |
+| Deferred upload when logged out  | `.latest_test_run.json` + `deepeval view`   | **Results deleted**                 | [6](#6-results-are-destroyed-when-not-logged-in) |
+| Post-run hook                    | `@deepeval.on_test_run_end`                 | **None**                            | [7](#7-missing-cli-flags)                        |
+| Hyperparameter logging           | `@deepeval.log_hyperparameters`             | `logHyperparameters()`              | —                                                |
+| Run telemetry                    | `capture_evaluation_run(Entrypoint.PYTEST)` | **None**                            | [9](#9-no-run-telemetry)                         |
 
 ## Cross-cutting gaps
 

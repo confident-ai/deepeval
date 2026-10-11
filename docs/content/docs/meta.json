@@ -13,6 +13,7 @@
 
     "---[FlaskConical]LLM Evals---",
     "evaluation-introduction",
+    "evaluation-eval-modes",
     "(concepts)",
     "evaluation-end-to-end-llm-evals",
     "evaluation-trajectory-based-llm-evals",

@@ -34,10 +34,17 @@ const languagesField = z
  */
 const betaField = z.literal(true).optional();
 
+/**
+ * `peek: true` hides a mascot behind the page title that peeks over it now
+ * and then. Like `beta`, omit it rather than writing `peek: false`.
+ */
+const peekField = z.literal(true).optional();
+
 const extendedPageSchema = pageSchema.extend({
   sidebar_label: z.string().optional(),
   languages: languagesField.optional(),
   beta: betaField,
+  peek: peekField,
 });
 
 /**

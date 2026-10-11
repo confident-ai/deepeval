@@ -7,6 +7,7 @@
     "metrics-turn-taking-naturalness",
     "metrics-agent-responsiveness",
     "metrics-audio-integrity",
-    "metrics-voice-reliability"
+    "metrics-voice-reliability",
+    "metrics-transcription-accuracy"
   ]
 }

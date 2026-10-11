@@ -1,20 +1,23 @@
-"""Shared core for ``JevEval`` and ``ConversationalJevEval``.
+"""Shared core for ``JevEval`` and ``ConversationalJevEval``, and for the
+whole-chain System One path built-in metrics take under ``system_one`` eval
+mode (``deepeval.metrics.utils.system_one``).
 
 The metric is one Jev ``decide()`` call followed by one equation:
 
     score = sum(w_i * v_i) / sum(w_i)   over applicable questions
 
 where ``v_i`` is the value each primitive's answer maps onto in ``[0, 1]``.
-Everything here is pure: no LLM, no network. The optional reason lives in the
-metric classes.
+Everything here is pure: no LLM, no network.
 """
 
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
+
+from pydantic import BaseModel
 
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils.decision import _jsonable
 from deepeval.metrics.utils.turns import convert_turn_to_dict
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
+from deepeval.models import DeepEvalBaseSystemOneModel
 from deepeval.models.system_one.schema import (
     SystemOneAnswers,
     SystemOneQuestion,
@@ -24,7 +27,6 @@ from deepeval.test_case import (
     LLMTestCase,
     MultiTurnParams,
     SingleTurnParams,
-    ToolCall,
 )
 
 from .questions import Choice, JevQuestion, Noul, QuestionOutcome, Score
@@ -64,18 +66,6 @@ def initialize_jev_model(
             "Pass a configured `TypeSafeModel` as `system_one_model`, or "
             "install `typesafe-sdk` and set TYPESAFE_API_KEY."
         ) from e
-
-
-def initialize_reason_model(
-    model: Optional[Union[str, DeepEvalBaseLLM]], include_reason: bool
-) -> Tuple[Optional[DeepEvalBaseLLM], bool]:
-    """The LLM only writes the reason. Without ``include_reason`` no LLM is
-    built at all, so JevEval runs with no LLM provider configured."""
-    from deepeval.metrics.utils.models import initialize_model
-
-    if not include_reason and not isinstance(model, DeepEvalBaseLLM):
-        return None, False
-    return initialize_model(model)
 
 
 ###############################################
@@ -130,7 +120,7 @@ def value_from_answer(
             value=p,
             applicable=True,
             probabilities={"true": p, "false": 1.0 - p},
-            confidence=None,
+            confidence=answer.confidence,
         )
 
     if isinstance(question, Score):
@@ -261,6 +251,9 @@ def aggregate_strict(outcomes: Sequence[QuestionOutcome]) -> float:
 
 
 def min_confidence(outcomes: Sequence[QuestionOutcome]) -> Optional[float]:
+    """The least decisive answer across the questions. Choice and Score carry
+    the API's confidence; a Noul's is derived (``|2p - 1|``, see
+    ``NoulAnswer.confidence``), so every outcome contributes."""
     values = [o.confidence for o in outcomes if o.confidence is not None]
     return min(values) if values else None
 
@@ -279,11 +272,12 @@ def _is_populated(value: Any) -> bool:
 
 
 def _field(value: Any) -> Any:
-    if isinstance(value, list) and value and isinstance(value[0], ToolCall):
-        # Structured, not repr(): Jev can then read `output` as data.
-        return [
-            tool.model_dump(mode="json", exclude_none=True) for tool in value
-        ]
+    # Structured, not repr(): Jev can then read a `ToolCall`'s `output` or a
+    # `RetrievedContextData`'s `context` as data.
+    if isinstance(value, BaseModel):
+        return value.model_dump(mode="json", exclude_none=True)
+    if isinstance(value, list):
+        return [_field(v) for v in value]
     return value
 
 
@@ -335,11 +329,11 @@ def construct_multi_turn_state(
 
 
 ###############################################
-# Verbalised outcomes (for the reason prompt)
+# Verbalised outcomes (for the deterministic reason)
 ###############################################
 #
-# The reason prompt never sees a number it could parrot. Each outcome is
-# turned into words before it reaches the LLM.
+# Each outcome is turned into words so the reason reads as a judgement, with
+# the numbers that produced it alongside.
 
 _RUNNER_UP_MARGIN = 0.15
 
@@ -374,29 +368,6 @@ def verbalise_outcome(outcome: QuestionOutcome) -> str:
     if not outcome.applicable:
         return "not applicable"
     return _verbalise_ranked(outcome.probabilities)
-
-
-def describe_outcomes(
-    questions: Sequence[JevQuestion], outcomes: Sequence[QuestionOutcome]
-) -> List[Dict[str, Any]]:
-    """What the reason prompt receives per question: no probabilities, no
-    score, just the question, its kind, its weight and the outcome in words."""
-    described: List[Dict[str, Any]] = []
-    for question, outcome in zip(questions, outcomes):
-        entry: Dict[str, Any] = {
-            "question": outcome.question,
-            "type": outcome.type,
-            "weight": outcome.weight,
-            "outcome": verbalise_outcome(outcome),
-            "levels": None,
-            "options": None,
-        }
-        if isinstance(question, Score):
-            entry["levels"] = list(question.levels)
-        elif isinstance(question, Choice):
-            entry["options"] = list(question.options)
-        described.append(entry)
-    return described
 
 
 def format_outcomes_for_logs(outcomes: Sequence[QuestionOutcome]) -> str:

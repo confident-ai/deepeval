@@ -1,0 +1,1 @@
+Judging only what the user sees in the agent's replies in `steps_taken` (internal tool calls and their outputs are invisible to the user unless the agent relays them), how completely and correctly is the user's `task` completed?
