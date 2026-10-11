@@ -7,7 +7,6 @@ from pydantic import (
     model_serializer,
 )
 from enum import Enum
-import uuid
 from typing import List, Optional, Dict, Any, Union, Type
 from pydantic import TypeAdapter
 
@@ -131,30 +130,23 @@ class OutputSchema(BaseModel):
 
 
 class Tool(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    id: Optional[str] = None
     name: str
-    description: str
+    description: Optional[str] = None
     mode: ToolMode
-    structured_schema: Optional[Union[Type[BaseModel], OutputSchema]] = Field(
-        serialization_alias="structuredSchema",
-        validation_alias=AliasChoices("structured_schema", "structuredSchema"),
+    input_schema: Union[Type[BaseModel], Dict[str, Any]] = Field(
+        serialization_alias="schema",
+        validation_alias=AliasChoices("schema", "input_schema"),
     )
+    version: Optional[str] = None
 
     @model_validator(mode="after")
-    def update_schema(self):
-        if not isinstance(self.structured_schema, OutputSchema):
-            from deepeval.prompt.utils import construct_output_schema
+    def convert_input_schema(self):
+        if not isinstance(self.input_schema, dict):
+            from deepeval.prompt.utils import construct_tool_input_schema
 
-            self.structured_schema = construct_output_schema(
-                self.structured_schema
-            )
+            self.input_schema = construct_tool_input_schema(self.input_schema)
         return self
-
-    @property
-    def input_schema(self) -> Dict[str, Any]:
-        from deepeval.prompt.utils import output_schema_to_json_schema
-
-        return output_schema_to_json_schema(self.structured_schema)
 
 
 ###################################

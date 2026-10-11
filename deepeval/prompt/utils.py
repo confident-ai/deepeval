@@ -8,6 +8,7 @@ from typing import (
     Optional,
     List,
     Match,
+    Tuple,
     Union,
     get_origin,
     get_args,
@@ -287,104 +288,118 @@ def construct_output_schema(
     return OutputSchema(fields=all_fields, name=base_model_class.__name__)
 
 
-def output_schema_to_json_schema(
-    schema: Optional[OutputSchema] = None,
+###################################
+# Tool Input Schema Construction
+###################################
+
+_TOOL_SCHEMA_KEYWORDS = {
+    "type",
+    "description",
+    "enum",
+    "properties",
+    "items",
+    "required",
+}
+
+_TOOL_SCHEMA_ANNOTATIONS = {"title", "default", "examples"}
+
+_UNION_KEYWORDS = ("anyOf", "oneOf", "allOf")
+_NULL_SCHEMA = {"type": "null"}
+
+
+def _inline_tool_schema_ref(
+    node: Dict[str, Any],
+    defs: Dict[str, Any],
+    location: str,
+    expanding: Tuple[str, ...],
+) -> Tuple[Dict[str, Any], Tuple[str, ...]]:
+    name = node.pop("$ref").rsplit("/", 1)[-1]
+    if name in expanding:
+        raise ValueError(
+            f"{location} refers to '{name}' recursively, which a tool "
+            "schema can't express."
+        )
+    return {**defs[name], **node}, (*expanding, name)
+
+
+def _unwrap_tool_schema_union(
+    node: Dict[str, Any], keyword: str, location: str
 ) -> Dict[str, Any]:
-    if not schema or not schema.fields:
-        return {
-            "type": "object",
-            "properties": {},
-            "additionalProperties": False,
-        }
+    branches = [b for b in node.pop(keyword) if b != _NULL_SCHEMA]
+    if len(branches) != 1:
+        raise ValueError(
+            f"{location} is a union of several types. A tool schema supports "
+            "only Optional[...] of one type."
+        )
+    return {**branches[0], **node}
 
-    # Build parent-child mapping
-    children_map: Dict[Optional[str], List[OutputSchemaField]] = {}
-    for field in schema.fields:
-        parent_id = field.parent_id
-        children_map.setdefault(parent_id, []).append(field)
 
-    # Map SchemaDataType to JSON Schema types
-    def map_type(dtype: SchemaDataType) -> str:
-        return {
-            SchemaDataType.STRING: "string",
-            SchemaDataType.INTEGER: "integer",
-            SchemaDataType.FLOAT: "number",
-            SchemaDataType.BOOLEAN: "boolean",
-            SchemaDataType.OBJECT: "object",
-            SchemaDataType.ARRAY: "array",
-            SchemaDataType.NULL: "null",
-        }.get(dtype, "string")
-
-    def build_node(field_list: List[OutputSchemaField]) -> Dict[str, Any]:
-        properties = {}
-        required_fields = []
-
-        for field in field_list:
-            field_type = (
-                field.type.value if hasattr(field.type, "value") else field.type
+def _resolve_tool_schema_node(
+    node: Dict[str, Any],
+    defs: Dict[str, Any],
+    location: str,
+    expanding: Tuple[str, ...],
+) -> Tuple[Dict[str, Any], Tuple[str, ...]]:
+    node = dict(node)
+    while True:
+        if "$ref" in node:
+            node, expanding = _inline_tool_schema_ref(
+                node, defs, location, expanding
             )
-            normalized_type = (
-                SchemaDataType(field_type)
-                if not isinstance(field_type, SchemaDataType)
-                else field_type
+            continue
+        keyword = next((k for k in _UNION_KEYWORDS if k in node), None)
+        if keyword is None:
+            return node, expanding
+        node = _unwrap_tool_schema_union(node, keyword, location)
+
+
+def _normalize_tool_schema_node(
+    node: Dict[str, Any],
+    defs: Dict[str, Any],
+    path: List[str],
+    expanding: Tuple[str, ...],
+) -> Dict[str, Any]:
+    location = ".".join(["root", *path])
+    node, expanding = _resolve_tool_schema_node(node, defs, location, expanding)
+
+    if "const" in node:
+        node["enum"] = [node.pop("const")]
+    if node.pop("additionalProperties", False) is not False:
+        raise ValueError(
+            f"{location} is a free-form dict. Describe its keys with a "
+            "pydantic model instead."
+        )
+
+    for keyword in _TOOL_SCHEMA_ANNOTATIONS:
+        node.pop(keyword, None)
+    unsupported = sorted(set(node) - _TOOL_SCHEMA_KEYWORDS)
+    if unsupported:
+        raise ValueError(
+            f"{location} uses {', '.join(unsupported)}, which a tool schema "
+            f"doesn't support. Use only {', '.join(sorted(_TOOL_SCHEMA_KEYWORDS))}."
+        )
+    if "type" not in node:
+        raise ValueError(
+            f"{location} has no type. Give the field a concrete type."
+        )
+
+    if "properties" in node:
+        node["properties"] = {
+            name: _normalize_tool_schema_node(
+                child, defs, [*path, name], expanding
             )
-
-            field_schema = {"type": map_type(normalized_type)}
-
-            # Add description if available
-            if field.description:
-                field_schema["description"] = field.description
-
-            if field_type == SchemaDataType.ARRAY.value:
-                children = children_map.get(field.id, [])
-                if children:
-                    item_field = children[0]
-                    item_type = (
-                        item_field.type.value
-                        if hasattr(item_field.type, "value")
-                        else item_field.type
-                    )
-                    item_normalized = (
-                        SchemaDataType(item_type)
-                        if not isinstance(item_type, SchemaDataType)
-                        else item_type
-                    )
-                    item_schema = {"type": map_type(item_normalized)}
-                    if item_type == SchemaDataType.OBJECT.value:
-                        obj_children = children_map.get(item_field.id, [])
-                        if obj_children:
-                            nested = build_node(obj_children)
-                            item_schema.update(nested)
-                        else:
-                            item_schema["properties"] = {}
-                            item_schema["additionalProperties"] = False
-                    field_schema["items"] = item_schema
-                else:
-                    field_schema["items"] = {}
-
-            elif field_type == SchemaDataType.OBJECT.value:
-                children = children_map.get(field.id, [])
-                if children:
-                    nested = build_node(children)
-                    field_schema.update(nested)
-                else:
-                    field_schema["properties"] = {}
-                    field_schema["additionalProperties"] = False
-
-            properties[field.name] = field_schema
-            if field.required:
-                required_fields.append(field.name)
-
-        schema_dict = {
-            "type": "object",
-            "properties": properties,
-            "additionalProperties": False,
+            for name, child in node["properties"].items()
         }
+    if "items" in node:
+        node["items"] = _normalize_tool_schema_node(
+            node["items"], defs, [*path, "items"], expanding
+        )
+    return node
 
-        if required_fields:
-            schema_dict["required"] = required_fields
 
-        return schema_dict
-
-    root_fields = children_map.get(None, [])
-    return build_node(root_fields)
+def construct_tool_input_schema(
+    base_model_class: Type[BaseModel],
+) -> Dict[str, Any]:
+    schema = base_model_class.model_json_schema()
+    defs = schema.pop("$defs", {})
+    return _normalize_tool_schema_node(schema, defs, [], ())
