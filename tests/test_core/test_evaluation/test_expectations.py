@@ -215,6 +215,26 @@ def test_conversation_checks_all_turns(judge, run_async):
 
 
 @pytest.mark.parametrize("run_async", [False, True])
+def test_single_turn_evidence_reads_metadata_and_tags(judge, run_async):
+    case = LLMTestCase(
+        input="Find patients over 50",
+        actual_output="Here are the matching patients",
+        expected_output="A list of patients over 50",
+        expected_tools=[ToolCall(name="search_patients")],
+        metadata={"filters": {"age": {"gt": 50}}},
+        tags=["search"],
+        expectations={"must": ["Filter on age greater than 50"]},
+    )
+    results = run([case], run_async)
+    assert results[0].success
+    evidence = json.loads(judge.prompts[0].split("\nObserved case: ", 1)[1])
+    assert evidence["metadata"] == {"filters": {"age": {"gt": 50}}}
+    assert evidence["tags"] == ["search"]
+    assert "expected_output" not in evidence
+    assert "expected_tools" not in evidence
+
+
+@pytest.mark.parametrize("run_async", [False, True])
 def test_mixed_cases_and_metrics(judge, run_async):
     cases = [
         LLMTestCase(
