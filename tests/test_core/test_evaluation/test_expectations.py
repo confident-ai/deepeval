@@ -375,6 +375,12 @@ def test_cache_invalidated_by_requirements_and_actions(monkeypatch):
     case.expectations.must[0] = "Cancel"
     case.tools_called = [ToolCall(name="cancel")]
     assert manager.get_cached_test_case(case, None) is None
+    manager.cache_test_case(case, CachedTestCase(), None)
+    case.metadata = {"filters": {"status": "active"}}
+    assert manager.get_cached_test_case(case, None) is None
+    manager.cache_test_case(case, CachedTestCase(), None)
+    case.tags = ["cancellation"]
+    assert manager.get_cached_test_case(case, None) is None
 
 
 def test_trace_scoped_assert_uses_golden_expectations(judge, monkeypatch):
