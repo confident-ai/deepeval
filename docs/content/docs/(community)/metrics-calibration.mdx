@@ -1,0 +1,67 @@
+---
+id: metrics-calibration
+title: Calibration
+sidebar_label: Calibration
+languages: [python]
+---
+
+Calibration measures whether reported confidence corresponds to empirical correctness across a dataset. Among predictions assigned confidence `0.8`, about 80% should be correct. Accuracy measures how often predictions are correct; a system can be accurate and still overstate its confidence.
+
+`calculate_calibration()` computes **Expected Calibration Error (ECE)** and the **binary Brier score** without making an LLM call. Confidence can come from any source, including RAG confidence, routing confidence, classifier confidence, and agent abstention or escalation policies. Token probabilities are not required. Each confidence must represent the probability of the event recorded by its paired binary outcome.
+
+## Usage
+
+```python
+from deepeval.metrics.community import calculate_calibration
+
+result = calculate_calibration(
+    confidences=[0.25, 0.25, 0.25, 0.25, 0.75, 0.75, 0.75, 0.75],
+    outcomes=[1, 0, 0, 0, 1, 1, 1, 0],
+    n_bins=10,
+)
+
+print(result.ece)    # 0.0
+print(result.brier)  # 0.1875
+```
+
+The returned `CalibrationResult` is an immutable dataclass with `ece` and `brier` fields. Both scores range from 0 to 1, and **lower is better**. In this example, confidence matches the observed correctness rate in each populated bin, even though individual predictions are not all correct.
+
+## Dataset scope
+
+Calibration is an aggregate property. Compute it once over the complete set of paired confidences and observed outcomes you intend to assess. Each function call is independent and keeps no state across evaluations.
+
+This helper is separate from the per-test-case metric API. It is not a `BaseMetric`, cannot be supplied in `evaluate(metrics=[...])`, and does not automatically appear in evaluation reports or Confident AI. There is no per-case ECE, threshold, or success flag.
+
+If you store the values in `LLMTestCase.metadata`, extract them explicitly:
+
+```python
+# test_cases is your completed collection of LLMTestCase objects.
+# Each case's metadata contains its confidence and observed correctness.
+result = calculate_calibration(
+    confidences=[case.metadata["confidence"] for case in test_cases],
+    outcomes=[case.metadata["correct"] for case in test_cases],
+)
+```
+
+Keep each confidence paired with its own outcome. Decide which population to assess before calculating the scores; excluding failures or cases with missing outcomes can change the interpretation. Raw retrieval distances and arbitrary routing scores need a meaningful mapping to probabilities before they can serve as confidence values.
+
+## Calculation
+
+ECE uses `n_bins` equal-width bins, defaulting to 10. Bins include their left boundary and exclude their right boundary, except the final bin includes `1.0`. With 10 bins, `0.1` belongs to `[0.1, 0.2)`, and `1.0` belongs to `[0.9, 1.0]`. Empty bins contribute zero.
+
+```text
+ECE = sum((bin_size / total_size) * abs(mean_confidence - mean_accuracy))
+Brier = mean((confidence - outcome) ** 2)
+```
+
+ECE depends on the bin count and the sample population. Zero ECE on a finite dataset does not guarantee calibration on future data. Use the same bin count when comparing runs.
+
+The binary Brier score measures the quality of probability predictions. It reflects calibration and predictive discrimination, so it is not a pure measure of calibration. This helper uses one squared error per binary outcome, with no additional factor of two.
+
+## Inputs and validation
+
+- `confidences`: a non-empty sequence of finite real numbers between `0` and `1`, inclusive.
+- `outcomes`: an equally sized sequence of numeric `0` or `1` values, where `1` means the prediction was correct. Numeric `0.0` and `1.0` are also accepted.
+- `n_bins`: a positive integer, default `10`.
+
+Booleans, numeric strings, complex numbers, and other non-real values are rejected. Invalid element types or a non-integer `n_bins` raise `TypeError`. Empty inputs, unequal lengths, non-finite or out-of-range confidence, non-binary outcomes, and non-positive `n_bins` raise `ValueError`. Values are not clipped or parsed from strings.
