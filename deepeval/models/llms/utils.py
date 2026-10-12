@@ -17,6 +17,13 @@ def trim_and_load_json(
         input_string = input_string + "}"
         end = len(input_string)
     jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+    # Attempt direct parse first to avoid corrupting valid JSON whose string
+    # values contain ", ]" or ", }" (issue #2770).
+    try:
+        return json.loads(jsonStr)
+    except json.JSONDecodeError:
+        pass
+    # Fallback: strip trailing commas that LLMs sometimes emit and retry.
     jsonStr = re.sub(r",\s*([\]}])", r"\1", jsonStr)
     try:
         return json.loads(jsonStr)
