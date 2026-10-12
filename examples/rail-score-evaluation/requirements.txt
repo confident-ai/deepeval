@@ -1,0 +1,2 @@
+rail-score-sdk>=2.4.0
+deepeval>=3.0.0
