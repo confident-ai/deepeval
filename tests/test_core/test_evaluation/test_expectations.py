@@ -235,6 +235,26 @@ def test_single_turn_evidence_reads_metadata_and_tags(judge, run_async):
 
 
 @pytest.mark.parametrize("run_async", [False, True])
+def test_conversation_evidence_reads_metadata_and_tags(judge, run_async):
+    case = ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="Find patients over 50"),
+            Turn(role="assistant", content="Here are the matching patients"),
+        ],
+        expected_outcome="Patients over 50 are listed",
+        metadata={"filters": {"age": {"gt": 50}}},
+        tags=["search"],
+        expectations={"must": ["Filter on age greater than 50"]},
+    )
+    results = run([case], run_async)
+    assert results[0].success
+    evidence = json.loads(judge.prompts[0].split("\nObserved case: ", 1)[1])
+    assert evidence["metadata"] == {"filters": {"age": {"gt": 50}}}
+    assert evidence["tags"] == ["search"]
+    assert "expected_outcome" not in evidence
+
+
+@pytest.mark.parametrize("run_async", [False, True])
 def test_mixed_cases_and_metrics(judge, run_async):
     cases = [
         LLMTestCase(
