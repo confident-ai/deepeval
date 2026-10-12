@@ -26,17 +26,20 @@ class EvaluationCost(float):
 
     input_tokens: Optional[int]
     output_tokens: Optional[int]
+    cached_tokens: Optional[int]
 
     def __new__(
         cls,
         value: Optional[float],
         input_tokens: Optional[int] = None,
         output_tokens: Optional[int] = None,
+        cached_tokens: Optional[int] = None,
     ) -> "EvaluationCost":
         obj = super().__new__(cls, value if value is not None else 0.0)
         obj.value = value
         obj.input_tokens = input_tokens
         obj.output_tokens = output_tokens
+        obj.cached_tokens = cached_tokens
         return obj
 
 
