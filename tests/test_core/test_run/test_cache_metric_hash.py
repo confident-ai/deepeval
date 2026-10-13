@@ -30,7 +30,6 @@ from deepeval.test_run.cache import (
     _qualified_metric_class_name,
 )
 
-
 # ---------------------------------------------------------------------------
 # Unit helpers for user-defined metrics. Each class lives inside its own
 # module-compatible scope so inspect.getsource() can locate the body.
