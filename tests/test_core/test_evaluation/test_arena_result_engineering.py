@@ -25,7 +25,6 @@ from deepeval.evaluate.compare import (
     ArenaResult,
 )
 
-
 # ---------------------------------------------------------------------------
 # 1. Backward compatibility: ArenaResult must behave like Dict[str, int].
 # ---------------------------------------------------------------------------
