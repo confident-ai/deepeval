@@ -181,7 +181,7 @@ export class PromptAlignmentMetric extends BaseMetric {
     const total = this.verdicts.length;
     if (total === 0) return 1;
     const alignmentCount = this.verdicts.filter(
-      (v) => v.verdict.trim().toLowerCase() !== "no",
+      (v) => v.verdict.trim().toLowerCase() === "yes",
     ).length;
     const score = alignmentCount / total;
     return this.applyStrictMode(score);
