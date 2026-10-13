@@ -35,7 +35,6 @@ from tests.test_integrations.test_strands.apps.strands_eval_app import (
     init_evals_strands,
 )
 
-
 pytestmark = pytest.mark.skipif(
     not os.getenv("OPENAI_API_KEY"),
     reason=(
