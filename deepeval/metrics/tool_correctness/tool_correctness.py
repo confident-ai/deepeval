@@ -28,7 +28,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 TOOL_SELECTION_LEVELS = [
