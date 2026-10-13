@@ -308,6 +308,7 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     FakePeerConnection.agent_frames = [agent_frame(b"\x02\x00" * 480)]
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
+    await asyncio.sleep(0)  # let the drain loop consume the fake frame
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
 
