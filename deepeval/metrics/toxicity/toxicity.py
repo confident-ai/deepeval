@@ -35,7 +35,6 @@ from deepeval.metrics.toxicity.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 ToxicityTemplate = make_template_class("ToxicityMetric")
 
 

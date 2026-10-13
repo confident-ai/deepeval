@@ -10,7 +10,6 @@ from deepeval.metrics.g_eval.utils import MetricPullResponse
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 
-
 TRACE = {
     "name": "support_agent",
     "type": "agent",
