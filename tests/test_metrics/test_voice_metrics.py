@@ -5,6 +5,7 @@ import pytest
 
 from deepeval.metrics.voice import (
     AgentResponsivenessMetric,
+    AudioGlitchMetric,
     AudioIntegrityMetric,
     SpeechIntelligibilityMetric,
     TurnTakingNaturalnessMetric,
@@ -129,6 +130,72 @@ def test_turn_taking_uses_timestamped_audio_and_skips_without_it():
     test_case.turns[0].audio.start_time = None
     assert metric.measure(test_case, _show_indicator=False) is None
     assert metric.skipped is True
+
+
+def _call_with_response_delays(delays):
+    turns = []
+    cursor = 0.0
+    for index, delay in enumerate(delays):
+        turns.append(
+            Turn(
+                role="user",
+                content=f"Question {index}",
+                audio=make_tone(start_time=cursor, frequency=160),
+            )
+        )
+        cursor += 0.3 + delay
+        turns.append(
+            Turn(
+                role="assistant",
+                content=f"Answer {index}",
+                audio=make_tone(start_time=cursor, frequency=190),
+            )
+        )
+        cursor += 0.3 + 0.2
+    return ConversationalTestCase(turns=turns)
+
+
+def test_turn_taking_rewards_consistent_response_delays():
+    steady = TurnTakingNaturalnessMetric()
+    steady.measure(_call_with_response_delays([0.4] * 4), _show_indicator=False)
+    erratic = TurnTakingNaturalnessMetric()
+    erratic.measure(
+        _call_with_response_delays([0.1, 0.4, 2.5, 0.4]), _show_indicator=False
+    )
+
+    assert steady.score_breakdown["response_delays"]["count"] == 4
+    assert steady.score_breakdown["response_delays"]["spread_seconds"] == (
+        pytest.approx(0.0, abs=1e-6)
+    )
+    assert steady.score_breakdown["response_delays"]["score"] == pytest.approx(
+        1.0
+    )
+    assert erratic.score_breakdown["response_delays"]["spread_seconds"] == (
+        pytest.approx(0.96, abs=0.01)
+    )
+    assert erratic.score < steady.score
+    assert "varied by" in erratic.reason
+
+
+def test_turn_taking_omits_consistency_with_fewer_than_three_delays():
+    metric = TurnTakingNaturalnessMetric()
+    metric.measure(voice_case(), _show_indicator=False)
+
+    delays = metric.score_breakdown["response_delays"]
+    assert delays["count"] == 2
+    assert delays["score"] is None
+    transitions = metric.score_breakdown["transitions"]
+    assert metric.score == pytest.approx(
+        sum(t["score"] for t in transitions) / len(transitions)
+    )
+
+
+def test_audio_glitch_is_exported_with_the_voice_metrics():
+    import deepeval.metrics
+    import deepeval.metrics.voice
+
+    assert "AudioGlitchMetric" in deepeval.metrics.voice.__all__
+    assert deepeval.metrics.AudioGlitchMetric is AudioGlitchMetric
 
 
 def test_timeline_rendering_preserves_gap_and_overlap():

@@ -1,5 +1,5 @@
 import math
-from statistics import mean
+from statistics import mean, pstdev
 from typing import Dict, List
 
 from deepeval.metrics.voice.base_metric import (
@@ -8,6 +8,13 @@ from deepeval.metrics.voice.base_metric import (
 )
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.timeline import build_audio_timeline
+
+# How evenly the agent waits before replying: scored once there are enough
+# caller-to-agent gaps to compare, and weighted so it adjusts rather than
+# dominates the transition scores.
+RESPONSE_DELAY_MIN_COUNT = 3
+RESPONSE_DELAY_SPREAD_TAU = 2.0
+RESPONSE_DELAY_WEIGHT = 0.2
 
 
 class TurnTakingNaturalnessMetric(BaseVoiceMetric):
@@ -33,6 +40,7 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
 
         transitions: List[Dict] = []
         scores: List[float] = []
+        response_delay_seconds: List[float] = []
         for current, following in zip(timeline, timeline[1:]):
             if current.role == following.role:
                 continue
@@ -41,6 +49,8 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
                 # Smoothly decreases as silence grows; there is no hard cap.
                 transition_score = math.exp(-gap_seconds / 2.5)
                 kind = "gap"
+                if current.role == "user":
+                    response_delay_seconds.append(gap_seconds)
             elif current.role == "assistant" and following.role == "user":
                 # User barge-in can be natural; only very long overlap is poor.
                 transition_score = math.exp(-abs(gap_seconds) / 2.0)
@@ -66,12 +76,37 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
                 {"transitions": transitions},
             )
         score = mean(scores)
-        return (
-            score,
+        response_delays: Dict = {
+            "count": len(response_delay_seconds),
+            "mean_seconds": (
+                mean(response_delay_seconds) if response_delay_seconds else None
+            ),
+            "spread_seconds": None,
+            "score": None,
+        }
+        reason = (
             f"Turn-taking naturalness was {score:.2f} across "
             f"{len(scores)} speaker transition(s); timing is scored "
-            "continuously rather than against a latency cutoff.",
-            {"transitions": transitions},
+            "continuously rather than against a latency cutoff."
+        )
+        if len(response_delay_seconds) >= RESPONSE_DELAY_MIN_COUNT:
+            spread = pstdev(response_delay_seconds)
+            consistency_score = math.exp(-spread / RESPONSE_DELAY_SPREAD_TAU)
+            response_delays["spread_seconds"] = spread
+            response_delays["score"] = consistency_score
+            score = (
+                1 - RESPONSE_DELAY_WEIGHT
+            ) * score + RESPONSE_DELAY_WEIGHT * consistency_score
+            reason = (
+                f"Turn-taking naturalness was {score:.2f} across "
+                f"{len(scores)} speaker transition(s); the agent's response "
+                f"delay varied by ±{spread:.2f}s across "
+                f"{len(response_delay_seconds)} replies."
+            )
+        return (
+            score,
+            reason,
+            {"transitions": transitions, "response_delays": response_delays},
         )
 
     @property

@@ -103,6 +103,67 @@ def _pitch_hz(frame: Sequence[int], sample_rate: int) -> Optional[float]:
     return rate / best_lag
 
 
+def _pitch_and_periodicity(
+    frame: Sequence[int],
+    sample_rate: int,
+    *,
+    min_hz: float = 60.0,
+    max_hz: float = 1000.0,
+) -> Optional[Tuple[float, float]]:
+    """Pitch in Hz and how periodic the frame is (1.0 for a pure tone).
+
+    Searches a wider range than `_pitch_hz`, which stops at 400 Hz: a TTS
+    artifact can sit well above a voice. Lags are searched coarsely then
+    refined, and the shortest lag close to the best one wins so a
+    sub-harmonic is not reported.
+    """
+    if _rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
+        return None
+    step = max(1, sample_rate // 8000)
+    data = frame[::step]
+    rate = sample_rate / step
+    min_lag = max(1, int(rate / max_hz))
+    max_lag = min(len(data) // 2, int(rate / min_hz))
+    if max_lag <= min_lag:
+        return None
+    centered_mean = sum(data) / len(data)
+    centered = [sample - centered_mean for sample in data]
+    cumulative = [0.0]
+    for sample in centered:
+        cumulative.append(cumulative[-1] + sample * sample)
+    if cumulative[-1] <= 0:
+        return None
+
+    def correlation(lag: int) -> float:
+        overlap = len(centered) - lag
+        head = cumulative[overlap]
+        tail = cumulative[-1] - cumulative[lag]
+        if head <= 0 or tail <= 0:
+            return 0.0
+        return sum(
+            centered[index] * centered[index + lag] for index in range(overlap)
+        ) / math.sqrt(head * tail)
+
+    coarse = {lag: correlation(lag) for lag in range(min_lag, max_lag + 1, 3)}
+    best_coarse = max(coarse.values())
+    if best_coarse <= 0:
+        return None
+    anchor = min(
+        lag for lag, value in coarse.items() if value >= 0.9 * best_coarse
+    )
+    fine = {
+        lag: coarse[lag] if lag in coarse else correlation(lag)
+        for lag in range(max(min_lag, anchor - 3), min(max_lag, anchor + 3) + 1)
+    }
+    best_lag = max(fine, key=fine.get)
+    best = fine[best_lag]
+    left = fine.get(best_lag - 1, best)
+    right = fine.get(best_lag + 1, best)
+    curvature = left - 2 * best + right
+    offset = 0.5 * (left - right) / curvature if curvature < 0 else 0.0
+    return rate / (best_lag + offset), best
+
+
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
     frames = _frame_samples(samples, sample_rate)

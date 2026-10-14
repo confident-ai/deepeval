@@ -77,6 +77,7 @@ from .multimodal_metrics import (
 )
 from .voice import (
     AgentResponsivenessMetric,
+    AudioGlitchMetric,
     AudioIntegrityMetric,
     SpeechIntelligibilityMetric,
     TurnTakingNaturalnessMetric,
@@ -162,5 +163,6 @@ __all__ = [
     "VoiceConsistencyMetric",
     "AgentResponsivenessMetric",
     "AudioIntegrityMetric",
+    "AudioGlitchMetric",
     "VoiceReliabilityMetric",
 ]

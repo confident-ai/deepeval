@@ -1,3 +1,4 @@
+from deepeval.metrics.audio_glitch import AudioGlitchMetric
 from deepeval.metrics.voice.consistency import VoiceConsistencyMetric
 from deepeval.metrics.voice.integrity import AudioIntegrityMetric
 from deepeval.metrics.voice.intelligibility import SpeechIntelligibilityMetric
@@ -13,5 +14,6 @@ __all__ = [
     "VoiceConsistencyMetric",
     "AgentResponsivenessMetric",
     "AudioIntegrityMetric",
+    "AudioGlitchMetric",
     "VoiceReliabilityMetric",
 ]
