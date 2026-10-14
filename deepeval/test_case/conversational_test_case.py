@@ -35,6 +35,7 @@ class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
     PROVIDER_TRANSCRIPT = "provider_transcript"
+    AUDIO = "audio"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
