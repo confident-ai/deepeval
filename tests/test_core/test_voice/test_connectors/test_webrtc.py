@@ -314,7 +314,7 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     events = []
     async for event in connector.iter_agent_events():
         events.append(event)
-        if event.turn_complete:
+        if any(e.audio for e in events) and any(e.transcript for e in events):
             break
 
     audio = [event.audio for event in events if event.audio]

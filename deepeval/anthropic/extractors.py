@@ -1,6 +1,7 @@
-from anthropic.types.message import Message
+from typing import Any
+
 from anthropic.types import ToolUseBlock
-from typing import Any, Dict
+from anthropic.types.message import Message
 
 from deepeval.anthropic.utils import (
     render_messages_anthropic,
@@ -10,16 +11,16 @@ from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.test_case.llm_test_case import ToolCall
 
 
-def safe_extract_input_parameters(kwargs: Dict[str, Any]) -> InputParameters:
+def safe_extract_input_parameters(kwargs: dict[str, Any]) -> InputParameters:
     # guarding against errors to be compatible with legacy APIs
     try:
         return extract_messages_api_input_parameters(kwargs)
-    except:
+    except Exception:
         return InputParameters(model="NA")
 
 
 def extract_messages_api_input_parameters(
-    kwargs: Dict[str, Any],
+    kwargs: dict[str, Any],
 ) -> InputParameters:
     model = kwargs.get("model")
     tools = kwargs.get("tools")
@@ -57,7 +58,7 @@ def safe_extract_output_parameters(
         return extract_messages_api_output_parameters(
             message_response, input_parameters
         )
-    except:
+    except Exception:
         return OutputParameters()
 
 
@@ -65,15 +66,30 @@ def extract_messages_api_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    output = str(message_response.content[0].text)
-    prompt_tokens = message_response.usage.input_tokens
-    completion_tokens = message_response.usage.output_tokens
+    content = getattr(message_response, "content", []) or []
+    text_blocks = [
+        block.text
+        for block in content
+        if getattr(block, "type", None) == "text" and hasattr(block, "text")
+    ]
+    output = "".join(text_blocks)
+    prompt_tokens = (
+        message_response.usage.input_tokens
+        if getattr(message_response, "usage", None)
+        else None
+    )
+    completion_tokens = (
+        message_response.usage.output_tokens
+        if getattr(message_response, "usage", None)
+        else None
+    )
 
     tools_called = None
     anthropic_tool_calls = [
         block
-        for block in message_response.content
-        if isinstance(block, ToolUseBlock)
+        for block in content
+        if getattr(block, "type", None) == "tool_use"
+        or isinstance(block, ToolUseBlock)
     ]
     if anthropic_tool_calls:
         tools_called = []
@@ -86,6 +102,10 @@ def extract_messages_api_output_parameters(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+
+    if not output and tools_called:
+        output = tools_called
+
     return OutputParameters(
         output=output,
         prompt_tokens=prompt_tokens,
