@@ -1693,9 +1693,13 @@ class Synthesizer:
         else:
             try:
                 res = model.generate(prompt, schema=schema)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 return res
             except TypeError:
                 res = model.generate(prompt)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 data = trimAndLoadJson(res, self)
                 # `SyntheticDataList` is nested, so must be manually processed
                 # if custom model doesn't support schema
@@ -1719,9 +1723,13 @@ class Synthesizer:
         else:
             try:
                 res = await model.a_generate(prompt, schema=schema)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 return res
             except TypeError:
                 res = await model.a_generate(prompt)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 data = trimAndLoadJson(res, self)
                 # `SyntheticDataList` is nested, so must be manually processed
                 # if custom model doesn't support schema
@@ -1739,10 +1747,14 @@ class Synthesizer:
             return res
         else:
             try:
-                res: Response = self.model.generate(prompt, schema=Response)
-                return res.response
+                res = self.model.generate(prompt, schema=Response)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
+                return res.response if isinstance(res, Response) else res
             except TypeError:
                 res = self.model.generate(prompt)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 return res
 
     async def _a_generate(self, prompt: str) -> str:
@@ -1753,12 +1765,16 @@ class Synthesizer:
             return res
         else:
             try:
-                res: Response = await self.model.a_generate(
+                res = await self.model.a_generate(
                     prompt, schema=Response
                 )
-                return res.response
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
+                return res.response if isinstance(res, Response) else res
             except TypeError:
                 res = await self.model.a_generate(prompt)
+                if isinstance(res, tuple) and len(res) == 2:
+                    res, _ = res
                 return res
 
     #############################################################
