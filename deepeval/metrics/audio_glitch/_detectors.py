@@ -41,7 +41,7 @@ TONE_MAX_GLIDE = 0.01
 MIN_TONE_SECONDS = 0.8
 # A run counts as a held tone when it is far longer than that speaker holds
 # any sound, far above the pitch of their voice, or long outright.
-TONE_HOLD_RATIO = 2.0
+TONE_HOLD_RATIO = 3.0
 TONE_PITCH_RATIO = 1.3
 TONE_ABSOLUTE_SECONDS = 2.5
 TYPICAL_HOLD_PERCENTILE = 0.9
@@ -52,6 +52,10 @@ MIN_DEAD_SECONDS = 0.5
 # TTS engines pad the tail of a clip with digital zeros, so a run that
 # reaches the end of the clip needs to be longer before it counts.
 DEAD_TRAILING_MIN_SECONDS = 1.0
+# A recorded voice leaves room noise in its pauses, so exact zeros mean the
+# stream dropped. Some synthetic voices write every pause as zeros; when at
+# least this share of a speaker's pauses is digital, zeros are not evidence.
+DIGITAL_SILENCE_SHARE = 0.5
 
 STREAM_CUT_MAX_GAP_SECONDS = 15.0
 CLIPPING_MIN_FRACTION = 0.01
@@ -94,6 +98,13 @@ class DeadRun:
 
 
 @dataclass
+class SilenceProfile:
+    runs: List[DeadRun]
+    quiet_runs: int
+    digital_quiet_runs: int
+
+
+@dataclass
 class ClipAnalysis:
     turn: int
     role: str
@@ -101,14 +112,16 @@ class ClipAnalysis:
     measurements: AudioMeasurements
     frames: List[ToneFrame]
     stable_runs: List[StableRun]
-    dead_runs: List[DeadRun]
+    silence: SilenceProfile
     clipping_span: Optional[Tuple[float, float]]
 
     @property
-    def ends_mid_speech(self) -> bool:
-        return self.measurements.ends_abruptly or any(
-            run.runs_to_end for run in self.dead_runs
-        )
+    def dead_runs(self) -> List[DeadRun]:
+        return self.silence.runs
+
+    @property
+    def trailing_dead_run(self) -> bool:
+        return any(run.runs_to_end for run in self.dead_runs)
 
 
 @dataclass
@@ -117,6 +130,7 @@ class SpeakerBaseline:
     clips: int
     median_pitch_hz: Optional[float]
     typical_hold_seconds: Optional[float]
+    digital_silence: bool
 
 
 @dataclass
@@ -218,7 +232,7 @@ def _stable_runs(frames: Sequence[ToneFrame]) -> List[StableRun]:
     return runs
 
 
-def _dead_runs(samples: array, sample_rate: int) -> List[DeadRun]:
+def _silence_profile(samples: array, sample_rate: int) -> SilenceProfile:
     frames = _frame_samples(samples, sample_rate, frame_ms=DEAD_FRAME_MS)
     dead = [
         max(frame) <= DEAD_MAX_ABS_SAMPLE and min(frame) >= -DEAD_MAX_ABS_SAMPLE
@@ -229,25 +243,41 @@ def _dead_runs(samples: array, sample_rate: int) -> List[DeadRun]:
     ]
     frame_seconds = DEAD_FRAME_MS / 1000
     runs: List[DeadRun] = []
+    quiet_runs = digital_quiet_runs = 0
     index = 0
     heard_speech = False
     while index < len(frames):
-        if not dead[index]:
-            heard_speech = heard_speech or voiced[index]
+        if voiced[index]:
+            heard_speech = True
             index += 1
             continue
         start = index
-        while index < len(frames) and dead[index]:
+        while index < len(frames) and not voiced[index]:
             index += 1
-        if not heard_speech:
-            continue
-        length = (index - start) * frame_seconds
-        if index >= len(frames):
-            if length >= DEAD_TRAILING_MIN_SECONDS:
-                runs.append(DeadRun(start * frame_seconds, length, True))
-        elif length >= MIN_DEAD_SECONDS and any(voiced[index:]):
-            runs.append(DeadRun(start * frame_seconds, length, False))
-    return runs
+        quiet_runs += 1
+        if all(dead[start:index]):
+            digital_quiet_runs += 1
+        dead_start = start
+        while dead_start < index:
+            if not dead[dead_start]:
+                dead_start += 1
+                continue
+            dead_end = dead_start
+            while dead_end < index and dead[dead_end]:
+                dead_end += 1
+            length = (dead_end - dead_start) * frame_seconds
+            if heard_speech:
+                if dead_end >= len(frames):
+                    if length >= DEAD_TRAILING_MIN_SECONDS:
+                        runs.append(
+                            DeadRun(dead_start * frame_seconds, length, True)
+                        )
+                elif length >= MIN_DEAD_SECONDS and any(voiced[dead_end:]):
+                    runs.append(
+                        DeadRun(dead_start * frame_seconds, length, False)
+                    )
+            dead_start = dead_end
+    return SilenceProfile(runs, quiet_runs, digital_quiet_runs)
 
 
 def _clipping_span(
@@ -275,7 +305,7 @@ def analyze_clip(turn: int, role: str, audio: Audio) -> ClipAnalysis:
         measurements=measurements,
         frames=frames,
         stable_runs=_stable_runs(frames),
-        dead_runs=_dead_runs(samples, sample_rate),
+        silence=_silence_profile(samples, sample_rate),
         clipping_span=(
             _clipping_span(samples, sample_rate)
             if measurements.clipping_fraction > CLIPPING_MIN_FRACTION
@@ -290,7 +320,11 @@ def speaker_baselines(
     pitches: Dict[str, List[float]] = {}
     holds: Dict[str, List[float]] = {}
     clips: Dict[str, int] = {}
+    quiet_runs: Dict[str, List[int]] = {}
     for analysis in analyses:
+        quiet_runs.setdefault(analysis.role, [0, 0])
+        quiet_runs[analysis.role][0] += analysis.silence.quiet_runs
+        quiet_runs[analysis.role][1] += analysis.silence.digital_quiet_runs
         # Frames inside a tone-length run would pull the voice's pitch up.
         held = set()
         for run in analysis.stable_runs:
@@ -310,6 +344,7 @@ def speaker_baselines(
     baselines = {}
     for role in clips:
         role_holds = sorted(holds[role])
+        total_quiet, digital_quiet = quiet_runs[role]
         baselines[role] = SpeakerBaseline(
             role=role,
             clips=clips[role],
@@ -318,6 +353,10 @@ def speaker_baselines(
                 role_holds[int(TYPICAL_HOLD_PERCENTILE * (len(role_holds) - 1))]
                 if role_holds
                 else None
+            ),
+            digital_silence=(
+                total_quiet > 0
+                and digital_quiet / total_quiet >= DIGITAL_SILENCE_SHARE
             ),
         )
     return baselines
@@ -432,10 +471,9 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
     baselines = speaker_baselines(list(analyses.values()))
     for index, analysis in analyses.items():
         audio = turns[index].audio
-        events.extend(
-            held_tone_events(analysis, audio, baselines[analysis.role])
-        )
-        for run in analysis.dead_runs:
+        baseline = baselines[analysis.role]
+        events.extend(held_tone_events(analysis, audio, baseline))
+        for run in [] if baseline.digital_silence else analysis.dead_runs:
             events.append(
                 _event(
                     analysis,
@@ -466,11 +504,13 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
         entries = build_audio_timeline(turns)
         for current, following in zip(entries, entries[1:]):
             analysis = analyses.get(current.turn_index)
-            if (
-                analysis is None
-                or current.role != following.role
-                or not analysis.ends_mid_speech
-            ):
+            if analysis is None or current.role != following.role:
+                continue
+            ends_mid_speech = analysis.measurements.ends_abruptly or (
+                analysis.trailing_dead_run
+                and not baselines[analysis.role].digital_silence
+            )
+            if not ends_mid_speech:
                 continue
             gap = following.start_time - current.end_time
             if not 0 < gap <= STREAM_CUT_MAX_GAP_SECONDS:

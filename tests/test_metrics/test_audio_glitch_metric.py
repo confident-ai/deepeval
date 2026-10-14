@@ -9,7 +9,7 @@ from deepeval.metrics import AudioGlitchMetric
 from deepeval.metrics.voice._analysis import _pitch_and_periodicity
 from deepeval.metrics.audio_glitch import AudioGlitchTemplate
 from deepeval.metrics.audio_glitch._detectors import (
-    _dead_runs,
+    _silence_profile,
     _stable_runs,
     _tone_frames,
     detect_audio_glitches,
@@ -28,7 +28,7 @@ RATE = 8000
 # ------------------------------------------------------------- fixtures
 
 
-def speech_like(seconds, *, base_hz=200.0, seed=0) -> array:
+def speech_like(seconds, *, base_hz=200.0, seed=0, noise=20) -> array:
     """A voice-shaped signal: pitch gliding ±30 Hz, harmonics, syllables of
     sound and near-silence, and faint room noise so pauses are never zero."""
     rng = random.Random(seed)
@@ -44,7 +44,7 @@ def speech_like(seconds, *, base_hz=200.0, seed=0) -> array:
             + 0.5 * math.sin(2 * phase)
             + 0.3 * math.sin(3 * phase)
         ) / 1.8
-        out.append(int(8000 * envelope * voice + rng.gauss(0, 20)))
+        out.append(int(8000 * envelope * voice + rng.gauss(0, noise)))
     return out
 
 
@@ -189,17 +189,17 @@ def test_speech_like_audio_holds_no_tone_length_run():
 
 def test_dead_runs_ignore_leading_padding_and_room_noise():
     clip = zeros(0.6) + speech_like(1.0) + speech_like(1.0, seed=1)
-    assert _dead_runs(clip, RATE) == []
+    assert _silence_profile(clip, RATE).runs == []
     clip = speech_like(1.0) + zeros(0.8) + speech_like(1.0, seed=1)
-    (run,) = _dead_runs(clip, RATE)
+    (run,) = _silence_profile(clip, RATE).runs
     assert run.offset == pytest.approx(1.0, abs=0.05)
     assert run.duration == pytest.approx(0.8, abs=0.05)
     assert run.runs_to_end is False
 
 
 def test_a_trailing_dead_run_needs_a_full_second():
-    assert _dead_runs(speech_like(1.0) + zeros(0.7), RATE) == []
-    (run,) = _dead_runs(speech_like(1.0) + zeros(1.2), RATE)
+    assert _silence_profile(speech_like(1.0) + zeros(0.7), RATE).runs == []
+    (run,) = _silence_profile(speech_like(1.0) + zeros(1.2), RATE).runs
     assert run.runs_to_end is True
 
 
@@ -316,6 +316,29 @@ def test_dead_stream_in_the_callers_answer():
     assert event["runs_to_end"] is False
     assert event["duration_seconds"] == pytest.approx(0.7, abs=0.05)
     assert event["start_time"] == pytest.approx(8.0, abs=0.05)
+
+
+def test_zeros_are_not_a_dead_stream_for_a_voice_whose_pauses_are_digital():
+    turns = clean_turns()
+    for index in (0, 2, 4):
+        turns[index].audio = to_audio(
+            speech_like(3.0, seed=index, noise=0), start_time=index * 3.5
+        )
+    turns[2].audio = to_audio(
+        speech_like(1.0, noise=0)
+        + zeros(0.7)
+        + speech_like(1.0, seed=5, noise=0),
+        start_time=7.0,
+    )
+    metric, _ = _measure(turns)
+    assert _events(metric) == []
+    assert (
+        metric.score_breakdown["baselines"]["user"]["digital_silence"] is True
+    )
+    assert (
+        metric.score_breakdown["baselines"]["assistant"]["digital_silence"]
+        is False
+    )
 
 
 def _cut_call():

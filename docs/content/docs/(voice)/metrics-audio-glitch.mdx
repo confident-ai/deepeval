@@ -102,8 +102,8 @@ The breakdown lists the turns it checked, the events, and the per-speaker baseli
         },
     ],
     "baselines": {
-        "assistant": {"role": "assistant", "clips": 6, "median_pitch_hz": 195.2, "typical_hold_seconds": 0.28},
-        "user": {"role": "user", "clips": 6, "median_pitch_hz": 197.0, "typical_hold_seconds": 0.36},
+        "assistant": {"role": "assistant", "clips": 6, "median_pitch_hz": 195.2, "typical_hold_seconds": 0.28, "digital_silence": False},
+        "user": {"role": "user", "clips": 6, "median_pitch_hz": 197.0, "typical_hold_seconds": 0.36, "digital_silence": False},
     },
     "timeline_available": True,
 }
@@ -121,13 +121,13 @@ Each clip is cut into short frames and measured for loudness, pitch and how peri
 
 | Event               | Detected when                                                                                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `held_tone`         | One pitch is held for at least 0.8 s with no frame-to-frame jitter and no glide, and the hold is at least twice as long as anything that speaker otherwise holds, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
-| `dead_stream`       | At least 0.5 s of exact digital zero between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero.      |
+| `held_tone`         | One pitch is held for at least 0.8 s with no frame-to-frame jitter and no glide, and the hold is at least three times as long as anything that speaker otherwise holds, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
+| `dead_stream`       | At least 0.5 s of exact digital zero between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero — so this only fires for a speaker whose pauses normally carry noise. |
 | `stream_cut`        | A clip stops while the speaker is still loud, or ends in digital zero, and the **same** speaker starts again within 15 s. Needs `Audio.start_time` on every clip.          |
 | `clipping`          | More than 1% of samples sit at full scale. Carries the clipped span and `fraction`.                                                                                        |
 | `audio_undecodable` | The clip could not be decoded to PCM. Carries a `reason`.                                                                                                                  |
 
-The held-tone thresholds are relative to the speaker, not fixed: `typical_hold_seconds` is the 90th percentile of how long that speaker holds any steady pitch across their clips, and `median_pitch_hz` is the pitch of their voice with tone-length runs left out. A deep voice or a slow talker therefore sets their own bar. The remaining constants (the 0.8 s minimum, the jitter and glide bounds, the 0.5 s dead-stream floor) are fixed in code, as they are for every other voice metric.
+The thresholds are relative to the speaker, not fixed: `typical_hold_seconds` is the 90th percentile of how long that speaker holds any steady pitch across their clips, `median_pitch_hz` is the pitch of their voice with tone-length runs left out, and `digital_silence` records whether at least half of that speaker's pauses are exact zeros — true for some synthetic voices, in which case a zero run is how their audio is silenced rather than lost stream, and `dead_stream` is not raised for them. A deep voice or a slow talker therefore sets their own bar. The remaining constants (the 0.8 s minimum, the jitter and glide bounds, the 0.5 s dead-stream floor) are fixed in code, as they are for every other voice metric.
 
 A speaker with a single clip has no hold baseline, so a tone at their own pitch is only caught by the 2.5 s rule. A turn without audio is skipped; a test case where no turn has audio raises rather than scoring.
 
