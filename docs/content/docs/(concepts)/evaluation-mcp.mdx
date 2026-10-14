@@ -398,7 +398,7 @@ The [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversatio
 
 ```python title="main.py"
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics import MultiTurnMCPMetric
+from deepeval.metrics import MultiTurnMCPUseMetric
 from deepeval.test_case.mcp import MCPServer
 from deepeval import evaluate
 
@@ -407,7 +407,7 @@ test_case = ConversationalTestCase(
     mcp_servers=[MCPServer(...), MCPServer(...)]
 )
 
-evaluate(test_cases=[test_case], metrics=[MultiTurnMCPMetric()])
+evaluate(test_cases=[test_case], metrics=[MultiTurnMCPUseMetric()])
 ```
 
 </Case>
@@ -650,7 +650,7 @@ The [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) matches on the typ
         <>
           Use the{" "}
           <a href="/docs/metrics-multi-turn-mcp-use">MCP metrics</a> (such as{" "}
-          <code>MultiTurnMCPMetric</code>) to score whether your app called the
+          <code>MultiTurnMCPUseMetric</code>) to score whether your app called the
           right tools, resources, and prompts correctly.
         </>
       ),
