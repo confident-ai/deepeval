@@ -53,9 +53,10 @@ MIN_DEAD_SECONDS = 0.5
 # reaches the end of the clip needs to be longer before it counts.
 DEAD_TRAILING_MIN_SECONDS = 1.0
 # A recorded voice leaves room noise in its pauses, so exact zeros mean the
-# stream dropped. Some synthetic voices write every pause as zeros; when at
-# least this share of a speaker's pauses is digital, zeros are not evidence.
-DIGITAL_SILENCE_SHARE = 0.5
+# stream dropped. Some synthetic voices write their pauses as zeros; when a
+# speaker's typical pause is at least this much digital, zeros are not
+# evidence. A recording's typical pause is never digital at all.
+DIGITAL_SILENCE_SHARE = 0.2
 
 STREAM_CUT_MAX_GAP_SECONDS = 15.0
 CLIPPING_MIN_FRACTION = 0.01
@@ -100,8 +101,8 @@ class DeadRun:
 @dataclass
 class SilenceProfile:
     runs: List[DeadRun]
-    quiet_runs: int
-    digital_quiet_runs: int
+    # Share of each pause (unvoiced stretch) that is exact digital zero.
+    pause_dead_fractions: List[float]
 
 
 @dataclass
@@ -243,7 +244,7 @@ def _silence_profile(samples: array, sample_rate: int) -> SilenceProfile:
     ]
     frame_seconds = DEAD_FRAME_MS / 1000
     runs: List[DeadRun] = []
-    quiet_runs = digital_quiet_runs = 0
+    pause_dead_fractions: List[float] = []
     index = 0
     heard_speech = False
     while index < len(frames):
@@ -254,9 +255,7 @@ def _silence_profile(samples: array, sample_rate: int) -> SilenceProfile:
         start = index
         while index < len(frames) and not voiced[index]:
             index += 1
-        quiet_runs += 1
-        if all(dead[start:index]):
-            digital_quiet_runs += 1
+        pause_dead_fractions.append(sum(dead[start:index]) / (index - start))
         dead_start = start
         while dead_start < index:
             if not dead[dead_start]:
@@ -277,7 +276,7 @@ def _silence_profile(samples: array, sample_rate: int) -> SilenceProfile:
                         DeadRun(dead_start * frame_seconds, length, False)
                     )
             dead_start = dead_end
-    return SilenceProfile(runs, quiet_runs, digital_quiet_runs)
+    return SilenceProfile(runs, pause_dead_fractions)
 
 
 def _clipping_span(
@@ -320,11 +319,11 @@ def speaker_baselines(
     pitches: Dict[str, List[float]] = {}
     holds: Dict[str, List[float]] = {}
     clips: Dict[str, int] = {}
-    quiet_runs: Dict[str, List[int]] = {}
+    pauses: Dict[str, List[float]] = {}
     for analysis in analyses:
-        quiet_runs.setdefault(analysis.role, [0, 0])
-        quiet_runs[analysis.role][0] += analysis.silence.quiet_runs
-        quiet_runs[analysis.role][1] += analysis.silence.digital_quiet_runs
+        pauses.setdefault(analysis.role, []).extend(
+            analysis.silence.pause_dead_fractions
+        )
         # Frames inside a tone-length run would pull the voice's pitch up.
         held = set()
         for run in analysis.stable_runs:
@@ -344,7 +343,6 @@ def speaker_baselines(
     baselines = {}
     for role in clips:
         role_holds = sorted(holds[role])
-        total_quiet, digital_quiet = quiet_runs[role]
         baselines[role] = SpeakerBaseline(
             role=role,
             clips=clips[role],
@@ -355,8 +353,8 @@ def speaker_baselines(
                 else None
             ),
             digital_silence=(
-                total_quiet > 0
-                and digital_quiet / total_quiet >= DIGITAL_SILENCE_SHARE
+                bool(pauses[role])
+                and median(pauses[role]) >= DIGITAL_SILENCE_SHARE
             ),
         )
     return baselines
