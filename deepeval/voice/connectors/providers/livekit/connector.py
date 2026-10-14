@@ -37,7 +37,7 @@ from deepeval.voice.turn_detection import TurnDetection, turn_detection_timing
 
 logger = logging.getLogger(__name__)
 
-_INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
+_INSTALL_HINT = "Install it with `pip install livekit livekit-api`."
 
 # Agents publish their speech transcript on this text-stream topic.
 # https://docs.livekit.io/agents/multimodality/text/
