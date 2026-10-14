@@ -48,7 +48,19 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         region: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> None:
+        """Initialize Amazon Bedrock model.
+
+        Args:
+            model: The Bedrock model ID (e.g., 'anthropic.claude-3-sonnet')
+            aws_access_key_id: AWS access key ID
+            aws_secret_access_key: AWS secret access key
+            aws_session_token: AWS session token for temporary credentials
+            cost_per_input_token: USD cost per input token
+            cost_per_output_token: USD cost per output token
+            region: AWS region (e.g., 'us-east-1')
+            generation_kwargs: Additional kwargs for Bedrock API
+        """
         settings = get_settings()
 
         normalized_kwargs, alias_values = normalize_kwargs_and_extract_aliases(
