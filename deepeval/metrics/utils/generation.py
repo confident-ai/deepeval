@@ -10,40 +10,75 @@ from deepeval.metrics.base_metric import (
 from deepeval.models.utils import EvaluationCost
 
 
+_ESCAPE_PAIR = re.compile(r"\\(.?)", re.DOTALL)
+_VALID_ESCAPE_CHARS = set('"\\/bfnrtu')
+
+
+def _repair_escapes(text: str) -> str:
+    def fix(m):
+        nxt = m.group(1)
+        return (
+            m.group(0) if nxt and nxt in _VALID_ESCAPE_CHARS else "\\\\" + nxt
+        )
+
+    return _ESCAPE_PAIR.sub(fix, text)
+
+
+_TRAILING_COMMA = re.compile(r",\s*([\]}])")
+
+EMPTY_OUTPUT_ERROR = (
+    "Evaluation LLM returned an empty response, so there was no JSON to parse. "
+    "With reasoning models (e.g. the gpt-5 family, o-series, gpt-oss) this usually "
+    "means the completion-token limit was used up by hidden reasoning before any "
+    "output was written. Raise the max completion tokens or lower reasoning effort "
+    "on your evaluation model."
+)
+TRUNCATED_OUTPUT_ERROR = (
+    "Evaluation LLM output appears truncated: it starts a JSON object but never "
+    "closes it. This usually means the completion-token limit was reached "
+    "(reasoning models spend part of that budget on hidden reasoning). "
+    "Raise the max completion tokens on your evaluation model."
+)
+INVALID_JSON_ERROR = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
+
+
+def _fail(message: str, metric: Optional[Any]) -> None:
+    if metric is not None:
+        metric.error = message
+    raise ValueError(message)
+
+
 def trimAndLoadJson(
-    input_string: Optional[str],
-    metric: Optional[BaseMetric] = None,
+    input_string: Optional[str], metric: Optional[Any] = None
 ) -> Any:
-    if input_string is None:
-        error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-        if metric is not None:
-            metric.error = error_str
-        raise ValueError(error_str)
+    if input_string is None or not input_string.strip():
+        _fail(EMPTY_OUTPUT_ERROR, metric)
 
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
+    if start == -1:
+        # no object at all — let json.loads judge the whole string
+        # (it may be a bare list, or a plain-text non-JSON reply)
+        start, end = 0, len(input_string)
+    elif end <= start:
+        _fail(TRUNCATED_OUTPUT_ERROR, metric)
 
-    if end == 0 and start != -1:
-        input_string = input_string + "}"
-        end = len(input_string)
-
-    jsonStr = input_string[start:end] if start != -1 and end != 0 else ""
+    json_str = _TRAILING_COMMA.sub(r"\1", input_string[start:end])
 
     try:
-        return json.loads(jsonStr)
+        return json.loads(json_str)
     except json.JSONDecodeError:
-        # Some models emit a trailing comma before a closing ] or }. Strip it
-        # and retry, but only after a direct parse fails, so valid JSON string
-        # values containing ", ]" or ", }" are never corrupted.
+        pass
+
+    # Repair illegal backslash escapes (#2280's "Invalid \escape") and retry once.
+    repaired = _repair_escapes(json_str)
+    if repaired != json_str:
         try:
-            return json.loads(re.sub(r",\s*([\]}])", r"\1", jsonStr))
+            return json.loads(repaired)
         except json.JSONDecodeError:
-            error_str = "Evaluation LLM outputted an invalid JSON. Please use a better evaluation model."
-            if metric is not None:
-                metric.error = error_str
-            raise ValueError(error_str)
-    except Exception as e:
-        raise Exception(f"An unexpected error occurred: {str(e)}")
+            pass
+
+    _fail(INVALID_JSON_ERROR, metric)
 
 
 SchemaType = TypeVar("SchemaType")
