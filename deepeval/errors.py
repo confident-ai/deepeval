@@ -55,12 +55,6 @@ class MismatchedTestCaseInputsError(DeepEvalError):
     pass
 
 
-class ContextWindowExceededError(DeepEvalError):
-    """A metric's prompt does not fit in the evaluation model's context window."""
-
-    pass
-
-
 class NoMetricsError(DeepEvalError):
     """An evaluation run was started with no metric sources at any level.
 
