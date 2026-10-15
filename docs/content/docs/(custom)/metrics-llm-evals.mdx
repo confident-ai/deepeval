@@ -5,8 +5,6 @@ sidebar_label: G-Eval
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 <MetricTagsDisplayer singleTurn={true} multiTurn={true} custom={true} />
 
 G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
@@ -711,7 +709,7 @@ G-Eval is a framework originally from the [paper](https://arxiv.org/abs/2303.166
 
 The G-Eval algorithm first generates a series of evaluation steps for chain of thoughts (CoTs) prompting before using the generated steps to determine the final score via a "form-filling paradigm" (which is just a fancy way of saying G-Eval requires different test case parameters for evaluation depending on the generated steps).
 
-<ImageDisplayer src={ASSETS.gEvalAlgorithm} alt="G-Eval Algorithm" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-algorithm" />
 
 After generating a series of evaluation steps, G-Eval will:
 
@@ -725,7 +723,7 @@ We highly recommend everyone to read [this article](https://confident-ai.com/blo
 
 Here are the results from the paper, which shows how G-Eval outperforms all traditional, non-LLM evals that were mentioned earlier in this article:
 
-<ImageDisplayer src={ASSETS.gEvalResults} alt="G-Eval Results" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-summeval-correlations" />
 
 :::note
 Although G-Eval is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric`](/docs/metrics-dag) instead.

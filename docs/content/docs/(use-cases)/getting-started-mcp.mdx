@@ -65,7 +65,7 @@ The MCP architecture is composed of three main components:
 - **Client** — Maintains a one-to-one connection with a server and retrieves context from it for the host to use
 - **Server** — Paired with a single client, providing the context the client passes to the host
 
-<ImageDisplayer src={ASSETS.mcpArchitecture} alt="MCP Architecture Image" />
+<ImageDisplayer id="diagrams/in-house/agents/mcp-architecture" />
 
 `deepeval` allows you to evaluate the MCP host on various criterion like its primitive usage, argument generation and task completion.
 
@@ -155,8 +155,7 @@ async function main() {
 In your MCP application's main file, you need to track all the MCP interactions during run time. This includes adding <Term py="tools_called" ts="toolsCalled"/>, <Term py="resources_called" ts="resourcesCalled"/> and <Term py="prompts_called" ts="promptsCalled"/> whenever your host uses them.
 
 <ImageDisplayer
-  src={ASSETS.evaluationMcpTools}
-  alt="MCP Interaction tracking"
+  id="diagrams/in-house/agents/mcp-tools-called-tracking"
 />
 
 <Switch>
@@ -408,8 +407,7 @@ For multi-turn MCP evals, you are required to add the <Term py="mcp_tools_called
 During the interactive session of your application, you need to track all the MCP interactions. This includes adding <Term py="tools_called" ts="toolsCalled"/>, <Term py="resources_called" ts="resourcesCalled"/> and <Term py="prompts_called" ts="promptsCalled"/> whenever your host uses them.
 
 <ImageDisplayer
-  src={ASSETS.evaluationMcpTools}
-  alt="MCP Interaction tracking"
+  id="diagrams/in-house/agents/mcp-tools-called-tracking"
 />
 
 <Switch>

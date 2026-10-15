@@ -5,8 +5,6 @@ sidebar_label: End-to-End Evals
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 End-to-end evaluation assesses the **observable inputs and outputs** of your LLM application and treats it as a black box — you only care about what goes in and what comes out, not the path the system took to get there. The shape of "input" and "output" depends entirely on what your app does:
 
 - **Tool-using agent treated as a black box** — input is the user's task, output is the final answer plus the tools that were called.
@@ -16,7 +14,7 @@ End-to-end evaluation assesses the **observable inputs and outputs** of your LLM
 - **Classifier / extractor** — input is a chunk of text, output is the label or the structured fields you pulled out.
 - **Writing assistant / rewriter** — input is the draft (and any instructions), output is the rewritten text.
 
-<ImageDisplayer src={ASSETS.endToEndLlmEvals} alt="end-to-end evals" />
+<ImageDisplayer id="diagrams/in-house/evaluation/end-to-end-evals" />
 
 This page explains the **concepts** behind end-to-end evaluation. For the actual step-by-step walkthroughs, jump to the right flavor for your application:
 

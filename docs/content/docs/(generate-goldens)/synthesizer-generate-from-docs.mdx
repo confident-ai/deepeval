@@ -6,8 +6,6 @@ languages: [python]
 ---
 
 
-import { ASSETS } from "@site/src/assets";
-
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**.
 
 By simply providing these documents, `deepeval`'s Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
@@ -19,7 +17,7 @@ By simply providing these documents, `deepeval`'s Synthesizer will automatically
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.synthesizeFromDocs} />
+  <ImageDisplayer id="diagrams/in-house/datasets/goldens-from-docs" />
 </div>
 
 :::tip[DID YOU KNOW?]
@@ -188,7 +186,7 @@ Similar to the context selection step, if the cosine similarity is still lower t
     justifyContent: "start",
   }}
 >
-  <ImageDisplayer src={ASSETS.filteringContext} />
+  <ImageDisplayer id="diagrams/in-house/datasets/synthetic-context-filtering" />
 </div>
 
 ## FAQs

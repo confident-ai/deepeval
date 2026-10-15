@@ -5,8 +5,6 @@ sidebar_label: CLI Settings
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 ## Quick Summary
 
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
@@ -303,8 +301,7 @@ npx deepeval inspect --folder ./experiments # same, via explicit flag
 This allows you to inspect traces and spans locally on your machine:
 
 <ImageDisplayer
-  src={ASSETS.deepevalTuiInspect}
-  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+  id="screenshots/deepeval/inspect-trace-tree"
 />
 
 <Switch>
