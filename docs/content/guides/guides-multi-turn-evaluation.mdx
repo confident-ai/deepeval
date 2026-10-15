@@ -53,7 +53,7 @@ This creates two key challenges:
 
 2. **Quality must be sustained.** An LLM that gives five perfect responses and then one terrible one has still failed. Multi-turn metrics need to evaluate consistency across the entire conversation, not just individual turns.
 
-<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/conversational-test-case" />
 
 In `deepeval`, multi-turn interactions are grouped by **scenarios** defined as [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation). If two conversations occur under the same scenario (e.g., "Angry user asking for a refund"), we consider those comparable—even if the exact messages differ.
 

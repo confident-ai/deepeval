@@ -32,8 +32,7 @@ _For a comprehensive breakdown of each agentic metric, see the [AI Agent Evaluat
 An AI agent pipeline involves reasoning (planning) and action (tool calling) steps that iterate until task completion. The reasoning layer decides _what_ to do, while the action layer carries out _how_ to do it.
 
 <ImageDisplayer
-  src="https://images.ctfassets.net/otwaplf7zuwf/U833Rl3xfX0xq7UCDbpgA/b57e854f9f8444639b12773f9cee77f8/ai-agent.png"
-  alt="AI Agent"
+  id="diagrams/in-house/agents/ai-agent-architecture"
 />
 
 The **reasoning layer** contains your LLM and is responsible for understanding tasks, creating plans, and deciding which tools to use. The **action layer** contains your tools (function calls, APIs, etc.) and is responsible for executing those decisions. Together, they loop until the task is complete or fails.
@@ -121,7 +120,7 @@ Development evals help answer questions like:
 
 But first, you'll have to tell `deepeval` what components are within your AI agent in order for metrics to operate. You can do this via [LLM tracing.](/docs/evaluation-llm-tracing) LLM tracing is a great way to help `deepeval` map out the entire execution trace of AI agents, and involves adding an `@observe` decorator to functions within your AI agent, and adds no latency to your AI agent.
 
-<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component level evals" />
+<ImageDisplayer id="diagrams/in-house/evaluation/component-level-evals" />
 
 Let's look at the example below to see how we can setup tracing on an example flight booking agent that uses OpenAI as the LLM:
 

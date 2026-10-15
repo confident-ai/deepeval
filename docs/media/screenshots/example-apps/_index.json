@@ -1,0 +1,88 @@
+{
+  "images": [
+    {
+      "file": "medical-chatbot.webp",
+      "title": "Medical chatbot booking an appointment",
+      "alt": "Healthcare chatbot UI where a user books a 9:30 AM appointment and the assistant confirms it after collecting name, email and birth date",
+      "width": 2400,
+      "height": 1305,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:medical-chatbot:chatbot-overview.png"
+        ]
+      }
+    },
+    {
+      "file": "meeting-summarizer-markdown-output.webp",
+      "title": "Meeting summarizer rendering raw markdown",
+      "alt": "Meeting summarizer web app showing the LLM's markdown output dumped into one box, with a summary and a numbered list of action items",
+      "width": 2332,
+      "height": 1412,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-demo-1.png"
+        ]
+      }
+    },
+    {
+      "file": "meeting-summarizer-structured-output.webp",
+      "title": "Meeting summarizer with structured output",
+      "alt": "Meeting summarizer web app rendering structured output as a summary paragraph and separate checkbox action items for Maya and Ethan",
+      "width": 2332,
+      "height": 1420,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-demo-2.png"
+        ]
+      }
+    },
+    {
+      "file": "meeting-summarizer.webp",
+      "title": "Meeting summarizer app with action items",
+      "alt": "Meeting summarizer web app showing a meeting summary paragraph and action items grouped by person, each with a checkbox",
+      "width": 2372,
+      "height": 1568,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-overview.png"
+        ]
+      }
+    },
+    {
+      "file": "rag-qa-agent-markdown-output.webp",
+      "title": "RAG QA agent rendering raw markdown",
+      "alt": "QA agent web app showing a markdown answer with bold text, bullet points and a numbered certifications list, with no citations panel",
+      "width": 2372,
+      "height": 1568,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agent-demo-1.png"
+        ]
+      }
+    },
+    {
+      "file": "rag-qa-agent-structured-output.webp",
+      "title": "RAG QA agent with structured citations",
+      "alt": "QA agent web app showing a plain-text answer about the NanoDrop 3000 under a collapsed Citations (3) panel, rendered from JSON output",
+      "width": 2372,
+      "height": 1568,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agnet-demo-2.png"
+        ]
+      }
+    },
+    {
+      "file": "rag-qa-agent.webp",
+      "title": "RAG QA agent answering with citations",
+      "alt": "QA agent web app answering a question about the NanoDrop 3000 and its certifications, with a collapsed citations panel above the answer",
+      "width": 2372,
+      "height": 1568,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agent-overview.png"
+        ]
+      }
+    }
+  ]
+}

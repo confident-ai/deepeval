@@ -5,8 +5,6 @@ sidebar_label: Evaluate Retriever & Generator
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In the previous section of this tutorial we've built a `RAGAgent` that:
 
 - Retrieves documents related to a query from our knowledge base
@@ -14,7 +12,7 @@ In the previous section of this tutorial we've built a `RAGAgent` that:
 
 To evaluate a RAG QA Agent, we'll use single-turn [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-casess)s from `deepeval`. We need to provide the `retrieval_context` in our test cases for evaluating our RAG application.
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="Single-turn LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 Our RAG agent first retrieves context from our knowledge base and uses the retrieved context to answer the question. All these questions are individual interactions that only depend on the retrieved context. Hence, we'll create our test cases with `input`, `actual_output` and `retrieval_context` as shown below:
 
@@ -232,7 +230,7 @@ evaluate(test_cases, generator_metrics)
 
 You can also run `deepeval view` to see the results of evals on Confident AI:
 
-<ImageDisplayer src={ASSETS.tutorialRagQaAgentEvalResults} alt="RAG QA Agent Eval Results" />
+<ImageDisplayer id="platform/evaluation/metric-scores-radar" />
 
 :::note
 If you remember the implementation of our RAG agent. There are too many hyperparameters that can change the behavious of our RAG application. Click here to see the [implementation of RAG Agent](https://deepeval.com/tutorials/rag-qa-agent/tutorial-rag-qa-development) once again.

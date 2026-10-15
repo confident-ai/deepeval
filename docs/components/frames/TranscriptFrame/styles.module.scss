@@ -1,0 +1,293 @@
+@import "../vars";
+@import "../FrameShell/frame";
+
+.frame.frame {
+  .text {
+    @include label;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  .highlight {
+    background: none;
+    font-weight: $FONT_MEDIUM;
+    color: var(--chart-pink);
+  }
+
+  .role {
+    @include kicker;
+  }
+
+  .turnHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .verdict {
+    @include mark-fill;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--mark-color);
+  }
+
+  .turn {
+    @include mark-fill;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 12px;
+    min-width: 0;
+  }
+
+  .inlineTag {
+    display: none;
+    @include small;
+    color: var(--mark-color);
+  }
+
+  .panelTitle {
+    font-size: 13px;
+    font-weight: $FONT_MEDIUM;
+    color: var(--text-primary);
+  }
+
+  // chat: a mock playground.
+  .chat {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 4px 0;
+  }
+
+  .prompt,
+  .reply {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .prompt {
+    background-color: var(--bg-primary);
+  }
+
+  .reply {
+    --mark-color: var(--chart-violet);
+    @include mark-fill;
+    border-left-width: 3px;
+  }
+
+  .reply[data-role="tool"] {
+    --mark-color: var(--chart-ember);
+  }
+
+  .reply[data-role="system"] {
+    --mark-color: var(--chart-muted);
+  }
+
+  // turns: a stack with ranges on the left and pointers on the right.
+  .turns {
+    display: grid;
+    grid-template-columns: minmax(80px, 0.7fr) minmax(0, 2fr) minmax(80px, 0.8fr);
+    column-gap: 12px;
+    row-gap: 6px;
+    padding: 4px 0;
+  }
+
+  .range {
+    grid-column: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .rangeLabel {
+    @include small;
+    min-width: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .bracket {
+    align-self: stretch;
+    width: 8px;
+    flex-shrink: 0;
+    border: 1px solid var(--text-secondary);
+    border-right: 0;
+  }
+
+  .turnCell {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  .pointer {
+    grid-column: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    @include small;
+  }
+
+  .pointerArrow {
+    flex-shrink: 0;
+    width: 18px;
+    height: 1px;
+    background: var(--text-secondary);
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: -3px;
+      border: 3.5px solid transparent;
+      border-right: 6px solid var(--text-secondary);
+      border-left: 0;
+    }
+  }
+
+  @container (max-width: 520px) {
+    .turns {
+      grid-template-columns: 76px minmax(0, 1fr);
+      column-gap: 8px;
+    }
+
+    .pointer {
+      display: none;
+    }
+
+    .inlineTag {
+      display: inline;
+    }
+  }
+
+  // judge: input → judge prompt → verdict.
+  .judge {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) 24px minmax(0, 1.2fr) 24px auto;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  .judgeInput {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .conversation {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-strong);
+  }
+
+  .line {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .lineRole {
+    @include kicker;
+    color: var(--mark-color);
+  }
+
+  .judgeBox {
+    @include mark-fill;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  .verdictBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .score {
+    @include mark-fill;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: $FONT_MEDIUM;
+    color: var(--text-primary);
+  }
+
+  .flowArrow {
+    position: relative;
+    height: 1px;
+    background: var(--text-secondary);
+
+    &::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: -3px;
+      border: 3.5px solid transparent;
+      border-left: 6px solid var(--text-secondary);
+      border-right: 0;
+    }
+  }
+
+  @container (max-width: 520px) {
+    .judge {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: stretch;
+    }
+
+    .flowArrow {
+      justify-self: center;
+      width: 1px;
+      height: 18px;
+
+      &::after {
+        right: -3px;
+        top: auto;
+        bottom: 0;
+        border: 3.5px solid transparent;
+        border-top: 6px solid var(--text-secondary);
+        border-bottom: 0;
+      }
+    }
+  }
+
+  // compare: panels side by side.
+  .compare {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 4px 0;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+}

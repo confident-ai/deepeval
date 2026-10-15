@@ -115,7 +115,7 @@ Create a test file to run your first **end-to-end evaluation**.
 
 An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` represents a **single unit of LLM app interaction**, and contains mandatory fields such as the `input` and <Term py="actual_output" ts="actualOutput"/> (LLM generated output), and optional ones like <Term py="expected_output" ts="expectedOutput"/>.
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 Run <Term py="touch test_example.py" ts="touch example.test.ts"/> in your terminal and paste in the following code:
 
@@ -312,8 +312,7 @@ If you run more than one test run, you will be able to **catch regressions** by 
 A [conversational test case](/docs/evaluation-multiturn-test-cases#conversational-test-case) in `deepeval` represents a **multi-turn interaction with your LLM app**, and contains information such as the actual conversation that took place in the format of `turn`s, and optionally the scenario of which a conversation happened.
 
 <ImageDisplayer
-  src={ASSETS.conversationalTestCase}
-  alt="Conversational Test Case"
+  id="diagrams/in-house/evaluation/conversational-test-case"
 />
 
 Run <Term py="touch test_example.py" ts="touch example.test.ts"/> in your terminal and paste in the following code:
@@ -694,8 +693,7 @@ npx tsx main.ts
 Trajectory-based evaluation tells you whether the complete path was effective. [Component-level evaluation](/docs/evaluation-component-level-llm-evals) uses the same trace to score one span at a time, helping you identify which planner, retriever, tool call, LLM generation, or sub-agent caused a failure.
 
 <ImageDisplayer
-  src={ASSETS.componentLevelEvals}
-  alt="component-level metrics attached to individual spans within an agent trace"
+  id="diagrams/in-house/evaluation/component-level-evals"
 />
 
 Once your agent is traced, attach component metrics only to the spans you need to diagnose. Trajectory and component scores can run together in the same test run. See the [component-level guide](/docs/evaluation-component-level-llm-evals) for stack-specific examples, sub-agent evaluation, retriever scoring, and span customization.
@@ -754,8 +752,7 @@ Either way, run it with <Term py="deepeval test run" ts="npx deepeval test run"/
 Every <Term py="evals_iterator()" ts="evalsIterator()"/> run is snapshotted to disk, so you can open it in a trace-tree TUI — with trajectory scores, per-span scores, and metric reasons — by running bare <Term py="deepeval inspect" ts="npx deepeval inspect"/>. See the [`deepeval inspect` reference](/docs/command-line-interface#inspect) for full details.
 
 <ImageDisplayer
-  src={ASSETS.deepevalTuiInspect}
-  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+  id="screenshots/deepeval/inspect-trace-tree"
 />
 
 :::

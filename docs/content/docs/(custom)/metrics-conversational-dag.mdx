@@ -5,8 +5,6 @@ sidebar_label: Conversational DAG
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 <MetricTagsDisplayer jev={true} multiTurn={true} custom={true} />
 
 The conversational deep acyclic graph (DAG) metric in `deepeval` is currently the most versatile custom metric for you to easily build deterministic decision trees for multi-turn evaluation with the help of using LLM-as-a-judge.
@@ -264,7 +262,7 @@ const task = new ConversationalTaskNode({
 
 Use turn windows when a check applies to only part of the dialogue, such as the greeting or the final resolution.
 
-<ImageDisplayer src={ASSETS.dagTurnWindows} alt="DAG with turns window" />
+<ImageDisplayer id="diagrams/in-house/metrics/conversational-dag-turns-window" />
 
 ### Shared Nodes and Multiple Parents
 

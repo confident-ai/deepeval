@@ -1,0 +1,484 @@
+{
+  "evaluator-types": {
+    "nodes": [
+      {
+        "id": "who",
+        "label": "Who evaluates?",
+        "kind": "decision",
+        "shape": "diamond"
+      },
+      {
+        "id": "human",
+        "label": "Human annotators: SMEs, QA and product teams",
+        "kind": "actor",
+        "icon": "users"
+      },
+      {
+        "id": "automated",
+        "label": "Automated evaluators",
+        "kind": "eval",
+        "icon": "cpu"
+      },
+      {
+        "id": "deterministic",
+        "label": "Deterministic checks",
+        "kind": "tool",
+        "icon": "list-checks"
+      },
+      {
+        "id": "judge",
+        "label": "LLM-as-a-judge",
+        "kind": "llm",
+        "icon": "gavel"
+      },
+      {
+        "id": "statistical",
+        "label": "Statistical and NLP scores",
+        "color": "muted",
+        "icon": "activity"
+      }
+    ],
+    "edges": [
+      {
+        "from": "who",
+        "to": "human",
+        "label": "people"
+      },
+      {
+        "from": "who",
+        "to": "automated",
+        "label": "code or models"
+      },
+      {
+        "from": "automated",
+        "to": "deterministic",
+        "label": "verifiable"
+      },
+      {
+        "from": "automated",
+        "to": "judge",
+        "label": "semantic"
+      },
+      {
+        "from": "automated",
+        "to": "statistical",
+        "label": "similarity"
+      }
+    ]
+  },
+  "evaluation-scope-decision": {
+    "nodes": [
+      {
+        "id": "outcome",
+        "label": "Do you care about the final outcome?",
+        "kind": "decision",
+        "shape": "diamond"
+      },
+      {
+        "id": "components-only",
+        "label": "Trace, then evaluate components only",
+        "kind": "eval",
+        "icon": "layers"
+      },
+      {
+        "id": "internals",
+        "label": "Do you also care about the inner components?",
+        "kind": "decision",
+        "shape": "diamond"
+      },
+      {
+        "id": "end-to-end-only",
+        "label": "End-to-end evals only",
+        "kind": "eval",
+        "icon": "target"
+      },
+      {
+        "id": "both",
+        "label": "Trace, then evaluate end to end and per component",
+        "kind": "eval",
+        "icon": "network"
+      }
+    ],
+    "edges": [
+      {
+        "from": "outcome",
+        "to": "components-only",
+        "label": "No"
+      },
+      {
+        "from": "outcome",
+        "to": "internals",
+        "label": "Yes"
+      },
+      {
+        "from": "internals",
+        "to": "end-to-end-only",
+        "label": "No"
+      },
+      {
+        "from": "internals",
+        "to": "both",
+        "label": "Yes"
+      }
+    ]
+  },
+  "white-box-checkpoints": {
+    "nodes": [
+      {
+        "id": "task",
+        "label": "Task",
+        "kind": "input"
+      },
+      {
+        "id": "plan",
+        "label": "Plan",
+        "kind": "llm",
+        "group": "agent"
+      },
+      {
+        "id": "retrieve",
+        "label": "Retrieve context",
+        "kind": "llm",
+        "icon": "search",
+        "group": "agent"
+      },
+      {
+        "id": "select",
+        "label": "Select tool and arguments",
+        "kind": "llm",
+        "icon": "wrench",
+        "group": "agent"
+      },
+      {
+        "id": "knowledge",
+        "label": "Knowledge base",
+        "kind": "store",
+        "shape": "store",
+        "group": "external"
+      },
+      {
+        "id": "mcp",
+        "label": "MCP server",
+        "kind": "tool",
+        "icon": "server",
+        "group": "external"
+      },
+      {
+        "id": "records",
+        "label": "Customer records",
+        "kind": "store",
+        "shape": "store",
+        "group": "external"
+      },
+      {
+        "id": "state",
+        "label": "Final state",
+        "kind": "output",
+        "icon": "clipboard-check"
+      }
+    ],
+    "groups": [
+      {
+        "id": "agent",
+        "label": "Agent",
+        "badge": "Plan adherence"
+      },
+      {
+        "id": "external",
+        "label": "External systems",
+        "badge": "Security boundary"
+      }
+    ],
+    "edges": [
+      {
+        "from": "task",
+        "to": "plan"
+      },
+      {
+        "from": "plan",
+        "to": "retrieve"
+      },
+      {
+        "from": "retrieve",
+        "to": "knowledge",
+        "both": true
+      },
+      {
+        "from": "retrieve",
+        "to": "select"
+      },
+      {
+        "from": "select",
+        "to": "mcp",
+        "label": "tool call"
+      },
+      {
+        "from": "mcp",
+        "to": "records",
+        "both": true
+      },
+      {
+        "from": "mcp",
+        "to": "state",
+        "label": "result",
+        "dashed": true
+      }
+    ]
+  },
+  "golden-feedback-loop": {
+    "direction": "LR",
+    "nodes": [
+      {
+        "id": "golden",
+        "label": "Golden",
+        "kind": "store",
+        "shape": "store",
+        "group": "in-development"
+      },
+      {
+        "id": "run",
+        "label": "Run the application",
+        "kind": "llm",
+        "group": "in-development"
+      },
+      {
+        "id": "evidence",
+        "label": "Test case and trace",
+        "kind": "output",
+        "icon": "file-search",
+        "group": "in-development"
+      },
+      {
+        "id": "regression",
+        "label": "Regression testing",
+        "kind": "eval",
+        "group": "in-development"
+      },
+      {
+        "id": "deploy",
+        "label": "Deployment",
+        "color": "muted",
+        "icon": "send"
+      },
+      {
+        "id": "production",
+        "label": "Production traces",
+        "kind": "store",
+        "shape": "store",
+        "group": "in-production"
+      },
+      {
+        "id": "discovery",
+        "label": "Failure discovery",
+        "kind": "eval",
+        "icon": "bug",
+        "group": "in-production"
+      }
+    ],
+    "groups": [
+      {
+        "id": "in-development",
+        "label": "Development"
+      },
+      {
+        "id": "in-production",
+        "label": "Production"
+      }
+    ],
+    "edges": [
+      {
+        "from": "golden",
+        "to": "run"
+      },
+      {
+        "from": "run",
+        "to": "evidence"
+      },
+      {
+        "from": "evidence",
+        "to": "regression"
+      },
+      {
+        "from": "regression",
+        "to": "deploy"
+      },
+      {
+        "from": "deploy",
+        "to": "production"
+      },
+      {
+        "from": "production",
+        "to": "discovery"
+      },
+      {
+        "from": "discovery",
+        "to": "golden",
+        "label": "new or updated golden",
+        "dashed": true
+      }
+    ]
+  },
+  "coding-agent-simulation": {
+    "participants": [
+      {
+        "id": "user",
+        "label": "Simulated user",
+        "kind": "actor",
+        "icon": "user"
+      },
+      {
+        "id": "agent",
+        "label": "Coding agent",
+        "kind": "llm",
+        "icon": "bot"
+      },
+      {
+        "id": "github",
+        "label": "GitHub MCP",
+        "kind": "tool",
+        "icon": "server"
+      }
+    ],
+    "messages": [
+      {
+        "from": "user",
+        "to": "agent",
+        "label": "Fix issue #184: duplicate webhooks"
+      },
+      {
+        "from": "agent",
+        "to": "github",
+        "label": "get_issue(184)"
+      },
+      {
+        "from": "github",
+        "to": "agent",
+        "label": "Issue details",
+        "dashed": true
+      },
+      {
+        "from": "agent",
+        "to": "agent",
+        "label": "Edits the handler, runs tests"
+      },
+      {
+        "from": "agent",
+        "to": "user",
+        "label": "Patch ready, tests pass",
+        "dashed": true
+      },
+      {
+        "from": "user",
+        "to": "agent",
+        "label": "Open a PR and link the issue"
+      },
+      {
+        "from": "agent",
+        "to": "github",
+        "label": "create_pull_request"
+      },
+      {
+        "from": "github",
+        "to": "agent",
+        "label": "PR #212 opened",
+        "dashed": true
+      },
+      {
+        "from": "agent",
+        "to": "user",
+        "label": "Done, see PR #212",
+        "dashed": true
+      }
+    ]
+  },
+  "rag-qa-evaluation": {
+    "nodes": [
+      {
+        "id": "question",
+        "label": "Employee question",
+        "kind": "input"
+      },
+      {
+        "id": "embedding",
+        "label": "Embedding model",
+        "kind": "llm",
+        "icon": "binary",
+        "group": "retriever"
+      },
+      {
+        "id": "index",
+        "label": "Vector index of internal docs",
+        "kind": "store",
+        "shape": "store",
+        "group": "retriever"
+      },
+      {
+        "id": "chunks",
+        "label": "Top-K chunks",
+        "kind": "input",
+        "icon": "file-text",
+        "group": "retriever"
+      },
+      {
+        "id": "prompt",
+        "label": "Prompt with context",
+        "kind": "input",
+        "icon": "layout-template",
+        "group": "generator"
+      },
+      {
+        "id": "llm",
+        "label": "LLM",
+        "kind": "llm",
+        "group": "generator"
+      },
+      {
+        "id": "answer",
+        "label": "Grounded answer",
+        "kind": "output"
+      }
+    ],
+    "groups": [
+      {
+        "id": "retriever",
+        "label": "Retriever",
+        "badge": "Contextual metrics"
+      },
+      {
+        "id": "generator",
+        "label": "Generator",
+        "badge": "Faithfulness"
+      }
+    ],
+    "edges": [
+      {
+        "from": "question",
+        "to": "embedding"
+      },
+      {
+        "from": "embedding",
+        "to": "index"
+      },
+      {
+        "from": "index",
+        "to": "chunks"
+      },
+      {
+        "from": "chunks",
+        "to": "prompt"
+      },
+      {
+        "from": "question",
+        "to": "prompt"
+      },
+      {
+        "from": "prompt",
+        "to": "llm"
+      },
+      {
+        "from": "llm",
+        "to": "answer"
+      }
+    ]
+  }
+}

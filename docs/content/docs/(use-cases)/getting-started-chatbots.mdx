@@ -59,7 +59,7 @@ Multi-turn evals are tricky because of the ad-hoc nature of conversations. The n
 
 Hence, when running evals for the purpose of benchmarking we cannot compare different conversations by looking at their turns. In `deepeval`, multi-turn interactions are grouped by **scenarios** instead. If two conversations occur under the same scenario, we consider those the same.
 
-<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/conversational-test-case" />
 
 :::note
 Scenarios are optional in the diagram because not all users start with conversations with labelled scenarios.
@@ -282,7 +282,7 @@ const dataset = new EvaluationDataset({
 
 A dataset is a collection of goldens in `deepeval`, and in a multi-turn context this these are represented by `ConversationalGolden`s.
 
-<ImageDisplayer src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
+<ImageDisplayer id="diagrams/in-house/datasets/goldens-to-test-cases" />
 
 The idea is simple - we start with a list of standardized `scenario`s for each golden, and we'll simulate turns during evaluation time for more robust evaluation.
 

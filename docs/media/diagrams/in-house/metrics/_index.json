@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "file": "conversational-dag-turns-window.webp",
+      "title": "Turns window in a conversational DAG",
+      "alt": "Conversational test case where a window of turns feeds a node that summarizes the assistant's replies before the rest of the DAG",
+      "width": 2400,
+      "height": 722,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:turn-windows.png"
+        ]
+      }
+    },
+    {
+      "file": "conversational-dag.webp",
+      "title": "Conversational DAG for assistant replies",
+      "alt": "Conversational DAG that summarizes a chat's assistant replies, checks they answer the user, then scores 0, 5 or 10 by the assistant's tone",
+      "width": 2400,
+      "height": 1493,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:conversational-dag.png"
+        ]
+      }
+    },
+    {
+      "file": "dag-decision-tree-summary-headings.webp",
+      "title": "DAG decision tree for summary headings",
+      "alt": "DAG that extracts headings from a summary, checks for intro, body and conclusion, then scores 0, 2, 4 or 10 depending on their order",
+      "width": 2400,
+      "height": 1840,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png"
+        ]
+      }
+    },
+    {
+      "file": "dag-g-eval-leaf.webp",
+      "title": "DAG metric with a G-Eval leaf node",
+      "alt": "DAG that checks whether a sales email has four sentences or fewer, scoring 0 if not and otherwise passing it to a persuasiveness G-Eval",
+      "width": 2400,
+      "height": 1357,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:dag:sales-email.png"
+        ]
+      }
+    },
+    {
+      "file": "g-eval-usage-by-criteria.svg",
+      "title": "G-Eval usage by criteria",
+      "alt": "One month of G-Eval usage by criteria: Correctness 8.05M, Coherence 4.21M, Tonality 3.15M, Safety 2.74M and Custom RAG 2.04M runs",
+      "width": 960,
+      "height": 540,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases:usage.svg"
+        ]
+      }
+    }
+  ]
+}
