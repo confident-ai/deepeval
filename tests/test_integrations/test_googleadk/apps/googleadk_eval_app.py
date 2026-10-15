@@ -27,7 +27,6 @@ from google.genai import types
 from deepeval.integrations.google_adk import instrument_google_adk
 from deepeval.tracing import update_current_span
 
-
 _APP_NAME = "deepeval-googleadk-evals"
 
 
