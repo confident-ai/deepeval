@@ -1,11 +1,11 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from deepeval.metrics.base_metric import YesNo
+# removed YesNo import
 
 
 class ContextualRelevancyVerdict(BaseModel):
     statement: str
-    verdict: YesNo
+    verdict: Optional[str]
     reason: Optional[str] = Field(default=None)
 
 
