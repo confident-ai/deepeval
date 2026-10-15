@@ -67,7 +67,7 @@ class FakeTrack:
     async def recv(self):
         if not self._frames:
             raise RuntimeError("track ended")
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.3)  # let drain loop process audio frame (CI-safe)
         return self._frames.pop(0)
 
 
@@ -310,6 +310,7 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+    await asyncio.sleep(0.3)  # let the drain loop consume both events (CI-safe)
 
     events = []
     async for event in connector.iter_agent_events():
