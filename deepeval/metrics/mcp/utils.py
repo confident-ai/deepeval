@@ -109,7 +109,9 @@ def turn_mcp_interaction_text(turn) -> str:
             args = tool.args
             structured = getattr(tool.result, "structuredContent", None)
             if structured is None:
-                structured = getattr(tool.result, "structured_content", None) or {}
+                structured = (
+                    getattr(tool.result, "structured_content", None) or {}
+                )
             result = structured.get("result")
         else:
             args = tool.input_parameters
