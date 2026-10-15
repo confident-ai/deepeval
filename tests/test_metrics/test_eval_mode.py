@@ -46,7 +46,6 @@ from tests.test_metrics.system_one_fakes import (
     noul_answers,
 )
 
-
 ###############################################
 # A toy metric with both chains
 ###############################################
