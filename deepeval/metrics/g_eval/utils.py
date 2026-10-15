@@ -95,6 +95,7 @@ CONVERSATIONAL_G_EVAL_API_PARAMS = {
     MultiTurnParams.EXPECTED_OUTCOME: "expectedOutcome",
     MultiTurnParams.RETRIEVAL_CONTEXT: "retrievalContext",
     MultiTurnParams.TOOLS_CALLED: "toolsCalled",
+    MultiTurnParams.AUDIO: "audio",
 }
 
 
