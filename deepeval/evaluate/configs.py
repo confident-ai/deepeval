@@ -1,5 +1,5 @@
 from typing import List, Literal, Optional, Union
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from deepeval.test_run.test_run import TestRunResultDisplay
 
