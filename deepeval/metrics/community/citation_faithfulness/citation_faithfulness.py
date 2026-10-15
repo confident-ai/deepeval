@@ -166,7 +166,15 @@ class CitationFaithfulnessMetric(BaseMetric):
     def _invalid_citations(self, test_case: LLMTestCase) -> List[int]:
         passage_count = len(test_case.retrieval_context)
         invalid = set()
-        for match in re.findall(r"\[(-?[0-9]+)\]", test_case.actual_output):
+        # Leave neutral case citations such as [2019] UKSC 5 to the judge.
+        # A year alone is still checked as a passage number.
+        output = re.sub(
+            r"\[[0-9]{4}\][ \t]+[A-Z][A-Z0-9]+"
+            r"(?:[ \t]+[A-Za-z]+)?[ \t]+[0-9]+\b",
+            "",
+            test_case.actual_output,
+        )
+        for match in re.findall(r"\[(-?[0-9]+)\]", output):
             number = int(match)
             if not 1 <= number <= passage_count:
                 invalid.add(number)

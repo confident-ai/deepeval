@@ -205,3 +205,115 @@ def test_invalid_citation_skips_system_one_batch():
     assert len(system_one.calls) == 1
     assert citation.measure(test_case, _show_indicator=False) == 0.0
     assert len(system_one.calls) == 1
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+@pytest.mark.parametrize("verdict", ["faithful", "unfaithful"])
+@pytest.mark.parametrize(
+    "case_citation",
+    [
+        pytest.param("[2026] KEHC 11082 (KLR)", id="kenya"),
+        pytest.param("[2019] UKSC 5", id="uk-supreme-court"),
+        pytest.param("[2024] EWCA Civ 355", id="uk-civil-division"),
+    ],
+)
+def test_case_citation_year_is_left_to_judge(
+    async_mode, verdict, case_citation
+):
+    judge = FakeJudge(CitationFaithfulnessVerdict(verdict=verdict))
+    metric = CitationFaithfulnessMetric(model=judge, async_mode=async_mode)
+    test_case = LLMTestCase(
+        input="Which case supports the answer?",
+        actual_output=f"The answer relies on {case_citation} [1].",
+        retrieval_context=[f"The relevant case is {case_citation}."],
+    )
+
+    assert metric.measure(test_case, _show_indicator=False) == (
+        1.0 if verdict == "faithful" else 0.0
+    )
+    assert test_case.actual_output in judge.last_prompt
+    assert metric._system_one_eval_spec(test_case) is not None
+
+
+def test_case_citation_direct_async_is_left_to_judge():
+    judge = FakeJudge(CitationFaithfulnessVerdict(verdict="faithful"))
+    metric = CitationFaithfulnessMetric(model=judge)
+    test_case = LLMTestCase(
+        input="Which case supports the answer?",
+        actual_output="The answer relies on [2019] UKSC 5 [1].",
+        retrieval_context=["The relevant case is [2019] UKSC 5."],
+    )
+
+    assert (
+        asyncio.run(metric.a_measure(test_case, _show_indicator=False)) == 1.0
+    )
+    assert test_case.actual_output in judge.last_prompt
+
+
+@pytest.mark.parametrize("citation", ["[7]", "[0]", "[2019]"])
+def test_case_citation_does_not_hide_another_invalid_marker(citation):
+    judge = FakeJudge(CitationFaithfulnessVerdict(verdict="faithful"))
+    metric = CitationFaithfulnessMetric(model=judge, async_mode=False)
+    test_case = LLMTestCase(
+        input="Which case supports the answer?",
+        actual_output=f"The answer relies on [2019] UKSC 5 {citation}.",
+        retrieval_context=["The relevant case is [2019] UKSC 5."],
+    )
+
+    assert metric.measure(test_case, _show_indicator=False) == 0.0
+    assert citation in metric.reason
+    assert judge.last_prompt is None
+    assert metric._system_one_eval_spec(test_case) is None
+
+
+@pytest.mark.parametrize(
+    "output",
+    [
+        pytest.param("The answer cites [2019].", id="bare-year"),
+        pytest.param("The answer cites [2019] UKSC.", id="no-case-number"),
+        pytest.param("The answer cites [7] UKSC 5.", id="short-number"),
+        pytest.param("The answer cites [-2019] UKSC 5.", id="negative-number"),
+        pytest.param("The answer cites [2019] ordinary text 5.", id="prose"),
+        pytest.param("The answer cites [2019]\nUKSC 5.", id="next-line"),
+    ],
+)
+def test_non_case_citations_still_fail_without_judge(output):
+    judge = FakeJudge(CitationFaithfulnessVerdict(verdict="faithful"))
+    metric = CitationFaithfulnessMetric(model=judge, async_mode=False)
+    test_case = LLMTestCase(
+        input=QUERY,
+        actual_output=output,
+        retrieval_context=RETRIEVAL_CONTEXT,
+    )
+
+    assert metric.measure(test_case, _show_indicator=False) == 0.0
+    assert judge.last_prompt is None
+
+
+@pytest.mark.parametrize("probability", [0.1, 0.9])
+def test_case_citation_reaches_system_one_batch(probability):
+    system_one = FakeSystemOneModel(
+        answer_fn=answer_everything(probability=probability)
+    )
+    citation = CitationFaithfulnessMetric(
+        system_one_model=system_one, eval_mode="system_one", async_mode=False
+    )
+    relevancy = AnswerRelevancyMetric(
+        system_one_model=system_one, eval_mode="system_one"
+    )
+    test_case = LLMTestCase(
+        input="Which case supports the answer?",
+        actual_output="The answer relies on [2026] KEHC 11082 (KLR) [1].",
+        retrieval_context=["The relevant case is [2026] KEHC 11082 (KLR)."],
+    )
+
+    handled = measure_system_one_batch(
+        [citation, relevancy],
+        test_case,
+        ignore_errors=False,
+        skip_on_missing_params=False,
+    )
+
+    assert handled == [citation, relevancy]
+    assert len(system_one.calls) == 1
+    assert (citation.score >= 0.5) == (probability >= 0.5)
