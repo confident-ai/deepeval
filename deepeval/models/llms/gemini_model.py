@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 from deepeval.errors import DeepEvalError
 from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key, EvaluationCost
+from deepeval.models.utils import (
+    EvaluationCost,
+    require_secret_api_key,
+    token_cost,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
@@ -344,14 +348,11 @@ class GeminiModel(DeepEvalBaseLLM):
         return {"temperature": self.temperature}
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
     ) -> Optional[EvaluationCost]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     def _token_cost(self, response) -> EvaluationCost:
         usage = getattr(response, "usage_metadata", None)
@@ -361,8 +362,18 @@ class GeminiModel(DeepEvalBaseLLM):
         thoughts_tokens = getattr(usage, "thoughts_token_count", None)
         if isinstance(thoughts_tokens, int) and thoughts_tokens > 0:
             output_tokens = (output_tokens or 0) + thoughts_tokens
+        modality_details = getattr(usage, "prompt_tokens_details", None)
+        audio_input_tokens = sum(
+            detail.token_count or 0
+            for detail in (
+                modality_details if isinstance(modality_details, list) else []
+            )
+            if detail.modality == "AUDIO"
+        )
         if input_tokens is not None and output_tokens is not None:
-            cost = self.calculate_cost(input_tokens, output_tokens)
+            cost = self.calculate_cost(
+                input_tokens, output_tokens, audio_input_tokens
+            )
             if cost is not None:
                 return cost
         return EvaluationCost(None, input_tokens, output_tokens)

@@ -1,8 +1,11 @@
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
+
+if TYPE_CHECKING:
+    from deepeval.models.base_model import DeepEvalModelData
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,39 @@ class EvaluationCost(float):
         obj.input_tokens = input_tokens
         obj.output_tokens = output_tokens
         return obj
+
+
+def token_cost(
+    model_data: "DeepEvalModelData",
+    input_tokens: int,
+    output_tokens: int,
+    audio_input_tokens: int = 0,
+) -> Optional[EvaluationCost]:
+    if model_data.input_price and model_data.output_price:
+        if audio_input_tokens and model_data.audio_input_price is None:
+            # Audio is billed at its own rate, so pricing it as text would
+            # understate the cost; report it as unknown instead.
+            return EvaluationCost(None, input_tokens, output_tokens)
+        text_input_tokens = input_tokens - audio_input_tokens
+        input_cost = text_input_tokens * model_data.input_price
+        if audio_input_tokens:
+            input_cost += audio_input_tokens * model_data.audio_input_price
+        output_cost = output_tokens * model_data.output_price
+        # Carry token counts alongside the cost so metric runs can surface
+        # input/output token usage (EvaluationCost subclasses float, so every
+        # existing `output, cost = generate(...)` caller is unaffected).
+        return EvaluationCost(
+            input_cost + output_cost, input_tokens, output_tokens
+        )
+    return None
+
+
+def prompt_audio_tokens(usage: Any) -> int:
+    # OpenAI-format usage reports audio input inside prompt_tokens_details;
+    # anything there that isn't a token count means no audio.
+    details = getattr(usage, "prompt_tokens_details", None)
+    audio_tokens = getattr(details, "audio_tokens", None)
+    return audio_tokens if isinstance(audio_tokens, int) else 0
 
 
 def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:

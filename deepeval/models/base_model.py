@@ -38,6 +38,8 @@ class DeepEvalModelData:
     supports_structured_outputs: Optional[bool] = None
     supports_json: Optional[bool] = None
     input_price: Optional[float] = None
+    # Per-token price of audio input, which providers bill apart from text.
+    audio_input_price: Optional[float] = None
     output_price: Optional[float] = None
     supports_temperature: Optional[bool] = True
     # True only when the provider lets us turn thinking on and off per request.

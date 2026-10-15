@@ -15,6 +15,7 @@ from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
     EvaluationCost,
+    token_cost,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
@@ -201,13 +202,10 @@ class KimiModel(DeepEvalBaseLLM):
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[EvaluationCost]:
+        return token_cost(self.model_data, input_tokens, output_tokens)
 
     ###############################################
     # Capabilities

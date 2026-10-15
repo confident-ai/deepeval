@@ -28,6 +28,7 @@ from deepeval.models.utils import (
     require_costs,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    token_cost,
 )
 
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
@@ -364,14 +365,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def calculate_cost(
         self, input_tokens: int, output_tokens: int
-    ) -> Optional[float]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
-        return None
+    ) -> Optional[EvaluationCost]:
+        return token_cost(self.model_data, input_tokens, output_tokens)
 
     def load_model(self):
         pass

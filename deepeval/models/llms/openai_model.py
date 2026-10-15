@@ -24,6 +24,8 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    prompt_audio_tokens,
+    token_cost,
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -177,6 +179,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -194,6 +197,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -206,7 +210,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -243,6 +249,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -260,6 +267,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -272,7 +280,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -322,7 +332,11 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -357,7 +371,11 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -395,17 +413,11 @@ class OpenAIModel(DeepEvalBaseLLM):
         return {"temperature": self.temperature}
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
-    ) -> Optional[float]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            # Carry token counts alongside the cost so metric runs can surface
-            # input/output token usage (EvaluationCost subclasses float, so every
-            # existing `output, cost = generate(...)` caller is unaffected).
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
+    ) -> Optional[EvaluationCost]:
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     #########################
     # Capabilities          #

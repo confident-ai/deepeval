@@ -26,6 +26,8 @@ from deepeval.models.utils import (
     require_costs,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    prompt_audio_tokens,
+    token_cost,
 )
 from deepeval.constants import ProviderSlug as PS
 
@@ -206,6 +208,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return structured_output, cost
             if self.model_data.supports_json:
@@ -228,6 +231,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return schema.model_validate(json_output), cost
 
@@ -245,7 +249,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -283,6 +289,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return structured_output, cost
             if self.model_data.supports_json:
@@ -305,6 +312,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return schema.model_validate(json_output), cost
 
@@ -324,6 +332,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
             completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -360,7 +369,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
 
         return completion, cost
 
@@ -389,7 +402,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
 
         return completion, cost
 
@@ -404,13 +421,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
+    ) -> Optional[EvaluationCost]:
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     ###############################################
     # Capabilities

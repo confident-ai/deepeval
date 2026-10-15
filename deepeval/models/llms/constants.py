@@ -65,16 +65,6 @@ def make_model_data(**kwargs: Any) -> ModelDataFactory:
     return lambda: DeepEvalModelData(**kwargs)
 
 
-# OpenAI's audio models take text and audio (no images), and reject any
-# request without audio in it. Pricing is left unset until audio input
-# tokens are priced separately from text.
-GPT_AUDIO_MODEL_DATA = make_model_data(
-    supports_multimodal=False,
-    supports_audio=True,
-    requires_audio=True,
-)
-
-
 OPENAI_MODELS_DATA = ModelDataRegistry(
     {
         "gpt-3.5-turbo": make_model_data(
@@ -575,12 +565,56 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=0.10 / 1e6,
             output_price=0.50 / 1e6,
         ),
-        "gpt-audio": GPT_AUDIO_MODEL_DATA,
-        "gpt-audio-2025-08-28": GPT_AUDIO_MODEL_DATA,
-        "gpt-audio-1.5": GPT_AUDIO_MODEL_DATA,
-        "gpt-audio-mini": GPT_AUDIO_MODEL_DATA,
-        "gpt-audio-mini-2025-10-06": GPT_AUDIO_MODEL_DATA,
-        "gpt-audio-mini-2025-12-15": GPT_AUDIO_MODEL_DATA,
+        # Audio models take text and audio (no images) and reject any
+        # request without audio in it.
+        "gpt-audio": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=2.50 / 1e6,
+            audio_input_price=32.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-audio-2025-08-28": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=2.50 / 1e6,
+            audio_input_price=32.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-audio-1.5": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=2.50 / 1e6,
+            audio_input_price=32.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-audio-mini": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=0.60 / 1e6,
+            audio_input_price=10.00 / 1e6,
+            output_price=2.40 / 1e6,
+        ),
+        "gpt-audio-mini-2025-10-06": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=0.60 / 1e6,
+            audio_input_price=10.00 / 1e6,
+            output_price=2.40 / 1e6,
+        ),
+        "gpt-audio-mini-2025-12-15": make_model_data(
+            supports_multimodal=False,
+            supports_audio=True,
+            requires_audio=True,
+            input_price=0.60 / 1e6,
+            audio_input_price=10.00 / 1e6,
+            output_price=2.40 / 1e6,
+        ),
     }
 )
 
@@ -930,6 +964,8 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
 
 GEMINI_MODELS_DATA = ModelDataRegistry(
     {
+        # audio_input_price follows Google's pricing page; models it doesn't list
+        # leave it unset, so requests with audio report an unknown cost.
         "gemini-1.5-pro": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
@@ -1000,6 +1036,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_structured_outputs=True,
             supports_json=True,
             input_price=1.25 / 1e6,
+            audio_input_price=1.25 / 1e6,
             output_price=10.00 / 1e6,
         ),
         "gemini-2.5-flash": make_model_data(
@@ -1009,6 +1046,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.30 / 1e6,
+            audio_input_price=1.00 / 1e6,
             output_price=2.50 / 1e6,
         ),
         "gemini-2.5-flash-lite": make_model_data(
@@ -1018,6 +1056,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.10 / 1e6,
+            audio_input_price=0.30 / 1e6,
             output_price=0.40 / 1e6,
         ),
         "gemini-3-pro": make_model_data(
@@ -1048,6 +1087,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=2.0 / 1e6,
+            audio_input_price=2.0 / 1e6,
             output_price=12.0 / 1e6,
         ),
         # Gemini 3.6-3.8 Flash prices are promotional through 2026-12-31;
@@ -1060,6 +1100,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=0.75 / 1e6,
+            audio_input_price=0.75 / 1e6,
             output_price=3.75 / 1e6,
         ),
         "gemini-3.7-flash": make_model_data(
@@ -1080,6 +1121,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=0.75 / 1e6,
+            audio_input_price=0.75 / 1e6,
             output_price=3.75 / 1e6,
         ),
         "gemini-3.5-flash": make_model_data(
@@ -1100,6 +1142,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=0.3 / 1e6,
+            audio_input_price=0.3 / 1e6,
             output_price=2.5 / 1e6,
         ),
         "gemini-3-flash-preview": make_model_data(
@@ -1110,6 +1153,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=0.5 / 1e6,
+            audio_input_price=1.00 / 1e6,
             output_price=3.0 / 1e6,
         ),
         "gemini-3.1-flash-lite": make_model_data(
@@ -1120,6 +1164,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
             supports_json=True,
             supports_temperature=False,
             input_price=0.25 / 1e6,
+            audio_input_price=0.50 / 1e6,
             output_price=1.5 / 1e6,
         ),
         "gemini-pro": make_model_data(
