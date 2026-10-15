@@ -311,3 +311,42 @@ def test_audio_only_openai_model_rejects_text_only_prompts():
         "type": "input_audio",
         "input_audio": {"data": WAV_B64, "format": "wav"},
     }
+
+
+def test_openai_generate_bills_audio_tokens_at_the_audio_rate():
+    model = OpenAIModel(model="gpt-audio", api_key="k")
+    completion = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="ok"))],
+        usage=SimpleNamespace(
+            prompt_tokens=1000,
+            completion_tokens=100,
+            prompt_tokens_details=SimpleNamespace(audio_tokens=600),
+        ),
+    )
+    client = SimpleNamespace(
+        chat=SimpleNamespace(
+            completions=SimpleNamespace(create=lambda **kwargs: completion)
+        )
+    )
+    model.load_model = lambda async_mode=False: client
+
+    _, cost = model.generate("Rate the reply.", audio=[wav_clip()])
+
+    assert cost == pytest.approx(400 * 2.5e-6 + 600 * 32e-6 + 100 * 10e-6)
+
+
+def test_gemini_bills_audio_modality_tokens_at_the_audio_rate():
+    model = GeminiModel(model="gemini-2.5-flash", api_key="k")
+    usage = SimpleNamespace(
+        prompt_token_count=1000,
+        candidates_token_count=100,
+        thoughts_token_count=None,
+        prompt_tokens_details=[
+            SimpleNamespace(modality="TEXT", token_count=400),
+            SimpleNamespace(modality="AUDIO", token_count=600),
+        ],
+    )
+
+    cost = model._token_cost(SimpleNamespace(usage_metadata=usage))
+
+    assert cost == pytest.approx(400 * 0.30e-6 + 600 * 1.00e-6 + 100 * 2.5e-6)
