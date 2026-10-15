@@ -12,8 +12,6 @@ from typing import List, Optional, Sequence, Tuple
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 
-# A pause between words keeps the line's noise; a dropped stream falls far
-# below it. Clips whose pauses are already near-digital give no evidence.
 DROPOUT_MAX_FRAMES = 10
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0

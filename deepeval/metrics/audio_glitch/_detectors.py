@@ -36,7 +36,6 @@ TONE_MAX_BRIDGE_FRAMES = 2
 TONE_MIN_PERIODICITY = 0.85
 # A voice holding a vowel jitters from frame to frame and glides in pitch;
 # a synthetic tone does neither. Both are relative to the run's pitch.
-# Synthetic voices jitter far less than human ones, but still above this.
 TONE_MAX_JITTER = 0.002
 TONE_MAX_GLIDE = 0.01
 MIN_TONE_SECONDS = 0.8

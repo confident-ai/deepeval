@@ -89,8 +89,6 @@ def tone(seconds, hz, *, amplitude=6000) -> array:
 
 
 def spoken_words(count=8, *, pause=0.1, noise=20) -> array:
-    """Syllable-length words with the short pauses between them that carry
-    only the room's noise."""
     rng = random.Random(count)
     out = array("h")
     for index in range(count):
@@ -100,8 +98,7 @@ def spoken_words(count=8, *, pause=0.1, noise=20) -> array:
 
 
 def synthetic_syllable(seconds, *, hz=230.0, wobble=0.005, seed=0) -> array:
-    """A syllable held by a synthetic voice: no glide, but its pitch still
-    moves a little from one 40 ms frame to the next."""
+    """No glide, but the pitch moves a little every 40 ms frame."""
     rng = random.Random(seed)
     out = array("h")
     phase = 0.0
