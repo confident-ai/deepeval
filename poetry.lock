@@ -1520,12 +1520,12 @@ version = "3.21.2"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "filelock-3.21.2-py3-none-any.whl", hash = "sha256:d6cd4dbef3e1bb63bc16500fc5aa100f16e405bbff3fb4231711851be50c1560"},
     {file = "filelock-3.21.2.tar.gz", hash = "sha256:cfd218cfccf8b947fce7837da312ec3359d10ef2a47c8602edd59e0bacffb708"},
 ]
-markers = {dev = "python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", dev = "python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
 
 [[package]]
 name = "filetype"
@@ -1738,12 +1738,12 @@ version = "2026.2.0"
 description = "File-system specification"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
-markers = "python_version >= \"3.10\""
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "fsspec-2026.2.0-py3-none-any.whl", hash = "sha256:98de475b5cb3bd66bedd5c4679e87b4fdfe1a3bf4d707b151b3c07e58c9a2437"},
     {file = "fsspec-2026.2.0.tar.gz", hash = "sha256:6544e34b16869f5aacd5b90bdf1a71acb37792ea3ddf6125ee69a22a53fb8bff"},
 ]
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", dev = "python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
 
 [package.extras]
 abfs = ["adlfs"]
@@ -2995,7 +2995,7 @@ version = "1.2.0"
 description = "Fast transfer of large files with the Hugging Face Hub."
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "hf_xet-1.2.0-cp313-cp313t-macosx_10_12_x86_64.whl", hash = "sha256:ceeefcd1b7aed4956ae8499e2199607765fbd1c60510752003b6cc0b8413b649"},
     {file = "hf_xet-1.2.0-cp313-cp313t-macosx_11_0_arm64.whl", hash = "sha256:b70218dd548e9840224df5638fdc94bd033552963cfa97f9170829381179c813"},
@@ -3020,7 +3020,7 @@ files = [
     {file = "hf_xet-1.2.0-cp37-abi3-win_amd64.whl", hash = "sha256:e6584a52253f72c9f52f9e549d5895ca7a471608495c4ecaa6cc73dba2b24d69"},
     {file = "hf_xet-1.2.0.tar.gz", hash = "sha256:a8c27070ca547293b6890c4bf389f713f80e8c478631432962bb7f4bc0bd7d7f"},
 ]
-markers = {dev = "platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version <= \"3.13\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and python_version >= \"3.10\""}
+markers = {main = "(platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and extra == \"litellm\" and python_version >= \"3.10\"", dev = "platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\"", integrations = "python_version <= \"3.13\" and (platform_machine == \"x86_64\" or platform_machine == \"amd64\" or platform_machine == \"AMD64\" or platform_machine == \"arm64\" or platform_machine == \"aarch64\") and python_version >= \"3.10\""}
 
 [package.extras]
 tests = ["pytest"]
@@ -3163,12 +3163,12 @@ version = "1.4.1"
 description = "Client library to download and publish models, datasets and other repos on the huggingface.co hub"
 optional = false
 python-versions = ">=3.9.0"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "huggingface_hub-1.4.1-py3-none-any.whl", hash = "sha256:9931d075fb7a79af5abc487106414ec5fba2c0ae86104c0c62fd6cae38873d18"},
     {file = "huggingface_hub-1.4.1.tar.gz", hash = "sha256:b41131ec35e631e7383ab26d6146b8d8972abc8b6309b963b306fbcca87f5ed5"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
 
 [package.dependencies]
 filelock = "*"
@@ -3965,12 +3965,12 @@ version = "4.26.0"
 description = "An implementation of JSON Schema validation for Python"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
-markers = "python_version >= \"3.10\""
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "jsonschema-4.26.0-py3-none-any.whl", hash = "sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"},
     {file = "jsonschema-4.26.0.tar.gz", hash = "sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326"},
 ]
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", dev = "python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 attrs = ">=22.2.0"
@@ -3988,12 +3988,12 @@ version = "2025.9.1"
 description = "The JSON Schema meta-schemas and vocabularies, exposed as a Registry"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"},
     {file = "jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d"},
 ]
-markers = {integrations = "python_version >= \"3.10\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 referencing = ">=0.31.0"
@@ -4510,12 +4510,12 @@ version = "1.72.6"
 description = "Library to easily interface with LLM API providers"
 optional = false
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
-groups = ["integrations"]
-markers = "python_version >= \"3.10\" and python_version <= \"3.13\""
+groups = ["main", "integrations"]
 files = [
     {file = "litellm-1.72.6-py3-none-any.whl", hash = "sha256:e0ae98d25db4910e78b1a0a604f24c0d6875f6cdea02426b264a45d4fbdb8c46"},
     {file = "litellm-1.72.6.tar.gz", hash = "sha256:4e5c7e4273b09b765302d2faaec30f77b42255c0055b427b55ea02b8092b8582"},
 ]
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
 
 [package.dependencies]
 aiohttp = "*"
@@ -8597,7 +8597,7 @@ version = "6.0.3"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "integrations", "langchain"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "PyYAML-6.0.3-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:c2514fceb77bc5e7a2f7adfaa1feb2fb311607c9cb518dbc378688ec73d8292f"},
     {file = "PyYAML-6.0.3-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c57bb8c96f6d1808c030b1687b9b5fb476abaa47f0db9c0101f5e9f394e97f4"},
@@ -8673,7 +8673,7 @@ files = [
     {file = "pyyaml-6.0.3-cp39-cp39-win_amd64.whl", hash = "sha256:2e71d11abed7344e42a8849600193d15b6def118602c4c176f748e4583246007"},
     {file = "pyyaml-6.0.3.tar.gz", hash = "sha256:d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f"},
 ]
-markers = {langchain = "python_version >= \"3.10\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "questionary"
@@ -8716,12 +8716,12 @@ version = "0.36.2"
 description = "JSON Referencing + Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "referencing-0.36.2-py3-none-any.whl", hash = "sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0"},
     {file = "referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa"},
 ]
-markers = {integrations = "python_version >= \"3.10\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
 
 [package.dependencies]
 attrs = ">=22.2.0"
@@ -8734,7 +8734,7 @@ version = "2026.1.15"
 description = "Alternative regular expression module, to replace re."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations", "langchain"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "regex-2026.1.15-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:4e3dd93c8f9abe8aa4b6c652016da9a3afa190df5ad822907efe6b206c09896e"},
     {file = "regex-2026.1.15-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:97499ff7862e868b1977107873dd1a06e151467129159a6ffd07b66706ba3a9f"},
@@ -8868,7 +8868,7 @@ files = [
     {file = "regex-2026.1.15-cp39-cp39-win_arm64.whl", hash = "sha256:b325d4714c3c48277bfea1accd94e193ad6ed42b4bad79ad64f3b8f8a31260a5"},
     {file = "regex-2026.1.15.tar.gz", hash = "sha256:164759aa25575cbc0651bef59a0b18353e54300d79ace8084c818ad8ac72b7d5"},
 ]
-markers = {langchain = "python_version >= \"3.10\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", langchain = "python_version >= \"3.10\""}
 
 [[package]]
 name = "requests"
@@ -9136,8 +9136,7 @@ version = "0.30.0"
 description = "Python bindings to Rust's persistent data structures (rpds)"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
-markers = "python_version >= \"3.10\""
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:679ae98e00c0e8d68a7fda324e16b90fd5260945b45d3b824c892cec9eea3288"},
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4cc2206b76b4f576934f0ed374b10d7ca5f457858b157ca52064bdfc26b9fc00"},
@@ -9255,6 +9254,7 @@ files = [
     {file = "rpds_py-0.30.0-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:ac37f9f516c51e5753f27dfdef11a88330f04de2d564be3991384b2f3535d02e"},
     {file = "rpds_py-0.30.0.tar.gz", hash = "sha256:dd8ff7cf90014af0c0f787eea34794ebf6415242ee1d6fa91eaba725cc441e84"},
 ]
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", dev = "python_version >= \"3.10\"", integrations = "python_version >= \"3.10\""}
 
 [[package]]
 name = "rsa"
@@ -9714,7 +9714,7 @@ version = "0.12.0"
 description = "tiktoken is a fast BPE tokeniser for use with OpenAI's models"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations", "langchain"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "tiktoken-0.12.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:3de02f5a491cfd179aec916eddb70331814bd6bf764075d39e21d5862e533970"},
     {file = "tiktoken-0.12.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b6cfb6d9b7b54d20af21a912bfe63a2727d9cfa8fbda642fd8322c70340aad16"},
@@ -9774,7 +9774,7 @@ files = [
     {file = "tiktoken-0.12.0-cp39-cp39-win_amd64.whl", hash = "sha256:2cff3688ba3c639ebe816f8d58ffbbb0aa7433e23e08ab1cade5d175fc973fb3"},
     {file = "tiktoken-0.12.0.tar.gz", hash = "sha256:b18ba7ee2b093863978fcb14f74b3707cdc8d4d4d3836853ce7ec60772139931"},
 ]
-markers = {langchain = "python_version >= \"3.10\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", langchain = "python_version >= \"3.10\""}
 
 [package.dependencies]
 regex = ">=2022.1.18"
@@ -9801,7 +9801,7 @@ version = "0.22.2"
 description = ""
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "tokenizers-0.22.2-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:544dd704ae7238755d790de45ba8da072e9af3eea688f698b137915ae959281c"},
     {file = "tokenizers-0.22.2-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:1e418a55456beedca4621dbab65a318981467a2b188e982a23e117f115ce5001"},
@@ -9828,7 +9828,7 @@ files = [
     {file = "tokenizers-0.22.2-pp39-pypy39_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:143b999bdc46d10febb15cbffb4207ddd1f410e2c755857b5a0797961bbdc113"},
     {file = "tokenizers-0.22.2.tar.gz", hash = "sha256:473b83b915e547aa366d1eee11806deaf419e17be16310ac0a14077f1e28f917"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
 
 [package.dependencies]
 huggingface-hub = ">=0.16.4,<2.0"
@@ -9997,12 +9997,12 @@ version = "0.23.0"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "typer_slim-0.23.0-py3-none-any.whl", hash = "sha256:1d693daf22d998a7b1edab8413cdcb8af07254154ce3956c1664dc11b01e2f8b"},
     {file = "typer_slim-0.23.0.tar.gz", hash = "sha256:be8b60243df27cfee444c6db1b10a85f4f3e54d940574f31a996f78aa35a8254"},
 ]
-markers = {integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
+markers = {main = "extra == \"litellm\" and python_version >= \"3.10\"", integrations = "python_version >= \"3.10\" and python_version <= \"3.13\""}
 
 [package.dependencies]
 typer = ">=0.23.0"
@@ -11190,8 +11190,9 @@ cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and pyt
 
 [extras]
 inspect = ["pyperclip", "textual"]
+litellm = ["litellm"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9, <4.0"
-content-hash = "01aa6352de506ef5ffdfa71c8c068af1ee42b1190219f4e6623de09c6227d724"
+content-hash = "a3c64ac5a6e32f079a43b82d3443951925b553088376815468e56b68d0a16c3f"
