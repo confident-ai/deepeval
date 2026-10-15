@@ -44,8 +44,10 @@ from deepeval.metrics import (
 from deepeval.metrics.community.citation_faithfulness.citation_faithfulness import (
     CitationFaithfulnessMetric,
 )
+from deepeval.models import DeepEvalBaseSTT
 from deepeval.models.system_one.schema import ChoiceAnswer
 from deepeval.test_case import (
+    Audio,
     ConversationalTestCase,
     LLMTestCase,
     MCPServer,
@@ -53,6 +55,7 @@ from deepeval.test_case import (
     ToolCall,
     Turn,
 )
+from deepeval.voice.connectors import audio_utils
 from tests.test_metrics.system_one_fakes import (
     CannedLLM,
     ExplodingLLM,
@@ -232,6 +235,46 @@ def voice_conv_tc() -> ConversationalTestCase:
                 content="Noted.",
                 provider_transcript="I can start in two weeks.",
             ),
+        ],
+    )
+
+
+class CannedSTT(DeepEvalBaseSTT):
+    """Re-transcribes every clip as the same short phrase."""
+
+    def load_model(self):
+        return self
+
+    def transcribe(self, audio, **kwargs):
+        return "uh oh wait", None
+
+    async def a_transcribe(self, audio, **kwargs):
+        return "uh oh wait", None
+
+    def get_model_name(self):
+        return "echo-stt"
+
+
+def _wav_clip(start_time: float) -> Audio:
+    pcm = b"\xe8\x03" * 160
+    return Audio.from_bytes(
+        audio_utils.pcm16_to_wav_bytes(pcm, sample_rate=8000),
+        "audio/wav",
+        sampleRate=8000,
+        encoding="wav",
+        duration=0.02,
+        start_time=start_time,
+    )
+
+
+def voice_audio_conv_tc() -> ConversationalTestCase:
+    """A recorded call with a clip per turn and no provider transcript."""
+    return ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="", audio=_wav_clip(0.0)),
+            Turn(role="assistant", content="Hello?", audio=_wav_clip(2.0)),
+            Turn(role="user", content="", audio=_wav_clip(4.0)),
+            Turn(role="assistant", content="Hello?", audio=_wav_clip(6.0)),
         ],
     )
 
@@ -443,6 +486,21 @@ CASES = [
         routes=[
             (
                 "You are judging how accurately a voice agent",
+                json.dumps({"verdicts": [{"verdict": "no", "reason": "r"}]}),
+            )
+        ],
+        llm_score=0.0,
+    ),
+    Case(
+        "TranscriptionAccuracyAudio",
+        lambda **kw: TranscriptionAccuracyMetric(
+            compare_against="audio", stt_model=CannedSTT(), **kw
+        ),
+        voice_audio_conv_tc,
+        decision_key="You are judging whether the transcript of a recorded voice call",
+        routes=[
+            (
+                "You are judging whether the transcript of a recorded voice call",
                 json.dumps({"verdicts": [{"verdict": "no", "reason": "r"}]}),
             )
         ],
