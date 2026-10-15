@@ -1,11 +1,14 @@
+import base64
 import copy
 import pytest
+import requests
 from contextlib import asynccontextmanager
 from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch
 
 from tests.test_core.stubs import _RecordingClient
 from deepeval.models.llms.amazon_bedrock_model import AmazonBedrockModel
+from deepeval.test_case import MLLMImage
 
 
 class RecordingBedrockClient(_RecordingClient):
@@ -83,6 +86,33 @@ def test_various_generation_kwargs_passed_through(gen_kwargs):
     for key, value in gen_kwargs.items():
         assert key in inf_cfg
         assert inf_cfg[key] == value
+
+
+def test_get_converse_request_body_sends_images_as_lowercase_bytes():
+    image = MLLMImage(
+        dataBase64=base64.b64encode(b"img").decode(), mimeType="image/jpg"
+    )
+
+    body = _mk_model({}).get_converse_request_body(f"Look {image}")
+
+    assert body["messages"][0]["content"] == [
+        {"text": "Look "},
+        {"image": {"format": "jpeg", "source": {"bytes": b"img"}}},
+    ]
+
+
+def test_get_converse_request_body_downloads_remote_images(monkeypatch):
+    response = MagicMock(
+        content=b"remote", headers={"content-type": "image/png"}
+    )
+    monkeypatch.setattr(requests, "get", lambda url, **kwargs: response)
+    image = MLLMImage(url="https://example.com/cat.png")
+
+    body = _mk_model({}).get_converse_request_body(f"{image}")
+
+    assert body["messages"][0]["content"] == [
+        {"image": {"format": "png", "source": {"bytes": b"remote"}}},
+    ]
 
 
 def test_get_model_name_returns_name():

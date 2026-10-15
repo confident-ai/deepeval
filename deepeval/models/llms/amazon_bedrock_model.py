@@ -16,7 +16,11 @@ from deepeval.test_case import MLLMImage
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
-from deepeval.models.llms.multimodal import decode_image, multimodal_parts
+from deepeval.models.llms.multimodal import (
+    decode_image,
+    fetch_remote_image,
+    multimodal_parts,
+)
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
@@ -307,16 +311,17 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                     content.append({"text": element})
                 elif isinstance(element, MLLMImage):
                     # Bedrock doesn't support external URLs - must convert everything to bytes
+                    if element.url and not element.local:
+                        image_raw_bytes, mime_type = fetch_remote_image(element)
+                    else:
+                        image_raw_bytes = decode_image(
+                            element, error_cls=DeepEvalError
+                        )
+                        mime_type = element.mimeType or "image/jpeg"
+                    # Converse only accepts lowercase formats (png, jpeg, ...)
+                    image_format = mime_type.split("/")[-1].lower()
                     image_format = (
-                        (element.mimeType or "image/jpeg")
-                        .split("/")[-1]
-                        .upper()
-                    )
-                    image_format = (
-                        "JPEG" if image_format == "JPG" else image_format
-                    )
-                    image_raw_bytes = decode_image(
-                        element, error_cls=DeepEvalError
+                        "jpeg" if image_format == "jpg" else image_format
                     )
                     content.append(
                         {
