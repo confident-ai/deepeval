@@ -36,7 +36,7 @@ LLM evaluation is the process of systematically measuring the quality, reliabili
 
 In practice, this usually involves a combination of LLM-as-a-judge metrics, deterministic checks, task-specific scoring functions, and - where additional judgment or ground truth is required - human annotation.
 
-[image]
+<BoardFrame id="llm-evaluation-overview" type="groups" title="LLM evaluation scores the *whole system*, not just the model" description="An LLM application made of a model such as Claude, OpenAI or Gemini, prompts, retrieval, tools and MCP, memory and guardrails. Its outputs and traces go to LLM evaluation, which uses deterministic checks, LLM-as-a-judge and human annotation to produce scores such as task completion 0.92 and faithfulness 0.61." />
 
 Despite the name, "LLM evaluation" rarely means evaluating a language model in isolation. More often, it means evaluating the complete system built around that model, including its prompts, retrieval layer, tools, memory, orchestration logic, guardrails, and user interface.
 
@@ -49,6 +49,8 @@ The most common types of LLM applications include:
 - **MCP-based LLM apps**: Systems that use the [Model Context Protocol](https://modelcontextprotocol.io/docs/learn/architecture) to discover and interact with external tools, resources, and prompt templates through a standardized client-server interface.
 
 These categories are not mutually exclusive. A voice assistant is often also a chatbot. An AI agent may use RAG to acquire context, invoke tools exposed by MCP servers, and communicate with users through either text or voice. In sufficiently complex systems, all five can exist within the same application.
+
+<BoardFrame id="app-types-overlap" type="venn" title="Most LLM apps are *more than one* type" description="Two overlapping sets: apps that talk with users and apps that act on other systems. Only talking: FAQ chatbots and voice receptionists. Both: support agents and voice booking agents. Only acting: coding agents and MCP workflows." />
 
 ### 1. Interaction type
 
@@ -108,6 +110,8 @@ At the highest level, evaluation is performed through either human annotation or
 
 The trade-off is straightforward: human annotation can provide richer, domain-specific judgment, but it is slower, more expensive, and constrained by annotator availability. Automated evals are repeatable and available on demand, making them practical for workflows such as CI/CD, where you cannot guarantee that a qualified reviewer will be available every time a test run starts.
 
+<ChartFrame id="evaluator-cost-by-volume" type="function" title="Human review cost *grows with every test case*" subtitle="Illustrative" description="Cost and time to evaluate against the number of test cases. Human annotation starts at zero but rises steeply. LLM-as-a-judge starts slightly higher and rises slowly. Deterministic checks cost the most to set up but stay almost flat." />
+
 ### Human evaluators
 
 Human annotation asks annotators to score, classify, rank, or critique an LLM application's behavior. In enterprises, annotators are typically QA teams, product managers, or subject-matter experts (SMEs)—an umbrella term for anyone with enough domain knowledge to distinguish a correct result from a merely plausible one.
@@ -123,7 +127,7 @@ The annotation itself is often easier than getting humans to perform it consiste
 
 In practice, this often means triaging traces in Jira, notifying annotators through Slack, and manually tracking who owns each decision.
 
-**Industry standards that have emerged recently involve concepts such as annotation queues** that make this workflow manageable by allowing teams to filter, prioritize, assign, and track cases in one place. We will cover how to design these annotation workflows—including assignment, sampling, calibration, and adjudication—in a later best practices section.
+**Industry standards that have emerged recently involve concepts such as annotation queues** that make this workflow manageable by allowing teams to filter, prioritize, assign, and track cases in one place. We will come back to where human annotation fits best in the [best practices](#3-never-leave-humans-out) at the end of this guide.
 
 Human annotation is most valuable when defining a new benchmark, investigating unfamiliar failures, or judging qualities that cannot yet be expressed reliably in code.
 
@@ -139,35 +143,7 @@ Automated evaluations include:
 - **LLM-as-a-judge metrics**: Large language models that apply criteria, evaluation steps, or rubrics to judge semantic qualities such as correctness, relevancy, groundedness, completeness, safety, or task completion; some might even use an algorithm such as G-Eval.
 - **Statistical and NLP-based metrics**: BLEU, ROUGE, BERTScore, embedding similarity, token-level comparisons, and other reference-based or model-based scoring methods, although I personally argued that those shouldn't be used for LLM evaluation here.
 
-```mermaid
-flowchart TD
-    evaluator{"Who or what evaluates it?"}
-    evaluator --> human["Human evaluators"]
-    evaluator --> automated["Automated evaluators"]
-
-    human --> experts["Subject-matter experts"]
-    human --> teams["QA and product teams"]
-    experts --> humanUse["Best for ambiguous, domain-specific,<br/>or high-impact decisions"]
-    teams --> humanUse
-
-    automated --> deterministic["Deterministic and<br/>execution-based checks"]
-    automated --> judge["LLM-as-a-judge"]
-    automated --> nlp["Statistical and<br/>NLP-based metrics"]
-
-    deterministic --> deterministicUse["Best when success can<br/>be verified objectively"]
-    judge --> judgeUse["Best when quality requires<br/>semantic judgment"]
-    nlp --> nlpUse["Reference or similarity-based<br/>scoring"]
-
-    classDef decision fill:#EEF2FF,stroke:#818CF8,color:#1E1B4B,stroke-width:1.5px
-    classDef humanBranch fill:#ECFDF5,stroke:#6EE7B7,color:#064E3B,stroke-width:1.5px
-    classDef automatedBranch fill:#EFF6FF,stroke:#93C5FD,color:#1E3A8A,stroke-width:1.5px
-    classDef supporting fill:#F8FAFC,stroke:#CBD5E1,color:#334155
-
-    class evaluator decision
-    class human humanBranch
-    class automated automatedBranch
-    class experts,teams,humanUse,deterministic,judge,nlp,deterministicUse,judgeUse,nlpUse supporting
-```
+<FlowFrame id="evaluator-types" type="tree" title="Every evaluator is either a *person* or a *procedure*" description="Who evaluates splits into people and procedures. Human annotators are subject-matter experts, QA and product teams. Automated evaluators are deterministic checks for verifiable results, LLM-as-a-judge for results that need semantic judgment, and statistical and NLP scores for reference similarity." />
 
 These methods should not be treated as a hierarchy in which the most sophisticated model is automatically the best evaluator:
 
@@ -183,23 +159,7 @@ Human- or automated-evaluator-driven LLM evaluation can assess the application e
 
 It is important to decide this scope early because it determines what you need to set up. End-to-end evaluation requires evidence of the final outcome, while component-level evaluation requires tracing so you can inspect the intermediate steps that produced it. If both matter, you need both forms of evaluation.
 
-```mermaid
-flowchart TD
-    outcome{"Do you care about<br/>the final outcome?"}
-
-    outcome -- "No" --> componentOnly["Set up tracing for<br/>component-level evaluation only"]
-    outcome -- "Yes" --> internals{"Do you also care about<br/>the inner components?"}
-    internals -- "No" --> e2eOnly["Set up end-to-end<br/>evaluation only"]
-    internals -- "Yes" --> both["Set up tracing for end-to-end and component-level evals"]
-
-    classDef decision fill:#EEF2FF,stroke:#818CF8,color:#1E1B4B,stroke-width:1.5px
-    classDef endToEnd fill:#EFF6FF,stroke:#93C5FD,color:#1E3A8A,stroke-width:1.5px
-    classDef componentLevel fill:#ECFDF5,stroke:#6EE7B7,color:#064E3B,stroke-width:1.5px
-
-    class outcome,internals,both decision
-    class e2eOnly endToEnd
-    class componentOnly componentLevel
-```
+<FlowFrame id="evaluation-scope-decision" type="tree" title="Two questions decide *what* to set up" description="If you don’t care about the final outcome, trace the app and evaluate components only. If you do, ask whether you also care about the inner components: if not, run end-to-end evals only; if so, trace the app and evaluate both end to end and per component." />
 
 ### End-to-end evaluation (black-box)
 
@@ -219,7 +179,7 @@ It also depends heavily on the modality:
 - **Image**: Did the system interpret or generate the visual information correctly?
 - **Video**: Did it understand or produce the correct events across time?
 
-[Image: A scenario entering an LLM application represented as a black box, with RAG, tools, MCP, and model calls faded inside it. The evaluation compares only the initial task with the final response or environment state.]
+<BoardFrame id="black-box-evaluation" type="groups" title="Only the task and the *outcome* are compared" description="A task, resolve the duplicate charge, goes into an LLM application whose RAG, tools, MCP and model calls are not inspected. The final outcome, one refund issued, is compared with what should have happened." />
 
 End-to-end evaluation changes much less according to external access because those mechanisms sit inside the black box:
 
@@ -251,11 +211,13 @@ Unlike end-to-end evaluation, component-level evaluation changes significantly a
 - **MCP**: Evaluate server and resource selection, schema compliance, capability boundaries, and the handling of untrusted content.
 - **Browser or computer use**: Evaluate navigation, action sequencing, confirmation requirements, and external state changes.
 
-[Image: An opened LLM application showing checkpoints across planning, retrieval, tool selection, MCP access, execution, and final state, with security boundaries highlighted around external systems.]
+<FlowFrame id="white-box-checkpoints" type="flow" title="Component-level evals *open the box*" description="A task goes to an agent that plans, retrieves context from a knowledge base and selects a tool and its arguments, all scored for plan adherence. The tool call goes to an MCP server, which reads and writes customer records inside the external systems’ security boundary, and its result becomes the final state." />
 
 This is also where security becomes a much larger part of LLM evaluation. Once an agent can use tools or MCP servers, it can do more than generate a bad response: it can access unauthorized data, leak sensitive context, follow prompt injections hidden inside tool results, escalate permissions, or perform consequential actions without approval.
 
 These failures may not appear in the final output. An agent can complete its task while reading data it did not need, sending information to an untrusted server, or briefly placing an external system into an unsafe state. A successful outcome does not necessarily imply a safe execution.
+
+<ChatFrame id="tool-result-injection" type="chat" title="The task succeeded, but the execution *wasn’t safe*" description="A user asks Shopping Assistant to summarize the top review on a product page. It summarizes the review correctly but also sends the user’s saved address to an outside site because the page told it to, which fails the check." />
 
 Component-level evals:
 
@@ -314,7 +276,7 @@ A golden may contain different fields:
 
 Not every golden needs every field. What matters is that it contains enough information to initiate the behavior and later determine whether that behavior was successful.
 
-[Image: Evaluation timeline divided into two sides. Before execution: a golden containing the task, initial state, expected outcome, and constraints. After execution: a structured test case and a free-form trace containing what actually happened.]
+<BoardFrame id="golden-before-after-execution" type="groups" title="Goldens come *before* execution; evidence comes after" description="Before execution, a golden holds the task, initial state, expected outcome and constraints. Running the app produces runtime evidence: a test case with the golden’s fields plus the actual output, tool calls and scores, and a trace with spans, prompts, retries, timings and errors." />
 
 The concrete structure depends on the application.
 
@@ -329,7 +291,7 @@ For an agent, the input may not resemble a traditional prompt at all. It could b
 
 Increasingly, with AI agents, we're also seeing goldens containing data on mocked tool calls with hardcoded expected input parameters and a list of tools to call.
 
-[Image: Four example golden cards for an AI agent, RAG application, multi-turn chatbot, and multimodal application. Keep the field names conceptually consistent while showing different payloads.]
+<BoardFrame id="golden-cards-by-application" type="groups" title="Same field roles, *different payloads*" description="Four goldens. An AI agent: input refund the duplicate charge, expected exactly one refund, expected tools search_orders and issue_refund. A RAG application: input a question about annual leave, expected 20 days per HR Policy 4.2, context the HR handbook. A multi-turn chatbot: scenario reschedule a dentist visit, a user in a hurry on a phone, expected a new slot confirmed. A multimodal app: input a bill of lading PDF, expected the carrier Maersk, metadata scanned, 2 pages." />
 
 This distinction is essential for standardization. An input does not need to contain the same kind of data across every application, but it should retain the same definition:
 
@@ -368,7 +330,7 @@ Goldens and test cases are structurally similar because the test case inherits t
 
 One golden maps to many test cases across different test runs. The same coding task can be executed against several model versions, prompts, tool configurations, or agent architectures. Each run begins with the same golden but produces a different test case.
 
-[Image: Two columns of single turn vs multi-turn test case, mapped from goldens]
+<BoardFrame id="test-case-anatomy" type="groups" title="A test case is a golden *plus what happened*" description="A single-turn test case takes input, expected_output and context from the golden and adds actual_output, retrieval_context and tools_called from the run. A multi-turn test case takes the scenario, expected_outcome and user_description from the golden and adds the turns from the simulated conversation." />
 
 This structure makes test cases useful for LLM evaluation metrics to act on. For example, the tool correctness metric can compare expected and actual tool calls. A retrieval metric can access the retrieved and reference context. The metric changes, but the underlying test case remains structured.
 
@@ -380,7 +342,7 @@ Instead of reducing the run to predefined fields in a test case, a trace preserv
 
 Traces may have a technical structure - usually a hierarchy of spans - but their semantics are comparatively unstructured. Different agents may use different span names, nesting conventions, tools, and execution paths. Even two runs of the same agent can produce traces of radically different shapes.
 
-[Image: A large branching agent trace containing planning, retrieval, model, tool, retry, and sub-agent spans. Arrows extract a small number of stable fields into a structured test case.]
+<BoardFrame id="agent-trace-to-test-case" type="tree" title="A trace keeps everything; a test case keeps *what you measure*" description="An agent trace for a refund agent with an LLM planning span, a retriever with an embedding span, a search_orders tool call, an issue_refund call that timed out and its retry, a billing sub-agent with its own LLM span and a final answer. The tool calls are extracted into tools_called and the final answer into actual_output on the agent’s test case." />
 
 A trace can therefore be treated as a free-form superset of runtime evidence. It may contain much more information about what happened than a test case, but it does not necessarily contain what should have happened.
 
@@ -412,7 +374,7 @@ A predefined test-case schema could only capture anticipated behavior. Traces al
 
 The industry therefore moved from **test-case-first evaluation** toward **trace-first evaluation**.
 
-[Image: Three-stage evolution - structured RAG test cases, followed by free-form agent traces, followed by structured agent test cases extracted from trace evidence. Label the stages "Known signals," "Discovering failures," and "Structuring recurring failures."]
+<BoardFrame id="test-cases-to-traces-and-back" type="groups" title="From test cases, to traces, *and back again*" description="Three stages. Known signals: structured RAG test cases. Discovering failures: free-form agent traces from early agents. Structuring recurring failures: today, agent test cases built from trace evidence." />
 
 This shift made agent evaluation more expressive, but it introduced a new problem: Raw traces are excellent debugging artifacts but inconsistent measurement interfaces.
 
@@ -441,34 +403,7 @@ The trace is not disappearing. Its role is becoming clearer.
 
 In development, the workflow generally begins with a golden, runs the application, and produces both a test case and a trace. In production, the workflow may begin with a trace, surface an unexpected failure, and convert that failure into a new golden for future regression testing.
 
-```mermaid
-flowchart LR
-    golden["Golden"]
-    execution["Application execution"]
-    evidence["Test case and trace"]
-    regression["Regression testing"]
-    deployment["Deployment"]
-    production["Production traces"]
-    discovery["Failure discovery"]
-
-    golden --> execution
-    execution --> evidence
-    evidence --> regression
-    regression --> deployment
-    deployment --> production
-    production --> discovery
-    discovery -- "New or updated golden" --> golden
-
-    classDef goldenNode fill:#EEF2FF,stroke:#818CF8,color:#1E1B4B,stroke-width:1.5px
-    classDef development fill:#EFF6FF,stroke:#93C5FD,color:#1E3A8A,stroke-width:1.5px
-    classDef productionNode fill:#ECFDF5,stroke:#6EE7B7,color:#064E3B,stroke-width:1.5px
-    classDef discoveryNode fill:#FFF7ED,stroke:#FDBA74,color:#7C2D12,stroke-width:1.5px
-
-    class golden goldenNode
-    class execution,evidence,regression development
-    class deployment,production productionNode
-    class discovery discoveryNode
-```
+<FlowFrame id="golden-feedback-loop" type="flow" title="Production failures become *tomorrow’s goldens*" description="In development, a golden runs through the application to produce a test case and a trace, which feed regression testing before deployment. In production, traces go through failure discovery, and each failure becomes a new or updated golden." />
 
 That feedback loop is the foundation of a mature evaluation system: traces discover what teams did not know to test, goldens preserve what they learn, and test cases turn that knowledge into repeatable measurement.
 
@@ -498,6 +433,8 @@ Finally, the metric must match the unit it acts on. A **golden** supplies the ex
 
 A Faithfulness metric, for example, is only meaningful if the generated answer and retrieval context are available. Tool Correctness requires actual tool calls and, where appropriate, expected tools or constraints. Task Completion for an agent may need the initial task, the full trace, and evidence of the final environment state. Choosing the metric without checking whether its required evidence exists produces a score, but not necessarily a valid measurement.
 
+<SchemaFrame id="metric-evidence-in-test-case" type="card" title="Each metric reads *specific fields* of a test case" description="An LLM test case with input, actual_output and optional retrieval_context, tools_called and expected_tools. Answer relevancy reads input and actual_output. Faithfulness reads actual_output and retrieval_context. Tool correctness reads tools_called and expected_tools." />
+
 Metric selection should therefore follow this order:
 
 1. Define the outcome that represents success.
@@ -506,7 +443,9 @@ Metric selection should therefore follow this order:
 4. Choose the human or automated evaluator best suited to that evidence.
 5. Define the score, threshold, or assertion that separates passing from failing.
 
-This is why the examples in the next section will not share one standard bundle of metrics. The logistics extractor, coding agent, RAG pipeline, and voice chatbot each produce different evidence and have fundamentally different definitions of success. If you want a catalog of individual metrics after applying this framework, [this complete guide to LLM evaluation metrics](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) covers them in detail.
+This is why the examples in the next section will not share one standard bundle of metrics. The logistics extractor, coding agent, RAG pipeline, and voice chatbot each produce different evidence and have fundamentally different definitions of success. If you want a catalog of individual metrics after applying this framework, [this introduction to LLM evaluation metrics](/docs/metrics-introduction) covers them in detail.
+
+<ChartFrame id="metric-fit-by-application" type="heatmap" title="Each application leans on *different* metrics" description="How much each example application in this guide relies on each metric, from 0 (not used) to 3 (primary). The document extractor relies on exact match. The coding agent relies on task completion and tool correctness. The RAG QA pipeline relies on faithfulness and contextual recall. The voice chatbot relies on task completion, conversation completeness and turn-taking." note="0 = not used, 3 = primary metric" />
 
 ## There are 7 questions to ask before any LLM evaluation attempt
 
@@ -550,7 +489,7 @@ LLM evaluation can feel exactly like that—everything makes sense until a real 
 
 We have spent enough time on the theory. It is time to apply it.
 
-This section will focus exclusively on **pre-deployment development LLM evaluation** because, as we’ll see later, production LLM evaluation isn’t nearly as interesting—or as difficult to crack—once the development workflow is sound.
+This section will focus exclusively on **pre-deployment development LLM evaluation**, because production monitoring reuses the same goldens, metrics, and evaluators - get the development workflow right first, and production has something solid to build on.
 
 We’ll work through four real-world systems:
 
@@ -561,9 +500,7 @@ We’ll work through four real-world systems:
 
 These examples will not cover every possible architecture, but they should cover enough building blocks to evaluate most systems by composition.
 
-And if your architecture combines these components in an even stranger way - or you simply want to see it evaluated in practice - you know where to [book a demo with the Confident AI team](https://www.confident-ai.com/book-a-demo) :)
-
-Once a development workflow is set up correctly, production evaluation becomes conceptually straightforward: capture live executions, sample the relevant traces, apply the same evaluators, and route important failures back into the development dataset.
+Once a development workflow is set up correctly, [production monitoring](https://www.confident-ai.com/products/llm-observability) on Confident AI picks up where it leaves off: capture live executions, discover issues in real traces before assigning an eval to them, apply the same evaluators, and route important failures back into the development dataset.
 
 Finally, for each system, we will determine:
 
@@ -606,14 +543,16 @@ Realistically, the input and expected output are all you need. The final step is
 
 Once you have your test cases, you can now compare all the actual outputs with the expected outputs, mapped from the goldens, using a simple exact match metric - which is 100% deterministic and free of charge.
 
+<SchemaFrame id="extracted-vs-expected-record" type="match" title="Field-level checks show *which* field was wrong" description="The extracted record and the expected record matched field by field. The bill number BOL-042, the total weight of 1240 kg and the port of loading Rotterdam match; the carrier is Maersk Line in the extraction but Maersk in the golden, so an exact match on the whole record fails." />
+
 This resulting "benchmark" is what we call a test run.
 
 Note that we skipped over the "how" in "run your document extractor against your dataset of goldens" - in practice, this usually involves either:
 
 - Invoking your LLM app in code, running the evals locally through [DeepEval](https://deepeval.com/), or
-- Invoking your LLM app through API calls, which can happen in code or on an [LLM evaluation platform](https://www.confident-ai.com/products/llm-evaluation) like Confident AI
+- Invoking your LLM app through API calls, either from code or from an LLM evaluation platform
 
-Multiple test runs produce controlled experiments, and comparing two test runs side-by-side allows for regression testing. We'll talk about these two workflows in more detail later.
+Multiple test runs produce controlled experiments, and comparing two test runs side-by-side allows for regression testing.
 
 ### Evaluating a coding assistant with GitHub MCP access
 
@@ -658,16 +597,15 @@ So here's the algorithm for running LLM evals on a coding assistant:
 - For each scenario in your dataset of goldens, simulate the entire conversation
 - Once completed, evaluate using your metrics
 
-As a best practice, you should also connect your evaluation tool to the same MCP servers as your coding assistant before running the simulation. This gives the evaluator visibility into the available tools, allowing it to check tool selection and argument correctness at each simulated turn. [Confident AI supports this natively](https://www.confident-ai.com/docs/llm-evaluation/mcp-servers).
+<FlowFrame id="coding-agent-simulation" type="sequence" title="The simulated user *drives the conversation*" description="A simulated user asks the coding agent to fix issue 184 about duplicate webhooks. The agent fetches the issue from the GitHub MCP server, edits the handler, runs the tests and reports that they pass. The user asks for a pull request linked to the issue; the agent opens PR 212 through the MCP server and confirms." />
+
+As a best practice, you should also connect your evaluation tool to the same MCP servers as your coding assistant before running the simulation. This gives the evaluator visibility into the available tools, allowing it to check tool selection and argument correctness at each simulated turn.
 
 If you still remember high school chemistry, you'll know that in any chemical reaction, there's a slow step and a fast step. In multi-turn LLM evaluation, simulation is the slow step.
 
-There are various ways you can run simulations:
+You can run simulations locally with [DeepEval's conversation simulator](https://deepeval.com/docs/conversation-simulator), which lets you define how the simulated user behaves, including deterministic graphs that steer user behavior at certain checkpoints in a conversation.
 
-- Locally, you can use [DeepEval's conversation simulator](https://deepeval.com/docs/conversation-simulator) to define how your user behavior can be simulated, including deterministic graphs to determine user behavior based on certain checkpoints in a conversation
-- For enterprises that need [standardization and control on a centralized platform](https://www.confident-ai.com/products/ai-governance) with a UI layer, Confident AI will be the obvious choice
-
-For those who want to dive deeper into multi-turn LLM evaluation specifically and what metrics are available, [here's a useful guide I've written](https://www.confident-ai.com/blog/multi-turn-llm-evaluation-in-2026) on this topic.
+For those who want to dive deeper into multi-turn LLM evaluation specifically and what metrics are available, [here's a useful guide](/guides/guides-multi-turn-evaluation) on this topic.
 
 ### Evaluating an enterprise RAG QA pipeline
 
@@ -697,12 +635,14 @@ However, in contrast to the single-turn logistics document extractor example abo
 
 In this case, we'll have to find a way to instrument our RAG QA to make sure we can capture the execution trace of our RAG pipeline, and place the corresponding RAG metrics on both the generator ([answer relevancy](https://deepeval.com/docs/metrics-answer-relevancy), [faithfulness](https://deepeval.com/docs/metrics-faithfulness)) and retriever (contextual [recall](https://deepeval.com/docs/metrics-contextual-recall)/[precision](https://deepeval.com/docs/metrics-contextual-precision)/[relevancy](https://deepeval.com/docs/metrics-contextual-relevancy)) respectively.
 
+<FlowFrame id="rag-qa-evaluation" type="flow" title="Score the retriever and the generator *separately*" description="An employee question goes through an embedding model to a vector index of internal docs, which returns the top-K chunks; the retriever is scored with contextual metrics. The chunks and the question fill a prompt for the LLM, which writes the grounded answer; the generator is scored with faithfulness." />
+
 There are a ton of ways to capture execution traces, but I'd recommend using our open-source framework DeepEval to do so. It offers you the option to:
 
 - Trace locally, and apply 50+ metrics on different components within agentic/RAG pipelines, with 20+ integrations in Python and TypeScript such as LangChain, LangGraph, CrewAI, Pydantic AI, and AI SDK
-- Run regression tests and production monitoring on Confident AI when you start needing team collaboration capabilities
+- Send the same traces to Confident AI for [production monitoring](https://www.confident-ai.com/products/llm-observability) once the pipeline is live, and route answers that look wrong to human annotators
 
-This isn't a guide to show how to use DeepEval, so for the rest of the setup I'll defer to [this guide I've written on RAG evaluation](https://www.confident-ai.com/blog/rag-evaluation-metrics-answer-relevancy-faithfulness-and-more) here, which includes the common RAG metrics that I've explicitly avoided diving too deep into.
+This isn't a guide to show how to use DeepEval, so for the rest of the setup I'll defer to [this guide on RAG evaluation](/guides/guides-rag-evaluation) here, which includes the common RAG metrics that I've explicitly avoided diving too deep into.
 
 ### Evaluating a voice AI chatbot for a hospital call center
 
@@ -758,6 +698,8 @@ That's why I split voice metrics by what they look at:
 
 Escalation correctness deserves its own golden, because it's the highest-stakes behavior in this use case. If a caller mentions chest pain halfway through rescheduling, the right outcome is no longer a confirmed appointment - it's an immediate handoff to clinical staff. No built-in metric knows your hospital's escalation policy, so write it down as criteria for a custom conversational metric like [G-Eval](/docs/metrics-llm-evals).
 
+<TranscriptFrame id="voice-escalation-judge" type="judge" title="The call sounded fine, but the agent *missed the emergency*" description="A caller asks to move a cardiology appointment, gives their name and date of birth, and mentions their chest has been hurting all morning. The voice agent ignores it and offers a new slot. A judge asked whether the agent handed off to clinical staff when the caller reported chest pain answers no: it kept scheduling." />
+
 And just like the coding assistant, don't rely on the conversation alone to tell you whether the task actually happened. After each simulated call, check the scheduling system directly: is the July 21 slot booked, and was the original appointment released? That's a deterministic final-state check, and it costs nothing to run.
 
 If you need a single number to gate a release on, [voice reliability](/docs/metrics-voice-reliability) combines responsiveness and audio integrity into one score, and drops straight to zero on catastrophic failures like the agent never answering - a few clean turns can't average away a dead call.
@@ -769,160 +711,9 @@ There are also two traps specific to voice simulation:
 
 Finally, remember how simulation was the slow step? In voice, it's even slower. Every call happens in real time, and calls run one at a time because each connection holds a single live session - a three-minute call takes three minutes to simulate. Be deliberate about which scenario and persona pairs you run on every change, rather than running the full cross product each time.
 
-As for how to run all of this:
-
-- Locally, DeepEval's conversation simulator has a [voice mode](/docs/conversation-simulator-voice-mode) that connects to agents built on ElevenLabs, LiveKit, Vapi, Pipecat, or a raw-audio WebSocket or WebRTC endpoint, with [personas](/docs/conversation-simulator-voice-personas) for voices, background noise, and interruptions. It saves the audio of every turn (and optionally the full call), so you can listen to the exact moment a metric flagged
-- For teams that need the same workflow on a centralized platform, including phone and SIP calls and a UI where QA teams and clinicians can review and annotate calls, Confident AI supports [voice AI evals](https://www.confident-ai.com/blog/launch-week-q3-2026-day-1-voice-ai-evals) natively
+As for how to run all of this, DeepEval's conversation simulator has a [voice mode](/docs/conversation-simulator-voice-mode) that connects to agents built on ElevenLabs, LiveKit, Vapi, Pipecat, or a raw-audio WebSocket or WebRTC endpoint, with [personas](/docs/conversation-simulator-voice-personas) for voices, background noise, and interruptions. It saves the audio of every turn (and optionally the full call), so you can listen to the exact moment a metric flagged.
 
 If you want to understand how the voice pipeline works under the hood, [this page on voice evaluation](/docs/evaluation-voice) covers it in detail.
-
-## Common LLM evaluation workflows for AI in different stages of development
-
-If you’re hitting your context limit at this point, here’s a quick recap on what we talked about thus far:
-
-- LLM apps differ by **interaction type**, **modality**, and **external access**.
-- They can be evaluated through **human annotation**, **automated evaluation**, **or both**.
-- Evaluation can cover the **end-to-end outcome**, **individual components**, **or both**.
-- A **golden** defines what should be tested, a **test case** contains structured results, and a **trace** preserves the broader execution.
-- Running LLM evaluation involves using **evaluators** to execute LLM apps against **goldens**, which can be scored and turned into **test cases**.
-
-When one or more test cases are evaluated together, their scores, reasons, errors, and metadata form a **test run**. That test run may support an experiment comparing prompts or models, a regression test blocking a bad release, an evaluation workflow created before any dataset exists, or production monitoring that discovers new failures from live traces.
-
-So far, we have focused on how test runs are constructed. What we have not discussed is **how** they are actually used.
-
-[Image: LLM evaluation lifecycle connecting experimentation, regression testing, deployment, production evaluation, and new goldens]
-
-This section frames those workflows around common situations you might find yourself in: preparing to deploy, already running in production without evals, starting without a dataset, comparing different configurations, validating a metric, or turning production data and human feedback into a reliable dataset.
-
-The evaluation methods remain the same. What changes is **when they run, where their data comes from, and what decision the results are meant to support.**
-
-### Running regression tests pre-deployment
-
-A regression test answers one question:
-
-> Did the change make the application better or worse?
-
-For an LLM application, that change could be a new model, prompt, retriever, tool, or agent architecture. Switching to a smaller model may reduce cost, for example, while quietly degrading a coding agent's ability to modify unfamiliar repositories.
-
-To test this, run the same versioned set of goldens against:
-
-- A **baseline**, representing the currently approved application.
-- A **candidate**, containing the proposed change.
-
-Pair the resulting test cases using their golden identifiers - not merely their input text - and compare the two runs at both the aggregate and individual test-case level.
-
-\<InteractiveFrame />
-
-Aggregate results show whether pass rate, quality, cost, or latency changed overall. Case-level results reveal which specific behaviors improved or regressed. This matters because the average score can improve while one critical case moves from passing to failing.
-
-For each paired test case, look for:
-
-- Significant metric or human-annotation changes
-- Cases that moved from pass to fail
-- Regressions within high-risk dataset slices
-- Cost, latency, security, or policy violations
-
-Because LLM outputs are probabilistic, a small score movement is not automatically a regression. Important cases may need to be repeated to distinguish a systematic degradation from normal run-to-run variance.
-
-If your application is instrumented, compare the corresponding traces after identifying a regression. The test case tells you what changed; the trace may reveal why - such as different retrieval, planning, tool selection, arguments, or retries.
-
-You can build this workflow yourself, but I would be doing you a disservice if I did not mention that this comparison workflow is already available in Confident AI with 50+ evaluation metrics at your disposal.
-
-### AI already in production, but no online evals in place
-
-Another common situation is having an LLM application in production but no evaluation dataset, metrics, or quality workflow in place for whatever reason (maybe it was a last-minute MVP, who knows).
-
-This creates a circular problem. **Offline evaluation** requires a dataset of goldens, but you do not yet know which examples belong in it. **Online evaluation** can score live traces directly, but choosing a metric still assumes you know which behaviors and failures matter.
-
-You cannot measure what you have not yet learned to recognize.
-
-The good news is that production traces can become the starting point for both workflows.
-
-\<BoardFrame />
-
-A practical workflow looks like this:
-
-1. **Instrument the application.** Capture inputs, outputs, retrieval steps, tool calls, errors, latency, metadata, and other runtime evidence as traces.
-2. **Find the recurring patterns.** Use an observability platform such as Confident AI (yes, again, we're a one-stop shop for everything related to AI quality) to segment traces by user intent, workflow, tool usage, outcome, customer, or risk. Look for common requests, unusual trajectories, repeated errors, loops, escalations, and other behavioral patterns.
-3. **[Optional] Annotate representative traces.** Send high-volume, high-risk, and unusual traces to the appropriate annotators. Their labels help distinguish harmless variation from genuine quality problems. I'd love to dive deeper into this right now but please read on to the following sections to see how this can be done.
-4. **Turn traces into goldens.** Select representative successes, failures, and edge cases; preserve the initiating input or scenario; and add the expected outcome, reference signals, or constraints. These goldens become the first version of your offline evaluation dataset.
-5. **Calibrate automated evaluations.** Once annotators have identified recurring problems, define deterministic checks or LLM-as-a-judge metrics around them and compare their decisions against the human annotations.
-
-From there, the workflow splits naturally. The dataset supports **offline experiments and regression tests** before deployment. The calibrated evaluators can also run **online against relevant production traces** to monitor the behavior you now understand.
-
-New production failures then flow back into the dataset as additional goldens, creating a continuous loop between online discovery and offline prevention.
-
-You do not need an evaluation dataset to begin. You need observable production behavior - and a process for turning that behavior into one.
-
-### Experiment to choose the best models and agent configurations
-
-Regression testing begins with an incumbent. You already have a version you trust, and the question is whether a proposed change makes it worse.
-
-Experimentation begins with uncertainty.
-
-At the earliest stage of AI development, you may not know which model, prompt, or architecture should become the baseline. Instead of comparing one candidate against one approved version, you might compare as many configurations as necessary to understand how they square up against one another.
-
-A configuration might vary:
-
-- The model, prompt, temperature, or reasoning settings
-- The available tools and their descriptions
-- The retrieval or reranking strategy
-- The routing, memory, or orchestration logic
-
-Run every configuration against the same versioned dataset so that the comparison remains fair.
-
-The goal is not always to find one configuration that wins every metric. A larger model may achieve the highest task-completion rate while costing five times more. A multi-agent architecture may perform better on complex tasks but add unnecessary latency to simple ones. The strongest configuration may also differ across dataset slices.
-
-This is why experiments should compare aggregate performance alongside individual test cases, cost, latency, and important failure categories. For nondeterministic systems, run important configurations several times so that one lucky execution does not determine the winner.
-
-The key distinction is simple:
-
-> Regression testing asks whether a candidate is safe to ship. Experimentation asks which candidate should become the baseline.
-
-You can build this workflow by storing every configuration, executing the same goldens repeatedly, and joining the resulting test runs yourself. Or, because I would once again be doing you a disservice not to mention it, Confident AI natively supports experiments across models, prompts, hyperparameters, and agent configurations.
-
-### Using an LLM-as-a-judge metric, but unsure how accurate it is
-
-An LLM judge can return a precise score and a convincing explanation while still being wrong. The only reliable way to understand its accuracy is to compare its decisions against independent human annotations.
-
-The word independent matters. Annotators should judge the application's output or execution - not whether they agree with the metric. Ideally, the metric's score and reasoning should be hidden during annotation.
-
-Otherwise, annotators become anchored to the metric's opinion. Worse, the team may spend weeks calibrating a Faithfulness or Task Completion metric without first establishing whether that quality is what actually determines application success.
-
-Instead, ask annotators questions such as:
-
-> Did the application achieve the expected outcome?
-
-Their answers will reveal which metrics correlate with real quality while still exposing false positives - cases the metric passed but humans rejected - and false negatives - cases the metric failed but humans accepted.
-
-\<InteractiveFrame />
-
-During Development: Annotate Test Cases:
-
-- Run the metric across a representative set of test cases, including successes, failures, and difficult edge cases.
-- Ask annotators to judge the underlying output or outcome without showing them the metric's score.
-- Compare the metric decisions with the human annotations and inspect false positives and false negatives individually.
-- Adjust the evaluation criteria, rubric, threshold, or judge model - then validate the changes against a separate set of test cases.
-- Remove the metric if it consistently disagrees with humans or measures a quality that does not predict actual success.
-
-In production, the workflow looks similar, but instead you'll annotate traces instead of test cases in test runs:
-
-- Run the metric against a sample of production traces rather than every execution initially.
-- Send a balanced sample of passes, failures, borderline scores, and high-risk traces into annotation queues.
-- Ask annotators to judge the execution itself, including its outcome and relevant intermediate behavior, without seeing the metric result.
-- Compare annotations with metric scores to detect false positives, false negatives, and changes in accuracy across use cases or customer segments.
-- Turn recurring disagreements and newly discovered failures into goldens for future regression testing.
-
-There is also a more rigorous version of this workflow: do not begin with an LLM judge at all.
-
-Start with human annotations, perform error analysis to identify recurring failure modes, and only then decide which automated metrics should represent them. We will cover that process in a later section.
-
-Both approaches ultimately arrive at the same destination:
-
-- **Metric first,** then human calibration: Faster and generally better for teams moving quickly.
-- **Human annotation first,** then metric discovery: Slower, but less likely to optimize the wrong measurement and therefore better for the strongest results.
-
-Confident AI supports both workflows: annotating test cases during development, routing production traces through annotation queues, and comparing human judgments with automated metric results.
 
 ## 5 Rules for LLM Evaluation Best Practices
 
@@ -934,13 +725,15 @@ Everything discussed in this guide - datasets, evaluations, human annotation
 
 You're free to build the system yourself, assemble it from open-source tools, or buy a platform. What matters is that these workflows share the same datasets, metrics, quality standards, and failure history across the entire AI lifecycle.
 
-If you want that functionality out of the box, Confident AI is one option that combines evaluation and observability with red teaming and AI governance.
+For enterprise teams, [Confident AI](https://www.confident-ai.com) is that one system: evaluation, production monitoring, human annotation, red teaming, and AI governance on a single platform. One system for all of your teams, and all of AI quality in one system.
 
 ### 2. Define the quality bar before development ends
 
 If you are building multiple AI applications, every team should know what allows a project to move from prototype to POC, and from POC to production. Define the required datasets, metrics, thresholds, human approvals, and safety checks in advance.
 
-This is AI governance: not a committee that appears at the end, but an enforceable process for deciding when an AI system is ready to advance. This actually ties back to the previous point, where you'd want to have the AI quality enforcement layer in the same platform where you run your evals.
+This is AI governance: not a committee that appears at the end, but an enforceable process for deciding when an AI system is ready to advance. This ties back to the previous point: the AI quality enforcement layer should live in the same platform where you run your evals.
+
+For enterprise teams, this is where [Confident AI's AI governance](https://www.confident-ai.com/products/ai-governance) comes in: define the datasets, metrics, thresholds, and approvals a project must pass once, then enforce them as release gates across every AI project in the organization.
 
 ### 3. Never leave humans out
 
@@ -948,7 +741,7 @@ Humans help identify which qualities matter, discover failure modes, and calibra
 
 ### 4. Instrument production from the beginning
 
-Automated production signals reveal which use cases are growing, how different user segments behave, and where cost, latency, errors, or quality are trending in the wrong direction. Ensure your observability platform - Confident AI included - can segment traces by application, workflow, customer, outcome, and risk, then route important failures back into evaluation datasets.
+Automated production signals reveal which use cases are growing, how different user segments behave, and where cost, latency, errors, or quality are trending in the wrong direction. Your production monitoring should segment traces by application, workflow, customer, outcome, and risk, discover issues before you've assigned an eval to them, and keep PMs in the loop on what is failing and why. On Confident AI, those issues are routed to human annotators and turned into new goldens, so production keeps feeding your evaluation datasets.
 
 ### 5. Standardize metrics - and red-team what they miss
 

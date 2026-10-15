@@ -1,0 +1,355 @@
+@import "../vars";
+
+.frame.frame {
+  // The frame box, head, legend and caption are FrameShell's; this styles the drawing.
+
+  .plot {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .wide {
+    max-height: 60vh;
+
+    @container (max-width: 520px) {
+      display: none;
+    }
+  }
+
+  .narrow {
+    display: none;
+
+    @container (max-width: 520px) {
+      display: block;
+    }
+  }
+
+  .grid {
+    stroke: var(--border-subtle);
+    stroke-dasharray: 2 4;
+  }
+
+  .axis {
+    fill: none;
+    stroke: var(--border-strong);
+  }
+
+  .tick {
+    font-size: 11px;
+    fill: var(--text-secondary);
+  }
+
+  .category {
+    font-size: 13px;
+    fill: var(--text-primary);
+  }
+
+  .threshold {
+    stroke: var(--text-secondary);
+    stroke-dasharray: 6 4;
+  }
+
+  .thresholdLabel {
+    font-size: 11px;
+    fill: var(--text-secondary);
+    stroke: var(--bg-secondary);
+    stroke-width: 3.5;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
+
+  .bar {
+    fill: var(--mark-color);
+    fill-opacity: 0.2;
+    stroke: var(--mark-color);
+    stroke-width: 1;
+  }
+
+  .ring {
+    fill: none;
+    stroke: var(--border-subtle);
+  }
+
+  .area {
+    fill: var(--mark-color);
+    fill-opacity: 0.16;
+    stroke: var(--mark-color);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+
+  .areaFill {
+    fill: var(--mark-color);
+    fill-opacity: 0.16;
+  }
+
+  .barSolid,
+  .slice {
+    fill: var(--mark-color);
+    fill-opacity: 0.6;
+    stroke: var(--bg-secondary);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+
+
+  // Matrix cells: a 2px gap in the frame's background between neighbours.
+  .cell {
+    fill: var(--mark-color);
+    stroke: var(--bg-secondary);
+    stroke-width: 2;
+  }
+
+  .bubble {
+    fill: var(--mark-color);
+    fill-opacity: 0.3;
+    stroke: var(--mark-color);
+    stroke-width: 1.25;
+  }
+
+  .value {
+    font-size: 13px;
+    font-weight: $FONT_MEDIUM;
+    fill: var(--mark-color);
+  }
+
+  // Sizes for value labels; after .value so they override it.
+  .valueLarge {
+    font-size: 22px;
+  }
+
+  .valueSmall {
+    font-size: 11px;
+    font-weight: $FONT_REGULAR;
+    fill: var(--text-secondary);
+  }
+
+  .gridSolid {
+    stroke: var(--border-subtle);
+  }
+
+  .gridZero {
+    stroke: var(--border-strong);
+  }
+
+  .region {
+    fill: var(--mark-color);
+  }
+
+  .curve,
+  .curveDashed {
+    fill: none;
+    stroke: var(--mark-color);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .curveDashed {
+    stroke-width: 1.5;
+    stroke-dasharray: 5 4;
+  }
+
+  .vline {
+    stroke: var(--mark-color);
+    stroke-dasharray: 2 4;
+  }
+
+  .drop {
+    stroke: var(--mark-color);
+    stroke-width: 1.25;
+    stroke-dasharray: 3 4;
+  }
+
+  .dot {
+    fill: var(--mark-color);
+    stroke: var(--bg-secondary);
+    stroke-width: 1.5;
+  }
+
+  .dotHollow {
+    fill: var(--bg-secondary);
+    stroke: var(--mark-color);
+    stroke-width: 1.75;
+  }
+
+  .arrowAxes path {
+    fill: none;
+    stroke: var(--text-primary);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .halo {
+    stroke: var(--bg-secondary);
+    stroke-width: 3.5;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
+
+  .regionLabel {
+    font-size: 13px;
+    font-weight: $FONT_MEDIUM;
+    fill: var(--text-primary);
+  }
+
+  .annotationLabel,
+  .pointLabel {
+    font-size: 11px;
+    fill: var(--mark-color);
+  }
+
+  .axisLabel {
+    font-size: 12px;
+    fill: var(--text-secondary);
+  }
+
+  .barBody,
+  .barBodyX {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(var(--i) * 120ms);
+  }
+
+  .barBodyX {
+    transform-origin: left;
+  }
+
+  .curve {
+    stroke-dasharray: 1;
+    transition: stroke-dashoffset 1100ms cubic-bezier(0.45, 0, 0.25, 1);
+    transition-delay: calc(var(--i) * 150ms);
+  }
+
+  .value,
+  .cell,
+  .area,
+  .areaFill,
+  .slice,
+  .curveDashed,
+  .region,
+  .threshold,
+  .thresholdLabel,
+  .vline,
+  .drop,
+  .point,
+  .regionLabel,
+  .annotationLabel {
+    transition: opacity 400ms ease-out;
+  }
+
+  .value {
+    transition-delay: calc(var(--i) * 120ms + 500ms);
+  }
+
+  .area,
+  .areaFill,
+  .slice {
+    transition-delay: calc(var(--i) * 150ms + 200ms);
+  }
+
+  .cell {
+    transition-delay: calc(var(--i) * 40ms);
+  }
+
+  .curveDashed,
+  .region,
+  .threshold,
+  .thresholdLabel,
+  .vline,
+  .annotationLabel,
+  .regionLabel {
+    transition-delay: 600ms;
+  }
+
+  .drop,
+  .point {
+    transition-delay: 1000ms;
+  }
+
+  .reveal[data-revealed="false"] {
+    .barBody {
+      transform: scaleY(0);
+    }
+
+    .barBodyX {
+      transform: scaleX(0);
+    }
+
+    .curve {
+      stroke-dashoffset: 1;
+    }
+
+    .value,
+    .cell,
+    .area,
+    .areaFill,
+    .slice,
+    .curveDashed,
+    .region,
+    .threshold,
+    .thresholdLabel,
+    .vline,
+    .drop,
+    .point,
+    .regionLabel,
+    .annotationLabel {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .barBody,
+    .barBodyX,
+    .curve,
+    .value,
+    .cell,
+    .area,
+    .areaFill,
+    .slice,
+    .curveDashed,
+    .region,
+    .threshold,
+    .thresholdLabel,
+    .vline,
+    .drop,
+    .point,
+    .regionLabel,
+    .annotationLabel {
+      transition: none;
+    }
+
+    .reveal[data-revealed="false"] {
+      .barBody,
+      .barBodyX {
+        transform: none;
+      }
+
+      .curve {
+        stroke-dashoffset: 0;
+      }
+
+      .value,
+      .cell,
+      .area,
+      .areaFill,
+      .slice,
+      .curveDashed,
+      .region,
+      .threshold,
+      .thresholdLabel,
+      .vline,
+      .drop,
+      .point,
+      .regionLabel,
+      .annotationLabel {
+        opacity: 1;
+      }
+    }
+  }
+}
