@@ -122,8 +122,7 @@ def audio_base64(audio: Audio) -> str:
 def reject_audio(audio: Optional[List[Audio]], provider: str) -> None:
     if audio:
         raise DeepEvalError(
-            f"{provider} doesn't accept audio input. Use a model that does, "
-            "such as GeminiModel or an OpenAI audio model."
+            f"{provider} doesn't accept audio input. Use a different model that supports audio."
         )
 
 
