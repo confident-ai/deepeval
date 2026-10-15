@@ -71,6 +71,7 @@ CONVERSATIONAL_G_EVAL_PARAMS = {
     MultiTurnParams.RETRIEVAL_CONTEXT: "Retrieval Context",
     MultiTurnParams.EXPECTED_OUTCOME: "Expected Outcome",
     MultiTurnParams.SCENARIO: "Scenario",
+    MultiTurnParams.AUDIO: "Audio",
 }
 
 G_EVAL_API_PARAMS = {
@@ -310,6 +311,7 @@ def construct_non_turns_test_case_string(
             or param == MultiTurnParams.TOOLS_CALLED
             or param == MultiTurnParams.CONTENT
             or param == MultiTurnParams.ROLE
+            or param == MultiTurnParams.AUDIO
         ):
             continue
 
