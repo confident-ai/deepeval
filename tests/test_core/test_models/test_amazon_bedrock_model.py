@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 from tests.test_core.stubs import _RecordingClient
 from deepeval.models.llms.amazon_bedrock_model import AmazonBedrockModel
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 
 
 class RecordingBedrockClient(_RecordingClient):
@@ -112,6 +112,17 @@ def test_get_converse_request_body_downloads_remote_images(monkeypatch):
 
     assert body["messages"][0]["content"] == [
         {"image": {"format": "png", "source": {"bytes": b"remote"}}},
+    ]
+
+
+def test_get_converse_request_body_sends_audio_after_the_text():
+    clip = Audio.from_bytes(b"wav", "audio/x-wav")
+
+    body = _mk_model({}).get_converse_request_body("Rate the reply.", [clip])
+
+    assert body["messages"][0]["content"] == [
+        {"text": "Rate the reply."},
+        {"audio": {"format": "wav", "source": {"bytes": b"wav"}}},
     ]
 
 

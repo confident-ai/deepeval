@@ -1,20 +1,38 @@
 import base64
+from types import SimpleNamespace
 
 import pytest
 import requests
 
 from deepeval.config.settings import get_settings
 from deepeval.errors import DeepEvalError
+from deepeval.models.llms import (
+    AnthropicModel,
+    DeepSeekModel,
+    GeminiModel,
+    GrokModel,
+    KimiModel,
+    OllamaModel,
+)
 from deepeval.models.llms.multimodal import (
+    audio_base64,
+    audio_format,
     decode_image,
     fetch_remote_image,
     multimodal_parts,
+    reject_audio,
     to_openai_content,
 )
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 
 IMAGE_BYTES = b"\x89PNG-bytes"
 IMAGE_B64 = base64.b64encode(IMAGE_BYTES).decode()
+WAV_BYTES = b"RIFF-wav-bytes"
+WAV_B64 = base64.b64encode(WAV_BYTES).decode()
+
+
+def wav_clip():
+    return Audio.from_bytes(WAV_BYTES, "audio/x-wav")
 
 
 class FakeResponse:
@@ -136,3 +154,113 @@ def test_decode_image_raises_given_error_on_invalid_base64(error_cls):
 
     with pytest.raises(error_cls, match="Invalid base64 data"):
         decode_image(image, error_cls=error_cls)
+
+
+def test_multimodal_parts_puts_audio_after_the_text():
+    clip = wav_clip()
+
+    assert multimodal_parts("Rate the reply.", [clip]) == [
+        "Rate the reply.",
+        clip,
+    ]
+
+
+def test_multimodal_parts_puts_audio_after_images():
+    image = MLLMImage(dataBase64=IMAGE_B64, mimeType="image/png")
+    clip = wav_clip()
+
+    assert multimodal_parts(f"A {image}", [clip]) == ["A ", image, clip]
+
+
+def test_multimodal_parts_treats_empty_audio_as_text_only():
+    assert multimodal_parts("just text", []) is None
+
+
+def test_to_openai_content_sends_audio_as_base64_input_audio():
+    content = to_openai_content("Rate the reply.", [wav_clip()])
+
+    assert content == [
+        {"type": "text", "text": "Rate the reply."},
+        {
+            "type": "input_audio",
+            "input_audio": {"data": WAV_B64, "format": "wav"},
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    "mime_type, expected",
+    [
+        ("audio/wav", "wav"),
+        ("audio/x-wav", "wav"),
+        ("audio/wave", "wav"),
+        ("audio/vnd.wave", "wav"),
+        ("audio/mpeg", "mp3"),
+        ("audio/mp3", "mp3"),
+        ("audio/flac", "flac"),
+    ],
+)
+def test_audio_format_normalizes_mime_types(mime_type, expected):
+    assert audio_format(Audio.from_bytes(WAV_BYTES, mime_type)) == expected
+
+
+def test_audio_base64_downloads_a_remote_clip(monkeypatch):
+    monkeypatch.setattr(
+        requests,
+        "get",
+        lambda url, **kwargs: FakeResponse({"content-type": "audio/wav"}),
+    )
+    clip = Audio(url="https://example.com/call.wav")
+
+    assert audio_base64(clip) == IMAGE_B64
+
+
+@pytest.mark.parametrize("audio", [None, []])
+def test_reject_audio_allows_calls_without_audio(audio):
+    reject_audio(audio, "SomeModel")
+
+
+def test_reject_audio_raises_when_audio_is_given():
+    with pytest.raises(DeepEvalError, match="SomeModel doesn't accept audio"):
+        reject_audio([wav_clip()], "SomeModel")
+
+
+def test_gemini_sends_audio_as_an_inline_part():
+    model = GeminiModel.__new__(GeminiModel)
+    model._module = SimpleNamespace(
+        types=SimpleNamespace(
+            Part=SimpleNamespace(
+                from_bytes=lambda data, mime_type: (data, mime_type)
+            )
+        )
+    )
+
+    contents = model._prompt_contents("Rate the reply.", [wav_clip()])
+
+    assert contents == ["Rate the reply.", (WAV_BYTES, "audio/wav")]
+
+
+@pytest.mark.parametrize(
+    "send_audio",
+    [
+        lambda audio: AnthropicModel.__new__(AnthropicModel)._prompt_content(
+            "Rate", audio
+        ),
+        lambda audio: OllamaModel.__new__(OllamaModel)._prompt_messages(
+            "Rate", audio
+        ),
+        lambda audio: DeepSeekModel.__new__(DeepSeekModel).generate(
+            "Rate", audio=audio
+        ),
+        lambda audio: GrokModel.__new__(GrokModel)._prompt_content(
+            "Rate", audio
+        ),
+        lambda audio: KimiModel.__new__(KimiModel)._prompt_content(
+            "Rate", audio
+        ),
+    ],
+    ids=["anthropic", "ollama", "deepseek", "grok", "kimi"],
+)
+def test_providers_without_audio_input_reject_audio(send_audio):
+    with pytest.raises(DeepEvalError, match="doesn't accept audio input"):
+        send_audio([wav_clip()])
