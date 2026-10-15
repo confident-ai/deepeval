@@ -6,7 +6,10 @@ import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import AudioGlitchMetric
-from deepeval.metrics.voice._analysis import pitch_and_periodicity
+from deepeval.metrics.voice._analysis import (
+    analyze_audio,
+    pitch_and_periodicity,
+)
 from deepeval.metrics.audio_glitch import AudioGlitchTemplate
 from deepeval.metrics.audio_glitch._detectors import (
     _silence_profile,
@@ -80,6 +83,39 @@ def tone(seconds, hz, *, amplitude=6000) -> array:
         out.append(
             int(
                 amplitude * envelope * math.sin(2 * math.pi * hz * index / RATE)
+            )
+        )
+    return out
+
+
+def spoken_words(count=8, *, pause=0.1, noise=20) -> array:
+    rng = random.Random(count)
+    out = array("h")
+    for index in range(count):
+        out.extend(speech_like(0.25, seed=index, noise=noise))
+        out.extend(int(rng.gauss(0, noise)) for _ in range(int(pause * RATE)))
+    return out
+
+
+def synthetic_syllable(seconds, *, hz=230.0, wobble=0.005, seed=0) -> array:
+    """No glide, but the pitch moves a little every 40 ms frame."""
+    rng = random.Random(seed)
+    out = array("h")
+    phase = 0.0
+    step = int(0.04 * RATE)
+    for index in range(int(seconds * RATE)):
+        if index % step == 0:
+            frame_hz = hz * (1 + rng.gauss(0, wobble))
+        phase += 2 * math.pi * frame_hz / RATE
+        out.append(
+            int(
+                5000
+                * (
+                    math.sin(phase)
+                    + 0.5 * math.sin(2 * phase)
+                    + 0.3 * math.sin(3 * phase)
+                )
+                / 1.8
             )
         )
     return out
@@ -203,6 +239,22 @@ def test_a_trailing_dead_run_needs_a_full_second():
     assert run.runs_to_end is True
 
 
+def test_pauses_between_words_are_not_dropouts():
+    assert analyze_audio(to_audio(spoken_words())).dropout_events == 0
+
+
+def test_a_short_break_inside_a_word_is_a_dropout():
+    clip = spoken_words()
+    clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
+    assert analyze_audio(to_audio(clip)).dropout_events == 1
+
+
+def test_a_break_is_not_a_dropout_when_pauses_are_digital():
+    clip = spoken_words(noise=0)
+    clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
+    assert analyze_audio(to_audio(clip)).dropout_events == 0
+
+
 # ----------------------------------------------------------- held tones
 
 
@@ -254,6 +306,18 @@ def test_a_held_vowel_with_a_natural_glide_is_not_a_tone():
     turns = clean_turns()
     turns[0].audio = to_audio(
         speech_like(1.0) + vowel(1.0) + speech_like(1.0, seed=3), start_time=0.0
+    )
+    metric, _ = _measure(turns)
+    assert _events(metric) == []
+
+
+def test_a_synthetic_voice_holding_a_syllable_is_not_a_tone():
+    turns = clean_turns()
+    turns[1].audio = to_audio(
+        speech_like(1.0, base_hz=230.0)
+        + synthetic_syllable(1.2)
+        + speech_like(1.0, base_hz=230.0, seed=4),
+        start_time=3.5,
     )
     metric, _ = _measure(turns)
     assert _events(metric) == []

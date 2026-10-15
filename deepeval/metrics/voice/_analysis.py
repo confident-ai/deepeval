@@ -6,11 +6,15 @@ import hashlib
 import math
 from array import array
 from dataclasses import dataclass
-from statistics import mean, pstdev
+from statistics import mean, median, pstdev
 from typing import List, Optional, Sequence, Tuple
 
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
+
+DROPOUT_MAX_FRAMES = 10
+DROPOUT_FLOOR_RATIO = 0.1
+MIN_PAUSE_FLOOR_RMS = 8.0
 
 
 @dataclass
@@ -178,9 +182,13 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         else:
             current_silence = 0
 
+    pause_levels = [
+        value for value, is_silent in zip(frame_rms, silent) if is_silent
+    ]
+    pause_floor = median(pause_levels) if pause_levels else 0.0
     dropout_events = 0
     index = 1
-    while index < len(silent) - 1:
+    while pause_floor >= MIN_PAUSE_FLOOR_RMS and index < len(silent) - 1:
         if not silent[index]:
             index += 1
             continue
@@ -193,7 +201,8 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and index < len(silent)
             and not silent[start - 1]
             and not silent[index]
-            and length <= 10
+            and length <= DROPOUT_MAX_FRAMES
+            and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
             dropout_events += 1
 
