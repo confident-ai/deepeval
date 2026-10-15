@@ -13,7 +13,10 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.models.llms.multimodal import (
+    ensure_audio,
+    to_openai_content,
+)
 from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
@@ -155,7 +158,7 @@ class OpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -221,7 +224,7 @@ class OpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -307,7 +310,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = client.chat.completions.create(
             model=self.name,
@@ -342,7 +345,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = await client.chat.completions.create(
             model=self.name,
@@ -368,7 +371,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         audio: Optional[List[Audio]] = None,
     ) -> list[str]:
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         response = client.chat.completions.create(
             model=self.name,
@@ -417,6 +420,12 @@ class OpenAIModel(DeepEvalBaseLLM):
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
 
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
+
+    def requires_audio(self) -> Union[bool, None]:
+        return self.model_data.requires_audio
+
     def supports_structured_outputs(self) -> Union[bool, None]:
         """
         OpenAI models that natively enforce typed structured outputs.
@@ -433,6 +442,13 @@ class OpenAIModel(DeepEvalBaseLLM):
     #########
     # Model #
     #########
+
+    def _prompt_content(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        if self.requires_audio():
+            ensure_audio(audio, self.name)
+        return to_openai_content(prompt, audio)
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

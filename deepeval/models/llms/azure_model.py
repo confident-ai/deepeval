@@ -15,7 +15,10 @@ from deepeval.utils import require_param
 from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
-from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.models.llms.multimodal import (
+    ensure_audio,
+    to_openai_content,
+)
 from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
@@ -182,7 +185,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -259,7 +262,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -341,7 +344,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -370,7 +373,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
-        content = to_openai_content(prompt, audio)
+        content = self._prompt_content(prompt, audio)
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -389,6 +392,13 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(input_tokens, output_tokens)
 
         return completion, cost
+
+    def _prompt_content(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        if self.requires_audio():
+            ensure_audio(audio, self.name)
+        return to_openai_content(prompt, audio)
 
     ###############################################
     # Utilities
@@ -414,6 +424,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
+
+    def requires_audio(self) -> Union[bool, None]:
+        return self.model_data.requires_audio
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs

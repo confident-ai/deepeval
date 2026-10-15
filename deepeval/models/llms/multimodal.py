@@ -125,3 +125,11 @@ def reject_audio(audio: Optional[List[Audio]], provider: str) -> None:
             f"{provider} doesn't accept audio input. Use a model that does, "
             "such as GeminiModel or an OpenAI audio model."
         )
+
+
+def ensure_audio(audio: Optional[List[Audio]], model: str) -> None:
+    if not audio:
+        raise DeepEvalError(
+            f"{model} only accepts requests that include audio. Pass audio, "
+            "or use a model that also takes text-only requests."
+        )

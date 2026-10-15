@@ -223,6 +223,9 @@ class GrokModel(DeepEvalBaseLLM):
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
 
+    def supports_audio(self) -> bool:
+        return False
+
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs
 

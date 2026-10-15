@@ -32,6 +32,9 @@ class DeepEvalModelData:
     supports_log_probs: Optional[bool] = None
     max_log_probs: Optional[int] = None
     supports_multimodal: Optional[bool] = None
+    supports_audio: Optional[bool] = None
+    # True for models that reject any request without audio in it.
+    requires_audio: Optional[bool] = None
     supports_structured_outputs: Optional[bool] = None
     supports_json: Optional[bool] = None
     input_price: Optional[float] = None
@@ -140,6 +143,12 @@ class DeepEvalBaseLLM(ABC):
         return None
 
     def supports_multimodal(self) -> Union[bool, None]:
+        return None
+
+    def supports_audio(self) -> Union[bool, None]:
+        return None
+
+    def requires_audio(self) -> Union[bool, None]:
         return None
 
     def supports_structured_outputs(self) -> Union[bool, None]:

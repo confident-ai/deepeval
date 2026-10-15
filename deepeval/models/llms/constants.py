@@ -65,11 +65,22 @@ def make_model_data(**kwargs: Any) -> ModelDataFactory:
     return lambda: DeepEvalModelData(**kwargs)
 
 
+# OpenAI's audio models take text and audio (no images), and reject any
+# request without audio in it. Pricing is left unset until audio input
+# tokens are priced separately from text.
+GPT_AUDIO_MODEL_DATA = make_model_data(
+    supports_multimodal=False,
+    supports_audio=True,
+    requires_audio=True,
+)
+
+
 OPENAI_MODELS_DATA = ModelDataRegistry(
     {
         "gpt-3.5-turbo": make_model_data(
             supports_log_probs=True,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=0.50 / 1e6,
@@ -78,6 +89,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-3.5-turbo-0125": make_model_data(
             supports_log_probs=True,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=0.50 / 1e6,
@@ -86,6 +98,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-3.5-turbo-1106": make_model_data(
             supports_log_probs=True,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=1.00 / 1e6,
@@ -94,6 +107,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-0125-preview": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=10.00 / 1e6,
@@ -102,6 +116,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-1106-preview": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=10.00 / 1e6,
@@ -110,6 +125,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-turbo": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=10.00 / 1e6,
@@ -118,6 +134,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-turbo-2024-04-09": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=10.00 / 1e6,
@@ -126,6 +143,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-turbo-preview": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=10.00 / 1e6,
@@ -134,6 +152,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=2.50 / 1e6,
@@ -142,6 +161,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4": make_model_data(
             supports_log_probs=True,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=30.00 / 1e6,
@@ -150,6 +170,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o-2024-05-13": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=2.50 / 1e6,
@@ -158,6 +179,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o-2024-08-06": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=2.50 / 1e6,
@@ -166,6 +188,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o-2024-11-20": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=2.50 / 1e6,
@@ -174,6 +197,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o-mini": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=0.150 / 1e6,
@@ -182,6 +206,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4o-mini-2024-07-18": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=0.150 / 1e6,
@@ -190,6 +215,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-32k": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=True,
             input_price=60.00 / 1e6,
@@ -198,6 +224,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4-32k-0613": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             input_price=60.00 / 1e6,
@@ -206,6 +233,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4.1": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=2.00 / 1e6,
@@ -214,6 +242,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4.1-mini": make_model_data(
             supports_log_probs=True,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=0.4 / 1e6,
@@ -222,6 +251,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4.1-nano": make_model_data(
             supports_log_probs=True,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=0.1 / 1e6,
@@ -230,6 +260,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4.5-preview": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             input_price=75.00 / 1e6,
@@ -238,6 +269,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-4.5-preview-2025-02-27": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=75.00 / 1e6,
@@ -247,6 +279,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -256,6 +289,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1-preview": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=15.00 / 1e6,
@@ -264,6 +298,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1-2024-12-17": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -273,6 +308,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1-preview-2024-09-12": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             input_price=15.00 / 1e6,
@@ -281,6 +317,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             supports_temperature=False,
@@ -290,6 +327,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o1-mini-2024-09-12": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             supports_temperature=False,
@@ -299,6 +337,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o3-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -308,6 +347,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o3-mini-2025-01-31": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -317,6 +357,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o4-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -326,6 +367,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "o4-mini-2025-04-16": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -335,6 +377,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -344,6 +387,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-2025-08-07": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -353,6 +397,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -362,6 +407,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-mini-2025-08-07": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -371,6 +417,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-nano": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -380,6 +427,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-nano-2025-08-07": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -389,6 +437,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5-chat-latest": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=False,
             supports_json=False,
             input_price=1.25 / 1e6,
@@ -397,6 +446,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.1": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -406,6 +456,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.2": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -416,6 +467,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_log_probs=True,
             max_log_probs=5,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -426,6 +478,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_log_probs=True,
             max_log_probs=5,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -435,6 +488,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.4-mini": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             supports_temperature=False,
@@ -444,6 +498,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.5": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -453,6 +508,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.5-2026-04-23": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -462,6 +518,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.6-sol": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -471,6 +528,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.6-terra": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -480,6 +538,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-5.6-luna": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -489,6 +548,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-6-astra": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -498,6 +558,7 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-6-sol": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -507,12 +568,19 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
         "gpt-6-luna": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
             input_price=0.10 / 1e6,
             output_price=0.50 / 1e6,
         ),
+        "gpt-audio": GPT_AUDIO_MODEL_DATA,
+        "gpt-audio-2025-08-28": GPT_AUDIO_MODEL_DATA,
+        "gpt-audio-1.5": GPT_AUDIO_MODEL_DATA,
+        "gpt-audio-mini": GPT_AUDIO_MODEL_DATA,
+        "gpt-audio-mini-2025-10-06": GPT_AUDIO_MODEL_DATA,
+        "gpt-audio-mini-2025-12-15": GPT_AUDIO_MODEL_DATA,
     }
 )
 
@@ -865,6 +933,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-1.5-pro": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=1.25 / 1e6,
@@ -873,6 +942,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-1.5-pro-002": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=1.25 / 1e6,
@@ -881,6 +951,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-1.5-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.075 / 1e6,
@@ -889,6 +960,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-1.5-flash-002": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.075 / 1e6,
@@ -897,6 +969,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-1.5-flash-8b": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.0375 / 1e6,
@@ -905,6 +978,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-2.0-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.15 / 1e6,
@@ -913,6 +987,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-2.0-flash-lite": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.075 / 1e6,
@@ -921,6 +996,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-2.5-pro": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=1.25 / 1e6,
@@ -929,6 +1005,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-2.5-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.30 / 1e6,
@@ -937,6 +1014,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-2.5-flash-lite": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.10 / 1e6,
@@ -945,6 +1023,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3-pro": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -954,6 +1033,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3-pro-preview": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -963,6 +1043,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.1-pro-preview": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -974,6 +1055,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.6-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -983,6 +1065,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.7-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -992,6 +1075,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.8-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -1001,6 +1085,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.5-flash": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -1010,6 +1095,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.5-flash-lite": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -1019,6 +1105,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3-flash-preview": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -1028,6 +1115,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-3.1-flash-lite": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=True,
             supports_structured_outputs=True,
             supports_json=True,
             supports_temperature=False,
@@ -1037,6 +1125,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-pro": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.50 / 1e6,
@@ -1045,6 +1134,7 @@ GEMINI_MODELS_DATA = ModelDataRegistry(
         "gemini-pro-vision": make_model_data(
             supports_log_probs=False,
             supports_multimodal=True,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=True,
             input_price=0.50 / 1e6,
@@ -2186,12 +2276,15 @@ OLLAMA_MODELS_DATA = ModelDataRegistry(
 
 BEDROCK_MODELS_DATA = ModelDataRegistry(
     {
+        # Converse only takes audio on models that list speech input (Voxtral),
+        # none of which are registered, so supports_audio is False throughout.
         ########################
         # anthropic (claude 3) #
         ########################
         "anthropic.claude-3-opus-20240229-v1:0": make_model_data(
             supports_log_probs=False,  # Converse responses don't include logprobs.
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # We support `schema` by parsing JSON from text (not toolConfig).
             supports_json=False,  # No cross-model JSON-mode supported by AmazonBedrockModel yet
             input_price=None,
@@ -2200,6 +2293,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-3-sonnet-20240229-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2211,6 +2305,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-opus-4-20250514-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2219,6 +2314,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-opus-4-1-20250805-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2227,6 +2323,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-sonnet-4-20250514-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2235,6 +2332,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2243,6 +2341,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2256,6 +2355,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.titan-text-express-v1": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2264,6 +2364,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.titan-text-premier-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2275,6 +2376,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.nova-micro-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2283,6 +2385,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.nova-lite-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2291,6 +2394,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.nova-pro-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2299,6 +2403,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "amazon.nova-premier-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # Some Nova models support multimodal via Converse; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # Some Nova models support tool use.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2310,6 +2415,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "meta.llama4-maverick-17b-instruct-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,  # SDK tool use varies by model.  # noqa: E501
             supports_json=False,
             input_price=None,
@@ -2318,6 +2424,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "meta.llama4-maverick-17b-instruct-128k-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2326,6 +2433,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "meta.llama4-scout-17b-instruct-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2334,6 +2442,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "meta.llama4-scout-17b-instruct-128k-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2345,6 +2454,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "mistral.mistral-large-2407-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2353,6 +2463,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "mistral.mistral-large-2411-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2364,6 +2475,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "mistral.pixtral-large-2411-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2372,6 +2484,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "mistral.pixtral-large-2502-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2380,6 +2493,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "mistral.pixtral-large-2511-v1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2391,6 +2505,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "openai.gpt-oss-20b-1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,
@@ -2399,6 +2514,7 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
         "openai.gpt-oss-120b-1:0": make_model_data(
             supports_log_probs=False,
             supports_multimodal=False,
+            supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
             input_price=None,

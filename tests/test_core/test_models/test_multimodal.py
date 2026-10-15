@@ -13,6 +13,8 @@ from deepeval.models.llms import (
     GrokModel,
     KimiModel,
     OllamaModel,
+    OpenAIModel,
+    OpenRouterModel,
 )
 from deepeval.models.llms.multimodal import (
     audio_base64,
@@ -264,3 +266,48 @@ def test_gemini_sends_audio_as_an_inline_part():
 def test_providers_without_audio_input_reject_audio(send_audio):
     with pytest.raises(DeepEvalError, match="doesn't accept audio input"):
         send_audio([wav_clip()])
+
+
+@pytest.mark.parametrize(
+    "make_model, supports, requires",
+    [
+        (lambda: OpenAIModel(model="gpt-audio", api_key="k"), True, True),
+        (lambda: OpenAIModel(model="gpt-audio-mini", api_key="k"), True, True),
+        (lambda: OpenAIModel(model="gpt-4.1", api_key="k"), False, None),
+        (
+            lambda: GeminiModel(model="gemini-2.5-flash", api_key="k"),
+            True,
+            None,
+        ),
+        (lambda: GeminiModel(model="gemini-pro", api_key="k"), False, None),
+        (lambda: AnthropicModel.__new__(AnthropicModel), False, None),
+        (lambda: OllamaModel.__new__(OllamaModel), False, None),
+        (lambda: OpenRouterModel(model="x", api_key="k"), None, None),
+    ],
+    ids=[
+        "gpt-audio",
+        "gpt-audio-mini",
+        "gpt-4.1",
+        "gemini-2.5-flash",
+        "gemini-pro",
+        "anthropic",
+        "ollama",
+        "openrouter",
+    ],
+)
+def test_models_report_audio_support(make_model, supports, requires):
+    model = make_model()
+
+    assert model.supports_audio() is supports
+    assert model.requires_audio() is requires
+
+
+def test_audio_only_openai_model_rejects_text_only_prompts():
+    model = OpenAIModel(model="gpt-audio", api_key="k")
+
+    with pytest.raises(DeepEvalError, match="only accepts requests that"):
+        model._prompt_content("Rate the reply.")
+    assert model._prompt_content("Rate the reply.", [wav_clip()])[1] == {
+        "type": "input_audio",
+        "input_audio": {"data": WAV_B64, "format": "wav"},
+    }
