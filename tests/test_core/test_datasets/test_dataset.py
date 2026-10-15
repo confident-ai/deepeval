@@ -595,6 +595,8 @@ class TestSaveAndLoad:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 assert any(item["input"] == "input case" for item in data)
+                assert data[0]["name"] == "Name"
+                assert data[0]["comments"] == "Comment"
 
     def test_save_as_includes_test_cases_round_trips_retrieval_context_data(
         self,
@@ -645,6 +647,8 @@ class TestSaveAndLoad:
                 assert any(
                     item["scenario"] == "test case scenario" for item in data
                 )
+                assert data[0]["name"] == "Name"
+                assert data[0]["comments"] == "Comment"
 
     def test_convert_convo_goldens_to_test_cases_preserves_expected_outcome(
         self,
