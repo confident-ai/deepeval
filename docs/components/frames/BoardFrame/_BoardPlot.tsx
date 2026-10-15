@@ -1,5 +1,5 @@
 import type * as React from "react";
-import type { Box } from "@/components/frames/FlowPlot/_scene";
+import { type Box, textWidth } from "@/components/frames/FlowPlot/_scene";
 import { markColor } from "@/components/frames/FrameShell/FrameShell";
 import type { ChartColor } from "@/lib/charts/schema";
 import {
@@ -15,7 +15,7 @@ import {
   type SceneText,
 } from "./_scene";
 import { BoardIcon } from "./_BoardIcon";
-import { ELLIPSIS, sizeVars } from "./_tokens";
+import { ELLIPSIS, TIER, sizeVars } from "./_tokens";
 import styles from "./styles.module.scss";
 
 interface BoardPlotProps {
@@ -31,21 +31,43 @@ interface TextProps {
   halo?: boolean;
 }
 
-const Text = ({ text, tone, halo }: TextProps): React.ReactElement => (
-  <text
-    className={styles.text}
-    data-tier={text.tier}
-    data-tone={tone}
-    data-halo={halo || undefined}
-    data-weight={text.weight}
-    x={text.x}
-    y={text.y}
-    textAnchor={text.anchor}
-    dominantBaseline="central"
-  >
-    {text.text}
-  </text>
-);
+const CODE_SPAN = /(`[^`]+`)/;
+const isCode = (part: string) => part.length > 2 && part.startsWith("`") && part.endsWith("`");
+const CHIP_PAD = 4;
+
+// `backticks` draw as inline code; a line that is only code also gets a chip behind it.
+const Text = ({ text, tone, halo }: TextProps): React.ReactElement => {
+  const parts = text.text.split(CODE_SPAN).filter(Boolean);
+  const size = TIER[text.tier].text;
+  const chip = parts.length === 1 && isCode(parts[0]) ? textWidth(parts[0].slice(1, -1), size) + 2 * CHIP_PAD : 0;
+  const chipX = text.anchor === "middle" ? text.x - chip / 2 : text.anchor === "end" ? text.x - chip + CHIP_PAD : text.x - CHIP_PAD;
+  return (
+    <>
+      {chip ? <rect className={styles.codeChip} x={chipX} y={text.y - size / 2 - 3} width={chip} height={size + 6} rx={3} /> : null}
+      <text
+        className={styles.text}
+        data-tier={text.tier}
+        data-tone={tone}
+        data-halo={halo || undefined}
+        data-weight={text.weight}
+        x={text.x}
+        y={text.y}
+        textAnchor={text.anchor}
+        dominantBaseline="central"
+      >
+        {parts.map((part, i) =>
+          isCode(part) ? (
+            <tspan key={i} className={styles.code}>
+              {part.slice(1, -1)}
+            </tspan>
+          ) : (
+            part
+          )
+        )}
+      </text>
+    </>
+  );
+};
 
 /** A group drawn in a chart color, or in the board's own colors without one. */
 const tint = (color: ChartColor | undefined, className?: string) => ({

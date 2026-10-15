@@ -57,6 +57,14 @@
   margin: 4px auto 0;
   overflow: visible;
 
+  .code {
+    font-family: $DM_MONO;
+  }
+
+  .codeChip {
+    fill: color-mix(in srgb, var(--board-text) 9%, transparent);
+  }
+
   .text {
     fill: var(--board-text);
 

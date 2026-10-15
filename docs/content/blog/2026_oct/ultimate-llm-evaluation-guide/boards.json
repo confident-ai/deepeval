@@ -570,13 +570,13 @@
           "color": "violet",
           "lines": [
             {
-              "text": "input: refund the duplicate charge"
+              "text": "`input`: refund the duplicate charge"
             },
             {
-              "text": "expected: exactly one refund"
+              "text": "`expected_output`: exactly one refund"
             },
             {
-              "text": "expected tools: search_orders, issue_refund"
+              "text": "`expected_tools`: search_orders, issue_refund"
             }
           ]
         },
@@ -586,13 +586,13 @@
           "color": "teal",
           "lines": [
             {
-              "text": "input: how much annual leave do I get?"
+              "text": "`input`: how much annual leave do I get?"
             },
             {
-              "text": "expected: 20 days, per HR Policy 4.2"
+              "text": "`expected_output`: 20 days, per HR Policy 4.2"
             },
             {
-              "text": "context: HR handbook"
+              "text": "`context`: HR handbook"
             }
           ]
         },
@@ -602,13 +602,13 @@
           "color": "blue",
           "lines": [
             {
-              "text": "scenario: reschedule a dentist visit"
+              "text": "`scenario`: reschedule a dentist visit"
             },
             {
-              "text": "user: in a hurry, calling from a phone"
+              "text": "`user_description`: in a hurry, on a phone"
             },
             {
-              "text": "expected: new slot confirmed"
+              "text": "`expected_outcome`: new slot confirmed"
             }
           ]
         },
@@ -618,13 +618,13 @@
           "color": "ember",
           "lines": [
             {
-              "text": "input: bill-of-lading-042.pdf"
+              "text": "`input`: bill-of-lading-042.pdf"
             },
             {
-              "text": "expected: { carrier: Maersk }"
+              "text": "`expected_output`: { carrier: Maersk }"
             },
             {
-              "text": "metadata: scanned, 2 pages"
+              "text": "`metadata`: scanned, 2 pages"
             }
           ]
         }
@@ -646,13 +646,13 @@
               "label": "From the golden",
               "lines": [
                 {
-                  "text": "input"
+                  "text": "`input`"
                 },
                 {
-                  "text": "expected_output"
+                  "text": "`expected_output`"
                 },
                 {
-                  "text": "context"
+                  "text": "`context`"
                 }
               ]
             },
@@ -661,13 +661,13 @@
               "label": "From the run",
               "lines": [
                 {
-                  "text": "actual_output"
+                  "text": "`actual_output`"
                 },
                 {
-                  "text": "retrieval_context"
+                  "text": "`retrieval_context`"
                 },
                 {
-                  "text": "tools_called"
+                  "text": "`tools_called`"
                 }
               ]
             }
@@ -683,13 +683,13 @@
               "label": "From the golden",
               "lines": [
                 {
-                  "text": "scenario"
+                  "text": "`scenario`"
                 },
                 {
-                  "text": "expected_outcome"
+                  "text": "`expected_outcome`"
                 },
                 {
-                  "text": "user_description"
+                  "text": "`user_description`"
                 }
               ]
             },
@@ -698,7 +698,7 @@
               "label": "From the simulation",
               "lines": [
                 {
-                  "text": "turns"
+                  "text": "`turns`"
                 }
               ]
             }
