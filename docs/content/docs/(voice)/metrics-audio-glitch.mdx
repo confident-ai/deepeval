@@ -21,7 +21,7 @@ This metric exists because a transcript cannot show these failures. A text-to-sp
 
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), or any `ConversationalTestCase` whose turns carry [`Audio`](/docs/evaluation-voice) clips. Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), or any `ConversationalTestCase` whose turns carry [`Audio`](/docs/evaluation-voice#audio-data-model) clips. Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
 
 ```python
 from deepeval import evaluate
