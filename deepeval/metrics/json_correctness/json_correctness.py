@@ -102,12 +102,14 @@ class JsonCorrectnessMetric(BaseMetric):
                 )
             else:
                 valid_json = True
+                self._validation_error: Optional[str] = None
                 try:
                     self.expected_schema.model_validate_json(
                         _strip_code_fence(test_case.actual_output)
                     )
-                except ValidationError:
+                except ValidationError as e:
                     valid_json = False
+                    self._validation_error = str(e)
 
                 self.score = 1 if valid_json else 0
                 self.reason = self.generate_reason(test_case.actual_output)
@@ -139,12 +141,14 @@ class JsonCorrectnessMetric(BaseMetric):
             _in_component=_in_component,
         ):
             valid_json = True
+            self._validation_error: Optional[str] = None
             try:
                 self.expected_schema.model_validate_json(
                     _strip_code_fence(test_case.actual_output)
                 )
-            except ValidationError:
+            except ValidationError as e:
                 valid_json = False
+                self._validation_error = str(e)
 
             self.score = 1 if valid_json else 0
             self.reason = await self.a_generate_reason(test_case.actual_output)
