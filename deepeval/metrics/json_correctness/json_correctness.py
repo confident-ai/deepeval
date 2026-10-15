@@ -78,16 +78,19 @@ class JsonCorrectnessMetric(BaseMetric):
 
         Empty / whitespace-only / non-JSON strings fail both paths.
         """
+        self._validation_error: Optional[str] = None
         if self.expected_schema is not None:
             try:
                 self.expected_schema.model_validate_json(actual_output)
                 return True
-            except ValidationError:
+            except ValidationError as e:
+                self._validation_error = str(e)
                 return False
         try:
             json.loads(actual_output)
             return True
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
+            self._validation_error = str(e)
             return False
 
     def _deterministic_reason(self, valid_json: bool) -> Optional[str]:
