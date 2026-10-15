@@ -28,7 +28,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 TOOL_SELECTION_LEVELS = [
@@ -608,6 +607,12 @@ class ToolCorrectnessMetric(BaseMetric):
             return 1.0
         if self.should_exact_match:
             return 1.0 if dict1 == dict2 else 0.0
+        # A tool call frequently carries no arguments (``input_parameters``
+        # defaults to ``None``). Comparing ``None`` against a populated dict
+        # previously raised AttributeError on ``None.keys()``; treat a missing
+        # argument list on either side as a mismatch contribution instead.
+        if dict1 is None or dict2 is None:
+            return 0.0
         match_score = 0
         matched_keys = set(dict1.keys()).intersection(set(dict2.keys()))
         total_keys = set(dict1.keys()).union(set(dict2.keys()))
