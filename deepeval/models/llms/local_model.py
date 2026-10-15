@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
@@ -11,6 +11,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     require_secret_api_key,
 )
@@ -82,11 +83,17 @@ class LocalModel(DeepEvalBaseLLM):
 
     @retry_local
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
         content = to_openai_content(
-            prompt, text_only_as_string=True, inline_remote_images=True
+            prompt,
+            audio,
+            text_only_as_string=True,
+            inline_remote_images=True,
         )
 
         client = self.load_model(async_mode=False)
@@ -106,11 +113,17 @@ class LocalModel(DeepEvalBaseLLM):
 
     @retry_local
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
         content = to_openai_content(
-            prompt, text_only_as_string=True, inline_remote_images=True
+            prompt,
+            audio,
+            text_only_as_string=True,
+            inline_remote_images=True,
         )
 
         client = self.load_model(async_mode=True)

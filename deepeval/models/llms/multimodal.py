@@ -2,23 +2,40 @@ import base64
 from typing import Dict, List, Optional, Tuple, Type, Union
 
 from deepeval.config.settings import get_settings
-from deepeval.test_case import MLLMImage
+from deepeval.errors import DeepEvalError
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 
+# Mime subtypes that name a common format differently, e.g. audio/x-wav.
+_AUDIO_FORMAT_ALIASES = {
+    "x-wav": "wav",
+    "wave": "wav",
+    "vnd.wave": "wav",
+    "mpeg": "mp3",
+}
 
-def multimodal_parts(prompt: str) -> Optional[List[Union[str, MLLMImage]]]:
-    if not check_if_multimodal(prompt):
+
+def multimodal_parts(
+    prompt: str, audio: Optional[List[Audio]] = None
+) -> Optional[List[Union[str, MLLMImage, Audio]]]:
+    has_images = check_if_multimodal(prompt)
+    if not has_images and not audio:
         return None
-    return convert_to_multi_modal_array(input=prompt)
+    parts = (
+        convert_to_multi_modal_array(input=prompt) if has_images else [prompt]
+    )
+    # Audio belongs to the whole prompt, so it follows the text in order.
+    return parts + list(audio or [])
 
 
 def to_openai_content(
     prompt: str,
+    audio: Optional[List[Audio]] = None,
     *,
     text_only_as_string: bool = False,
     inline_remote_images: bool = False,
 ) -> Union[str, List[Dict]]:
-    parts = multimodal_parts(prompt)
+    parts = multimodal_parts(prompt, audio)
     if parts is None:
         if text_only_as_string:
             return prompt
@@ -31,6 +48,18 @@ def to_openai_content(
         elif isinstance(element, MLLMImage):
             url = _openai_image_url(element, inline_remote_images)
             content.append({"type": "image_url", "image_url": {"url": url}})
+        elif isinstance(element, Audio):
+            # Base64 only, no URLs. OpenAI itself takes "wav" and "mp3";
+            # gateways and local servers may accept more.
+            content.append(
+                {
+                    "type": "input_audio",
+                    "input_audio": {
+                        "data": audio_base64(element),
+                        "format": audio_format(element),
+                    },
+                }
+            )
     return content
 
 
@@ -77,3 +106,22 @@ def decode_image(
         return base64.b64decode(image.dataBase64)
     except Exception:
         raise error_cls(f"Invalid base64 data in MLLMImage: {image._id}")
+
+
+def audio_format(audio: Audio) -> str:
+    subtype = audio.mimeType.split("/")[-1].lower()
+    return _AUDIO_FORMAT_ALIASES.get(subtype, subtype)
+
+
+def audio_base64(audio: Audio) -> str:
+    if audio.dataBase64 is None:
+        audio.get_bytes()  # downloads a remote clip and caches its base64
+    return audio.dataBase64
+
+
+def reject_audio(audio: Optional[List[Audio]], provider: str) -> None:
+    if audio:
+        raise DeepEvalError(
+            f"{provider} doesn't accept audio input. Use a model that does, "
+            "such as GeminiModel or an OpenAI audio model."
+        )

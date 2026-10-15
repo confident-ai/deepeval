@@ -3,7 +3,7 @@ from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
 from deepeval.errors import DeepEvalError
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.models.utils import require_secret_api_key, EvaluationCost
 from deepeval.models.retry_policy import (
@@ -12,6 +12,7 @@ from deepeval.models.retry_policy import (
 from deepeval.utils import require_dependency
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.models.llms.multimodal import (
+    audio_format,
     decode_image,
     fetch_remote_image,
     multimodal_parts,
@@ -196,8 +197,10 @@ class GeminiModel(DeepEvalBaseLLM):
             return False
 
     @retry_gemini
-    def _prompt_contents(self, prompt: str) -> Union[str, List]:
-        parts = multimodal_parts(prompt)
+    def _prompt_contents(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> Union[str, List]:
+        parts = multimodal_parts(prompt, audio)
         if parts is None:
             return prompt
 
@@ -219,6 +222,14 @@ class GeminiModel(DeepEvalBaseLLM):
                     data=image_data, mime_type=mime_type
                 )
                 content.append(image_part)
+            elif isinstance(element, Audio):
+                # Inline bytes; remote clips are downloaded first
+                content.append(
+                    self._module.types.Part.from_bytes(
+                        data=element.get_bytes(),
+                        mime_type=f"audio/{audio_format(element)}",
+                    )
+                )
             else:
                 raise DeepEvalError(f"Invalid input type: {type(element)}")
 
@@ -230,20 +241,24 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         """Generates text from a prompt.
 
         Args:
             prompt: Text prompt
             schema: Optional Pydantic model for structured output
+            audio: Optional audio clips sent after the prompt
 
         Returns:
             Generated text response or structured output as Pydantic model
         """
         client = self.load_model()
 
-        contents = self._prompt_contents(prompt)
+        contents = self._prompt_contents(prompt, audio)
 
         if schema is not None:
             response = client.models.generate_content(
@@ -272,20 +287,24 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         """Asynchronously generates text from a prompt.
 
         Args:
             prompt: Text prompt
             schema: Optional Pydantic model for structured output
+            audio: Optional audio clips sent after the prompt
 
         Returns:
             Generated text response or structured output as Pydantic model
         """
         client = self.load_model()
 
-        contents = self._prompt_contents(prompt)
+        contents = self._prompt_contents(prompt, audio)
 
         if schema is not None:
             response = await client.aio.models.generate_content(

@@ -7,6 +7,7 @@ from deepeval.constants import ProviderSlug as PS
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.gateway_model import DeepEvalBaseGatewayModel
 from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     EvaluationCost,
@@ -121,22 +122,28 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ###############################################
 
     def _generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(to_openai_content(prompt))
+        params = self._completion_params(to_openai_content(prompt, audio))
         if schema:
             params["response_format"] = schema
         response = completion(**params)
         return self._parse_response(response, schema)
 
     async def _a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         from litellm import acompletion
 
-        params = self._completion_params(to_openai_content(prompt))
+        params = self._completion_params(to_openai_content(prompt, audio))
         if schema:
             params["response_format"] = schema
         response = await acompletion(**params)
@@ -147,48 +154,70 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ###############################################
 
     def generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Any, Optional[float]]:
-        return self._run(self._generate_raw_response, prompt, top_logprobs)
+        return self._run(
+            self._generate_raw_response, prompt, top_logprobs, audio
+        )
 
     async def a_generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Any, Optional[float]]:
         return await self._arun(
-            self._a_generate_raw_response, prompt, top_logprobs
+            self._a_generate_raw_response, prompt, top_logprobs, audio
         )
 
     def _generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Any, Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(to_openai_content(prompt))
+        params = self._completion_params(to_openai_content(prompt, audio))
         params.update({"logprobs": True, "top_logprobs": top_logprobs})
         response = completion(**params)
         return response, self._response_cost(response)
 
     async def _a_generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Any, Optional[float]]:
         from litellm import acompletion
 
-        params = self._completion_params(to_openai_content(prompt))
+        params = self._completion_params(to_openai_content(prompt, audio))
         params.update({"logprobs": True, "top_logprobs": top_logprobs})
         response = await acompletion(**params)
         return response, self._response_cost(response)
 
     def generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[List[str], Optional[float]]:
-        return self._run(self._generate_samples, prompt, n, temperature)
+        return self._run(self._generate_samples, prompt, n, temperature, audio)
 
     def _generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[List[str], Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(to_openai_content(prompt))
+        params = self._completion_params(to_openai_content(prompt, audio))
         params.update({"n": n, "temperature": temperature})
         response = completion(**params)
         samples = [choice.message.content for choice in response.choices]

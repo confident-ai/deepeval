@@ -39,6 +39,7 @@ from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.llms.utils import safe_asyncio_run, trim_and_load_json
 from deepeval.models.retry_policy import create_retry_decorator, sdk_retries_for
 from deepeval.models.utils import EvaluationCost, require_secret_api_key
+from deepeval.test_case import Audio
 
 
 def _request_timeout_seconds() -> float:
@@ -88,22 +89,34 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
     ###############################################
 
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        return self._run(self._generate, prompt, schema)
+        return self._run(self._generate, prompt, schema, audio)
 
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        return await self._arun(self._a_generate, prompt, schema)
+        return await self._arun(self._a_generate, prompt, schema, audio)
 
     def _generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         raise NotImplementedError
 
     async def _a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         raise NotImplementedError
 
@@ -186,16 +199,22 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     ###############################################
 
     def _generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         # Reuse the async path so structured-output handling lives in one place.
-        return safe_asyncio_run(self._a_generate(prompt, schema))
+        return safe_asyncio_run(self._a_generate(prompt, schema, audio))
 
     async def _a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         client = self.load_model(async_mode=True)
-        messages = self._build_messages(prompt)
+        messages = self._build_messages(prompt, audio)
 
         if schema:
             # Try the gateway's native JSON-Schema structured output first.
@@ -246,24 +265,35 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     ###############################################
 
     def generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[object, Optional[float]]:
-        return self._run(self._generate_raw_response, prompt, top_logprobs)
+        return self._run(
+            self._generate_raw_response, prompt, top_logprobs, audio
+        )
 
     async def a_generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[object, Optional[float]]:
         return await self._arun(
-            self._a_generate_raw_response, prompt, top_logprobs
+            self._a_generate_raw_response, prompt, top_logprobs, audio
         )
 
     def _generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[object, Optional[float]]:
         client = self.load_model(async_mode=False)
         completion = client.chat.completions.create(
             model=self.name,
-            messages=self._build_messages(prompt),
+            messages=self._build_messages(prompt, audio),
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
@@ -277,12 +307,15 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         return completion, cost
 
     async def _a_generate_raw_response(
-        self, prompt: str, top_logprobs: int = 5
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[object, Optional[float]]:
         client = self.load_model(async_mode=True)
         completion = await client.chat.completions.create(
             model=self.name,
-            messages=self._build_messages(prompt),
+            messages=self._build_messages(prompt, audio),
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
@@ -296,17 +329,25 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
         return completion, cost
 
     def generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[List[str], Optional[float]]:
-        return self._run(self._generate_samples, prompt, n, temperature)
+        return self._run(self._generate_samples, prompt, n, temperature, audio)
 
     def _generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[List[str], Optional[float]]:
         client = self.load_model(async_mode=False)
         response = client.chat.completions.create(
             model=self.name,
-            messages=self._build_messages(prompt),
+            messages=self._build_messages(prompt, audio),
             n=n,
             temperature=temperature,
             **self.generation_kwargs,
@@ -332,8 +373,10 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     # Message + schema helpers
     ###############################################
 
-    def _build_messages(self, prompt: str) -> List[Dict]:
-        content = to_openai_content(prompt, text_only_as_string=True)
+    def _build_messages(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        content = to_openai_content(prompt, audio, text_only_as_string=True)
         return [{"role": "user", "content": content}]
 
     @staticmethod

@@ -1,9 +1,10 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.config.settings import get_settings
+from deepeval.models.llms.multimodal import reject_audio
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     require_costs,
@@ -17,6 +18,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import DEEPSEEK_MODELS_DATA
+from deepeval.test_case import Audio
 from deepeval.utils import require_param
 
 # consistent retry rules
@@ -104,9 +106,14 @@ class DeepSeekModel(DeepEvalBaseLLM):
 
     @retry_deepseek
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
+        # DeepSeek's chat API is text-only, with no audio input.
+        reject_audio(audio, "DeepSeekModel")
         client = self.load_model(async_mode=False)
         if schema:
             completion = client.chat.completions.create(
@@ -139,9 +146,14 @@ class DeepSeekModel(DeepEvalBaseLLM):
 
     @retry_deepseek
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
+        # DeepSeek's chat API is text-only, with no audio input.
+        reject_audio(audio, "DeepSeekModel")
         client = self.load_model(async_mode=True)
         if schema:
             completion = await client.chat.completions.create(

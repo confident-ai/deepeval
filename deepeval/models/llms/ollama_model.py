@@ -8,11 +8,12 @@ from deepeval.utils import require_dependency, require_param
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.multimodal import (
     fetch_remote_image,
     multimodal_parts,
+    reject_audio,
 )
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import OLLAMA_MODELS_DATA
@@ -76,11 +77,14 @@ class OllamaModel(DeepEvalBaseLLM):
 
     @retry_ollama
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model()
 
-        messages = self._prompt_messages(prompt)
+        messages = self._prompt_messages(prompt, audio)
 
         response: ChatResponse = chat_model.chat(
             model=self.name,
@@ -102,11 +106,14 @@ class OllamaModel(DeepEvalBaseLLM):
 
     @retry_ollama
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model(async_mode=True)
 
-        messages = self._prompt_messages(prompt)
+        messages = self._prompt_messages(prompt, audio)
 
         response: ChatResponse = await chat_model.chat(
             model=self.name,
@@ -126,7 +133,11 @@ class OllamaModel(DeepEvalBaseLLM):
             0,
         )
 
-    def _prompt_messages(self, prompt: str) -> List[Dict]:
+    def _prompt_messages(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        # Ollama chat messages carry text and images only, no audio.
+        reject_audio(audio, "OllamaModel")
         parts = multimodal_parts(prompt)
         if parts is None:
             return [{"role": "user", "content": prompt}]

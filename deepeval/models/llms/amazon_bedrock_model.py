@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, SecretStr
@@ -12,11 +12,12 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
 from deepeval.models.llms.multimodal import (
+    audio_format,
     decode_image,
     fetch_remote_image,
     multimodal_parts,
@@ -165,15 +166,21 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        return safe_asyncio_run(self.a_generate(prompt, schema))
+        return safe_asyncio_run(self.a_generate(prompt, schema, audio))
 
     @retry_bedrock
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        payload = self.get_converse_request_body(prompt)
+        payload = self.get_converse_request_body(prompt, audio)
 
         async with self._get_client() as client:
             response = await client.converse(
@@ -300,8 +307,10 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             f"content keys={keys}, stopReason={stop_reason}"
         )
 
-    def get_converse_request_body(self, prompt: str) -> dict:
-        parts = multimodal_parts(prompt)
+    def get_converse_request_body(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> dict:
+        parts = multimodal_parts(prompt, audio)
         if parts is None:
             content = [{"text": prompt}]
         else:
@@ -328,6 +337,17 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                             "image": {
                                 "format": image_format,
                                 "source": {"bytes": image_raw_bytes},
+                            }
+                        }
+                    )
+                elif isinstance(element, Audio):
+                    # Audio blocks need botocore >= 1.42.1, and only some
+                    # Converse models (e.g. Voxtral) accept them.
+                    content.append(
+                        {
+                            "audio": {
+                                "format": audio_format(element),
+                                "source": {"bytes": element.get_bytes()},
                             }
                         }
                     )

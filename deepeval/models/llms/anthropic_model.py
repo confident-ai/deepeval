@@ -3,7 +3,7 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.llms.multimodal import multimodal_parts
+from deepeval.models.llms.multimodal import multimodal_parts, reject_audio
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -15,7 +15,7 @@ from deepeval.models.utils import (
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
 )
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency, require_param
@@ -190,9 +190,12 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     @retry_anthropic
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        content = self._prompt_content(prompt)
+        content = self._prompt_content(prompt, audio)
         module = self._anthropic_module()
         chat_model = self.load_model()
         output_format = self._output_format(module, schema)
@@ -213,9 +216,12 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     @retry_anthropic
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        content = self._prompt_content(prompt)
+        content = self._prompt_content(prompt, audio)
         module = self._anthropic_module()
         chat_model = self.load_model(async_mode=True)
         output_format = self._output_format(module, schema)
@@ -232,7 +238,11 @@ class AnthropicModel(DeepEvalBaseLLM):
             )
         return self._parse_message(message, schema)
 
-    def _prompt_content(self, prompt) -> List[Dict]:
+    def _prompt_content(
+        self, prompt, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        # The Messages API has no audio content block.
+        reject_audio(audio, "AnthropicModel")
         parts = multimodal_parts(prompt)
         if parts is None:
             return [{"type": "text", "text": prompt}]

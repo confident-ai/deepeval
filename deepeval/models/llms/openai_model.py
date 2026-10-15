@@ -14,6 +14,7 @@ from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
     require_costs,
@@ -147,11 +148,14 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     @retry_openai
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -210,11 +214,14 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     @retry_openai
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -287,6 +294,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
 
@@ -299,7 +307,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = client.chat.completions.create(
             model=self.name,
@@ -321,6 +329,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
 
@@ -333,7 +342,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = await client.chat.completions.create(
             model=self.name,
@@ -352,10 +361,14 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     @retry_openai
     def generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> list[str]:
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         response = client.chat.completions.create(
             model=self.name,

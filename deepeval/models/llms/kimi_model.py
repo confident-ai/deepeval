@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel, SecretStr
 
@@ -9,7 +9,8 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.models.llms.multimodal import reject_audio, to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
@@ -103,10 +104,13 @@ class KimiModel(DeepEvalBaseLLM):
 
     @retry_kimi
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
-        content = to_openai_content(prompt)
+        content = self._prompt_content(prompt, audio)
 
         client = self.load_model(async_mode=False)
         if schema and self.supports_json_mode() is True:
@@ -144,10 +148,13 @@ class KimiModel(DeepEvalBaseLLM):
 
     @retry_kimi
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
-        content = to_openai_content(prompt)
+        content = self._prompt_content(prompt, audio)
 
         client = self.load_model(async_mode=True)
         if schema and self.supports_json_mode() is True:
@@ -182,6 +189,13 @@ class KimiModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
+
+    def _prompt_content(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        # Moonshot's chat API takes text and images, with no audio input.
+        reject_audio(audio, "KimiModel")
+        return to_openai_content(prompt)
 
     ###############################################
     # Utilities

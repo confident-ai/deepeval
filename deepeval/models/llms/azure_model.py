@@ -1,6 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from typing import Optional, Tuple, Union, Dict, Callable, Awaitable
+from typing import Optional, Tuple, Union, Dict, List, Callable, Awaitable
 from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
@@ -16,6 +16,7 @@ from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
 from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
@@ -174,11 +175,14 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     @retry_azure
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -248,11 +252,14 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     @retry_azure
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -330,10 +337,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -358,10 +366,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
-        content = to_openai_content(prompt)
+        content = to_openai_content(prompt, audio)
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
