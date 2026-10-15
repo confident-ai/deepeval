@@ -1,5 +1,4 @@
-import base64
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Optional, Tuple, Union, Dict
 from contextlib import asynccontextmanager
 
 from pydantic import BaseModel, SecretStr
@@ -15,9 +14,9 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.test_case import MLLMImage
 from deepeval.errors import DeepEvalError
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
+from deepeval.models.llms.multimodal import decode_image, multimodal_parts
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
@@ -170,11 +169,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            payload = self.generate_payload(prompt)
-        else:
-            payload = self.get_converse_request_body(prompt)
+        payload = self.get_converse_request_body(prompt)
 
         async with self._get_client() as client:
             response = await client.converse(
@@ -194,46 +189,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         else:
             json_output = trim_and_load_json(message)
             return schema.model_validate(json_output), cost
-
-    def generate_payload(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"text": element})
-            elif isinstance(element, MLLMImage):
-                # Bedrock doesn't support external URLs - must convert everything to bytes
-                element.ensure_images_loaded()
-
-                image_format = (
-                    (element.mimeType or "image/jpeg").split("/")[-1].upper()
-                )
-                image_format = "JPEG" if image_format == "JPG" else image_format
-
-                try:
-                    image_raw_bytes = base64.b64decode(element.dataBase64)
-                except Exception:
-                    raise DeepEvalError(
-                        f"Invalid base64 data in MLLMImage: {element._id}"
-                    )
-
-                content.append(
-                    {
-                        "image": {
-                            "format": image_format,
-                            "source": {"bytes": image_raw_bytes},
-                        }
-                    }
-                )
-
-        return {
-            "messages": [{"role": "user", "content": content}],
-            "inferenceConfig": {
-                **self.generation_kwargs,
-            },
-        }
 
     #########################
     # Capabilities          #
@@ -342,9 +297,38 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         )
 
     def get_converse_request_body(self, prompt: str) -> dict:
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            content = [{"text": prompt}]
+        else:
+            content = []
+            for element in parts:
+                if isinstance(element, str):
+                    content.append({"text": element})
+                elif isinstance(element, MLLMImage):
+                    # Bedrock doesn't support external URLs - must convert everything to bytes
+                    image_format = (
+                        (element.mimeType or "image/jpeg")
+                        .split("/")[-1]
+                        .upper()
+                    )
+                    image_format = (
+                        "JPEG" if image_format == "JPG" else image_format
+                    )
+                    image_raw_bytes = decode_image(
+                        element, error_cls=DeepEvalError
+                    )
+                    content.append(
+                        {
+                            "image": {
+                                "format": image_format,
+                                "source": {"bytes": image_raw_bytes},
+                            }
+                        }
+                    )
 
         return {
-            "messages": [{"role": "user", "content": [{"text": prompt}]}],
+            "messages": [{"role": "user", "content": content}],
             "inferenceConfig": {
                 **self.generation_kwargs,
             },

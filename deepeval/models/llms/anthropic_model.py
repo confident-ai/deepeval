@@ -3,6 +3,7 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import multimodal_parts
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -15,7 +16,6 @@ from deepeval.models.utils import (
     EvaluationCost,
 )
 from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency, require_param
@@ -233,10 +233,36 @@ class AnthropicModel(DeepEvalBaseLLM):
         return self._parse_message(message, schema)
 
     def _prompt_content(self, prompt) -> List[Dict]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            return self.generate_content(prompt)
-        return [{"type": "text", "text": prompt}]
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            return [{"type": "text", "text": prompt}]
+
+        content = []
+        for element in parts:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": element.dataBase64,
+                            },
+                        }
+                    )
+        return content
 
     def _output_format(
         self, module, schema: Optional[BaseModel]
@@ -344,34 +370,6 @@ class AnthropicModel(DeepEvalBaseLLM):
                 "budget_tokens": self._thinking_budget_tokens,
             }
         }
-
-    def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {"type": "url", "url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    mime_type = element.mimeType or "image/jpeg"
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": mime_type,
-                                "data": element.dataBase64,
-                            },
-                        }
-                    )
-        return content
 
     ###############################################
     # Utilities

@@ -1,7 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Any, Optional, Tuple, Union, Dict, List
 import warnings
-from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
 from openai import (
     OpenAI,
@@ -9,12 +8,12 @@ from openai import (
 )
 
 from deepeval.errors import DeepEvalError
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.tracing.context import update_llm_span, update_current_span
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.utils import (
     parse_model_name,
     require_costs,
@@ -152,11 +151,7 @@ class OpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         messages = [{"role": "user", "content": content}]
 
@@ -219,11 +214,7 @@ class OpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         messages = [{"role": "user", "content": content}]
 
@@ -298,7 +289,6 @@ class OpenAIModel(DeepEvalBaseLLM):
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
-        is_multimodal = check_if_multimodal(prompt)
 
         if self.supports_log_probs() is False:
             raise DeepEvalError(
@@ -309,11 +299,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
-        if is_multimodal:
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
         messages = [{"role": "user", "content": content}]
         completion = client.chat.completions.create(
             model=self.name,
@@ -337,7 +323,6 @@ class OpenAIModel(DeepEvalBaseLLM):
         top_logprobs: int = 5,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
-        is_multimodal = check_if_multimodal(prompt)
 
         if self.supports_log_probs() is False:
             raise DeepEvalError(
@@ -348,11 +333,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
-        if is_multimodal:
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
         messages = [{"role": "user", "content": content}]
         completion = await client.chat.completions.create(
             model=self.name,
@@ -374,11 +355,7 @@ class OpenAIModel(DeepEvalBaseLLM):
         self, prompt: str, n: int, temperature: float
     ) -> list[str]:
         client = self.load_model(async_mode=False)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
         messages = [{"role": "user", "content": content}]
         response = client.chat.completions.create(
             model=self.name,
@@ -443,35 +420,6 @@ class OpenAIModel(DeepEvalBaseLLM):
     #########
     # Model #
     #########
-
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    data_uri = (
-                        f"data:{element.mimeType};base64,{element.dataBase64}"
-                    )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
-        return content
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

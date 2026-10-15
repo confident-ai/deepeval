@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict, List
+from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
@@ -8,13 +8,12 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.utils import (
     require_costs,
     require_secret_api_key,
     EvaluationCost,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import GROK_MODELS_DATA
@@ -113,11 +112,7 @@ class GrokModel(DeepEvalBaseLLM):
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
@@ -159,11 +154,7 @@ class GrokModel(DeepEvalBaseLLM):
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
             )
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
@@ -192,34 +183,6 @@ class GrokModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
-
-    def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ):
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    data_uri = (
-                        f"data:{element.mimeType};base64,{element.dataBase64}"
-                    )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
-        return content
 
     ###############################################
     # Utilities

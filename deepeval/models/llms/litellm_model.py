@@ -6,18 +6,14 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.gateway_model import DeepEvalBaseGatewayModel
+from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import (
     EvaluationCost,
     normalize_kwargs_and_extract_aliases,
     require_secret_api_key,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import (
-    check_if_multimodal,
-    convert_to_multi_modal_array,
-    require_param,
-)
+from deepeval.utils import require_param
 
 _ALIAS_MAP = {
     "base_url": ["api_base"],
@@ -129,7 +125,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(self._build_content(prompt))
+        params = self._completion_params(to_openai_content(prompt))
         if schema:
             params["response_format"] = schema
         response = completion(**params)
@@ -140,7 +136,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
         from litellm import acompletion
 
-        params = self._completion_params(self._build_content(prompt))
+        params = self._completion_params(to_openai_content(prompt))
         if schema:
             params["response_format"] = schema
         response = await acompletion(**params)
@@ -167,7 +163,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ) -> Tuple[Any, Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(self._build_content(prompt))
+        params = self._completion_params(to_openai_content(prompt))
         params.update({"logprobs": True, "top_logprobs": top_logprobs})
         response = completion(**params)
         return response, self._response_cost(response)
@@ -177,7 +173,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ) -> Tuple[Any, Optional[float]]:
         from litellm import acompletion
 
-        params = self._completion_params(self._build_content(prompt))
+        params = self._completion_params(to_openai_content(prompt))
         params.update({"logprobs": True, "top_logprobs": top_logprobs})
         response = await acompletion(**params)
         return response, self._response_cost(response)
@@ -192,7 +188,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
     ) -> Tuple[List[str], Optional[float]]:
         from litellm import completion
 
-        params = self._completion_params(self._build_content(prompt))
+        params = self._completion_params(to_openai_content(prompt))
         params.update({"n": n, "temperature": temperature})
         response = completion(**params)
         samples = [choice.message.content for choice in response.choices]
@@ -224,11 +220,6 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         params.update(self.generation_kwargs)
         return params
 
-    def _build_content(self, prompt: str) -> List[Dict]:
-        if check_if_multimodal(prompt):
-            return self.generate_content(convert_to_multi_modal_array(prompt))
-        return [{"type": "text", "text": prompt}]
-
     def _parse_response(
         self, response: Any, schema: Optional[BaseModel]
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
@@ -245,22 +236,6 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         return self.calculate_cost(
             input_tokens, output_tokens, response=response
         )
-
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ) -> List[Dict]:
-        content: List[Dict] = []
-        for element in multimodal_input or []:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    url = element.url
-                else:
-                    element.ensure_images_loaded()
-                    url = f"data:{element.mimeType};base64,{element.dataBase64}"
-                content.append({"type": "image_url", "image_url": {"url": url}})
-        return content
 
     def supports_multimodal(self) -> bool:
         return True

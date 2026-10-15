@@ -1,5 +1,4 @@
 import json
-import base64
 from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
@@ -10,12 +9,13 @@ from deepeval.models.utils import require_secret_api_key, EvaluationCost
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.utils import (
-    convert_to_multi_modal_array,
-    check_if_multimodal,
-    require_dependency,
-)
+from deepeval.utils import require_dependency
 from deepeval.models.base_model import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import (
+    decode_image,
+    fetch_remote_image,
+    multimodal_parts,
+)
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import (
     GEMINI_MODELS_DATA,
@@ -196,46 +196,22 @@ class GeminiModel(DeepEvalBaseLLM):
             return False
 
     @retry_gemini
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = (
-            multimodal_input if multimodal_input is not None else []
-        )
-        content = []
+    def _prompt_contents(self, prompt: str) -> Union[str, List]:
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            return prompt
 
-        for element in multimodal_input:
+        content = []
+        for element in parts:
             if isinstance(element, str):
                 content.append(element)
             elif isinstance(element, MLLMImage):
                 # Gemini doesn't support direct external URLs
                 # Must convert all images to bytes
                 if element.url and not element.local:
-                    import requests
-
-                    settings = get_settings()
-
-                    response = requests.get(
-                        element.url,
-                        timeout=(
-                            settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                            settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                        ),
-                    )
-                    response.raise_for_status()
-                    image_data = response.content
-                    mime_type = response.headers.get(
-                        "content-type", element.mimeType or "image/jpeg"
-                    )
+                    image_data, mime_type = fetch_remote_image(element)
                 else:
-                    element.ensure_images_loaded()
-                    try:
-                        image_data = base64.b64decode(element.dataBase64)
-                    except Exception:
-                        raise ValueError(
-                            f"Invalid base64 data in MLLMImage: {element._id}"
-                        )
-
+                    image_data = decode_image(element)
                     mime_type = element.mimeType or "image/jpeg"
 
                 # Create Part from bytes
@@ -267,14 +243,12 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         client = self.load_model()
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_content(prompt)
+        contents = self._prompt_contents(prompt)
 
         if schema is not None:
             response = client.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
@@ -287,7 +261,7 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             response = client.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     **self._temperature_kwargs(),
@@ -311,14 +285,12 @@ class GeminiModel(DeepEvalBaseLLM):
         """
         client = self.load_model()
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_content(prompt)
+        contents = self._prompt_contents(prompt)
 
         if schema is not None:
             response = await client.aio.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
@@ -331,7 +303,7 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             response = await client.aio.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     **self._temperature_kwargs(),

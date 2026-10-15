@@ -35,11 +35,10 @@ from pydantic import BaseModel, SecretStr
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.llms.utils import safe_asyncio_run, trim_and_load_json
 from deepeval.models.retry_policy import create_retry_decorator, sdk_retries_for
 from deepeval.models.utils import EvaluationCost, require_secret_api_key
-from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 
 
 def _request_timeout_seconds() -> float:
@@ -334,29 +333,8 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     ###############################################
 
     def _build_messages(self, prompt: str) -> List[Dict]:
-        if check_if_multimodal(prompt):
-            content = self.generate_content(
-                convert_to_multi_modal_array(input=prompt)
-            )
-        else:
-            content = prompt
+        content = to_openai_content(prompt, text_only_as_string=True)
         return [{"role": "user", "content": content}]
-
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ) -> List[Dict]:
-        content: List[Dict] = []
-        for element in multimodal_input or []:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    url = element.url
-                else:
-                    element.ensure_images_loaded()
-                    url = f"data:{element.mimeType};base64,{element.dataBase64}"
-                content.append({"type": "image_url", "image_url": {"url": url}})
-        return content
 
     @staticmethod
     def _set_additional_properties_false(node: Any) -> Any:

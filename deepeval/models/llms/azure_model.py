@@ -1,6 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from typing import Optional, Tuple, Union, Dict, List, Callable, Awaitable
+from typing import Optional, Tuple, Union, Dict, Callable, Awaitable
 from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
@@ -11,15 +11,11 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import (
-    convert_to_multi_modal_array,
-    check_if_multimodal,
-    require_param,
-)
+from deepeval.utils import require_param
 from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
+from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
@@ -182,11 +178,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -260,11 +252,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -345,11 +333,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -377,11 +361,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = to_openai_content(prompt)
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -400,35 +380,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(input_tokens, output_tokens)
 
         return completion, cost
-
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    data_uri = (
-                        f"data:{element.mimeType};base64,{element.dataBase64}"
-                    )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
-        return content
 
     ###############################################
     # Utilities

@@ -8,9 +8,12 @@ from deepeval.utils import require_dependency, require_param
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.utils import convert_to_multi_modal_array, check_if_multimodal
 from deepeval.test_case import MLLMImage
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import (
+    fetch_remote_image,
+    multimodal_parts,
+)
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import OLLAMA_MODELS_DATA
 
@@ -77,11 +80,7 @@ class OllamaModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model()
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            messages = self.generate_messages(prompt)
-        else:
-            messages = [{"role": "user", "content": prompt}]
+        messages = self._prompt_messages(prompt)
 
         response: ChatResponse = chat_model.chat(
             model=self.name,
@@ -107,11 +106,7 @@ class OllamaModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         chat_model = self.load_model(async_mode=True)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            messages = self.generate_messages(prompt)
-        else:
-            messages = [{"role": "user", "content": prompt}]
+        messages = self._prompt_messages(prompt)
 
         response: ChatResponse = await chat_model.chat(
             model=self.name,
@@ -131,12 +126,13 @@ class OllamaModel(DeepEvalBaseLLM):
             0,
         )
 
-    def generate_messages(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ):
-        messages = []
+    def _prompt_messages(self, prompt: str) -> List[Dict]:
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            return [{"role": "user", "content": prompt}]
 
-        for element in multimodal_input:
+        messages = []
+        for element in parts:
             if isinstance(element, str):
                 messages.append(
                     {
@@ -150,20 +146,11 @@ class OllamaModel(DeepEvalBaseLLM):
                     from PIL import Image
                     import io
 
-                    settings = get_settings()
                     try:
-                        response = requests.get(
-                            element.url,
-                            stream=True,
-                            timeout=(
-                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                            ),
-                        )
-                        response.raise_for_status()
+                        image_data, _ = fetch_remote_image(element)
 
                         # Convert to JPEG and encode
-                        image = Image.open(io.BytesIO(response.content))
+                        image = Image.open(io.BytesIO(image_data))
                         buffered = io.BytesIO()
 
                         # Convert RGBA/LA/P to RGB for JPEG
