@@ -177,19 +177,11 @@ def _verdict_for_audio_exchange(
 
 
 class TranscriptionAccuracyMetric(BaseConversationalMetric):
-    @property
-    def _required_test_case_params(self) -> List[MultiTurnParams]:
-        if self.compare_against == "audio":
-            return [
-                MultiTurnParams.CONTENT,
-                MultiTurnParams.ROLE,
-                MultiTurnParams.AUDIO,
-            ]
-        return [
-            MultiTurnParams.CONTENT,
-            MultiTurnParams.ROLE,
-            MultiTurnParams.PROVIDER_TRANSCRIPT,
-        ]
+    _required_test_case_params = [
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.ROLE,
+        MultiTurnParams.PROVIDER_TRANSCRIPT,
+    ]
 
     def __init__(
         self,
@@ -231,6 +223,12 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
                 "`stt_model` is only used when compare_against='audio'."
             )
         self.compare_against = compare_against
+        if compare_against == "audio":
+            self._required_test_case_params = [
+                MultiTurnParams.CONTENT,
+                MultiTurnParams.ROLE,
+                MultiTurnParams.AUDIO,
+            ]
         self.stt_model = (
             _initialize_stt_model_for_audio(stt_model)
             if compare_against == "audio"

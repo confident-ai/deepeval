@@ -6,7 +6,7 @@ import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import AudioGlitchMetric
-from deepeval.metrics.voice._analysis import _pitch_and_periodicity
+from deepeval.metrics.voice._analysis import pitch_and_periodicity
 from deepeval.metrics.audio_glitch import AudioGlitchTemplate
 from deepeval.metrics.audio_glitch._detectors import (
     _silence_profile,
@@ -178,7 +178,7 @@ def test_pitch_and_periodicity_finds_tones_above_the_voice_range(hz):
 
 
 def test_pitch_and_periodicity_is_silent_on_quiet_frames():
-    assert _pitch_and_periodicity(array("h", [0] * 320), RATE) is None
+    assert pitch_and_periodicity(array("h", [0] * 320), RATE) is None
 
 
 def test_speech_like_audio_holds_no_tone_length_run():

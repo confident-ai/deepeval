@@ -50,19 +50,19 @@ def decode_audio(audio: Audio) -> Tuple[array, int]:
     return samples, sample_rate
 
 
-def _rms(samples: Sequence[int]) -> float:
+def rms(samples: Sequence[int]) -> float:
     if not samples:
         return 0.0
     return math.sqrt(sum(sample * sample for sample in samples) / len(samples))
 
 
-def _dbfs(rms: float) -> float:
-    if rms <= 0:
+def dbfs(level: float) -> float:
+    if level <= 0:
         return -96.0
-    return 20.0 * math.log10(rms / 32768.0)
+    return 20.0 * math.log10(level / 32768.0)
 
 
-def _frame_samples(
+def frame_samples(
     samples: Sequence[int], sample_rate: int, frame_ms: int = 20
 ) -> List[Sequence[int]]:
     width = max(1, int(sample_rate * frame_ms / 1000))
@@ -74,7 +74,7 @@ def _frame_samples(
 
 
 def _pitch_hz(frame: Sequence[int], sample_rate: int) -> Optional[float]:
-    if _rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
+    if rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
         return None
     step = max(1, sample_rate // 8000)
     data = frame[::step]
@@ -103,7 +103,7 @@ def _pitch_hz(frame: Sequence[int], sample_rate: int) -> Optional[float]:
     return rate / best_lag
 
 
-def _pitch_and_periodicity(
+def pitch_and_periodicity(
     frame: Sequence[int],
     sample_rate: int,
     *,
@@ -117,7 +117,7 @@ def _pitch_and_periodicity(
     refined, and the shortest lag close to the best one wins so a
     sub-harmonic is not reported.
     """
-    if _rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
+    if rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
         return None
     step = max(1, sample_rate // 8000)
     data = frame[::step]
@@ -166,8 +166,8 @@ def _pitch_and_periodicity(
 
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
-    frames = _frame_samples(samples, sample_rate)
-    frame_rms = [_rms(frame) for frame in frames]
+    frames = frame_samples(samples, sample_rate)
+    frame_rms = [rms(frame) for frame in frames]
     silent = [value < audio_utils.DEFAULT_SILENCE_RMS for value in frame_rms]
 
     longest_silence = current_silence = 0
@@ -230,7 +230,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     )
     pitches = [
         pitch
-        for frame in _frame_samples(samples, sample_rate, frame_ms=40)
+        for frame in frame_samples(samples, sample_rate, frame_ms=40)
         if (pitch := _pitch_hz(frame, sample_rate)) is not None
     ]
 
@@ -238,7 +238,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     fingerprints = {}
     for start in range(0, len(samples) - loop_window + 1, loop_window):
         window = samples[start : start + loop_window]
-        if _rms(window) < audio_utils.DEFAULT_SILENCE_RMS:
+        if rms(window) < audio_utils.DEFAULT_SILENCE_RMS:
             continue
         fingerprint = hashlib.blake2b(
             array("h", window).tobytes(), digest_size=8
@@ -250,7 +250,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
-        rms_dbfs=_dbfs(_rms(samples)),
+        rms_dbfs=dbfs(rms(samples)),
         clipping_fraction=sum(abs(sample) >= 32760 for sample in samples)
         / len(samples),
         silence_fraction=sum(silent) / len(silent) if silent else 1.0,
@@ -261,8 +261,8 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         zero_crossing_rate=crossings / max(1, len(samples) - 1),
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
-        starts_abruptly=_rms(samples[:edge_size]) > edge_threshold,
-        ends_abruptly=_rms(samples[-edge_size:]) > edge_threshold,
+        starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
+        ends_abruptly=rms(samples[-edge_size:]) > edge_threshold,
     )
 
 

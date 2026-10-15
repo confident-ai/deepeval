@@ -12,12 +12,12 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from deepeval.metrics.voice._analysis import (
     AudioMeasurements,
-    _dbfs,
-    _pitch_and_periodicity,
-    _frame_samples,
-    _rms,
     analyze_audio,
+    dbfs,
     decode_audio,
+    frame_samples,
+    pitch_and_periodicity,
+    rms,
 )
 from deepeval.test_case import Audio, ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
@@ -152,14 +152,14 @@ def _tone_frames(samples: array, sample_rate: int) -> List[ToneFrame]:
     data.frombytes(pcm)
     frames = []
     for index, frame in enumerate(
-        _frame_samples(data, rate, frame_ms=TONE_FRAME_MS)
+        frame_samples(data, rate, frame_ms=TONE_FRAME_MS)
     ):
-        pitch = _pitch_and_periodicity(
+        pitch = pitch_and_periodicity(
             frame, rate, min_hz=TONE_MIN_HZ, max_hz=TONE_MAX_HZ
         )
         if pitch is None:
             continue
-        frames.append(ToneFrame(index, pitch[0], pitch[1], _dbfs(_rms(frame))))
+        frames.append(ToneFrame(index, pitch[0], pitch[1], dbfs(rms(frame))))
     return frames
 
 
@@ -234,14 +234,12 @@ def _stable_runs(frames: Sequence[ToneFrame]) -> List[StableRun]:
 
 
 def _silence_profile(samples: array, sample_rate: int) -> SilenceProfile:
-    frames = _frame_samples(samples, sample_rate, frame_ms=DEAD_FRAME_MS)
+    frames = frame_samples(samples, sample_rate, frame_ms=DEAD_FRAME_MS)
     dead = [
         max(frame) <= DEAD_MAX_ABS_SAMPLE and min(frame) >= -DEAD_MAX_ABS_SAMPLE
         for frame in frames
     ]
-    voiced = [
-        _rms(frame) >= audio_utils.DEFAULT_SILENCE_RMS for frame in frames
-    ]
+    voiced = [rms(frame) >= audio_utils.DEFAULT_SILENCE_RMS for frame in frames]
     frame_seconds = DEAD_FRAME_MS / 1000
     runs: List[DeadRun] = []
     pause_dead_fractions: List[float] = []

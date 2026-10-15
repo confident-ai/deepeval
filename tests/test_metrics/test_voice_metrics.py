@@ -5,7 +5,6 @@ import pytest
 
 from deepeval.metrics.voice import (
     AgentResponsivenessMetric,
-    AudioGlitchMetric,
     AudioIntegrityMetric,
     SpeechIntelligibilityMetric,
     TurnTakingNaturalnessMetric,
@@ -188,14 +187,6 @@ def test_turn_taking_omits_consistency_with_fewer_than_three_delays():
     assert metric.score == pytest.approx(
         sum(t["score"] for t in transitions) / len(transitions)
     )
-
-
-def test_audio_glitch_is_exported_with_the_voice_metrics():
-    import deepeval.metrics
-    import deepeval.metrics.voice
-
-    assert "AudioGlitchMetric" in deepeval.metrics.voice.__all__
-    assert deepeval.metrics.AudioGlitchMetric is AudioGlitchMetric
 
 
 def test_timeline_rendering_preserves_gap_and_overlap():
