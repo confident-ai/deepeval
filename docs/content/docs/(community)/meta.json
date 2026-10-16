@@ -2,6 +2,7 @@
   "title": "Community",
   "pages": [
     "community-metrics-overview",
+    "metrics-calibration",
     "metrics-citation-faithfulness",
     "metrics-agent-loop-detection",
     "metrics-tool-permission"
