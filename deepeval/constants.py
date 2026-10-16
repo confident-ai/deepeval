@@ -44,6 +44,7 @@ class ProviderSlug(str, Enum):
     PORTKEY = "portkey"
     # System One (typed decision) provider; not an LLM.
     TYPESAFE = "typesafe"
+    THEGRID = "thegrid"
     # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
     # to carry a retry policy, not as selectable LLM providers.
     ASSEMBLYAI = "assemblyai"
