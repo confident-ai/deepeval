@@ -661,9 +661,7 @@ class WebSocketConnector(BaseWebSocketConnector):
             if transcript:
                 event.transcript = transcript
         if schema.receive_provider_transcript_key:
-            heard = schema.read(
-                message, schema.receive_provider_transcript_key
-            )
+            heard = schema.read(message, schema.receive_provider_transcript_key)
             if heard:
                 event.provider_transcript = heard
         if (
