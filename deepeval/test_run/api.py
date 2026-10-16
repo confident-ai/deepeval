@@ -134,6 +134,7 @@ class TurnApi(BaseModel):
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     comments: Optional[str] = Field(None)
+    metadata: Optional[Dict] = Field(None)
 
 
 class ConversationalApiTestCase(BaseModel):
