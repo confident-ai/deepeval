@@ -1,6 +1,6 @@
 import re
 import uuid
-from jinja2 import Template
+from jinja2.sandbox import SandboxedEnvironment
 from typing import (
     Any,
     Dict,
@@ -78,8 +78,18 @@ def interpolate_dollar_brackets(text: str, **kwargs: Any) -> str:
     return re.sub(r"\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}", replace_match, text)
 
 
+# A prompt template can originate from an untrusted source (a prompt pulled from
+# the Confident AI cloud, a shared/team prompt, or a file). Rendering it with a
+# plain ``jinja2.Template`` evaluates the whole template body, which allows
+# Server-Side Template Injection (e.g. ``{{ ''.__class__.__mro__[1].__subclasses__() }}``)
+# and can lead to remote code execution. A ``SandboxedEnvironment`` blocks access
+# to unsafe attributes/methods (raising ``jinja2.exceptions.SecurityError``) while
+# still supporting normal variable substitution, filters and control structures.
+_JINJA_SANDBOX = SandboxedEnvironment()
+
+
 def interpolate_jinja(text: str, **kwargs: Any) -> str:
-    template = Template(text)
+    template = _JINJA_SANDBOX.from_string(text)
     return template.render(**kwargs)
 
 
