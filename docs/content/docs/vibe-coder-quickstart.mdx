@@ -7,9 +7,36 @@ languages: [python, typescript]
 
 import { GitMerge, Terminal } from "lucide-react";
 
-This page sets your coding agent (Cursor, Claude Code, Codex, Windsurf, OpenCode, …) up to drive a real DeepEval loop on your repo — install the skill, point it at our LLM-friendly docs, paste the starter prompt, and you're off.
+This page sets your coding agent (Cursor, Claude Code, Codex, Windsurf, OpenCode, …) up to drive a real DeepEval loop on your repo — run the setup wizard for a first evaluation, install the skill, point it at our LLM-friendly docs, paste the starter prompt, and you're off.
 
 If you want to understand the loop _before_ wiring it up, read [Vibe Coding with DeepEval](/docs/vibe-coding) first.
+
+## Run the Setup Wizard
+
+The fastest way to a first evaluation is the setup wizard. Run it from an interactive terminal at the root of your repo:
+
+<Switch>
+
+<Case id="python">
+
+```bash
+pip install -U deepeval
+deepeval setup
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval setup
+```
+
+</Case>
+
+</Switch>
+
+The wizard checks your repo and DeepEval install, sets up the judge model that powers LLM metrics, then hands the evaluation to your coding agent: Claude Code, Codex, or Cursor CLI when one is installed, or a prompt you paste into any other agent. It ends by running the evaluation once and reporting what it found. It can also sign you in to Confident AI, or skip that and keep everything local. Keys are written to a git-ignored `.env.local` and never passed to the agent's prompt, and the wizard doesn't commit or push. It supports macOS and Linux for now; see the [`setup` command](/docs/command-line-interface#setup) for its flags.
 
 ## Install the Agent Skill
 
