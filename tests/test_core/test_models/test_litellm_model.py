@@ -212,3 +212,93 @@ def test_litellm_model_name_resolves_provider_with_configured_region(
     assert calls["model"] == "bedrock_mantle/openai.gpt-oss-120b"
     assert calls["api_base"] is None
     assert calls["litellm_params"] == {"aws_region_name": "us-east-1"}
+
+
+##############################
+# temperature fallback tests #
+##############################
+
+
+class _FakeUnsupportedParamsError(Exception):
+    pass
+
+
+def _patch_completion(monkeypatch, reject_temperature=True):
+    """Make `litellm.completion`/`acompletion` reject any `temperature` the
+    way LiteLLM does client-side for models that only accept the default,
+    and record the params of every call."""
+    litellm_module = sys.modules["litellm"]
+    calls = []
+
+    def fake_completion(**params):
+        calls.append(params)
+        if reject_temperature and "temperature" in params:
+            raise _FakeUnsupportedParamsError(
+                "o3 does not support temperature=0.0. Only temperature=1 is "
+                "supported."
+            )
+        message = SimpleNamespace(content="OK")
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=message)], usage=None
+        )
+
+    async def fake_acompletion(**params):
+        return fake_completion(**params)
+
+    monkeypatch.setattr(litellm_module, "completion", fake_completion)
+    monkeypatch.setattr(litellm_module, "acompletion", fake_acompletion)
+    monkeypatch.setattr(
+        litellm_module,
+        "UnsupportedParamsError",
+        _FakeUnsupportedParamsError,
+        raising=False,
+    )
+    return calls
+
+
+def test_litellm_drops_default_temperature_when_model_rejects_it(
+    monkeypatch, settings
+):
+    calls = _patch_completion(monkeypatch)
+    model = _mk_litellm_model(settings)
+
+    assert model.generate("hi") == ("OK", None)
+    assert calls[0]["temperature"] == 0.0
+    assert "temperature" not in calls[1]
+
+    # Remembered for later calls: no second rejected request.
+    model.generate("hi")
+    assert len(calls) == 3
+    assert "temperature" not in calls[2]
+
+
+async def test_litellm_a_generate_drops_default_temperature_when_model_rejects_it(
+    monkeypatch, settings
+):
+    calls = _patch_completion(monkeypatch)
+    model = _mk_litellm_model(settings)
+
+    assert await model.a_generate("hi") == ("OK", None)
+    assert [("temperature" in c) for c in calls] == [True, False]
+
+
+def test_litellm_keeps_explicit_temperature_when_model_rejects_it(
+    monkeypatch, settings
+):
+    calls = _patch_completion(monkeypatch)
+    model = _mk_litellm_model(settings, temperature=0)
+
+    with pytest.raises(_FakeUnsupportedParamsError):
+        model.generate("hi")
+    assert len(calls) == 1
+
+
+def test_litellm_sends_default_temperature_when_model_accepts_it(
+    monkeypatch, settings
+):
+    calls = _patch_completion(monkeypatch, reject_temperature=False)
+    model = _mk_litellm_model(settings)
+
+    model.generate("hi")
+    assert len(calls) == 1
+    assert calls[0]["temperature"] == 0.0
