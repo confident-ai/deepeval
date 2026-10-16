@@ -19,7 +19,7 @@ from deepeval.config.eval_mode import (
     EvalMode,
     resolve_eval_mode,
 )
-from deepeval.errors import DeepEvalError
+from deepeval.errors import ContextWindowExceededError, DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.base_metric import (
     BaseMetric,
@@ -208,6 +208,8 @@ def _is_permanent(exc: BaseException) -> bool:
 
 def _describe_failure(exc: BaseException) -> str:
     if isinstance(exc, SystemOneContextLimitError):
+        if exc.limit_tokens is None:
+            return "context limit (rejected by Jev)"
         return (
             f"context limit ({exc.estimated_tokens} est. tokens > "
             f"{exc.limit_tokens})"
@@ -237,11 +239,11 @@ def _system_one_error_types() -> Tuple[type, ...]:
 
 def context_limit_error(
     metric: Any, exc: SystemOneContextLimitError
-) -> DeepEvalError:
+) -> ContextWindowExceededError:
     """The error a `system_one` metric raises when its test case does not
     fit in Jev's context: Jev cannot judge it, and the LLM can."""
     name = getattr(metric, "__name__", type(metric).__name__)
-    return DeepEvalError(
+    return ContextWindowExceededError(
         f"{name} could not run on System One: {exc} This test case is too "
         f"large for Jev to judge in one request. Switch this metric back to "
         f'the LLM with `eval_mode="{EvalMode.LLM}"` or '
