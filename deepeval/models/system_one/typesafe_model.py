@@ -38,8 +38,6 @@ retry_typesafe = create_retry_decorator(PS.TYPESAFE)
 
 @contextmanager
 def _jev_max_tokens_as_context_limit(state: Any):
-    # The pre-check only estimates tokens, so dense text (ids, base64, CJK)
-    # can pass it and still be rejected by Jev's exact count.
     try:
         yield
     except Exception as error:

@@ -245,7 +245,9 @@ def context_limit_error(
     name = getattr(metric, "__name__", type(metric).__name__)
     return ContextWindowExceededError(
         f"{name} could not run on System One: {exc} This test case is too "
-        f"large for Jev to judge in one request. Switch to LLM mode instead."
+        f"large for Jev to judge in one request. Switch this metric back to "
+        f'the LLM with `eval_mode="{EvalMode.LLM}"` or '
+        f"`deepeval set-eval-mode {EvalMode.LLM}`."
     )
 
 
