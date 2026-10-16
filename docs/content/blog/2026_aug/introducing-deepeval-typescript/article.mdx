@@ -79,7 +79,7 @@ jobs:
         run: npx deepeval test run llm_app.test.ts
 ```
 
-Note what isn't in there: no `CONFIDENT_API_KEY`, no hosted service, no vendor in the critical path of your merge queue. Give it a judge key and the whole thing runs on the runner. Add the key later if you want shared reports and regression tracking across commits, and add `--official` on `main` to mark the baseline that future runs get compared against. The full walkthrough is in [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd).
+Note what isn't in there: no `CONFIDENT_API_KEY`, no hosted service, no vendor in the critical path of your merge queue. Give it a judge key and the whole thing runs on the runner. Add the key later and each run also appears on Confident AI, and `--official` on `main` marks the baseline that future runs get compared against. The full walkthrough is in [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd).
 
 ## Every metric, open-source
 

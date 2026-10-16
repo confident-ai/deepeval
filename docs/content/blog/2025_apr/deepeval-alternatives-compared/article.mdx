@@ -32,7 +32,7 @@ Ragas is most known for RAG evaluation, where the founders originally released a
 
 1. **Developer Experience:** DeepEval offers a highly customizable and developer-friendly experience with plug-and-play metrics, Pytest CI/CD integration, graceful error handling, great documentation, while Ragas provides a data science approach and can feel more rigid and lackluster in comparison.
 2. **Breadth of features:** DeepEval supports a wide range of LLM evaluation types beyond RAG, including chatbot, agents, and scales to safety testing, whereas Ragas is more narrowly focused on RAG-specific evaluation metrics.
-3. **Platform support:** DeepEval is integrated natively with Confident AI, which makes it easy to bring LLM evaluation to entire organizations. Ragas on the other hand barely has a platform and all it does is an UI for metric annotation.
+3. **Path to production:** Every DeepEval metric is available on Confident AI to run evals on live traces, identify failures in production, and turn them into goldens for your next eval. Ragas on the other hand barely has a platform and all it does is an UI for metric annotation.
 
 ### What people like about Ragas
 
@@ -95,7 +95,7 @@ Promptfoo is known for being focused on security testing and red teaming for LLM
 
 1. **Breadth of metrics:** DeepEval supports a wide range (60+) of metrics across prompt, RAG, chatbot, and safety testing, while Promptfoo is limited to basic RAG and safety metrics.
 2. **Developer experience:** DeepEval offers a clean, code-first experience with intuitive APIs, whereas Promptfoo relies heavily on YAML files and plugin-based abstractions, which can feel rigid and unfriendly to developers.
-3. **More comprehensive platform**: DeepEval is 100% integrated with Confident AI, which is a full-fledged evaluation platform with support for regression testing, test case management, observability, and red teaming, while Promptfoo is a minimal tool focused mainly on generating risk assessments on red teaming results.
+3. **Beyond pre-deployment**: DeepEval covers regression testing and test case management in code, and every DeepEval metric is also available on Confident AI to run evals on live traces, identify failures in production, and turn them into your next eval, while Promptfoo is a minimal tool focused mainly on generating risk assessments on red teaming results.
 
 ### What people like about Promptfoo
 
@@ -119,7 +119,7 @@ Promptfoo offers a limited set of metrics (mainly RAG and safety), and its YAML-
 ### Key differences
 
 1. **Evaluation focus**: DeepEval is focused on structured LLM evaluation with support for metrics, regression testing, and test management, while Langfuse centers more on observability and tracing with lightweight evaluation hooks.
-2. **Dataset curation**: DeepEval includes tools for curating, versioning, and managing test datasets for systematic evaluation (locally or on Confident AI), whereas Langfuse provides labeling and feedback collection but lacks a full dataset management workflow.
+2. **Dataset curation**: DeepEval includes tools for curating, versioning, and managing test datasets for systematic evaluation, and Confident AI adds new goldens built from failing production traces, whereas Langfuse provides labeling and feedback collection but lacks a full dataset management workflow.
 3. **Scales to red teaming**: DeepEval is designed to scale into advanced safety testing like red teaming and fairness evaluations, while Langfuse does not offer built-in capabilities for proactive adversarial testing.
 
 ### What people like about Langfuse
@@ -159,6 +159,6 @@ The platform is closed-source, making it difficult to customize evaluation metri
 
 DeepEval is purpose-built for the ideal LLM evaluation workflow with support for prompt, RAG, agents, and chatbot testing. It offers full customizability, reliable and reproducible results like no one else, and allow users to trust fully for pre-deployment regressions testing and A|B experimentation for prompts and models.
 
-DeepEval also integrates natively with [Confident AI](https://confident-ai.com), a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. The integration takes no extra lines of code, and lets you take LLM evaluation to your organization once you see value with DeepEval. Confident AI is self-served, has transparent pricing, and teams can upgrade to more features whenever they are ready and feel comfortable after testing the entire platform out.
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability), a separate product built by the same team, is AI monitoring for apps that are live: it surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, routes them to the right annotators, and turns them into goldens for your next DeepEval run. Confident AI is self-served and has transparent pricing, and for enterprise teams it's [one system for AI quality](https://www.confident-ai.com): evaluation, monitoring, annotation, red teaming, and governance.
 
 It includes additional toolkits such as synthetic dataset generation and LLM red teaming so your team never has to stitch together multiple tools for your LLMOps purpose.

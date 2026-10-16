@@ -340,7 +340,7 @@ jobs:
 
 :::info
 
-For those interested, here is another nice article on [Unit Testing RAG Applications in CI/CD.](https://www.confident-ai.com/blog/how-to-evaluate-rag-applications-in-ci-cd-pipelines-with-deepeval)
+For more on running `deepeval` in a pipeline, including flags for parallelism and caching, see [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd).
 
 :::
 
@@ -441,15 +441,7 @@ For a deeper dive into simulation and callback patterns, see the [Multi-Turn Sim
 
 ## Optimizing On Hyperparameters
 
-In `deepeval`, you can associate hyperparameters such as text chunk size, top-K, embedding model, LLM, etc. to each test run, which when used in conjunction with Confident AI, allows you to easily see how changing different hyperparameters lead to different evaluation results.
-
-Confident AI is a web-based LLM evaluation platform which all users of `deepeval` automatically have access to. To begin, login via the CLI:
-
-```bash
-deepeval login
-```
-
-Follow the instructions to create an account, copy and paste your API key in the CLI, and add these few lines of code in your test file to start logging hyperparameters with each test run:
+In `deepeval`, you can associate hyperparameters such as text chunk size, top-K, embedding model, LLM, etc. to each test run, so you can see how changing different hyperparameters leads to different evaluation results. Add these few lines of code in your test file to start logging hyperparameters with each test run:
 
 ```python title="test_rag.py"
 import deepeval
@@ -467,7 +459,7 @@ def custom_parameters():
 ```
 
 :::tip
-You can simply return an empty dictionary `{}` if you don't have any custom parameters to log.
+You can simply return an empty dictionary `{}` if you don't have any custom parameters to log. Hyperparameters are saved with each test run, and the SQLite [local backend](/docs/evaluation-local-backend-storage) lets you query scores by configuration across runs.
 :::
 
 **Congratulations 🎉!** You've just learnt most of what you need to know for RAG evaluation.
@@ -552,9 +544,8 @@ For any addition questions, please come and ask away in the [DeepEval discord se
           relevancy to chunk size, top-K, and embedding model; faithfulness to
           your LLM choice; answer relevancy to your prompt template. Track
           scores per configuration with{" "}
-          <code>@deepeval.log_hyperparameters</code> on{" "}
-          <a href="https://confident-ai.com">Confident AI</a> to see which
-          combination performs best.
+          <code>@deepeval.log_hyperparameters</code>, which saves them with
+          each test run so you can compare which combination performs best.
         </>
       ),
     },

@@ -224,10 +224,10 @@ In this example, we've decorated each component of our agent with `@observe()` t
 When `travel_agent()` is called, `deepeval` automatically captures the nested execution: the agent span contains the LLM span (reasoning) and tool spans (actions), forming a tree structure that metrics can analyze.
 
 :::tip
-The `type` parameter is optional but recommended—it helps `deepeval` understand your agent's architecture and enables better visualization on [Confident AI](https://confident-ai.com). If you don't specify a type, it defaults to a custom span.
+The `type` parameter is optional but recommended—it helps `deepeval` understand your agent's architecture and decide which spans each metric applies to. If you don't specify a type, it defaults to a custom span.
 :::
 
-Another thing that is recommended is logging into Confident AI — an AI quality platform `deepeval` integrates with natively. If you've set your `CONFIDENT_API_KEY` or run `deepeval login`, test runs will appear automatically on the platform whenever you run an evaluation as you will quickly learn,
+If you've set your `CONFIDENT_API_KEY` or run `deepeval login`, test runs also appear on Confident AI whenever you run an evaluation:
 
 <VideoDisplayer
   src={ASSETS.gettingStartedAgentEvalsEndToEnd}
@@ -445,13 +445,13 @@ _For the full picture of where the eval harness sits in the agent stack and how 
 
 ## Agent Evals In Production
 
-In production, the goal shifts from benchmarking to **continuous performance monitoring**. Unlike development where you run evals on datasets, production evals need to:
+In production, the goal shifts from benchmarking to **catching the trajectories that fail**. Your dataset only covers the failures you thought of, and real users will find others. Production evals also need to:
 
 - **Run asynchronously** — never block your agent's responses
 - **Avoid resource overhead** — no local metric initialization or LLM judge calls
-- **Track trends over time** — monitor quality degradation before users notice
+- **Feed the next eval** — every failing trace is a test case your dataset was missing
 
-While you could spin up a separate evaluation server, [Confident AI](https://confident-ai.com) handles this seamlessly. Here's how to set it up:
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next `deepeval` run. Evals can also run on every production trace and flag the failing ones, which is what the setup below configures.
 
 ### Create a Metric Collection
 
@@ -460,8 +460,8 @@ Log in to Confident AI and create a metric collection containing the metrics you
 <VideoDisplayer
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Run online evals on Confident AI"
-  description="Create a metric collection to score production traffic automatically."
+  label="Create a metric collection on Confident AI"
+  description="Choose the metrics that run on every production trace."
 />
 
 ### Reference the Collection
@@ -475,13 +475,13 @@ def call_openai(messages):
     ...
 ```
 
-That's it. Whenever your agent runs, `deepeval` automatically exports traces to Confident AI in an OpenTelemetry-like fashion—no additional code required. Confident AI then evaluates these traces asynchronously using your metric collection and stores the results for you to analyze.
+That's it. Whenever your agent runs, `deepeval` exports the trace to Confident AI in the background, and the metric collection evaluates it asynchronously. Traces that fail are the ones worth pulling into your dataset, so the next development run tests the trajectory that broke in production.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Track agent performance over time on Confident AI"
-  description="Monitor traces and metric scores as your agent runs in production."
+  label="Failing agent traces on Confident AI"
+  description="Spot the production traces that fail and turn them into your next eval."
 />
 
 :::tip
@@ -507,7 +507,7 @@ To catch these issues, `deepeval` provides metrics you can apply at different sc
 :::info[Development vs Production]
 
 - **Development** — Benchmark and compare agent iterations using datasets with locally defined metrics
-- **Production** — Export traces to Confident AI and evaluate asynchronously to monitor performance over time
+- **Production** — Export traces to Confident AI, catch the failing ones, and turn them into goldens for the next development run
 
 :::
 
@@ -587,9 +587,13 @@ With proper evaluation in place, you can catch regressions before users do, pinp
       answer: (
         <>
           Run development evaluations locally with DeepEval, then export traces
-          to <a href="https://confident-ai.com">Confident AI</a> for
-          asynchronous production evaluation. Attach metric collections to your
-          agent and LLM spans so the platform scores live traffic without adding
+          to{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>
+          , which surfaces failing production traces so you can turn them into
+          goldens for your next eval. Attach metric collections to your agent
+          and LLM spans to evaluate every trace asynchronously without adding
           latency to your application.
         </>
       ),
@@ -599,20 +603,12 @@ With proper evaluation in place, you can catch regressions before users do, pinp
 
 ## Next Steps And Additional Resources
 
-While `deepeval` handles the metrics and evaluation logic, [Confident AI](https://confident-ai.com) is the platform that brings everything together. It solves the infrastructure overhead so you can focus on building better agents:
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing agent traces before anyone has written an eval for them, clusters them into failure modes, routes them to the right annotators, and turns them into goldens for your next eval. Here's what to do next:
 
-- **LLM Observability** — Visualize traces, debug failures, and understand exactly where your agent went wrong
-- **Async Production Evals** — Run evaluations without blocking your agent or consuming production resources
-- **Dataset Management** — Curate and version golden datasets on the cloud
-- **Performance Tracking** — Monitor quality trends over time and catch degradation early
-- **Shareable Reports** — Generate testing reports you can share with your team
-
-Ready to get started? Here's what to do next:
-
-1. **Login to Confident AI** — Run `deepeval login` in your terminal to connect your account
-2. **Understand trajectory evaluation** — Learn how to score complete ordered agent traces in the [trajectory-based evaluation guide](/docs/evaluation-trajectory-based-llm-evals)
-3. **Explore the metrics** — Learn how each metric works, including calculation formulas and configuration options, in the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)
-4. **Read the full guide** — For a deeper dive into single-turn vs multi-turn agents, common misconceptions, and best practices, check out [AI Agent Evaluation: The Definitive Guide](https://www.confident-ai.com/blog/definitive-ai-agent-evaluation-guide)
+1. **Understand trajectory evaluation** — Learn how to score complete ordered agent traces in the [trajectory-based evaluation guide](/docs/evaluation-trajectory-based-llm-evals)
+2. **Explore the metrics** — Learn how each metric works, including calculation formulas and configuration options, in the [AI Agent Evaluation Metrics guide](/guides/guides-ai-agent-evaluation-metrics)
+3. **Read the full guide** — For how agent evaluation fits alongside voice AI, RAG and MCP, with best practices for development and production, read [LLM Evaluation: A Practical Guide](/blog/ultimate-llm-evaluation-guide)
+4. **Connect production traces** — Run `deepeval login` in your terminal to start sending traces to Confident AI
 5. **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help!
 
 **Congratulations 🎉!** You now have the knowledge to build robust evaluation pipelines for your AI agents.

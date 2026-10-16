@@ -16,8 +16,8 @@ By the end of this quickstart, you should be able to:
 
 - Run your first local eval with a test case, metric, and <Term py="deepeval test run" ts="npx deepeval test run"/>.
 - Evaluate an AI agent's complete trajectory and diagnose its internal components with tracing.
-- Know where to go next for datasets, integrations, and the Confident AI
-  platform.
+- Know where to go next for datasets, integrations, and production
+  monitoring.
 
 New to DeepEval? Checkout the [introduction](/docs/introduction) to learn more about this framework.
 
@@ -57,7 +57,7 @@ The package ships a `deepeval` binary, so every command below runs through `npx`
 
 :::info
 
-To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://www.confident-ai.com), an AI observability and evals platform that DeepEval integrates with natively:
+Everything in this quickstart runs locally. To also send traces and test runs to [Confident AI](https://www.confident-ai.com/products/llm-observability), log in:
 
 <Switch>
 
@@ -101,10 +101,6 @@ cp .env.example .env.local
 ```
 
 </details>
-
-:::note
-Confident AI is free and allows you to keep all evaluation results on the cloud. Sign up [here.](https://app.confident-ai.com)
-:::
 
 ## Create Your First Test Run
 
@@ -304,7 +300,7 @@ Congratulations! Your test case should have passed ✅ Let's breakdown what happ
 - In this example, the metric `criteria` is correctness of the <Term py="actual_output" ts="actualOutput"/> based on the provided <Term py="expected_output" ts="expectedOutput"/>, but not all metrics require an <Term py="expected_output" ts="expectedOutput"/>.
 - All metric scores range from 0 - 1, which the <Term py="threshold=0.5" ts="threshold: 0.5"/> threshold ultimately determines if your test have passed or not.
 
-If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results) for video demo).
+If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side.
 
 </Tab>
 <Tab value="Multi-Turn">
@@ -506,19 +502,30 @@ npx deepeval test run example.test.ts
 - In this example, the `criteria` metric evaluates the professionalism of the sequence of `content`.
 - All metric scores range from 0 - 1, which the <Term py="threshold=0.5" ts="threshold: 0.5"/> threshold ultimately determines if your test have passed or not.
 
-If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results) for video demo).
+If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side.
 
 </Tab>
 </Tabs>
 
 ### Save Results
 
-It is recommended that you push your test runs to Confident AI — an AI quality platform `deepeval` integrates with natively for observability, evals, and monitoring.
+Test runs are cached locally, and you can choose where results are saved. If you're logged in, they also appear on Confident AI.
 
-<Tabs items={["Confident AI", "Locally in JSON"]}>
+<Tabs items={["Locally in JSON", "Confident AI"]}>
+<Tab value="Locally in JSON">
+
+Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice. Everything `deepeval` stores locally, including the SQLite alternative, is explained [here](/docs/evaluation-local-backend-storage).
+
+```bash
+# linux
+export DEEPEVAL_RESULTS_FOLDER="./data"
+
+# or windows
+set DEEPEVAL_RESULTS_FOLDER=.\data
+```
+
+</Tab>
 <Tab value="Confident AI">
-
-Confident AI is an AI observability and evals platform that DeepEval integrates with natively, and helps you build the best LLM evals pipeline.
 
 Run <Term py="deepeval view" ts="npx deepeval view"/> to view your newly ran test run on the platform:
 
@@ -564,29 +571,12 @@ npx deepeval login
 
 </Switch>
 
-Once that's set up, Confident AI will **generate testing reports and automate regression testing** whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
-
 <VideoDisplayer
   src={ASSETS.evaluationOverview}
   confidentUrl="/docs/getting-started/setup"
   label="Watch full guide on Confident AI"
   description="A complete walkthrough of running and analyzing your first evals."
 />
-
-**Once you've run more than one test run**, you'll be able to use the [regression testing page](https://www.confident-ai.com/docs/llm-evaluation/dashboards/ab-regression-testing) shown near the end of the video. Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression.
-
-</Tab>
-<Tab value="Locally in JSON">
-
-Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice. Everything `deepeval` stores locally, including the SQLite alternative, is explained [here](/docs/evaluation-local-backend-storage).
-
-```bash
-# linux
-export DEEPEVAL_RESULTS_FOLDER="./data"
-
-# or windows
-set DEEPEVAL_RESULTS_FOLDER=.\data
-```
 
 </Tab>
 </Tabs>
@@ -757,13 +747,11 @@ Every <Term py="evals_iterator()" ts="evalsIterator()"/> run is snapshotted to d
 
 :::
 
-## DeepEval for Online Evals
+## Evaluating Production Traces
 
-When you do LLM tracing using `deepeval`, you can automatically run online evals to monitor **traces, spans, and threads (conversations) in production**.
+The tests above cover what you knew to test. Once your app is live, the same traces can go to [Confident AI](https://www.confident-ai.com/products/llm-observability), which runs evals on **traces, spans, and threads (conversations) in production** and surfaces the failing ones so they can become your next test cases.
 
-You'll need to use Confident AI to provide the necessary backend infrastructure and dashboard for this.
-
-Simply get an [API key from Confident AI](https://app.confident-ai.com) and set it in the CLI:
+Get an [API key from Confident AI](https://app.confident-ai.com) and set it in the CLI:
 
 ```bash
 CONFIDENT_API_KEY="confident_us..."
@@ -806,10 +794,10 @@ const aiAgent = observe({
 
 </Switch>
 
-✅ Done. All invocations of your AI agent will now have online evals ran on it.
+✅ Done. Every trace your AI agent produces will now be evaluated, and failing traces will show up on Confident AI.
 
 :::tip
-To learn more on what a "metric collection" is, and how to pair observability with online evals, checkout the [docs on Confident AI.](https://www.confident-ai.com/docs/llm-tracing/quickstart)
+To learn more on what a "metric collection" is, see the [docs on Confident AI.](https://www.confident-ai.com/docs/llm-tracing/quickstart)
 :::
 
 `deepeval`'s LLM tracing implementation is **non-instrusive**, meaning it will not affect any part of your code.
@@ -823,7 +811,7 @@ Trace-level evals can score the observable result with [end-to-end evaluation](/
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Trace-level evals in production"
-  description="Score complete results or agent trajectories on live traffic."
+  description="Score complete results or agent trajectories on production traces."
 />
 
 </Tab>
@@ -885,8 +873,9 @@ Here are a few examples available for your selected SDK:
   - [Simulate conversations](/docs/conversation-simulator)
   - [Use integrations](/integrations) with LangChain, LangGraph, OpenAI, CrewAI, and more
 
-If your team needs shared reports, regression analysis, or production monitoring,
-DeepEval integrates natively with [Confident AI](https://www.confident-ai.com/docs).
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability)
+surfaces the production traces that fail before anyone has written an eval for
+them, and turns them into goldens for your next dataset.
 
 ## FAQs
 
@@ -901,9 +890,9 @@ DeepEval integrates natively with [Confident AI](https://www.confident-ai.com/do
       question: "Do I need Confident AI for this quickstart?",
       answer: (
         <>
-          No. DeepEval runs locally. Confident AI is optional and useful when
-          you want shared reports, regression tracking, observability, or
-          production monitoring.
+          No. DeepEval runs locally. Confident AI is optional and comes in once
+          your app is in production, where it surfaces failing traces and
+          turns them into your next eval.
         </>
       ),
     },

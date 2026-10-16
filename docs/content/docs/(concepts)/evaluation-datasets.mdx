@@ -32,7 +32,7 @@ Depending on the type of goldens you supply, datasets are either **single-turn**
 
 :::info
 
-If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on Confident AI, which integrates 100% with `deepeval`:
+If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces the production traces that fail, routes them to the right annotators, and turns them into goldens you can pull into `deepeval`:
 
 <VideoDisplayer
   src={ASSETS.datasetsCreate}
@@ -40,9 +40,6 @@ If you don't already have an `EvaluationDataset`, a great starting point is to s
   label="Learn dataset annotation on Confident AI"
   description="Create, edit, and collaborate on goldens in the dataset editor."
 />
-
-Full documentation for datasets on [Confident AI
-here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 :::
 
@@ -582,7 +579,7 @@ You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-e
 
 ## Manage Your Dataset
 
-Dataset management is an essential part of your evaluation lifecycle. We recommend Confident AI as the choice for your dataset management workflow as it comes with dozens of collaboration features out of the box, but you can also do it locally as well.
+Dataset management is an essential part of your evaluation lifecycle. Datasets can be saved locally as JSON, CSV, or JSONL, or pushed to Confident AI, where goldens built from failing production traces live alongside the ones you write.
 
 ### Save Dataset
 
@@ -852,7 +849,7 @@ By default the `saveAs()` method only saves the `Golden`s within your `Evaluatio
 <Tabs items={["Confident AI", "From JSON", "From JSONL", "From CSV"]}>
 <Tab value="Confident AI">
 
-You can load entire datasets on Confident AI's cloud in one line of code.
+You can pull a dataset from Confident AI in one line of code.
 
 <Switch>
 
@@ -880,9 +877,7 @@ await dataset.pull({ alias: "My Evals Dataset" });
 
 </Switch>
 
-Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
-
-For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+On Confident AI, failing production traces are routed to the right annotators — engineers, QA, domain experts or PMs — and become goldens in the dataset you pull here. See the [Confident AI datasets docs](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for details.
 
 </Tab>
 <Tab value="From JSON">
@@ -1206,7 +1201,7 @@ For more information on how `deepeval`'s `Synthesizer` works, visit the [Golden 
 
 <NotImplemented id="typescript" feature="Synthesizer">
 
-It generates synthetic goldens from your documents, contexts, or from scratch, which is what you reach for when you have no dataset prepared beforehand. Until it lands, write your goldens by hand or [pull a dataset from Confident AI](#load-dataset), where synthetic goldens generated elsewhere can be stored and shared.
+It generates synthetic goldens from your documents, contexts, or from scratch, which is what you reach for when you have no dataset prepared beforehand. Until it lands, write your goldens by hand or [pull a dataset from Confident AI](#load-dataset) if your goldens are there.
 
 </NotImplemented>
 
@@ -1600,17 +1595,16 @@ Runs containing expectations stay local and print a warning that expectations ar
     },
     {
       question:
-        "Can my team store, edit, and version datasets on the cloud with a UI?",
+        "Can I build datasets from production failures?",
       answer: (
         <>
-          Datasets are fully usable locally. For teams that want a shared
-          source of truth,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) lets you store datasets in the
-          cloud, edit
-          goldens and custom columns in a UI, and have non-engineers contribute
-          — then pull the same dataset back into code. It's optional and local
-          datasets behave identically.
+          Yes. Datasets are fully usable locally, and once your app is live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces, routes them to the right
+          annotators, and turns them into goldens you pull back into code with
+          the same API. It's optional and local datasets behave identically.
         </>
       ),
     },

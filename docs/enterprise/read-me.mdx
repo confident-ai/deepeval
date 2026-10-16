@@ -14,7 +14,7 @@ import { ArrowUpRight } from "lucide-react";
 
 ## DeepEval gets you started. Enterprise gets you standardized.
 
-DeepEval enterprise is available on Confident AI Evals - the platform that makes evals a centralized quality-gate work for your whole company.
+For enterprise teams, [Confident AI](https://www.confident-ai.com) is one system for AI quality: evaluation, monitoring, annotation, red teaming and governance, with one standard every team ships against. DeepEval evaluates your app in development. Confident AI enforces the standard once it's live, running evals on every production trace and turning the failing ones into your next eval.
 
 <EnterpriseComparisonTable />
 
@@ -24,15 +24,13 @@ DeepEval enterprise is available on Confident AI Evals - the platform that makes
 
 <SectionLabel>For product and QA teams</SectionLabel>
 
-## Run evals without writing a single line of code.
+## Everyone works from the same failing traces.
 
-Spin up evaluations from the dashboard. Annotate traces and turn feedback into reusable metrics. Build custom dashboards your team actually understands. Stop filing tickets to engineering every time you want to test a prompt change.
+Engineers, QA, domain experts and PMs work from the same traces, annotations and datasets, so PMs stay in the loop on what's failing and why. Nobody files a ticket to engineering to find out which traces broke.
 
-- No-code eval workflows for PMs, QA, and domain experts.
-- Annotation queues that turn human feedback into automated metrics.
-- Custom dashboards and reports for stakeholders who don't read code.
-
-We connect directly to your AI app over HTTP so non-technical team members can collaborate equally on AI quality.
+- Failing traces routed to the right annotators, who turn them into goldens.
+- Datasets built from failing production traces, ready for the next eval.
+- Connects to your AI app over HTTP, so non-technical team members can contribute without touching code.
 
 <Tabs items={["Experiments", "Dataset management", "Centralized metrics", "Regression testing", "Annotation", "Prompt versioning"]}>
 <Tab value="Experiments">
@@ -85,15 +83,13 @@ We connect directly to your AI app over HTTP so non-technical team members can c
 
 <SectionLabel>For engineering teams</SectionLabel>
 
-## Tracing and evals built for the way you actually ship.
+## Failing production traces become your next eval.
 
-Drop in our SDK or use OpenTelemetry to capture every LLM call, tool call, and agent step. Run regression tests on every prompt change in CI/CD. Get alerted the moment quality drops in production. Framework-agnostic — works with LangChain, LangGraph, CrewAI, OpenAI Agents, Pydantic AI, or your own stack.
+Instrument once with OpenTelemetry or a framework integration (LangChain, LangGraph, CrewAI, OpenAI Agents, Pydantic AI, or your own stack). Confident AI surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next eval. Detect the failure, build the eval, then run it on every trace from then on.
 
-- Production tracing for every LLM call, span, and agent step.
-- Automatic detection of AI app failures, quality drift, user sentiment shifts, performance regressions, and cost anomalies in production.
-- Real-time alerts in Slack, PagerDuty, or Teams when quality degrades.
-
-Observability completes the AI iteration loop: Trace agents, run online evals, detect issues, feed these back to datasets for pre-deployment testing.
+- Failure modes shown alongside user sentiment and behavior across traces.
+- Failing traces turned into datasets for the next eval.
+- Evals on every production trace that flag the failing ones, with alerts in Slack, PagerDuty, or Teams when quality degrades.
 
 <Tabs items={["Online evals", "Signals", "Alerts", "Trace-to-dataset"]}>
 <Tab value="Online evals">
@@ -132,15 +128,16 @@ Observability completes the AI iteration loop: Trace agents, run online evals, d
 
 <SectionLabel>For platform teams</SectionLabel>
 
-## Deploy once. Scale to every team in your org.
+## One standard. Enforced across every team.
 
-Self-host on your own infrastructure or run on our cloud. Multi-tenant by default — give every product team their own workspace with shared compliance and observability standards. Built for the AI platform team that's responsible for quality across the whole company.
+Define the datasets, metrics and thresholds a release has to pass, and [AI governance](https://www.confident-ai.com/products/ai-governance) enforces them as release gates for every team. Self-host on your own infrastructure or run on our cloud. Multi-tenant by default — give every product team their own workspace with shared compliance and governance standards. Built for the AI platform team that's responsible for quality across the whole company.
 
 - On-prem deployment in 3 days, automated updates in 30 minutes.
 - SSO, RBAC, granular permissions, and audit logs.
 - SOC2 Type II, GDPR-compliant, custom data retention available.
+- A [red-teaming module](https://www.confident-ai.com/products/ai-red-teaming) in the same system, held to the same standard.
 
-One platform, one source of truth for AI quality across every team.
+One system for AI quality across every team: evaluation, monitoring, annotation, red teaming and governance.
 
 <EnterprisePlatformMockup variant="deployment" />
 

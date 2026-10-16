@@ -6,7 +6,7 @@ authors: [penguine]
 category: comparisons
 ---
 
-**TL;DR:** TruLens offers useful tooling for basic LLM app monitoring and runtime feedback, but it’s still early-stage and lacks many core evaluation features — including agentic and conversational metrics, granular test control, and safety testing. DeepEval takes a more complete approach to LLM evaluation, supporting structured testing, CI/CD workflows, custom metrics, and integration with Confident AI for collaborative analysis, sharing, and decision-making across teams.
+**TL;DR:** TruLens offers useful tooling for basic LLM app monitoring and runtime feedback, but it’s still early-stage and lacks many core evaluation features — including agentic and conversational metrics, granular test control, and safety testing. DeepEval takes a more complete approach to LLM evaluation, supporting structured testing, CI/CD workflows, custom metrics, and, once you're live, Confident AI to monitor production traces and turn the failing ones into your next eval.
 
 ## What Makes DeepEval Stand Out?
 
@@ -48,25 +48,16 @@ Comparison tables below will show what you get with DeepEval out of the box.
 
 ### 6. Scales with Your Org
 
-[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
+[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://www.confident-ai.com/products/llm-observability) are **two separate products** built by the same team — not the same thing.
 
 - **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
-- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
+- **Confident AI** is **AI monitoring for apps in production**. It runs evals on production traces, clusters the failing ones into failure modes, and turns them into goldens for your next eval.
 
-Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
+TruLens attaches feedback scores to runtime calls, which tells you a score dropped but not what to do about it. Confident AI goes a step further: it surfaces failing production traces before anyone has written an eval for them, groups them by failure mode, routes them to the right annotators, and turns them into the dataset your next DeepEval run tests against. Engineers, QA, domain experts, and PMs work from the same failing traces, so everyone sees what's breaking and why.
 
-**Use DeepEval on its own** for fast, code-first local evaluation and CI gates. **Use DeepEval with Confident AI** when your team needs:
+**Use DeepEval on its own** for fast, code-first local evaluation, regression testing, and CI gates. Add Confident AI once the app is live. For enterprise teams, [Confident AI](https://www.confident-ai.com) is one system for AI quality: evaluation, monitoring, annotation, red teaming, and governance, with [governance](https://www.confident-ai.com/products/ai-governance) enforced as release gates across projects.
 
-- Shared dashboards for metric distributions, averages, and trends across runs
-- Test reports to share internally or with external stakeholders
-- Centralized cloud datasets and golden management
-- Regression gates and side-by-side prompt and model experiments
-- Production trace observability and online evaluation of live traffic
-- Red teaming campaigns and safety testing at organization scale
-
-The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
-
-DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework.
 
 ## Comparing DeepEval and Trulens
 
@@ -110,11 +101,11 @@ DeepEval offers countless integrations with the tools you are likely already bui
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. TruLens's platform is hidden and minimal.
+Every DeepEval metric is available on Confident AI, a separate product built by the same team, to run evals on live traces, identify failures in production, and turn them into goldens for your next DeepEval run. TruLens's platform is hidden and minimal.
 
 <FeatureComparisonTable type="trulens::platform" competitor="Trulens" />
 
-Confident AI is also self-served, meaning you don't have to talk to us to try it out. Sign up [here.](https://app.confident-ai.com)
+Confident AI is also self-served, meaning you don't have to talk to us to try it out: [sign up for Confident AI](https://app.confident-ai.com).
 
 ## Conclusion
 

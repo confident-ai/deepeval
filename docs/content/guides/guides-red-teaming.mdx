@@ -32,12 +32,11 @@ This tutorial will walk you through **how to red-team your LLM from start to fin
 </div>
 
 :::note
-Before diving into this tutorial, it might be helpful to **read the following articles**:
+Before diving into this tutorial, it might be helpful to **read the following pages** on the safety and security checks `deepeval` already offers:
 
-- [Red Teaming LLMs](https://www.confident-ai.com/blog/red-teaming-llms-a-step-by-step-guide)
-- [LLM Safety Guide](https://www.confident-ai.com/blog/the-comprehensive-llm-safety-guide-navigate-ai-regulations-and-best-practices-for-llm-safety)
-- [LLM Security Guide](https://www.confident-ai.com/blog/the-comprehensive-guide-to-llm-security)
-- [How to Jailbreak LLMs](https://www.confident-ai.com/blog/how-to-jailbreak-llms-one-step-at-a-time)
+- [Toxicity](/docs/metrics-toxicity) and [Bias](/docs/metrics-bias) metrics
+- [PII Leakage](/docs/metrics-pii-leakage) and [Role Violation](/docs/metrics-role-violation) metrics
+- [Prompt Injection](/docs/classifiers-prompt-injection) and [Data Leakage](/docs/classifiers-data-leakage) classifiers
 
 :::
 
@@ -276,5 +275,5 @@ The final step is to refine your LLM based on the scan results and make improvem
 </div>
 
 :::tip
-Confident AI offers powerful [**observability**](https://www.confident-ai.com/docs) features, which include automated evaluations, human feedback integrations, and more, as well as blazing-fast **guardrails** to protect your LLM application.
+Scans only cover the attacks you thought to simulate. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, including the ones where users push your LLM outside its role, and turns them into goldens for your next round of evals. For enterprise teams, Confident AI's [red-teaming module](https://www.confident-ai.com/products/ai-red-teaming) makes these scans a repeatable part of the release process.
 :::

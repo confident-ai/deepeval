@@ -928,7 +928,7 @@ def respond_to_user(prompt: str) -> str:
 | <Term py="thread_id" ts="threadId"/> | <Term py="str" ts="string"/> | Groups related runs into a single trace thread. |
 | <Term py="user_id" ts="userId"/> | <Term py="str" ts="string"/> | Actor identifier for the trace. |
 | `metrics` | <Term py="list" ts="array"/> | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
-| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on live traffic. |
+| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on production traces. |
 | <Term py="test_case_id" ts="testCaseId"/> | <Term py="str" ts="string"/> | Optional test case identifier. |
 | <Term py="turn_id" ts="turnId"/> | <Term py="str" ts="string"/> | Optional turn identifier for conversational traces. |
 
@@ -981,19 +981,6 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
       ),
     },
     {
-      question: "Can I see these LangChain traces in a cloud UI?",
-      answer: (
-        <>
-          Yes, optionally. After{" "}
-          <Term py="deepeval login" ts="npx deepeval login" />,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> renders every
-          agent, LLM, tool, and retriever span produced by the{" "}
-          <Term py="CallbackHandler" ts="DeepEvalCallbackHandler" /> in a shared
-          dashboard — no code changes.
-        </>
-      ),
-    },
-    {
       question: "Can I monitor a LangChain app in production?",
       answer: (
         <>
@@ -1001,12 +988,10 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
           <Term py="CallbackHandler" ts="DeepEvalCallbackHandler" /> in your
           production calls and set{" "}
           <Term py="thread_id" ts="threadId" /> /{" "}
-          <Term py="user_id" ts="userId" /> for grouping; when logged into
-          Confident AI those live traces support{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic.
+          <Term py="user_id" ts="userId" /> for grouping.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> flags failing chain and agent
+          traces before any eval covers them, clusters them into failure modes,
+          and turns them into a dataset for your next LangChain eval.
         </>
       ),
     },

@@ -431,7 +431,7 @@ LLM judges are useful because they understand semantics, but they can still be n
 
 You should also cross-check your LLM judge with human labels. You do not need a complex labeling system to start. A simple pass/fail annotation from a domain expert is enough to tell whether your metric agrees with human judgement.
 
-You do not need a dedicated platform to start. However, if you do want shared annotation queues, reviewer workflows, and metric alignment across a team, you can use [Confident AI](https://www.confident-ai.com/) to collect human annotations and compare them against DeepEval metric scores.
+You do not need a dedicated platform to start. Once you're in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) routes failing production traces to the right annotators, so domain experts label the traces that matter, and those labels become goldens for your next eval as well as a check on how often your judge agrees with them.
 
 <ImageDisplayer
   id="platform/annotation/queue-annotator"
@@ -541,14 +541,14 @@ Keep `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` on the relevant LLM
 
 ### Production Monitoring
 
-You can also use LLM judges after deployment to monitor quality over real production traffic. DeepEval defines and runs the evaluation metrics, while [Confident AI](https://www.confident-ai.com/) gives you the production monitoring layer for tracking those scores over time. This is most useful for referenceless metrics, since production requests usually do not come with labelled `expected_output`s.
+You can also run LLM judges after deployment, on production traces. [Confident AI](https://www.confident-ai.com/products/llm-observability) runs evals on every production trace and flags the failing ones, clusters them into failure modes, and turns them into goldens for your next eval. This is most useful for referenceless metrics, since production traces usually do not come with labelled `expected_output`s.
 
 Common production monitoring use cases include:
 
 - Tracking answer relevancy, faithfulness, task completion, or safety over time.
 - Detecting regressions after model, prompt, retriever, or tool changes.
 - Sampling low-scoring traces into datasets for future regression tests.
-- Routing suspicious outputs to human annotation queues for review.
+- Routing failing traces to the right annotators so they become goldens.
 - Comparing online metric trends against offline benchmark results.
 
 For production monitoring, start with a small number of high-signal metrics. Too many LLM judges can make your monitoring noisy, expensive, and hard to interpret.
@@ -676,11 +676,15 @@ For `JevEval`, inspect `score_breakdown` instead. It records every question's pr
         <>
           Yes. DeepEval can run LLM judges in CI/CD with{" "}
           <code>assert_test</code> and <code>deepeval test run</code>, and on
-          traces with <code>@observe</code>. For production monitoring over live
-          traffic, use <a href="https://confident-ai.com">Confident AI</a> with
-          DeepEval metrics to track referenceless scores such as answer
-          relevancy, task completion, faithfulness, safety, or custom G-Eval
-          metrics over time.
+          traces with <code>@observe</code>. Once you're in production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          runs evals on every production trace, flags the failing ones, and
+          turns them into goldens for your next eval. Referenceless criteria
+          such as answer relevancy, task completion, faithfulness, safety, or
+          custom G-Eval rubrics work best there, since production traces rarely
+          come with an expected output.
         </>
       ),
     },

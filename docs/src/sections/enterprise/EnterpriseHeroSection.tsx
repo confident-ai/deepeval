@@ -54,8 +54,8 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
         </h1>
 
         <p className={styles.description}>
-          AI governance and eval workflows for your engineers, PMs, and QA to
-          use together — not just developers in a terminal.
+          One quality standard and AI governance for your engineers, PMs, and
+          QA, enforced from development to every production trace.
         </p>
 
         <div className={styles.actions}>

@@ -27,7 +27,7 @@ See the [custom LLM guide](/guides/guides-using-custom-llms) for full details.
 
 ### Is `deepeval` the same as Confident AI?
 
-No. Think of it like Next.js and Vercel — related, but separate. `deepeval` is an open-source LLM evaluation framework that runs locally. Confident AI is an AI quality platform with observability, evals, and monitoring. `deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that integrate natively with Confident AI, but the platform is **not limited to them** — it also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs.
+No. Think of it like Next.js and Vercel — related, but separate. `deepeval` is an open-source LLM evaluation framework that runs locally, before you ship. Confident AI is AI monitoring for apps in production: it surfaces failing production traces and turns them into your next eval. `deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that integrate natively with Confident AI, but the platform is **not limited to them** — it also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs.
 
 Confident AI is free to get started:
 
@@ -174,23 +174,21 @@ The `Synthesizer` supports generating from docs, contexts, scratch, or existing 
 
 Set up [LLM tracing](/docs/evaluation-llm-tracing) with `deepeval`'s `@observe` decorator (or one-line integrations) and connect to [Confident AI](https://www.confident-ai.com/docs/llm-tracing/introduction). Once instrumented, every trace, span, and thread flowing through your app can be **automatically evaluated against your chosen metrics in real-time** — no manual test runs needed.
 
-This means you can catch regressions, hallucinations, and quality degradation as they happen in production, not after the fact. Confident AI supports evaluating at three levels:
+This means failing traces surface as they happen in production, not after the fact. Confident AI evaluates at three levels:
 
 - **Traces** — end-to-end evaluation of a single request
 - **Spans** — component-level evaluation of individual steps (LLM calls, retriever results, tool executions)
 - **Threads** — conversation-level evaluation across multi-turn interactions
 
-You can also use production traces to **curate your next evaluation dataset**, creating a feedback loop where real-world usage continuously improves your offline evals.
+Failing traces can then be routed to the right annotators and **turned into goldens for your next evaluation dataset**, so every production issue becomes an eval you run before the next release.
 
 ### I already use LangSmith / Langfuse / another tool for tracing. Do I still need `@observe`?
 
 You can use `deepeval`'s `@observe` decorator **alongside** your existing tracing tool — they operate independently.
 
-That said, you should seriously consider [Confident AI for tracing](https://www.confident-ai.com/docs/llm-tracing/introduction). Unlike standalone tracing tools, Confident AI gives you **observability and automated evaluation in the same platform** — every trace, span, and thread can be automatically evaluated against 50+ metrics in real-time. It's like Datadog for AI apps, but with built-in LLM evals to monitor AI quality over time.
+Tracing tools record what happened. [Confident AI](https://www.confident-ai.com/products/llm-observability) tells you what went wrong: it **surfaces failing production traces before anyone has written an eval for them**, clusters them into failure modes, and shows user sentiment and behavior across traces. Each failing trace can then become a golden in your next evaluation dataset.
 
-On top of that, traces collected in Confident AI can be used to **curate your next version of evaluation datasets** — so your production data directly feeds back into improving your evals over time.
-
-Getting started is easy. Confident AI offers **one-line integrations** for the frameworks you're already using — OpenAI, LangChain, LangGraph, Pydantic AI, Vercel AI SDK, and more — plus full **OpenTelemetry (OTEL) support** for any language (Python, TypeScript, Go, Ruby, C#). You don't have to rewrite anything:
+Confident AI offers **one-line integrations** for the frameworks you're already using — OpenAI, LangChain, LangGraph, Pydantic AI, Vercel AI SDK, and more — plus full **OpenTelemetry (OTEL) support** for any language (Python, TypeScript, Go, Ruby, C#). You don't have to rewrite anything:
 
 | Approach                  | Best For                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------ |
@@ -255,7 +253,7 @@ def test_my_app():
 deepeval test run test_llm_app.py
 ```
 
-The command returns a non-zero exit code on failure, so it integrates directly into any CI/CD `.yaml` workflow. Pair it with [Confident AI](https://confident-ai.com) to automatically generate regression testing reports across runs.
+The command returns a non-zero exit code on failure, so it integrates directly into any CI/CD `.yaml` workflow.
 
 ### How do I evaluate multi-turn conversations?
 
@@ -309,7 +307,7 @@ The typical workflow is:
 1. **Start with offline evals** — use `evaluate()` or `deepeval test run` with a curated dataset to validate your LLM app during development.
 2. **Add tracing** — instrument your app with `@observe` or [one-line integrations](https://www.confident-ai.com/docs/llm-tracing/introduction) for OpenAI, LangChain, Pydantic AI, etc.
 3. **Enable online evals** — connect to [Confident AI](https://confident-ai.com) so every production trace is automatically evaluated against your metrics.
-4. **Close the loop** — use production traces to curate and improve your evaluation datasets, then re-run offline evals to validate changes before deploying.
+4. **Close the loop** — turn failing production traces into goldens for your next evaluation dataset, then re-run offline evals to validate changes before deploying.
 
 This creates a continuous cycle: offline evals catch issues before deployment, production monitoring catches issues after deployment, and production data improves your next round of offline evals.
 
@@ -372,17 +370,13 @@ This is especially valuable when using custom LLMs that need more explicit instr
 
 ### What is Confident AI and how does it relate to `deepeval`?
 
-[Confident AI](https://confident-ai.com) is an AI quality platform with observability, evals, and monitoring. `deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that **integrate natively with Confident AI** via APIs, so that evaluation results, red teaming assessments, and traces can flow into the platform if you want them to.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) is AI monitoring for apps in production. `deepeval` tests what you know to test before you ship; Confident AI finds what you didn't:
 
-But Confident AI is **not limited to these open-source packages**. It also has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and standalone APIs. You can use Confident AI entirely without `deepeval` or `deepteam` if you want, and you can use `deepeval` or `deepteam` entirely without Confident AI.
+- **Failing traces surface before anyone has written an eval for them**, clustered into failure modes, with user sentiment and behavior across traces.
+- **Failing traces route to the right annotators** — engineers, QA, domain experts or PMs — and become goldens for your next eval.
+- **Evals run on every production trace, span, and thread**, so a failure you've fixed stays fixed.
 
-Confident AI provides:
-
-- **LLM evaluation** with shareable test reports and regression testing across runs
-- **LLM red teaming** with vulnerability scanning and risk assessments
-- **LLM observability** with tracing, online evals, latency and cost tracking
-- **Dataset management** with annotation tools for non-technical team members
-- **Production monitoring** with real-time quality metrics on traces, spans, and threads
+`deepeval` and [DeepTeam](https://trydeepteam.com) are standalone open-source frameworks that can send traces and results to Confident AI, but the platform is **not limited to them**: it has its own TypeScript SDK, OpenTelemetry support, third-party integrations, and APIs. You can use Confident AI without `deepeval` or DeepTeam, and you can use either without Confident AI.
 
 It's free to get started:
 
@@ -410,7 +404,7 @@ Learn more at the [Confident AI docs](https://www.confident-ai.com/docs).
 
 ### What is DeepTeam?
 
-[DeepTeam](https://www.trydeepteam.com/docs/getting-started) is an open-source framework for **red teaming LLM systems**. While `deepeval` focuses on evaluation (correctness, relevancy, faithfulness, etc.), DeepTeam is dedicated to **security and safety testing**. Like `deepeval`, it also serves as an SDK for Confident AI — red teaming results are automatically uploaded to the platform.
+[DeepTeam](https://www.trydeepteam.com/docs/getting-started) is an open-source framework for **red teaming LLM systems**. While `deepeval` focuses on evaluation (correctness, relevancy, faithfulness, etc.), DeepTeam is dedicated to **security and safety testing**. Like `deepeval`, it can also send its results to Confident AI.
 
 DeepTeam lets you:
 
@@ -437,11 +431,11 @@ It is **extremely common to use both `deepeval` and DeepTeam** together — `dee
 
 Think of it this way:
 
-- **[Confident AI](https://confident-ai.com)** is the AI quality platform — observability, evals, monitoring, red teaming, and collaboration all live here.
-- **[`deepeval`](https://github.com/confident-ai/deepeval)** is a standalone open-source LLM evaluation framework that integrates natively with Confident AI.
-- **[DeepTeam](https://trydeepteam.com)** is a standalone open-source LLM red teaming framework that also integrates natively with Confident AI.
+- **[`deepeval`](https://github.com/confident-ai/deepeval)** is a standalone open-source framework for evaluating LLM apps before they ship.
+- **[DeepTeam](https://trydeepteam.com)** is a standalone open-source framework for red teaming LLM apps.
+- **[Confident AI](https://www.confident-ai.com/products/llm-observability)** is AI monitoring once they're live: it surfaces failing production traces and turns them into your next eval.
 
-Each works independently — you can use `deepeval` or DeepTeam purely locally without ever touching Confident AI. But when you connect them, everything flows into one platform. You can also use Confident AI on its own via its TypeScript SDK, OpenTelemetry, or direct API integrations, without either open-source package.
+Each works independently — you can use `deepeval` or DeepTeam purely locally without ever touching Confident AI, and you can use Confident AI on its own via its TypeScript SDK, OpenTelemetry, or direct API integrations.
 
 ### I want to learn more about enterprise offerings. Where can I get started?
 

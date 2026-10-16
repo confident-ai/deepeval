@@ -451,26 +451,14 @@ For runtime helpers (`update_current_trace`, `update_current_span`) and the test
       ),
     },
     {
-      question: "Can I review crew runs on the cloud?",
-      answer: (
-        <>
-          Yes, optionally. After <code>deepeval login</code>,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> renders each
-          kickoff as a trace — every agent, LLM, and tool span with its score —
-          in a shared UI.
-        </>
-      ),
-    },
-    {
       question: "Can I monitor a CrewAI app in production?",
       answer: (
         <>
           Yes. <code>instrument_crewai()</code> keeps emitting spans in
-          production, and when logged into Confident AI those live traces feed{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic.
+          production, one trace per kickoff.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> surfaces the kickoffs that fail
+          before you've written an eval for them, clusters them into failure
+          modes, and turns those traces into goldens for your next crew eval.
         </>
       ),
     },

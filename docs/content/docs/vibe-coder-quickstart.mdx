@@ -170,7 +170,7 @@ With the [Agent Skill](#install-the-agent-skill) installed, you can shorten the 
 
 ## Connect to Confident AI (optional)
 
-DeepEval is local-first, so the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
+DeepEval is local-first, so the loop above works fully offline. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) catches failing production traces, clusters them into failure modes, and turns them into goldens for the next round of the loop. To connect, log in:
 
 <Switch>
 
@@ -192,7 +192,7 @@ npx deepeval login
 
 </Switch>
 
-Every <Term py="deepeval test run" ts="npx deepeval test run"/> your agent kicks off pushes a testing report your reviewers can open with <Term py="deepeval view" ts="npx deepeval view"/>. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+After that, test runs your agent kicks off with <Term py="deepeval test run" ts="npx deepeval test run"/> also show up on Confident AI, and <Term py="deepeval view" ts="npx deepeval view"/> opens the most recent one.
 
 ## Next Steps
 

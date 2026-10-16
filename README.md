@@ -72,7 +72,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 > Jev is now available in DeepEval, both in existing metrics and the latest [JevEval.](https://deepeval.com/docs/metrics-jev-eval)
 
 > [!IMPORTANT]
-> Want to compare iterations, share evaluation reports, and monitor your AI in production? [Sign up for Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme), the enterprise AI evals and observability platform.
+> If you're already in production, [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme) surfaces failing traces before anyone has written an eval for them, clusters them into failure modes, and turns them into your next eval.
 >
 > ![Demo GIF](assets/demo.gif)
 
@@ -168,7 +168,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 
 # 🔌 Integrations
 
-DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more. For enterprise teams standardizing evals and observability across the organization, **Confident AI** provides a native DeepEval integration.
+DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and more. The same traces can go to **Confident AI** once you're live, where evals run on every production trace.
 
 ## Frameworks
 
@@ -187,11 +187,12 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 ## ☁️ Platform + Ecosystem
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section&ref_page=github/readme) is the enterprise AI evals and observability platform. It gives organizations one consistent standard across product teams, integrates natively with DeepEval, and remains model- and framework-agnostic.
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=platform_section&ref_page=github/readme) is AI monitoring for applications in production. DeepEval tests what you know to test before you ship; Confident AI finds what you didn't, and it's model- and framework-agnostic.
 
-- Product teams manage datasets, evaluate AI applications before launch, and monitor live traces with online evals and signals in production.
-- Platform teams define one organization-wide quality standard and enforce it through governance and native red teaming.
-- Don't need a UI? Use Confident AI as your persistence layer to run evals, pull datasets, and inspect traces from Claude Code or Cursor through Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
+- Failing traces surface before anyone has written an eval for them, clustered into failure modes, with user sentiment and behavior across traces.
+- Failing traces route to the right annotators and become goldens, so production issues turn into your next eval.
+- For enterprise teams, one system for AI quality: governance as release gates and native red teaming.
+- Prefer to stay in your editor? Inspect failing traces and pull the datasets built from them in Claude Code or Cursor through Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
 
 <p align="center">
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
@@ -621,23 +622,19 @@ cp .env.example .env.local
 
 # DeepEval With Confident AI
 
-[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) — the AI observability and evaluation platform for production LLM systems. Trace agent executions, run online evals on live traffic, alert on quality regressions, and let PMs, QA, and domain experts review outputs without writing code. DeepEval traces stream to it with no code changes.
+[Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=cli_login_section&ref_page=github/readme) monitors AI applications in production. Evals run on every production trace, failing traces are clustered into failure modes, and each one can be routed to the right annotators — engineers, QA, domain experts or PMs — and turned into a golden for your next eval. The traces your app already produces with DeepEval stream to it with no code changes.
 
-Log in from the CLI to get started:
+Log in from the CLI to connect:
 
 ```bash
 deepeval login
 ```
 
-Then run your tests as usual — results are automatically synced to the platform:
-
-```bash
-deepeval test run test_chatbot.py
-```
+Test runs also appear on the platform once you're logged in.
 
 ![Demo GIF](assets/demo.gif)
 
-Prefer to stay in your IDE? Use DeepEval via [Confident AI's MCP server](https://github.com/confident-ai/confident-mcp-server) as the persistent layer to run evals, pull datasets, and inspect traces without leaving your editor.
+Prefer to stay in your IDE? Inspect failing traces and pull the datasets built from them through [Confident AI's MCP server](https://github.com/confident-ai/confident-mcp-server) without leaving your editor.
 
 <p align="center">
   <img src="assets/confident-mcp-architecture.png" alt="Confident AI MCP Architecture" width="500">
