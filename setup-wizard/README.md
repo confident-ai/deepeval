@@ -15,11 +15,11 @@ deepeval setup        # Python: pip install -U deepeval
 npx deepeval setup    # TypeScript: npm install deepeval
 ```
 
-Both commands download the `deepeval-setup` release pinned to that DeepEval
-version from `confident-ai/deepeval` (tag `setup-v<version>`), verify it against
-the release's `SHA256SUMS`, cache it under
-`${XDG_CACHE_HOME:-~/.cache}/deepeval/setup/<version>/`, and run it with any
-flags you pass. macOS and Linux are supported for now.
+Both commands ask GitHub for the newest `deepeval-setup` release of
+`confident-ai/deepeval` (tag `setup-v<version>`), verify it against the release's
+`SHA256SUMS`, cache it under `${XDG_CACHE_HOME:-~/.cache}/deepeval/setup/<version>/`,
+and run it with any flags you pass. When GitHub cannot be reached, they run the
+newest cached copy instead. macOS and Linux are supported for now.
 
 The wizard first asks whether to use Confident AI. Answering yes signs in, saves
 a project API key, and verifies the run in the cloud; if the project already has
@@ -156,11 +156,11 @@ smoke-tests each binary with `--help`, and publishes them with `SHA256SUMS` as a
 GitHub release that never takes the repository's "Latest" badge, which stays on
 the Python SDK.
 
-`deepeval setup` and `npx deepeval setup` each pin the wizard version:
-`SETUP_WIZARD_VERSION` in `deepeval/cli/setup/launcher.py` and
-`typescript/src/cli/setup/launcher.ts`. Tests on both sides fail when either
-differs from `package.json`, so bump all three together, push the
-`setup-v<version>` tag, and only then release the SDKs that point at it.
+`deepeval setup` and `npx deepeval setup` always run the newest published
+`setup-v*` release, so a release reaches every user at once, with no SDK release
+needed. They skip drafts and prereleases, so publish a release as a prerelease to
+try it before it goes out. The workflow refuses a tag that differs from the
+version in `package.json`.
 
 ## License
 

@@ -1,7 +1,7 @@
 name: Setup Wizard Release
 
-# `deepeval setup` and `npx deepeval setup` download these assets by tag
-# (`setup-v<version>`), pinned to the version in setup-wizard/package.json.
+# `deepeval setup` and `npx deepeval setup` download the newest published
+# `setup-v<version>` release, whose tag must match setup-wizard/package.json.
 
 on:
   push:

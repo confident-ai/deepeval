@@ -4,16 +4,12 @@ on:
   pull_request:
     paths:
       - 'typescript/**'
-      # The setup launcher's version must match the wizard it downloads.
-      - 'setup-wizard/package.json'
       - '.github/workflows/typescript_test.yml'
   push:
     branches:
       - main
     paths:
       - 'typescript/**'
-      # The setup launcher's version must match the wizard it downloads.
-      - 'setup-wizard/package.json'
       - '.github/workflows/typescript_test.yml'
   workflow_dispatch:
 

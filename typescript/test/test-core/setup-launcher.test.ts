@@ -7,18 +7,20 @@ import { Command } from "commander";
 
 import { registerSetupCommand } from "@/cli/commands/setup";
 import {
-  cacheDir,
+  cacheRoot,
   defaultLauncherDependencies,
+  latestVersion,
   releaseUrl,
+  RELEASES_PER_PAGE,
   resolveTarget,
   runSetup,
-  SETUP_WIZARD_VERSION,
   type LauncherDependencies,
   type RunResult,
 } from "@/cli/setup/launcher";
 
 const ARCHIVE = "deepeval-setup-linux-arm64.tar.gz";
 const BINARY = "#!/bin/sh\necho wizard\n";
+const VERSION = "0.2.0";
 
 let scratch: string;
 
@@ -53,17 +55,39 @@ function checksums(archive: Buffer, name = ARCHIVE): Buffer {
   return Buffer.from(`${"0".repeat(64)}  other.tar.gz\n${digest}  ${name}\n`);
 }
 
+function githubRelease(
+  tag: string,
+  options: { assets?: string[]; draft?: boolean; prerelease?: boolean } = {},
+) {
+  return {
+    tag_name: tag,
+    draft: options.draft ?? false,
+    prerelease: options.prerelease ?? false,
+    assets: (options.assets ?? [ARCHIVE, "SHA256SUMS"]).map((name) => ({
+      name,
+    })),
+  };
+}
+
 /** Stands in for GitHub releases and the child process, so no test touches
  * the network or launches anything. */
 function fakeDependencies(
   files: Record<string, Buffer>,
   result: RunResult = { status: 0, signal: null },
   overrides: Partial<LauncherDependencies> = {},
+  pages: ReadonlyArray<ReadonlyArray<unknown>> = [
+    [githubRelease("python-v4.3.0"), githubRelease(`setup-v${VERSION}`)],
+  ],
 ) {
   const requested: string[] = [];
+  const pagesRequested: number[] = [];
   const runs: Array<{ binary: string; args: string[] }> = [];
   const messages: string[] = [];
   const dependencies: LauncherDependencies = {
+    fetchReleases: async (page) => {
+      pagesRequested.push(page);
+      return [...(pages[page - 1] ?? [])];
+    },
     download: async (url) => {
       requested.push(url);
       const body = files[url];
@@ -83,28 +107,28 @@ function fakeDependencies(
     notify: (message) => messages.push(message),
     ...overrides,
   };
-  return { dependencies, requested, runs, messages };
+  return { dependencies, requested, pagesRequested, runs, messages };
 }
 
 function release(archive: Buffer, sums: Buffer = checksums(archive)) {
   return {
-    [releaseUrl(ARCHIVE)]: archive,
-    [releaseUrl("SHA256SUMS")]: sums,
+    [releaseUrl(ARCHIVE, VERSION)]: archive,
+    [releaseUrl("SHA256SUMS", VERSION)]: sums,
   };
 }
 
-const binaryPath = () =>
-  path.join(
-    scratch,
-    "cache",
-    "deepeval",
-    "setup",
-    SETUP_WIZARD_VERSION,
-    "deepeval-setup",
-  );
+const binaryPath = (version = VERSION) =>
+  path.join(scratch, "cache", "deepeval", "setup", version, "deepeval-setup");
+
+function cacheBinary(version = VERSION): string {
+  const binary = binaryPath(version);
+  fs.mkdirSync(path.dirname(binary), { recursive: true });
+  fs.writeFileSync(binary, BINARY, { mode: 0o755 });
+  return binary;
+}
 
 describe("deepeval setup launcher", () => {
-  it("downloads, verifies, caches and runs the wizard", async () => {
+  it("downloads, verifies, caches and runs the latest wizard", async () => {
     const archive = makeArchive("deepeval-setup");
     const fake = fakeDependencies(release(archive), {
       status: 7,
@@ -119,12 +143,99 @@ describe("deepeval setup launcher", () => {
     expect(fs.readFileSync(binary, "utf8")).toBe(BINARY);
     expect(fs.statSync(binary).mode & 0o777).toBe(0o755);
     expect(fake.requested).toEqual([
-      `https://github.com/confident-ai/deepeval/releases/download/setup-v${SETUP_WIZARD_VERSION}/${ARCHIVE}`,
-      `https://github.com/confident-ai/deepeval/releases/download/setup-v${SETUP_WIZARD_VERSION}/SHA256SUMS`,
+      `https://github.com/confident-ai/deepeval/releases/download/setup-v${VERSION}/${ARCHIVE}`,
+      `https://github.com/confident-ai/deepeval/releases/download/setup-v${VERSION}/SHA256SUMS`,
     ]);
     expect(fake.runs).toEqual([{ binary, args: ["--proj-id", "p"] }]);
     // Only the binary lands in the cache: the staging directory is gone.
     expect(fs.readdirSync(path.dirname(binary))).toEqual(["deepeval-setup"]);
+  });
+
+  it("picks the newest published release that ships this platform", async () => {
+    const pages = [
+      [
+        githubRelease("typescript-v0.9.21"),
+        githubRelease("setup-v0.4.0", { draft: true }),
+        githubRelease("setup-v0.3.5", { prerelease: true }),
+        githubRelease("setup-v0.3.0", { assets: ["SHA256SUMS"] }),
+        githubRelease("setup-v0.10.0"),
+        githubRelease("setup-v0.9.0"),
+        githubRelease("setup-latest"),
+        "not a release",
+      ],
+    ];
+    const fetched: number[] = [];
+
+    await expect(
+      latestVersion(ARCHIVE, async (page) => {
+        fetched.push(page);
+        return pages[page - 1] ?? [];
+      }),
+    ).resolves.toBe("0.10.0");
+    expect(fetched).toEqual([1]);
+  });
+
+  it("looks past a full page without a wizard release", async () => {
+    const fullPage = Array.from({ length: RELEASES_PER_PAGE }, (_, index) =>
+      githubRelease(`python-v4.${index}.0`),
+    );
+    const pages = [fullPage, [githubRelease("setup-v0.1.0")]];
+
+    await expect(
+      latestVersion(ARCHIVE, async (page) => pages[page - 1] ?? []),
+    ).resolves.toBe("0.1.0");
+  });
+
+  it("runs a cached latest wizard without downloading", async () => {
+    const binary = cacheBinary();
+    const fake = fakeDependencies({});
+
+    await expect(
+      runSetup(["--org-id", "org"], fake.dependencies),
+    ).resolves.toBe(0);
+
+    expect(fake.requested).toEqual([]);
+    expect(fake.runs).toEqual([{ binary, args: ["--org-id", "org"] }]);
+  });
+
+  it("replaces an older cached wizard with a newer release", async () => {
+    cacheBinary("0.1.0");
+    const archive = makeArchive("deepeval-setup");
+    const fake = fakeDependencies(release(archive));
+
+    await expect(runSetup([], fake.dependencies)).resolves.toBe(0);
+
+    expect(fake.requested).toHaveLength(2);
+    expect(fake.runs).toEqual([{ binary: binaryPath(), args: [] }]);
+  });
+
+  it("falls back to the newest cached wizard when GitHub is down", async () => {
+    cacheBinary("0.1.0");
+    const newest = cacheBinary("0.10.0");
+    const fake = fakeDependencies({}, undefined, {
+      fetchReleases: async () => {
+        throw new Error("offline");
+      },
+    });
+
+    await expect(runSetup([], fake.dependencies)).resolves.toBe(0);
+
+    expect(fake.messages.join("\n")).toContain("using the cached 0.10.0");
+    expect(fake.runs).toEqual([{ binary: newest, args: [] }]);
+  });
+
+  it.each([
+    ["no releases", []],
+    ["no wizard release", [[githubRelease("python-v4.3.0")]]],
+  ] as const)("exits 1 with %s and nothing cached", async (_label, pages) => {
+    const fake = fakeDependencies({}, undefined, {}, pages);
+
+    await expect(runSetup([], fake.dependencies)).resolves.toBe(1);
+
+    expect(fake.messages.join("\n")).toContain(
+      "Could not find the setup wizard",
+    );
+    expect(fake.runs).toEqual([]);
   });
 
   it("writes nothing when the checksum does not match", async () => {
@@ -174,6 +285,7 @@ describe("deepeval setup launcher", () => {
     await expect(runSetup([], fake.dependencies)).resolves.toBe(1);
 
     expect(fake.messages.join("\n")).toContain("macOS and Linux");
+    expect(fake.pagesRequested).toEqual([]);
     expect(fake.requested).toEqual([]);
     expect(fake.runs).toEqual([]);
   });
@@ -194,45 +306,21 @@ describe("deepeval setup launcher", () => {
     });
   });
 
-  it("runs a cached binary without downloading", async () => {
-    const binary = binaryPath();
-    fs.mkdirSync(path.dirname(binary), { recursive: true });
-    fs.writeFileSync(binary, BINARY, { mode: 0o755 });
-    const fake = fakeDependencies({});
-
-    await expect(
-      runSetup(["--org-id", "org"], fake.dependencies),
-    ).resolves.toBe(0);
-
-    expect(fake.requested).toEqual([]);
-    expect(fake.runs).toEqual([{ binary, args: ["--org-id", "org"] }]);
-  });
-
   it("reports a signal exit the way shells do", async () => {
-    const binary = binaryPath();
-    fs.mkdirSync(path.dirname(binary), { recursive: true });
-    fs.writeFileSync(binary, BINARY, { mode: 0o755 });
+    cacheBinary();
     const fake = fakeDependencies({}, { status: null, signal: "SIGINT" });
 
     await expect(runSetup([], fake.dependencies)).resolves.toBe(130);
   });
 
   it("ignores a relative XDG_CACHE_HOME", () => {
-    expect(cacheDir({ XDG_CACHE_HOME: "relative" }, "/home/me")).toBe(
-      path.join(
-        "/home/me",
-        ".cache",
-        "deepeval",
-        "setup",
-        SETUP_WIZARD_VERSION,
-      ),
+    expect(cacheRoot({ XDG_CACHE_HOME: "relative" }, "/home/me")).toBe(
+      path.join("/home/me", ".cache", "deepeval", "setup"),
     );
   });
 
   it("passes every wizard option through the CLI", async () => {
-    const binary = binaryPath();
-    fs.mkdirSync(path.dirname(binary), { recursive: true });
-    fs.writeFileSync(binary, BINARY, { mode: 0o755 });
+    const binary = cacheBinary();
     const fake = fakeDependencies({}, { status: 3, signal: null });
     const program = new Command().enablePositionalOptions().exitOverride();
     registerSetupCommand(program, () => fake.dependencies);
@@ -269,15 +357,5 @@ describe("deepeval setup launcher", () => {
         ],
       },
     ]);
-  });
-
-  it("pins the version of setup-wizard/package.json", () => {
-    const manifest = JSON.parse(
-      fs.readFileSync(
-        path.resolve(__dirname, "../../../setup-wizard/package.json"),
-        "utf8",
-      ),
-    ) as { version: string };
-    expect(SETUP_WIZARD_VERSION).toBe(manifest.version);
   });
 });

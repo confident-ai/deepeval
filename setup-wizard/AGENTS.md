@@ -32,11 +32,12 @@ npm run build
   of plan gates: a 401 has to mean the key itself was rejected. The test-run
   routes answer a free plan with 401, so they cannot serve as that check.
 - Releases are `setup-v<version>` tags built by
-  `.github/workflows/setup_wizard_release.yml` at the repository root. The
-  version in `package.json` must equal `SETUP_WIZARD_VERSION` in
+  `.github/workflows/setup_wizard_release.yml` at the repository root, and the
+  tag must match the version in `package.json`. Both launchers,
   `deepeval/cli/setup/launcher.py` and `typescript/src/cli/setup/launcher.ts`,
-  and the archive names `deepeval-setup-<os>-<arch>.tar.gz` and `SHA256SUMS`
-  are what both launchers download, so change them together.
+  run the newest published `setup-v*` release, so every release reaches all
+  users at once. The archive names `deepeval-setup-<os>-<arch>.tar.gz` and
+  `SHA256SUMS` are what both launchers download, so change them together.
 - Preserve `.env.local` contents when changing the Confident key or judge-model
   keys, reject symlinks, and retain mode `0600`.
 - `src/judge.ts` mirrors DeepEval's own judge resolution: `USE_*` flags first,

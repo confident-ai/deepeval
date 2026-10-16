@@ -18,6 +18,14 @@ const judgeProvider = {
  * failing anything else.
  */
 describe("canonical prompt", () => {
+  it("checks for an outdated DeepEval before working around a failure", () => {
+    const prompt = getCanonicalPrompt();
+    expect(prompt).toContain("pip index versions deepeval");
+    expect(prompt).toContain("npm view deepeval version");
+    expect(prompt).toContain("do not upgrade it yourself");
+    expect(prompt).toContain("npm install deepeval@latest");
+  });
+
   it("arrives whole, with the contract src/result.ts validates against", () => {
     const prompt = getCanonicalPrompt();
     expect(prompt.startsWith("# Confident AI evaluation setup")).toBe(true);

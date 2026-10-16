@@ -1,8 +1,9 @@
 """Download, verify, cache and run the `deepeval-setup` wizard binary.
 
 The wizard lives in `setup-wizard/` and ships as a standalone executable on
-GitHub releases tagged `setup-v<version>`. Each DeepEval release pins the
-wizard version it was tested with, so `deepeval setup` never runs "latest".
+GitHub releases tagged `setup-v<version>`. Every run asks GitHub for the newest
+of those releases, so a wizard fix reaches users without a DeepEval upgrade, and
+falls back to the newest cached copy when GitHub cannot be reached.
 """
 
 import contextlib
@@ -17,17 +18,32 @@ import subprocess
 import tarfile
 import tempfile
 from pathlib import Path, PurePosixPath
-from typing import Callable, Iterator, Mapping, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import requests
 
-# Must equal `version` in setup-wizard/package.json; a test enforces it.
-SETUP_WIZARD_VERSION = "0.1.0"
 BINARY_NAME = "deepeval-setup"
 CHECKSUMS_NAME = "SHA256SUMS"
 RELEASES_URL = "https://github.com/confident-ai/deepeval/releases/download"
+RELEASES_API_URL = "https://api.github.com/repos/confident-ai/deepeval/releases"
 # (connect, read) seconds; the read timeout applies per chunk, not overall.
 DOWNLOAD_TIMEOUT = (10, 60)
+LOOKUP_TIMEOUT = (10, 30)
+# Python and TypeScript SDK releases share the list, newest first, so the
+# newest wizard release is normally on the first page.
+RELEASES_PER_PAGE = 100
+LOOKUP_PAGES = 3
+_TAG = re.compile(r"^setup-v(\d+)\.(\d+)\.(\d+)$")
+_VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 _OS_NAMES = {"darwin": "darwin", "linux": "linux"}
 _ARCH_NAMES = {
@@ -67,26 +83,99 @@ def archive_name(os_name: str, arch: str) -> str:
     return f"{BINARY_NAME}-{os_name}-{arch}.tar.gz"
 
 
-def release_url(name: str, version: str = SETUP_WIZARD_VERSION) -> str:
+def release_url(name: str, version: str) -> str:
     return f"{RELEASES_URL}/setup-v{version}/{name}"
 
 
-def cache_dir(
-    version: str = SETUP_WIZARD_VERSION,
-    env: Optional[Mapping[str, str]] = None,
-) -> Path:
-    """`${XDG_CACHE_HOME:-~/.cache}/deepeval/setup/<version>`."""
+def cache_root(env: Optional[Mapping[str, str]] = None) -> Path:
+    """`${XDG_CACHE_HOME:-~/.cache}/deepeval/setup`."""
     env = os.environ if env is None else env
     base = env.get("XDG_CACHE_HOME") or ""
     # The XDG spec says a relative value is invalid and should be ignored.
     root = Path(base) if os.path.isabs(base) else Path.home() / ".cache"
-    return root / "deepeval" / "setup" / version
+    return root / "deepeval" / "setup"
+
+
+def cache_dir(version: str, env: Optional[Mapping[str, str]] = None) -> Path:
+    return cache_root(env) / version
 
 
 def _download(url: str) -> bytes:
     response = requests.get(url, timeout=DOWNLOAD_TIMEOUT)
     response.raise_for_status()
     return response.content
+
+
+def _fetch_releases(page: int) -> List[Any]:
+    response = requests.get(
+        RELEASES_API_URL,
+        params={"per_page": RELEASES_PER_PAGE, "page": page},
+        headers={"Accept": "application/vnd.github+json"},
+        timeout=LOOKUP_TIMEOUT,
+    )
+    response.raise_for_status()
+    releases = response.json()
+    if not isinstance(releases, list):
+        raise SetupLauncherError("GitHub returned an unexpected release list.")
+    return releases
+
+
+def _is_executable(path: Path) -> bool:
+    return path.is_file() and os.access(path, os.X_OK)
+
+
+def latest_version(
+    asset: str,
+    fetch_releases: Optional[Callable[[int], List[Any]]] = None,
+) -> str:
+    """The newest published `setup-v*` release that ships `asset`.
+
+    Drafts and prereleases are skipped, so a release can be staged as a
+    prerelease before it reaches everyone."""
+    fetch_releases = fetch_releases or _fetch_releases
+    newest: Optional[Tuple[int, ...]] = None
+    for page in range(1, LOOKUP_PAGES + 1):
+        releases = fetch_releases(page)
+        for release in releases:
+            if not isinstance(release, dict):
+                continue
+            if release.get("draft") or release.get("prerelease"):
+                continue
+            match = _TAG.match(str(release.get("tag_name") or ""))
+            if match is None:
+                continue
+            assets = {
+                item.get("name")
+                for item in release.get("assets") or []
+                if isinstance(item, dict)
+            }
+            if asset not in assets or CHECKSUMS_NAME not in assets:
+                continue
+            version = tuple(int(part) for part in match.groups())
+            if newest is None or version > newest:
+                newest = version
+        if newest is not None or len(releases) < RELEASES_PER_PAGE:
+            break
+    if newest is None:
+        raise SetupLauncherError(
+            f"No published setup wizard release ships {asset}."
+        )
+    return ".".join(str(part) for part in newest)
+
+
+def newest_cached(env: Optional[Mapping[str, str]] = None) -> Optional[Path]:
+    """The newest wizard already in the cache, for when GitHub is out of
+    reach."""
+    root = cache_root(env)
+    if not root.is_dir():
+        return None
+    cached = []
+    for entry in root.iterdir():
+        match = _VERSION.match(entry.name)
+        binary = entry / BINARY_NAME
+        if match and _is_executable(binary):
+            cached.append((tuple(int(part) for part in match.groups()), binary))
+    return max(cached)[1] if cached else None
 
 
 def expected_sha256(checksums: str, name: str) -> str:
@@ -176,27 +265,44 @@ def install_binary(
 def ensure_binary(
     *,
     download: Optional[Callable[[str], bytes]] = None,
+    fetch_releases: Optional[Callable[[int], List[Any]]] = None,
     system: Optional[str] = None,
     machine: Optional[str] = None,
     env: Optional[Mapping[str, str]] = None,
     notify: Callable[[str], None] = lambda _message: None,
 ) -> Path:
-    """Return the cached wizard binary, downloading it first if needed."""
-    # Resolved per call, so patching `_download` reaches every caller.
+    """Return the newest wizard binary, downloading it first if needed."""
+    # Resolved per call, so patching the helpers reaches every caller.
     download = download or _download
+    fetch_releases = fetch_releases or _fetch_releases
     os_name, arch = resolve_target(system, machine)
-    target = cache_dir(env=env) / BINARY_NAME
-    if target.is_file() and os.access(target, os.X_OK):
+    name = archive_name(os_name, arch)
+
+    try:
+        version = latest_version(name, fetch_releases)
+    except (requests.RequestException, ValueError, SetupLauncherError) as error:
+        cached = newest_cached(env)
+        if cached is None:
+            raise SetupLauncherError(
+                f"Could not find the setup wizard on GitHub: {error}"
+            ) from error
+        notify(
+            f"Could not check GitHub for a newer setup wizard ({error}); "
+            f"using the cached {cached.parent.name}."
+        )
+        return cached
+
+    target = cache_dir(version, env) / BINARY_NAME
+    if _is_executable(target):
         return target
 
-    name = archive_name(os_name, arch)
     notify(
-        f"Downloading the DeepEval setup wizard {SETUP_WIZARD_VERSION} "
+        f"Downloading the DeepEval setup wizard {version} "
         f"({os_name}-{arch})..."
     )
     try:
-        archive = download(release_url(name))
-        checksums = download(release_url(CHECKSUMS_NAME))
+        archive = download(release_url(name, version))
+        checksums = download(release_url(CHECKSUMS_NAME, version))
     except requests.RequestException as error:
         raise SetupLauncherError(
             f"Could not download the setup wizard: {error}"

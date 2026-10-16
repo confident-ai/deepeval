@@ -85,6 +85,18 @@ project's own environment on Python 3.9 or newer, the TypeScript SDK into the
 project's `package.json`. If it cannot be installed, stop and report `failed`
 with the reason.
 
+### When DeepEval does not behave as this prompt says
+
+If an import, a metric, an argument, or a `test run` flag that this prompt names
+fails or does not exist, check whether the installed DeepEval is the latest
+release before working around it: an older release is the usual cause. Compare
+the installed version (`pip show deepeval` in the project's environment, or
+`npm ls deepeval`) with the newest published one (`pip index versions deepeval`,
+or `npm view deepeval version`). If it is older, do not upgrade it yourself: add
+both versions to `errors`, and in your report tell the user to upgrade with the
+project's own package manager, such as `pip install -U deepeval` or
+`npm install deepeval@latest`, then rerun setup.
+
 ## Step 3 — Build a dataset of 20 goldens
 
 Hold the goldens in DeepEval's own `EvaluationDataset`, never in a plain list or
@@ -386,7 +398,9 @@ run that reaches Confident AI creates another test run for the user to sift
 through. When an API is unclear, read the installed package's type definitions or
 source instead of calling it. The single exception is a command that fails before
 any metric scores, which produced no test run at all: fix its cause and issue the
-command once more, at most once, then report what happened either way.
+command once more, at most once, then report what happened either way. When that
+failure looks like a DeepEval API mismatch, check the version first, as step 2
+describes.
 
 ## Step 8 — Tell the user what happened
 
@@ -404,7 +418,8 @@ result file, so do not restate them or dump a score table.
 4. **The next step.** One sentence: the single most useful thing to do with this
    result, drawn from what the run actually showed — raise the weakest
    component's quality, widen the 20 goldens, or replace a judge-free metric that
-   never fails.
+   never fails. When an outdated DeepEval caused a failure, the next step is the
+   upgrade command instead.
 
 Plain sentences, no headings, no secrets, and nothing about how you built it.
 

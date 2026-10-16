@@ -2,9 +2,10 @@
  * Download, verify, cache and run the `deepeval-setup` wizard binary.
  *
  * The wizard lives in `setup-wizard/` and ships as a standalone executable on
- * GitHub releases tagged `setup-v<version>`. Each DeepEval release pins the
- * wizard version it was tested with, so `npx deepeval setup` never runs
- * "latest". Mirrors `deepeval/cli/setup/launcher.py`.
+ * GitHub releases tagged `setup-v<version>`. Every run asks GitHub for the
+ * newest of those releases, so a wizard fix reaches users without a DeepEval
+ * upgrade, and falls back to the newest cached copy when GitHub cannot be
+ * reached. Mirrors `deepeval/cli/setup/launcher.py`.
  */
 import { createHash } from "crypto";
 import { execFile, spawnSync } from "child_process";
@@ -14,12 +15,18 @@ import * as path from "path";
 import { promisify } from "util";
 import axios from "axios";
 
-/** Must equal `version` in setup-wizard/package.json; a test enforces it. */
-export const SETUP_WIZARD_VERSION = "0.1.0";
 export const BINARY_NAME = "deepeval-setup";
 export const CHECKSUMS_NAME = "SHA256SUMS";
 export const RELEASES_URL =
   "https://github.com/confident-ai/deepeval/releases/download";
+export const RELEASES_API_URL =
+  "https://api.github.com/repos/confident-ai/deepeval/releases";
+// Python and TypeScript SDK releases share the list, newest first, so the
+// newest wizard release is normally on the first page.
+export const RELEASES_PER_PAGE = 100;
+export const LOOKUP_PAGES = 3;
+const TAG = /^setup-v(\d+)\.(\d+)\.(\d+)$/;
+const VERSION = /^(\d+)\.(\d+)\.(\d+)$/;
 
 const OS_NAMES: Partial<Record<NodeJS.Platform, string>> = {
   darwin: "darwin",
@@ -57,25 +64,130 @@ export function archiveName(target: Target): string {
   return `${BINARY_NAME}-${target.os}-${target.arch}.tar.gz`;
 }
 
-export function releaseUrl(
-  name: string,
-  version: string = SETUP_WIZARD_VERSION,
-): string {
+export function releaseUrl(name: string, version: string): string {
   return `${RELEASES_URL}/setup-v${version}/${name}`;
 }
 
-/** `${XDG_CACHE_HOME:-~/.cache}/deepeval/setup/<version>`. */
-export function cacheDir(
+/** `${XDG_CACHE_HOME:-~/.cache}/deepeval/setup`. */
+export function cacheRoot(
   env: NodeJS.ProcessEnv = process.env,
   home: string = os.homedir(),
-  version: string = SETUP_WIZARD_VERSION,
 ): string {
   const configured = env.XDG_CACHE_HOME ?? "";
   // The XDG spec says a relative value is invalid and should be ignored.
   const root = path.isAbsolute(configured)
     ? configured
     : path.join(home, ".cache");
-  return path.join(root, "deepeval", "setup", version);
+  return path.join(root, "deepeval", "setup");
+}
+
+export function cacheDir(
+  version: string,
+  env: NodeJS.ProcessEnv = process.env,
+  home: string = os.homedir(),
+): string {
+  return path.join(cacheRoot(env, home), version);
+}
+
+type VersionParts = [number, number, number];
+
+function parseVersion(pattern: RegExp, text: string): VersionParts | undefined {
+  const match = pattern.exec(text);
+  return match
+    ? [Number(match[1]), Number(match[2]), Number(match[3])]
+    : undefined;
+}
+
+function compareVersions(a: VersionParts, b: VersionParts): number {
+  return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+}
+
+async function fetchReleases(page: number): Promise<unknown[]> {
+  const response = await axios.get<unknown>(RELEASES_API_URL, {
+    params: { per_page: RELEASES_PER_PAGE, page },
+    headers: { Accept: "application/vnd.github+json" },
+    timeout: 30_000,
+  });
+  if (!Array.isArray(response.data)) {
+    throw new SetupLauncherError("GitHub returned an unexpected release list.");
+  }
+  return response.data;
+}
+
+interface ReleaseLike {
+  tag_name?: unknown;
+  draft?: unknown;
+  prerelease?: unknown;
+  assets?: unknown;
+}
+
+/**
+ * The newest published `setup-v*` release that ships `asset`. Drafts and
+ * prereleases are skipped, so a release can be staged as a prerelease before
+ * it reaches everyone.
+ */
+export async function latestVersion(
+  asset: string,
+  fetch: (page: number) => Promise<unknown[]> = fetchReleases,
+): Promise<string> {
+  let newest: VersionParts | undefined;
+  for (let page = 1; page <= LOOKUP_PAGES; page++) {
+    const releases = await fetch(page);
+    for (const candidate of releases) {
+      if (!candidate || typeof candidate !== "object") continue;
+      const release = candidate as ReleaseLike;
+      if (release.draft || release.prerelease) continue;
+      const version = parseVersion(TAG, String(release.tag_name ?? ""));
+      if (!version) continue;
+      const names = new Set(
+        (Array.isArray(release.assets) ? release.assets : []).map(
+          (item: unknown) =>
+            item && typeof item === "object"
+              ? (item as { name?: unknown }).name
+              : undefined,
+        ),
+      );
+      if (!names.has(asset) || !names.has(CHECKSUMS_NAME)) continue;
+      if (!newest || compareVersions(version, newest) > 0) newest = version;
+    }
+    if (newest || releases.length < RELEASES_PER_PAGE) break;
+  }
+  if (!newest) {
+    throw new SetupLauncherError(
+      `No published setup wizard release ships ${asset}.`,
+    );
+  }
+  return newest.join(".");
+}
+
+/** The newest wizard already in the cache, for when GitHub is out of reach. */
+export function newestCached(
+  env: NodeJS.ProcessEnv = process.env,
+  home: string = os.homedir(),
+): { version: string; binary: string } | undefined {
+  const root = cacheRoot(env, home);
+  let entries: string[];
+  try {
+    entries = fs.readdirSync(root);
+  } catch {
+    return undefined;
+  }
+  let newest: { parts: VersionParts; version: string } | undefined;
+  for (const entry of entries) {
+    const parts = parseVersion(VERSION, entry);
+    if (!parts || !isExecutableFile(path.join(root, entry, BINARY_NAME))) {
+      continue;
+    }
+    if (!newest || compareVersions(parts, newest.parts) > 0) {
+      newest = { parts, version: entry };
+    }
+  }
+  return newest
+    ? {
+        version: newest.version,
+        binary: path.join(root, newest.version, BINARY_NAME),
+      }
+    : undefined;
 }
 
 /** Read `name`'s digest from `sha256sum` output. */
@@ -148,6 +260,7 @@ function runInherited(binary: string, args: string[]): RunResult {
 }
 
 export interface LauncherDependencies {
+  fetchReleases: (page: number) => Promise<unknown[]>;
   download: (url: string) => Promise<Buffer>;
   extract: (archivePath: string, directory: string) => Promise<void>;
   run: (binary: string, args: string[]) => RunResult;
@@ -159,6 +272,7 @@ export interface LauncherDependencies {
 }
 
 export const defaultLauncherDependencies = (): LauncherDependencies => ({
+  fetchReleases,
   download,
   extract: extractWithTar,
   run: runInherited,
@@ -230,23 +344,51 @@ export async function installBinary(
   return target;
 }
 
-/** Return the cached wizard binary, downloading it first if needed. */
+function describeError(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return error.response
+      ? `GitHub answered ${error.response.status}`
+      : error.message;
+  }
+  return error instanceof Error ? error.message : String(error);
+}
+
+/** Return the newest wizard binary, downloading it first if needed. */
 export async function ensureBinary(
   dependencies: LauncherDependencies,
 ): Promise<string> {
   const target = resolveTarget(dependencies.platform, dependencies.arch);
+  const name = archiveName(target);
+
+  let version: string;
+  try {
+    version = await latestVersion(name, dependencies.fetchReleases);
+  } catch (error) {
+    const cached = newestCached(dependencies.env, dependencies.home);
+    if (!cached) {
+      throw new SetupLauncherError(
+        `Could not find the setup wizard on GitHub: ${describeError(error)}`,
+      );
+    }
+    dependencies.notify(
+      `Could not check GitHub for a newer setup wizard (${describeError(error)}); using the cached ${cached.version}.`,
+    );
+    return cached.binary;
+  }
+
   const binary = path.join(
-    cacheDir(dependencies.env, dependencies.home),
+    cacheDir(version, dependencies.env, dependencies.home),
     BINARY_NAME,
   );
   if (isExecutableFile(binary)) return binary;
 
-  const name = archiveName(target);
   dependencies.notify(
-    `Downloading the DeepEval setup wizard ${SETUP_WIZARD_VERSION} (${target.os}-${target.arch})...`,
+    `Downloading the DeepEval setup wizard ${version} (${target.os}-${target.arch})...`,
   );
-  const archive = await dependencies.download(releaseUrl(name));
-  const checksums = await dependencies.download(releaseUrl(CHECKSUMS_NAME));
+  const archive = await dependencies.download(releaseUrl(name, version));
+  const checksums = await dependencies.download(
+    releaseUrl(CHECKSUMS_NAME, version),
+  );
   return installBinary(
     archive,
     checksums.toString("utf8"),

@@ -1,22 +1,22 @@
 import hashlib
 import io
-import json
 import os
 import stat
 import subprocess
 import tarfile
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pytest
+import requests
 from typer.testing import CliRunner
 
 from deepeval.cli.main import app
 from deepeval.cli.setup import launcher
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 BINARY = b"#!/bin/sh\necho wizard\n"
 ARCHIVE_NAME = "deepeval-setup-linux-arm64.tar.gz"
+VERSION = "0.2.0"
 
 
 def _tar_gz(members: Dict[str, Optional[bytes]]) -> bytes:
@@ -41,17 +41,48 @@ def _checksums(archive: bytes, name: str = ARCHIVE_NAME) -> bytes:
     return f"{'0' * 64}  other.tar.gz\n{digest}  {name}\n".encode()
 
 
-class FakeRelease:
-    """Stands in for GitHub releases, so no test touches the network."""
+def _release(
+    tag: str,
+    assets: Optional[List[str]] = None,
+    draft: bool = False,
+    prerelease: bool = False,
+) -> Dict[str, Any]:
+    names = [ARCHIVE_NAME, "SHA256SUMS"] if assets is None else assets
+    return {
+        "tag_name": tag,
+        "draft": draft,
+        "prerelease": prerelease,
+        "assets": [{"name": name} for name in names],
+    }
 
-    def __init__(self, archive: bytes, checksums: bytes) -> None:
+
+class FakeGitHub:
+    """Stands in for the release list and its downloads, so no test touches
+    the network."""
+
+    def __init__(
+        self,
+        archive: bytes,
+        checksums: bytes,
+        pages: Optional[List[List[Dict[str, Any]]]] = None,
+    ) -> None:
+        self.pages = (
+            [[_release("python-v4.3.0"), _release(f"setup-v{VERSION}")]]
+            if pages is None
+            else pages
+        )
         self.files = {
-            launcher.release_url(ARCHIVE_NAME): archive,
-            launcher.release_url(launcher.CHECKSUMS_NAME): checksums,
+            launcher.release_url(ARCHIVE_NAME, VERSION): archive,
+            launcher.release_url(launcher.CHECKSUMS_NAME, VERSION): checksums,
         }
+        self.pages_requested: List[int] = []
         self.requested: List[str] = []
 
-    def __call__(self, url: str) -> bytes:
+    def releases(self, page: int) -> List[Dict[str, Any]]:
+        self.pages_requested.append(page)
+        return self.pages[page - 1] if page <= len(self.pages) else []
+
+    def download(self, url: str) -> bytes:
         self.requested.append(url)
         return self.files[url]
 
@@ -92,29 +123,36 @@ def linux_arm64(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _install(
-    monkeypatch: pytest.MonkeyPatch, release: FakeRelease, runner: FakeRunner
+    monkeypatch: pytest.MonkeyPatch, github: FakeGitHub, runner: FakeRunner
 ) -> None:
-    monkeypatch.setattr("deepeval.cli.setup.launcher._download", release)
+    monkeypatch.setattr(
+        "deepeval.cli.setup.launcher._fetch_releases", github.releases
+    )
+    monkeypatch.setattr(
+        "deepeval.cli.setup.launcher._download", github.download
+    )
     monkeypatch.setattr("deepeval.cli.setup.launcher.subprocess.run", runner)
 
 
-def _binary_path(cache_home: Path) -> Path:
-    return (
-        cache_home
-        / "deepeval"
-        / "setup"
-        / launcher.SETUP_WIZARD_VERSION
-        / "deepeval-setup"
-    )
+def _binary_path(cache_home: Path, version: str = VERSION) -> Path:
+    return cache_home / "deepeval" / "setup" / version / "deepeval-setup"
 
 
-def test_downloads_verifies_caches_and_runs_the_wizard(
+def _cache(cache_home: Path, version: str) -> Path:
+    binary = _binary_path(cache_home, version)
+    binary.parent.mkdir(parents=True)
+    binary.write_bytes(BINARY)
+    binary.chmod(0o755)
+    return binary
+
+
+def test_downloads_verifies_caches_and_runs_the_latest_wizard(
     monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
 ) -> None:
     archive = _tar_gz({"deepeval-setup": BINARY})
-    release = FakeRelease(archive, _checksums(archive))
+    github = FakeGitHub(archive, _checksums(archive))
     runner = FakeRunner(returncode=7)
-    _install(monkeypatch, release, runner)
+    _install(monkeypatch, github, runner)
 
     result = CliRunner().invoke(
         app,
@@ -133,11 +171,11 @@ def test_downloads_verifies_caches_and_runs_the_wizard(
     binary = _binary_path(cache_home)
     assert binary.read_bytes() == BINARY
     assert stat.S_IMODE(binary.stat().st_mode) == 0o755
-    assert release.requested == [
+    assert github.requested == [
         "https://github.com/confident-ai/deepeval/releases/download/"
-        f"setup-v{launcher.SETUP_WIZARD_VERSION}/{ARCHIVE_NAME}",
+        f"setup-v{VERSION}/{ARCHIVE_NAME}",
         "https://github.com/confident-ai/deepeval/releases/download/"
-        f"setup-v{launcher.SETUP_WIZARD_VERSION}/SHA256SUMS",
+        f"setup-v{VERSION}/SHA256SUMS",
     ]
     assert runner.calls == [
         [
@@ -154,13 +192,112 @@ def test_downloads_verifies_caches_and_runs_the_wizard(
     assert os.listdir(binary.parent) == ["deepeval-setup"]
 
 
+def test_picks_the_newest_published_release_that_ships_this_platform() -> None:
+    pages = [
+        [
+            _release("typescript-v0.9.21"),
+            _release("setup-v0.4.0", draft=True),
+            _release("setup-v0.3.5", prerelease=True),
+            _release("setup-v0.3.0", assets=["SHA256SUMS"]),
+            _release("setup-v0.10.0"),
+            _release("setup-v0.9.0"),
+            _release("setup-latest"),
+            "not a release",
+        ]
+    ]
+    github = FakeGitHub(b"", b"", pages)
+
+    assert launcher.latest_version(ARCHIVE_NAME, github.releases) == "0.10.0"
+    assert github.pages_requested == [1]
+
+
+def test_looks_past_a_full_page_without_a_wizard_release() -> None:
+    full_page = [
+        _release(f"python-v4.{index}.0")
+        for index in range(launcher.RELEASES_PER_PAGE)
+    ]
+    github = FakeGitHub(b"", b"", [full_page, [_release("setup-v0.1.0")]])
+
+    assert launcher.latest_version(ARCHIVE_NAME, github.releases) == "0.1.0"
+    assert github.pages_requested == [1, 2]
+
+
+def test_a_cached_latest_wizard_skips_the_download(
+    monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
+) -> None:
+    binary = _cache(cache_home, VERSION)
+    github = FakeGitHub(b"", b"")
+    runner = FakeRunner()
+    _install(monkeypatch, github, runner)
+
+    result = CliRunner().invoke(app, ["setup", "--org-id", "org"])
+
+    assert result.exit_code == 0, result.output
+    assert github.requested == []
+    assert runner.calls == [[str(binary), "--org-id", "org"]]
+
+
+def test_a_newer_release_replaces_an_older_cached_wizard(
+    monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
+) -> None:
+    _cache(cache_home, "0.1.0")
+    archive = _tar_gz({"deepeval-setup": BINARY})
+    github = FakeGitHub(archive, _checksums(archive))
+    runner = FakeRunner()
+    _install(monkeypatch, github, runner)
+
+    assert CliRunner().invoke(app, ["setup"]).exit_code == 0
+    assert len(github.requested) == 2
+    assert runner.calls == [[str(_binary_path(cache_home))]]
+
+
+def test_falls_back_to_the_newest_cached_wizard_when_github_is_down(
+    monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
+) -> None:
+    _cache(cache_home, "0.1.0")
+    newest = _cache(cache_home, "0.10.0")
+    runner = FakeRunner()
+
+    def offline(_page: int) -> List[Any]:
+        raise requests.ConnectionError("offline")
+
+    github = FakeGitHub(b"", b"")
+    _install(monkeypatch, github, runner)
+    monkeypatch.setattr("deepeval.cli.setup.launcher._fetch_releases", offline)
+
+    result = CliRunner().invoke(app, ["setup"])
+
+    assert result.exit_code == 0, result.output
+    assert "using the cached 0.10.0" in result.output
+    assert runner.calls == [[str(newest)]]
+
+
+@pytest.mark.parametrize(
+    "pages", [[], [[_release("python-v4.3.0")]]], ids=["empty", "none"]
+)
+def test_no_release_and_no_cache_exits_1(
+    monkeypatch: pytest.MonkeyPatch,
+    cache_home: Path,
+    linux_arm64: None,
+    pages: List[List[Dict[str, Any]]],
+) -> None:
+    runner = FakeRunner()
+    _install(monkeypatch, FakeGitHub(b"", b"", pages), runner)
+
+    result = CliRunner().invoke(app, ["setup"])
+
+    assert result.exit_code == 1
+    assert "Could not find the setup wizard" in result.output
+    assert runner.calls == []
+
+
 def test_checksum_mismatch_writes_nothing(
     monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
 ) -> None:
     archive = _tar_gz({"deepeval-setup": BINARY})
     tampered = _tar_gz({"deepeval-setup": b"#!/bin/sh\necho evil\n"})
     runner = FakeRunner()
-    _install(monkeypatch, FakeRelease(tampered, _checksums(archive)), runner)
+    _install(monkeypatch, FakeGitHub(tampered, _checksums(archive)), runner)
 
     result = CliRunner().invoke(app, ["setup"])
 
@@ -187,7 +324,7 @@ def test_rejects_unsafe_or_unexpected_archives(
 ) -> None:
     archive = _tar_gz(members)
     runner = FakeRunner()
-    _install(monkeypatch, FakeRelease(archive, _checksums(archive)), runner)
+    _install(monkeypatch, FakeGitHub(archive, _checksums(archive)), runner)
 
     result = CliRunner().invoke(app, ["setup"])
 
@@ -212,15 +349,16 @@ def test_unsupported_platforms_exit_1(
     monkeypatch.setattr(
         "deepeval.cli.setup.launcher.platform.machine", lambda: machine
     )
-    release = FakeRelease(b"", b"")
+    github = FakeGitHub(b"", b"")
     runner = FakeRunner()
-    _install(monkeypatch, release, runner)
+    _install(monkeypatch, github, runner)
 
     result = CliRunner().invoke(app, ["setup"])
 
     assert result.exit_code == 1
     assert "macOS and Linux" in result.output
-    assert release.requested == []
+    assert github.pages_requested == []
+    assert github.requested == []
     assert runner.calls == []
 
 
@@ -239,50 +377,23 @@ def test_maps_supported_platforms(
     assert launcher.resolve_target(system, machine) == target
 
 
-def test_cached_binary_skips_the_download(
-    monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
-) -> None:
-    binary = _binary_path(cache_home)
-    binary.parent.mkdir(parents=True)
-    binary.write_bytes(BINARY)
-    binary.chmod(0o755)
-    release = FakeRelease(b"", b"")
-    runner = FakeRunner()
-    _install(monkeypatch, release, runner)
-
-    result = CliRunner().invoke(app, ["setup", "--org-id", "org"])
-
-    assert result.exit_code == 0, result.output
-    assert release.requested == []
-    assert runner.calls == [[str(binary), "--org-id", "org"]]
-
-
 def test_signal_exit_maps_to_shell_convention(
     monkeypatch: pytest.MonkeyPatch, cache_home: Path, linux_arm64: None
 ) -> None:
     archive = _tar_gz({"./deepeval-setup": BINARY})
     _install(
         monkeypatch,
-        FakeRelease(archive, _checksums(archive)),
+        FakeGitHub(archive, _checksums(archive)),
         FakeRunner(returncode=-2),
     )
 
     assert CliRunner().invoke(app, ["setup"]).exit_code == 130
 
 
-def test_cache_dir_ignores_a_relative_xdg_cache_home(
+def test_cache_root_ignores_a_relative_xdg_cache_home(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
-    assert (
-        launcher.cache_dir(env={"XDG_CACHE_HOME": "relative"})
-        == (Path.home() / ".cache" / "deepeval" / "setup")
-        / launcher.SETUP_WIZARD_VERSION
+    assert launcher.cache_root(env={"XDG_CACHE_HOME": "relative"}) == (
+        Path.home() / ".cache" / "deepeval" / "setup"
     )
-
-
-def test_version_matches_the_setup_wizard_package() -> None:
-    package = json.loads(
-        (REPO_ROOT / "setup-wizard" / "package.json").read_text()
-    )
-    assert launcher.SETUP_WIZARD_VERSION == package["version"]
