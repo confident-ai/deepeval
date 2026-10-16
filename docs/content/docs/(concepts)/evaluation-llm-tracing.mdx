@@ -718,7 +718,7 @@ const supervisorAgent = observe({
 </Switch>
 
 :::tip[Span types carry over]
-If you also send your traces to [Confident AI](#already-in-production), span types carry over — model + token cost on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.
+If you also send your traces to [Confident AI](#evaluating-production-traces), span types carry over — model + token cost on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.
 :::
 
 ## Reference goldens at runtime
@@ -788,7 +788,7 @@ This is the right tool for short-lived jobs, serverless handlers, and sandboxes 
 
 If you send traces through OpenTelemetry, `ConfidentSpanExporter.force_flush()` and `ContextAwareSpanProcessor.force_flush()` wait on the same queue, so the standard `TracerProvider.force_flush()` call also drains pending traces.
 
-## Already in Production?
+## Evaluating Production Traces
 
 Everything above runs entirely locally — you don't need an account for any of it. Once your app is live, the same traces can go to [Confident AI](https://www.confident-ai.com/products/llm-observability), which surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and shows user sentiment and behavior across traces:
 

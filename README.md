@@ -72,7 +72,7 @@ Use these evaluations to determine the optimal models, prompts, and architecture
 > Jev is now available in DeepEval, both in existing metrics and the latest [JevEval.](https://deepeval.com/docs/metrics-jev-eval)
 
 > [!IMPORTANT]
-> Already in production? [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme) surfaces failing traces before anyone has written an eval for them, clusters them into failure modes, and turns them into your next eval.
+> If you're already in production, [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=signup_callout&ref_page=github/readme) surfaces failing traces before anyone has written an eval for them, clusters them into failure modes, and turns them into your next eval.
 >
 > ![Demo GIF](assets/demo.gif)
 

@@ -586,7 +586,7 @@ Now that you have run your first RAG evals, you should:
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point.
 3. **Enable evals in production**: Just replace `metrics` in <Term py="@observe" ts="observe()"/> with a [<Term py="metric_collection" ts="metricCollection"/>](https://www.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string on Confident AI.
 
-Evals then run on every production trace and flag the failing retrievals and generations. Not sure what to test next? [Confident AI](https://www.confident-ai.com/products/llm-observability) also surfaces failing traces no eval covers yet, clusters them into failure modes, and turns them into goldens for your next RAG eval.
+Evals then run on every production trace and flag the failing retrievals and generations. [Confident AI](https://www.confident-ai.com/products/llm-observability) also surfaces failing traces no eval covers yet, clusters them into failure modes, and turns them into goldens for your next RAG eval.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
