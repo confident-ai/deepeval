@@ -3,28 +3,28 @@ import styles from "./EnterpriseComparisonTable.module.scss";
 
 const ROWS = [
   {
-    confident: "Failing production traces surface on their own",
-    deepeval: "You write the eval before you can catch the failure",
+    confident: "One quality standard across every team",
+    deepeval: "Each team's evals live in its own code",
   },
   {
-    confident: "Failing traces clustered into failure modes",
-    deepeval: "Failures reviewed one test case at a time",
+    confident: "Centralized metrics",
+    deepeval: "Metrics scattered in code",
   },
   {
-    confident: "Failing traces become goldens for the next eval",
-    deepeval: "Goldens curated by hand",
+    confident: "AI governance as release gates",
+    deepeval: "Pass/fail per test suite",
   },
   {
     confident: "Evals on every production trace",
     deepeval: "Evals in development and CI/CD",
   },
   {
-    confident: "Traces routed to the right annotators",
-    deepeval: "Developer-mediated annotation",
+    confident: "Failing traces become goldens for the next eval",
+    deepeval: "Goldens curated by hand",
   },
   {
-    confident: "AI governance as release gates",
-    deepeval: "Pass/fail per test suite",
+    confident: "Traces routed to the right annotators",
+    deepeval: "Developer-mediated annotation",
   },
   {
     confident: "Red teaming in the same system",

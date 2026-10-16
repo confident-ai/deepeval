@@ -54,8 +54,8 @@ const EnterpriseHeroSection: React.FC<EnterpriseHeroSectionProps> = ({
         </h1>
 
         <p className={styles.description}>
-          For enterprise teams: one system for AI quality, from failing
-          production traces to the next eval, with governance as release gates.
+          One quality standard and AI governance for your engineers, PMs, and
+          QA, enforced from development to every production trace.
         </p>
 
         <div className={styles.actions}>
