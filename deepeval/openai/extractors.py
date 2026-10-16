@@ -46,7 +46,7 @@ def extract_input_parameters_from_completion(
     user_messages = []
     for message in messages:
         role = message["role"]
-        content = message["content"]
+        content = message.get("content")
         if role == "user":
             user_messages.append(content)
     if len(user_messages) > 0:
