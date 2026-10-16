@@ -20,6 +20,7 @@ from deepeval.config.eval_mode import (
     resolve_eval_mode,
 )
 from deepeval.errors import DeepEvalError
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.base_metric import (
     BaseMetric,
     BaseConversationalMetric,
@@ -32,9 +33,13 @@ from deepeval.models.system_one.schema import (
     SystemOneAnswers,
 )
 
+from deepeval.test_case import Audio
+
 from .generation import (
     SchemaType,
     accrue_token_usage,
+    audio_kwargs,
+    resolve_judge,
     trimAndLoadJson,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
@@ -615,12 +620,15 @@ def generate_rubric_score(
     strict_mode: bool,
     top_logprobs: int,
     weighted_score_fn: Callable[[int, Any], Union[int, float]],
+    audio: Optional[List[Audio]] = None,
+    model: Optional[DeepEvalBaseLLM] = None,
 ) -> Tuple[Union[int, float], str]:
+    judge, _ = resolve_judge(metric, model)
     try:
-        if _no_log_prob_support(metric.model):
+        if _no_log_prob_support(judge):
             raise AttributeError("log_probs unsupported.")
-        res, cost = metric.model.generate_raw_response(
-            prompt, top_logprobs=top_logprobs
+        res, cost = judge.generate_raw_response(
+            prompt, top_logprobs=top_logprobs, **audio_kwargs(audio)
         )
         return _score_from_raw_response(
             metric,
@@ -636,6 +644,8 @@ def generate_rubric_score(
             schema_cls=schema_cls,
             extract_schema=lambda s: (s.score, s.reason),
             extract_json=lambda d: (d["score"], d["reason"]),
+            audio=audio,
+            model=model,
         )
 
 
@@ -647,12 +657,15 @@ async def a_generate_rubric_score(
     strict_mode: bool,
     top_logprobs: int,
     weighted_score_fn: Callable[[int, Any], Union[int, float]],
+    audio: Optional[List[Audio]] = None,
+    model: Optional[DeepEvalBaseLLM] = None,
 ) -> Tuple[Union[int, float], str]:
+    judge, _ = resolve_judge(metric, model)
     try:
-        if _no_log_prob_support(metric.model):
+        if _no_log_prob_support(judge):
             raise AttributeError("log_probs unsupported.")
-        res, cost = await metric.model.a_generate_raw_response(
-            prompt, top_logprobs=top_logprobs
+        res, cost = await judge.a_generate_raw_response(
+            prompt, top_logprobs=top_logprobs, **audio_kwargs(audio)
         )
         return _score_from_raw_response(
             metric,
@@ -668,4 +681,6 @@ async def a_generate_rubric_score(
             schema_cls=schema_cls,
             extract_schema=lambda s: (s.score, s.reason),
             extract_json=lambda d: (d["score"], d["reason"]),
+            audio=audio,
+            model=model,
         )

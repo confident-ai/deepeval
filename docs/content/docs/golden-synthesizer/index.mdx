@@ -5,8 +5,6 @@ sidebar_label: Golden Synthesizer
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 `deepeval`'s `Synthesizer` offers a fast and easy way to generate high-quality **single and multi-turn goldens** for your evaluation datasets in just a few lines of code. This is especially helpful if:
 
 - You don't have an evaluation dataset to start with
@@ -441,7 +439,7 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.generationFiltration} />
+  <ImageDisplayer id="diagrams/in-house/datasets/synthetic-input-filtering" />
 </div>
 
 Any goldens that has a quality scores below the `synthetic_input_quality_threshold` will be re-generated. If the quality score still does not meet the required `synthetic_input_quality_threshold` after the allowed `max_quality_retries`, the most generation with the highest score is used. As a result, some generated `Goldens` in your final evaluation dataset may not meet the minimum input quality scores, but you will be guaranteed at least a golden regardless of its quality.
@@ -465,7 +463,7 @@ As an example, a golden might take the following evolutionary route when `num_ev
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.evolutions} />
+  <ImageDisplayer id="diagrams/in-house/datasets/input-evolution-tree" />
 
 </div>
 

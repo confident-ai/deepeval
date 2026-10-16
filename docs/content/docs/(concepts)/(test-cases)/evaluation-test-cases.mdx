@@ -188,7 +188,7 @@ For users starting out, scoping the interaction as the overall LLM application w
 
 An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as RAG and LLM agents (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 An `LLMTestCase` is used for both end-to-end and component-level evaluation:
 

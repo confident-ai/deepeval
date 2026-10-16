@@ -1,0 +1,35 @@
+$FONT_REGULAR: 400;
+$FONT_MEDIUM: 500;
+$FONT_SEMIBOLD: 600;
+$DM_MONO: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+$custom-breakpoints: (
+  xs: (minSize: 0px, maxSize: 479px),
+  sm: (minSize: 480px, maxSize: 767px),
+  md: (minSize: 768px, maxSize: 991px),
+  lg: (minSize: 992px, maxSize: 1439px),
+);
+
+@mixin responsive($breakpoint) {
+  @media (max-width: #{map-get(map-get($custom-breakpoints, $breakpoint), maxSize)}) {
+    @content;
+  }
+}
+
+// The colors frames draw with, taken from the docs theme.
+@mixin site-tokens {
+  --text-primary: var(--color-fd-foreground);
+  --text-secondary: var(--color-fd-muted-foreground);
+  --bg-primary: var(--color-fd-background);
+  --bg-secondary: var(--color-fd-card);
+  --bg-card: var(--color-fd-background);
+  --border-subtle: var(--color-fd-border);
+  --border-strong: color-mix(in srgb, var(--color-fd-foreground) 25%, var(--color-fd-border));
+  --accent-label-yellow: rgb(232, 255, 1);
+  --accent-label-blue: rgb(0, 157, 255);
+  --accent-label-teal: rgb(0, 255, 200);
+  --accent-label-ember: rgb(255, 65, 1);
+  --accent-label-violet: #6200ff;
+  --accent-label-pink: rgb(231, 0, 116);
+  --accent-label-muted: var(--text-secondary);
+}

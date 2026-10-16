@@ -9,7 +9,7 @@ import { ASSETS } from "@site/src/assets";
 
 Component-level evaluation (sometimes also known as **step-wise evals**) grades **internal components** of your LLM app — retrievers, tool calls, LLM generations, sub-agents — instead of treating the whole system as a black box. The unit of evaluation is still an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases), but it's attached to a span (an <Term py="@observe" ts="observe()"/>'d function or a framework-emitted span) rather than the whole trace.
 
-<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component level evals" />
+<ImageDisplayer id="diagrams/in-house/evaluation/component-level-evals" />
 
 If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for black-box evaluation and [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for scoring an agent's complete chain of steps.
 

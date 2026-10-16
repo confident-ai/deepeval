@@ -1,0 +1,30 @@
+{
+  "evaluator-cost-by-volume": {
+    "axes": "arrows",
+    "x": { "min": 0, "max": 10, "label": "number of test cases" },
+    "y": { "min": 0, "max": 10, "label": "cost and time to evaluate" },
+    "series": [
+      { "id": "human", "label": "Human annotation", "color": "ember", "y": "0.9 * x" },
+      { "id": "judge", "label": "LLM-as-a-judge", "color": "violet", "y": "0.5 + 0.22 * x" },
+      { "id": "deterministic", "label": "Deterministic checks", "color": "teal", "y": "1 + 0.03 * x" }
+    ]
+  },
+  "metric-fit-by-application": {
+    "x": {
+      "label": "Metric",
+      "categories": ["Exact match", "Task completion", "Tool correctness", "Faithfulness", "Contextual recall", "Conversation completeness", "Turn-taking"]
+    },
+    "y": {
+      "label": "Application",
+      "categories": ["Document extractor", "Coding agent", "RAG QA pipeline", "Voice chatbot"]
+    },
+    "values": [
+      [3, 0, 0, 0, 0, 0, 0],
+      [1, 3, 3, 0, 0, 1, 0],
+      [0, 0, 0, 3, 3, 0, 0],
+      [0, 3, 2, 0, 0, 3, 3]
+    ],
+    "value": { "decimals": 0 },
+    "color": "violet"
+  }
+}

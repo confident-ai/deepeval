@@ -1,0 +1,127 @@
+@import "../vars";
+@import "./frame";
+
+.frame.frame {
+  @include site-tokens;
+  @include frame-colors;
+
+  container-type: inline-size;
+  width: 100%;
+  margin: var(--media-frame-margin, 0 0 20px);
+  padding: 16px 24px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-secondary);
+
+  @include responsive(xs) {
+    padding: 14px 16px;
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+
+  .kicker {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: $FONT_MEDIUM;
+    line-height: 1.2;
+    color: var(--text-primary);
+
+    em {
+      font-style: normal;
+      color: var(--chart-violet);
+    }
+  }
+
+  .subtitle {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .drawing {
+    margin: 0;
+    overflow-x: auto;
+
+    &:focus-visible {
+      outline: 2px solid var(--chart-violet);
+      outline-offset: 2px;
+    }
+  }
+
+  .srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  .legendItem {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .swatch,
+  .lineSwatch {
+    flex-shrink: 0;
+  }
+
+  .swatch {
+    width: 9px;
+    height: 9px;
+    background-color: var(--mark-color);
+  }
+
+  .lineSwatch {
+    width: 14px;
+    border-top: 2px solid var(--mark-color);
+
+    &[data-dashed] {
+      border-top-style: dashed;
+    }
+  }
+
+  .note {
+    flex-basis: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .caption.caption {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+}
