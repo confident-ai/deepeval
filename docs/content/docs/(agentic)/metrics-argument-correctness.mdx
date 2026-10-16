@@ -55,12 +55,12 @@ test_case = LLMTestCase(
         ToolCall(
             name="WebSearch Tool",
             description="Tool to search for information on the web.",
-            input={"search_query": "Trump first raised tariffs year"}
+            input_parameters={"search_query": "Trump first raised tariffs year"}
         ),
         ToolCall(
             name="History FunFact Tool",
             description="Tool to provide a fun fact about the topic.",
-            input={"topic": "Trump tariffs"}
+            input_parameters={"topic": "Trump tariffs"}
         )
     ]
 )
