@@ -15,6 +15,9 @@ from deepeval.benchmarks.drop.drop import DELIMITER
 from deepeval.benchmarks.big_bench_hard.big_bench_hard import BigBenchHard
 from deepeval.benchmarks.tasks import BigBenchHardTask
 from deepeval.dataset import Golden
+from deepeval.benchmarks.truthful_qa.truthful_qa import TruthfulQA
+from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
+from deepeval.benchmarks.truthful_qa.task import TruthfulQATask
 
 # --------------------------------------------------------------------------- #
 # MathQA: the answer schema must be able to represent option "e"
@@ -101,3 +104,47 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# TruthfulQA: unscorable inputs must not be reported as a genuine zero score
+
+
+def test_truth_identification_score_returns_zero_for_no_prediction():
+    assert Scorer.truth_identification_score("[1,2]", "") == 0
+
+
+def test_truth_identification_score_returns_zero_for_no_matching_answers():
+    assert Scorer.truth_identification_score("[1,2]", "[3]") == 0
+
+
+def test_truth_identification_score_returns_none_for_empty_target():
+    assert Scorer.truth_identification_score("[]", "[1]") is None
+
+
+def test_truth_identification_score_returns_none_for_malformed_input():
+    assert Scorer.truth_identification_score("[1,2]", "[invalid]") is None
+
+
+def test_truthfulqa_evaluate_excludes_unscorable_predictions_from_accuracy():
+    bench = TruthfulQA.__new__(TruthfulQA)
+
+    bench.tasks = [TruthfulQATask.MISCONCEPTIONS]
+    bench.mode = TruthfulQAMode.MC2
+    bench.n_problems_per_task = None
+    bench.verbose_mode = False
+
+    goldens = [
+        Golden(input="question 1", expected_output="[1]"),
+        Golden(input="question 2", expected_output="[1]"),
+    ]
+
+    bench.load_benchmark_dataset = lambda task, mode: goldens
+    bench.predict = lambda model, golden, mode: {
+        "prediction": "1",
+        "score": 100 if golden.input == "question 1" else None,
+    }
+
+    result = bench.evaluate(object())
+
+    assert result.overall_accuracy == 100
+    assert bench.task_scores.iloc[0]["Score"] == 100
