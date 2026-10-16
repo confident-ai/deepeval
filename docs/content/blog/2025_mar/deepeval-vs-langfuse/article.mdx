@@ -112,7 +112,7 @@ DeepEval also integrates directly with LLM providers to power its metrics, from 
 
 ### Platform
 
-DeepEval connects to Confident AI, a separate product built by the same team for monitoring AI apps in production. Langfuse's platform is also called Langfuse. Langfuse is focused on capturing and browsing traces; Confident AI runs evals on every production trace, flags the failing ones, and clusters them into failure modes so they become your next eval.
+Every DeepEval metric is available on Confident AI, a separate product built by the same team for monitoring AI apps in production, so the evals you write in development run on production traces too, and the failing traces become goldens for your next DeepEval run. Langfuse's platform is also called Langfuse. Langfuse is focused on capturing and browsing traces; Confident AI flags the failing ones and clusters them into failure modes.
 
 <FeatureComparisonTable type="langfuse::platform" competitor="Langfuse" />
 
