@@ -358,6 +358,12 @@ def _handle_metric_measurement(
                 return None
             else:
                 raise
+    except Exception as e:
+        if ignore_errors:
+            metric.error = str(e)
+            metric.success = False
+            return None
+        raise
 
 
 async def _a_handle_metric_measurement(
@@ -407,6 +413,12 @@ async def _a_handle_metric_measurement(
                 return None
             else:
                 raise
+    except Exception as e:
+        if ignore_errors:
+            metric.error = str(e)
+            metric.success = False
+            return None
+        raise
 
 
 def update_test_run_map(
