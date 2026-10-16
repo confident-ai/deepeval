@@ -696,6 +696,39 @@ class TestSaveAndLoad:
             assert reloaded.test_cases[0].context == ["c1", "c2"]
             assert reloaded.test_cases[0].retrieval_context == ["r1", "r2"]
 
+    def test_save_as_json_round_trips_null_tools_via_test_case_loader(self):
+        """save_as writes goldens without tools as "tools_called": null, so the
+        JSON test case loader must treat a null tools value as no tools."""
+        goldens = [
+            Golden(
+                input="What's the weather?",
+                actual_output="Sunny",
+                tools_called=[ToolCall(name="get_weather")],
+            ),
+            Golden(input="Hi", actual_output="Hello"),
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = EvaluationDataset(goldens).save_as(
+                "json", tmpdir, file_name="rt"
+            )
+
+            reloaded = EvaluationDataset()
+            reloaded.add_test_cases_from_json_file(
+                file_path=path,
+                input_key_name="input",
+                actual_output_key_name="actual_output",
+                tools_called_key_name="tools_called",
+                expected_tools_key_name="expected_tools",
+            )
+
+            assert len(reloaded.test_cases) == 2
+            assert reloaded.test_cases[0].tools_called == [
+                ToolCall(name="get_weather")
+            ]
+            assert reloaded.test_cases[0].expected_tools == []
+            assert reloaded.test_cases[1].tools_called == []
+            assert reloaded.test_cases[1].expected_tools == []
+
 
 class TestDatasetVersion:
     def _pulled_dataset(self) -> EvaluationDataset:
