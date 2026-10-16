@@ -9,16 +9,53 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.telemetry import capture_benchmark_run
+from deepeval.config.utils import get_env_bool
 
 
-def secure_exec(code_str, global_vars=None, local_vars=None):
-    """Securely execute code with restricted globals and locals."""
+# Opt-in flag required before any model-generated code is executed.
+ALLOW_CODE_EXECUTION_ENV_VAR = "DEEPEVAL_ALLOW_CODE_EXECUTION"
+
+
+def _require_code_execution_enabled() -> None:
+    """Raise unless the operator has explicitly opted in to code execution.
+
+    Scoring HumanEval functional correctness runs untrusted, model-generated
+    code on this machine, which is a remote-code-execution risk.
+    """
+    if not get_env_bool(ALLOW_CODE_EXECUTION_ENV_VAR, default=False):
+        raise RuntimeError(
+            "The HumanEval benchmark executes untrusted, model-generated code on "
+            "this machine, which is a remote-code-execution risk. It is disabled "
+            "by default. To enable it, set the environment variable "
+            f"{ALLOW_CODE_EXECUTION_ENV_VAR}=1, and only do so inside an isolated "
+            "sandbox (a disposable container/VM with no network access, no "
+            "credentials, and least privilege)."
+        )
+
+
+def _execute_untrusted_code(code_str, global_vars=None, local_vars=None):
+    """Execute model-generated code for functional-correctness scoring.
+
+    WARNING: this runs UNTRUSTED code produced by the model under evaluation.
+    The restricted ``__builtins__`` mapping below is NOT a security sandbox — it
+    can be trivially bypassed (e.g. ``().__class__.__bases__[0].__subclasses__()``),
+    so this function can execute arbitrary code, including OS commands and file
+    access, with the privileges of the current process.
+
+    Execution is therefore disabled unless the caller explicitly opts in by
+    setting ``DEEPEVAL_ALLOW_CODE_EXECUTION=1``, and it should only ever be run
+    inside a disposable, isolated sandbox (a container/VM with no network, no
+    credentials, and least privilege).
+    """
+    _require_code_execution_enabled()
     if global_vars is None:
         global_vars = {}
     if local_vars is None:
         local_vars = {}
 
-    # Create a restricted globals dictionary with only safe built-ins
+    # NOTE: this restricted builtins mapping narrows the default namespace but is
+    # NOT a security boundary (attribute traversal can reach arbitrary objects).
+    # It does not make executing untrusted code safe — see the docstring above.
     safe_globals = {
         "__builtins__": {
             "abs": abs,
@@ -191,6 +228,10 @@ class HumanEval(DeepEvalBaseBenchmark):
         c = self.c.get(task.value, None)
         functions = self.functions.get(task.value, None)
         if c is None:
+            # Fail fast (and before spending model calls) if code execution has
+            # not been explicitly enabled. The per-sample try/except below would
+            # otherwise swallow this and silently report an accuracy of 0.
+            _require_code_execution_enabled()
             # Define prompt template
             prompt: dict = HumanEvalTemplate.generate_output(
                 input=golden.input,
@@ -203,7 +244,7 @@ class HumanEval(DeepEvalBaseBenchmark):
             for function in functions:
                 try:
                     full_code = function + "\n" + golden.expected_output
-                    secure_exec(full_code)
+                    _execute_untrusted_code(full_code)
                     c += 1
                 except AssertionError:
                     pass
