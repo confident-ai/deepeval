@@ -115,7 +115,9 @@ def metric_progress_indicator(
         else:
             yield
     except Exception as error:
-        if _is_context_window_exceeded(error):
+        if not isinstance(
+            error, ContextWindowExceededError
+        ) and _is_context_window_exceeded(error):
             raise ContextWindowExceededError(
                 "Too large to evaluate: the test case or trace exceeds the "
                 "evaluation model's context window. Evaluate a smaller test "
