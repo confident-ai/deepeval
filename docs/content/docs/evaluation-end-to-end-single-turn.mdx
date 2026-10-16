@@ -5,6 +5,8 @@ sidebar_label: Single-Turn
 languages: [python, typescript]
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 A single-turn end-to-end test scores **one input → one output** per LLM interaction, captured as an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases). This is the right flavor for any LLM application with a "flat" shape — agents treated as a black box, RAG / QA, summarization, classifiers, writing assistants, and so on.
 
 If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for the concepts and how single-turn compares to multi-turn.
@@ -115,7 +117,14 @@ To grade **individual components** (the retriever, a tool call, an inner LLM cal
 </Step>
 </Steps>
 
-If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run and its traces also appear there.
+If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run and its traces also appear there:
+
+<VideoDisplayer
+  src={ASSETS.evaluationSingleTurnE2eReportTracing}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Test reports for evals and traces on Confident AI"
+  description="Drill into each test case's scores, reasons, and the trace behind it."
+/>
 
 ## Approach 2: `evaluate()`
 
@@ -390,7 +399,14 @@ for await (const golden of iterator) {
 
 </Switch>
 
-The logged values are attached to the test run, including on Confident AI if you're logged in.
+The logged values are attached to the test run, including on Confident AI if you're logged in:
+
+<VideoDisplayer
+  src={ASSETS.evaluationParameterInsights}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/model-and-prompt-insights"
+  label="Parameter insights to find the best model"
+  description="Compare metric scores across models and prompts to pick a winner."
+/>
 
 ## In CI/CD
 

@@ -32,7 +32,35 @@ Engineers, QA, domain experts and PMs work from the same traces, annotations and
 - Datasets built from failing production traces, ready for the next eval.
 - Connects to your AI app over HTTP, so non-technical team members can contribute without touching code.
 
-<Tabs items={["Annotation", "Datasets"]}>
+<Tabs items={["Experiments", "Dataset management", "Centralized metrics", "Regression testing", "Annotation", "Prompt versioning"]}>
+<Tab value="Experiments">
+
+<ImageDisplayer
+  id="platform/evaluation/experiment-comparison"
+/>
+
+</Tab>
+<Tab value="Dataset management">
+
+<ImageDisplayer
+  id="platform/datasets/dataset-editor"
+/>
+
+</Tab>
+<Tab value="Centralized metrics">
+
+<ImageDisplayer
+  id="platform/evaluation/metrics-library"
+/>
+
+</Tab>
+<Tab value="Regression testing">
+
+<ImageDisplayer
+  id="platform/evaluation/regression-test-cases"
+/>
+
+</Tab>
 <Tab value="Annotation">
 
 <ImageDisplayer
@@ -40,10 +68,10 @@ Engineers, QA, domain experts and PMs work from the same traces, annotations and
 />
 
 </Tab>
-<Tab value="Datasets">
+<Tab value="Prompt versioning">
 
 <ImageDisplayer
-  id="platform/datasets/dataset-editor"
+  id="platform/prompts/prompt-editor"
 />
 
 </Tab>
@@ -63,21 +91,7 @@ Instrument once with OpenTelemetry or a framework integration (LangChain, LangGr
 - Failing traces turned into datasets for the next eval.
 - Evals on every production trace that flag the failing ones, with alerts in Slack, PagerDuty, or Teams when quality degrades.
 
-<Tabs items={["Signals", "Trace-to-dataset", "Online evals", "Alerts"]}>
-<Tab value="Signals">
-
-<ImageDisplayer
-  id="platform/monitoring/signals"
-/>
-
-</Tab>
-<Tab value="Trace-to-dataset">
-
-<ImageDisplayer
-  id="platform/datasets/trace-ingestion-task"
-/>
-
-</Tab>
+<Tabs items={["Online evals", "Signals", "Alerts", "Trace-to-dataset"]}>
 <Tab value="Online evals">
 
 <ImageDisplayer
@@ -85,10 +99,24 @@ Instrument once with OpenTelemetry or a framework integration (LangChain, LangGr
 />
 
 </Tab>
+<Tab value="Signals">
+
+<ImageDisplayer
+  id="platform/monitoring/signals"
+/>
+
+</Tab>
 <Tab value="Alerts">
 
 <ImageDisplayer
   id="platform/monitoring/alert-rule-editor"
+/>
+
+</Tab>
+<Tab value="Trace-to-dataset">
+
+<ImageDisplayer
+  id="platform/datasets/trace-ingestion-task"
 />
 
 </Tab>

@@ -5,6 +5,8 @@ sidebar_label: Multi-Turn
 languages: [python, typescript]
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 Multi-turn end-to-end evaluation grades **whole conversations**, not single exchanges. Each test case is a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) and each golden is a [`ConversationalGolden`](/docs/evaluation-datasets#what-are-goldens) describing a _scenario_, an _expected outcome_, and _who the user is_.
 
 If you haven't already, read the [end-to-end overview](/docs/evaluation-end-to-end-llm-evals) for the concepts and how multi-turn compares to single-turn.
@@ -312,7 +314,14 @@ Note that **simulation** and **evaluation** are separate phases: the simulator r
 
 </Switch>
 
-If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run also appears there.
+If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run also appears there:
+
+<VideoDisplayer
+  src={ASSETS.evaluationMultiTurnE2eReport}
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Test reports after running evals on Confident AI"
+  description="Review full conversations alongside their metric scores and reasons."
+/>
 
 ## Hyperparameters
 

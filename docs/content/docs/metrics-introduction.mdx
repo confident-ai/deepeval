@@ -5,6 +5,8 @@ sidebar_label: Introduction
 languages: [python, typescript]
 ---
 
+import { ASSETS } from "@site/src/assets";
+
 `deepeval` offers 50+ SOTA, ready-to-use metrics for you to quickly get started with. Essentially, while a test case represents the thing you're trying to measure, the metric acts as the ruler for specific criteria of interest.
 
 ## Quick Summary
@@ -159,7 +161,14 @@ await evaluate(
 
 </Switch>
 
-If you're logged in to Confident AI (`deepeval login` in the CLI) before running an evaluation, the test run also appears there.
+If you're logged in to Confident AI (`deepeval login` in the CLI) before running an evaluation, the test run also appears there:
+
+<VideoDisplayer
+  src={ASSETS.evaluationSingleTurnE2eReport}
+  confidentUrl="/docs/llm-evaluation/dashboards/testing-reports"
+  label="Run evaluations on Confident AI"
+  description="Get sharable test reports for every metric you run with deepeval."
+/>
 
 ## Why `deepeval` Metrics?
 
