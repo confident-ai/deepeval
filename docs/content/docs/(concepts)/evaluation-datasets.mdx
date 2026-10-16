@@ -1043,7 +1043,7 @@ For multi-turn goldens, each line can look like:
 {"scenario": "A user asks for help evaluating an LLM app.", "expected_outcome": "The user understands how to create an evaluation dataset.", "context": ["DeepEval supports evaluation datasets."]}
 ```
 
-Blank lines are skipped, and a line that doesn't parse fails with its line number. A `context` written as one delimited string rather than an array is split on `contextDelimiter`, which defaults to `|`.
+Blank lines are skipped, and a line that doesn't parse fails with its line number. `saveAs({ fileType: "jsonl" })` writes `context` as an array. A `context` written as one delimited string rather than an array is still split on `contextDelimiter`, which defaults to `|`.
 
 :::note
 An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but not both. If a JSONL file mixes `Golden` and `ConversationalGolden` rows, `deepeval` will raise an error.
@@ -1062,7 +1062,7 @@ An `EvaluationDataset` can contain either single-turn or multi-turn goldens, but
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
-Remember, parameters such as `context` should be a list of strings, and in the context of CSV files that means a cell holding a list is split on `context_col_delimiter`, which defaults to `|` — the same delimiter [`save_as()`](#save-dataset) joins on, so a saved dataset reloads without any configuration. Supply it only if your file uses something else.
+Remember, parameters such as `context` should be a list of strings. `save_as("csv")` writes those lists as JSON array cells so a `|` inside an item (markdown tables, shell pipelines) survives a reload. Loaders try JSON first and fall back to splitting on `context_col_delimiter` (default `|`) so files written before this change still load. Supply a delimiter only if your file uses something else.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -1108,7 +1108,7 @@ Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `ex
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `filePath` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
-Remember, parameters such as `context` hold a list of strings, so a cell holding a list is split on `contextDelimiter`, which defaults to `|` — the same delimiter [`saveAs()`](#save-dataset) joins on, so a saved dataset reloads without any configuration. Pass it only if your file uses something else.
+Remember, parameters such as `context` hold a list of strings. `saveAs({ fileType: "csv" })` writes those lists as JSON array cells so a `|` inside an item (markdown tables, shell pipelines) survives a reload. Loaders try JSON first and fall back to splitting on `contextDelimiter` (default `|`) so files written before this change still load. Pass a delimiter only if your file uses something else.
 
 ```typescript
 import { EvaluationDataset } from "deepeval/dataset";
