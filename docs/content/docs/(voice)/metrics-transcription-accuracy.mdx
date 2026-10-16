@@ -130,10 +130,6 @@ metric.measure(convo_test_case)
 print(metric.score, metric.reason)
 ```
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
-
 ## How Is It Calculated?
 
 The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a `provider_transcript` is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
