@@ -109,7 +109,7 @@ within one criterion, the table shows the lowest applicable rating.
 | Capability                | DeepEval                                                                                                                    | Promptfoo                                                                                                                    | Ragas                                                                                                                          | Arize Phoenix                                                                                                              | TruLens                                                                                                                    |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | **Metric coverage**       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> AI agents, RAG, chat, safety, and multimodal | <span className="comparison-status comparison-status--strong">✓ Strong:</span> prompt testing and AI security                | <span className="comparison-status comparison-status--partial">~ Partial:</span> RAG-first coverage with some AI agent metrics | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG and trace-based AI agent evaluation     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG and AI agent feedback                   |
-| **Datasets**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> local and cloud datasets                     | <span className="comparison-status comparison-status--partial">~ Partial:</span> reusable YAML test cases                    | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets and RAG test sets                    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> versioned datasets and runs                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> experiment-oriented tooling               |
+| **Datasets**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> local datasets, goldens from production      | <span className="comparison-status comparison-status--partial">~ Partial:</span> reusable YAML test cases                    | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets and RAG test sets                    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> versioned datasets and runs                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> experiment-oriented tooling               |
 | **AI agent tracing**      | <span className="comparison-status comparison-status--strong">✓ Strong:</span> native traces and per-span scoring           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native component-level scoring | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native AI agent tracing          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> OpenTelemetry and OpenInference             | <span className="comparison-status comparison-status--partial">~ Partial:</span> OpenTelemetry trace evaluation            |
 | **Developer workflow**    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Python, Pytest, CLI, CI, Agent Skill         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> YAML, CLI, TypeScript, and CI                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python and notebook workflows                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python, TypeScript, and a local UI        | <span className="comparison-status comparison-status--partial">~ Partial:</span> Python and a local dashboard              |
 | **Dataset generation**    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> documents, contexts, goldens, or scratch     | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation      | <span className="comparison-status comparison-status--strong">✓ Strong:</span> synthetic RAG test sets                         | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation    | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation    |
@@ -142,10 +142,12 @@ as Claude Code and Codex. An AI coding agent can generate a dataset,
 run the eval suite, inspect failed traces, modify the relevant prompt or
 component, and rerun until the metrics pass.
 
-For teams that later need collaboration and production monitoring, DeepEval
-connects natively to [Confident AI](https://confident-ai.com). DeepEval and
-Confident AI are separate products: the former is the open-source framework,
-while the latter adds the enterprise platform.
+Once the app is live, [Confident AI](https://www.confident-ai.com/products/llm-observability)
+picks up where DeepEval leaves off: it surfaces failing production traces,
+clusters them into failure modes, and turns them into goldens for your next
+eval. DeepEval and Confident AI are separate products: the former is the
+open-source framework for evaluating in development, while the latter is AI
+monitoring for apps in production.
 
 ### Key features
 
@@ -163,8 +165,8 @@ while the latter adds the enterprise platform.
 - **An Agent Skill** for vibe-coding evaluation loops
 - **More than 30 documented integrations** across AI agent frameworks, model
   providers, and vector databases
-- **Optional enterprise capabilities** for reports, experiments, datasets,
-  observability, and monitoring through [Confident AI](https://confident-ai.com)
+- **Optional production monitoring** through Confident AI, which turns
+  failing production traces into your next eval
 
 ### Getting started
 
@@ -188,7 +190,7 @@ case and metric, and run a passing eval locally.
 | Product      | Price                           | Includes                                                                                  |
 | ------------ | ------------------------------- | ----------------------------------------------------------------------------------------- |
 | DeepEval     | Free and open source            | Local metrics, datasets, tracing, synthetic data, simulations, and CI/CD                  |
-| Confident AI | Self-serve and enterprise plans | Shared reports, experiments, cloud datasets, observability, monitoring, and collaboration |
+| Confident AI | Self-serve and enterprise plans | AI monitoring: evals on production traces, failing traces turned into goldens             |
 
 **DeepEval is for you if...**
 
@@ -450,8 +452,9 @@ data and observability.
   for trace collection and debugging, but it is much more limited than Arize AX
   from an enterprise perspective. Once a team needs managed monitoring,
   collaboration, and production evaluation, it should compare Arize AX with
-  [Confident AI](https://confident-ai.com), which also connects those workflows
-  to local DeepEval tests, datasets, and metrics.
+  [Confident AI](https://www.confident-ai.com/products/llm-observability),
+  which surfaces failing production traces and turns them into goldens for the
+  next DeepEval run.
 
 ### Step 2: Decide whether you need evaluation or observability first
 
@@ -472,10 +475,11 @@ the center of your stack.
   applications and support custom evaluation logic.
 - **Configuration-first:** Promptfoo is easier when prompts, providers, and
   assertions should live in YAML.
-- **Platform-first:** [Confident AI](https://confident-ai.com) is the best fit
-  for organizations already using DeepEval because its native integration
-  standardizes the same evals, datasets, and metrics across local development
-  and production observability. Phoenix is another option when evaluation is
+- **Platform-first:** [Confident AI](https://www.confident-ai.com) fits teams
+  already using DeepEval once they're in production: failing production traces
+  become goldens you pull back into DeepEval, and for enterprise teams it's one
+  system for AI quality across evaluation, monitoring, annotation, red teaming,
+  and governance. Phoenix is another option when evaluation is
   centered primarily around a trace and experiment UI. For a full breakdown of
   this category, see our
   [Top 5 LLM evaluation platforms](/blog/best-llm-evaluation-platforms)
@@ -495,7 +499,7 @@ evaluation context can be lost.
 
 | Tool          | Open source         | Primary interface             | Best for                                            | You may also need                                         |
 | ------------- | ------------------- | ----------------------------- | --------------------------------------------------- | --------------------------------------------------------- |
-| **DeepEval**  | Apache 2.0          | Python + Pytest + CLI         | Comprehensive AI agent, RAG, and chatbot evaluation | Confident AI for enterprise collaboration                 |
+| **DeepEval**  | Apache 2.0          | Python + Pytest + CLI         | Comprehensive AI agent, RAG, and chatbot evaluation | Confident AI once you're in production                    |
 | **Promptfoo** | MIT                 | YAML + CLI + TypeScript       | Prompt comparison and AI security                   | A broader Python metric and dataset framework             |
 | **Ragas**     | Apache 2.0          | Python                        | Focused RAG evaluation                              | AI agent tracing, multi-turn simulation, and CI tooling   |
 | **Phoenix**   | Elastic License 2.0 | Python/TypeScript + UI + OTel | Observability-led evaluation                        | Synthetic data, simulation, and broader metrics           |
@@ -530,8 +534,8 @@ evaluation context can be lost.
 
 **For enterprise teams**
 
-- **DeepEval + Confident AI** for an evaluation-first path from local testing to
-  shared datasets, reports, monitoring, and online evals
+- **DeepEval + Confident AI** for evals in development and AI monitoring in
+  production, where failing traces become the next eval
 - **Phoenix + Arize AX** for observability-led AI operations
 - **TruLens + Snowflake** for teams already standardized on Snowflake
 
@@ -601,9 +605,9 @@ evaluation context can be lost.
       answer: (
         <>
           No. DeepEval is a standalone Apache 2.0 open-source framework that
-          runs locally. Confident AI is optional and adds shared reports,
-          experiments, datasets, observability, monitoring, and enterprise
-          collaboration.
+          runs locally. Confident AI is a separate, optional product for apps
+          in production: it runs evals on production traces, surfaces the
+          failing ones, and turns them into goldens for your next eval.
         </>
       ),
     },

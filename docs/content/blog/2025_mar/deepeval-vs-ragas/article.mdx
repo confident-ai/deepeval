@@ -6,7 +6,7 @@ authors: [penguine]
 category: comparisons
 ---
 
-**TL;DR:** Ragas is well-suited for lightweight experimentation — much like using pandas for quick data analysis. DeepEval takes a broader approach, offering a full evaluation ecosystem designed for production workflows, CI/CD integration, custom metrics, and integration with Confident AI for team collaboration, reporting, and analysis. The right tool depends on whether you're running ad hoc evaluations or building scalable LLM testing into your LLM stack.
+**TL;DR:** Ragas is well-suited for lightweight experimentation — much like using pandas for quick data analysis. DeepEval takes a broader approach, offering a full evaluation ecosystem designed for production workflows, CI/CD integration, custom metrics, and a path to production through Confident AI, which turns failing production traces into your next eval. The right tool depends on whether you're running ad hoc evaluations or building scalable LLM testing into your LLM stack.
 
 ## How is DeepEval Different?
 
@@ -50,25 +50,16 @@ There's going to be a few comparison tables in later sections to talk more about
 
 ### 6. We scale with your evaluation needs
 
-[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://confident-ai.com) are **two separate products** built by the same team — not the same thing.
+[DeepEval](https://github.com/confident-ai/deepeval) and [Confident AI](https://www.confident-ai.com/products/llm-observability) are **two separate products** built by the same team — not the same thing.
 
 - **DeepEval** is the **open-source LLM evaluation framework**: metrics, test cases, datasets, synthetic data generation, benchmarks, and CI/CD evals. It runs locally, requires no account, and works fully standalone.
-- **Confident AI** is an **all-in-one enterprise platform for LLM evaluation, observability, and red teaming**. It adds shared regression reports, online evals on production traces, monitoring, cloud-hosted datasets, prompt and model experimentation, red teaming campaigns, and team collaboration.
+- **Confident AI** is **AI monitoring for LLM apps in production**. It runs evals on production traces, clusters the failing ones into failure modes, and turns them into goldens for your next eval.
 
-Confident AI open-sourced many of its metrics through DeepEval. That does not make them the same product, and Confident AI is not a UI layer on top of DeepEval.
+Ragas metrics, like DeepEval's, only score the test cases someone thought to write. That gap shows up once a RAG pipeline is live: users ask questions nobody put in the dataset, and retrieval breaks in ways no metric was pointed at. Confident AI surfaces those failing production traces before anyone has written an eval for them, routes them to the right annotators, and turns them into goldens you pull back into DeepEval.
 
-**Use DeepEval on its own** for fast, code-first local evaluation and CI gates. **Use DeepEval with Confident AI** when your team needs:
+**Use DeepEval on its own** for fast, code-first local evaluation, regression testing, and CI gates. Add Confident AI once the app is in production and you want failing traces to decide what you test next. For enterprise teams, [Confident AI](https://www.confident-ai.com) is one system for AI quality: evaluation, monitoring, annotation, [red teaming](https://www.confident-ai.com/products/ai-red-teaming), and governance.
 
-- Shared dashboards for metric distributions, averages, and trends across runs
-- Test reports to share internally or with external stakeholders
-- Centralized cloud datasets and golden management
-- Regression gates and side-by-side prompt and model experiments
-- Production trace observability and online evaluation of live traffic
-- Red teaming campaigns and safety testing at organization scale
-
-The integration is built into DeepEval — connect once and every DeepEval run syncs to Confident AI without extra code.
-
-DeepEval also pairs with **DeepTeam**, our open-source red teaming framework, which Confident AI's red teaming features build on the same way they build on DeepEval.
+DeepEval also pairs with **DeepTeam**, our open-source red teaming framework.
 
 ## Comparing DeepEval and Ragas
 
@@ -92,7 +83,7 @@ DeepEval and Ragas both specialize in RAG evaluation, however:
 - **Ragas**'s metrics has limited support for explanability, verbose log debugging, and error handling, and customizations
 - **DeepEval**'s metrics go beyond RAG, with support for agentic workflows, LLM chatbot conversations, all through its plug-and-play metrics.
 
-DeepEval also integrates with Confident AI so you can bring these metrics to your organization whenever you're ready.
+Already in production? Confident AI surfaces the failing production traces your RAG metrics never anticipated and turns them into goldens for your next eval.
 
 <FeatureComparisonTable type="ragas::metrics" competitor="Ragas" />
 
@@ -130,17 +121,17 @@ Both offer integrations, but with a different focus. Ragas' integrations pushes 
 
 <FeatureComparisonTable type="ragas::integrations" competitor="Ragas" />
 
-You'll notice that Ragas does not own their platform integrations such as LangSmith, while DeepEval owns Confident AI. This means bringing LLM evaluation to your organization is 10x easier using DeepEval.
+You'll notice that Ragas hands you off to third-party platforms such as LangSmith, while DeepEval and Confident AI are built by the same team, so the goldens your failing production traces turn into pull straight back into DeepEval.
 
 ### Platform
 
-DeepEval integrates natively with Confident AI, a separate all-in-one enterprise platform for LLM evaluation, observability, and red teaming, built by the same team. Ragas's platform is also called Ragas.
+DeepEval connects to Confident AI, a separate product built by the same team for monitoring AI apps in production. Ragas's platform is also called Ragas.
 
 Both have varying degrees of capabilities, and you can draw your own conclusions from the table below.
 
 <FeatureComparisonTable type="ragas::platform" competitor="Ragas" />
 
-Confident AI is also self-served, meaning you don't have to talk to us to try it out. Sign up [here.](https://app.confident-ai.com)
+Confident AI is also self-served, meaning you don't have to talk to us to try it out: [sign up for Confident AI](https://app.confident-ai.com).
 
 ## Conclusion
 

@@ -22,7 +22,7 @@ MCP evaluation is different from other evaluations because you can choose to cre
 ## Prerequisites
 
 - Install `deepeval`, an MCP client, and whichever LLM SDK your host calls
-- A Confident AI API key (recommended). Sign up for one [here](https://app.confident-ai.com)
+- Optionally, a Confident AI API key
 
 This quickstart's host talks to its server over streamable HTTP and calls Anthropic:
 
@@ -48,7 +48,7 @@ npm install @modelcontextprotocol/sdk @anthropic-ai/sdk
 </Switch>
 
 :::info
-Confident AI allows you to view and share your testing reports. Set your API key in the CLI:
+If you have a Confident AI API key, set it in the CLI and your test runs are sent there too:
 
 ```bash
 CONFIDENT_API_KEY="confident_us..."
@@ -356,9 +356,9 @@ await evaluate([testCase], [mcpUseMetric]);
 </Step>
 
 <Step>
-### View on Confident AI (recommended)
+### View the run on Confident AI (optional)
 
-If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
+If you've set your `CONFIDENT_API_KEY`, the test run also appears on Confident AI.
 
 <VideoDisplayer
   src={ASSETS.gettingStartedMcpSingleTurn}
@@ -591,9 +591,9 @@ await evaluate([convoTestCase], [mcpUseMetric, mcpTaskCompletion]);
 
 </Step>
 <Step>
-### View on Confident AI (recommended)
+### View the run on Confident AI (optional)
 
-If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
+With `CONFIDENT_API_KEY` set, this multi-turn run is sent to Confident AI as well.
 
 <VideoDisplayer
   src={ASSETS.gettingStartedMcpMultiTurn}
@@ -637,6 +637,8 @@ Now that you have run your first MCP eval, you should:
 1. **Customize your metrics**: You can change the threshold of your metrics to be more strict to your use-case.
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point to store your inputs as goldens.
 3. **Setup Tracing**: If you created your own custom MCP server, you can [setup tracing](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/span-types) on your tool definitions.
+
+Already in production? [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing MCP tool calls in production traces before anyone has written an eval for them, and turns those traces into goldens for your next MCP eval.
 
 <VideoDisplayer
   src={ASSETS.tracingSpans}

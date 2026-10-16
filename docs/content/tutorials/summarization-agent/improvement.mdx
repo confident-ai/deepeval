@@ -5,8 +5,6 @@ sidebar_label: Testing Prompts and Models
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. We'll create a full evaluation suite that allows us to iterate on our summarization agent to find the best hyperparameters that help improve it.
 
 Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence the performance of our application. In our case, the key hyperparameters for the `MeetingSummarizer` that can improve our agent are:
@@ -55,7 +53,7 @@ print(len(summary_test_cases))
 print(len(action_item_test_cases))
 ```
 
-You can use these test cases to evaluate your summarizer anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
+You can use these test cases to evaluate your summarizer anywhere and anytime. This assumes you pushed the dataset with `dataset.push()` in the previous section, since `pull()` loads it from Confident AI. See [evaluation datasets](/docs/evaluation-datasets) to learn more.
 
 ## Iterating On Hyperparameters
 
@@ -189,32 +187,7 @@ for model in models:
 ```
 
 :::tip
-By logging hyperparameters in the evaluate function, you can easily compare performance across runs in [Confident AI](https://www.confident-ai.com) and trace score changes back to specific hyperparameter adjustments. Learn more about [the evaluate function here](https://deepeval.com/docs/evaluation-introduction#evaluating-without-pytest).
-
-Here's an example of how you can set up [**Confident AI**](https://deepeval.com/tutorials/tutorial-setup) to check the results in a report format that also provides details on hyperparameters used for test runs:
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "20px",
-  }}
->
-  <video width="100%" autoPlay loop muted playsInline>
-    <source
-      src={ASSETS.tutorialSummarizationHyperparameters}
-      type="video/mp4"
-    />
-  </video>
-</div>
-
-To get started, run the following command:
-
-```bash
-deepeval login
-```
-
+Logging hyperparameters in `evaluate()` saves them with each test run, so you can trace score changes back to specific hyperparameter adjustments. Switch to the SQLite [local backend](/docs/evaluation-local-backend-storage) if you want to query scores by model across runs, and see the [evaluation introduction](/docs/evaluation-introduction) for more on `evaluate()`.
 :::
 
 The average results of the evaluation iterations are shown below:

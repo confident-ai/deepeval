@@ -408,16 +408,15 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
       ),
     },
     {
-      question: "Can I run evals on a Google ADK agent serving production traffic?",
+      question: "Can I run evals on a Google ADK agent's production traces?",
       answer: (
         <>
           Yes. Pass <code>environment="production"</code> to{" "}
-          <code>instrument_google_adk(...)</code>; with a Confident AI login the
-          live traces feed{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real requests.
+          <code>instrument_google_adk(...)</code>. Not sure what to test next?{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> catches failing ADK traces in
+          production, groups them into failure modes, and routes them to the
+          right annotators, so the trajectories that went wrong become goldens
+          for your next eval.
         </>
       ),
     },
@@ -429,17 +428,6 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
           parametrized <code>pytest</code> test, and assert with{" "}
           <code>assert_test(...)</code> under <code>deepeval test run</code> — a
           failing metric fails the pipeline.
-        </>
-      ),
-    },
-    {
-      question: "Is there a cloud dashboard for these ADK traces?",
-      answer: (
-        <>
-          Yes, optionally. <code>deepeval login</code> connects{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, which renders
-          the same ADK agent, LLM, and tool spans with their scores in a shared
-          UI.
         </>
       ),
     },

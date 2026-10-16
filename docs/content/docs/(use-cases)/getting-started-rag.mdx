@@ -59,7 +59,7 @@ No. The trace-tree TUI is built on [Ink](https://github.com/vadimdemedes/ink), d
 
 </Switch>
 
-You should also run <Term py="deepeval login" ts="npx deepeval login"/>:
+Optionally, run <Term py="deepeval login" ts="npx deepeval login"/> to send your test runs to Confident AI as well:
 
 <Switch>
 
@@ -80,8 +80,6 @@ npx deepeval login
 </Case>
 
 </Switch>
-
-It connects you to [Confident AI](https://www.confident-ai.com/) so you can store results, annotate, and inspect evaluated agent traces on the cloud.
 
 ## Unit Test RAG in CI/CD
 
@@ -588,11 +586,11 @@ Now that you have run your first RAG evals, you should:
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point.
 3. **Enable evals in production**: Just replace `metrics` in <Term py="@observe" ts="observe()"/> with a [<Term py="metric_collection" ts="metricCollection"/>](https://www.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string on Confident AI.
 
-You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.
+Evals then run on every production trace and flag the failing retrievals and generations. Not sure what to test next? [Confident AI](https://www.confident-ai.com/products/llm-observability) also surfaces failing traces no eval covers yet, clusters them into failure modes, and turns them into goldens for your next RAG eval.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="RAG evaluation in production"
-  description="Trace retrievals and generations, and run evals on live traffic."
+  description="Run evals on retrievals and generations in every production trace."
 />

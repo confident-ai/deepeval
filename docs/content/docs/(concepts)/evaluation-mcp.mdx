@@ -655,16 +655,16 @@ The [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) matches on the typ
     },
     {
       question:
-        "Can my team visualize MCP tool/resource calls on the cloud in a UI?",
+        "Can I catch failing MCP tool calls in production?",
       answer: (
         <>
-          MCP evals run locally. For teams that want to inspect which tools,
-          resources, and prompts were invoked across runs,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) can visualize MCP interactions
-          and their
-          scores in a shared cloud UI — optional, with no change to your
-          evaluation code.
+          MCP evals run locally. Once you're live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces production traces where tool, resource, or prompt calls
+          went wrong and turns them into your next eval — optional, with no
+          change to your evaluation code.
         </>
       ),
     },

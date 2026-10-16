@@ -5,8 +5,6 @@ sidebar_label: Component-Level Evals
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 Component-level evaluation (sometimes also known as **step-wise evals**) grades **internal components** of your LLM app — retrievers, tool calls, LLM generations, sub-agents — instead of treating the whole system as a black box. The unit of evaluation is still an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-cases), but it's attached to a span (an <Term py="@observe" ts="observe()"/>'d function or a framework-emitted span) rather than the whole trace.
 
 <ImageDisplayer id="diagrams/in-house/evaluation/component-level-evals" />
@@ -121,7 +119,7 @@ Every run of the iterator is snapshotted to disk, so you can open it in a trace-
 </Step>
 </Steps>
 
-Logging into Confident AI via the CLI also gives you testing reports with traces on the platform to annotate, share, and persist:
+If you log in to Confident AI via the CLI, the test run and its traces also appear there:
 
 <Switch>
 
@@ -142,13 +140,6 @@ npx deepeval login
 </Case>
 
 </Switch>
-
-<VideoDisplayer
-  src={ASSETS.tracingSpans}
-  confidentUrl="/docs/llm-tracing/introduction"
-  label="Span-level evals on Confident AI"
-  description="Inspect component-level scores on every span in your traces."
-/>
 
 :::tip[Go further]
 
@@ -174,7 +165,7 @@ Then run your evals exactly as before — <Term py="evals_iterator()" ts="evalsI
 
 ## Hyperparameters
 
-Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts).
+Log the model, prompt, and other configuration values with each test run so every score is tied to the configuration that produced it. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts).
 
 <Switch>
 
@@ -207,7 +198,7 @@ for await (const golden of dataset.evalsIterator({ hyperparameters })) {
 
 </Switch>
 
-On Confident AI, the logged values become filterable axes for comparing test runs and surfacing the configuration that performs best.
+They're saved with the test run, which also carries them to Confident AI when you're logged in.
 
 ## In CI/CD
 
@@ -325,16 +316,16 @@ See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for assertio
     },
     {
       question:
-        "Can my team see a visual breakdown of component scores on the cloud?",
+        "Can I find failing components in production traces?",
       answer: (
         <>
-          Component-level evals run locally, but the per-span scores are much
-          easier to read visually. Logging into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the official
-          platform for <code>deepeval</code>) renders the same traces and
-          component scores
-          into a shared cloud UI, so a team can drill into which span failed and
-          track it over time — optional, with zero additional code.
+          Yes. Component-level evals run locally, and once you're live{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces down to the span that broke,
+          clusters them into failure modes, and turns them into your next eval
+          — optional, with zero additional code.
         </>
       ),
     },

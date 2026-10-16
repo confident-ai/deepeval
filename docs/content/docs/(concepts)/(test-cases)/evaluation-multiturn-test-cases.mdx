@@ -574,7 +574,7 @@ test_case = ConversationalTestCase(
 )
 ```
 
-This is most useful for conversations you know are noisy — for example simulated conversations with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged on Confident AI so you can monitor how often flaky test cases actually fail.
+This is most useful for conversations you know are noisy — for example simulated conversations with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. If you're logged into Confident AI, the `flaky` status is sent along with the run.
 
 :::info
 A single-turn `LLMTestCase` can also be marked `flaky`, and so can metrics — a flaky **metric's** failure never decides its test case's pass/fail status.
@@ -582,7 +582,7 @@ A single-turn `LLMTestCase` can also be marked `flaky`, and so can metrics — a
 
 ## Label Test Cases For Confident AI
 
-If you're using Confident AI, these are some additional parameters to help manage your test cases.
+If you're logged into Confident AI, these optional parameters label the test cases in each run you send there.
 
 ### Name
 
@@ -698,17 +698,16 @@ Unlike for single-turn test cases, the concept of component-level evaluation doe
     },
     {
       question:
-        "How can my team share multi-turn conversations and visualize them in a UI?",
+        "Can I turn failing production conversations into test cases?",
       answer: (
         <>
-          Conversations run fully locally, but reading long multi-turn
-          transcripts in a terminal doesn't scale. Logging into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) renders the same conversations
-          and their
-          per-turn scores into a shared cloud UI, so a team can review,
-          annotate, and track them over time — with no change to your test case
-          code. It's entirely optional.
+          Yes. Conversations run fully locally, and once you're live{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing conversation traces, routes them to the right
+          annotators, and turns them into conversational goldens — with no
+          change to your test case code. It's entirely optional.
         </>
       ),
     },

@@ -509,9 +509,22 @@ If you run more than one test run, you will be able to **catch regressions** by 
 
 ### Save Results
 
-Test runs are cached locally. If you're logged in, they also appear on Confident AI.
+Test runs are cached locally, and you can choose where results are saved. If you're logged in, they also appear on Confident AI.
 
-<Tabs items={["Confident AI", "Locally in JSON"]}>
+<Tabs items={["Locally in JSON", "Confident AI"]}>
+<Tab value="Locally in JSON">
+
+Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice. Everything `deepeval` stores locally, including the SQLite alternative, is explained [here](/docs/evaluation-local-backend-storage).
+
+```bash
+# linux
+export DEEPEVAL_RESULTS_FOLDER="./data"
+
+# or windows
+set DEEPEVAL_RESULTS_FOLDER=.\data
+```
+
+</Tab>
 <Tab value="Confident AI">
 
 Run <Term py="deepeval view" ts="npx deepeval view"/> to view your newly ran test run on the platform:
@@ -557,28 +570,6 @@ npx deepeval login
 </Case>
 
 </Switch>
-
-<VideoDisplayer
-  src={ASSETS.evaluationOverview}
-  confidentUrl="/docs/getting-started/setup"
-  label="Watch full guide on Confident AI"
-  description="A complete walkthrough of running and analyzing your first evals."
-/>
-
-After more than one test run, runs can be compared on the [regression testing page](https://www.confident-ai.com/docs/llm-evaluation/dashboards/ab-regression-testing) shown near the end of the video.
-
-</Tab>
-<Tab value="Locally in JSON">
-
-Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice. Everything `deepeval` stores locally, including the SQLite alternative, is explained [here](/docs/evaluation-local-backend-storage).
-
-```bash
-# linux
-export DEEPEVAL_RESULTS_FOLDER="./data"
-
-# or windows
-set DEEPEVAL_RESULTS_FOLDER=.\data
-```
 
 </Tab>
 </Tabs>
@@ -813,7 +804,7 @@ Trace-level evals can score the observable result with [end-to-end evaluation](/
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Trace-level evals in production"
-  description="Score complete results or agent trajectories on live traffic."
+  description="Score complete results or agent trajectories on production traces."
 />
 
 </Tab>

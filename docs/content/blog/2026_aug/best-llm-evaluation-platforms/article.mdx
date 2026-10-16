@@ -71,8 +71,9 @@ worth checking before committing to a platform:
    evaluation cycles independently, without an engineer writing scripts?
 4. **CI/CD integration** – can evaluations run automatically in your
    deployment pipeline and gate releases on regressions?
-5. **Production evaluation** – can you monitor live traffic with online evals
-   and signals — continuous enforcement, not after-the-fact dashboards?
+5. **Production evaluation** – can you run evals on production traces and
+   surface the failing ones — continuous enforcement, not after-the-fact
+   dashboards?
 6. **Simulation and data generation** – can you generate test data dynamically,
    including multi-turn conversations and adversarial inputs?
 7. **Red teaming and safety** – is security testing a first-class part of the
@@ -104,14 +105,14 @@ means the capability is unavailable as a native workflow.
 
 | Capability                         | Confident AI                                                                                                                                     | LangSmith                                                                                                                       | Langfuse                                                                                                                      | Braintrust                                                                                                                 | Arize AI                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Use case coverage**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> RAG, agents, chatbots, multi-turn, and safety                     | <span className="comparison-status comparison-status--partial">~ Partial:</span> LangChain-centric, no multi-turn or safety     | <span className="comparison-status comparison-status--partial">~ Partial:</span> tracing-first with lightweight evals         | <span className="comparison-status comparison-status--partial">~ Partial:</span> prompt-centric evaluation                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> monitoring-first with custom evaluators      |
-| **Metric depth and trust**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 50+ research-backed metrics with human alignment                  | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom judge prompts, openevals templates      | <span className="comparison-status comparison-status--partial">~ Partial:</span> prebuilt judge evaluators, custom scores     | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom scorers and judge templates        | <span className="comparison-status comparison-status--partial">~ Partial:</span> judge templates with alignment tooling       |
-| **Collaboration workflows**        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> dataset curation, annotation queues, no-code evals, prompt studio | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues with rubrics                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues, engineer-led setup        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> no-code playground and dataset editor       | <span className="comparison-status comparison-status--partial">~ Partial:</span> labeling queues and annotations              |
-| **CI/CD integration**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> GitHub and GitLab integrations, PR-style prompt versioning        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> SDK-driven CI evaluation                         | <span className="comparison-status comparison-status--partial">~ Partial:</span> manual, assembled by the team                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> CI gates on prompt changes                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> experiment workflows in CI                     |
-| **Production evaluation**          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals, signals, alerting, auto-curated datasets            | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluation scoring on traces                     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals and monitors (alerts cloud-only)  | <span className="comparison-status comparison-status--partial">~ Partial:</span> online scoring on logs, no quality alerts | <span className="comparison-status comparison-status--strong">✓ Strong:</span> real-time dashboards and monitoring            |
+| **Use case coverage**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> AI agents, chatbots, RAG, multi-turn, and safety                  | <span className="comparison-status comparison-status--partial">~ Partial:</span> LangChain-centric, no multi-turn or safety     | <span className="comparison-status comparison-status--partial">~ Partial:</span> tracing-first with lightweight evals         | <span className="comparison-status comparison-status--partial">~ Partial:</span> prompt-centric evaluation                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> monitoring-first with custom evaluators      |
+| **Metric depth and trust**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 50+ research-backed metrics, aligned with human annotations       | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom judge prompts, openevals templates      | <span className="comparison-status comparison-status--partial">~ Partial:</span> prebuilt judge evaluators, custom scores     | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom scorers and judge templates        | <span className="comparison-status comparison-status--partial">~ Partial:</span> judge templates with alignment tooling       |
+| **Collaboration workflows**        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> failing traces routed to the right annotators, no-code evals      | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues with rubrics                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues, engineer-led setup        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> no-code playground and dataset editor       | <span className="comparison-status comparison-status--partial">~ Partial:</span> labeling queues and annotations              |
+| **CI/CD integration**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> governance as release gates, GitHub and GitLab integrations       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> SDK-driven CI evaluation                         | <span className="comparison-status comparison-status--partial">~ Partial:</span> manual, assembled by the team                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> CI gates on prompt changes                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> experiment workflows in CI                     |
+| **Production evaluation**          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evals on every trace, failure-mode clusters, alerting             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluation scoring on traces                     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals and monitors (alerts cloud-only)  | <span className="comparison-status comparison-status--partial">~ Partial:</span> online scoring on logs, no quality alerts | <span className="comparison-status comparison-status--strong">✓ Strong:</span> real-time dashboards and monitoring            |
 | **Simulation and data generation** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> simulated conversations, synthetic dataset generation             | <span className="comparison-status comparison-status--partial">~ Partial:</span> simulation via openevals, in code only         | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation | <span className="comparison-status comparison-status--partial">~ Partial:</span> Loop generates test cases, no simulation  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation |
 | **Red teaming and safety**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 120+ vulnerabilities, OWASP, NIST AI RMF, MITRE ATLAS             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              |
-| **AI governance**                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> org-wide gate, enforced pre-launch and live                       | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                |
+| **AI governance**                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> org-wide release gates, enforced pre-launch and live              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                |
 | **Deployment and cost**            | <span className="comparison-status comparison-status--partial">~ Partial:</span> $1/GB traces, enterprise self-hosting                           | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-seat pricing, Enterprise-only self-hosting | <span className="comparison-status comparison-status--strong">✓ Strong:</span> MIT-licensed, free self-hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> $3/GB traces, steep tier jump             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> free open-source Phoenix, managed AX path      |
 
 </div>
@@ -120,43 +121,46 @@ means the capability is unavailable as a native workflow.
 
 ### What is Confident AI and why should AI teams consider it?
 
-[Confident AI](https://confident-ai.com) is the AI quality platform built for
-enterprise teams to standardize evals and observability across the org. Think
-of it as the funnel every AI use case passes through: platform teams define
-what "good" means once, and different product teams — whatever stack they're
-on — measure their apps against that standard before launch with
-research-backed eval metrics, then monitor them live with online evals and
-signals on real traffic.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) is AI
+monitoring for apps in production, and the platform in this comparison built
+around one loop: turning production issues into your next eval. Where
+observability-first tools record traces and leave the judging to you,
+Confident AI surfaces failing production traces before anyone has written an
+eval for them, clusters them into failure modes, routes them to the right
+annotators, and turns them into goldens for your next eval — which then runs
+on every trace from then on.
 
-Its main advantage is enforcement. It is the only platform in this comparison
-where the same standard extends to security through native red teaming, and
-is applied automatically through AI governance — an org-wide gate that blocks
-anything failing its evals or red-team checks before it ships, and keeps
-enforcing that bar every day the app is live. Nothing reaches customers
-without clearing it.
+For enterprise teams, [Confident AI](https://www.confident-ai.com) is one
+system for AI quality: evaluation, monitoring, annotation, red teaming, and
+governance. Platform teams define what "good" means once, and
+[AI governance](https://www.confident-ai.com/products/ai-governance) enforces
+it as release gates across every AI project, whatever stack each team is on —
+blocking anything that fails its evals or red-team checks before it ships, and
+holding that bar every day the app is live. It is also the only platform in
+this comparison with a native
+[red-teaming module](https://www.confident-ai.com/products/ai-red-teaming), so
+security sits inside the same standard.
 
 ### Key features
 
+- **Failing traces, surfaced:** issues show up in production traces — down to
+  the call, span, and agent step — before anyone has written an eval for them,
+  clustered into failure modes
+- **Evals on every production trace**, with alerts when traces start failing
+- **Live signals** for user sentiment, behavior, and use cases across traces
+- **Goldens from failing traces:** failing traces route to the right
+  annotators and become the dataset for your next eval
 - **50+ research-backed metrics** for AI agents, multi-turn, and RAG
 - **Postman for AI evals:** run evals on the API endpoints that host your
   agents instead of recreating them directly on the platform
-- **Full tracing** of every call, span, and agent step, and the most common
-  failure modes
-- **Online evals** that run against real production traces, with monitored
-  alerts
-- **Live signals** to identify patterns in user sentiment, issues, and use
-  cases
-- **Experimentation, regression testing, and prompt management**, plus
-  multi-turn simulation
-- **Dataset workflows** that automatically build your next dataset from
-  traces, queued for annotation
+- **Prompt management and multi-turn simulation**
 - **Native red teaming:** 120+ vulnerabilities such as PII leakage and tool
   misuse, 20+ attack vectors such as linear jailbreaking, scanned on agentic
   traces — with shareable risk assessments aligned to OWASP Top 10, NIST AI
   RMF, and MITRE ATLAS
-- **AI governance:** define the standard once and an automatic gate blocks
-  releases that fail their evals or red-team checks — enforced before launch
-  and live in production
+- **AI governance as release gates:** define the standard once and an
+  automatic gate blocks releases that fail their evals or red-team checks —
+  enforced before launch and live in production
 - **Enterprise-ready:** self-hosting, SOC 2 Type II, GDPR, SSO, RBAC, and
   audit logs
 
@@ -164,8 +168,8 @@ without clearing it.
 
 Create a free account at
 [app.confident-ai.com](https://app.confident-ai.com/auth/signup), connect your
-AI application over HTTP or with a few lines of SDK code, and run your first
-evaluation — no need to recreate your app on the platform.
+AI application over HTTP or with a few lines of SDK code, and start running
+evals on its traces — no need to recreate your app on the platform.
 
 ### Pricing
 
@@ -178,25 +182,25 @@ evaluation — no need to recreate your app on the platform.
 
 **Confident AI is for you if...**
 
-- Different teams build AI apps on different stacks and you need one
-  consistent bar for how they're measured and monitored
-- You want evals and observability in one place — measure before launch,
-  monitor live after
+- Your AI app is in production and you want failing traces to tell you what
+  to test next, not a dashboard you have to read
+- Engineers, QA, domain experts, and PMs need to work from the same failing
+  traces, annotations, and datasets
+- You're an enterprise team building AI apps on different stacks and need one
+  system for AI quality, with one bar for all of them
 - Leadership needs an automatic answer to "is this AI app allowed to ship?"
 - Security testing should be part of the same standard, not a separate vendor
-- PMs, QA, and domain experts need to run evaluation cycles without code
 
 **Confident AI is not for you if...**
 
-- You're a developer who just needs metrics in code — an open-source
-  framework like DeepEval will serve you better
+- You're a developer who just needs metrics in code before launch — an
+  open-source framework like DeepEval will serve you better
 - You need a fully open-source platform on the free tier (self-hosting is
   enterprise-only)
 
-Confident AI's eval metrics and adversarial testing are powered by
-[DeepEval](https://github.com/confident-ai/deepeval) and
-[DeepTeam](https://github.com/confident-ai/deepteam) respectively — two of the
-most-used open-source packages for LLM evaluation and red teaming.
+Confident AI and [DeepEval](https://github.com/confident-ai/deepeval) are
+separate products from the same team: DeepEval evaluates your app in
+development, and Confident AI monitors it once it's live.
 
 ## 2. LangSmith
 
@@ -389,7 +393,7 @@ rather than a deep built-in metric library.
 
 ### Step 1: Identify what you are evaluating
 
-- **Multiple use cases (RAG + agents + chatbots + safety):** Confident AI is
+- **Multiple use cases (agents + chatbots + RAG + safety):** Confident AI is
   the only platform in this comparison that covers all of them natively.
 - **LangChain applications:** LangSmith offers the tightest native
   integration, with the trade-off that depth outside that ecosystem is
@@ -402,26 +406,30 @@ rather than a deep built-in metric library.
 
 If evaluation stays with engineers, any platform here works, and a framework
 like DeepEval may even be enough on its own. If PMs, QA, and domain experts
-need to run evaluation cycles independently, Confident AI is the only platform
-in this comparison where non-engineers run full evaluation cycles — elsewhere,
-collaboration stops at annotation queues and playgrounds, with engineers
-setting up each run.
+need to run evaluation cycles independently, Confident AI is built for it:
+everyone works from the same failing traces, annotations, and datasets, and
+PMs stay in the loop on what's failing and why. Elsewhere, collaboration stops
+at annotation queues and playgrounds, with engineers setting up each run.
 
-### Step 3: Decide whether you need evaluation or observability first
+### Step 3: Decide whether you need evaluation, observability, or monitoring
 
-An evaluation-first platform starts with datasets and success criteria, gates
-releases on quality, and extends the same metrics into production. Confident
-AI and Braintrust are built this way.
+An evaluation-first platform starts with datasets and success criteria and
+gates releases on quality. Braintrust is built this way.
 
 An observability-first platform starts with traces and dashboards, then adds
 scoring on top. LangSmith, Langfuse, and Arize follow this model — strong at
 debugging what happened, lighter at judging whether it was good.
 
+Confident AI is AI monitoring: traces and evals go together from the start, so
+failing production traces are flagged, clustered into failure modes, and
+turned into your next eval instead of waiting for someone to spot them on a
+dashboard.
+
 ### Step 4: Check the constraint that will actually decide it
 
 - **Need one standard enforced across many teams?** Only Confident AI has an
-  AI governance layer — an automatic gate that blocks releases failing their
-  evals or red-team checks, before launch and continuously in production.
+  AI governance layer — release gates that block anything failing its evals
+  or red-team checks, before launch and continuously in production.
 - **Need red teaming without another vendor?** Only Confident AI includes it.
 - **Must self-host on day one?** Langfuse is the only MIT-licensed, fully
   self-hostable option here.
@@ -432,7 +440,7 @@ debugging what happened, lighter at judging whether it was good.
 
 | Tool             | Open source        | Primary interface     | Best for                                         | You may also need                                           |
 | ---------------- | ------------------ | --------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
-| **Confident AI** | No (self-hostable) | UI + HTTP + SDK       | Standardizing evals and observability org-wide   | Nothing — evals, observability, red teaming, and governance |
+| **Confident AI** | No (self-hostable) | UI + HTTP + SDK       | Turning failing production traces into evals     | DeepEval for code-first evals before launch                 |
 | **LangSmith**    | No                 | UI + SDK              | LangChain-native tracing with basic evals        | Deeper metrics and simulation for non-LangChain components  |
 | **Langfuse**     | MIT                | UI + SDK + self-host  | Self-hosted observability with lightweight evals | Deeper metrics and simulation beyond judge templates        |
 | **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Broader tooling for agents, multi-turn, and safety          |
@@ -442,18 +450,19 @@ debugging what happened, lighter at judging whether it was good.
 
 **For enterprise platform teams**
 
-- **Confident AI** to standardize evals and observability across the org and
-  enforce them automatically through AI governance
+- **Confident AI** as one system for AI quality, with AI governance enforced
+  as release gates across the org
 
 **For cross-functional AI teams**
 
-- **Confident AI** if PMs, QA, and domain experts need to own evaluation
-  cycles alongside engineers
+- **Confident AI** if PMs, QA, and domain experts need to work from the same
+  failing traces and annotations as engineers
 
 **For LangChain engineering teams**
 
 - **LangSmith** for native tracing and debugging
-- **Confident AI** when evaluation depth and team workflows outgrow it
+- **Confident AI** when you need evals on production traces, not just
+  tracing
 
 **For teams that must self-host**
 
@@ -463,7 +472,8 @@ debugging what happened, lighter at judging whether it was good.
 **For monitoring-led enterprises**
 
 - **Arize AI** to combine ML and LLM observability at scale
-- **Confident AI** when the evaluation layer needs to be first-class
+- **Confident AI** when you want failing production traces to become your
+  next eval
 
 ## FAQs
 
@@ -473,9 +483,11 @@ debugging what happened, lighter at judging whether it was good.
       question: "What is the best overall LLM evaluation platform in 2026?",
       answer: (
         <>
-          Confident AI — it combines evals, observability, red teaming, and AI
-          governance in one platform, with an org-wide gate that enforces the
-          same standard before launch and in production. A specialist may be
+          Confident AI — it runs evals on production traces and turns the
+          failing ones into your next eval, and for enterprise teams it's one
+          system for AI quality: evaluation, monitoring, annotation, red
+          teaming, and governance, with release gates that enforce the same
+          standard before launch and in production. A specialist may be
           better if your only requirement is LangChain tracing, self-hosted
           observability, or prompt regression.
         </>
@@ -501,11 +513,11 @@ debugging what happened, lighter at judging whether it was good.
       question: "Are DeepEval and Confident AI the same product?",
       answer: (
         <>
-          No — they're separate products. DeepEval is an open-source evaluation
-          framework that runs locally in code. Confident AI is the AI quality
-          platform for enterprise teams to standardize evals and observability
-          across the org — its metrics and adversarial testing are powered by
-          DeepEval and DeepTeam, but the platform is its own product, not
+          No — they're separate products from the same team. DeepEval is an
+          open-source evaluation framework that runs locally in code and
+          evaluates your app in development. Confident AI is AI monitoring for
+          apps in production: it surfaces failing production traces and turns
+          them into goldens for your next eval. It's its own product, not
           "DeepEval's UI."
         </>
       ),
@@ -526,9 +538,13 @@ debugging what happened, lighter at judging whether it was good.
       question: "How do I integrate LLM evaluation into CI/CD?",
       answer: (
         <>
-          Confident AI runs evaluations in your pipeline, returns testing
-          reports with regression tracking, and its governance gate blocks
-          releases that fail. LangSmith, Braintrust, and Arize support CI-driven
+          In code,{" "}
+          <a href="/docs/evaluation-unit-testing-in-ci-cd">
+            DeepEval runs evals in your pipeline
+          </a>{" "}
+          and fails the build on regressions. For enterprise teams, Confident
+          AI's AI governance adds release gates that block anything failing its
+          evals or red-team checks. LangSmith, Braintrust, and Arize support CI-driven
           evaluation through their SDKs; Langfuse requires assembling the
           pipeline yourself.
         </>
@@ -540,8 +556,7 @@ debugging what happened, lighter at judging whether it was good.
         <>
           On most platforms, yes. Confident AI is the only one here with native
           red teaming — 120+ vulnerabilities, 20+ attack methods, and risk
-          assessments aligned to OWASP Top 10, NIST AI RMF, and MITRE ATLAS —
-          powered by DeepTeam, an open-source red teaming package.
+          assessments aligned to OWASP Top 10, NIST AI RMF, and MITRE ATLAS.
         </>
       ),
     },

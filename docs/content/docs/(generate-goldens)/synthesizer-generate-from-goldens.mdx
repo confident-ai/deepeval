@@ -115,13 +115,17 @@ If your existing Goldens include `context`, the synthesizer will utilize these c
       ),
     },
     {
-      question: "Can my team generate goldens from our existing goldens without code?",
+      question: "Where should the goldens I expand from come from?",
       answer: (
         <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can connect your knowledge bases and run the generation pipeline
-          no-code — tweak filtration, evolutions, and styling, experiment with
-          variations, and collaborate on the resulting dataset as a team.
+          Any goldens work, but the best seeds are cases your app has actually
+          failed on. Not sure what to test next?{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces and turns them into goldens, which
+          you can then expand into variations with{" "}
+          <code>generate_goldens_from_goldens()</code>.
         </>
       ),
     },

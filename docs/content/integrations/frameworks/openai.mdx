@@ -857,28 +857,13 @@ await setTracingContext(
       ),
     },
     {
-      question:
-        "Can I see these traces and scores in a UI instead of the terminal?",
-      answer: (
-        <>
-          Yes, and it's optional. Run{" "}
-          <Term py="deepeval login" ts="npx deepeval login" /> to connect{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> and the same
-          instrumented client renders every trace, LLM span, and metric score in
-          a shared cloud dashboard — no code changes.
-        </>
-      ),
-    },
-    {
       question: "Can I keep evaluating my OpenAI app once it's in production?",
       answer: (
         <>
-          Yes. When logged into Confident AI, the instrumented client streams
-          live traces in real time, so you can run{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real production traffic instead of only offline datasets.
+          Yes. The instrumented client traces production calls the same way it
+          does in tests. <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> catches the traces
+          that fail there, groups them into failure modes, and turns them into
+          the dataset your next offline eval runs on.
         </>
       ),
     },

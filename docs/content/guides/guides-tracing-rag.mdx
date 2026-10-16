@@ -88,7 +88,7 @@ For unsupported clients, you can manually log token counts and model names using
 
 ### Connecting to Confident AI (Optional)
 
-To export your traces for visualizing execution graphs and running asynchronous evaluations, you must provide a Confident AI API key. Without this, traces are only collected locally. Run `deepeval login` in your terminal to authenticate, or pass the key directly.
+To export traces to Confident AI and run asynchronous evaluations on them, provide a Confident AI API key. Without one, traces are only collected locally. Run `deepeval login` in your terminal to authenticate, or pass the key directly.
 
 ```python title="main.py"
 trace_manager.configure(
@@ -166,7 +166,7 @@ def answer_user_query(user_query: str) -> str:
 When `answer_user_query()` is executed, `deepeval` creates a root trace. Inside that trace, the `retriever` span will execute first, followed by the `llm` span.
 
 :::tip
-Always explicitly define the `type` parameter (`llm`, `retriever`, `tool`, or `agent`). Typed spans unlock component-specific evaluation metrics — `FaithfulnessMetric` and `AnswerRelevancyMetric` on `llm` spans, contextual metrics on `retriever` spans — and enable specialized rendering in Confident AI's trace explorer.
+Always explicitly define the `type` parameter (`llm`, `retriever`, `tool`, or `agent`). Typed spans unlock component-specific evaluation metrics — `FaithfulnessMetric` and `AnswerRelevancyMetric` on `llm` spans, contextual metrics on `retriever` spans — and carry type-specific fields such as model, token cost, and retrieval settings when traces are exported.
 :::
 
 ## Tracking Dynamic Context
@@ -293,7 +293,7 @@ for golden in dataset.evals_iterator():
 When `generate_response()` runs, `deepeval` automatically extracts the function's `input` (the query), `output` (the response), and any `retrieval_context` attached to the span, and feeds them into both metrics. If a metric fails its threshold, it is highlighted in your local trace output immediately — before you ever push code.
 
 :::note
-Running metrics via the `metrics` parameter is a blocking operation. The metric uses an LLM judge to evaluate the span locally, meaning execution will pause until the evaluation is complete. This is intended exclusively for development and testing environments. For production, use `metric_collection` instead — see the [production section](#llm-observability-in-production) below.
+Running metrics via the `metrics` parameter is a blocking operation. The metric uses an LLM judge to evaluate the span locally, meaning execution will pause until the evaluation is complete. This is intended exclusively for development and testing environments. For production, use `metric_collection` instead — see the [production section](#catching-failing-traces-in-production) below.
 :::
 
 ### End-to-End Evaluation
@@ -436,11 +436,11 @@ print(result)
 The integrations shown here are minimal tracing examples. For full options — including attaching evaluation metrics to specific spans, running component-level evals, and setting up production `metric_collection`s — see the [LlamaIndex integration docs](/integrations/llamaindex) and [LangChain integration docs](/integrations/langchain).
 :::
 
-## LLM Observability In Production
+## Catching Failing Traces In Production
 
-In production, the goal of observability shifts from local debugging to **continuous, non-blocking performance monitoring**. You cannot afford to run local LLM judges (metrics) that pause your application's execution and add latency for your end users.
+In production, the goal shifts from local debugging to **catching the traces that fail**. You cannot afford to run local LLM judges (metrics) that pause your application's execution and add latency for your end users, and your dataset won't cover every query real users send.
 
-Instead, Confident AI handles production observability and asynchronous evaluation seamlessly.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next eval. The steps below also set up evals that run asynchronously on every trace and flag the failing ones.
 
 :::note
 Traces are sent asynchronously in a background worker thread. For short-lived scripts that exit before the worker finishes, set the `CONFIDENT_TRACE_FLUSH=1` environment variable to ensure all traces are flushed before the process exits. If you need to control when that happens, or to know whether it succeeded, call `deepeval.flush_traces()` (or `await deepeval.a_flush_traces()`) at your shutdown point instead. For long-running servers (FastAPI, Django), neither is needed.
@@ -457,7 +457,7 @@ Log in to Confident AI and create a metric collection containing the component-l
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Create a metric collection on Confident AI"
-  description="Group RAG metrics to score retrievals and generations automatically."
+  description="Choose the RAG metrics that run on every production trace."
 />
 
 </Step>
@@ -474,20 +474,20 @@ def generate_response(query: str, context: list) -> str:
     ...
 ```
 
-Whenever your application runs, `deepeval` automatically exports the traces to Confident AI in a background thread—meaning zero latency is added to your application. Confident AI then evaluates these traces asynchronously using your specified metric collection.
+Whenever your application runs, `deepeval` exports the traces to Confident AI in a background thread, so zero latency is added to your application, and the metric collection evaluates them asynchronously.
 
 </Step>
 <Step>
-### Monitor and analyze traces
+### Turn failing traces into goldens
 
 
-Once your traces are exported, you can visualize the entire execution graph, inspect the dynamic context attached to every span, and review the asynchronous metric scores to catch regressions before they affect users.
+Open a failing trace to see which span broke: a retriever that returned irrelevant chunks, or a generator that ignored the `retrieval_context` attached to it. The trace's input and context are what you need to turn it into a golden, so the next development run tests the query that failed in production.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Track tracing performance over time on Confident AI"
-  description="Watch metric scores trend across your RAG pipeline in production."
+  label="Failing RAG traces on Confident AI"
+  description="Inspect the retriever and generator spans of a failing production trace."
 />
 
 </Step>
@@ -506,7 +506,7 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
 :::info[Development vs Production]
 
 - **Development** — Leave `sampling_rate=1.0`, attach `metrics` directly to `@observe` to evaluate components locally, and use `get_all_traces_dict()` to inspect or log raw traces without any external dependency.
-- **Production** — Tune your `sampling_rate`, swap local metrics for asynchronous `metric_collection`s, and monitor execution via Confident AI dashboards without adding latency.
+- **Production** — Tune your `sampling_rate`, swap local metrics for asynchronous `metric_collection`s, and turn the failing traces Confident AI catches into goldens for your next eval.
 
 :::
 
@@ -569,10 +569,13 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
       answer: (
         <>
           No. Tracing works fully offline. You can inspect captured traces
-          locally via <code>trace_manager.get_all_traces_dict()</code>.{" "}
-          <a href="https://confident-ai.com">Confident AI</a> is the platform
-          layer for production observability, async evaluations, and dataset
-          curation, but the tracing primitives don't require it.
+          locally via <code>trace_manager.get_all_traces_dict()</code>. You
+          only need{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          to catch failing production traces and turn them into goldens; the
+          tracing primitives don't require it.
         </>
       ),
     },
@@ -593,16 +596,9 @@ In this guide, you learned how to instrument your single-turn and RAG applicatio
 
 ## Next Steps And Additional Resources
 
-While `deepeval` handles the decorators and trace collection, [Confident AI](https://confident-ai.com) is the platform that brings everything together for production observability:
+Already in production? [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, routes them to the right annotators, and turns them into goldens for your development dataset. Here's what to do next:
 
-- **Trace Explorer** — Search, filter, and inspect every trace and span in a visual tree
-- **Async Production Evals** — Attach metric collections to spans and run evaluations without blocking your app
-- **Dataset Curation** — Export failing production traces as goldens for your development testing bench
-- **Performance Tracking** — Monitor latency, token usage, and cost trends over time
-
-Ready to get started? Here's what to do next:
-
-1. **Login to Confident AI** — Run `deepeval login` in your terminal to connect your account
+1. **Connect production traces** — Run `deepeval login` in your terminal to start sending traces to Confident AI
 2. **Explore multi-turn tracing** — Learn how to stitch traces together in the [Multi-Turn Tracing guide](/guides/guides-tracing-multi-turn)
 3. **Explore agent tracing** — Learn how to track complex tool execution in the [Tracing AI Agents guide](/guides/guides-tracing-ai-agents)
 4. **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help!
