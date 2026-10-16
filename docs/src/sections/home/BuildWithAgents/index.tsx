@@ -7,8 +7,11 @@ import { Check, ChevronDown, Copy, SquareTerminal } from "lucide-react";
 import { OpenAIMark } from "@site/src/components/BrandMarks";
 import styles from "./BuildWithAgents.module.scss";
 
+type CommandIcon = "cli" | "python" | "typescript";
+
 type Command = {
   label?: string;
+  icon?: CommandIcon;
   command: string;
 };
 
@@ -26,8 +29,21 @@ const OPTIONS: Option[] = [
     description:
       "Walks your coding agent through building and running a first evaluation on your repo.",
     commands: [
-      { label: "Python", command: "pip install -U deepeval && deepeval setup" },
-      { label: "TypeScript", command: "npx deepeval setup" },
+      {
+        label: "CLI",
+        icon: "cli",
+        command: "curl -fsSL https://deepeval.com/setup.sh | sh",
+      },
+      {
+        label: "Python",
+        icon: "python",
+        command: "pip install -U deepeval && deepeval setup",
+      },
+      {
+        label: "TypeScript",
+        icon: "typescript",
+        command: "npx deepeval setup",
+      },
     ],
   },
   {
@@ -40,6 +56,21 @@ const OPTIONS: Option[] = [
     ],
   },
 ];
+
+function LabelIcon({ icon }: { icon: CommandIcon }) {
+  if (icon === "cli") {
+    return <SquareTerminal aria-hidden className={styles.labelIcon} />;
+  }
+  return (
+    <Image
+      src={`/icons/${icon}.svg`}
+      alt=""
+      width={14}
+      height={14}
+      className={styles.labelIcon}
+    />
+  );
+}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -138,7 +169,12 @@ const BuildWithAgents: React.FC = () => {
             <p className={styles.description}>{option.description}</p>
             {option.commands.map((c) => (
               <div key={c.command} className={styles.command}>
-                {c.label && <span className={styles.label}>{c.label}</span>}
+                {c.label && (
+                  <span className={styles.label}>
+                    {c.icon && <LabelIcon icon={c.icon} />}
+                    {c.label}
+                  </span>
+                )}
                 <code>{c.command}</code>
                 <CopyButton text={c.command} />
               </div>

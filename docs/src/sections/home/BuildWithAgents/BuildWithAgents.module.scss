@@ -48,7 +48,7 @@
   top: calc(100% + 0.4rem);
   left: 0;
   z-index: 20;
-  width: min(30rem, calc(100vw - 2rem));
+  width: min(32rem, calc(100vw - 2rem));
   background: var(--color-fd-background);
   border: 1px solid var(--color-fd-border);
   box-shadow: 0 12px 32px -12px
@@ -119,9 +119,18 @@
 
 .label {
   flex: none;
-  min-width: 4.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 5rem;
   font-size: 11px;
   color: var(--color-fd-muted-foreground);
+}
+
+.labelIcon {
+  flex: none;
+  width: 14px;
+  height: 14px;
 }
 
 .copy {
