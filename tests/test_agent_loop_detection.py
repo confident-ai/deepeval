@@ -292,7 +292,7 @@ def test_same_name_different_input_not_a_cycle():
     be flagged as a cycle — input_hash disambiguates them.
 
     This is the edge case where the old label-only approach would have
-    false-positived.  Including a truncated input hash in the DFS label
+    false-positived.  Including an input hash in the DFS label
     makes the detection resilient to legitimate same-name delegation.
     """
     # outer planner delegates to an inner planner with different input
@@ -325,6 +325,38 @@ def test_same_name_different_input_not_a_cycle():
     # Different inputs → different labels → no cycle
     assert metric.score_breakdown["call_graph_cycles"] == 1.0
     assert metric.success is True
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+@pytest.mark.parametrize("structured_input", [False, True])
+@pytest.mark.parametrize("same_input", [False, True])
+def test_cycle_detection_uses_full_input(
+    async_mode, structured_input, same_input
+):
+    common_context = "Shared planning context for a delegated task. " * 4
+    outer_input = common_context + "Book a hotel in Paris."
+    inner_input = (
+        outer_input if same_input else common_context + "Book a hotel in Tokyo."
+    )
+    if structured_input:
+        outer_input = {"context": common_context, "task": outer_input}
+        inner_input = {"task": inner_input, "context": common_context}
+
+    inner = _make_agent_span("planner", [])
+    inner["input"] = inner_input
+    outer = _make_agent_span("planner", [inner])
+    outer["input"] = outer_input
+    metric = AgentLoopDetectionMetric(
+        async_mode=async_mode,
+        check_tool_repetition=False,
+        check_reasoning_stagnation=False,
+    )
+
+    score = metric.measure(_make_test_case(outer), _show_indicator=False)
+
+    assert score == (0.0 if same_input else 1.0)
+    assert metric.score_breakdown["call_graph_cycles"] == score
+    assert metric.success is (not same_input)
 
 
 # ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import hashlib
 import json
 from difflib import SequenceMatcher
 from typing import Optional, List, Tuple, Dict
@@ -83,7 +84,7 @@ class AgentLoopDetectionMetric(BaseMetric):
     3. **Call Graph Cycles** — DFS on the nested ``children`` tree.  A
        cycle is flagged when a span with the same ``type:name:input_hash``
        label appears twice on the same root-to-leaf ancestry path.
-       Including a truncated input hash in the label reduces false
+       Including an input hash in the label reduces false
        positives when two structurally different spans happen to share a
        name (see *Limitations* in the metric documentation).
 
@@ -101,7 +102,7 @@ class AgentLoopDetectionMetric(BaseMetric):
     ~~~~~~~~~~~
     * **Cycle detection** relies on ``type:name:input_hash`` identity.
       Two genuinely different spans that share the same type, name, *and*
-      a truncated input hash could still be false-positived.  The trace
+      the same input could still be false-positived.  The trace
       dict (``_trace_dict``) does not expose span UUIDs, so this is the
       best available heuristic.
     * **Stagnation detection** uses structural text similarity (bigram
@@ -349,8 +350,8 @@ class AgentLoopDetectionMetric(BaseMetric):
         Including the input in the DFS label drastically reduces false
         positives when two structurally different spans share a
         ``type:name`` pair (e.g. two different agents both named
-        ``"planner"``).  We truncate to 64 chars to keep labels readable
-        in cycle-path messages.
+        ``"planner"``).  Hash the full input so differences beyond a
+        shared prefix still produce distinct, fixed-length labels.
         """
         raw = span.get("input", "")
         if isinstance(raw, dict):
@@ -358,7 +359,7 @@ class AgentLoopDetectionMetric(BaseMetric):
                 raw = json.dumps(raw, sort_keys=True)
             except (TypeError, ValueError):
                 raw = str(raw)
-        return str(raw)[:64]
+        return hashlib.sha256(str(raw).encode("utf-8")).hexdigest()
 
     def _score_call_graph_cycles(
         self, trace_dict: Optional[Dict]
@@ -374,9 +375,9 @@ class AgentLoopDetectionMetric(BaseMetric):
         different spans that happen to share the same ``type:name`` (e.g.
         ``agent:planner`` at the root and a delegated ``agent:planner``
         with different input deeper in the tree) would be false-positived.
-        Incorporating a truncated input hash makes the label specific
+        Incorporating a full-input hash makes the label specific
         enough to avoid this while still detecting true recursive loops
-        (which, by definition, pass the same or similar input back).
+        (which pass the same input back).
 
         **Limitation:** If the trace dict exposed span UUIDs we could
         use exact identity.  ``create_nested_spans_dict`` strips them,
