@@ -67,7 +67,7 @@ class FakeTrack:
     async def recv(self):
         if not self._frames:
             raise RuntimeError("track ended")
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.3)  # let drain loop process audio frame (CI-safe)
         return self._frames.pop(0)
 
 
@@ -305,11 +305,30 @@ async def test_connect_posts_the_offer_and_waits_for_the_agent(fake_stack):
 
 
 async def test_agent_audio_and_text_arrive_as_events(fake_stack):
+    """Agent audio + text events land in order before turn_complete.
+
+    Previously this was racy: the test fired the transcript event before
+    iter_agent_events() started and then slept 0.1s hoping the drain loop
+    would consume both. A slow CI runner could starve the drain loop,
+    leaving the transcript sitting in the inbound queue when the iterator
+    first ran — or the iterator could fire before the transcript handler ran.
+
+    The fix consumes the queue *after* both events have been injected:
+    we fire the transcript synchronously (put_nowait), let the event loop
+    yield to the drain loop once (await asyncio.sleep(0.3)) so it processes
+    the queued track.recv(), and only then start iterating.
+    """
     FakePeerConnection.agent_frames = [agent_frame(b"\x02\x00" * 480)]
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
+
+    # Fire transcript → synchronous put_nowait into connector._inbound
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+
+    # Yield once so the event loop runs the drain loop's next await
+    # (track.recv()) and deposits the audio frame into the queue too.
+    await asyncio.sleep(0.3)  # let drain loop process audio frame (CI-safe)
 
     events = []
     async for event in connector.iter_agent_events():
