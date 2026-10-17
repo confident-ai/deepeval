@@ -26,6 +26,7 @@ from deepeval.models.llms.multimodal import (
     to_openai_content,
 )
 from deepeval.test_case import Audio, MLLMImage
+from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 
 IMAGE_BYTES = b"\x89PNG-bytes"
 IMAGE_B64 = base64.b64encode(IMAGE_BYTES).decode()
@@ -69,6 +70,32 @@ def test_multimodal_parts_splits_text_and_images_in_order():
     parts = multimodal_parts(f"A {first} B {second}")
 
     assert parts == ["A ", first, " B ", second]
+
+
+def test_multimodal_parts_resolves_an_unregistered_remote_url():
+    parts = multimodal_parts("A [DEEPEVAL:IMAGE:https://example.com/cat.png]")
+
+    assert parts[0] == "A "
+    assert parts[1].url == "https://example.com/cat.png"
+    assert parts[1].local is False
+    assert parts[1].dataBase64 is None
+
+
+@pytest.mark.parametrize("as_uri", [False, True])
+@pytest.mark.parametrize("kind", ["IMAGE", "PDF"])
+def test_multimodal_parts_never_reads_a_local_path_from_placeholder_text(
+    tmp_path, kind, as_uri
+):
+    # Placeholder text can come from the output under evaluation, so an
+    # unregistered id must not be resolved against the local filesystem.
+    secret = tmp_path / "secret.env"
+    secret.write_text("API_KEY=not-a-real-key")
+    target = secret.as_uri() if as_uri else str(secret)
+
+    with pytest.raises(ValueError, match="Unknown multimodal placeholder"):
+        multimodal_parts(f"Chart: [DEEPEVAL:{kind}:{target}]")
+
+    assert target not in _MLLM_IMAGE_REGISTRY
 
 
 def test_to_openai_content_wraps_text_only_prompt():
