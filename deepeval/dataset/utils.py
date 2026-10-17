@@ -32,6 +32,7 @@ def strip_local_expectation_fields(golden_bodies: List[Dict[str, Any]]):
         for field in _LOCAL_ONLY_EXPECTATION_FIELDS:
             expectations.pop(field, None)
 
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -276,6 +277,19 @@ def format_turns(turns: List[Turn]) -> str:
             "mcp_prompts_called": _dump_list(turn.mcp_prompts_called),
             "metadata": turn.metadata if turn.metadata else None,
         }
+        cur_turn.update(
+            turn.model_dump(
+                mode="json",
+                include={
+                    "audio",
+                    "latency_ms",
+                    "interrupted",
+                    "provider_transcript",
+                },
+                exclude={"audio": {"_local", "_filename", "_id"}},
+                exclude_none=True,
+            )
+        )
         res.append(cur_turn)
     try:
         return json.dumps(res, ensure_ascii=False)
