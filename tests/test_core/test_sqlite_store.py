@@ -849,7 +849,9 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        # pysqlite3 may wrap long error messages with newlines; normalise
+        # whitespace before asserting so the check is CI-environment agnostic.
+        assert "disk I/O error" in " ".join(capsys.readouterr().err.split())
         assert mgr.last_saved_path is None
 
 
