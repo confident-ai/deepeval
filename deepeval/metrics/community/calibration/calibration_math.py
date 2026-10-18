@@ -14,8 +14,11 @@ Input contract (source-agnostic, see decisions-and-constraints.md):
 
 from __future__ import annotations
 
-import math
 from typing import List, NamedTuple, Sequence, Tuple, Union
+
+# Upper bound on n_bins: bin arrays are allocated up front, so an absurd value
+# costs seconds of work and memory before any row is read (1e6 bins ~ 1.7 s).
+MAX_N_BINS = 1000
 
 Number = Union[int, float]
 Outcome = Union[bool, int]
@@ -34,6 +37,8 @@ def _validate(
 ) -> None:
     if not isinstance(n_bins, int) or isinstance(n_bins, bool) or n_bins < 1:
         raise ValueError(f"n_bins must be an int >= 1, got {n_bins!r}")
+    if n_bins > MAX_N_BINS:
+        raise ValueError(f"n_bins must be <= {MAX_N_BINS}, got {n_bins!r}")
     if len(confidences) != len(corrects):
         raise ValueError(
             f"confidences and corrects must be the same length "
@@ -42,14 +47,13 @@ def _validate(
     if len(confidences) == 0:
         raise ValueError("need at least one (confidence, correct) pair")
     for i, c in enumerate(confidences):
-        if (
-            isinstance(c, bool)
-            or not isinstance(c, (int, float))
-            or math.isnan(c)
-        ):
+        if isinstance(c, bool) or not isinstance(c, (int, float)):
             raise ValueError(
                 f"confidences[{i}] must be a real number, got {c!r}"
             )
+        # Also rejects NaN (every comparison with NaN is False) and huge ints
+        # (int/float comparison is exact), unlike math.isnan(10**1000) which
+        # raises OverflowError.
         if not 0.0 <= c <= 1.0:
             raise ValueError(f"confidences[{i}]={c!r} outside [0, 1]")
     for i, o in enumerate(corrects):

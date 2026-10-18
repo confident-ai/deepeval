@@ -20,7 +20,11 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 
-from .calibration_math import calculate_calibration, calibration_bins
+from .calibration_math import (
+    MAX_N_BINS,
+    calculate_calibration,
+    calibration_bins,
+)
 from .schema import CalibrationBin, CalibrationResult
 from .store import CalibrationRunStore, create_calibration_store
 
@@ -32,10 +36,6 @@ OUTCOME_DEFINITION = (
 
 # Below this many rows, ECE/Brier are too noisy to trust.
 SMALL_SAMPLE_WARNING_THRESHOLD = 30
-
-# Upper bound on n_bins: bin arrays are allocated up front, so an absurd
-# value costs seconds of work and memory before any row is read.
-MAX_N_BINS = 1000
 
 
 def _coerce_row(confidence: Any, outcome: Any) -> Tuple[float, int]:
