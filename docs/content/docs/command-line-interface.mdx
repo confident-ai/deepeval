@@ -5,12 +5,11 @@ sidebar_label: CLI Settings
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 ## Quick Summary
 
 `deepeval` provides a CLI for managing common tasks directly from the terminal. You can use it for:
 
+- Setting up a first evaluation with a coding agent (<Term py="deepeval setup" ts="npx deepeval setup"/>)
 - Logging in/out and viewing test runs
 - Running evaluations from test files
 - Checking a project against its governance policy (<Term py="deepeval gate" ts="npx deepeval gate"/>)
@@ -80,6 +79,16 @@ Point `deepeval` at a different directory with `ENV_DIR_PATH=/path/to/project`, 
 :::
 
 ## Core Commands
+
+### `setup`
+
+Use <Term py="deepeval setup" ts="npx deepeval setup"/> to set up a first evaluation for your project with a coding agent. It downloads the newest setup wizard from GitHub releases (macOS and Linux), verifies its checksum, caches it, and runs it from an interactive terminal. See the [Vibe Coder Quickstart](/docs/vibe-coder-quickstart#run-the-setup-wizard) for what it does. Wizard options are passed straight through:
+
+| Option                 | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `--project-dir <path>` | Project directory. Defaults to the current directory.        |
+| `--org-id <id>`        | Require this Confident AI organization.                      |
+| `--proj-id <id>`       | Select this Confident AI project.                            |
 
 <Only id="python">
 
@@ -303,8 +312,7 @@ npx deepeval inspect --folder ./experiments # same, via explicit flag
 This allows you to inspect traces and spans locally on your machine:
 
 <ImageDisplayer
-  src={ASSETS.deepevalTuiInspect}
-  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+  id="screenshots/deepeval/inspect-trace-tree"
 />
 
 <Switch>
@@ -426,7 +434,7 @@ Adding `--json` is handy in CI or bug reports — it's safe to share since all s
 
 ## Confident AI Commands
 
-Use these commands to connect `deepeval` to **Confident AI** (`deepeval` Cloud) so your local evaluations can be uploaded, organized, and viewed as rich test run reports on the cloud. If you don’t have an account yet, [sign up here](https://app.confident-ai.com?utm_source=deepeval&utm_medium=docs&utm_content=cli_confident_commands_signup&ref_page=/docs/command-line-interface).
+Use these commands to connect `deepeval` to [Confident AI](https://www.confident-ai.com/products/llm-observability), AI monitoring for apps in production. Once connected, test runs are uploaded there as well. If you don’t have an account yet, [sign up here](https://app.confident-ai.com?utm_source=deepeval&utm_medium=docs&utm_content=cli_confident_commands_signup&ref_page=/docs/command-line-interface).
 
 ### `login` & `logout`
 

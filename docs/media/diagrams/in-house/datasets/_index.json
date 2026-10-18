@@ -1,0 +1,112 @@
+{
+  "images": [
+    {
+      "file": "goldens-from-contexts.svg",
+      "title": "Generating goldens from contexts",
+      "alt": "Three color-coded contexts on the left each generate a synthetic golden with an input and an expected output on the right",
+      "width": 733,
+      "height": 137,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-contexts.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-docs.svg",
+      "title": "Generating goldens from documents",
+      "alt": "Documents are split into three contexts, each of which generates a synthetic golden with an input and an expected output",
+      "width": 1012,
+      "height": 151,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-docs.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-goldens.svg",
+      "title": "Generating goldens from existing goldens",
+      "alt": "Existing goldens with input and expected output are reduced to contexts, which then generate new synthetic goldens of the same shape",
+      "width": 877,
+      "height": 136,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/goldens_from_goldens.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-scratch.svg",
+      "title": "Generating goldens from scratch",
+      "alt": "Scenario, task and input format boxes feeding an arrow into three synthetic golden inputs, with no documents or contexts involved",
+      "width": 748,
+      "height": 148,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-scratch.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-to-test-cases.webp",
+      "title": "Evaluation dataset of goldens becoming test cases",
+      "alt": "Evals dataset diagram where goldens pass through the LLM app before evaluation and come out as test cases during evaluation",
+      "width": 2184,
+      "height": 858,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png"
+        ]
+      }
+    },
+    {
+      "file": "input-evolution-tree.svg",
+      "title": "Evolution tree for synthetic inputs",
+      "alt": "Tree of input evolutions with sampling weights for in-breadth, comparative and reasoning, highlighting a path from reasoning to in-breadth",
+      "width": 572,
+      "height": 310,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/evolutions.svg"
+        ]
+      }
+    },
+    {
+      "file": "synthesizer-pipeline.webp",
+      "title": "Synthesizer pipeline from documents to dataset",
+      "alt": "Flow from uploaded documents to chunks, contexts and goldens, filtering unqualified ones and evolving queries into a synthetic dataset",
+      "width": 2400,
+      "height": 1889,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesizer.png"
+        ]
+      }
+    },
+    {
+      "file": "synthetic-context-filtering.svg",
+      "title": "Context filtering for golden synthesis",
+      "alt": "Documents split into random chunks, scored by a critic model, filtered by quality and similarity thresholds, then grouped into contexts",
+      "width": 1046,
+      "height": 469,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/filtering_context.svg"
+        ]
+      }
+    },
+    {
+      "file": "synthetic-input-filtering.svg",
+      "title": "Input generation and filtration for goldens",
+      "alt": "Contexts feed an LLM that generates golden inputs; inputs below a 0.5 quality threshold are regenerated up to twice before evolution",
+      "width": 941,
+      "height": 206,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/generation-filtration.svg"
+        ]
+      }
+    }
+  ]
+}

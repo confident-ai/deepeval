@@ -5,8 +5,6 @@ sidebar_label: End-to-End Evals
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 End-to-end evaluation assesses the **observable inputs and outputs** of your LLM application and treats it as a black box — you only care about what goes in and what comes out, not the path the system took to get there. The shape of "input" and "output" depends entirely on what your app does:
 
 - **Tool-using agent treated as a black box** — input is the user's task, output is the final answer plus the tools that were called.
@@ -16,7 +14,7 @@ End-to-end evaluation assesses the **observable inputs and outputs** of your LLM
 - **Classifier / extractor** — input is a chunk of text, output is the label or the structured fields you pulled out.
 - **Writing assistant / rewriter** — input is the draft (and any instructions), output is the rewritten text.
 
-<ImageDisplayer src={ASSETS.endToEndLlmEvals} alt="end-to-end evals" />
+<ImageDisplayer id="diagrams/in-house/evaluation/end-to-end-evals" />
 
 This page explains the **concepts** behind end-to-end evaluation. For the actual step-by-step walkthroughs, jump to the right flavor for your application:
 
@@ -107,7 +105,7 @@ Both single-turn and (for `evaluate()`) multi-turn give you a choice between two
 | Approach                                                                                                                       | What it looks like                                                                                                                                                                             | When to choose it                                                                                                                                          |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **`evaluate()`**                                                                                                               | Build a list of `LLMTestCase`s (or `ConversationalTestCase`s) up front, hand them to a single `evaluate()` call.                                                                               | You want a self-contained script with no tracing dependency.                                                                                               |
-| **<Term py="dataset.evals_iterator()" ts="dataset.evalsIterator()"/> with tracing** **— recommended (single-turn only)** | Instrument your app with <Term py="@observe" ts="observe()"/>, then loop over goldens with the iterator, passing <Term py="metrics=[...]" ts="metrics: [...]"/>. `deepeval` builds the test cases from the captured trace. | Your app is (or will be) instrumented with [tracing](/docs/evaluation-llm-tracing). You also get a full per-test-case trace view on Confident AI for free. |
+| **<Term py="dataset.evals_iterator()" ts="dataset.evalsIterator()"/> with tracing** **— recommended (single-turn only)** | Instrument your app with <Term py="@observe" ts="observe()"/>, then loop over goldens with the iterator, passing <Term py="metrics=[...]" ts="metrics: [...]"/>. `deepeval` builds the test cases from the captured trace. | Your app is (or will be) instrumented with [tracing](/docs/evaluation-llm-tracing). |
 
 For new single-turn projects we recommend the iterator — same amount of code, plus traces, plus the same setup carries over to [component-level evaluation](/docs/evaluation-component-level-llm-evals) later.
 

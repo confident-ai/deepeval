@@ -117,10 +117,6 @@ print(metric.score_breakdown)
 # }
 ```
 
-::::caution
-Running as a standalone is useful for debugging or building a custom pipeline, but you will **NOT** get the benefits of testing reports, Confident AI platform integration, or the optimizations (speed, caching, computation) that `evaluate()` or `deepeval test run` offer.
-::::
-
 ## How Is It Calculated?
 
 The `AgentLoopDetectionMetric` score is a **weighted combination** of three independent sub-signals:

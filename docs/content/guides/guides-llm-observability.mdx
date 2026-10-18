@@ -8,7 +8,7 @@ sidebar_label: LLM Observability & Monitoring
 **LLM observability** is the practice of tracking and analyzing model performance in real-world use. It helps teams ensure models stay accurate, aligned with goals, and responsive to users.
 
 :::tip
-LLM Observability tools help you **monitor behavior in real-time, catch performance changes early, and address these issues** before they impact users—allowing fast troubleshooting, reliable models, and scalable AI initiatives. Here is a [great article](https://www.confident-ai.com/blog/what-is-llm-observability-the-ultimate-llm-monitoring-guide) if you wish to learn more about LLM observability in-depth.
+LLM Observability tools help you **monitor behavior in real-time, catch performance changes early, and address these issues** before they impact users—allowing fast troubleshooting, reliable models, and scalable AI initiatives. To see what capturing traces looks like in code, start with the guide on [tracing AI agents](/guides/guides-tracing-ai-agents).
 :::
 
 ## Why LLM Observability is Necessary
@@ -39,24 +39,10 @@ LLM observability can greatly reduce these risks by **automatically detecting is
 
 5. **Human-in-the-Loop**: Incorporating human feedback and expected responses for flagged outputs serves as the final layer of response verification, bridging the gap between automated evaluations and nuanced human judgment. This feature ensures that complex or ambiguous cases receive the expert attention they require, and are added to evaluation datasets for further model development, whether that involves prompt engineering or fine-tuning.
 
-## LLM Observability with Confident AI
+## Turning Failing Production Traces Into Evals
 
-:::tip
-Confident AI makes **LLM observability** easy, offering a comprehensive platform designed to help teams monitor, analyze, and enhance LLM operations with efficiency.
-:::
+Monitoring only pays off when what it catches makes your next release better. Each production trace records the full path a request took through your application, so a trace that fails tells you which component broke and gives you the exact input that broke it. Run `deepeval` on that input in development and you have a test case your dataset was missing.
 
-Our platform encompasses a **robust suite of features** that covers all aspects of model operations, from decision-making processes to data management. This comprehensive tracking fosters a deeper understanding of user behaviors and provides valuable insights that can be used to optimize your applications.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) is AI monitoring built around that loop. It surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, routes them to the right annotators, and turns them into goldens for your next eval. Once you've written an eval for a failure mode, it can run on every production trace from then on and flag new failures as they happen.
 
-Starting with Confident AI is straightforward, with each integration requiring just a few lines of code, allowing you to quickly benefit from advanced observability features.
-
-Confident AI supports all core observability needs, including:
-
-- **Response Monitoring**
-- **Automated Evaluations**
-- **Advanced Filtering**
-- **Application Tracing**
-- **Human-in-the-Loop Integration**
-
-(Documentation [here](https://www.confident-ai.com/docs))
-
-We are continuously evolving our platform to include better features. By integrating with Confident AI, you can significantly improve the observability and operational efficiency of your LLM systems, ensuring they remain aligned with your business objectives and user expectations. [Get started now](https://www.confident-ai.com/).
+Traces reach Confident AI through the same `@observe` decorators and integrations `deepeval` uses for [component-level evals](/docs/evaluation-component-level-llm-evals), so instrumenting your application once covers both development and production. Run `deepeval login` and follow the [Confident AI LLM tracing setup guide](https://www.confident-ai.com/docs/llm-tracing/quickstart) to get started.

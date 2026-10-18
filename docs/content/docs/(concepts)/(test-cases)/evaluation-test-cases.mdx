@@ -80,7 +80,7 @@ Since `deepeval` is an LLM evaluation framework, the **`input` and <Term py="act
   />
 </video>
 
-To get your own sharable testing report with `deepeval`, [sign up to Confident AI](https://app.confident-ai.com), or run `deepeval login` in the CLI:
+Test runs also appear on Confident AI once you've logged in from the CLI:
 
 ```bash
 deepeval login
@@ -188,7 +188,7 @@ For users starting out, scoping the interaction as the overall LLM application w
 
 An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as RAG and LLM agents (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 An `LLMTestCase` is used for both end-to-end and component-level evaluation:
 
@@ -246,7 +246,7 @@ const testCase = new LLMTestCase({
 
 Not all `input`s should include your prompt template, as this is determined by the metric you're using. Furthermore, the `input` should **NEVER** be a json version of the list of messages you are passing into your LLM.
 
-If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best <Term py="actual_output" ts="actualOutput"/>s for a given `input`:
+If you're logged into Confident AI, you can also log hyperparameters such as the prompt template with each test run:
 
 ```bash
 deepeval login
@@ -990,7 +990,7 @@ const testCase = new LLMTestCase({ input: "...", actualOutput: "...", flaky: tru
 
 </Switch>
 
-This is most useful for test cases you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged on Confident AI so you can monitor how often flaky test cases actually fail.
+This is most useful for test cases you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged with the run on Confident AI if you're logged in.
 
 :::info
 Metrics can also be marked as flaky. A flaky **metric's** failure never decides its test case's pass/fail status, which is why every evaluation requires at least one non-flaky metric with a `threshold`.
@@ -998,7 +998,7 @@ Metrics can also be marked as flaky. A flaky **metric's** failure never decides 
 
 ## Label Test Cases For Confident AI
 
-If you're using Confident AI, these are some additional parameters to help manage your test cases.
+If you're logged into Confident AI, these optional parameters label test cases in the runs sent there.
 
 ### Name
 
@@ -1117,17 +1117,19 @@ Click on each of the links to learn how to use test cases for evals.
     },
     {
       question:
-        "How do I organize and search test cases across a team or keep them on the cloud?",
+        "How do I label test cases so I can find them later?",
       answer: (
         <>
-          Locally you can label test cases with <code>name</code> and{" "}
-          <code>tags</code> for filtering. If your team wants a shared,
-          cloud-hosted view, those same labels carry over to{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, where you can
-          search, filter, and visualize test cases and their results in a UI —
-          useful when importing from external data sources or collaborating
-          across a team. It's optional and your test cases run identically
-          without it.
+          Give test cases a <code>name</code> (useful as an external ID when
+          importing from another data source) and <code>tags</code> for
+          filtering. If you're logged in, both carry over with the run to
+          Confident AI. If you're already in production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces before anyone has written an eval
+          for them and turns them into goldens for your next round of test
+          cases.
         </>
       ),
     },

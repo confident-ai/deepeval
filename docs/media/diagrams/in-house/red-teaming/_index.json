@@ -1,0 +1,28 @@
+{
+  "images": [
+    {
+      "file": "iteration-loop.svg",
+      "title": "Red-teaming iteration loop before deployment",
+      "alt": "Development loop of fine-tuning or prompting, adding filters and guardrails, and scanning, which then feeds deployment and monitoring",
+      "width": 1190,
+      "height": 303,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/red_teaming_iteration.svg"
+        ]
+      }
+    },
+    {
+      "file": "red-teamer-workflow.svg",
+      "title": "Red-teaming workflow in DeepEval",
+      "alt": "Red-teaming flow: define a target LLM, initialize the RedTeamer, scan and interpret results, then iterate with fine-tuning or prompting",
+      "width": 1179,
+      "height": 280,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/red_teaming_deepeval.svg"
+        ]
+      }
+    }
+  ]
+}

@@ -194,12 +194,6 @@ const datasets: Datasets = {
           deepeval: true,
           competitor: false,
         },
-        {
-          feature: "Integrates with Confident AI",
-          description: "Custom metrics or not, whether it can be on the cloud",
-          deepeval: true,
-          competitor: false,
-        },
       ],
       synthesizer: [
         {
@@ -248,12 +242,6 @@ const datasets: Datasets = {
         {
           feature: "Supports any LLMs",
           description: "Generate using any LLMs, with JSON confinement",
-          deepeval: true,
-          competitor: false,
-        },
-        {
-          feature: "Save generations to Confident AI",
-          description: "Not just generate, but bring it to your organization",
           deepeval: true,
           competitor: false,
         },
@@ -436,7 +424,7 @@ const datasets: Datasets = {
         },
         {
           feature: "Confident AI",
-          description: "Integrated with Confident AI",
+          description: "Send traces and test runs to Confident AI",
           deepeval: true,
           competitor: false,
         },
@@ -687,12 +675,6 @@ const datasets: Datasets = {
           deepeval: true,
           competitor: false,
         },
-        {
-          feature: "Integrates with Confident AI",
-          description: "Custom metrics or not, whether it can be on the cloud",
-          deepeval: true,
-          competitor: false,
-        },
       ],
       synthesizer: [
         {
@@ -741,12 +723,6 @@ const datasets: Datasets = {
         {
           feature: "Supports any LLMs",
           description: "Generate using any LLMs, with JSON confinement",
-          deepeval: true,
-          competitor: false,
-        },
-        {
-          feature: "Save generations to Confident AI",
-          description: "Not just generate, but bring it to your organization",
           deepeval: true,
           competitor: false,
         },
@@ -923,7 +899,7 @@ const datasets: Datasets = {
         },
         {
           feature: "Confident AI",
-          description: "Integrated with Confident AI",
+          description: "Send traces and test runs to Confident AI",
           deepeval: true,
           competitor: false,
         },
@@ -1250,12 +1226,6 @@ const datasets: Datasets = {
           deepeval: true,
           competitor: false,
         },
-        {
-          feature: "Integrates with Confident AI",
-          description: "Custom metrics or not, whether it can be on the cloud",
-          deepeval: true,
-          competitor: false,
-        },
       ],
       synthesizer: [
         {
@@ -1304,12 +1274,6 @@ const datasets: Datasets = {
         {
           feature: "Supports any LLMs",
           description: "Generate using any LLMs, with JSON confinement",
-          deepeval: true,
-          competitor: false,
-        },
-        {
-          feature: "Save generations to Confident AI",
-          description: "Not just generate, but bring it to your organization",
           deepeval: true,
           competitor: false,
         },
@@ -1492,7 +1456,7 @@ const datasets: Datasets = {
         },
         {
           feature: "Confident AI",
-          description: "Integrated with Confident AI",
+          description: "Send traces and test runs to Confident AI",
           deepeval: true,
           competitor: false,
         },
@@ -1743,12 +1707,6 @@ const datasets: Datasets = {
           deepeval: true,
           competitor: false,
         },
-        {
-          feature: "Integrates with Confident AI",
-          description: "Custom metrics or not, whether it can be on the cloud",
-          deepeval: true,
-          competitor: false,
-        },
       ],
       synthesizer: [
         {
@@ -1797,12 +1755,6 @@ const datasets: Datasets = {
         {
           feature: "Supports any LLMs",
           description: "Generate using any LLMs, with JSON confinement",
-          deepeval: true,
-          competitor: false,
-        },
-        {
-          feature: "Save generations to Confident AI",
-          description: "Not just generate, but bring it to your organization",
           deepeval: true,
           competitor: false,
         },
@@ -1985,7 +1937,7 @@ const datasets: Datasets = {
         },
         {
           feature: "Confident AI",
-          description: "Integrated with Confident AI",
+          description: "Send traces and test runs to Confident AI",
           deepeval: true,
           competitor: false,
         },

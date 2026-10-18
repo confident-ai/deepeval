@@ -511,23 +511,10 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
       answer: (
         <>
           Yes. Set <code>environment="production"</code> on{" "}
-          <code>DeepEvalInstrumentationSettings(...)</code>; once logged into
-          Confident AI the live traces support{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic.
-        </>
-      ),
-    },
-    {
-      question: "Can I see these traces and scores in a cloud dashboard?",
-      answer: (
-        <>
-          Yes, optionally. <code>deepeval login</code> connects{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, which
-          visualizes every auto-instrumented agent, LLM, and tool span with its
-          score in a shared UI — no extra code.
+          <code>DeepEvalInstrumentationSettings(...)</code>.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> surfaces failing Pydantic AI
+          traces before anyone has written an eval for them and turns them into
+          goldens, so your next eval tests the runs that actually broke.
         </>
       ),
     },

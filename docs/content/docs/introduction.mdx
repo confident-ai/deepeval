@@ -36,9 +36,10 @@ import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 - Customize metrics, prompts, models, and evaluation templates when built-in
   behavior is not enough.
 
-DeepEval is local-first: your evaluations run in your own environment. When your
-team needs shared dashboards, regression tracking, observability, or production
-monitoring, DeepEval integrates natively with [Confident AI](https://www.confident-ai.com).
+DeepEval is local-first: your evaluations run in your own environment. Once
+your app is live, [Confident AI](https://www.confident-ai.com/products/llm-observability)
+surfaces the production traces that fail before anyone has written an eval for
+them, so they can become your next eval.
 
 :::tip[Vibe coding? Have your coding agent set DeepEval up for you.]
 Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any other AI coding tool, paste a starter prompt, and your coding agent will do the rest of the work. [Click here](/docs/vibe-coder-quickstart) to get started.
@@ -208,7 +209,7 @@ workflow needs collaboration, monitoring, or security testing.
   <Card
     icon={<Cloud />}
     title="Confident AI"
-    description="An AI quality platform for shared eval dashboards, regression analysis, observability, and monitoring."
+    description="AI monitoring that runs evals on production traces, clusters failing traces into failure modes, and turns them into your next eval."
     href="https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=introduction_ecosystem_card&ref_page=/docs/introduction"
     external
   />
@@ -242,7 +243,7 @@ DeepEval is shaped by the people who report bugs, propose ideas, review changes,
         <>
           No. DeepEval runs locally. You only need an LLM provider key, such as{" "}
           <code>OPENAI_API_KEY</code>, for metrics that use an LLM judge. An
-          account is only needed if you want to send results to Confident AI.
+          account is only needed to send traces or results to Confident AI.
         </>
       ),
     },

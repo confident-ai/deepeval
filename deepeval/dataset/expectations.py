@@ -79,6 +79,8 @@ def expectation_evidence(test_case) -> dict:
             "turns",
             "scenario",
             "chatbot_role",
+            "metadata",
+            "tags",
         },
     )
 
