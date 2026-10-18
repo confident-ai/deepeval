@@ -24,8 +24,12 @@ class CalibrationBin(BaseModel):
     def _check_bin(self) -> "CalibrationBin":
         if self.upper <= self.lower:
             raise ValueError("upper must be greater than lower")
-        if self.count == 0 and (self.avg_confidence != 0.0 or self.accuracy != 0.0):
-            raise ValueError("an empty bin must have avg_confidence == accuracy == 0.0")
+        if self.count == 0 and (
+            self.avg_confidence != 0.0 or self.accuracy != 0.0
+        ):
+            raise ValueError(
+                "an empty bin must have avg_confidence == accuracy == 0.0"
+            )
         return self
 
 

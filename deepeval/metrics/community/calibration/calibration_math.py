@@ -11,6 +11,7 @@ Input contract (source-agnostic, see decisions-and-constraints.md):
                this flag; deciding what "correct" means for a given row
                (retrieval hit vs. appropriate abstention) is the caller's job.
 """
+
 from __future__ import annotations
 
 import math
@@ -21,14 +22,16 @@ Outcome = Union[bool, int]
 
 
 class BinStat(NamedTuple):
-    lower: float          # inclusive (last bin: upper also inclusive)
+    lower: float  # inclusive (last bin: upper also inclusive)
     upper: float
     count: int
     avg_confidence: float  # 0.0 when count == 0
-    accuracy: float        # 0.0 when count == 0
+    accuracy: float  # 0.0 when count == 0
 
 
-def _validate(confidences: Sequence[Number], corrects: Sequence[Outcome], n_bins: int) -> None:
+def _validate(
+    confidences: Sequence[Number], corrects: Sequence[Outcome], n_bins: int
+) -> None:
     if not isinstance(n_bins, int) or isinstance(n_bins, bool) or n_bins < 1:
         raise ValueError(f"n_bins must be an int >= 1, got {n_bins!r}")
     if len(confidences) != len(corrects):
@@ -39,8 +42,14 @@ def _validate(confidences: Sequence[Number], corrects: Sequence[Outcome], n_bins
     if len(confidences) == 0:
         raise ValueError("need at least one (confidence, correct) pair")
     for i, c in enumerate(confidences):
-        if isinstance(c, bool) or not isinstance(c, (int, float)) or math.isnan(c):
-            raise ValueError(f"confidences[{i}] must be a real number, got {c!r}")
+        if (
+            isinstance(c, bool)
+            or not isinstance(c, (int, float))
+            or math.isnan(c)
+        ):
+            raise ValueError(
+                f"confidences[{i}] must be a real number, got {c!r}"
+            )
         if not 0.0 <= c <= 1.0:
             raise ValueError(f"confidences[{i}]={c!r} outside [0, 1]")
     for i, o in enumerate(corrects):
@@ -101,6 +110,13 @@ def calculate_calibration(
     """
     bins = calibration_bins(confidences, corrects, n_bins)
     n = len(confidences)
-    ece = sum((b.count / n) * abs(b.accuracy - b.avg_confidence) for b in bins if b.count)
-    brier = sum((float(c) - float(o)) ** 2 for c, o in zip(confidences, corrects)) / n
+    ece = sum(
+        (b.count / n) * abs(b.accuracy - b.avg_confidence)
+        for b in bins
+        if b.count
+    )
+    brier = (
+        sum((float(c) - float(o)) ** 2 for c, o in zip(confidences, corrects))
+        / n
+    )
     return ece, brier

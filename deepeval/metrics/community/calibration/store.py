@@ -49,7 +49,9 @@ class CalibrationRunStore:
             raise ValueError(f"confidence must be a number, got {confidence!r}")
         c = float(confidence)
         if math.isnan(c) or not (0.0 <= c <= 1.0):
-            raise ValueError(f"confidence must be in [0, 1], got {confidence!r}")
+            raise ValueError(
+                f"confidence must be in [0, 1], got {confidence!r}"
+            )
         if isinstance(outcome, bool):
             o = int(outcome)
         elif isinstance(outcome, int) and outcome in (0, 1):
@@ -80,9 +82,7 @@ class CalibrationRunStore:
             rows = list(self._rows.values())
         return [c for c, _ in rows], [o for _, o in rows]
 
-    def aggregate(
-        self, fn: Callable[[List[float], List[int]], T]
-    ) -> T:
+    def aggregate(self, fn: Callable[[List[float], List[int]], T]) -> T:
         """Run ``fn(confidences, outcomes)`` on a snapshot, outside the lock.
 
         Idempotent: safe to call after every row. Propagates whatever ``fn``
