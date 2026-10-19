@@ -272,8 +272,8 @@ def initialize_system_one_model(
     eval mode never calls one.
 
     ``model`` is the metric's ``system_one_model`` argument: a configured
-    ``DeepEvalBaseSystemOneModel``, a TypeSafe model name, or ``None`` for
-    the default. ``eval_mode`` is the metric's eval mode; ``None`` resolves
+    ``DeepEvalBaseSystemOneModel``, a model name on the configured provider,
+    or ``None`` for the default. ``eval_mode`` is the metric's eval mode; ``None`` resolves
     it from settings (for metrics that take no ``eval_mode`` argument).
     Under ``llm`` no model is built, so a missing TypeSafe key is not an
     error; under ``hybrid`` and ``system_one`` a missing key or SDK fails

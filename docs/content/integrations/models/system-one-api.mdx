@@ -165,6 +165,10 @@ an opaque configuration digest so distinct endpoints, credentials, prices,
 or capabilities do not share batched requests or cached results. API-key
 rotation also changes this identity.
 
+Metric caches also record the decision model and eval mode, including in
+hybrid mode. Existing cache entries without this metadata are conservatively
+recomputed when those fields differ.
+
 Token limits are estimates, not tokenizer guarantees. Unset adapter token
 limits are enforced by the server, not replaced with Jev limits. To implement
 a non-HTTP decision provider, subclass `DeepEvalBaseSystemOneModel`, implement

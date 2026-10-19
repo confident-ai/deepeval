@@ -64,6 +64,35 @@ RESPONSE = {
 }
 
 
+def answer_payload(payload):
+    answers = {}
+    for key, question in payload["questions"].items():
+        kind = question["type"]
+        if kind == "noul":
+            answers[key] = {"type": kind, "noul": 0.9}
+        elif kind == "choice":
+            options = list(question["criteria"])
+            answers[key] = {
+                "type": kind,
+                "choice": options[0],
+                "probabilities": {
+                    option: float(i == 0) for i, option in enumerate(options)
+                },
+                "confidence": 1.0,
+            }
+        else:
+            top = len(question["criteria"]) - 1
+            answers[key] = {
+                "type": kind,
+                "score": top,
+                "probabilities": {
+                    str(i): float(i == top) for i in range(top + 1)
+                },
+                "confidence": 1.0,
+            }
+    return {"answers": answers}
+
+
 @pytest.fixture
 def server():
     config = {"status": 200, "body": RESPONSE, "calls": [], "delay": 0}
@@ -271,6 +300,8 @@ def test_malformed_answers_are_rejected(path, value):
         {"question_types": ["chat"]},
         {"cost_per_input_token": float("nan")},
         {"cost_per_output_token": -1},
+        {"api_key": "secret\nheader"},
+        {"timeout": 10**1000},
     ],
 )
 def test_bad_configuration_fails_before_network(kwargs):
@@ -328,11 +359,7 @@ def test_hybrid_cache_distinguishes_decision_providers_and_modes():
 async def test_distinct_provider_credentials_do_not_share_a_batch(
     server, is_async
 ):
-    server["body"] = lambda payload: {
-        "answers": {
-            key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
-        }
-    }
+    server["body"] = answer_payload
     case = LLMTestCase(
         input="Where?", actual_output="Paris", retrieval_context=["Paris"]
     )
@@ -433,11 +460,7 @@ def test_env_selection_and_explicit_instance(monkeypatch):
 async def test_configured_jev_eval_and_built_in_batch(
     server, monkeypatch, is_async
 ):
-    server["body"] = lambda payload: {
-        "answers": {
-            key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
-        }
-    }
+    server["body"] = answer_payload
     configure(
         monkeypatch,
         DEEPEVAL_SYSTEM_ONE_PROVIDER="systemone",

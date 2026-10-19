@@ -28,10 +28,14 @@ from deepeval.models.utils import EvaluationCost
 
 
 def _number(value: Any, label: str, maximum: Optional[float] = None) -> float:
+    try:
+        finite = math.isfinite(value)
+    except (TypeError, OverflowError):
+        finite = False
     if (
         isinstance(value, bool)
         or not isinstance(value, (int, float))
-        or not math.isfinite(value)
+        or not finite
         or value < 0
         or (maximum is not None and value > maximum)
     ):
@@ -106,6 +110,11 @@ class SystemOneAPIModel(DeepEvalBaseSystemOneModel):
             if isinstance(api_key, SecretStr)
             else SecretStr(api_key or "")
         )
+        if any(
+            ord(char) < 32 or ord(char) > 126
+            for char in self.api_key.get_secret_value()
+        ):
+            raise DeepEvalError("System One API key must contain printable ASCII.")
         self.auth = (
             auth
             if auth is not None
