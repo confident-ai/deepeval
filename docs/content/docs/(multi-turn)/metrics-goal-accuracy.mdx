@@ -6,7 +6,7 @@ languages: [python, typescript]
 ---
 <MetricTagsDisplayer jev={true} usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
-The Goal Accuracy metric is a multi-turn agentic metric that evaluates your LLM agent's abilities **on planning and executing the plan to finish a task or reach a goal**. It is a self-explaining eval, which means it outputs a reason for its metric score.
+The Goal Accuracy metric is a multi-turn agentic metric that evaluates your AI agent's abilities **on planning and executing the plan to finish a task or reach a goal**. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
 ## Required Arguments
 
@@ -140,14 +140,14 @@ You can change how the `GoalAccuracyMetric` is calculated by setting the [eval m
 
 The `GoalAccuracyMetric` score is calculated using the following steps:
 
-- Find **individual goals and steps** taken by your LLM agent for each user-assistat interactions.
+- Find **individual goals and steps** taken by your AI agent for each user-assistat interactions.
 - Find **goal accuracy scores** for each of the goal-steps pairs using the evaluation model.
 - Find **plan quality and plan adherence scores** for each of the goal-step pairs using the evaluation model.
 
 <Equation formula="\text{Goal Accuracy Score} = \frac{\text{Goal Evaluation Score + Plan Evaluation Score}}{\text{2}}" />
 
 :::info
-The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evaluates the steps taken by the LLM agent to find its plan and how accurately it has finished the task or reached the goal in that interaction.
+The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evaluates the steps taken by the AI agent to find its plan and how accurately it has finished the task or reached the goal in that interaction.
 :::
 
 ### Hybrid

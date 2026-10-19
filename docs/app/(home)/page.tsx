@@ -13,7 +13,7 @@ import { siteTitle } from "@/lib/shared";
 export const metadata: Metadata = {
   title: { absolute: siteTitle },
   description:
-    "DeepEval is the open-source LLM evaluation framework for testing and benchmarking LLM applications — 50+ plug-and-play metrics for AI agents, RAG, chatbots, and more.",
+    "DeepEval is the open-source LLM evaluation framework for testing and benchmarking LLM applications — 50+ plug-and-play metrics for AI agents, multi-turn chatbots, voice agents, RAG, and more.",
   alternates: { canonical: "/" },
 };
 

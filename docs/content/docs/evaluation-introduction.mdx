@@ -9,13 +9,13 @@ languages: [python, typescript]
 
 Evaluation refers to the process of testing your LLM application outputs. At the top level, there are **TWO** types of LLM apps:
 
-- **Single-turn**: Each interaction is one input and one output, such as a RAG QA app or a one-shot agent.
-- **Multi-turn**: Each interaction is a back-and-forth conversation, such as a chatbot or a customer support agent.
+- **Single-turn**: Each interaction is one input and one output, such as a single-step AI agent or a RAG QA app.
+- **Multi-turn**: Each interaction is a back-and-forth conversation, such as a customer support AI agent, chatbot, or voice agent.
 
 Either type can also vary in:
 
 - **Modality**: Inputs and outputs can be text, images, voice, or video.
-- **Data access**: Your LLM app can pull in external data through tool calls, RAG, or MCP.
+- **Data access**: Your LLM app can pull in external data through tool calls, MCP, or RAG.
 
 Here's what an ideal evaluation workflow looks like using `deepeval`, and the components it requires, for each type. Multi-turn LLM apps have an extra simulation step that generates conversations for you to evaluate:
 
