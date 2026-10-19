@@ -876,7 +876,7 @@ async def _a_execute_llm_test_cases(
         )
         update_pbar(progress, pbar_id)
 
-    return create_test_result(api_test_case)
+    return create_test_result(api_test_case, case_classifications)
 
 
 async def _a_execute_conversational_test_cases(
@@ -998,7 +998,7 @@ async def _a_execute_conversational_test_cases(
         )
         update_pbar(progress, pbar_id)
 
-    return create_test_result(api_test_case)
+    return create_test_result(api_test_case, case_classifications)
 
 
 async def _evaluate_test_case_pairs(
