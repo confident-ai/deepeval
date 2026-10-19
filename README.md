@@ -61,7 +61,7 @@
 
 **DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which use LLM-as-a-judge and other NLP models that run **locally on your machine**.
 
-Whether you're building AI agents, multi-turn chatbots, voice agents, or RAG pipelines, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
+Whether you're building AI agents, multi-turn chatbots, voice agents, RAG pipelines, or anything else, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
 
 - **LLM apps end-to-end** as black boxes
 - **Complete AI agent trajectories** across every decision and action
@@ -213,7 +213,7 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 # 🤖 Vibe-Coder QuickStart
 
-Want your coding agent to add evals and fix failures for you? Install the DeepEval skill, point it at your AI agent, multi-turn chatbot, voice agent, or RAG pipeline, and ask it to generate a dataset, write the eval suite, run `deepeval test run`, and iterate on the failing metrics.
+Want your coding agent to add evals and fix failures for you? Install the DeepEval skill, point it at your AI agent, multi-turn chatbot, voice agent, RAG pipeline, or any other LLM app, and ask it to generate a dataset, write the eval suite, run `deepeval test run`, and iterate on the failing metrics.
 
 [Start with the 5-minute vibe-coder guide](https://deepeval.com/docs/vibe-coder-quickstart?utm_source=GitHub).
 
@@ -617,7 +617,7 @@ print(answer_relevancy_metric.score)
 print(answer_relevancy_metric.reason)
 ```
 
-Note that some metrics are for AI agents, others for multi-turn chatbots, voice agents, or RAG pipelines. Make sure to use our docs to pick the right one for your use case.
+Note that some metrics are built for specific use cases, such as AI agents, multi-turn chatbots, voice agents, RAG, and more. Make sure to use our docs to pick the right one for your use case.
 
 ## A Note on Env Variables (.env / .env.local)
 
