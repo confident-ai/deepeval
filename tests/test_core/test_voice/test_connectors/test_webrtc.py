@@ -312,16 +312,17 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
 
     events = []
-    async for event in connector.iter_agent_events():
-        events.append(event)
-        if event.turn_complete:
-            break
+    stream = connector.iter_agent_events()
+    # Audio, track end, and text are independent events; EOF may precede text.
+    for _ in range(3):
+        events.append(await asyncio.wait_for(stream.__anext__(), timeout=1))
 
     audio = [event.audio for event in events if event.audio]
     assert audio == [b"\x02\x00" * 480]
     assert [event.transcript for event in events if event.transcript] == [
         "Hello"
     ]
+    assert any(event.turn_complete for event in events)
     await connector.disconnect()
 
 
