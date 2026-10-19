@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 import inspect
-from typing import List, Optional, Dict, Union
+from typing import TYPE_CHECKING, List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
