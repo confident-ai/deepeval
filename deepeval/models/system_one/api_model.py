@@ -114,7 +114,9 @@ class SystemOneAPIModel(DeepEvalBaseSystemOneModel):
             ord(char) < 32 or ord(char) > 126
             for char in self.api_key.get_secret_value()
         ):
-            raise DeepEvalError("System One API key must contain printable ASCII.")
+            raise DeepEvalError(
+                "System One API key must contain printable ASCII."
+            )
         self.auth = (
             auth
             if auth is not None
