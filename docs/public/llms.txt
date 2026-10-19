@@ -1,11 +1,22 @@
 # DeepEval
 
-> DeepEval is an open-source LLM evaluation framework designed to unit-test LLM powered applications such as agents, chatbots, and RAG. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as G-Eval, hallucination, answer relevancy, fluency, etc., which uses LLMs and various other NLP models that runs locally on your machine for evaluation. DeepEval integrates natively with [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=llms_txt&utm_content=intro_mention), a separate AI quality platform with observability, evals, and monitoring that adds team-wide collaboration on top of DeepEval evals.
+> DeepEval is an open-source LLM evaluation framework designed to unit-test AI agents, multi-turn chatbots, voice agents, and RAG pipelines. For AI agents, DeepEval evaluates complete trajectories, tool calls, and individual components via tracing. DeepEval incorporates the latest research to evaluate LLM outputs based on metrics such as G-Eval, hallucination, answer relevancy, fluency, etc., which uses LLMs and various other NLP models that runs locally on your machine for evaluation. DeepEval integrates natively with [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=llms_txt&utm_content=intro_mention), a separate AI quality platform with observability, evals, and monitoring that adds team-wide collaboration on top of DeepEval evals.
 
 - [DeepEval LLM Evaluation](https://deepeval.com/): Open-source framework for evaluating large language models effectively.
 - [DeepEval Framework Quickstart](https://deepeval.com/docs/getting-started): DeepEval is an open-source framework for evaluating LLM applications.
 - [DeepEval LLM Evaluation](https://deepeval.com/docs/evaluation-introduction): Learn how to evaluate LLM applications using DeepEval.
 - [DeepEval Metrics Overview](https://deepeval.com/docs/metrics-introduction): DeepEval provides 40+ metrics for evaluating LLM performance effectively.
+- [AI Agent Evaluation Quickstart](https://deepeval.com/docs/getting-started-agents): Evaluate AI agents end-to-end and at the component level with tracing.
+- [AI Agent Evaluation Guide](https://deepeval.com/guides/guides-ai-agent-evaluation): Learn how to evaluate AI agents, from full trajectories to individual tool calls.
+- [AI Agent Evaluation Metrics](https://deepeval.com/guides/guides-ai-agent-evaluation-metrics): Choose the right metrics for evaluating AI agents.
+- [Tracing AI Agents](https://deepeval.com/guides/guides-tracing-ai-agents): Trace AI agents to run component-level evals on every step.
+- [Task Completion Metrics](https://deepeval.com/docs/metrics-task-completion): Evaluate whether an AI agent accomplished its task from its full trajectory.
+- [Tool Correctness Metric](https://deepeval.com/docs/metrics-tool-correctness): Assess AI agent's tool calling accuracy with metrics.
+- [Multimodal Tool Correctness](https://deepeval.com/docs/multimodal-metrics-tool-correctness): Assess multimodal LLM tool calling accuracy and correctness.
+- [Argument Correctness Metric](https://deepeval.com/docs/metrics-argument-correctness): Evaluate whether an AI agent generated correct tool call arguments.
+- [Step Efficiency Metric](https://deepeval.com/docs/metrics-step-efficiency): Evaluate whether an AI agent took unnecessary steps.
+- [Plan Adherence Metric](https://deepeval.com/docs/metrics-plan-adherence): Evaluate whether an AI agent followed its plan.
+- [Multi-Turn Chatbot Evaluation Quickstart](https://deepeval.com/docs/getting-started-chatbots): Evaluate multi-turn conversations and simulated user interactions.
 - [G-Eval Framework](https://deepeval.com/docs/metrics-llm-evals): G-Eval framework for evaluating LLM outputs with custom metrics.
 - [DAG Metric Overview](https://deepeval.com/docs/metrics-dag): Explore the versatile DAG metric for LLM evaluations.
 - [Top G-Eval Use Cases](https://deepeval.com/blog/top-5-geval-use-cases): Explore top G-Eval use cases for custom LLM metrics.
@@ -18,8 +29,6 @@
 - [Toxicity Metric Overview](https://deepeval.com/docs/metrics-toxicity): Evaluate toxicity in LLM outputs using referenceless metrics.
 - [LLM Hallucination Metric](https://deepeval.com/docs/metrics-hallucination): Evaluate LLM hallucination using context comparison metrics.
 - [LLM Summarization Metrics](https://deepeval.com/docs/metrics-summarization): Learn how to evaluate LLM summarization metrics effectively.
-- [Task Completion Metrics](https://deepeval.com/docs/metrics-task-completion): Evaluate task completion using LLM metrics and arguments.
-- [Tool Correctness Metric](https://deepeval.com/docs/metrics-tool-correctness): Assess LLM agent's tool calling accuracy with metrics.
 - [JSON Correctness Metric](https://deepeval.com/docs/metrics-json-correctness): Learn how to measure JSON correctness in LLM applications.
 - [Prompt Alignment Metric](https://deepeval.com/docs/metrics-prompt-alignment): Evaluate LLM output alignment with prompt instructions effectively.
 - [Image Coherence Metric](https://deepeval.com/docs/multimodal-metrics-image-coherence): Evaluate image coherence with accompanying text for MLLM.
@@ -98,6 +107,5 @@
 - [LLM Observability Guide](https://deepeval.com/guides/guides-llm-observability): Explore LLM observability for monitoring and improving AI models.
 - [Red Teaming Vulnerabilities](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities): Explore vulnerabilities in LLMs for effective red teaming.
 - [End-to-End LLM Evaluation](https://deepeval.com/docs/evaluation-end-to-end-llm-evals): Comprehensive guide for end-to-end evaluation of LLM applications.
-- [Multimodal Tool Correctness](https://deepeval.com/docs/multimodal-metrics-tool-correctness): Assess multimodal LLM tool calling accuracy and correctness.
 - [Generate Goldens](https://deepeval.com/docs/synthesizer-generate-from-contexts): Generate synthetic Goldens from provided contexts easily.
 - [Synthetic Goldens Generation](https://deepeval.com/docs/synthesizer-generate-from-scratch): Generate synthetic Goldens from scratch for LLM applications.

@@ -7,7 +7,7 @@ languages: [python, typescript]
 
 End-to-end evaluation assesses the **observable inputs and outputs** of your LLM application and treats it as a black box — you only care about what goes in and what comes out, not the path the system took to get there. The shape of "input" and "output" depends entirely on what your app does:
 
-- **Tool-using agent treated as a black box** — input is the user's task, output is the final answer plus the tools that were called.
+- **Tool-using AI agent treated as a black box** — input is the user's task, output is the final answer plus the tools that were called.
 - **Multi-turn chatbot / support agent** — input is the scenario the user is in, output is the full conversation.
 - **RAG / QA app** — input is a question, output is the answer (and the retrieved context, if you want to score faithfulness).
 - **Document summarization** — input is the source document, output is the summary.
@@ -18,7 +18,7 @@ End-to-end evaluation assesses the **observable inputs and outputs** of your LLM
 
 This page explains the **concepts** behind end-to-end evaluation. For the actual step-by-step walkthroughs, jump to the right flavor for your application:
 
-- [**Single-Turn End-to-End Evals**](/docs/evaluation-end-to-end-single-turn) — for any LLM app where one input maps to one output (agents treated as a black box, RAG / QA, summarization, classifiers, etc.).
+- [**Single-Turn End-to-End Evals**](/docs/evaluation-end-to-end-single-turn) — for any LLM app where one input maps to one output (AI agents treated as a black box, RAG / QA, summarization, classifiers, etc.).
 - [**Multi-Turn End-to-End Evals**](/docs/evaluation-end-to-end-multi-turn) — for chatbots and conversational agents where the unit of evaluation is the _whole conversation_.
 
 If you need to evaluate the internal path taken by an AI agent or long-horizon agent, use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) instead.
@@ -60,7 +60,7 @@ Pick the flavor that matches your application:
 | **Dataset entry**           | [`Golden`](/docs/evaluation-datasets#what-are-goldens)                         | [`ConversationalGolden`](/docs/evaluation-datasets#what-are-goldens)                                                                  |
 | **What's evaluated**        | One input → one output                                                         | A full conversation (a sequence of `Turn`s)                                                                                           |
 | **How test cases are made** | You invoke your app on each golden and build the test case from the result     | The [`ConversationSimulator`](/docs/conversation-simulator) drives a synthetic user against your chatbot until the scenario plays out |
-| **Typical apps**            | Agents-as-black-box, RAG / QA, summarization, classifiers, writing assistants | Chatbots, support agents, multi-turn assistants                                                                                       |
+| **Typical apps**            | AI agents as black box, RAG / QA, summarization, classifiers, writing assistants | Chatbots, support agents, multi-turn assistants                                                                                       |
 | **Metric base class**       | `BaseMetric`                                                                   | `BaseConversationalMetric`                                                                                                            |
 | **Walkthrough**             | [Single-Turn E2E Evals →](/docs/evaluation-end-to-end-single-turn)             | [Multi-Turn E2E Evals →](/docs/evaluation-end-to-end-multi-turn)                                                                      |
 
@@ -90,7 +90,7 @@ You don't have to choose just one. With the [recommended evals iterator path](/d
 
 Choose end-to-end evaluation when:
 
-- Your LLM application has a "flat" architecture that fits naturally into a single `LLMTestCase` (agents treated as a black box, RAG / QA, summarization, single-shot classifiers, writing assistants, etc.)
+- Your LLM application has a "flat" architecture that fits naturally into a single `LLMTestCase` (AI agents treated as a black box, RAG / QA, summarization, single-shot classifiers, writing assistants, etc.)
 - Your application is multi-turn (chatbots, support agents) and you want to score the whole conversation rather than each step.
 - Your application is a complex agent, but you've concluded that [component-level evaluation](/docs/evaluation-component-level-llm-evals) gives you too much noise and you'd rather grade the final outcome.
 

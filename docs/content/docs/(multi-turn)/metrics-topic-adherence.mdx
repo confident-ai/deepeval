@@ -90,7 +90,7 @@ There is **ONE** mandatory and **SIX** optional parameters when creating a `Topi
 
 </Switch>
 
-- <Term py="relevant_topics" ts="relevantTopics"/>: a list of strings that define what topics your LLM agent can answer. Any answers that don't adhere to this topic will penalise the score this metric.
+- <Term py="relevant_topics" ts="relevantTopics"/>: a list of strings that define what topics your AI agent can answer. Any answers that don't adhere to this topic will penalise the score this metric.
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
@@ -141,7 +141,7 @@ You can change how the `TopicAdherenceMetric` is calculated by setting the [eval
 
 The `TopicAdherenceMetric` score is calculated through the following process:
 
-- Find question-answer pairs from the entire conversation, where question is taken from user and answered by the LLM agent.
+- Find question-answer pairs from the entire conversation, where question is taken from user and answered by the AI agent.
 - Find the truth table values for all the question-answer pairs.
     - **True Positives**: Question is relevant and the response correctly answers it.
     - **True Negatives**: Question is NOT relevant, and the assistant correctly refused to answer.
