@@ -5,6 +5,7 @@ wrappers do with that. No API key is needed: ragas itself is stubbed, since
 what is under test is deepeval's handling of the score it hands back.
 """
 
+import json
 import sys
 import types
 from unittest.mock import patch
@@ -157,3 +158,55 @@ class TestRagasCompositeMetric:
         assert score is None
         assert metric.error is not None
         assert metric.score_breakdown["Faithfulness (ragas)"] is None
+
+    def test_no_composite_when_no_sub_metric_was_measured(
+        self, ragas_scores, test_case
+    ):
+        metric, score = self._run(test_case, [None] * 5)
+
+        assert score is None
+        assert metric.success is False
+        # The error is built from the full list, so it should name all five.
+        for name in metric.score_breakdown:
+            assert name in metric.error
+
+
+class TestRagasTestRunExport:
+    """An unmeasured case reaches the saved test run as an error, not a score."""
+
+    def test_unmeasured_case_is_counted_as_an_error_in_the_saved_run(
+        self, ragas_scores, test_case, tmp_path
+    ):
+        from deepeval.evaluate.utils import create_metric_data
+        from deepeval.metrics.ragas import RAGASFaithfulnessMetric
+        from deepeval.test_run.api import LLMApiTestCase
+        from deepeval.test_run.test_run import TestRun
+
+        test_run = TestRun()
+        for order, raw in enumerate([0.8, float("nan")]):
+            ragas_scores["faithfulness"] = [raw]
+            metric = RAGASFaithfulnessMetric(threshold=0.5, model=MODEL)
+            metric.measure(test_case)
+            api_test_case = LLMApiTestCase(
+                name=f"case {order}", input=test_case.input, order=order
+            )
+            api_test_case.update_metric_data(create_metric_data(metric))
+            test_run.test_cases.append(api_test_case)
+
+        assert test_run.construct_metrics_scores() == 1
+        [metric_scores] = test_run.metrics_scores
+        assert metric_scores.scores == [0.8]
+        assert metric_scores.errors == 1
+
+        path = tmp_path / "test_run.json"
+        with open(path, "w") as f:
+            test_run.save(f)
+        saved = json.loads(path.read_text())
+
+        measured, unmeasured = (
+            case["metricsData"][0] for case in saved["testCases"]
+        )
+        assert measured["score"] == 0.8
+        assert "score" not in unmeasured
+        assert "faithfulness" in unmeasured["error"]
+        assert saved["metricsScores"][0]["scores"] == [0.8]
