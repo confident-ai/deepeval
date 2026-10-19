@@ -210,6 +210,35 @@ def test_unknown_cost_is_not_zero():
     assert model._parse(json.dumps(body).encode(), QUESTIONS)[1] is None
 
 
+def test_hybrid_cache_distinguishes_decision_providers_and_modes():
+    from deepeval.test_run.cache import Cache
+
+    def metric(decision, mode="hybrid"):
+        return AnswerRelevancyMetric(model=ExplodingLLM(), system_one_model=decision, eval_mode=mode)
+
+    first = metric(api())
+    cached = Cache.create_metric_configuration(first)
+    assert Cache.same_metric_configs(metric(api()), cached)
+    assert not Cache.same_metric_configs(metric(api(base_url="http://localhost:8010")), cached)
+    assert not Cache.same_metric_configs(metric(api(), "llm"), cached)
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.asyncio
+async def test_distinct_provider_credentials_do_not_share_a_batch(server, is_async):
+    server["body"] = lambda payload: {"answers": {
+        key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
+    }}
+    case = LLMTestCase(input="Where?", actual_output="Paris", retrieval_context=["Paris"])
+    metrics = [cls(model=ExplodingLLM(), system_one_model=api(server, api_key=key), eval_mode="system_one") for cls, key in ((AnswerRelevancyMetric, "tenant-a"), (FaithfulnessMetric, "tenant-b"))]
+    run = a_measure_system_one_batch if is_async else measure_system_one_batch
+    result = run(metrics, case, ignore_errors=False, skip_on_missing_params=False)
+    if is_async:
+        await result
+    assert len(server["calls"]) == 2
+    assert {call[1]["Authorization"] for call in server["calls"]} == {"Bearer tenant-a", "Bearer tenant-b"}
+
+
 def test_limits_and_capabilities():
     api().check_request("x" * 200_000, QUESTIONS)
     with pytest.raises(SystemOneContextLimitError):

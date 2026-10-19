@@ -47,6 +47,8 @@ class MetricConfiguration(BaseModel):
     ##### Required fields #####
     threshold: Optional[float] = None
     evaluation_model: Optional[str] = None
+    system_one_model: Optional[str] = None
+    eval_mode: Optional[str] = None
     strict_mode: bool = False
     criteria: Optional[str] = None
     include_reason: Optional[bool] = None
@@ -372,6 +374,8 @@ class Cache:
         config_fields = [
             "threshold",
             "evaluation_model",
+            "system_one_model",
+            "eval_mode",
             "strict_mode",
             "include_reason",
             "n",
@@ -385,6 +389,8 @@ class Cache:
         for field in config_fields:
             metric_value = getattr(metric, field, None)
             cached_value = getattr(metric_configuration, field, None)
+            if field == "system_one_model" and metric_value is not None:
+                metric_value = metric_value.get_model_name()
 
             # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
@@ -455,6 +461,8 @@ class Cache:
         config_fields = [
             "threshold",
             "evaluation_model",
+            "system_one_model",
+            "eval_mode",
             "strict_mode",
             "include_reason",  # checked
             "n",  # checked
@@ -468,6 +476,8 @@ class Cache:
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
+            if field == "system_one_model" and value is not None:
+                value = value.get_model_name()
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
             config_kwargs[field] = value
