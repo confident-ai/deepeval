@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "deepeval"
 version = "4.3.1"
-description = "The LLM Evaluation Framework for AI agents, chatbots, voice agents, and RAG"
+description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
 readme = "README.md"
