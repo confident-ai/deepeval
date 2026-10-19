@@ -14,9 +14,11 @@ from deepeval.models.system_one.limits import (
     estimate_tokens,
 )
 from deepeval.models.system_one.typesafe_model import TypeSafeModel
+from deepeval.models.system_one.api_model import SystemOneAPIModel
 
 __all__ = [
     "TypeSafeModel",
+    "SystemOneAPIModel",
     "SystemOneContextLimitError",
     "check_context_budget",
     "estimate_tokens",

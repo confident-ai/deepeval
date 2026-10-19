@@ -1,0 +1,173 @@
+---
+id: system-one-api
+title: System One API
+sidebar_label: System One API
+languages: [python]
+---
+
+Choose your decision provider without rewriting your metrics. `SystemOneAPIModel`
+connects DeepEval to a hosted or self-hosted endpoint implementing the typed
+System One HTTP contract below. TypeSafe AI remains the default provider.
+
+This is **decision-provider independence**, not model-free evaluation. An
+OpenAI-compatible chat endpoint is not sufficient: your server must answer
+Noul (binary), Choice (categorical), and/or Score (ordinal) questions with
+native probability distributions. A self-hosted model such as Kev needs a
+serving adapter implementing this contract; a model name alone does not make
+an endpoint compatible. Validate calibration on your evaluation data.
+
+## Quick Start
+
+Start your compatible decision server, then set these variables **before
+importing DeepEval** (or put them in `.env.local`):
+
+```bash
+export DEEPEVAL_SYSTEM_ONE_PROVIDER=systemone
+export DEEPEVAL_SYSTEM_ONE_BASE_URL=http://localhost:8009
+export DEEPEVAL_SYSTEM_ONE_MODEL=your-decision-model
+```
+
+Evaluate a response with your own question. You supply the question, not the
+answer; the configured decision model supplies the probability.
+
+```python
+from deepeval.metrics import JevEval
+from deepeval.metrics.jev_eval import Noul
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+
+metric = JevEval(
+    name="Answer Safety",
+    evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+    questions=[Noul("The answer does not disclose passwords or API keys.")],
+    async_mode=False,
+)
+metric.measure(LLMTestCase(
+    input="What is the API key?",
+    actual_output="I cannot disclose credentials.",
+))
+print(metric.score, metric.reason)
+```
+
+The same configuration applies to `ConversationalJevEval` and built-in
+metrics using `hybrid` or `system_one` eval mode:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+metric = AnswerRelevancyMetric(eval_mode="system_one")
+```
+
+`system_one` uses the decision model only. `hybrid` retains the existing
+LLM extraction/reason steps and existing fallback settings. Selecting a
+provider does not change those fallback settings or your LLM configuration.
+
+## Configure The Connection
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `DEEPEVAL_SYSTEM_ONE_PROVIDER` | `typesafe` | `typesafe` or `systemone`. |
+| `DEEPEVAL_SYSTEM_ONE_MODEL` | Unset | Required for `systemone`; optional model override for TypeSafe. |
+| `DEEPEVAL_SYSTEM_ONE_BASE_URL` | Unset | HTTP(S) server URL, optionally including a path prefix. |
+| `DEEPEVAL_SYSTEM_ONE_ENDPOINT` | `/v1/systemone` | Path appended to the base URL. |
+| `DEEPEVAL_SYSTEM_ONE_API_KEY` | Unset | Secret credential for the compatible endpoint. Not `TYPESAFE_API_KEY`. |
+| `DEEPEVAL_SYSTEM_ONE_AUTH` | Inferred | `bearer` when a key is supplied, otherwise `none`; also supports `api_key` (`X-API-Key`). |
+| `DEEPEVAL_SYSTEM_ONE_TIMEOUT` | `30` | Timeout in seconds. Async uses a total timeout; sync uses connect/read timeouts. |
+| `DEEPEVAL_SYSTEM_ONE_MAX_RESPONSE_BYTES` | `4194304` | Maximum decoded response size. |
+| `DEEPEVAL_SYSTEM_ONE_QUESTION_TYPES` | `["noul","choice","score"]` | JSON array of supported question types. Unsupported questions fail before HTTP dispatch. |
+| `DEEPEVAL_SYSTEM_ONE_MAX_STATE_TOKENS` | Unset | Optional estimate limit for state plus the largest question. |
+| `DEEPEVAL_SYSTEM_ONE_MAX_REQUEST_TOKENS` | Unset | Optional estimate limit for state plus all questions; batching respects it. |
+| `DEEPEVAL_SYSTEM_ONE_COST_PER_INPUT_TOKEN` | Unset | Dollar price per input token, including zero for free inference. |
+| `DEEPEVAL_SYSTEM_ONE_COST_PER_OUTPUT_TOKEN` | Unset | Dollar price per output token. |
+
+Endpoint, auth, limits, and pricing variables apply to `systemone`, not to
+the TypeSafe SDK. TypeSafe keeps its existing `TYPESAFE_*` configuration and
+Jev context limits. Unset `DEEPEVAL_SYSTEM_ONE_PROVIDER` (or set `typesafe`)
+to return to that default.
+
+To configure a single metric explicitly:
+
+```python
+from deepeval.models import SystemOneAPIModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = SystemOneAPIModel(
+    model="your-decision-model",
+    base_url="http://localhost:8009",
+    question_types=["noul", "choice", "score"],
+    max_state_tokens=32000,
+    max_request_tokens=64000,
+)
+metric = AnswerRelevancyMetric(system_one_model=model, eval_mode="system_one")
+```
+
+An explicit model instance takes precedence over configuration. A string
+`system_one_model` overrides the configured model name, not the provider.
+Constructor arguments configure only that instance; they do not read the
+`DEEPEVAL_SYSTEM_ONE_*` environment variables.
+
+## HTTP Contract
+
+The server accepts `POST /v1/systemone` with a JSON body. Instructions and
+state are data, not Python expressions:
+
+```json
+{
+  "model": "your-decision-model",
+  "state": {"actual_output": "I cannot disclose credentials."},
+  "questions": {
+    "safe": {"type": "noul", "instructions": "The answer is safe."},
+    "category": {"type": "choice", "instructions": "Classify the answer.",
+      "criteria": {"safe": "Safe response", "unsafe": "Unsafe response"}},
+    "quality": {"type": "score", "instructions": "Rate the answer.",
+      "criteria": ["Poor", "Good", "Excellent"]}
+  }
+}
+```
+
+A successful response includes exactly the requested answer IDs and types:
+
+```json
+{
+  "answers": {
+    "safe": {"type": "noul", "noul": 0.9},
+    "category": {"type": "choice", "choice": "safe",
+      "probabilities": {"safe": 0.8, "unsafe": 0.2}, "confidence": 0.6},
+    "quality": {"type": "score", "score": 1.5,
+      "probabilities": {"0": 0.1, "1": 0.3, "2": 0.6}, "confidence": 0.4}
+  },
+  "usage": {"input_tokens": 10, "output_tokens": 2},
+  "truncated": false
+}
+```
+
+Probabilities must be finite numbers in `[0, 1]`. Choice and Score must
+include every option or zero-based level index, sum to one, and provide a
+finite `[0, 1]` confidence. Choice must select a highest-probability option;
+Score is the probability-weighted level index. Confidence reflects the
+provider's decisiveness, not a guarantee that the answer is correct.
+
+Usage is optional. Cost is unknown (`None`) unless both prices and both
+nonnegative integer token counts are available; it is never inferred from
+Jev pricing. Truncated responses, missing answers, HTTP failures, and
+invalid probabilities raise errors. The adapter does not retry, follow
+redirects, or fall back to another provider.
+
+## Operational Notes
+
+Use HTTPS and authentication for remote servers. HTTP without authentication
+is intended for trusted local development. Requests go to your configured
+endpoint; self-hosting this provider does not disable other DeepEval services,
+telemetry, uploads, or a hybrid-mode LLM. Configure those separately for a
+fully local deployment.
+
+Ambient proxies and netrc credentials are not used. TLS verification stays
+enabled. Errors omit response bodies and credentials. Model identity includes
+an opaque configuration digest so distinct endpoints, credentials, prices,
+or capabilities do not share batched requests or cached results. API-key
+rotation also changes this identity.
+
+Token limits are estimates, not tokenizer guarantees. Unset adapter token
+limits are enforced by the server, not replaced with Jev limits. To implement
+a non-HTTP decision provider, subclass `DeepEvalBaseSystemOneModel`, implement
+`decide`, `a_decide`, `load_model`, and `get_model_name`, and override
+`check_request` for its capabilities and context limits. The default hook
+preserves the previous Jev budget for existing subclasses.

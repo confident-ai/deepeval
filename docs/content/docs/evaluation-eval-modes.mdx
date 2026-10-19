@@ -29,6 +29,15 @@ Under `llm`, each box is an LLM call (except the score, which is an equation). U
 
 ## Setting The Eval Mode
 
+<Only id="python">
+
+The evaluation mode and decision provider are separate settings. TypeSafe
+AI is the default; set `DEEPEVAL_SYSTEM_ONE_PROVIDER=systemone` to use a
+[compatible decision endpoint](/integrations/models/system-one-api) instead.
+This does not change the configured LLM or the mode's fallback behavior.
+
+</Only>
+
 The eval mode is resolved per metric, in this order:
 
 1. The <Term py="eval_mode" ts="evalMode"/> argument on the metric.

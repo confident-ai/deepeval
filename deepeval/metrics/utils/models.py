@@ -34,12 +34,12 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
     OpenRouterModel,
-    TypeSafeModel,
 )
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseSystemOneModel,
 )
+from deepeval.models.system_one.provider import create_system_one_model
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
     GEMINI_MODELS_DATA,
@@ -289,12 +289,13 @@ def initialize_system_one_model(
             "None, str, or DeepEvalBaseSystemOneModel."
         )
     try:
-        return TypeSafeModel(model=model)
+        return create_system_one_model(model)
     except DeepEvalError as e:
         raise DeepEvalError(
-            f"{EVAL_MODE_ENV_VAR}={mode} routes metric decisions to TypeSafe "
-            f"AI Jev, but it is not usable: {e} Configure it with `deepeval "
-            f"set-typesafe --prompt-api-key` or switch back with `deepeval "
+            f"{EVAL_MODE_ENV_VAR}={mode} routes metric decisions to the configured "
+            f"System One provider, but it is not usable: {e} Configure "
+            f"DEEPEVAL_SYSTEM_ONE_PROVIDER (TypeSafe defaults use "
+            f"TYPESAFE_API_KEY), or switch back with `deepeval "
             f"set-eval-mode {EvalMode.LLM}`."
         ) from e
 

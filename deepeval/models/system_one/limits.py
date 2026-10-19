@@ -53,8 +53,8 @@ def check_context_budget(
     state: Any,
     questions: Dict[str, Any],
     *,
-    max_state_tokens: int = JEV_MAX_STATE_TOKENS,
-    max_request_tokens: int = JEV_MAX_REQUEST_TOKENS,
+    max_state_tokens: Optional[int] = JEV_MAX_STATE_TOKENS,
+    max_request_tokens: Optional[int] = JEV_MAX_REQUEST_TOKENS,
 ) -> None:
     """Raise ``SystemOneContextLimitError`` if the request is likely to exceed
     the model's context budget. ``questions`` are the SDK-shaped dicts or the
@@ -64,7 +64,7 @@ def check_context_budget(
         estimate_tokens(_dumpable(q)) for q in questions.values()
     ]
     longest = max(question_tokens) if question_tokens else 0
-    if state_tokens + longest > max_state_tokens:
+    if max_state_tokens is not None and state_tokens + longest > max_state_tokens:
         raise SystemOneContextLimitError(
             f"System One state ({state_tokens} est. tokens) plus the longest "
             f"question ({longest}) exceeds the {max_state_tokens}-token state "
@@ -73,7 +73,7 @@ def check_context_budget(
             limit_tokens=max_state_tokens,
         )
     total = state_tokens + sum(question_tokens)
-    if total > max_request_tokens:
+    if max_request_tokens is not None and total > max_request_tokens:
         raise SystemOneContextLimitError(
             f"System One request ({total} est. tokens across "
             f"{len(question_tokens)} questions) exceeds the "
