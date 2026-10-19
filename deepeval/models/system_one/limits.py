@@ -64,7 +64,10 @@ def check_context_budget(
         estimate_tokens(_dumpable(q)) for q in questions.values()
     ]
     longest = max(question_tokens) if question_tokens else 0
-    if max_state_tokens is not None and state_tokens + longest > max_state_tokens:
+    if (
+        max_state_tokens is not None
+        and state_tokens + longest > max_state_tokens
+    ):
         raise SystemOneContextLimitError(
             f"System One state ({state_tokens} est. tokens) plus the longest "
             f"question ({longest}) exceeds the {max_state_tokens}-token state "

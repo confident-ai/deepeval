@@ -17,27 +17,48 @@ from deepeval.metrics.jev_eval.utils import initialize_jev_model
 from deepeval.metrics.utils.models import initialize_system_one_model
 from deepeval.metrics.utils.system_one import _decide, _a_decide
 from deepeval.metrics.utils.system_one_batch import (
-    measure_system_one_batch, a_measure_system_one_batch,
+    measure_system_one_batch,
+    a_measure_system_one_batch,
 )
 from deepeval.models import SystemOneAPIModel
 from deepeval.models.system_one import provider
 from deepeval.models.system_one.limits import SystemOneContextLimitError
-from deepeval.models.system_one.schema import NoulQuestion, ChoiceQuestion, ScoreQuestion
+from deepeval.models.system_one.schema import (
+    NoulQuestion,
+    ChoiceQuestion,
+    ScoreQuestion,
+)
 from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from tests.test_metrics.system_one_fakes import ExplodingLLM, FakeSystemOneModel
 
 
 QUESTIONS = {
-    "safe": NoulQuestion(instructions="Is the answer safe?", true="Safe", false="Unsafe"),
-    "category": ChoiceQuestion(instructions="Classify", options={"yes": "Relevant", "no": "Irrelevant"}),
-    "quality": ScoreQuestion(instructions="Rate", levels=["Poor", "Good", "Excellent"]),
+    "safe": NoulQuestion(
+        instructions="Is the answer safe?", true="Safe", false="Unsafe"
+    ),
+    "category": ChoiceQuestion(
+        instructions="Classify", options={"yes": "Relevant", "no": "Irrelevant"}
+    ),
+    "quality": ScoreQuestion(
+        instructions="Rate", levels=["Poor", "Good", "Excellent"]
+    ),
 }
 RESPONSE = {
     "answers": {
         "safe": {"type": "noul", "noul": 0.9},
-        "category": {"type": "choice", "choice": "yes", "probabilities": {"yes": 0.8, "no": 0.2}, "confidence": 0.6},
-        "quality": {"type": "score", "score": 1.5, "probabilities": {"0": 0.1, "1": 0.3, "2": 0.6}, "confidence": 0.4},
+        "category": {
+            "type": "choice",
+            "choice": "yes",
+            "probabilities": {"yes": 0.8, "no": 0.2},
+            "confidence": 0.6,
+        },
+        "quality": {
+            "type": "score",
+            "score": 1.5,
+            "probabilities": {"0": 0.1, "1": 0.3, "2": 0.6},
+            "confidence": 0.4,
+        },
     },
     "usage": {"input_tokens": 10, "output_tokens": 2},
 }
@@ -52,7 +73,9 @@ def server():
             pass
 
         def do_POST(self):
-            payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            payload = json.loads(
+                self.rfile.read(int(self.headers["Content-Length"]))
+            )
             config["calls"].append((self.path, dict(self.headers), payload))
             time.sleep(config["delay"])
             body = config["body"]
@@ -81,7 +104,10 @@ def server():
 
 
 def api(server=None, **kwargs):
-    options = {"model": "local-decision", "base_url": server["url"] if server else "http://localhost:8009"}
+    options = {
+        "model": "local-decision",
+        "base_url": server["url"] if server else "http://localhost:8009",
+    }
     options.update(kwargs)
     return SystemOneAPIModel(**options)
 
@@ -95,8 +121,17 @@ def configure(monkeypatch, **kwargs):
 @pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
 @pytest.mark.asyncio
 async def test_http_contract_and_cost(server, is_async):
-    model = api(server, api_key="test-secret", cost_per_input_token=0.01, cost_per_output_token=0.02)
-    answers, cost = await model.a_decide({"text": "hello"}, QUESTIONS) if is_async else model.decide({"text": "hello"}, QUESTIONS)
+    model = api(
+        server,
+        api_key="test-secret",
+        cost_per_input_token=0.01,
+        cost_per_output_token=0.02,
+    )
+    answers, cost = (
+        await model.a_decide({"text": "hello"}, QUESTIONS)
+        if is_async
+        else model.decide({"text": "hello"}, QUESTIONS)
+    )
     assert answers.nouls["safe"].probability == 0.9
     assert answers.choices["category"].choice == "yes"
     assert answers.scores["quality"].normalized == 0.75
@@ -108,26 +143,57 @@ async def test_http_contract_and_cost(server, is_async):
     assert headers["Authorization"] == "Bearer test-secret"
     assert payload["model"] == "local-decision"
     assert payload["state"] == {"text": "hello"}
-    assert payload["questions"]["safe"]["criteria"] == {"true": "Safe", "false": "Unsafe"}
-    assert payload["questions"]["category"]["criteria"] == QUESTIONS["category"].options
-    assert payload["questions"]["quality"]["criteria"] == QUESTIONS["quality"].levels
+    assert payload["questions"]["safe"]["criteria"] == {
+        "true": "Safe",
+        "false": "Unsafe",
+    }
+    assert (
+        payload["questions"]["category"]["criteria"]
+        == QUESTIONS["category"].options
+    )
+    assert (
+        payload["questions"]["quality"]["criteria"]
+        == QUESTIONS["quality"].levels
+    )
 
 
-@pytest.mark.parametrize("auth,key,header", [("none", None, None), ("api_key", "secret", "X-API-Key"), ("bearer", "secret", "Authorization")])
+@pytest.mark.parametrize(
+    "auth,key,header",
+    [
+        ("none", None, None),
+        ("api_key", "secret", "X-API-Key"),
+        ("bearer", "secret", "Authorization"),
+    ],
+)
 def test_auth_and_endpoint(server, auth, key, header):
-    api(server, auth=auth, api_key=key, endpoint="/decision").decide({}, QUESTIONS)
+    api(server, auth=auth, api_key=key, endpoint="/decision").decide(
+        {}, QUESTIONS
+    )
     path, headers, _ = server["calls"][0]
     assert path == "/decision"
-    assert (header in headers) if header else not ({"Authorization", "X-API-Key"} & set(headers))
+    assert (
+        (header in headers)
+        if header
+        else not ({"Authorization", "X-API-Key"} & set(headers))
+    )
 
 
 @pytest.mark.parametrize("is_async", [False, True])
-@pytest.mark.parametrize("failure", ["redirect", "unauthorized", "server", "oversize", "json", "timeout"])
+@pytest.mark.parametrize(
+    "failure",
+    ["redirect", "unauthorized", "server", "oversize", "json", "timeout"],
+)
 @pytest.mark.asyncio
-async def test_transport_fails_without_retry_or_secret_leak(server, is_async, failure):
+async def test_transport_fails_without_retry_or_secret_leak(
+    server, is_async, failure
+):
     options = {}
     if failure in {"redirect", "unauthorized", "server"}:
-        server["status"] = {"redirect": 307, "unauthorized": 401, "server": 503}[failure]
+        server["status"] = {
+            "redirect": 307,
+            "unauthorized": 401,
+            "server": 503,
+        }[failure]
         server["body"] = b"private response test-secret"
     elif failure == "oversize":
         options["max_response_bytes"] = 10
@@ -148,22 +214,33 @@ async def test_transport_fails_without_retry_or_secret_leak(server, is_async, fa
     assert server["url"] not in str(error.value)
 
 
-@pytest.mark.parametrize("path,value", [
-    (("answers",), {}), (("answers", "extra"), {}),
-    (("answers", "safe", "type"), "choice"),
-    (("answers", "safe", "noul"), True), (("answers", "safe", "noul"), float("nan")),
-    (("answers", "safe", "noul"), -0.1), (("answers", "safe", "noul"), 1.1),
-    (("answers", "safe", "noul"), "0.9"),
-    (("answers", "category", "probabilities"), {"yes": 1.0}),
-    (("answers", "category", "probabilities"), {"yes": 0.1, "no": 0.1}),
-    (("answers", "category", "choice"), "no"),
-    (("answers", "category", "confidence"), None),
-    (("answers", "quality", "score"), 2),
-    (("answers", "quality", "probabilities"), {"0": 0.5, "01": 0.5, "2": 0}),
-    (("truncated",), True), (("truncated",), 0),
-    (("usage", "input_tokens"), True), (("usage", "output_tokens"), -1),
-    (("usage",), {"state_tokens": 10, "state_tokens_used": 5}),
-])
+@pytest.mark.parametrize(
+    "path,value",
+    [
+        (("answers",), {}),
+        (("answers", "extra"), {}),
+        (("answers", "safe", "type"), "choice"),
+        (("answers", "safe", "noul"), True),
+        (("answers", "safe", "noul"), float("nan")),
+        (("answers", "safe", "noul"), -0.1),
+        (("answers", "safe", "noul"), 1.1),
+        (("answers", "safe", "noul"), "0.9"),
+        (("answers", "category", "probabilities"), {"yes": 1.0}),
+        (("answers", "category", "probabilities"), {"yes": 0.1, "no": 0.1}),
+        (("answers", "category", "choice"), "no"),
+        (("answers", "category", "confidence"), None),
+        (("answers", "quality", "score"), 2),
+        (
+            ("answers", "quality", "probabilities"),
+            {"0": 0.5, "01": 0.5, "2": 0},
+        ),
+        (("truncated",), True),
+        (("truncated",), 0),
+        (("usage", "input_tokens"), True),
+        (("usage", "output_tokens"), -1),
+        (("usage",), {"state_tokens": 10, "state_tokens_used": 5}),
+    ],
+)
 def test_malformed_answers_are_rejected(path, value):
     body = copy.deepcopy(RESPONSE)
     target = body
@@ -174,25 +251,44 @@ def test_malformed_answers_are_rejected(path, value):
         api()._parse(json.dumps(body).encode(), QUESTIONS)
 
 
-@pytest.mark.parametrize("kwargs", [
-    {"model": ""}, {"base_url": "file:///tmp/model"},
-    {"base_url": "https://user:secret@example.com"}, {"base_url": "https://example.com?key=secret"},
-    {"endpoint": "//other-host/path"}, {"endpoint": "https://other-host"},
-    {"auth": "unknown"}, {"auth": "bearer"}, {"auth": "none", "api_key": "secret"},
-    {"timeout": 0}, {"timeout": float("inf")}, {"max_state_tokens": -1},
-    {"max_response_bytes": 0}, {"question_types": []}, {"question_types": ["chat"]},
-    {"cost_per_input_token": float("nan")}, {"cost_per_output_token": -1},
-])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"model": ""},
+        {"base_url": "file:///tmp/model"},
+        {"base_url": "https://user:secret@example.com"},
+        {"base_url": "https://example.com?key=secret"},
+        {"endpoint": "//other-host/path"},
+        {"endpoint": "https://other-host"},
+        {"auth": "unknown"},
+        {"auth": "bearer"},
+        {"auth": "none", "api_key": "secret"},
+        {"timeout": 0},
+        {"timeout": float("inf")},
+        {"max_state_tokens": -1},
+        {"max_response_bytes": 0},
+        {"question_types": []},
+        {"question_types": ["chat"]},
+        {"cost_per_input_token": float("nan")},
+        {"cost_per_output_token": -1},
+    ],
+)
 def test_bad_configuration_fails_before_network(kwargs):
     with pytest.raises(DeepEvalError):
         api(**kwargs)
 
 
-@pytest.mark.parametrize("kwargs", [
-    {"base_url": "http://localhost:8010"}, {"endpoint": "/other"},
-    {"api_key": "another-secret"}, {"cost_per_input_token": 0},
-    {"max_state_tokens": 200}, {"question_types": ["noul"]},
-])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"base_url": "http://localhost:8010"},
+        {"endpoint": "/other"},
+        {"api_key": "another-secret"},
+        {"cost_per_input_token": 0},
+        {"max_state_tokens": 200},
+        {"question_types": ["noul"]},
+    ],
+)
 def test_identity_is_stable_and_isolates_configuration(kwargs):
     first = api(api_key="secret-one")
     second = api(**dict({"api_key": "secret-one"}, **kwargs))
@@ -214,29 +310,54 @@ def test_hybrid_cache_distinguishes_decision_providers_and_modes():
     from deepeval.test_run.cache import Cache
 
     def metric(decision, mode="hybrid"):
-        return AnswerRelevancyMetric(model=ExplodingLLM(), system_one_model=decision, eval_mode=mode)
+        return AnswerRelevancyMetric(
+            model=ExplodingLLM(), system_one_model=decision, eval_mode=mode
+        )
 
     first = metric(api())
     cached = Cache.create_metric_configuration(first)
     assert Cache.same_metric_configs(metric(api()), cached)
-    assert not Cache.same_metric_configs(metric(api(base_url="http://localhost:8010")), cached)
+    assert not Cache.same_metric_configs(
+        metric(api(base_url="http://localhost:8010")), cached
+    )
     assert not Cache.same_metric_configs(metric(api(), "llm"), cached)
 
 
 @pytest.mark.parametrize("is_async", [False, True])
 @pytest.mark.asyncio
-async def test_distinct_provider_credentials_do_not_share_a_batch(server, is_async):
-    server["body"] = lambda payload: {"answers": {
-        key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
-    }}
-    case = LLMTestCase(input="Where?", actual_output="Paris", retrieval_context=["Paris"])
-    metrics = [cls(model=ExplodingLLM(), system_one_model=api(server, api_key=key), eval_mode="system_one") for cls, key in ((AnswerRelevancyMetric, "tenant-a"), (FaithfulnessMetric, "tenant-b"))]
+async def test_distinct_provider_credentials_do_not_share_a_batch(
+    server, is_async
+):
+    server["body"] = lambda payload: {
+        "answers": {
+            key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
+        }
+    }
+    case = LLMTestCase(
+        input="Where?", actual_output="Paris", retrieval_context=["Paris"]
+    )
+    metrics = [
+        cls(
+            model=ExplodingLLM(),
+            system_one_model=api(server, api_key=key),
+            eval_mode="system_one",
+        )
+        for cls, key in (
+            (AnswerRelevancyMetric, "tenant-a"),
+            (FaithfulnessMetric, "tenant-b"),
+        )
+    ]
     run = a_measure_system_one_batch if is_async else measure_system_one_batch
-    result = run(metrics, case, ignore_errors=False, skip_on_missing_params=False)
+    result = run(
+        metrics, case, ignore_errors=False, skip_on_missing_params=False
+    )
     if is_async:
         await result
     assert len(server["calls"]) == 2
-    assert {call[1]["Authorization"] for call in server["calls"]} == {"Bearer tenant-a", "Bearer tenant-b"}
+    assert {call[1]["Authorization"] for call in server["calls"]} == {
+        "Bearer tenant-a",
+        "Bearer tenant-b",
+    }
 
 
 def test_limits_and_capabilities():
@@ -258,7 +379,10 @@ def test_duplicate_answer_keys_are_rejected():
 
 def test_namespaced_model_name_is_not_rewritten():
     model = api(model="org/decision-model")
-    assert json.loads(model._payload({}, QUESTIONS))["model"] == "org/decision-model"
+    assert (
+        json.loads(model._payload({}, QUESTIONS))["model"]
+        == "org/decision-model"
+    )
 
 
 @pytest.mark.parametrize("value", ["unknown", "openai"])
@@ -273,7 +397,11 @@ def test_default_provider_preserves_typesafe_and_model_precedence(monkeypatch):
     from deepeval.models.system_one import typesafe_model
 
     calls = []
-    monkeypatch.setattr(typesafe_model, "TypeSafeModel", lambda **kw: calls.append(kw) or "typesafe")
+    monkeypatch.setattr(
+        typesafe_model,
+        "TypeSafeModel",
+        lambda **kw: calls.append(kw) or "typesafe",
+    )
     configure(monkeypatch)
     assert provider.create_system_one_model() == "typesafe"
     assert calls[-1] == {"model": None}
@@ -289,7 +417,9 @@ def test_env_selection_and_explicit_instance(monkeypatch):
     monkeypatch.setenv("DEEPEVAL_SYSTEM_ONE_BASE_URL", "http://localhost:8009")
     monkeypatch.setenv("DEEPEVAL_SYSTEM_ONE_QUESTION_TYPES", '["noul"]')
     configure(monkeypatch)
-    assert isinstance(initialize_system_one_model(eval_mode="system_one"), SystemOneAPIModel)
+    assert isinstance(
+        initialize_system_one_model(eval_mode="system_one"), SystemOneAPIModel
+    )
     assert isinstance(initialize_jev_model(), SystemOneAPIModel)
     assert provider.create_system_one_model("override").name == "override"
     custom = FakeSystemOneModel()
@@ -300,21 +430,42 @@ def test_env_selection_and_explicit_instance(monkeypatch):
 
 @pytest.mark.parametrize("is_async", [False, True])
 @pytest.mark.asyncio
-async def test_configured_jev_eval_and_built_in_batch(server, monkeypatch, is_async):
-    server["body"] = lambda payload: {"answers": {
-        key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
-    }}
-    configure(monkeypatch, DEEPEVAL_SYSTEM_ONE_PROVIDER="systemone", DEEPEVAL_SYSTEM_ONE_MODEL="local-decision", DEEPEVAL_SYSTEM_ONE_BASE_URL=server["url"])
-    case = LLMTestCase(input="Where?", actual_output="Paris", retrieval_context=["Paris"])
-    metric = JevEval(name="Safety", evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT], questions=[Noul("The answer is safe.")], async_mode=False)
+async def test_configured_jev_eval_and_built_in_batch(
+    server, monkeypatch, is_async
+):
+    server["body"] = lambda payload: {
+        "answers": {
+            key: {"type": "noul", "noul": 0.9} for key in payload["questions"]
+        }
+    }
+    configure(
+        monkeypatch,
+        DEEPEVAL_SYSTEM_ONE_PROVIDER="systemone",
+        DEEPEVAL_SYSTEM_ONE_MODEL="local-decision",
+        DEEPEVAL_SYSTEM_ONE_BASE_URL=server["url"],
+    )
+    case = LLMTestCase(
+        input="Where?", actual_output="Paris", retrieval_context=["Paris"]
+    )
+    metric = JevEval(
+        name="Safety",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        questions=[Noul("The answer is safe.")],
+        async_mode=False,
+    )
     if is_async:
         await metric.a_measure(case, _show_indicator=False)
     else:
         metric.measure(case, _show_indicator=False)
     assert metric.score == 0.9
-    metrics = [cls(model=ExplodingLLM(), eval_mode="system_one") for cls in (AnswerRelevancyMetric, FaithfulnessMetric)]
+    metrics = [
+        cls(model=ExplodingLLM(), eval_mode="system_one")
+        for cls in (AnswerRelevancyMetric, FaithfulnessMetric)
+    ]
     run = a_measure_system_one_batch if is_async else measure_system_one_batch
-    result = run(metrics, case, ignore_errors=False, skip_on_missing_params=False)
+    result = run(
+        metrics, case, ignore_errors=False, skip_on_missing_params=False
+    )
     if is_async:
         result = await result
     assert result == metrics

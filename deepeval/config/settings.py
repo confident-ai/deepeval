@@ -781,16 +781,22 @@ class Settings(BaseSettings):
     DEEPEVAL_SYSTEM_ONE_BASE_URL: Optional[str] = None
     DEEPEVAL_SYSTEM_ONE_ENDPOINT: str = "/v1/systemone"
     DEEPEVAL_SYSTEM_ONE_API_KEY: Optional[SecretStr] = None
-    DEEPEVAL_SYSTEM_ONE_AUTH: Optional[Literal["none", "bearer", "api_key"]] = None
+    DEEPEVAL_SYSTEM_ONE_AUTH: Optional[Literal["none", "bearer", "api_key"]] = (
+        None
+    )
     DEEPEVAL_SYSTEM_ONE_TIMEOUT: PositiveFloat = 30.0
     DEEPEVAL_SYSTEM_ONE_MAX_RESPONSE_BYTES: conint(gt=0) = 4 * 1024 * 1024
-    DEEPEVAL_SYSTEM_ONE_QUESTION_TYPES: List[Literal["noul", "choice", "score"]] = [
-        "noul", "choice", "score"
-    ]
+    DEEPEVAL_SYSTEM_ONE_QUESTION_TYPES: List[
+        Literal["noul", "choice", "score"]
+    ] = ["noul", "choice", "score"]
     DEEPEVAL_SYSTEM_ONE_MAX_STATE_TOKENS: Optional[conint(gt=0)] = None
     DEEPEVAL_SYSTEM_ONE_MAX_REQUEST_TOKENS: Optional[conint(gt=0)] = None
-    DEEPEVAL_SYSTEM_ONE_COST_PER_INPUT_TOKEN: Optional[confloat(ge=0, allow_inf_nan=False)] = None
-    DEEPEVAL_SYSTEM_ONE_COST_PER_OUTPUT_TOKEN: Optional[confloat(ge=0, allow_inf_nan=False)] = None
+    DEEPEVAL_SYSTEM_ONE_COST_PER_INPUT_TOKEN: Optional[
+        confloat(ge=0, allow_inf_nan=False)
+    ] = None
+    DEEPEVAL_SYSTEM_ONE_COST_PER_OUTPUT_TOKEN: Optional[
+        confloat(ge=0, allow_inf_nan=False)
+    ] = None
 
     # TypeSafe AI (System One). No USE_* flag: whether Jev takes part in a
     # metric is decided by DEEPEVAL_EVAL_MODE, alongside the active LLM.

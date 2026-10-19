@@ -29,9 +29,17 @@ def create_system_one_model(
     options = {
         key: getattr(settings, prefix + key.upper())
         for key in (
-            "base_url", "endpoint", "api_key", "auth", "timeout",
-            "max_response_bytes", "question_types", "max_state_tokens",
-            "max_request_tokens", "cost_per_input_token", "cost_per_output_token",
+            "base_url",
+            "endpoint",
+            "api_key",
+            "auth",
+            "timeout",
+            "max_response_bytes",
+            "question_types",
+            "max_state_tokens",
+            "max_request_tokens",
+            "cost_per_input_token",
+            "cost_per_output_token",
         )
     }
     return SystemOneAPIModel(model=name, **options)
