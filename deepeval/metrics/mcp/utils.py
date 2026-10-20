@@ -107,7 +107,21 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            result_obj = tool.result
+            # CallToolResult may use camelCase (structuredContent) or
+            # snake_case (structured_content) across mcp versions; fall back
+            # gracefully to the raw content / repr when neither exists.
+            structured = None
+            if hasattr(result_obj, "structuredContent"):
+                structured = result_obj.structuredContent
+            elif hasattr(result_obj, "structured_content"):
+                structured = result_obj.structured_content
+            if structured and isinstance(structured, dict):
+                result = structured.get("result", structured)
+            elif hasattr(result_obj, "content"):
+                result = result_obj.content
+            else:
+                result = repr(result_obj)
         else:
             args = tool.input_parameters
             result = tool.output
