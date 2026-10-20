@@ -454,6 +454,7 @@ async def safe_a_measure(
     except TypeError:
         try:
             await metric.a_measure(tc)
+            update_pbar(progress, pbar_eval_id)
         except MissingTestCaseParamsError as e:
             if skip_on_missing_params:
                 metric.skipped = True
