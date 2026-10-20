@@ -107,7 +107,22 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            # The `CallToolResult` class lives in the `mcp` package but
+            # its snake/camel-case attribute names have drifted across
+            # versions; both `structuredContent` and `structured_content`
+            # have been seen in the wild. Defensively accept either and
+            # fall back to the plain text content when neither is set.
+            structured = getattr(tool.result, "structuredContent", None)
+            if structured is None:
+                structured = getattr(tool.result, "structured_content", None)
+            if structured is not None and isinstance(structured, dict):
+                result = structured.get("result", structured)
+            else:
+                content = getattr(tool.result, "content", None)
+                if content:
+                    result = content[0].get("text", str(content[0]))
+                else:
+                    result = str(tool.result)
         else:
             args = tool.input_parameters
             result = tool.output
