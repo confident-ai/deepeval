@@ -107,7 +107,12 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            # MCP SDK has flip-flopped between camelCase and snake_case for
+            # this field across versions; tolerate both.
+            structured = getattr(tool.result, "structuredContent", None)
+            if structured is None:
+                structured = getattr(tool.result, "structured_content", None)
+            result = structured.get("result", structured) if structured else None
         else:
             args = tool.input_parameters
             result = tool.output
