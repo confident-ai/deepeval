@@ -283,3 +283,23 @@ class TestForLoopFlow:
 
         lex_sorted = sorted(target.glob("test_run_*.json"))
         assert lex_sorted == sorted(written, key=lambda p: p.name)
+
+class TestCorruptTempFileRecovers:
+    """A temp file with valid JSON that does not match the TestRun schema
+    (concurrent xdist writers, truncated-then-rewritten files, old schemas)
+    must degrade to a warning, not crash the whole evaluation."""
+
+    def test_get_test_run_warns_on_schema_mismatch(self, tmp_path: Path, monkeypatch, capsys):
+        temp_file = tmp_path / ".temp_test_run_data.json"
+        temp_file.write_text(json.dumps({"testCases": "not-a-list"}))
+
+        mgr = _TestRunManager()
+        mgr.set_test_run(_make_test_run())
+        monkeypatch.setattr(mgr, "temp_file_path", str(temp_file))
+        mgr.save_to_disk = True
+
+        run = mgr.get_test_run()  # must not raise ValidationError
+
+        assert run is mgr.test_run
+        err = capsys.readouterr().err
+        assert "Could not load test run from disk" in err
