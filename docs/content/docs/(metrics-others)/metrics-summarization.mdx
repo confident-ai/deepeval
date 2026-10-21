@@ -272,10 +272,6 @@ console.log(metric.score, metric.reason);
 
 </Switch>
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
-
 ## How Is It Calculated?
 
 You can change how the `SummarizationMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
@@ -291,7 +287,7 @@ To break it down, the:
 - The **alignment score** determines whether the summary contains hallucinated or contradictory information to the original text.
 - The **coverage score** determines whether the summary contains the necessary information from the original text.
 
-While the alignment score is similar to that of the [`HallucinationMetric`](/docs/metrics-hallucination), the coverage score is first calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', before calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
+While the alignment score is similar to that of the [`HallucinationMetric`](/docs/metrics-hallucination), the coverage score is first calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', before calculating the ratio of which the original text and summary yields the same answer.
 
 You can access both scores through a `SummarizationMetric`'s score breakdown as follows:
 

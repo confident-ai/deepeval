@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "file": "ai-agent-architecture.webp",
+      "title": "AI agent reasoning and action layers",
+      "alt": "AI agent where input triggers a loop between an LLM reasoning layer and a tools action layer, ending in output or handoff to other agents",
+      "width": 2400,
+      "height": 1076,
+      "source": {
+        "urls": [
+          "https://images.ctfassets.net/otwaplf7zuwf/U833Rl3xfX0xq7UCDbpgA/b57e854f9f8444639b12773f9cee77f8/ai-agent.png"
+        ]
+      }
+    },
+    {
+      "file": "chatbot-memory-loop.webp",
+      "title": "Multi-turn chatbot with conversation memory",
+      "alt": "Flowchart of a user sending input to a chatbot that reads history from memory, updates that memory, and returns a response to the user",
+      "width": 2215,
+      "height": 1071,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:multi-turn-chatbot.png"
+        ]
+      }
+    },
+    {
+      "file": "conversation-simulator-eval-loop.webp",
+      "title": "Conversation simulator evaluation loop",
+      "alt": "Flowchart where ConversationSimulator turns a chatbot's conversations into test cases for DeepEval evaluation, which improves the chatbot",
+      "width": 2400,
+      "height": 1117,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-simulator-chatbot.png"
+        ]
+      }
+    },
+    {
+      "file": "mcp-architecture.webp",
+      "title": "MCP architecture with host, clients and servers",
+      "alt": "MCP host LLM application containing three clients, each connected one-to-one with its own server via a two-way link",
+      "width": 1975,
+      "height": 817,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/mcp-architecture.png"
+        ]
+      }
+    },
+    {
+      "file": "mcp-tools-called-tracking.webp",
+      "title": "Tracking MCP tool calls as tools_called",
+      "alt": "MCP host with three clients and servers, where every client-server call is tapped into a single tools_called list on the right",
+      "width": 1975,
+      "height": 817,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-mcp-tools.png"
+        ]
+      }
+    }
+  ]
+}

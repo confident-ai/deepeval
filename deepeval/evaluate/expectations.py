@@ -44,6 +44,20 @@ _JUDGING_INSTRUCTIONS = (
     "unable_to_evaluate; do not invent evidence or assume success. "
 )
 
+_REASON_INSTRUCTIONS = """Given the score (1 only if every requirement below held) and each requirement's judged outcome, CONCISELY explain WHY the LLM system met or missed its expectations.
+
+Explain the behavior behind the outcome, don't list the requirements: lead with what failed and why, and name a shared cause once. Ground it in the evidence and refer to requirements by what they ask for, never by id.
+
+**
+IMPORTANT: Return only JSON with a 'reason' key.
+Example JSON:
+{
+  "reason": "The score is <score> because <your_reason>."
+}
+**
+
+"""
+
 
 class _Verdict(BaseModel):
     id: str
@@ -54,6 +68,10 @@ class _Verdict(BaseModel):
 
 class _Verdicts(BaseModel):
     verdicts: List[_Verdict]
+
+
+class _Reason(BaseModel):
+    reason: str
 
 
 class _ExpectationEvaluator:
@@ -105,6 +123,7 @@ class _ExpectationEvaluator:
         self.error = self.reason = self.score = self.success = None
         self.input_tokens = self.output_tokens = None
         self.verbose_logs = None
+        self.verdicts = None
         self.evaluation_cost = 0 if self.using_native_model else None
         conditions = [
             {"id": f"{kind}[{index}]", "kind": kind, "condition": condition}
@@ -131,19 +150,37 @@ class _ExpectationEvaluator:
             raise ValueError(
                 "Expectation judge returned missing, duplicate, or unknown verdict IDs."
             )
-        self.reason = "\n".join(
-            f"{condition['id']} {condition['condition']}: "
-            f"{by_id[condition['id']].status} — "
-            f"{by_id[condition['id']].reason} "
-            f"Evidence: {by_id[condition['id']].evidence}"
-            for condition in conditions
-        )
+        self.verdicts = [by_id[condition["id"]] for condition in conditions]
         self.verbose_logs = result.model_dump_json()
-        if any(v.status == "unable_to_evaluate" for v in result.verdicts):
-            raise ValueError(f"Unable to evaluate expectations:\n{self.reason}")
-        self.score = float(all(v.status == "pass" for v in result.verdicts))
+        if any(v.status == "unable_to_evaluate" for v in self.verdicts):
+            details = "\n".join(
+                f"{condition['id']} {condition['condition']}: "
+                f"{verdict.status} — {verdict.reason} "
+                f"Evidence: {verdict.evidence}"
+                for condition, verdict in zip(conditions, self.verdicts)
+            )
+            raise ValueError(f"Unable to evaluate expectations:\n{details}")
+        self.score = float(all(v.status == "pass" for v in self.verdicts))
         self.success = self.score == 1
         return self.score
+
+    def _reason_prompt(self, conditions):
+        verdicts = [
+            {
+                "kind": condition["kind"],
+                "condition": condition["condition"],
+                "status": verdict.status,
+                "reason": verdict.reason,
+                "evidence": verdict.evidence,
+            }
+            for condition, verdict in zip(conditions, self.verdicts)
+        ]
+        return (
+            _REASON_INSTRUCTIONS
+            + f"Score:\n{self.score}\n\n"
+            f"Requirements:\n{json.dumps(verdicts, ensure_ascii=False)}\n\n"
+            "JSON:\n"
+        )
 
     def _system_one_eval_spec(self, test_case):
         conditions, _ = self._prepare(test_case)
@@ -182,7 +219,16 @@ class _ExpectationEvaluator:
             extract_schema=lambda result: result,
             extract_json=_Verdicts.model_validate,
         )
-        return self._finish(conditions, result)
+        self._finish(conditions, result)
+        if self.include_reason:
+            self.reason = generate_with_schema_and_extract(
+                self,
+                self._reason_prompt(conditions),
+                _Reason,
+                extract_schema=lambda result: result.reason,
+                extract_json=lambda data: data["reason"],
+            )
+        return self.score
 
     async def a_measure(self, test_case, *args, **kwargs):
         if await a_run_system_one_eval(self, test_case):
@@ -195,7 +241,16 @@ class _ExpectationEvaluator:
             extract_schema=lambda result: result,
             extract_json=_Verdicts.model_validate,
         )
-        return self._finish(conditions, result)
+        self._finish(conditions, result)
+        if self.include_reason:
+            self.reason = await a_generate_with_schema_and_extract(
+                self,
+                self._reason_prompt(conditions),
+                _Reason,
+                extract_schema=lambda result: result.reason,
+                extract_json=lambda data: data["reason"],
+            )
+        return self.score
 
 
 class _SingleTurnExpectations(_ExpectationEvaluator, BaseMetric):

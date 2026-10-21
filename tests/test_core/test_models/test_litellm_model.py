@@ -175,3 +175,40 @@ def test_litellm_cost_uses_user_pricing(settings):
 def test_litellm_cost_handles_missing_usage_gracefully(settings):
     model = _mk_litellm_model(settings)
     assert model._response_cost(SimpleNamespace()) is None
+
+
+def test_litellm_model_name_resolves_provider_with_configured_region(
+    monkeypatch, settings
+):
+    calls = {}
+
+    def fake_get_llm_provider(model, api_base=None, litellm_params=None):
+        calls["model"] = model
+        calls["api_base"] = api_base
+        calls["litellm_params"] = litellm_params
+        return "resolved-provider"
+
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm",
+        types.SimpleNamespace(get_llm_provider=fake_get_llm_provider),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm.types.router",
+        types.SimpleNamespace(GenericLiteLLMParams=dict),
+    )
+
+    model = LiteLLMModel(
+        model="bedrock_mantle/openai.gpt-oss-120b",
+        api_key="test-key",
+        aws_region_name="us-east-1",
+    )
+
+    assert (
+        model.get_model_name()
+        == "bedrock_mantle/openai.gpt-oss-120b (resolved-provider)"
+    )
+    assert calls["model"] == "bedrock_mantle/openai.gpt-oss-120b"
+    assert calls["api_base"] is None
+    assert calls["litellm_params"] == {"aws_region_name": "us-east-1"}

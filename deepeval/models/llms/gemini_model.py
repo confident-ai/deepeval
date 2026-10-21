@@ -1,21 +1,26 @@
 import json
-import base64
 from pydantic import BaseModel, SecretStr
 from typing import TYPE_CHECKING, Optional, Dict, List, Union, Tuple
 
 from deepeval.errors import DeepEvalError
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
-from deepeval.models.utils import require_secret_api_key, EvaluationCost
+from deepeval.models.utils import (
+    EvaluationCost,
+    require_secret_api_key,
+    token_cost,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
-from deepeval.utils import (
-    convert_to_multi_modal_array,
-    check_if_multimodal,
-    require_dependency,
-)
+from deepeval.utils import require_dependency
 from deepeval.models.base_model import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import (
+    audio_format,
+    decode_image,
+    fetch_remote_image,
+    multimodal_parts,
+)
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.llms.constants import (
     GEMINI_MODELS_DATA,
@@ -196,46 +201,24 @@ class GeminiModel(DeepEvalBaseLLM):
             return False
 
     @retry_gemini
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = (
-            multimodal_input if multimodal_input is not None else []
-        )
-        content = []
+    def _prompt_contents(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> Union[str, List]:
+        parts = multimodal_parts(prompt, audio)
+        if parts is None:
+            return prompt
 
-        for element in multimodal_input:
+        content = []
+        for element in parts:
             if isinstance(element, str):
                 content.append(element)
             elif isinstance(element, MLLMImage):
                 # Gemini doesn't support direct external URLs
                 # Must convert all images to bytes
                 if element.url and not element.local:
-                    import requests
-
-                    settings = get_settings()
-
-                    response = requests.get(
-                        element.url,
-                        timeout=(
-                            settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                            settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                        ),
-                    )
-                    response.raise_for_status()
-                    image_data = response.content
-                    mime_type = response.headers.get(
-                        "content-type", element.mimeType or "image/jpeg"
-                    )
+                    image_data, mime_type = fetch_remote_image(element)
                 else:
-                    element.ensure_images_loaded()
-                    try:
-                        image_data = base64.b64decode(element.dataBase64)
-                    except Exception:
-                        raise ValueError(
-                            f"Invalid base64 data in MLLMImage: {element._id}"
-                        )
-
+                    image_data = decode_image(element)
                     mime_type = element.mimeType or "image/jpeg"
 
                 # Create Part from bytes
@@ -243,6 +226,14 @@ class GeminiModel(DeepEvalBaseLLM):
                     data=image_data, mime_type=mime_type
                 )
                 content.append(image_part)
+            elif isinstance(element, Audio):
+                # Inline bytes; remote clips are downloaded first
+                content.append(
+                    self._module.types.Part.from_bytes(
+                        data=element.get_bytes(),
+                        mime_type=f"audio/{audio_format(element)}",
+                    )
+                )
             else:
                 raise DeepEvalError(f"Invalid input type: {type(element)}")
 
@@ -254,27 +245,29 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         """Generates text from a prompt.
 
         Args:
             prompt: Text prompt
             schema: Optional Pydantic model for structured output
+            audio: Optional audio clips sent after the prompt
 
         Returns:
             Generated text response or structured output as Pydantic model
         """
         client = self.load_model()
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_content(prompt)
+        contents = self._prompt_contents(prompt, audio)
 
         if schema is not None:
             response = client.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
@@ -287,7 +280,7 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             response = client.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     **self._temperature_kwargs(),
@@ -298,27 +291,29 @@ class GeminiModel(DeepEvalBaseLLM):
 
     @retry_gemini
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         """Asynchronously generates text from a prompt.
 
         Args:
             prompt: Text prompt
             schema: Optional Pydantic model for structured output
+            audio: Optional audio clips sent after the prompt
 
         Returns:
             Generated text response or structured output as Pydantic model
         """
         client = self.load_model()
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(prompt)
-            prompt = self.generate_content(prompt)
+        contents = self._prompt_contents(prompt, audio)
 
         if schema is not None:
             response = await client.aio.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     response_mime_type="application/json",
                     response_schema=schema,
@@ -331,7 +326,7 @@ class GeminiModel(DeepEvalBaseLLM):
         else:
             response = await client.aio.models.generate_content(
                 model=self.name,
-                contents=prompt,
+                contents=contents,
                 config=self._module.types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     **self._temperature_kwargs(),
@@ -353,14 +348,11 @@ class GeminiModel(DeepEvalBaseLLM):
         return {"temperature": self.temperature}
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
     ) -> Optional[EvaluationCost]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     def _token_cost(self, response) -> EvaluationCost:
         usage = getattr(response, "usage_metadata", None)
@@ -370,8 +362,18 @@ class GeminiModel(DeepEvalBaseLLM):
         thoughts_tokens = getattr(usage, "thoughts_token_count", None)
         if isinstance(thoughts_tokens, int) and thoughts_tokens > 0:
             output_tokens = (output_tokens or 0) + thoughts_tokens
+        modality_details = getattr(usage, "prompt_tokens_details", None)
+        audio_input_tokens = sum(
+            detail.token_count or 0
+            for detail in (
+                modality_details if isinstance(modality_details, list) else []
+            )
+            if detail.modality == "AUDIO"
+        )
         if input_tokens is not None and output_tokens is not None:
-            cost = self.calculate_cost(input_tokens, output_tokens)
+            cost = self.calculate_cost(
+                input_tokens, output_tokens, audio_input_tokens
+            )
             if cost is not None:
                 return cost
         return EvaluationCost(None, input_tokens, output_tokens)
@@ -388,6 +390,9 @@ class GeminiModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         """

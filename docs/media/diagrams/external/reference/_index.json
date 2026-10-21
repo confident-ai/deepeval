@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "file": "elastic-rag-in-action.webp",
+      "title": "Elastic RAG in action diagram",
+      "alt": "Elastic diagram of RAG: a user question is embedded for similarity search in a vector DB, and similar passages feed a prompt to an LLM",
+      "width": 1600,
+      "height": 900,
+      "source": {
+        "urls": [
+          "https://images.contentstack.io/v3/assets/bltefdd0b53724fa2ce/blt1496b19e4c6f9e66/66ba412a46b3f4241b969f48/rag-in-action.jpeg"
+        ]
+      }
+    },
+    {
+      "file": "g-eval-algorithm.webp",
+      "title": "G-Eval framework overview from the paper",
+      "alt": "G-Eval figure: task introduction and criteria produce CoT evaluation steps, then an LLM fills a form and weighted scores are summed",
+      "width": 1580,
+      "height": 980,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:g-eval:algorithm.png"
+        ]
+      }
+    },
+    {
+      "file": "g-eval-summeval-correlations.webp",
+      "title": "G-Eval correlations on SummEval benchmark",
+      "alt": "Table of Spearman and Kendall-Tau correlations on SummEval, where G-Eval-4 beats ROUGE, BERTScore, BARTScore, UniEval and GPTScore",
+      "width": 1574,
+      "height": 806,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:g-eval:results.png"
+        ]
+      }
+    },
+    {
+      "file": "qdrant-rag-sketch.webp",
+      "title": "Hand-drawn RAG flow with Qdrant",
+      "alt": "Hand-drawn sketch of a user query embedded and searched against document embeddings in Qdrant, with context and query passed to an LLM",
+      "width": 720,
+      "height": 419,
+      "source": {
+        "urls": [
+          "https://miro.medium.com/v2/resize:fit:720/format:webp/1*d_t9FzfdZyelyzBx_CVUNA.png"
+        ]
+      }
+    },
+    {
+      "file": "weaviate-rag-pipeline.webp",
+      "title": "Weaviate RAG pipeline diagram",
+      "alt": "RAG pipeline where documents are chunked and embedded into a Weaviate vector database, and retrieved context fills an LLM prompt template",
+      "width": 2400,
+      "height": 1200,
+      "source": {
+        "urls": [
+          "https://weaviate.io/assets/images/rag-base-00430efd1764c948a95b4d1bbd1e19a9.png"
+        ]
+      }
+    }
+  ]
+}

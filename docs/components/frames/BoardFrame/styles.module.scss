@@ -1,0 +1,231 @@
+@import "../vars";
+@import "../FrameShell/frame";
+
+.plot {
+  // tokens:start
+  $relative-color: "(color: oklch(from red l c h))";
+
+  // Every color a board draws. Sizes (--board-text-xs … --board-text-lg) are set on the <svg> from
+  // _tokens.ts, the same numbers layout measures text with. Nothing below the tokens mixes a color or
+  // names a pixel size.
+  --board-surface: var(--bg-card);
+  --board-ink: var(--text-primary);
+  --board-text: var(--text-primary);
+  --board-text-muted: var(--text-secondary);
+  --board-frame: var(--border-strong);
+  --board-card-fill: color-mix(in srgb, var(--text-secondary) 6%, var(--bg-card));
+
+  @supports #{$relative-color} {
+    --board-surface: oklch(from var(--bg-card) max(l, 0.24) c h);
+    --board-ink: oklch(from var(--text-primary) min(l, 0.82) c h);
+    --board-card-fill: color-mix(in srgb, var(--text-secondary) 6%, oklch(from var(--bg-card) max(l, 0.24) c h));
+  }
+
+  // Anything drawn in a chart color: its fill, stroke and hatch, from the --mark-color it's given.
+  .tinted {
+    --mark-fill: color-mix(in srgb, var(--mark-color) 12%, var(--board-surface));
+    --mark-stroke: color-mix(in srgb, var(--mark-color) 60%, var(--board-surface));
+    --mark-hatch: color-mix(in srgb, var(--mark-color) 20%, transparent);
+    --mark-icon: color-mix(in srgb, var(--mark-color) 88%, var(--board-ink));
+    --mark-wash: color-mix(in srgb, var(--mark-color) 8%, transparent);
+
+    @supports #{$relative-color} {
+      --mark-fill: oklch(from color-mix(in srgb, var(--mark-color) 12%, var(--board-surface)) max(l, 0.3) calc(c * (2.2 - 1.2 * l)) h);
+      --mark-hatch: oklch(from color-mix(in srgb, var(--mark-color) 26%, var(--board-surface)) l c h / clamp(0.2, calc(l * 1.4 - 0.4), 1));
+    }
+  }
+
+  // A box and the rules dividing it share one stroke, so they can't disagree.
+  .box {
+    --box-fill: var(--board-surface);
+    --box-wash: none;
+    --box-stroke: var(--board-ink);
+
+    &.tinted {
+      --box-fill: var(--mark-fill);
+      --box-wash: var(--mark-wash);
+      --box-stroke: var(--mark-stroke);
+    }
+  }
+  // tokens:end
+
+  display: block;
+  width: 100%;
+  height: auto;
+  // No board taller than most of the screen: a taller one scales down to fit, so readers never lose their place in it.
+  max-height: 60vh;
+  margin: 4px auto 0;
+  overflow: visible;
+
+  .code {
+    font-family: $DM_MONO;
+  }
+
+  .codeChip {
+    fill: color-mix(in srgb, var(--board-text) 9%, transparent);
+  }
+
+  .text {
+    fill: var(--board-text);
+
+    &[data-tier="xs"] {
+      font-size: var(--board-text-xs);
+    }
+
+    &[data-tier="sm"] {
+      font-size: var(--board-text-sm);
+    }
+
+    &[data-tier="md"] {
+      font-size: var(--board-text-md);
+    }
+
+    &[data-tier="lg"] {
+      font-size: var(--board-text-lg);
+    }
+
+    &[data-tone="muted"] {
+      fill: var(--board-text-muted);
+    }
+
+    &[data-weight="medium"] {
+      font-weight: $FONT_MEDIUM;
+    }
+
+    &[data-halo] {
+      @include halo;
+      stroke: var(--board-surface);
+    }
+  }
+
+  .panel {
+    fill: var(--board-surface);
+    stroke: var(--board-frame);
+    stroke-width: 1.25;
+
+    &[data-border="none"] {
+      stroke: none;
+    }
+  }
+
+  .tree {
+    fill: none;
+    stroke: var(--board-ink);
+
+    &[data-border="dashed"] {
+      stroke-dasharray: 6 5;
+    }
+  }
+
+  .boxShape {
+    fill: var(--box-fill);
+    stroke: var(--box-stroke);
+  }
+
+  .setShape {
+    fill: var(--box-wash);
+    stroke: var(--box-stroke);
+  }
+
+  .rule {
+    fill: none;
+    stroke: var(--box-stroke);
+  }
+
+  .boxShape,
+  .setShape,
+  .rule {
+    &[data-border="dashed"] {
+      stroke-dasharray: 6 5;
+    }
+  }
+
+  .mark {
+    fill: var(--mark-fill);
+    stroke: var(--mark-stroke);
+  }
+
+  .note {
+    fill: var(--board-surface);
+    stroke: var(--board-frame);
+  }
+
+  .hatchFill {
+    stroke: none;
+  }
+
+  .hatch {
+    stroke: var(--mark-hatch);
+    stroke-width: 1.2;
+  }
+
+  .brand {
+    fill: var(--board-ink);
+
+    &.tinted {
+      fill: var(--mark-icon);
+    }
+  }
+
+  .lineIcon {
+    color: var(--board-ink);
+
+    &.tinted {
+      color: var(--mark-icon);
+    }
+  }
+
+  .line {
+    fill: none;
+    stroke: var(--board-ink);
+
+    &[data-dashed] {
+      stroke-dasharray: 4 4;
+    }
+  }
+
+  .arrowHead,
+  .ellipsis {
+    fill: var(--board-ink);
+  }
+
+  .pulloutLine {
+    --line-color: var(--board-text-muted);
+    --end-color: var(--board-ink);
+
+    &[data-colored] {
+      --line-color: var(--mark-color);
+      --end-color: var(--mark-color);
+    }
+  }
+
+  .leader {
+    fill: none;
+    stroke: var(--line-color);
+    stroke-linecap: round;
+
+    &[data-style="dashed"] {
+      stroke-dasharray: 5 4;
+    }
+  }
+
+  .endHollow {
+    fill: var(--board-surface);
+    stroke: var(--end-color);
+  }
+
+  .endSolid {
+    fill: var(--end-color);
+  }
+
+  .lens {
+    fill: var(--board-surface);
+    stroke: var(--board-ink);
+    stroke-width: 1.25;
+  }
+
+  .card {
+    fill: var(--board-card-fill);
+    stroke: var(--board-text-muted);
+  }
+}

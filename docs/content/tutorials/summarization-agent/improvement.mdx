@@ -55,7 +55,7 @@ print(len(summary_test_cases))
 print(len(action_item_test_cases))
 ```
 
-You can use these test cases to evaluate your summarizer anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
+You can use these test cases to evaluate your summarizer anywhere and anytime. This assumes you pushed the dataset with `dataset.push()` in the previous section, since `pull()` loads it from Confident AI. See [evaluation datasets](/docs/evaluation-datasets) to learn more.
 
 ## Iterating On Hyperparameters
 
@@ -189,9 +189,9 @@ for model in models:
 ```
 
 :::tip
-By logging hyperparameters in the evaluate function, you can easily compare performance across runs in [Confident AI](https://www.confident-ai.com) and trace score changes back to specific hyperparameter adjustments. Learn more about [the evaluate function here](https://deepeval.com/docs/evaluation-introduction#evaluating-without-pytest).
+Logging hyperparameters in `evaluate()` saves them with each test run, so you can trace score changes back to specific hyperparameter adjustments. Switch to the SQLite [local backend](/docs/evaluation-local-backend-storage) if you want to query scores by model across runs, and see the [evaluation introduction](/docs/evaluation-introduction) for more on `evaluate()`.
 
-Here's an example of how you can set up [**Confident AI**](https://deepeval.com/tutorials/tutorial-setup) to check the results in a report format that also provides details on hyperparameters used for test runs:
+If you're logged in to [Confident AI](https://deepeval.com/tutorials/tutorial-setup), each test run also shows the hyperparameters it was run with:
 
 <div
   style={{
@@ -209,7 +209,7 @@ Here's an example of how you can set up [**Confident AI**](https://deepeval.com/
   </video>
 </div>
 
-To get started, run the following command:
+To log in, run the following command:
 
 ```bash
 deepeval login

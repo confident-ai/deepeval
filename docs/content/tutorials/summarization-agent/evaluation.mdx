@@ -5,8 +5,6 @@ sidebar_label: Evaluate Your Summarizer
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In the previous section, we built a meeting summarization agent that:
 
 - Generates summaries
@@ -14,7 +12,7 @@ In the previous section, we built a meeting summarization agent that:
 
 To evaluate an LLM application like a summarization agent, we'll use single-turn [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases)s from `deepeval`
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="Single-turn LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 Our summarization agent is a single-turn LLM application. That means we supply a transcript as `input`, the agent generates a summary and a list of action items as output. In code, such unit interactions are represented by an `LLMTestCase`:
 
@@ -47,7 +45,7 @@ For evaluating a summarization agent like ours, there is one main approach we ca
 Having to maintain a database to store meeting transcripts might not be feasible and accessing them everytime may also prove to be hard. In such cases, we can use `deepeval`'s [datasets](https://deepeval.com/docs/evaluation-datasets).
 They are simply a collection of `Golden`s that can be stored in cloud and pulled anytime with just a few lines of code. They allow you to create test cases during run time by calling your LLM.
 
-<ImageDisplayer src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
+<ImageDisplayer id="diagrams/in-house/datasets/goldens-to-test-cases" />
 
 <details>
 <summary><strong>Click here to learn about <code>Golden</code> in DeepEval</strong></summary>
@@ -224,9 +222,9 @@ evaluate(
 - Create test cases for our summarization agent and evaluate it using `deepeval`
 - Create datasets to store your inputs and use them anytime to generate test cases on-the-fly during run time
 
-You can also run `deepeval view` to see the results of evals on Confident AI:
+You can also run `deepeval view` to open this test run on Confident AI:
 
-<ImageDisplayer src={ASSETS.tutorialSummarizationEvalResults} alt="Eval results for summarizer" />
+<ImageDisplayer id="platform/evaluation/test-run-overview" />
 
 ### Evaluation Results
 

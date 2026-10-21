@@ -3,6 +3,7 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import multimodal_parts, reject_audio
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -13,9 +14,9 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    token_cost,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency, require_param
@@ -190,9 +191,12 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     @retry_anthropic
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        content = self._prompt_content(prompt)
+        content = self._prompt_content(prompt, audio)
         module = self._anthropic_module()
         chat_model = self.load_model()
         output_format = self._output_format(module, schema)
@@ -213,9 +217,12 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     @retry_anthropic
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        content = self._prompt_content(prompt)
+        content = self._prompt_content(prompt, audio)
         module = self._anthropic_module()
         chat_model = self.load_model(async_mode=True)
         output_format = self._output_format(module, schema)
@@ -232,11 +239,41 @@ class AnthropicModel(DeepEvalBaseLLM):
             )
         return self._parse_message(message, schema)
 
-    def _prompt_content(self, prompt) -> List[Dict]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            return self.generate_content(prompt)
-        return [{"type": "text", "text": prompt}]
+    def _prompt_content(
+        self, prompt, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        # The Messages API has no audio content block.
+        reject_audio(audio, "AnthropicModel")
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            return [{"type": "text", "text": prompt}]
+
+        content = []
+        for element in parts:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": element.dataBase64,
+                            },
+                        }
+                    )
+        return content
 
     def _output_format(
         self, module, schema: Optional[BaseModel]
@@ -345,45 +382,14 @@ class AnthropicModel(DeepEvalBaseLLM):
             }
         }
 
-    def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {"type": "url", "url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    mime_type = element.mimeType or "image/jpeg"
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": mime_type,
-                                "data": element.dataBase64,
-                            },
-                        }
-                    )
-        return content
-
     ###############################################
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[EvaluationCost]:
+        return token_cost(self.model_data, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #
@@ -397,6 +403,9 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> bool:
+        return False
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs

@@ -3,32 +3,32 @@ import styles from "./EnterpriseComparisonTable.module.scss";
 
 const ROWS = [
   {
-    confident: "Shared evaluation workspace",
-    deepeval: "Testing results live in local files",
-  },
-  {
-    confident: "No-code eval workflows",
-    deepeval: "Local and CI/CD test runner",
-  },
-  {
-    confident: "Production observability + tracing",
-    deepeval: "Limited to pre-production testing",
-  },
-  {
-    confident: "Online eval monitoring",
-    deepeval: "Bring your own eval infra",
-  },
-  {
-    confident: "Managed regression workflows",
-    deepeval: "Engineer-owned test suites",
+    confident: "One quality standard across every team",
+    deepeval: "Each team's evals live in its own code",
   },
   {
     confident: "Centralized metrics",
     deepeval: "Metrics scattered in code",
   },
   {
-    confident: "Annotation queues for SMEs",
+    confident: "AI governance as release gates",
+    deepeval: "Pass/fail per test suite",
+  },
+  {
+    confident: "Evals on every production trace",
+    deepeval: "Evals in development and CI/CD",
+  },
+  {
+    confident: "Failing traces become goldens for the next eval",
+    deepeval: "Goldens curated by hand",
+  },
+  {
+    confident: "Traces routed to the right annotators",
     deepeval: "Developer-mediated annotation",
+  },
+  {
+    confident: "Red teaming in the same system",
+    deepeval: "Red teaming set up separately",
   },
   {
     confident: "Enterprise controls",
@@ -44,8 +44,8 @@ const EnterpriseComparisonTable: React.FC = () => {
       aria-label="DeepEval and Confident AI comparison"
     >
       <div className={styles.header} role="row">
-        <div role="columnheader">DeepEval Enterprise</div>
-        <div role="columnheader">DeepEval OS</div>
+        <div role="columnheader">Confident AI</div>
+        <div role="columnheader">DeepEval</div>
       </div>
       <div className={styles.body}>
         {ROWS.map((row) => (
