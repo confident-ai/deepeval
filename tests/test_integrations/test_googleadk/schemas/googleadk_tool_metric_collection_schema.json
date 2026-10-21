@@ -1,108 +1,185 @@
 {
-  "uuid": "d77fcac64c5f1716d9808312bf58492a",
-  "baseSpans": [],
-  "agentSpans": [
+  "uuid": "4e16d5bc109dff4e1774ad91613b5962",
+  "baseSpans": [
     {
-      "uuid": "f239937c0861dc3a",
-      "name": "invocation [deepeval-googleadk-tool]",
+      "uuid": "3ebad6c0e12bd321",
+      "name": "invocation",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-07T09:06:26.773Z",
-      "endTime": "2026-05-07T09:06:31.499Z",
-      "input": "{\"user_id\": \"test-user\", \"session_id\": \"97a2b7d5-b361-41e2-ba97-1fbc972b76d8\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 15 plus 25?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
-      "availableTools": [],
-      "agentHandoffs": [],
+      "type": "base",
+      "startTime": "2026-10-21T16:42:43.441Z",
+      "endTime": "2026-10-21T16:42:45.938Z",
       "integration": "Google ADK"
     },
     {
-      "uuid": "a97422315a6196e6",
+      "uuid": "16a4847283cd6725",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f6bb8b7893bf6602",
+      "startTime": "2026-10-21T16:42:44.880Z",
+      "endTime": "2026-10-21T16:42:45.934Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "7476430dedcb72c5",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "28f8cbc66b28c119",
+      "startTime": "2026-10-21T16:42:43.447Z",
+      "endTime": "2026-10-21T16:42:44.877Z",
+      "integration": "Google ADK"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "77c0fbd79e90124e",
       "name": "calculator_assistant",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "f239937c0861dc3a",
-      "startTime": "2026-05-07T09:06:26.773Z",
-      "endTime": "2026-05-07T09:06:31.499Z",
-      "input": [],
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
+      "parentUuid": "3ebad6c0e12bd321",
+      "startTime": "2026-10-21T16:42:43.443Z",
+      "endTime": "2026-10-21T16:42:45.937Z",
+      "input": "What is 15 plus 25?",
+      "output": "40",
+      "integration": "Google ADK",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
+          "output": 40,
+          "inputParameters": {
+            "b": 25,
+            "operation": "add",
+            "a": 15
+          }
+        }
+      ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Google ADK"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "d7d60f532ba1af22",
+      "uuid": "f6bb8b7893bf6602",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a97422315a6196e6",
-      "startTime": "2026-05-07T09:06:29.630Z",
-      "endTime": "2026-05-07T09:06:31.499Z",
-      "input": "{\"result\": 40}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217}}",
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 202.0,
-      "outputTokenCount": 15.0,
+      "parentUuid": "77c0fbd79e90124e",
+      "startTime": "2026-10-21T16:42:44.880Z",
+      "endTime": "2026-10-21T16:42:45.936Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "What is 15 plus 25?"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "b": 25,
+              "operation": "add",
+              "a": 15
+            }
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "response": {
+              "result": 40
+            }
+          }
+        }
+      ],
+      "output": "40",
       "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 200.0,
+      "outputTokenCount": 2.0
     },
     {
-      "uuid": "db1de588f20897fd",
+      "uuid": "28f8cbc66b28c119",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a97422315a6196e6",
-      "startTime": "2026-05-07T09:06:26.774Z",
-      "endTime": "2026-05-07T09:06:29.628Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\".",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"a\":15,\"operation\":\"add\",\"b\":25},\"name\":\"calculate\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":25,\"prompt_token_count\":163,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":163}],\"total_token_count\":188}}",
+      "parentUuid": "77c0fbd79e90124e",
+      "startTime": "2026-10-21T16:42:43.444Z",
+      "endTime": "2026-10-21T16:42:44.879Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "What is 15 plus 25?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "b": 25,
+              "operation": "add",
+              "a": 15
+            }
+          }
+        }
+      ],
+      "integration": "Google ADK",
       "toolsCalled": [
         {
           "name": "calculate",
           "type": "FUNCTION",
           "inputParameters": {
-            "a": 15,
+            "b": 25,
             "operation": "add",
-            "b": 25
+            "a": 15
           }
         }
       ],
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 163.0,
-      "outputTokenCount": 25.0,
-      "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 161.0,
+      "outputTokenCount": 72.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f3c9b41ae4fbf6c5",
+      "uuid": "aed010704200c98a",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "db1de588f20897fd",
-      "startTime": "2026-05-07T09:06:29.626Z",
-      "endTime": "2026-05-07T09:06:29.627Z",
-      "input": "{\"a\": 15, \"operation\": \"add\", \"b\": 25}",
-      "output": "{\"id\":\"adk-129533b3-95e9-43f0-915b-07c4e2c0f635\",\"name\":\"calculate\",\"response\":{\"result\":40}}",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {
-            "a": 15,
-            "operation": "add",
-            "b": 25
-          }
-        }
-      ],
-      "integration": "Google ADK"
+      "parentUuid": "77c0fbd79e90124e",
+      "startTime": "2026-10-21T16:42:44.878Z",
+      "endTime": "2026-10-21T16:42:44.878Z",
+      "input": {
+        "b": 25,
+        "operation": "add",
+        "a": 15
+      },
+      "output": 40,
+      "integration": "Google ADK",
+      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
+      "metricCollection": "calculator-metrics"
     }
   ],
-  "startTime": "2026-05-07T09:06:26.773Z",
-  "endTime": "2026-05-07T09:06:31.499Z",
+  "startTime": "2026-10-21T16:42:43.441Z",
+  "endTime": "2026-10-21T16:42:45.938Z",
   "name": "googleadk-tool-metric-test",
   "metadata": {
     "test_type": "tool_metric_collection"
@@ -115,7 +192,20 @@
   "environment": "development",
   "threadId": "tool-metric-123",
   "userId": "test-user",
-  "input": "{\"user_id\": \"test-user\", \"session_id\": \"97a2b7d5-b361-41e2-ba97-1fbc972b76d8\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 15 plus 25?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The sum of 15 and 25 is 40.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":15,\"prompt_token_count\":202,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":202}],\"total_token_count\":217},\"invocation_id\":\"e-a40ea599-4cc6-4307-8972-7e028a6a293d\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"09f807bc-224e-4e40-aa26-b67c58b3aa46\",\"timestamp\":1778144789.630004}",
-  "status": "SUCCESS"
+  "input": "What is 15 plus 25?",
+  "output": "40",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
+      "output": 40,
+      "inputParameters": {
+        "b": 25,
+        "operation": "add",
+        "a": 15
+      }
+    }
+  ]
 }

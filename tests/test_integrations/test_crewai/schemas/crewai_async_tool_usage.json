@@ -1,42 +1,308 @@
 {
-  "uuid": "87a8a030-0d06-4397-94ed-bf20c431d1c8",
+  "uuid": "90bfb59fef35ab546e3a4511c1b2927d",
   "baseSpans": [
     {
-      "uuid": "b90fcad2-1e2e-4027-adb5-d7349aafd979",
-      "name": "kickoff_async",
+      "uuid": "076994a0671bf33f",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:32.899Z",
-      "endTime": "2026-06-01T17:24:35.264Z",
-      "input": {},
-      "output": "Weather in Tokyo: Clear, 70\u00b0F",
-      "integration": "CrewAI"
-    },
-    {
-      "uuid": "f52c94e6-b2ea-4fbc-ba9e-571bd494f8d8",
-      "name": "kickoff",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "b90fcad2-1e2e-4027-adb5-d7349aafd979",
-      "startTime": "2026-06-01T17:24:32.899Z",
-      "endTime": "2026-06-01T17:24:35.264Z",
+      "startTime": "2026-10-21T17:48:02.107Z",
+      "endTime": "2026-10-21T17:48:04.149Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
       "integration": "CrewAI"
+    },
+    {
+      "uuid": "a260517def31a97a",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "076994a0671bf33f",
+      "startTime": "2026-10-21T17:48:02.399Z",
+      "endTime": "2026-10-21T17:48:04.141Z",
+      "input": {
+        "description": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.",
+        "context": ""
+      },
+      "output": "Weather in Tokyo: Clear, 70\u00b0F",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "c023b723336a72bb",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "008770a2517c1f69",
+      "startTime": "2026-10-21T17:48:02.403Z",
+      "endTime": "2026-10-21T17:48:04.135Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "832b640224603fa4",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:04.129Z",
+      "endTime": "2026-10-21T17:48:04.129Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "189d6e2f881b06d0",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:04.128Z",
+      "endTime": "2026-10-21T17:48:04.128Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b3c5bb9f775d8cbd",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:04.127Z",
+      "endTime": "2026-10-21T17:48:04.128Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "8c5cdc60a25d16f2",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:04.126Z",
+      "endTime": "2026-10-21T17:48:04.127Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5edca6d28e9e832e",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:04.117Z",
+      "endTime": "2026-10-21T17:48:04.125Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "22567652bd23640f",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.276Z",
+      "endTime": "2026-10-21T17:48:04.117Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a387f5f778f2bdbc",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.276Z",
+      "endTime": "2026-10-21T17:48:03.276Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "38c62db777fab5ec",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.275Z",
+      "endTime": "2026-10-21T17:48:03.276Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b01c3461623dfbf0",
+      "name": "node increment_and_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.275Z",
+      "endTime": "2026-10-21T17:48:03.275Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1271daddfa89737e",
+      "name": "node check_native_todo_completion",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.274Z",
+      "endTime": "2026-10-21T17:48:03.275Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "todo_not_satisfied",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "39b0637d09769496",
+      "name": "node execute_native_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:03.267Z",
+      "endTime": "2026-10-21T17:48:03.274Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_completed",
+      "integration": "CrewAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Weather in Tokyo: Clear, 70\u00b0F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "729f1fc2e383b416",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:02.409Z",
+      "endTime": "2026-10-21T17:48:03.267Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_calls",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "165c0dd7d0f6c923",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:02.409Z",
+      "endTime": "2026-10-21T17:48:02.409Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "2bffae13a3d58260",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:02.407Z",
+      "endTime": "2026-10-21T17:48:02.408Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "aa53581c3ca99fb2",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:02.406Z",
+      "endTime": "2026-10-21T17:48:02.406Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "331a380c6aaa7eda",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c023b723336a72bb",
+      "startTime": "2026-10-21T17:48:02.405Z",
+      "endTime": "2026-10-21T17:48:02.406Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "5ce68601-af62-4002-aeef-fd5d8d0fc163",
-      "name": "execute_task",
+      "uuid": "008770a2517c1f69",
+      "name": "Meteorologist",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "f52c94e6-b2ea-4fbc-ba9e-571bd494f8d8",
-      "startTime": "2026-06-01T17:24:32.908Z",
-      "endTime": "2026-06-01T17:24:35.257Z",
-      "input": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "a260517def31a97a",
+      "startTime": "2026-10-21T17:48:02.399Z",
+      "endTime": "2026-10-21T17:48:04.140Z",
+      "input": {
+        "description": "Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.",
+        "context": ""
+      },
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
       "integration": "CrewAI",
       "toolsCalled": [
@@ -55,81 +321,65 @@
   ],
   "llmSpans": [
     {
-      "uuid": "4a7c947c-5cfa-4e03-abfc-5d9a9311d9ce",
-      "name": "call",
+      "uuid": "91c99e21737862ae",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5ce68601-af62-4002-aeef-fd5d8d0fc163",
-      "startTime": "2026-06-01T17:24:34.303Z",
-      "endTime": "2026-06-01T17:24:35.251Z",
+      "parentUuid": "22567652bd23640f",
+      "startTime": "2026-10-21T17:48:03.277Z",
+      "endTime": "2026-10-21T17:48:04.115Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather",
-          "cache_breakpoint": true
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_NSzehTBPtzwSDe8rzCEKb96u",
-              "type": "function",
-              "function": {
-                "name": "'get_weather'",
-                "arguments": "'{\"city\":\"Tokyo\"}'"
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_BlLsZ5ipRhxFgCg3S1f6ye1G",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Tokyo"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "tool_call_id": "call_NSzehTBPtzwSDe8rzCEKb96u",
-          "name": "get_weather",
-          "content": "Weather in Tokyo: Clear, 70\u00b0F"
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_BlLsZ5ipRhxFgCg3S1f6ye1G",
+            "response": "Weather in Tokyo: Clear, 70\u00b0F"
+          }
         }
       ],
-      "output": "Weather in Tokyo: Clear, 70\u00b0F",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "8b00b95d-3032-4a09-95cd-8319b41bf484",
-      "name": "call",
+      "uuid": "efecfe5cc81ff576",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5ce68601-af62-4002-aeef-fd5d8d0fc163",
-      "startTime": "2026-06-01T17:24:32.914Z",
-      "endTime": "2026-06-01T17:24:34.294Z",
+      "parentUuid": "729f1fc2e383b416",
+      "startTime": "2026-10-21T17:48:02.410Z",
+      "endTime": "2026-10-21T17:48:03.259Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather",
-          "cache_breakpoint": true
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Check the weather in Tokyo. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
-      "output": [
-        {
-          "id": "call_NSzehTBPtzwSDe8rzCEKb96u",
-          "function": {
-            "arguments": "{\"city\":\"Tokyo\"}",
-            "name": "get_weather"
-          },
-          "type": "function"
-        }
-      ],
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
@@ -137,26 +387,38 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "1de7216f-7aca-42f2-a783-faa1da2c649f",
+      "uuid": "90d04e80313d1f16",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "5ce68601-af62-4002-aeef-fd5d8d0fc163",
-      "startTime": "2026-06-01T17:24:34.295Z",
-      "endTime": "2026-06-01T17:24:34.295Z",
+      "parentUuid": "39b0637d09769496",
+      "startTime": "2026-10-21T17:48:03.268Z",
+      "endTime": "2026-10-21T17:48:03.269Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "weather_tool_metrics"
     }
   ],
-  "startTime": "2026-06-01T17:24:32.899Z",
-  "endTime": "2026-06-01T17:24:35.264Z",
+  "startTime": "2026-10-21T17:48:02.107Z",
+  "endTime": "2026-10-21T17:48:04.149Z",
+  "name": "crew crew",
   "environment": "development",
   "input": {
     "city": "Tokyo"
   },
   "output": "Weather in Tokyo: Clear, 70\u00b0F",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Weather in Tokyo: Clear, 70\u00b0F",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    }
+  ]
 }

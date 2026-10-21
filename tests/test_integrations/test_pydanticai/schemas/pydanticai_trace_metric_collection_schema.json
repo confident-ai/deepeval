@@ -1,20 +1,15 @@
 {
-  "uuid": "888fd7e835b6860278a14a4fde87c411",
+  "uuid": "4c09506d4eb3b2124950fcc720976d3b",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "d044966292c0abd0",
+      "uuid": "84ad1c8a6becad2c",
       "name": "trace_metric_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:28.636Z",
-      "endTime": "2026-06-01T16:36:29.441Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Say hello in exactly two words."
-        }
-      ],
+      "startTime": "2026-10-21T17:17:32.160Z",
+      "endTime": "2026-10-21T17:17:33.335Z",
+      "input": "Say hello in exactly two words.",
       "output": "Hello there!",
       "integration": "PydanticAI",
       "availableTools": [],
@@ -23,13 +18,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "e74b98f85bf88488",
+      "uuid": "52daf416f7b73884",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "d044966292c0abd0",
-      "startTime": "2026-06-01T16:36:28.637Z",
-      "endTime": "2026-06-01T16:36:29.438Z",
+      "parentUuid": "84ad1c8a6becad2c",
+      "startTime": "2026-10-21T17:17:32.162Z",
+      "endTime": "2026-10-21T17:17:33.334Z",
       "input": [
         {
           "role": "system",
@@ -38,43 +33,20 @@
         {
           "role": "user",
           "content": "Say hello in exactly two words."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {},
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "Hello there!"
-        }
-      ],
+      "output": "Hello there!",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 3.0
+      "outputTokenCount": 4.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:28.636Z",
-  "endTime": "2026-06-01T16:36:29.441Z",
+  "startTime": "2026-10-21T17:17:32.160Z",
+  "endTime": "2026-10-21T17:17:33.335Z",
   "name": "pydanticai-trace-metric-test",
   "metadata": {
     "test_type": "trace_metric_collection"
@@ -86,12 +58,7 @@
   "environment": "development",
   "threadId": "trace-metric-123",
   "userId": "test-user",
-  "input": [
-    {
-      "role": "user",
-      "content": "Say hello in exactly two words."
-    }
-  ],
+  "input": "Say hello in exactly two words.",
   "output": "Hello there!",
   "status": "SUCCESS",
   "metricCollection": "test-trace-metrics"

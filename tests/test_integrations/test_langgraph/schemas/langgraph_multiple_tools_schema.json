@@ -1,507 +1,329 @@
 {
-  "uuid": "4f260103-2f68-40a6-8d35-ccd0826e43fb",
+  "uuid": "bc5bc0458f5182563281f8e82df9ecab",
   "baseSpans": [
     {
-      "uuid": "019d0517-5dba-7531-b258-7082e38a7d9b",
+      "uuid": "9e07009dd371a054",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-5205-7770-b8fb-a122c666bd19",
-      "startTime": "2026-03-19T07:55:10.650Z",
-      "endTime": "2026-03-19T07:55:11.939Z",
+      "parentUuid": "5d616185054cbfa2",
+      "startTime": "2026-10-21T17:48:31.396Z",
+      "endTime": "2026-10-21T17:48:32.763Z",
       "input": {
         "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Cloudy, 68\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-            "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "status": "success"
-          },
-          {
-            "content": "13,960,000",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_population",
-            "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-            "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "status": "success"
-          },
-          {
-            "content": "JST (UTC+9)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_timezone",
-            "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-            "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "status": "success"
-          }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Cloudy, 68\u00b0F",
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "13,960,000",
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "JST (UTC+9)",
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nWould you like more details (hourly forecast, population source/year, local time now)?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 303,
-                "total_tokens": 361,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tokyo is currently:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nIf you want, I can also give you a quick summary of what these numbers mean or compare Tokyo with another city."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Vir65cAYodveSYICF4TG1G0YSq",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5dba-7531-b258-70932b2ba563-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 303,
-              "output_tokens": 58,
-              "total_tokens": 361,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ]
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-62c2-72f2-82b4-12dbd96f97c7",
+      "uuid": "16083175a52fb8aa",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-5dba-7531-b258-7082e38a7d9b",
-      "startTime": "2026-03-19T07:55:11.938Z",
-      "endTime": "2026-03-19T07:55:11.938Z",
+      "parentUuid": "9e07009dd371a054",
+      "startTime": "2026-10-21T17:48:32.762Z",
+      "endTime": "2026-10-21T17:48:32.763Z",
       "input": {
         "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Cloudy, 68\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-            "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "status": "success"
-          },
-          {
-            "content": "13,960,000",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_population",
-            "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-            "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "status": "success"
-          },
-          {
-            "content": "JST (UTC+9)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_timezone",
-            "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-            "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "status": "success"
-          },
-          {
-            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nWould you like more details (hourly forecast, population source/year, local time now)?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 303,
-                "total_tokens": 361,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Vir65cAYodveSYICF4TG1G0YSq",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5dba-7531-b258-70932b2ba563-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 303,
-              "output_tokens": 58,
-              "total_tokens": 361,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Cloudy, 68\u00b0F",
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "13,960,000",
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "JST (UTC+9)",
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tokyo is currently:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nIf you want, I can also give you a quick summary of what these numbers mean or compare Tokyo with another city."
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": "__end__",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-5db7-7f61-b7e3-fc14a98e42c9",
+      "uuid": "3d52142521814133",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-5205-7770-b8fb-a122c666bd19",
-      "startTime": "2026-03-19T07:55:10.647Z",
-      "endTime": "2026-03-19T07:55:10.650Z",
+      "parentUuid": "5d616185054cbfa2",
+      "startTime": "2026-10-21T17:48:31.391Z",
+      "endTime": "2026-10-21T17:48:31.395Z",
       "input": {
         "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Cloudy, 68\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-            "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "status": "success"
-          },
-          {
-            "content": "13,960,000",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_population",
-            "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-            "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "status": "success"
-          },
-          {
-            "content": "JST (UTC+9)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_timezone",
-            "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-            "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "status": "success"
-          }
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Cloudy, 68\u00b0F",
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "13,960,000",
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "JST (UTC+9)",
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ]
         ]
       },
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "get_weather",
           "type": "FUNCTION",
-          "output": {
-            "content": "Cloudy, 68\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-            "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "status": "success"
-          },
-          "inputParameters": {
-            "city": "Tokyo"
-          }
-        },
-        {
-          "name": "get_timezone",
-          "type": "FUNCTION",
-          "output": {
-            "content": "JST (UTC+9)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_timezone",
-            "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-            "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "status": "success"
-          },
+          "output": "Cloudy, 68\u00b0F",
           "inputParameters": {
             "city": "Tokyo"
           }
@@ -509,595 +331,507 @@
         {
           "name": "get_population",
           "type": "FUNCTION",
-          "output": {
-            "content": "13,960,000",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_population",
-            "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-            "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "status": "success"
-          },
+          "output": "13,960,000",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_timezone",
+          "type": "FUNCTION",
+          "output": "JST (UTC+9)",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "8b46fb17bc4b1cb6",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "5d616185054cbfa2",
+      "startTime": "2026-10-21T17:48:29.857Z",
+      "endTime": "2026-10-21T17:48:31.391Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "a368233343caaeb2",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8b46fb17bc4b1cb6",
+      "startTime": "2026-10-21T17:48:31.390Z",
+      "endTime": "2026-10-21T17:48:31.390Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": "tools",
+      "integration": "LangGraph"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "5d616185054cbfa2",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-21T17:48:29.856Z",
+      "endTime": "2026-10-21T17:48:32.764Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_population",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_timezone",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Cloudy, 68\u00b0F",
+                  "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "13,960,000",
+                  "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "JST (UTC+9)",
+                  "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tokyo is currently:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nIf you want, I can also give you a quick summary of what these numbers mean or compare Tokyo with another city."
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Cloudy, 68\u00b0F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_population",
+          "type": "FUNCTION",
+          "output": "13,960,000",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_timezone",
+          "type": "FUNCTION",
+          "output": "JST (UTC+9)",
           "inputParameters": {
             "city": "Tokyo"
           }
         }
       ],
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019d0517-5205-7770-b8fb-a1310f9f7cb8",
-      "name": "agent",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019d0517-5205-7770-b8fb-a122c666bd19",
-      "startTime": "2026-03-19T07:55:07.653Z",
-      "endTime": "2026-03-19T07:55:10.646Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019d0517-5db6-75e3-86e1-a974383c0fa5",
-      "name": "should_continue",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019d0517-5205-7770-b8fb-a1310f9f7cb8",
-      "startTime": "2026-03-19T07:55:10.646Z",
-      "endTime": "2026-03-19T07:55:10.646Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          }
-        ]
-      },
-      "output": "tools",
-      "integration": "LangChain"
-    }
-  ],
-  "agentSpans": [
-    {
-      "uuid": "019d0517-5205-7770-b8fb-a122c666bd19",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-19T07:55:07.653Z",
-      "endTime": "2026-03-19T07:55:11.939Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 195,
-                "prompt_tokens": 205,
-                "total_tokens": 400,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_population",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_timezone",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 205,
-              "output_tokens": 195,
-              "total_tokens": 400,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          },
-          {
-            "content": "Cloudy, 68\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-            "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "status": "success"
-          },
-          {
-            "content": "13,960,000",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_population",
-            "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-            "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "status": "success"
-          },
-          {
-            "content": "JST (UTC+9)",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_timezone",
-            "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-            "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "status": "success"
-          },
-          {
-            "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nWould you like more details (hourly forecast, population source/year, local time now)?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 58,
-                "prompt_tokens": 303,
-                "total_tokens": 361,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Vir65cAYodveSYICF4TG1G0YSq",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-5dba-7531-b258-70932b2ba563-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 303,
-              "output_tokens": 58,
-              "total_tokens": 361,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d0517-5dba-7531-b258-70932b2ba563",
+      "uuid": "8d489c3a054fd955",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d0517-5dba-7531-b258-7082e38a7d9b",
-      "startTime": "2026-03-19T07:55:10.650Z",
-      "endTime": "2026-03-19T07:55:11.938Z",
+      "parentUuid": "9e07009dd371a054",
+      "startTime": "2026-10-21T17:48:31.397Z",
+      "endTime": "2026-10-21T17:48:32.760Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "Cloudy, 68\u00b0F"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_population",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_timezone",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+          }
         },
         {
           "role": "tool",
-          "content": "13,960,000"
+          "content": {
+            "type": "tool_call_response",
+            "response": "Cloudy, 68\u00b0F",
+            "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+          }
         },
         {
           "role": "tool",
-          "content": "JST (UTC+9)"
+          "content": {
+            "type": "tool_call_response",
+            "response": "13,960,000",
+            "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Evaluates a mathematical expression and returns the result.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "JST (UTC+9)",
+            "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nWould you like more details (hourly forecast, population source/year, local time now)?",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
+      "output": "Tokyo is currently:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nIf you want, I can also give you a quick summary of what these numbers mean or compare Tokyo with another city.",
+      "integration": "LangGraph",
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 303.0,
-      "outputTokenCount": 58.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "outputTokenCount": 61.0
     },
     {
-      "uuid": "019d0517-5206-7193-8559-ac98147ef02c",
+      "uuid": "328ea38491fa556b",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d0517-5205-7770-b8fb-a1310f9f7cb8",
-      "startTime": "2026-03-19T07:55:07.654Z",
-      "endTime": "2026-03-19T07:55:10.645Z",
+      "parentUuid": "8b46fb17bc4b1cb6",
+      "startTime": "2026-10-21T17:48:29.858Z",
+      "endTime": "2026-10-21T17:48:31.389Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Evaluates a mathematical expression and returns the result.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "arguments": {
               "city": "Tokyo"
             },
-            "id": "call_qyO8tApOfNSjg9D4ir2vA81j"
-          },
-          {
-            "name": "get_population",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_ipWAY77KMBUkWOci3aAWuL3J"
-          },
-          {
-            "name": "get_timezone",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd"
+            "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_population",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_timezone",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+          }
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_population",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        },
+        {
+          "name": "get_timezone",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 205.0,
-      "outputTokenCount": 195.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "outputTokenCount": 61.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d0517-5db9-71a1-b34b-14b7c908bce7",
-      "name": "get_population",
-      "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "019d0517-5db7-7f61-b7e3-fc14a98e42c9",
-      "startTime": "2026-03-19T07:55:10.649Z",
-      "endTime": "2026-03-19T07:55:10.649Z",
-      "input": {
-        "city": "Tokyo"
-      },
-      "output": {
-        "content": "13,960,000",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_population",
-        "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-        "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-        "status": "success"
-      },
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019d0517-5db9-71a1-b34b-14ab34099a42",
+      "uuid": "90ae8f0760a752d1",
       "name": "get_timezone",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-5db7-7f61-b7e3-fc14a98e42c9",
-      "startTime": "2026-03-19T07:55:10.649Z",
-      "endTime": "2026-03-19T07:55:10.649Z",
+      "parentUuid": "3d52142521814133",
+      "startTime": "2026-10-21T17:48:31.395Z",
+      "endTime": "2026-10-21T17:48:31.395Z",
       "input": {
         "city": "Tokyo"
       },
-      "output": {
-        "content": "JST (UTC+9)",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_timezone",
-        "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-        "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "JST (UTC+9)",
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-5db8-70d3-9962-163ff71c67bb",
+      "uuid": "3612afd14cbb0f15",
+      "name": "get_population",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "3d52142521814133",
+      "startTime": "2026-10-21T17:48:31.394Z",
+      "endTime": "2026-10-21T17:48:31.394Z",
+      "input": {
+        "city": "Tokyo"
+      },
+      "output": "13,960,000",
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "282074cbe89e0c70",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-5db7-7f61-b7e3-fc14a98e42c9",
-      "startTime": "2026-03-19T07:55:10.648Z",
-      "endTime": "2026-03-19T07:55:10.648Z",
+      "parentUuid": "3d52142521814133",
+      "startTime": "2026-10-21T17:48:31.393Z",
+      "endTime": "2026-10-21T17:48:31.393Z",
       "input": {
         "city": "Tokyo"
       },
-      "output": {
-        "content": "Cloudy, 68\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-        "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "Cloudy, 68\u00b0F",
+      "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-03-19T07:55:07.653Z",
-  "endTime": "2026-03-19T07:55:11.939Z",
+  "startTime": "2026-10-21T17:48:29.856Z",
+  "endTime": "2026-10-21T17:48:32.764Z",
   "name": "langgraph-multi-tool-test",
   "metadata": {
     "test_type": "multiple_tools"
@@ -1111,173 +845,114 @@
   "userId": "test-user",
   "input": {
     "messages": [
-      {
-        "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-      }
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
+            }
+          ]
+        }
+      ]
     ]
   },
   "output": {
     "messages": [
-      {
-        "content": "Tell me about Tokyo - what's the weather, population, and timezone?",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "8c8f2efb-f270-49db-99f5-21c959c3d7c6"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 195,
-            "prompt_tokens": 205,
-            "total_tokens": 400,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Tell me about Tokyo - what's the weather, population, and timezone?"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2VfbtJ0Ai2QWBMiADTz8rDhz8n4",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0517-5206-7193-8559-ac98147ef02c-0",
-        "tool_calls": [
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-            "type": "tool_call"
-          },
-          {
-            "name": "get_population",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-            "type": "tool_call"
-          },
-          {
-            "name": "get_timezone",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 205,
-          "output_tokens": 195,
-          "total_tokens": 400,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
-          }
+          ]
         }
-      },
-      {
-        "content": "Cloudy, 68\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-        "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-        "status": "success"
-      },
-      {
-        "content": "13,960,000",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_population",
-        "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-        "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-        "status": "success"
-      },
-      {
-        "content": "JST (UTC+9)",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_timezone",
-        "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-        "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-        "status": "success"
-      },
-      {
-        "content": "Here\u2019s the info for Tokyo:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nWould you like more details (hourly forecast, population source/year, local time now)?",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 58,
-            "prompt_tokens": 303,
-            "total_tokens": 361,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Tokyo"
+              },
+              "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+            },
+            {
+              "type": "tool_call",
+              "name": "get_population",
+              "arguments": {
+                "city": "Tokyo"
+              },
+              "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+            },
+            {
+              "type": "tool_call",
+              "name": "get_timezone",
+              "arguments": {
+                "city": "Tokyo"
+              },
+              "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2Vir65cAYodveSYICF4TG1G0YSq",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0517-5dba-7531-b258-70932b2ba563-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 303,
-          "output_tokens": 58,
-          "total_tokens": 361,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Cloudy, 68\u00b0F",
+              "id": "call_fsVXPzkV3wcc8XiwgitJGjZh"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "13,960,000",
+              "id": "call_RmFBXrJ2PsrqihvtPsGL6FfP"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "JST (UTC+9)",
+              "id": "call_TRQpNWsTP4AwTNsRFFvVxfSM"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Tokyo is currently:\n\n- Weather: Cloudy, 68\u00b0F\n- Population: 13,960,000\n- Timezone: JST (UTC+9)\n\nIf you want, I can also give you a quick summary of what these numbers mean or compare Tokyo with another city."
+            }
+          ]
+        }
+      ]
     ]
   },
   "status": "SUCCESS",
@@ -1285,33 +960,7 @@
     {
       "name": "get_weather",
       "type": "FUNCTION",
-      "output": {
-        "content": "Cloudy, 68\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "0be334ae-6a26-4f5f-9b6e-7d1a3dc00c37",
-        "tool_call_id": "call_qyO8tApOfNSjg9D4ir2vA81j",
-        "status": "success"
-      },
-      "inputParameters": {
-        "city": "Tokyo"
-      }
-    },
-    {
-      "name": "get_timezone",
-      "type": "FUNCTION",
-      "output": {
-        "content": "JST (UTC+9)",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_timezone",
-        "id": "15bf1f4b-a9af-4645-beef-5cd523a6868e",
-        "tool_call_id": "call_cYQ3mKcYa7UuIOeyMIpGAIsd",
-        "status": "success"
-      },
+      "output": "Cloudy, 68\u00b0F",
       "inputParameters": {
         "city": "Tokyo"
       }
@@ -1319,16 +968,15 @@
     {
       "name": "get_population",
       "type": "FUNCTION",
-      "output": {
-        "content": "13,960,000",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_population",
-        "id": "6414dda9-7946-4717-bdce-44f191fbd8e1",
-        "tool_call_id": "call_ipWAY77KMBUkWOci3aAWuL3J",
-        "status": "success"
-      },
+      "output": "13,960,000",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    },
+    {
+      "name": "get_timezone",
+      "type": "FUNCTION",
+      "output": "JST (UTC+9)",
       "inputParameters": {
         "city": "Tokyo"
       }

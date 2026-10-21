@@ -1,55 +1,65 @@
 {
-  "uuid": "04e1113ff051518dc465c11a776d274e",
+  "uuid": "0eacebd89007f45cd1fc0c34d6545f43",
   "baseSpans": [
     {
-      "uuid": "98767f88d764261e",
+      "uuid": "a09c4f95499886e9",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "88deabba408aeb0f",
-      "startTime": "2026-05-07T11:39:04.280Z",
-      "endTime": "2026-05-07T11:39:05.954Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "parentUuid": "b0df9651e6a60565",
+      "startTime": "2026-10-21T17:47:55.834Z",
+      "endTime": "2026-10-21T17:47:57.684Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+        }
+      ],
       "integration": "Strands"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "88deabba408aeb0f",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "b0df9651e6a60565",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-07T11:39:04.280Z",
-      "endTime": "2026-05-07T11:39:05.955Z",
+      "startTime": "2026-10-21T17:47:55.829Z",
+      "endTime": "2026-10-21T17:47:57.685Z",
       "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
       "output": "Hello, how are you?\n",
+      "integration": "Strands",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Strands"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "419347112052acee",
+      "uuid": "cf2d00d3a341e4de",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "98767f88d764261e",
-      "startTime": "2026-05-07T11:39:04.280Z",
-      "endTime": "2026-05-07T11:39:05.953Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
+      "parentUuid": "a09c4f95499886e9",
+      "startTime": "2026-10-21T17:47:55.834Z",
+      "endTime": "2026-10-21T17:47:57.682Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+        }
+      ],
       "output": "Hello, how are you?",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 40.0,
-      "outputTokenCount": 7.0,
       "integration": "Strands",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 40.0,
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-07T11:39:04.280Z",
-  "endTime": "2026-05-07T11:39:05.955Z",
+  "startTime": "2026-10-21T17:47:55.829Z",
+  "endTime": "2026-10-21T17:47:57.685Z",
   "name": "strands-async-simple-test",
   "metadata": {
     "test_type": "async_simple"

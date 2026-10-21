@@ -12,15 +12,23 @@ from opentelemetry.sdk.trace import Event, ReadableSpan, TracerProvider
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import SpanContext
 
 from deepeval.test_case import ToolCall
-from deepeval.tracing.otel.converter import convert_span
+from deepeval.tracing.otel import adapters
+from deepeval.tracing.otel.adapters import Adapter
+from deepeval.tracing.otel.converter import (
+    convert_span,
+    is_ai_span,
+    resolve_span_type,
+)
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
     LlmSpan,
     RetrieverSpan,
+    SpanType,
     ToolSpan,
     TraceSpanStatus,
 )
@@ -69,14 +77,15 @@ def export(ct):
     return start
 
 
-def synthetic_span(attributes=None, events=()):
+def synthetic_span(attributes=None, events=(), name="span", scope=None):
     return ReadableSpan(
-        name="span",
+        name=name,
         context=SpanContext(trace_id=1, span_id=2, is_remote=False),
         attributes=attributes or {},
         events=[Event(event["name"], event["attributes"]) for event in events],
         start_time=1_000,
         end_time=2_000,
+        instrumentation_scope=InstrumentationScope(scope) if scope else None,
     )
 
 
@@ -440,3 +449,415 @@ def test_openai_call_with_text(export, openai_client):
         "weather?",
         "sunny",
     )
+
+
+################ Rules every framework shares ################
+
+
+def test_plain_text_tool_results_are_kept():
+    span = convert_span(
+        synthetic_span(
+            {
+                "gen_ai.operation.name": "execute_tool",
+                "gen_ai.tool.name": "lookup",
+                "gen_ai.tool.call.arguments": '{"city": "Paris"}',
+                "gen_ai.tool.call.result": "sunny",
+            }
+        )
+    ).span
+    assert (span.input, span.output) == ({"city": "Paris"}, "sunny")
+
+
+def test_a_tool_reply_message_reads_as_its_response():
+    reply = [
+        {
+            "role": "tool",
+            "parts": [
+                {"type": "tool_call_response", "id": "t1", "response": "sunny"}
+            ],
+        }
+    ]
+    span = convert_span(
+        synthetic_span(
+            {
+                "gen_ai.operation.name": "execute_tool",
+                "confident.span.output": json.dumps(reply),
+            }
+        )
+    ).span
+    assert span.output == "sunny"
+
+
+def test_content_blocks_in_events_read_as_text():
+    span = convert_span(
+        synthetic_span(
+            {"gen_ai.operation.name": "chat"},
+            [
+                {
+                    "name": "gen_ai.user.message",
+                    "attributes": {"content": '[{"text": "Weather?"}]'},
+                },
+                {
+                    "name": "gen_ai.choice",
+                    "attributes": {"message": '[{"text": "Sunny."}]'},
+                },
+            ],
+        )
+    ).span
+    assert span.input == [{"role": "user", "content": "Weather?"}]
+    assert span.output == "Sunny."
+
+
+@pytest.mark.parametrize(
+    "name, attributes, start_type",
+    [
+        ("invoke_agent planner", {}, SpanType.AGENT),
+        ("execute_tool lookup", {}, SpanType.TOOL),
+        ("chat", {}, SpanType.LLM),
+        # A span that declares its own category isn't renamed into one.
+        ("chat", {"confident.span.type": "custom"}, None),
+        ("planner", {}, None),
+    ],
+)
+def test_spans_still_opening_are_typed_by_their_name(
+    name, attributes, start_type
+):
+    span = synthetic_span(attributes, name=name)
+    assert resolve_span_type(span, at_start=True) == start_type
+    assert resolve_span_type(span) is None
+
+
+def test_retrieved_documents_become_retrieval_context():
+    span = convert_span(
+        synthetic_span(
+            {
+                "confident.span.type": "retriever",
+                "confident.span.output": json.dumps(
+                    [{"page_content": "a"}, {"text": "b", "score": 0.5}]
+                ),
+            }
+        )
+    ).span
+    assert span.retrieval_context == ["a", "b"]
+
+
+def test_conversation_id_and_latest_user_message():
+    messages = [
+        {"role": "user", "parts": [{"type": "text", "content": "first"}]},
+        {"role": "assistant", "parts": [{"type": "text", "content": "ok"}]},
+        {"role": "user", "parts": [{"type": "text", "content": "second"}]},
+    ]
+    converted = convert_span(
+        synthetic_span(
+            {
+                "gen_ai.conversation.id": "thread",
+                "confident.trace.input": json.dumps(messages),
+            }
+        )
+    )
+    assert converted.conversation_id == "thread"
+    assert converted.trace_fields["input"] == "second"
+
+
+class _FrameworkAdapter(Adapter):
+    self_providers = frozenset({"framework"})
+
+    def detect(self, span):
+        return span.instrumentation_scope is not None
+
+    def start_span_type(self, span):
+        return "agent"
+
+    def span_type(self, span):
+        return "llm"
+
+    def span_fields(self, span, span_type):
+        return {"model": "claude-sonnet-4", "output": "ignored"}
+
+    def trace_fields(self, span, span_type):
+        return {"thread_id": "framework-thread"}
+
+    def conversation_id(self, span):
+        return "framework-conversation"
+
+
+def test_adapters_fill_only_what_the_core_left_unset(monkeypatch):
+    monkeypatch.setattr(adapters, "ADAPTERS", (_FrameworkAdapter(),))
+    span = synthetic_span(
+        {
+            "gen_ai.provider.name": "framework",
+            "confident.span.output": '"recorded"',
+        },
+        scope="framework",
+    )
+
+    assert is_ai_span(span)
+    assert resolve_span_type(span, at_start=True) == SpanType.AGENT
+    converted = convert_span(span)
+    llm = converted.span
+    assert isinstance(llm, LlmSpan)
+    assert (llm.model, llm.output) == ("claude-sonnet-4", "recorded")
+    # The framework's own name gives way to the model's real vendor.
+    assert llm.provider == "Anthropic"
+    assert converted.trace_fields == {"thread_id": "framework-thread"}
+    assert converted.conversation_id == "framework-conversation"
+
+
+################ Framework adapters ################
+
+
+@pytest.mark.parametrize(
+    "name, span_type",
+    [
+        ("VectorIndexRetriever.retrieve", RetrieverSpan),
+        ("BaseRetriever.aretrieve", RetrieverSpan),
+        ("VectorIndexRetriever._retrieve", BaseSpan),
+        ("RetrieverQueryEngine.query", BaseSpan),
+    ],
+)
+def test_llamaindex_retrievals_are_retriever_spans(name, span_type):
+    documents = [{"text": "Paris is in France.", "score": 0.9}]
+    span = synthetic_span(
+        {
+            "confident.span.integration": "LlamaIndex",
+            "confident.span.output": json.dumps(documents),
+        },
+        name=name,
+    )
+    converted = convert_span(span).span
+    assert type(converted) is span_type
+    if span_type is RetrieverSpan:
+        assert resolve_span_type(span, at_start=True) == SpanType.RETRIEVER
+        assert converted.retrieval_context == ["Paris is in France."]
+
+
+_PYDANTIC_AI_RUN = [
+    {"role": "user", "parts": [{"type": "text", "content": "Weather?"}]},
+    {
+        "role": "assistant",
+        "parts": [{"type": "tool_call", "name": "weather", "arguments": {}}],
+    },
+    {
+        "role": "user",
+        "parts": [{"type": "tool_call_response", "response": "sunny"}],
+    },
+    {"role": "assistant", "parts": [{"type": "text", "content": "Sunny."}]},
+]
+
+
+@pytest.mark.parametrize(
+    "final_result, output", [("Sunny!", "Sunny!"), (None, "Sunny.")]
+)
+def test_pydantic_ai_agents_read_their_run(final_result, output):
+    attributes = {
+        "gen_ai.operation.name": "invoke_agent",
+        "gen_ai.agent.name": "weather_agent",
+        "pydantic_ai.all_messages": json.dumps(_PYDANTIC_AI_RUN),
+    }
+    if final_result is not None:
+        attributes["final_result"] = final_result
+    span = synthetic_span(
+        attributes, name="invoke_agent weather_agent", scope="pydantic-ai"
+    )
+
+    agent = convert_span(span).span
+
+    assert isinstance(agent, AgentSpan)
+    assert (agent.name, agent.input, agent.output) == (
+        "weather_agent",
+        "Weather?",
+        output,
+    )
+
+
+@pytest.mark.parametrize("modern", [False, True])
+@pytest.mark.parametrize("result", ["sunny", "", False, 0])
+def test_pydantic_ai_tool_attribute_formats(modern, result):
+    arguments = "gen_ai.tool.call.arguments" if modern else "tool_arguments"
+    response = "gen_ai.tool.call.result" if modern else "tool_response"
+    span = synthetic_span(
+        {
+            "gen_ai.operation.name": "execute_tool",
+            "gen_ai.tool.name": "weather",
+            arguments: '{"city":"Paris"}',
+            response: result,
+        },
+        name="execute_tool weather",
+        scope="pydantic-ai",
+    )
+
+    tool = convert_span(span).span
+
+    assert isinstance(tool, ToolSpan)
+    assert (tool.input, tool.output) == ({"city": "Paris"}, result)
+
+
+@pytest.mark.parametrize(
+    "kind, span_type",
+    [
+        ("LLM", LlmSpan),
+        ("EMBEDDING", LlmSpan),
+        ("AGENT", AgentSpan),
+        ("TOOL", ToolSpan),
+        ("RETRIEVER", RetrieverSpan),
+        ("RERANKER", RetrieverSpan),
+        ("CHAIN", BaseSpan),
+        ("GUARDRAIL", BaseSpan),
+    ],
+)
+def test_openinference_kinds(kind, span_type):
+    span = synthetic_span(
+        {"openinference.span.kind": kind, "tool.name": "step"}, name="step"
+    )
+    assert is_ai_span(span)
+    assert type(convert_span(span).span) is span_type
+
+
+def test_an_openinference_tool_that_names_no_tool_is_a_base_span():
+    span = synthetic_span(
+        {"openinference.span.kind": "TOOL"}, name="handoff to assistant"
+    )
+    assert resolve_span_type(span, at_start=True) == SpanType.TOOL
+    assert type(convert_span(span).span) is BaseSpan
+
+
+def test_openinference_model_calls():
+    span = synthetic_span(
+        {
+            "openinference.span.kind": "LLM",
+            "llm.model_name": "gpt-4o-mini",
+            "llm.provider": "openai",
+            "llm.token_count.prompt": 11,
+            "llm.token_count.completion": 7,
+            "llm.input_messages.0.message.role": "system",
+            "llm.input_messages.0.message.content": "Be brief.",
+            "llm.input_messages.1.message.role": "user",
+            "llm.input_messages.1.message.contents.0.message_content.type": "text",
+            "llm.input_messages.1.message.contents.0.message_content.text": "Weather?",
+            "llm.output_messages.0.message.role": "assistant",
+            "llm.output_messages.0.message.tool_calls.0.tool_call.id": "t1",
+            "llm.output_messages.0.message.tool_calls.0.tool_call.function.name": "lookup",
+            "llm.output_messages.0.message.tool_calls.0.tool_call.function.arguments": '{"city": "Paris"}',
+            "session.id": "session",
+            "user.id": "user",
+            "tag.tags": ("weather",),
+        },
+        scope="openinference.instrumentation.openai",
+    )
+
+    converted = convert_span(span)
+    llm = converted.span
+
+    assert isinstance(llm, LlmSpan)
+    assert (llm.model, llm.provider) == ("gpt-4o-mini", "OpenAI")
+    assert (llm.input_token_count, llm.output_token_count) == (11, 7)
+    assert llm.input == [
+        {"role": "system", "content": "Be brief."},
+        {"role": "user", "content": "Weather?"},
+    ]
+    assert llm.tools_called == [
+        ToolCall(name="lookup", input_parameters={"city": "Paris"})
+    ]
+    assert (llm.integration, converted.trace_fields) == (
+        "OpenInference",
+        {"thread_id": "session", "user_id": "user", "tags": ["weather"]},
+    )
+
+
+def test_openinference_tools_and_retrievers():
+    tool = convert_span(
+        synthetic_span(
+            {
+                "openinference.span.kind": "TOOL",
+                "tool.name": "lookup",
+                "tool.description": "Looks up the weather.",
+                "input.value": '{"city": "Paris"}',
+                "input.mime_type": "application/json",
+                "output.value": "sunny",
+            },
+            name="lookup",
+        )
+    ).span
+    assert (tool.name, tool.description) == ("lookup", "Looks up the weather.")
+    assert (tool.input, tool.output) == ({"city": "Paris"}, "sunny")
+
+    retriever = convert_span(
+        synthetic_span(
+            {
+                "openinference.span.kind": "RETRIEVER",
+                "input.value": "Paris",
+                "retrieval.documents.0.document.content": "Paris is in France.",
+                "retrieval.documents.0.document.score": 0.9,
+                "retrieval.documents.1.document.content": "It is sunny.",
+            }
+        )
+    ).span
+    assert retriever.input == "Paris"
+    assert retriever.retrieval_context == [
+        "Paris is in France.",
+        "It is sunny.",
+    ]
+
+
+def test_content_confident_trace_could_not_serialize_is_missing():
+    span = synthetic_span(
+        {
+            "gen_ai.operation.name": "invoke_agent",
+            "confident.span.input": json.dumps("Weather?"),
+            "confident.span.output": json.dumps({"response": "[unsupported]"}),
+            "confident.trace.output": json.dumps(["[unsupported]"]),
+        }
+    )
+
+    converted = convert_span(span)
+
+    assert (converted.span.input, converted.span.output) == ("Weather?", None)
+    assert "output" not in converted.trace_fields
+
+
+@pytest.mark.parametrize(
+    "recorded, arguments",
+    [
+        ({"args": [], "kwargs": {"city": "Paris"}}, {"city": "Paris"}),
+        ({"kwargs": {"city": "Paris"}}, {"city": "Paris"}),
+        ({"args": ["Paris"], "kwargs": {}}, {"args": ["Paris"], "kwargs": {}}),
+        ({"city": "Paris"}, {"city": "Paris"}),
+    ],
+)
+def test_a_tool_called_with_keywords_takes_them_as_input(recorded, arguments):
+    span = synthetic_span(
+        {
+            "gen_ai.operation.name": "execute_tool",
+            "gen_ai.tool.name": "weather",
+            "confident.span.input": json.dumps(recorded),
+        }
+    )
+    assert convert_span(span).span.input == arguments
+
+
+def test_a_turn_that_only_calls_tools_keeps_its_calls_as_output():
+    output = [
+        {
+            "role": "assistant",
+            "parts": [
+                {"type": "text", "content": ""},
+                {"type": "tool_call", "name": "lookup", "arguments": {}},
+            ],
+        }
+    ]
+    span = synthetic_span(
+        {
+            "gen_ai.operation.name": "chat",
+            "gen_ai.output.messages": json.dumps(output),
+        }
+    )
+
+    llm = convert_span(span).span
+
+    assert llm.output == [
+        {
+            "role": "assistant",
+            "content": {"type": "tool_call", "name": "lookup", "arguments": {}},
+        }
+    ]
+    assert [call.name for call in llm.tools_called] == ["lookup"]

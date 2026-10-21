@@ -1,59 +1,45 @@
 """Which confident-trace spans ``DeepEvalSpanBridge`` keeps, and how."""
 
 import asyncio
-from typing import List
+import json
 
 import pytest
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
 from opentelemetry.trace import set_span_in_context
 
 from deepeval.config.settings import reset_settings
 from deepeval.contextvars import set_current_golden
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
-from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.test_case import LLMTestCase
-from deepeval.tracing import next_llm_span, observe, trace
+from deepeval.test_case import ToolCall
+from deepeval.tracing import (
+    next_llm_span,
+    observe,
+    trace,
+    update_current_span,
+    update_current_trace,
+    update_llm_span,
+)
 from deepeval.tracing.otel.setup import (
     ensure_confident_trace,
-    shutdown_confident_trace,
 )
 from deepeval.tracing.trace_context import LlmSpanContext
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.types import (
-    EvalMode,
-    EvalSession,
     LlmSpan,
     TraceSpanStatus,
 )
 
 ct = pytest.importorskip("confident_trace")
 
-MEASURED: List[LLMTestCase] = []
-
-
-class _RecordingMetric(BaseMetric):
-    threshold = 0.5
-
-    def measure(self, test_case, *args, **kwargs):
-        MEASURED.append(test_case)
-        self.score, self.success = 1.0, True
-        return self.score
-
-    async def a_measure(self, test_case, *args, **kwargs):
-        return self.measure(test_case)
-
-    def is_successful(self):
-        return True
-
-    @property
-    def __name__(self):
-        return "Recording"
+from .helpers import (  # noqa: E402
+    MEASURED,
+    RecordingMetric,
+    exported,
+    names,
+    names_of,
+)
 
 
 class _JudgeModel(DeepEvalBaseLLM):
@@ -71,55 +57,6 @@ class _JudgeModel(DeepEvalBaseLLM):
 
     def get_model_name(self):
         return "judge"
-
-
-@pytest.fixture
-def provider():
-    return TracerProvider(shutdown_on_exit=False)
-
-
-@pytest.fixture
-def exporter(provider):
-    exporter = InMemorySpanExporter()
-    # Importing ``deepeval.openai`` elsewhere starts confident-trace for good.
-    shutdown_confident_trace()
-    ensure_confident_trace(exporter=exporter, tracer_provider=provider)
-    MEASURED.clear()
-    yield exporter
-    shutdown_confident_trace()
-    trace_manager.clear_traces()
-    trace_manager.eval_session = EvalSession()
-
-
-@pytest.fixture
-def tracer(provider, exporter):
-    return provider.get_tracer("test")
-
-
-@pytest.fixture
-def posted(monkeypatch):
-    traces = []
-    monkeypatch.setattr(trace_manager, "post_trace", traces.append)
-    return traces
-
-
-@pytest.fixture
-def async_evaluation():
-    trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_ASYNC)
-    return trace_manager.eval_session
-
-
-def exported(exporter):
-    ct.flush()
-    return [span.name for span in exporter.get_finished_spans()]
-
-
-def names(spans):
-    return [span.name for span in spans]
-
-
-def names_of(api_spans):
-    return [api_span["name"] for api_span in api_spans]
 
 
 ################ Ownership ################
@@ -177,7 +114,7 @@ def test_a_root_span_fills_only_unset_trace_fields(exporter, posted):
 
 
 def test_span_defaults_staged_in_deepeval(exporter, posted):
-    from_context, staged = _RecordingMetric(), _RecordingMetric()
+    from_context, staged = RecordingMetric(), RecordingMetric()
     context = LlmSpanContext(metrics=[from_context], expected_output="x")
 
     with trace(llm_span_context=context):
@@ -325,6 +262,155 @@ def test_trace_shape_tests_capture_bare_spans(exporter, monkeypatch):
     assert names_of(trace_testing_manager.test_dict["agentSpans"]) == ["bare"]
 
 
+################ Traces from framework-native spans ################
+
+
+def native_agent_run(tracer, conversation="thread"):
+    """An agent that calls a model and a tool, with no ``confident.trace.*``."""
+    messages = [{"role": "user", "parts": [{"type": "text", "content": "q"}]}]
+    answer = [
+        {
+            "role": "assistant",
+            "parts": [{"type": "text", "content": "a"}],
+            "finish_reason": "stop",
+        }
+    ]
+    with tracer.start_as_current_span(
+        "invoke_agent planner",
+        attributes={
+            "gen_ai.operation.name": "invoke_agent",
+            "gen_ai.agent.name": "planner",
+            "gen_ai.conversation.id": conversation,
+        },
+    ):
+        with tracer.start_as_current_span("step"):
+            with tracer.start_as_current_span(
+                "execute_tool lookup",
+                attributes={
+                    "gen_ai.operation.name": "execute_tool",
+                    "gen_ai.tool.name": "lookup",
+                    "gen_ai.tool.call.arguments": '{"city": "Paris"}',
+                    "gen_ai.tool.call.result": "sunny",
+                },
+            ):
+                pass
+        with tracer.start_as_current_span(
+            "chat",
+            attributes={
+                "gen_ai.operation.name": "chat",
+                "gen_ai.input.messages": json.dumps(messages),
+                "gen_ai.output.messages": json.dumps(answer),
+            },
+        ):
+            pass
+
+
+def test_an_owned_native_trace_gets_its_content_from_its_spans(
+    tracer, async_evaluation
+):
+    native_agent_run(tracer)
+
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.name, collected.input, collected.output) == (
+        "planner",
+        "q",
+        "a",
+    )
+    assert collected.thread_id == "thread"
+    assert collected.tools_called == [
+        ToolCall(
+            name="lookup", input_parameters={"city": "Paris"}, output="sunny"
+        )
+    ]
+    (agent,) = collected.root_spans
+    # The agent lists the tool its intermediate step ran.
+    assert [call.name for call in agent.tools_called] == ["lookup"]
+
+
+def test_a_deepeval_trace_fills_only_what_its_code_left_unset(tracer, posted):
+    with trace(output="mine"):
+        native_agent_run(tracer)
+
+    (collected,) = posted
+    assert (collected.input, collected.output) == ("q", "mine")
+    assert collected.thread_id == "thread"
+    assert [call.name for call in collected.tools_called] == ["lookup"]
+
+
+################ deepeval code inside collected spans ################
+
+
+def test_span_updates_override_what_a_collected_span_recorded(exporter, posted):
+    staged = RecordingMetric()
+    with trace():
+        with ct.span("generate", type="llm", model="recorded"):
+            update_current_span(
+                name="renamed", metadata={"from": "deepeval"}, metrics=[staged]
+            )
+            update_llm_span(model="gpt-4o")
+
+    (generate,) = posted[0].root_spans
+    assert (generate.name, generate.model) == ("renamed", "gpt-4o")
+    assert generate.metadata == {"from": "deepeval"}
+    assert generate.metrics == [staged]
+
+
+def test_observe_nests_inside_collected_spans_and_back(exporter, posted):
+    @observe(name="helper")
+    def helper():
+        update_current_span(metadata={"from": "helper"})
+        with ct.span("inner", type="tool"):
+            pass
+        return "done"
+
+    with trace():
+        with ct.span("outer", type="agent"):
+            helper()
+
+    (outer,) = posted[0].root_spans
+    (helper_span,) = outer.children
+    assert (helper_span.name, helper_span.metadata) == (
+        "helper",
+        {"from": "helper"},
+    )
+    assert names(helper_span.children) == ["inner"]
+    assert outer.metadata is None
+
+
+def test_trace_updates_win_over_what_spans_recorded(exporter, async_evaluation):
+    @ct.span(name="app")
+    def app():
+        update_current_trace(output="mine", tags=["deepeval"])
+        return "recorded"
+
+    app()
+
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.output, collected.tags) == ("mine", ["deepeval"])
+
+
+def test_updates_inside_exported_spans_reach_confident_trace(exporter, posted):
+    with ct.span("bare"):
+        update_current_span(
+            metadata={"from": "deepeval"},
+            tools_called=[ToolCall(name="lookup")],
+            metrics=[RecordingMetric()],
+        )
+        update_current_trace(name="renamed", thread_id="thread")
+
+    ct.flush()
+    (bare,) = exporter.get_finished_spans()
+    assert json.loads(bare.attributes["confident.span.metadata"]) == {
+        "from": "deepeval"
+    }
+    assert json.loads(bare.attributes["confident.span.tools_called"]) == [
+        {"name": "lookup", "type": "FUNCTION"}
+    ]
+    assert bare.attributes["confident.trace.name"] == "renamed"
+    assert bare.attributes["confident.trace.thread_id"] == "thread"
+    assert posted == []
+
+
 ################ deepeval's own model calls ################
 
 
@@ -351,13 +437,13 @@ def test_internal_tracing_opts_judge_calls_back_in(exporter, monkeypatch):
 
 
 def generate(question):
-    with next_llm_span(metrics=[_RecordingMetric()]):
+    with next_llm_span(metrics=[RecordingMetric()]):
         with ct.span("generate", type="llm"):
             ct.update_span(input=question, output=question.upper())
 
 
 async def a_generate(question):
-    with next_llm_span(metrics=[_RecordingMetric()]):
+    with next_llm_span(metrics=[RecordingMetric()]):
         with ct.span("generate", type="llm"):
             await asyncio.sleep(0)
             ct.update_span(input=question, output=question.upper())
@@ -391,7 +477,7 @@ def test_trace_metrics_score_a_bare_openai_call(
 
     dataset = EvaluationDataset(goldens=[Golden(input="weather?")])
     for golden in dataset.evals_iterator(
-        metrics=[_RecordingMetric()],
+        metrics=[RecordingMetric()],
         async_config=AsyncConfig(run_async=run_async),
         display_config=DisplayConfig(show_indicator=False, print_results=False),
         cache_config=CacheConfig(write_cache=False),
@@ -408,3 +494,15 @@ def test_trace_metrics_score_a_bare_openai_call(
     assert [(case.input, case.actual_output) for case in MEASURED] == [
         ("weather?", "sunny")
     ]
+
+
+def test_flushing_traces_flushes_exported_spans(tracer, exporter):
+    from deepeval.tracing import flush_traces
+
+    with tracer.start_as_current_span(
+        "chat", attributes={"gen_ai.operation.name": "chat"}
+    ):
+        pass
+
+    assert flush_traces(timeout=5)
+    assert [span.name for span in exporter.get_finished_spans()] == ["chat"]

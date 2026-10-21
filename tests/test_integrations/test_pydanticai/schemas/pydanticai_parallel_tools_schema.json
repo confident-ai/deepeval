@@ -1,24 +1,17 @@
 {
-  "uuid": "553cad75352e5c9ce54747a5ade08835",
+  "uuid": "8db589c8bfb4d31a7bd83e9bd8fa5b49",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "419d6622204b355a",
+      "uuid": "4e0f1c16483696f2",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:33.959Z",
-      "endTime": "2026-06-01T16:36:36.964Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
-        }
-      ],
+      "startTime": "2026-10-21T17:17:34.414Z",
+      "endTime": "2026-10-21T17:17:37.467Z",
+      "input": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
       "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
       "integration": "PydanticAI",
-      "availableTools": [],
-      "agentHandoffs": [],
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -36,18 +29,20 @@
             "city": "Paris"
           }
         }
-      ]
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "1ff7209956c2c5df",
+      "uuid": "d9650806d5d59fb2",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.566Z",
-      "endTime": "2026-06-01T16:36:36.961Z",
+      "parentUuid": "4e0f1c16483696f2",
+      "startTime": "2026-10-21T17:17:36.123Z",
+      "endTime": "2026-10-21T17:17:37.465Z",
       "input": [
         {
           "role": "system",
@@ -61,25 +56,25 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_D3A0NXDY0sKkOUP1azTZ4Ty3",
             "name": "get_weather",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_ZCZ6UsjquKTv3P7EGysVzm4L",
             "name": "get_time",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_D3A0NXDY0sKkOUP1azTZ4Ty3",
             "name": "get_weather",
             "result": "Cloudy, 62F"
           }
@@ -88,116 +83,27 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_ZCZ6UsjquKTv3P7EGysVzm4L",
             "name": "get_time",
             "result": "8:00 AM CET"
           }
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET."
-        }
-      ],
+      "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 254.0,
-      "outputTokenCount": 26.0
+      "inputTokenCount": 234.0,
+      "outputTokenCount": 27.0
     },
     {
-      "uuid": "355cbdefbce6755c",
+      "uuid": "6fe554c38b65716a",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:33.960Z",
-      "endTime": "2026-06-01T16:36:35.562Z",
+      "parentUuid": "4e0f1c16483696f2",
+      "startTime": "2026-10-21T17:17:34.416Z",
+      "endTime": "2026-10-21T17:17:36.119Z",
       "input": [
         {
           "role": "system",
@@ -206,90 +112,6 @@
         {
           "role": "user",
           "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
       "output": [
@@ -297,38 +119,54 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_KCo0CJkQKiERmhujOkavOhEA",
+            "id": "call_D3A0NXDY0sKkOUP1azTZ4Ty3",
             "name": "get_weather",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         },
         {
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_yUkAxOMa9FnCe1p2dAJYwW7o",
+            "id": "call_ZCZ6UsjquKTv3P7EGysVzm4L",
             "name": "get_time",
-            "arguments": "{\"city\": \"Paris\"}"
+            "arguments": "{\"city\":\"Paris\"}"
           }
         }
       ],
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        },
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 185.0,
-      "outputTokenCount": 44.0
+      "inputTokenCount": 183.0,
+      "outputTokenCount": 45.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "e7e6720e6aa0c9c1",
+      "uuid": "6f424b2451a2ac99",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.563Z",
-      "endTime": "2026-06-01T16:36:35.565Z",
+      "parentUuid": "4e0f1c16483696f2",
+      "startTime": "2026-10-21T17:17:36.121Z",
+      "endTime": "2026-10-21T17:17:36.122Z",
       "input": {
         "city": "Paris"
       },
@@ -336,13 +174,13 @@
       "integration": "PydanticAI"
     },
     {
-      "uuid": "bda2dfe2e6af5a4d",
+      "uuid": "a2af73849291662b",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "419d6622204b355a",
-      "startTime": "2026-06-01T16:36:35.563Z",
-      "endTime": "2026-06-01T16:36:35.565Z",
+      "parentUuid": "4e0f1c16483696f2",
+      "startTime": "2026-10-21T17:17:36.121Z",
+      "endTime": "2026-10-21T17:17:36.122Z",
       "input": {
         "city": "Paris"
       },
@@ -350,8 +188,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:33.959Z",
-  "endTime": "2026-06-01T16:36:36.964Z",
+  "startTime": "2026-10-21T17:17:34.414Z",
+  "endTime": "2026-10-21T17:17:37.467Z",
   "name": "pydanticai-parallel-tools",
   "metadata": {
     "test_type": "parallel_tools"
@@ -363,12 +201,25 @@
   "environment": "development",
   "threadId": "parallel-tools-123",
   "userId": "test-user",
-  "input": [
-    {
-      "role": "user",
-      "content": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each."
-    }
-  ],
+  "input": "Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
   "output": "The current weather in Paris is cloudy with a temperature of 62\u00b0F. The time is 8:00 AM CET.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_time",
+      "type": "FUNCTION",
+      "output": "8:00 AM CET",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    },
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Cloudy, 62F",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    }
+  ]
 }

@@ -1,106 +1,255 @@
 {
-  "uuid": "5c5750b4674172b08a0c9d337ed2c120",
+  "uuid": "17f80bc8707f3fab46670aad4bd4ab1b",
   "baseSpans": [
     {
-      "uuid": "b82f381bd296efc1",
+      "uuid": "e41e202d503bd9b4",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "04b381d034f6cedd",
-      "startTime": "2026-05-07T11:39:39.136Z",
-      "endTime": "2026-05-07T11:39:40.037Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "parentUuid": "942fa6a2340064b8",
+      "startTime": "2026-10-21T17:50:16.760Z",
+      "endTime": "2026-10-21T17:50:17.872Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "name": "special_tool",
+                "input": {
+                  "query": "Sync Data"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Sync Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands"
     },
     {
-      "uuid": "814d6638b8be267e",
+      "uuid": "d29e3af93e7586fc",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "04b381d034f6cedd",
-      "startTime": "2026-05-07T11:39:38.072Z",
-      "endTime": "2026-05-07T11:39:39.135Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
-      "integration": "Strands"
+      "parentUuid": "942fa6a2340064b8",
+      "startTime": "2026-10-21T17:50:15.633Z",
+      "endTime": "2026-10-21T17:50:16.760Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "name": "special_tool",
+                "input": {
+                  "query": "Sync Data"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Sync Data",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "04b381d034f6cedd",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "942fa6a2340064b8",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-07T11:39:38.072Z",
-      "endTime": "2026-05-07T11:39:40.037Z",
+      "startTime": "2026-10-21T17:50:15.633Z",
+      "endTime": "2026-10-21T17:50:17.873Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "The query 'Sync Data' has been processed.\n",
-      "availableTools": [],
+      "output": "The query \"Sync Data\" has been processed.\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Sync Data",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
+      "availableTools": [
+        "special_tool"
+      ],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_v1",
-      "integration": "Strands"
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "flaky": false,
+          "evaluationModel": "gpt-5-nano"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "c4d8de9031a6113b",
+      "uuid": "ae07aa4f0b89dea0",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b82f381bd296efc1",
-      "startTime": "2026-05-07T11:39:39.136Z",
-      "endTime": "2026-05-07T11:39:40.036Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "The query 'Sync Data' has been processed.",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 163.0,
-      "outputTokenCount": 11.0,
+      "parentUuid": "e41e202d503bd9b4",
+      "startTime": "2026-10-21T17:50:16.761Z",
+      "endTime": "2026-10-21T17:50:17.871Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "name": "special_tool",
+                "input": {
+                  "query": "Sync Data"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Sync Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "The query \"Sync Data\" has been processed.",
       "integration": "Strands",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 163.0,
+      "outputTokenCount": 11.0
     },
     {
-      "uuid": "a116118b526f797b",
+      "uuid": "8b2364239c000a61",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "814d6638b8be267e",
-      "startTime": "2026-05-07T11:39:38.072Z",
-      "endTime": "2026-05-07T11:39:39.134Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_UghGzjp1vnuwMyzKg2R6DPnK', 'name': 'special_tool', 'input': {'query': 'Sync Data'}}}",
+      "parentUuid": "d29e3af93e7586fc",
+      "startTime": "2026-10-21T17:50:15.633Z",
+      "endTime": "2026-10-21T17:50:16.757Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_AoLcJIfAPNKFC316YzMYiQTF",
+                "name": "special_tool",
+                "input": {
+                  "query": "Sync Data"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 136.0,
       "outputTokenCount": 15.0,
-      "metricCollection": "llm_metrics_v1",
-      "integration": "Strands",
-      "provider": "OpenAI"
+      "metricCollection": "llm_metrics_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "eb71277ae0954315",
-      "name": "execute_tool special_tool",
+      "uuid": "92e5109647776b40",
+      "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "814d6638b8be267e",
-      "startTime": "2026-05-07T11:39:39.134Z",
-      "endTime": "2026-05-07T11:39:39.135Z",
+      "parentUuid": "d29e3af93e7586fc",
+      "startTime": "2026-10-21T17:50:16.758Z",
+      "endTime": "2026-10-21T17:50:16.759Z",
+      "input": {
+        "query": "Sync Data"
+      },
       "output": "Processed: Sync Data",
-      "toolsCalled": [
-        {
-          "name": "special_tool",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "metricCollection": "special_tool_v1",
-      "integration": "Strands"
+      "integration": "Strands",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+      "metricCollection": "special_tool_v1"
     }
   ],
-  "startTime": "2026-05-07T11:39:38.072Z",
-  "endTime": "2026-05-07T11:39:40.037Z",
+  "startTime": "2026-10-21T17:50:15.633Z",
+  "endTime": "2026-10-21T17:50:17.873Z",
   "name": "strands-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -115,7 +264,18 @@
   "threadId": "thread-sync-features-001",
   "userId": "user-sync-001",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
-  "output": "The query 'Sync Data' has been processed.\n",
+  "output": "The query \"Sync Data\" has been processed.\n",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+      "output": "Processed: Sync Data",
+      "inputParameters": {
+        "query": "Sync Data"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_override_v1"
 }

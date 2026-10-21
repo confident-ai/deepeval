@@ -1,104 +1,259 @@
 {
-  "uuid": "1c4094fcd1ff1fad0e2024eafb1f451f",
+  "uuid": "085c1ad47f25af381721549c48aea6d8",
   "baseSpans": [
     {
-      "uuid": "46259cbdfd523821",
+      "uuid": "b0ab14a46912848c",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "075bf93562f634e0",
-      "startTime": "2026-05-07T11:39:29.382Z",
-      "endTime": "2026-05-07T11:39:30.181Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
+      "parentUuid": "15442229d4e792c7",
+      "startTime": "2026-10-21T17:50:07.779Z",
+      "endTime": "2026-10-21T17:50:08.929Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "name": "calculate",
+                "input": {
+                  "operation": "add",
+                  "a": 15,
+                  "b": 25
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "40.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands"
     },
     {
-      "uuid": "9e51624673f361ae",
+      "uuid": "b6a3cd9ff035cb15",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "075bf93562f634e0",
-      "startTime": "2026-05-07T11:39:28.358Z",
-      "endTime": "2026-05-07T11:39:29.382Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
-      "integration": "Strands"
+      "parentUuid": "15442229d4e792c7",
+      "startTime": "2026-10-21T17:50:06.466Z",
+      "endTime": "2026-10-21T17:50:07.779Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "name": "calculate",
+                "input": {
+                  "operation": "add",
+                  "a": 15,
+                  "b": 25
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "40.0",
+          "inputParameters": {
+            "operation": "add",
+            "a": 15,
+            "b": 25
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "075bf93562f634e0",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "15442229d4e792c7",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-07T11:39:28.357Z",
-      "endTime": "2026-05-07T11:39:30.181Z",
+      "startTime": "2026-10-21T17:50:06.466Z",
+      "endTime": "2026-10-21T17:50:08.929Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
       "output": "15 plus 25 is 40.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Strands"
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "40.0",
+          "inputParameters": {
+            "operation": "add",
+            "a": 15,
+            "b": 25
+          }
+        }
+      ],
+      "availableTools": [
+        "calculate"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "fdad901df9bff673",
+      "uuid": "e63dd513f3ecb146",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "46259cbdfd523821",
-      "startTime": "2026-05-07T11:39:29.383Z",
-      "endTime": "2026-05-07T11:39:30.180Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
+      "parentUuid": "b0ab14a46912848c",
+      "startTime": "2026-10-21T17:50:07.780Z",
+      "endTime": "2026-10-21T17:50:08.928Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "name": "calculate",
+                "input": {
+                  "operation": "add",
+                  "a": 15,
+                  "b": 25
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "40.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "output": "15 plus 25 is 40.",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 115.0,
-      "outputTokenCount": 9.0,
       "integration": "Strands",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 115.0,
+      "outputTokenCount": 9.0
     },
     {
-      "uuid": "8c3df76e91e1aea0",
+      "uuid": "4eee45d1d9d96e30",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9e51624673f361ae",
-      "startTime": "2026-05-07T11:39:28.358Z",
-      "endTime": "2026-05-07T11:39:29.378Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "{'toolUse': {'toolUseId': 'call_TIOLUPlcYgyfJIp3FFY9EVP4', 'name': 'calculate', 'input': {'operation': 'add', 'a': 15, 'b': 25}}}",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 84.0,
-      "outputTokenCount": 21.0,
+      "parentUuid": "b6a3cd9ff035cb15",
+      "startTime": "2026-10-21T17:50:06.467Z",
+      "endTime": "2026-10-21T17:50:07.776Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_BGGyaAAcmfXoztOiRKF9VpHb",
+                "name": "calculate",
+                "input": {
+                  "operation": "add",
+                  "a": 15,
+                  "b": 25
+                }
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands",
-      "provider": "OpenAI"
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "operation": "add",
+            "a": 15,
+            "b": 25
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 84.0,
+      "outputTokenCount": 21.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "60b97ccc68a6504b",
-      "name": "execute_tool calculate",
+      "uuid": "2a94a3ad158f4b7a",
+      "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "9e51624673f361ae",
-      "startTime": "2026-05-07T11:39:29.380Z",
-      "endTime": "2026-05-07T11:39:29.381Z",
+      "parentUuid": "b6a3cd9ff035cb15",
+      "startTime": "2026-10-21T17:50:07.777Z",
+      "endTime": "2026-10-21T17:50:07.778Z",
+      "input": {
+        "operation": "add",
+        "a": 15,
+        "b": 25
+      },
       "output": "40.0",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "metricCollection": "calculator-metrics",
-      "integration": "Strands"
+      "integration": "Strands",
+      "description": "Perform basic arithmetic operations.",
+      "metricCollection": "calculator-metrics"
     }
   ],
-  "startTime": "2026-05-07T11:39:28.357Z",
-  "endTime": "2026-05-07T11:39:30.181Z",
+  "startTime": "2026-10-21T17:50:06.466Z",
+  "endTime": "2026-10-21T17:50:08.929Z",
   "name": "strands-tool-metric-test",
   "metadata": {
     "test_type": "tool_metric_collection"
@@ -113,5 +268,18 @@
   "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
   "output": "15 plus 25 is 40.\n",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.",
+      "output": "40.0",
+      "inputParameters": {
+        "operation": "add",
+        "a": 15,
+        "b": 25
+      }
+    }
+  ]
 }

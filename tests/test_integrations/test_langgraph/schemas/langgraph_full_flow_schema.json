@@ -1,3578 +1,1860 @@
 {
-  "uuid": "42a4584c-3f3b-4903-bf75-e6becf7a2876",
+  "uuid": "2a9bb6a55869c5bd0a6cc0b92ce86b09",
   "baseSpans": [
     {
-      "uuid": "019d0518-7e27-7653-a74a-8a4d1dc26c28",
+      "uuid": "f87ae34f909e3c08",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0518-76b4-7781-8d23-f40c26aeff55",
-      "startTime": "2026-03-19T07:56:24.487Z",
-      "endTime": "2026-03-19T07:56:25.306Z",
+      "parentUuid": "767fd5568f9574d8",
+      "startTime": "2026-10-21T17:48:48.178Z",
+      "endTime": "2026-10-21T17:48:49.583Z",
       "input": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "confirm_order",
-            "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-            "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "status": "success"
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "CONFIRMED",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 6,
-                "prompt_tokens": 619,
-                "total_tokens": 625,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "CONFIRMED"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Wu3fjsdvVvHhXZldwbZZT8pXlz",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-7e27-7653-a74a-8a53b48e7d10-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 619,
-              "output_tokens": 6,
-              "total_tokens": 625,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ]
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0518-8159-7cd3-b1c3-edc215f2737d",
+      "uuid": "c6d27bb811896ce7",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0518-7e27-7653-a74a-8a4d1dc26c28",
-      "startTime": "2026-03-19T07:56:25.306Z",
-      "endTime": "2026-03-19T07:56:25.306Z",
+      "parentUuid": "f87ae34f909e3c08",
+      "startTime": "2026-10-21T17:48:49.582Z",
+      "endTime": "2026-10-21T17:48:49.583Z",
       "input": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "confirm_order",
-            "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-            "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "status": "success"
-          },
-          {
-            "content": "CONFIRMED",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 6,
-                "prompt_tokens": 619,
-                "total_tokens": 625,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Wu3fjsdvVvHhXZldwbZZT8pXlz",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-7e27-7653-a74a-8a53b48e7d10-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 619,
-              "output_tokens": 6,
-              "total_tokens": 625,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "CONFIRMED"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": "__end__",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0518-7e24-7af2-b4d2-8a14a642e890",
+      "uuid": "a92da6739d948a68",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0518-76b4-7781-8d23-f40c26aeff55",
-      "startTime": "2026-03-19T07:56:24.484Z",
-      "endTime": "2026-03-19T07:56:24.486Z",
+      "parentUuid": "767fd5568f9574d8",
+      "startTime": "2026-10-21T17:48:48.175Z",
+      "endTime": "2026-10-21T17:48:48.178Z",
       "input": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "confirm_order",
-            "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-            "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "status": "success"
-          }
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ]
         ]
       },
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "confirm_order",
           "type": "FUNCTION",
-          "output": {
-            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "confirm_order",
-            "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-            "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "status": "success"
-          },
+          "output": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
           "inputParameters": {}
         }
-      ],
-      "integration": "LangChain"
+      ]
     },
     {
-      "uuid": "019d0518-76b6-7102-9097-2d1000e3d3c5",
+      "uuid": "8031e3c717b21a93",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0518-76b4-7781-8d23-f40c26aeff55",
-      "startTime": "2026-03-19T07:56:22.582Z",
-      "endTime": "2026-03-19T07:56:24.483Z",
+      "parentUuid": "767fd5568f9574d8",
+      "startTime": "2026-10-21T17:48:47.297Z",
+      "endTime": "2026-10-21T17:48:48.174Z",
       "input": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          }
+          ]
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0518-7e23-7873-b9a4-b027e251cc71",
+      "uuid": "2e1df2315bb528b1",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0518-76b6-7102-9097-2d1000e3d3c5",
-      "startTime": "2026-03-19T07:56:24.483Z",
-      "endTime": "2026-03-19T07:56:24.483Z",
+      "parentUuid": "8031e3c717b21a93",
+      "startTime": "2026-10-21T17:48:48.173Z",
+      "endTime": "2026-10-21T17:48:48.174Z",
       "input": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": "tools",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "019d0518-76b4-7781-8d23-f40c26aeff55",
+      "uuid": "767fd5568f9574d8",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-19T07:56:22.580Z",
-      "endTime": "2026-03-19T07:56:25.307Z",
+      "startTime": "2026-10-21T17:48:47.296Z",
+      "endTime": "2026-10-21T17:48:49.584Z",
       "input": {
         "messages": [
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          }
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 157,
-                "prompt_tokens": 302,
-                "total_tokens": 459,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-            "tool_calls": [
-              {
-                "name": "add_to_cart",
-                "args": {
-                  "item": "apples",
-                  "quantity": 2
-                },
-                "id": "call_4eCUWKwX50chB6VO75OhglMb",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 302,
-              "output_tokens": 157,
-              "total_tokens": 459,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          },
-          {
-            "content": "Added 2x apples to cart",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "add_to_cart",
-            "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-            "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "status": "success"
-          },
-          {
-            "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 344,
-                "total_tokens": 369,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "add_to_cart",
+                  "arguments": {
+                    "item": "apples",
+                    "quantity": 2
+                  },
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 344,
-              "output_tokens": 25,
-              "total_tokens": 369,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "45736510-9f1c-4496-880d-179a684be738"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 24,
-                "prompt_tokens": 402,
-                "total_tokens": 426,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Added 2x apples to cart",
+                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-            "tool_calls": [
-              {
-                "name": "apply_coupon",
-                "args": {
-                  "code": "SAVE20"
-                },
-                "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 402,
-              "output_tokens": 24,
-              "total_tokens": 426,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "20% discount applied",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "apply_coupon",
-            "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-            "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "status": "success"
-          },
-          {
-            "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 28,
-                "prompt_tokens": 435,
-                "total_tokens": 463,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Added 2 apples to your cart."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 435,
-              "output_tokens": 28,
-              "total_tokens": 463,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 82,
-                "prompt_tokens": 488,
-                "total_tokens": 570,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-            "tool_calls": [
-              {
-                "name": "checkout",
-                "args": {},
-                "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 488,
-              "output_tokens": 82,
-              "total_tokens": 570,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "checkout",
-            "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-            "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "status": "success"
-          },
-          {
-            "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 25,
-                "prompt_tokens": 525,
-                "total_tokens": 550,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "apply_coupon",
+                  "arguments": {
+                    "code": "SAVE20"
+                  },
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 525,
-              "output_tokens": 25,
-              "total_tokens": 550,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 83,
-                "prompt_tokens": 579,
-                "total_tokens": 662,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "20% discount applied",
+                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Coupon SAVE20 applied successfully."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "checkout",
+                  "arguments": {},
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-            "tool_calls": [
-              {
-                "name": "confirm_order",
-                "args": {},
-                "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 579,
-              "output_tokens": 83,
-              "total_tokens": 662,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "confirm_order",
-            "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-            "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "status": "success"
-          },
-          {
-            "content": "CONFIRMED",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 6,
-                "prompt_tokens": 619,
-                "total_tokens": 625,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "confirm_order",
+                  "arguments": {},
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2Wu3fjsdvVvHhXZldwbZZT8pXlz",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0518-7e27-7653-a74a-8a53b48e7d10-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 619,
-              "output_tokens": 6,
-              "total_tokens": 625,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "CONFIRMED"
+                }
+              ]
+            }
+          ]
         ]
       },
-      "integration": "LangChain",
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "confirm_order",
+          "type": "FUNCTION",
+          "output": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+          "inputParameters": {}
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d0518-7e27-7653-a74a-8a53b48e7d10",
+      "uuid": "0fce2f9f03929123",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d0518-7e27-7653-a74a-8a4d1dc26c28",
-      "startTime": "2026-03-19T07:56:24.487Z",
-      "endTime": "2026-03-19T07:56:25.305Z",
+      "parentUuid": "f87ae34f909e3c08",
+      "startTime": "2026-10-21T17:48:48.179Z",
+      "endTime": "2026-10-21T17:48:49.581Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "You are a helpful shopping assistant. Help users:\n        - Add/remove items from their cart\n        - View their cart\n        - Apply coupons\n        - Complete checkout\n        Remember the conversation context."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "add_to_cart",
+            "arguments": {
+              "item": "apples",
+              "quantity": 2
+            },
+            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Added 2x apples to cart"
+          "content": {
+            "type": "tool_call_response",
+            "response": "Added 2x apples to cart",
+            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+          }
         },
         {
-          "role": "ai",
-          "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?"
+          "role": "assistant",
+          "content": "Added 2 apples to your cart."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "apply_coupon",
+            "arguments": {
+              "code": "SAVE20"
+            },
+            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+          }
+        },
+        {
           "role": "tool",
-          "content": "20% discount applied"
+          "content": {
+            "type": "tool_call_response",
+            "response": "20% discount applied",
+            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+          }
         },
         {
-          "role": "ai",
-          "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
+          "role": "assistant",
+          "content": "Coupon SAVE20 applied successfully."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "checkout",
+            "arguments": {},
+            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Checkout initiated. Total: $25.99. Confirm to place order."
+          "content": {
+            "type": "tool_call_response",
+            "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+          }
         },
         {
-          "role": "ai",
-          "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?"
+          "role": "assistant",
+          "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "confirm_order",
+            "arguments": {},
+            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
+          "content": {
+            "type": "tool_call_response",
+            "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "CONFIRMED",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 619.0,
-      "outputTokenCount": 6.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "output": "CONFIRMED",
+      "integration": "LangGraph",
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 581.0,
+      "outputTokenCount": 6.0
     },
     {
-      "uuid": "019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb",
+      "uuid": "eeb799c08f124638",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d0518-76b6-7102-9097-2d1000e3d3c5",
-      "startTime": "2026-03-19T07:56:22.583Z",
-      "endTime": "2026-03-19T07:56:24.482Z",
+      "parentUuid": "8031e3c717b21a93",
+      "startTime": "2026-10-21T17:48:47.298Z",
+      "endTime": "2026-10-21T17:48:48.173Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "You are a helpful shopping assistant. Help users:\n        - Add/remove items from their cart\n        - View their cart\n        - Apply coupons\n        - Complete checkout\n        Remember the conversation context."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "add_to_cart",
+            "arguments": {
+              "item": "apples",
+              "quantity": 2
+            },
+            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Added 2x apples to cart"
+          "content": {
+            "type": "tool_call_response",
+            "response": "Added 2x apples to cart",
+            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+          }
         },
         {
-          "role": "ai",
-          "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?"
+          "role": "assistant",
+          "content": "Added 2 apples to your cart."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "apply_coupon",
+            "arguments": {
+              "code": "SAVE20"
+            },
+            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+          }
+        },
+        {
           "role": "tool",
-          "content": "20% discount applied"
+          "content": {
+            "type": "tool_call_response",
+            "response": "20% discount applied",
+            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+          }
         },
         {
-          "role": "ai",
-          "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?"
+          "role": "assistant",
+          "content": "Coupon SAVE20 applied successfully."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "checkout",
+            "arguments": {},
+            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Checkout initiated. Total: $25.99. Confirm to place order."
+          "content": {
+            "type": "tool_call_response",
+            "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+          }
         },
         {
-          "role": "ai",
-          "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?"
+          "role": "assistant",
+          "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'add_to_cart', 'description': 'Add an item to the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}, 'quantity': {'default': 1, 'type': 'integer'}}, 'required': ['item'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'remove_from_cart', 'description': 'Remove an item from the shopping cart.', 'parameters': {'properties': {'item': {'type': 'string'}}, 'required': ['item'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'view_cart', 'description': 'View the current shopping cart contents.', 'parameters': {'properties': {}, 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'apply_coupon', 'description': 'Apply a coupon code to the cart.', 'parameters': {'properties': {'code': {'type': 'string'}}, 'required': ['code'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'checkout', 'description': 'Proceed to checkout.', 'parameters': {'properties': {}, 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'confirm_order', 'description': 'Confirm and place the order.', 'parameters': {'properties': {}, 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "confirm_order",
-            "args": {},
-            "id": "call_aDNxiQh5JK4yJELox5YTLGfx"
+            "arguments": {},
+            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 579.0,
-      "outputTokenCount": 83.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "confirm_order",
+          "type": "FUNCTION",
+          "inputParameters": {}
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 541.0,
+      "outputTokenCount": 13.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d0518-7e25-7143-9f08-b98a88afbb09",
+      "uuid": "8e47a85c6e89b1af",
       "name": "confirm_order",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0518-7e24-7af2-b4d2-8a14a642e890",
-      "startTime": "2026-03-19T07:56:24.485Z",
-      "endTime": "2026-03-19T07:56:24.486Z",
+      "parentUuid": "a92da6739d948a68",
+      "startTime": "2026-10-21T17:48:48.176Z",
+      "endTime": "2026-10-21T17:48:48.177Z",
       "input": {},
-      "output": {
-        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "confirm_order",
-        "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-        "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+      "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-03-19T07:56:22.580Z",
-  "endTime": "2026-03-19T07:56:25.307Z",
+  "startTime": "2026-10-21T17:48:47.296Z",
+  "endTime": "2026-10-21T17:48:49.584Z",
   "name": "langgraph-full-flow",
   "tags": [
     "langgraph",
     "full-flow"
   ],
   "environment": "development",
-  "threadId": "full-flow-9fb20664-6a12-49ef-8574-24039c3d888a",
+  "threadId": "full-flow-1786650b-6c3d-46f7-bc31-c58cd5dcd88d",
   "input": {
     "messages": [
-      {
-        "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-      }
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+            }
+          ]
+        }
+      ]
     ]
   },
   "output": {
     "messages": [
-      {
-        "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "4a1456a7-8710-413a-8781-e0ae2e02af6a"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 157,
-            "prompt_tokens": 302,
-            "total_tokens": 459,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WkVI68g7YwyFMbB1iq8fv99WNT",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-55a7-7ef3-83d7-146721260516-0",
-        "tool_calls": [
-          {
-            "name": "add_to_cart",
-            "args": {
-              "item": "apples",
-              "quantity": 2
-            },
-            "id": "call_4eCUWKwX50chB6VO75OhglMb",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 302,
-          "output_tokens": 157,
-          "total_tokens": 459,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
-          }
+          ]
         }
-      },
-      {
-        "content": "Added 2x apples to cart",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "add_to_cart",
-        "id": "44710a89-41fe-4bd8-a503-eea3db277ae6",
-        "tool_call_id": "call_4eCUWKwX50chB6VO75OhglMb",
-        "status": "success"
-      },
-      {
-        "content": "Done \u2014 2 apples added to your cart. Would you like to add anything else or view your cart?",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 25,
-            "prompt_tokens": 344,
-            "total_tokens": 369,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "add_to_cart",
+              "arguments": {
+                "item": "apples",
+                "quantity": 2
+              },
+              "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WmgjdNGUgwCu9wV0qYjnHclJTL",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-5ea1-76f1-850d-e00c6f57072f-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 344,
-          "output_tokens": 25,
-          "total_tokens": 369,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      },
-      {
-        "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "45736510-9f1c-4496-880d-179a684be738"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 24,
-            "prompt_tokens": 402,
-            "total_tokens": 426,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Added 2x apples to cart",
+              "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WnY7OW3pRTXPPdiKbcMGZIKibO",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-62b6-7bb1-a12d-47480c922c4f-0",
-        "tool_calls": [
-          {
-            "name": "apply_coupon",
-            "args": {
-              "code": "SAVE20"
-            },
-            "id": "call_iwDWK19FAu0bIuU5I27DIw31",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 402,
-          "output_tokens": 24,
-          "total_tokens": 426,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      },
-      {
-        "content": "20% discount applied",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "apply_coupon",
-        "id": "9e8bbed0-0738-4a0a-a737-bcd6fb5c346a",
-        "tool_call_id": "call_iwDWK19FAu0bIuU5I27DIw31",
-        "status": "success"
-      },
-      {
-        "content": "Coupon SAVE20 applied \u2014 20% discount added to your cart. Would you like to proceed to checkout or keep shopping?",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 28,
-            "prompt_tokens": 435,
-            "total_tokens": 463,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Added 2 apples to your cart."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WpmBnoPPA4dGKsEEgy5RrDZWy2",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-67e8-7e42-9c13-5796d26ae85f-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 435,
-          "output_tokens": 28,
-          "total_tokens": 463,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      },
-      {
-        "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "dd42ad12-ce9e-4da4-baff-2bb0bb3a85ee"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 82,
-            "prompt_tokens": 488,
-            "total_tokens": 570,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 64,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      ],
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WqA1iIqDFaBrdykRXIeWIwWbfE",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-6c8e-73b1-b628-ee0e9fdc544e-0",
-        "tool_calls": [
-          {
-            "name": "checkout",
-            "args": {},
-            "id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 488,
-          "output_tokens": 82,
-          "total_tokens": 570,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 64
-          }
+          ]
         }
-      },
-      {
-        "content": "Checkout initiated. Total: $25.99. Confirm to place order.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "checkout",
-        "id": "c945f695-d9f8-46d0-8e17-f8b8f4242b3a",
-        "tool_call_id": "call_61XBvhsDHeMhmWBufjKyuPaC",
-        "status": "success"
-      },
-      {
-        "content": "Checkout started. Your total is $25.99. Would you like me to confirm and place the order?",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 25,
-            "prompt_tokens": 525,
-            "total_tokens": 550,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "apply_coupon",
+              "arguments": {
+                "code": "SAVE20"
+              },
+              "id": "call_10v79gTBvDEHeVwAjdCDt23t"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WrrvNCVYBBnvcb7ImxKWJL7Sxs",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-72b6-7f00-b8d7-3d02b2ed203c-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 525,
-          "output_tokens": 25,
-          "total_tokens": 550,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      },
-      {
-        "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "b708c211-ee45-44c9-a623-d850e2ab72a9"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 83,
-            "prompt_tokens": 579,
-            "total_tokens": 662,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 64,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "20% discount applied",
+              "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Coupon SAVE20 applied successfully."
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "checkout",
+              "arguments": {},
+              "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2Ws2obnuFRuKQk5kXa0MO2lVsRb",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-76b7-7dc2-a8d8-ba9ec0a08bcb-0",
-        "tool_calls": [
-          {
-            "name": "confirm_order",
-            "args": {},
-            "id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 579,
-          "output_tokens": 83,
-          "total_tokens": 662,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 64
-          }
+          ]
         }
-      },
-      {
-        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "confirm_order",
-        "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-        "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-        "status": "success"
-      },
-      {
-        "content": "CONFIRMED",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 6,
-            "prompt_tokens": 619,
-            "total_tokens": 625,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+              "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "confirm_order",
+              "arguments": {},
+              "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2Wu3fjsdvVvHhXZldwbZZT8pXlz",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0518-7e27-7653-a74a-8a53b48e7d10-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 619,
-          "output_tokens": 6,
-          "total_tokens": 625,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+              "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "CONFIRMED"
+            }
+          ]
+        }
+      ]
     ]
   },
   "status": "SUCCESS",
@@ -3580,16 +1862,7 @@
     {
       "name": "confirm_order",
       "type": "FUNCTION",
-      "output": {
-        "content": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "confirm_order",
-        "id": "680841d3-2e87-4e9b-9ec1-b43e2d461f99",
-        "tool_call_id": "call_aDNxiQh5JK4yJELox5YTLGfx",
-        "status": "success"
-      },
+      "output": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
       "inputParameters": {}
     }
   ]

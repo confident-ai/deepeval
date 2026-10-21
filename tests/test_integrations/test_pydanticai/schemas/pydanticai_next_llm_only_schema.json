@@ -1,20 +1,15 @@
 {
-  "uuid": "7fcb40d046430b814aedb0e608273264",
+  "uuid": "4a4985bd0b02b133acf4fd459d0c4587",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "0bd69b150a5c00ff",
+      "uuid": "7cd43a7e77e12228",
       "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:39.072Z",
-      "endTime": "2026-06-01T16:36:39.885Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Say hello in exactly three words."
-        }
-      ],
+      "startTime": "2026-10-21T17:17:33.343Z",
+      "endTime": "2026-10-21T17:17:34.716Z",
+      "input": "Say hello in exactly three words.",
       "output": "Hello, how are you?",
       "integration": "PydanticAI",
       "availableTools": [],
@@ -23,13 +18,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "36301fd9f4e54904",
+      "uuid": "90de9a0feee52e0b",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0bd69b150a5c00ff",
-      "startTime": "2026-06-01T16:36:39.073Z",
-      "endTime": "2026-06-01T16:36:39.884Z",
+      "parentUuid": "7cd43a7e77e12228",
+      "startTime": "2026-10-21T17:17:33.344Z",
+      "endTime": "2026-10-21T17:17:34.713Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "next_llm_only"
@@ -42,44 +37,21 @@
         {
           "role": "user",
           "content": "Say hello in exactly three words."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {},
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "Hello, how are you?"
-        }
-      ],
+      "output": "Hello, how are you?",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 6.0,
+      "outputTokenCount": 7.0,
       "metricCollection": "llm_metrics_only_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:39.072Z",
-  "endTime": "2026-06-01T16:36:39.885Z",
+  "startTime": "2026-10-21T17:17:33.343Z",
+  "endTime": "2026-10-21T17:17:34.716Z",
   "name": "pydanticai-next-llm-only-test",
   "metadata": {
     "test_type": "next_llm_only"
@@ -91,12 +63,7 @@
   "environment": "development",
   "threadId": "next-llm-only-123",
   "userId": "test-user",
-  "input": [
-    {
-      "role": "user",
-      "content": "Say hello in exactly three words."
-    }
-  ],
+  "input": "Say hello in exactly three words.",
   "output": "Hello, how are you?",
   "status": "SUCCESS"
 }

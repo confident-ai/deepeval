@@ -64,7 +64,7 @@ def get_time(city: str) -> dict:
 
 def _build_agent() -> LlmAgent:
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         name="multi_tool_assistant",
         instruction=(
             "You have access to weather and time tools. "

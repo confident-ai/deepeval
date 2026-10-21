@@ -1,62 +1,152 @@
 {
-  "uuid": "ffc92c50614e95bd293312ecdf2883ed",
-  "baseSpans": [],
-  "agentSpans": [
+  "uuid": "7603d314acbffb7ae465796111f3b721",
+  "baseSpans": [
     {
-      "uuid": "8c1a7ce486a80806",
-      "name": "invocation [deepeval-googleadk-evals]",
+      "uuid": "9cb9d7db0c1f8492",
+      "name": "invocation",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-07T09:09:01.394Z",
-      "endTime": "2026-05-07T09:09:04.669Z",
-      "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7678db9-e1e0-4091-9944-d255f5b285bc\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Sync Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
+      "type": "base",
+      "startTime": "2026-10-21T16:47:43.178Z",
+      "endTime": "2026-10-21T16:47:46.319Z",
       "integration": "Google ADK"
     },
     {
-      "uuid": "cd7b9d3470685350",
+      "uuid": "287f5a791848d348",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "56beb8bf19c9d973",
+      "startTime": "2026-10-21T16:47:44.871Z",
+      "endTime": "2026-10-21T16:47:46.309Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "6ebdba3c2aa84e06",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "42f08030ebfcf7ea",
+      "startTime": "2026-10-21T16:47:43.215Z",
+      "endTime": "2026-10-21T16:47:44.863Z",
+      "integration": "Google ADK"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "5087a812c8dbfb2f",
       "name": "evals_assistant",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "8c1a7ce486a80806",
-      "startTime": "2026-05-07T09:09:01.394Z",
-      "endTime": "2026-05-07T09:09:04.669Z",
-      "input": [],
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
+      "parentUuid": "9cb9d7db0c1f8492",
+      "startTime": "2026-10-21T16:47:43.180Z",
+      "endTime": "2026-10-21T16:47:46.314Z",
+      "input": "Use the special_tool to process 'Sync Data'",
+      "output": "The special_tool processed 'Sync Data' and returned: {\"processed\": \"Processed: Sync Data\"}.",
+      "integration": "Google ADK",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+          "output": {
+            "processed": "Processed: Sync Data"
+          },
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": [],
-      "integration": "Google ADK"
+      "metricCollection": "agent_metrics_v1",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "flaky": false,
+          "evaluationModel": "gpt-4.1-mini"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "d9ac9c9e1febceb7",
+      "uuid": "56beb8bf19c9d973",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "cd7b9d3470685350",
-      "startTime": "2026-05-07T09:09:03.043Z",
-      "endTime": "2026-05-07T09:09:04.668Z",
-      "input": "{\"processed\": \"Processed: Sync Data\"}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227}}",
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 227.0,
+      "parentUuid": "5087a812c8dbfb2f",
+      "startTime": "2026-10-21T16:47:44.870Z",
+      "endTime": "2026-10-21T16:47:46.312Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Sync Data'"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "special_tool",
+            "arguments": {
+              "query": "Sync Data"
+            }
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "response": {
+              "processed": "Processed: Sync Data"
+            }
+          }
+        }
+      ],
+      "output": "The special_tool processed 'Sync Data' and returned: {\"processed\": \"Processed: Sync Data\"}.",
       "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 225.0,
+      "outputTokenCount": 22.0
     },
     {
-      "uuid": "47973e09bcbac9a3",
+      "uuid": "42f08030ebfcf7ea",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "cd7b9d3470685350",
-      "startTime": "2026-05-07T09:09:01.395Z",
-      "endTime": "2026-05-07T09:09:03.041Z",
-      "input": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\".",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"query\":\"Sync Data\"},\"name\":\"special_tool\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":16,\"prompt_token_count\":193,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":193}],\"total_token_count\":209}}",
+      "parentUuid": "5087a812c8dbfb2f",
+      "startTime": "2026-10-21T16:47:43.215Z",
+      "endTime": "2026-10-21T16:47:44.869Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Sync Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "special_tool",
+            "arguments": {
+              "query": "Sync Data"
+            }
+          }
+        }
+      ],
+      "integration": "Google ADK",
       "toolsCalled": [
         {
           "name": "special_tool",
@@ -66,40 +156,36 @@
           }
         }
       ],
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 193.0,
-      "outputTokenCount": 16.0,
-      "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 191.0,
+      "outputTokenCount": 65.0,
+      "metricCollection": "llm_metrics_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d436db94c792f56e",
+      "uuid": "75ba6db22c986f1d",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "47973e09bcbac9a3",
-      "startTime": "2026-05-07T09:09:03.039Z",
-      "endTime": "2026-05-07T09:09:03.039Z",
-      "input": "{\"query\": \"Sync Data\"}",
-      "output": "{\"id\":\"adk-2b1a4c0f-8ea2-464e-a55e-6b928aef76b4\",\"name\":\"special_tool\",\"response\":{\"processed\":\"Processed: Sync Data\"}}",
-      "toolsCalled": [
-        {
-          "name": "special_tool",
-          "type": "FUNCTION",
-          "inputParameters": {
-            "query": "Sync Data"
-          }
-        }
-      ],
-      "metricCollection": "special_tool_v1",
-      "integration": "Google ADK"
+      "parentUuid": "5087a812c8dbfb2f",
+      "startTime": "2026-10-21T16:47:44.865Z",
+      "endTime": "2026-10-21T16:47:44.868Z",
+      "input": {
+        "query": "Sync Data"
+      },
+      "output": {
+        "processed": "Processed: Sync Data"
+      },
+      "integration": "Google ADK",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+      "metricCollection": "special_tool_v1"
     }
   ],
-  "startTime": "2026-05-07T09:09:01.394Z",
-  "endTime": "2026-05-07T09:09:04.669Z",
+  "startTime": "2026-10-21T16:47:43.178Z",
+  "endTime": "2026-10-21T16:47:46.319Z",
   "name": "googleadk-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -113,8 +199,21 @@
   "environment": "development",
   "threadId": "thread-sync-features-001",
   "userId": "user-sync-001",
-  "input": "{\"user_id\": \"test-user\", \"session_id\": \"c7678db9-e1e0-4091-9944-d255f5b285bc\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Sync Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":227},\"invocation_id\":\"e-f512e729-a99a-4667-bf1d-be37a0520e3f\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"bb164a82-9e6b-4173-ae84-e1033f54d575\",\"timestamp\":1778144943.043001}",
+  "input": "Use the special_tool to process 'Sync Data'",
+  "output": "The special_tool processed 'Sync Data' and returned: {\"processed\": \"Processed: Sync Data\"}.",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+      "output": {
+        "processed": "Processed: Sync Data"
+      },
+      "inputParameters": {
+        "query": "Sync Data"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_override_v1"
 }

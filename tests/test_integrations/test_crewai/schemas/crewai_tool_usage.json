@@ -1,30 +1,308 @@
 {
-  "uuid": "277dfa3d-31e4-425e-9b96-f957be2586db",
+  "uuid": "9ec80b190c4d080cbf41fe64d159ea41",
   "baseSpans": [
     {
-      "uuid": "c61119ad-7bb8-4ea1-bc63-3ca0ccd41d5d",
-      "name": "kickoff",
+      "uuid": "2dd0f24ab194827a",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:12.311Z",
-      "endTime": "2026-06-01T17:24:17.972Z",
+      "startTime": "2026-10-21T17:48:33.947Z",
+      "endTime": "2026-10-21T17:48:35.951Z",
       "input": {
         "city": "Paris"
       },
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
       "integration": "CrewAI"
+    },
+    {
+      "uuid": "356f8a6e476cde41",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "2dd0f24ab194827a",
+      "startTime": "2026-10-21T17:48:34.121Z",
+      "endTime": "2026-10-21T17:48:35.948Z",
+      "input": {
+        "description": "Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.",
+        "context": ""
+      },
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "03f0befaf3faf550",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "12f21f1285e2ec79",
+      "startTime": "2026-10-21T17:48:34.127Z",
+      "endTime": "2026-10-21T17:48:35.946Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a3f3c43cd9f63028",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.944Z",
+      "endTime": "2026-10-21T17:48:35.944Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d11399f426fe40bf",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.943Z",
+      "endTime": "2026-10-21T17:48:35.943Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "892707ba1bccfc7b",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.942Z",
+      "endTime": "2026-10-21T17:48:35.942Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "2077f1a8e967d856",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.941Z",
+      "endTime": "2026-10-21T17:48:35.941Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "34420b878fbacf47",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.938Z",
+      "endTime": "2026-10-21T17:48:35.940Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "50f40549015c312a",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.203Z",
+      "endTime": "2026-10-21T17:48:35.937Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "62c188f29fbb857a",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.202Z",
+      "endTime": "2026-10-21T17:48:35.202Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f2b2c02ea21b027d",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.201Z",
+      "endTime": "2026-10-21T17:48:35.202Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "653919a7030179cf",
+      "name": "node increment_and_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.200Z",
+      "endTime": "2026-10-21T17:48:35.201Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6854225dbf77ea56",
+      "name": "node check_native_todo_completion",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.200Z",
+      "endTime": "2026-10-21T17:48:35.200Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "todo_not_satisfied",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "cbcbef2455091275",
+      "name": "node execute_native_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:35.196Z",
+      "endTime": "2026-10-21T17:48:35.199Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_completed",
+      "integration": "CrewAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Weather in Paris: Cloudy, 65\u00b0F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "533cf804b69fa2ce",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:34.132Z",
+      "endTime": "2026-10-21T17:48:35.196Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_calls",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "65d79a0a4b923dab",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:34.132Z",
+      "endTime": "2026-10-21T17:48:34.132Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1fef51cd3b20f79e",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:34.130Z",
+      "endTime": "2026-10-21T17:48:34.131Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e80d97e7365b3300",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:34.129Z",
+      "endTime": "2026-10-21T17:48:34.130Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "0ada3d8c29a9af0d",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "03f0befaf3faf550",
+      "startTime": "2026-10-21T17:48:34.129Z",
+      "endTime": "2026-10-21T17:48:34.129Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "1e3fb047-7b2d-4e54-9ffd-cc6f0ad25bf4",
-      "name": "execute_task",
+      "uuid": "12f21f1285e2ec79",
+      "name": "Meteorologist",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "c61119ad-7bb8-4ea1-bc63-3ca0ccd41d5d",
-      "startTime": "2026-06-01T17:24:12.320Z",
-      "endTime": "2026-06-01T17:24:17.966Z",
-      "input": "Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "356f8a6e476cde41",
+      "startTime": "2026-10-21T17:48:34.122Z",
+      "endTime": "2026-10-21T17:48:35.947Z",
+      "input": {
+        "description": "Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.",
+        "context": ""
+      },
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
       "integration": "CrewAI",
       "toolsCalled": [
@@ -43,81 +321,65 @@
   ],
   "llmSpans": [
     {
-      "uuid": "7eca84a5-e985-4b49-9e6f-1dd85e975254",
-      "name": "call",
+      "uuid": "0e8e413e88abc45c",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1e3fb047-7b2d-4e54-9ffd-cc6f0ad25bf4",
-      "startTime": "2026-06-01T17:24:16.799Z",
-      "endTime": "2026-06-01T17:24:17.959Z",
+      "parentUuid": "50f40549015c312a",
+      "startTime": "2026-10-21T17:48:35.203Z",
+      "endTime": "2026-10-21T17:48:35.936Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather",
-          "cache_breakpoint": true
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_G0M4C0rIpIBoWcLMzY0IbBCP",
-              "type": "function",
-              "function": {
-                "name": "'get_weather'",
-                "arguments": "'{\"city\":\"Paris\"}'"
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_YFj5lRzJNBGOZT7rPMLBH8Yu",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "tool_call_id": "call_G0M4C0rIpIBoWcLMzY0IbBCP",
-          "name": "get_weather",
-          "content": "Weather in Paris: Cloudy, 65\u00b0F"
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_YFj5lRzJNBGOZT7rPMLBH8Yu",
+            "response": "Weather in Paris: Cloudy, 65\u00b0F"
+          }
         }
       ],
-      "output": "Weather in Paris: Cloudy, 65\u00b0F",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "73a6d8fe-73c6-463c-b6f0-b124656441d9",
-      "name": "call",
+      "uuid": "a0cde903ab6a1071",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1e3fb047-7b2d-4e54-9ffd-cc6f0ad25bf4",
-      "startTime": "2026-06-01T17:24:12.323Z",
-      "endTime": "2026-06-01T17:24:16.793Z",
+      "parentUuid": "533cf804b69fa2ce",
+      "startTime": "2026-10-21T17:48:34.133Z",
+      "endTime": "2026-10-21T17:48:35.194Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather",
-          "cache_breakpoint": true
+          "content": "You are Meteorologist. You are a meticulous meteorologist. You NEVER guess the weather. You ALWAYS call the tool without exception.\nYour personal goal is: Check weather"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Check the weather in Paris. You MUST use the 'get_weather' tool to find the answer. Do not answer from your own knowledge.\n\nThis is the expected criteria for your final answer: The weather report directly from the tool.\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
-      "output": [
-        {
-          "id": "call_G0M4C0rIpIBoWcLMzY0IbBCP",
-          "function": {
-            "arguments": "{\"city\":\"Paris\"}",
-            "name": "get_weather"
-          },
-          "type": "function"
-        }
-      ],
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
@@ -125,26 +387,38 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "62bbb2b3-1dd1-42ad-adec-a727bb59ea05",
+      "uuid": "510c9fad19efff49",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "1e3fb047-7b2d-4e54-9ffd-cc6f0ad25bf4",
-      "startTime": "2026-06-01T17:24:16.793Z",
-      "endTime": "2026-06-01T17:24:16.794Z",
+      "parentUuid": "cbcbef2455091275",
+      "startTime": "2026-10-21T17:48:35.197Z",
+      "endTime": "2026-10-21T17:48:35.197Z",
       "input": {
         "city": "Paris"
       },
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
-      "integration": "CrewAI"
+      "integration": "CrewAI",
+      "metricCollection": "weather_tool_metrics"
     }
   ],
-  "startTime": "2026-06-01T17:24:12.311Z",
-  "endTime": "2026-06-01T17:24:17.972Z",
+  "startTime": "2026-10-21T17:48:33.947Z",
+  "endTime": "2026-10-21T17:48:35.951Z",
+  "name": "crew crew",
   "environment": "development",
   "input": {
     "city": "Paris"
   },
   "output": "Weather in Paris: Cloudy, 65\u00b0F",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Weather in Paris: Cloudy, 65\u00b0F",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    }
+  ]
 }

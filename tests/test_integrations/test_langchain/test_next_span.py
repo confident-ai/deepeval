@@ -37,9 +37,13 @@ from deepeval.tracing import (
     next_retriever_span,
     next_span,
     next_tool_span,
-    trace_manager,
 )
 from deepeval.tracing.types import LlmSpan, RetrieverSpan, ToolSpan
+from tests.test_integrations.utils import (
+    collecting_traces,
+    confident_trace_instrumentation,
+    walk_spans,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -47,55 +51,34 @@ from deepeval.tracing.types import LlmSpan, RetrieverSpan, ToolSpan
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _collect_runs():
+    with confident_trace_instrumentation("langchain", "langgraph"):
+        with collecting_traces() as traces:
+            _COLLECTED.append(traces)
+            yield
+            _COLLECTED.clear()
+
+
+_COLLECTED: List[List[Any]] = []
+
+
+def _collected(span_type) -> list:
+    spans = [
+        span
+        for trace in _COLLECTED[-1]
+        for span in walk_spans(trace.root_spans)
+        if isinstance(span, span_type)
+    ]
+    return sorted(spans, key=lambda span: span.start_time)
+
+
 class _RecordingCallbackHandler(CallbackHandler):
-    """Capture span object refs the moment they're created so tests can
-    inspect them after the trace has ended.
+    """Reads the spans of each type that its runs produced, in start order."""
 
-    ``trace_manager.remove_span(...)`` clears the active-spans map at
-    span end but the span object itself stays parented in the trace
-    tree, so we take the reference at start (after super() applied
-    pending) and assert against it post-run.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.llm_spans: List[LlmSpan] = []
-        self.tool_spans: List[ToolSpan] = []
-        self.retriever_spans: List[RetrieverSpan] = []
-
-    def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
-        res = super().on_chat_model_start(
-            serialized, messages, run_id=run_id, **kwargs
-        )
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_llm_start(self, serialized, prompts, *, run_id, **kwargs):
-        res = super().on_llm_start(serialized, prompts, run_id=run_id, **kwargs)
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_tool_start(self, serialized, input_str, *, run_id, **kwargs):
-        res = super().on_tool_start(
-            serialized, input_str, run_id=run_id, **kwargs
-        )
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.tool_spans.append(span)
-        return res
-
-    def on_retriever_start(self, serialized, query, *, run_id, **kwargs):
-        res = super().on_retriever_start(
-            serialized, query, run_id=run_id, **kwargs
-        )
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.retriever_spans.append(span)
-        return res
+    llm_spans = property(lambda self: _collected(LlmSpan))
+    tool_spans = property(lambda self: _collected(ToolSpan))
+    retriever_spans = property(lambda self: _collected(RetrieverSpan))
 
 
 class _EchoToolInput(BaseModel):

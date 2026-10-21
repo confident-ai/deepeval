@@ -1,25 +1,17 @@
 {
-  "uuid": "a6ae3a361297a69d773f841e61992748",
+  "uuid": "0f293617816cb1ee509bf3535c046b47",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "9ac329154b446486",
+      "uuid": "2cd19372e625ab28",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:08.630Z",
-      "endTime": "2026-06-01T16:36:10.694Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Use the special_tool to process 'Async Data'"
-        }
-      ],
-      "output": "The special tool processed the input and resulted in: **Processed: Async Data**.",
+      "startTime": "2026-10-21T17:17:28.116Z",
+      "endTime": "2026-10-21T17:17:31.573Z",
+      "input": "Use the special_tool to process 'Async Data'",
+      "output": "The data has been processed: \"Async Data\".",
       "integration": "PydanticAI",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1",
       "toolsCalled": [
         {
           "name": "special_tool",
@@ -29,18 +21,21 @@
             "query": "Async Data"
           }
         }
-      ]
+      ],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_async_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "aa7c93b2b75f2765",
+      "uuid": "baa751cb59136795",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9ac329154b446486",
-      "startTime": "2026-06-01T16:36:09.667Z",
-      "endTime": "2026-06-01T16:36:10.692Z",
+      "parentUuid": "2cd19372e625ab28",
+      "startTime": "2026-10-21T17:17:30.280Z",
+      "endTime": "2026-10-21T17:17:31.571Z",
       "input": [
         {
           "role": "system",
@@ -54,7 +49,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
+            "id": "call_X1GtzFnBZTBLFKtIRC5jhutZ",
             "name": "special_tool",
             "arguments": "{\"query\":\"Async Data\"}"
           }
@@ -63,83 +58,27 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
+            "id": "call_X1GtzFnBZTBLFKtIRC5jhutZ",
             "name": "special_tool",
             "result": "Processed: Async Data"
           }
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "special_tool",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "type": "object"
-                },
-                "description": "A tool used by feature tests.",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "special_tool": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "The special tool processed the input and resulted in: **Processed: Async Data**."
-        }
-      ],
+      "output": "The data has been processed: \"Async Data\".",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 90.0,
-      "outputTokenCount": 18.0
+      "inputTokenCount": 86.0,
+      "outputTokenCount": 12.0
     },
     {
-      "uuid": "450fa34cfb0f128f",
+      "uuid": "2fec9e7da4ba35b4",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9ac329154b446486",
-      "startTime": "2026-06-01T16:36:08.632Z",
-      "endTime": "2026-06-01T16:36:09.665Z",
+      "parentUuid": "2cd19372e625ab28",
+      "startTime": "2026-10-21T17:17:28.118Z",
+      "endTime": "2026-10-21T17:17:30.278Z",
       "input": [
         {
           "role": "system",
@@ -148,57 +87,6 @@
         {
           "role": "user",
           "content": "Use the special_tool to process 'Async Data'"
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "special_tool",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "type": "object"
-                },
-                "description": "A tool used by feature tests.",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "special_tool": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
       "output": [
@@ -206,29 +94,38 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_3XniXRbaWiUvXHOwvhByJAqG",
+            "id": "call_X1GtzFnBZTBLFKtIRC5jhutZ",
             "name": "special_tool",
             "arguments": "{\"query\":\"Async Data\"}"
           }
         }
       ],
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0
+      "inputTokenCount": 61.0,
+      "outputTokenCount": 16.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "b908dde6e760b4b7",
+      "uuid": "a728ee2109e2bc78",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "9ac329154b446486",
-      "startTime": "2026-06-01T16:36:09.665Z",
-      "endTime": "2026-06-01T16:36:09.666Z",
+      "parentUuid": "2cd19372e625ab28",
+      "startTime": "2026-10-21T17:17:30.279Z",
+      "endTime": "2026-10-21T17:17:30.279Z",
       "input": {
         "query": "Async Data"
       },
@@ -236,8 +133,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:08.630Z",
-  "endTime": "2026-06-01T16:36:10.694Z",
+  "startTime": "2026-10-21T17:17:28.116Z",
+  "endTime": "2026-10-21T17:17:31.573Z",
   "name": "pydanticai-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -251,13 +148,18 @@
   "environment": "development",
   "threadId": "thread-async-features-002",
   "userId": "user-async-002",
-  "input": [
+  "input": "Use the special_tool to process 'Async Data'",
+  "output": "The data has been processed: \"Async Data\".",
+  "status": "SUCCESS",
+  "toolsCalled": [
     {
-      "role": "user",
-      "content": "Use the special_tool to process 'Async Data'"
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "output": "Processed: Async Data",
+      "inputParameters": {
+        "query": "Async Data"
+      }
     }
   ],
-  "output": "The special tool processed the input and resulted in: **Processed: Async Data**.",
-  "status": "SUCCESS",
   "metricCollection": "trace_metrics_override_async_v1"
 }

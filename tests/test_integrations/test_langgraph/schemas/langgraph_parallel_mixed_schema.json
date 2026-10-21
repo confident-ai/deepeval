@@ -1,547 +1,1731 @@
 {
-  "uuid": "76a18374-5a91-4e7c-b9e1-0c918b4685d9",
+  "uuid": "db62cd3f4a207f6da85b7ef092025276",
   "baseSpans": [
     {
-      "uuid": "019d0517-f0ad-7e92-b989-45bd858bae68",
+      "uuid": "0beb151c8ad145d6",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-e031-7743-a7a1-de77f4da7048",
-      "startTime": "2026-03-19T07:55:48.269Z",
-      "endTime": "2026-03-19T07:55:51.336Z",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:42.002Z",
+      "endTime": "2026-10-21T17:48:43.616Z",
       "input": {
         "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
+              ]
             }
-          },
-          {
-            "content": "Partly cloudy, 65\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-            "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "status": "success"
-          },
-          {
-            "content": "$245.60",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-            "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "status": "success"
-          },
-          {
-            "content": "1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_exchange_rate",
-            "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-            "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "status": "success"
-          },
-          {
-            "content": "100 * 1.5 = 150.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "22cce891-caa8-4e50-8125-102939123e07",
-            "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "status": "success"
-          }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "100 * 1.5 = 150.0",
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 200,
-                "prompt_tokens": 487,
-                "total_tokens": 687,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F\n- TSLA stock price: $245.60\n- USD to EUR exchange rate: 1 USD = 0.92 EUR\n- Calculation result: 150.0"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WK2B2Vs8ilieCym1vld52ddSop",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-f0ad-7e92-b989-45c6e1813e73-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 487,
-              "output_tokens": 200,
-              "total_tokens": 687,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          }
+          ]
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-fca8-73b3-bd9d-a738b7c9027a",
+      "uuid": "2fda4592a9fa6309",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-f0ad-7e92-b989-45bd858bae68",
-      "startTime": "2026-03-19T07:55:51.336Z",
-      "endTime": "2026-03-19T07:55:51.336Z",
+      "parentUuid": "0beb151c8ad145d6",
+      "startTime": "2026-10-21T17:48:43.615Z",
+      "endTime": "2026-10-21T17:48:43.616Z",
       "input": {
         "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
+              ]
             }
-          },
-          {
-            "content": "Partly cloudy, 65\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-            "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "status": "success"
-          },
-          {
-            "content": "$245.60",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-            "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "status": "success"
-          },
-          {
-            "content": "1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_exchange_rate",
-            "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-            "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "status": "success"
-          },
-          {
-            "content": "100 * 1.5 = 150.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "22cce891-caa8-4e50-8125-102939123e07",
-            "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "status": "success"
-          },
-          {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 200,
-                "prompt_tokens": 487,
-                "total_tokens": 687,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WK2B2Vs8ilieCym1vld52ddSop",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-f0ad-7e92-b989-45c6e1813e73-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 487,
-              "output_tokens": 200,
-              "total_tokens": 687,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "100 * 1.5 = 150.0",
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F\n- TSLA stock price: $245.60\n- USD to EUR exchange rate: 1 USD = 0.92 EUR\n- Calculation result: 150.0"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": "__end__",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-f0aa-7502-a377-29150794af21",
+      "uuid": "c77be66c3afdab3e",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019d0517-e031-7743-a7a1-de77f4da7048",
-      "startTime": "2026-03-19T07:55:48.266Z",
-      "endTime": "2026-03-19T07:55:48.269Z",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:42.000Z",
+      "endTime": "2026-10-21T17:48:42.002Z",
       "input": {
         "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Partly cloudy, 65\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-            "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "status": "success"
-          },
-          {
-            "content": "$245.60",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-            "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "status": "success"
-          },
-          {
-            "content": "1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_exchange_rate",
-            "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-            "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "status": "success"
-          },
-          {
-            "content": "100 * 1.5 = 150.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "22cce891-caa8-4e50-8125-102939123e07",
-            "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "status": "success"
-          }
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "100 * 1.5 = 150.0",
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ]
         ]
       },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "output": "100 * 1.5 = 150.0",
+          "inputParameters": {
+            "expression": "100 * 1.5"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "515aae7450b40c5e",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:40.881Z",
+      "endTime": "2026-10-21T17:48:42.000Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "c9b01903577646b9",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "515aae7450b40c5e",
+      "startTime": "2026-10-21T17:48:42.000Z",
+      "endTime": "2026-10-21T17:48:42.000Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": "tools",
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "830c4695a836af0e",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:40.877Z",
+      "endTime": "2026-10-21T17:48:40.880Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_exchange_rate",
+          "type": "FUNCTION",
+          "output": "1 USD = 0.92 EUR",
+          "inputParameters": {
+            "from_currency": "USD",
+            "to_currency": "EUR"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "398b7e0e4e0f659a",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:39.926Z",
+      "endTime": "2026-10-21T17:48:40.876Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "1f46a994496efa04",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "398b7e0e4e0f659a",
+      "startTime": "2026-10-21T17:48:40.875Z",
+      "endTime": "2026-10-21T17:48:40.875Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": "tools",
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "ec1079165b4456f8",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:39.923Z",
+      "endTime": "2026-10-21T17:48:39.925Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "type": "FUNCTION",
+          "output": "$245.60",
+          "inputParameters": {
+            "symbol": "TSLA"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "612d4d2a08489dc3",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:38.828Z",
+      "endTime": "2026-10-21T17:48:39.923Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "5f2b2465a49c5ca7",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "612d4d2a08489dc3",
+      "startTime": "2026-10-21T17:48:39.922Z",
+      "endTime": "2026-10-21T17:48:39.923Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": "tools",
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "ce50cde4ead2477c",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:38.824Z",
+      "endTime": "2026-10-21T17:48:38.827Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "get_weather",
           "type": "FUNCTION",
-          "output": {
-            "content": "Partly cloudy, 65\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-            "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "status": "success"
-          },
+          "output": "Partly cloudy, 65\u00b0F",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "601d65d7e924e893",
+      "name": "agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "668837e76bceea48",
+      "startTime": "2026-10-21T17:48:37.667Z",
+      "endTime": "2026-10-21T17:48:38.823Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "336d4876da345181",
+      "name": "should_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "601d65d7e924e893",
+      "startTime": "2026-10-21T17:48:38.822Z",
+      "endTime": "2026-10-21T17:48:38.823Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": "tools",
+      "integration": "LangGraph"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "668837e76bceea48",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-21T17:48:37.666Z",
+      "endTime": "2026-10-21T17:48:43.617Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Paris"
+                  },
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Partly cloudy, 65\u00b0F",
+                  "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_stock_price",
+                  "arguments": {
+                    "symbol": "TSLA"
+                  },
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "$245.60",
+                  "id": "call_4KcHCj6b8yiaB8T416phu93I"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "get_exchange_rate",
+                  "arguments": {
+                    "from_currency": "USD",
+                    "to_currency": "EUR"
+                  },
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "1 USD = 0.92 EUR",
+                  "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "calculate",
+                  "arguments": {
+                    "expression": "100 * 1.5"
+                  },
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "100 * 1.5 = 150.0",
+                  "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F\n- TSLA stock price: $245.60\n- USD to EUR exchange rate: 1 USD = 0.92 EUR\n- Calculation result: 150.0"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Partly cloudy, 65\u00b0F",
           "inputParameters": {
             "city": "Paris"
           }
@@ -549,16 +1733,7 @@
         {
           "name": "get_stock_price",
           "type": "FUNCTION",
-          "output": {
-            "content": "$245.60",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-            "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "status": "success"
-          },
+          "output": "$245.60",
           "inputParameters": {
             "symbol": "TSLA"
           }
@@ -566,16 +1741,7 @@
         {
           "name": "get_exchange_rate",
           "type": "FUNCTION",
-          "output": {
-            "content": "1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_exchange_rate",
-            "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-            "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "status": "success"
-          },
+          "output": "1 USD = 0.92 EUR",
           "inputParameters": {
             "from_currency": "USD",
             "to_currency": "EUR"
@@ -584,684 +1750,523 @@
         {
           "name": "calculate",
           "type": "FUNCTION",
-          "output": {
-            "content": "100 * 1.5 = 150.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "22cce891-caa8-4e50-8125-102939123e07",
-            "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "status": "success"
-          },
+          "output": "100 * 1.5 = 150.0",
           "inputParameters": {
             "expression": "100 * 1.5"
           }
         }
       ],
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019d0517-e032-7023-8955-91bc2579ac9d",
-      "name": "agent",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019d0517-e031-7743-a7a1-de77f4da7048",
-      "startTime": "2026-03-19T07:55:44.050Z",
-      "endTime": "2026-03-19T07:55:48.266Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019d0517-f0a9-7e90-861f-d4b0e3bd6f0f",
-      "name": "should_continue",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019d0517-e032-7023-8955-91bc2579ac9d",
-      "startTime": "2026-03-19T07:55:48.266Z",
-      "endTime": "2026-03-19T07:55:48.266Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
-            }
-          }
-        ]
-      },
-      "output": "tools",
-      "integration": "LangChain"
-    }
-  ],
-  "agentSpans": [
-    {
-      "uuid": "019d0517-e031-7743-a7a1-de77f4da7048",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-03-19T07:55:44.050Z",
-      "endTime": "2026-03-19T07:55:51.336Z",
-      "input": {
-        "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 350,
-                "prompt_tokens": 349,
-                "total_tokens": 699,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 256,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Paris"
-                },
-                "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_stock_price",
-                "args": {
-                  "symbol": "TSLA"
-                },
-                "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-                "type": "tool_call"
-              },
-              {
-                "name": "get_exchange_rate",
-                "args": {
-                  "from_currency": "USD",
-                  "to_currency": "EUR"
-                },
-                "id": "call_czYldoxNeUB1CIynwfO96sUT",
-                "type": "tool_call"
-              },
-              {
-                "name": "calculate",
-                "args": {
-                  "expression": "100 * 1.5"
-                },
-                "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 349,
-              "output_tokens": 350,
-              "total_tokens": 699,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 256
-              }
-            }
-          },
-          {
-            "content": "Partly cloudy, 65\u00b0F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-            "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "status": "success"
-          },
-          {
-            "content": "$245.60",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_stock_price",
-            "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-            "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "status": "success"
-          },
-          {
-            "content": "1 USD = 0.92 EUR",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_exchange_rate",
-            "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-            "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "status": "success"
-          },
-          {
-            "content": "100 * 1.5 = 150.0",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "calculate",
-            "id": "22cce891-caa8-4e50-8125-102939123e07",
-            "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "status": "success"
-          },
-          {
-            "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 200,
-                "prompt_tokens": 487,
-                "total_tokens": 687,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2WK2B2Vs8ilieCym1vld52ddSop",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d0517-f0ad-7e92-b989-45c6e1813e73-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 487,
-              "output_tokens": 200,
-              "total_tokens": 687,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d0517-f0ad-7e92-b989-45c6e1813e73",
+      "uuid": "8bb27effdb3f219f",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d0517-f0ad-7e92-b989-45bd858bae68",
-      "startTime": "2026-03-19T07:55:48.269Z",
-      "endTime": "2026-03-19T07:55:51.336Z",
+      "parentUuid": "0beb151c8ad145d6",
+      "startTime": "2026-10-21T17:48:42.002Z",
+      "endTime": "2026-10-21T17:48:43.614Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "Partly cloudy, 65\u00b0F"
-        },
-        {
-          "role": "tool",
-          "content": "$245.60"
-        },
-        {
-          "role": "tool",
-          "content": "1 USD = 0.92 EUR"
-        },
-        {
-          "role": "tool",
-          "content": "100 * 1.5 = 150.0"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 487.0,
-      "outputTokenCount": 200.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
-    },
-    {
-      "uuid": "019d0517-e032-7023-8955-91c3fb9e2ec9",
-      "name": "ChatOpenAI",
-      "status": "SUCCESS",
-      "type": "llm",
-      "parentUuid": "019d0517-e032-7023-8955-91bc2579ac9d",
-      "startTime": "2026-03-19T07:55:44.050Z",
-      "endTime": "2026-03-19T07:55:48.265Z",
-      "input": [
-        {
-          "role": "human",
-          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
-        },
-        {
-          "role": "human",
-          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Get weather for a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_stock_price', 'description': 'Get stock price for a symbol.', 'parameters': {'properties': {'symbol': {'type': 'string'}}, 'required': ['symbol'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_exchange_rate', 'description': 'Get exchange rate between currencies.', 'parameters': {'properties': {'from_currency': {'type': 'string'}, 'to_currency': {'type': 'string'}}, 'required': ['from_currency', 'to_currency'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'search_news', 'description': 'Search for news about a topic.', 'parameters': {'properties': {'topic': {'type': 'string'}}, 'required': ['topic'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'calculate', 'description': 'Calculate a math expression.', 'parameters': {'properties': {'expression': {'type': 'string'}}, 'required': ['expression'], 'type': 'object'}}}"
-        }
-      ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "arguments": {
               "city": "Paris"
             },
-            "id": "call_nNmab8KqjkYKKnwHp8AVh7HS"
-          },
-          {
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 65\u00b0F",
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_stock_price",
-            "args": {
+            "arguments": {
               "symbol": "TSLA"
             },
-            "id": "call_Q6Tru9EHiNjmjODyshaRlMbD"
-          },
-          {
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "$245.60",
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_exchange_rate",
-            "args": {
+            "arguments": {
               "from_currency": "USD",
               "to_currency": "EUR"
             },
-            "id": "call_czYldoxNeUB1CIynwfO96sUT"
-          },
-          {
+            "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "1 USD = 0.92 EUR",
+            "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "calculate",
-            "args": {
+            "arguments": {
               "expression": "100 * 1.5"
             },
-            "id": "call_7qaXY1jcHxIcItPAcVL7Z99W"
+            "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "100 * 1.5 = 150.0",
+            "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+          }
+        }
+      ],
+      "output": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F\n- TSLA stock price: $245.60\n- USD to EUR exchange rate: 1 USD = 0.92 EUR\n- Calculation result: 150.0",
+      "integration": "LangGraph",
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 505.0,
+      "outputTokenCount": 56.0
+    },
+    {
+      "uuid": "b7d46b0eabbccecd",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "515aae7450b40c5e",
+      "startTime": "2026-10-21T17:48:40.882Z",
+      "endTime": "2026-10-21T17:48:41.999Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
+        },
+        {
+          "role": "user",
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            },
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 65\u00b0F",
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "TSLA"
+            },
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "$245.60",
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_exchange_rate",
+            "arguments": {
+              "from_currency": "USD",
+              "to_currency": "EUR"
+            },
+            "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "1 USD = 0.92 EUR",
+            "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "expression": "100 * 1.5"
+            },
+            "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+          }
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "expression": "100 * 1.5"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 463.0,
+      "outputTokenCount": 21.0
+    },
+    {
+      "uuid": "1f1ac642e91ad49f",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "398b7e0e4e0f659a",
+      "startTime": "2026-10-21T17:48:39.926Z",
+      "endTime": "2026-10-21T17:48:40.874Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
+        },
+        {
+          "role": "user",
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            },
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 65\u00b0F",
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "TSLA"
+            },
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "$245.60",
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_exchange_rate",
+            "arguments": {
+              "from_currency": "USD",
+              "to_currency": "EUR"
+            },
+            "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+          }
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_exchange_rate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "from_currency": "USD",
+            "to_currency": "EUR"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 419.0,
+      "outputTokenCount": 24.0
+    },
+    {
+      "uuid": "065051b2849f454f",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "612d4d2a08489dc3",
+      "startTime": "2026-10-21T17:48:38.829Z",
+      "endTime": "2026-10-21T17:48:39.921Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
+        },
+        {
+          "role": "user",
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+        },
+        {
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            },
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        },
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 65\u00b0F",
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "TSLA"
+            },
+            "id": "call_4KcHCj6b8yiaB8T416phu93I"
+          }
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_stock_price",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "symbol": "TSLA"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 384.0,
+      "outputTokenCount": 19.0
+    },
+    {
+      "uuid": "2a13d4fa411a6a89",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "601d65d7e924e893",
+      "startTime": "2026-10-21T17:48:37.667Z",
+      "endTime": "2026-10-21T17:48:38.821Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant with access to multiple tools.\n        When asked for multiple pieces of information, call all relevant tools in parallel.\n        For example, if asked about weather in multiple cities, call get_weather for each city."
+        },
+        {
+          "role": "user",
+          "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
+            },
+            "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+          }
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Paris"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 349.0,
-      "outputTokenCount": 350.0,
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "outputTokenCount": 17.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d0517-f0ac-75d0-a93c-ac182ae9fe07",
+      "uuid": "15cd3d2c8f102c03",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-f0aa-7502-a377-29150794af21",
-      "startTime": "2026-03-19T07:55:48.268Z",
-      "endTime": "2026-03-19T07:55:48.268Z",
+      "parentUuid": "c77be66c3afdab3e",
+      "startTime": "2026-10-21T17:48:42.001Z",
+      "endTime": "2026-10-21T17:48:42.001Z",
       "input": {
         "expression": "100 * 1.5"
       },
-      "output": {
-        "content": "100 * 1.5 = 150.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "calculate",
-        "id": "22cce891-caa8-4e50-8125-102939123e07",
-        "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "100 * 1.5 = 150.0",
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-f0ac-75d0-a93c-ac027921a314",
+      "uuid": "994fdd22dad86f0a",
       "name": "get_exchange_rate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-f0aa-7502-a377-29150794af21",
-      "startTime": "2026-03-19T07:55:48.268Z",
-      "endTime": "2026-03-19T07:55:48.268Z",
+      "parentUuid": "830c4695a836af0e",
+      "startTime": "2026-10-21T17:48:40.879Z",
+      "endTime": "2026-10-21T17:48:40.880Z",
       "input": {
         "from_currency": "USD",
         "to_currency": "EUR"
       },
-      "output": {
-        "content": "1 USD = 0.92 EUR",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_exchange_rate",
-        "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-        "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "1 USD = 0.92 EUR",
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-f0ac-75d0-a93c-abfe7efb1690",
+      "uuid": "9906b52b0fdeda78",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-f0aa-7502-a377-29150794af21",
-      "startTime": "2026-03-19T07:55:48.268Z",
-      "endTime": "2026-03-19T07:55:48.268Z",
+      "parentUuid": "ec1079165b4456f8",
+      "startTime": "2026-10-21T17:48:39.924Z",
+      "endTime": "2026-10-21T17:48:39.925Z",
       "input": {
         "symbol": "TSLA"
       },
-      "output": {
-        "content": "$245.60",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-        "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "$245.60",
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019d0517-f0ab-7502-81d6-e2eb2e67f2e2",
+      "uuid": "1c3f6bdbd985efea",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d0517-f0aa-7502-a377-29150794af21",
-      "startTime": "2026-03-19T07:55:48.267Z",
-      "endTime": "2026-03-19T07:55:48.268Z",
+      "parentUuid": "ce50cde4ead2477c",
+      "startTime": "2026-10-21T17:48:38.826Z",
+      "endTime": "2026-10-21T17:48:38.827Z",
       "input": {
         "city": "Paris"
       },
-      "output": {
-        "content": "Partly cloudy, 65\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-        "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "Partly cloudy, 65\u00b0F",
+      "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-03-19T07:55:44.050Z",
-  "endTime": "2026-03-19T07:55:51.336Z",
+  "startTime": "2026-10-21T17:48:37.666Z",
+  "endTime": "2026-10-21T17:48:43.617Z",
   "name": "langgraph-parallel-mixed",
   "tags": [
     "langgraph",
@@ -1271,243 +2276,176 @@
   "environment": "development",
   "input": {
     "messages": [
-      {
-        "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-      }
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
+            }
+          ]
+        }
+      ]
     ]
   },
   "output": {
     "messages": [
-      {
-        "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "078acfd6-3fe1-4fb6-a5f6-5f551bcccaa4"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 350,
-            "prompt_tokens": 349,
-            "total_tokens": 699,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 256,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Call exactly these 4 tools, each exactly once, in this order:\n1. get_weather with city='Paris'\n2. get_stock_price with symbol='TSLA'\n3. get_exchange_rate with from_currency='USD' and to_currency='EUR'\n4. calculate with expression='100 * 1.5'\nDo NOT call any other tools (such as search_news).\nAfter receiving all tool results, summarize them briefly."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WG00eNGbQL0FuZPHg6rMEiYgdw",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0517-e032-7023-8955-91c3fb9e2ec9-0",
-        "tool_calls": [
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "Paris"
-            },
-            "id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-            "type": "tool_call"
-          },
-          {
-            "name": "get_stock_price",
-            "args": {
-              "symbol": "TSLA"
-            },
-            "id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-            "type": "tool_call"
-          },
-          {
-            "name": "get_exchange_rate",
-            "args": {
-              "from_currency": "USD",
-              "to_currency": "EUR"
-            },
-            "id": "call_czYldoxNeUB1CIynwfO96sUT",
-            "type": "tool_call"
-          },
-          {
-            "name": "calculate",
-            "args": {
-              "expression": "100 * 1.5"
-            },
-            "id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 349,
-          "output_tokens": 350,
-          "total_tokens": 699,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 256
-          }
+          ]
         }
-      },
-      {
-        "content": "Partly cloudy, 65\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-        "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-        "status": "success"
-      },
-      {
-        "content": "$245.60",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-        "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-        "status": "success"
-      },
-      {
-        "content": "1 USD = 0.92 EUR",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_exchange_rate",
-        "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-        "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-        "status": "success"
-      },
-      {
-        "content": "100 * 1.5 = 150.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "calculate",
-        "id": "22cce891-caa8-4e50-8125-102939123e07",
-        "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-        "status": "success"
-      },
-      {
-        "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F.  \n- TSLA stock price: $245.60.  \n- Exchange rate USD \u2192 EUR: 1 USD = 0.92 EUR.  \n- Calculation 100 * 1.5 = 150.0.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 200,
-            "prompt_tokens": 487,
-            "total_tokens": 687,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Paris"
+              },
+              "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2WK2B2Vs8ilieCym1vld52ddSop",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d0517-f0ad-7e92-b989-45c6e1813e73-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 487,
-          "output_tokens": 200,
-          "total_tokens": 687,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
-          }
+          ]
         }
-      }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Partly cloudy, 65\u00b0F",
+              "id": "call_7TST1oH20d6AIXWm9MRcxhbD"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
+            },
+            {
+              "type": "tool_call",
+              "name": "get_stock_price",
+              "arguments": {
+                "symbol": "TSLA"
+              },
+              "id": "call_4KcHCj6b8yiaB8T416phu93I"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "$245.60",
+              "id": "call_4KcHCj6b8yiaB8T416phu93I"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
+            },
+            {
+              "type": "tool_call",
+              "name": "get_exchange_rate",
+              "arguments": {
+                "from_currency": "USD",
+                "to_currency": "EUR"
+              },
+              "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "1 USD = 0.92 EUR",
+              "id": "call_DdwCswiMcZ72SYQ1jx5hjI6C"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
+            },
+            {
+              "type": "tool_call",
+              "name": "calculate",
+              "arguments": {
+                "expression": "100 * 1.5"
+              },
+              "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "100 * 1.5 = 150.0",
+              "id": "call_7Ioj2PaQedO1ZgJwbDhQ6NLE"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Here are the results:\n\n- Paris weather: Partly cloudy, 65\u00b0F\n- TSLA stock price: $245.60\n- USD to EUR exchange rate: 1 USD = 0.92 EUR\n- Calculation result: 150.0"
+            }
+          ]
+        }
+      ]
     ]
   },
   "status": "SUCCESS",
   "toolsCalled": [
     {
-      "name": "get_weather",
-      "type": "FUNCTION",
-      "output": {
-        "content": "Partly cloudy, 65\u00b0F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "id": "4770c052-b64d-418a-bb3d-514ded1d9285",
-        "tool_call_id": "call_nNmab8KqjkYKKnwHp8AVh7HS",
-        "status": "success"
-      },
-      "inputParameters": {
-        "city": "Paris"
-      }
-    },
-    {
-      "name": "get_stock_price",
-      "type": "FUNCTION",
-      "output": {
-        "content": "$245.60",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_stock_price",
-        "id": "6f60ef42-9f5e-40a9-bbdd-448317ba6832",
-        "tool_call_id": "call_Q6Tru9EHiNjmjODyshaRlMbD",
-        "status": "success"
-      },
-      "inputParameters": {
-        "symbol": "TSLA"
-      }
-    },
-    {
       "name": "get_exchange_rate",
       "type": "FUNCTION",
-      "output": {
-        "content": "1 USD = 0.92 EUR",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_exchange_rate",
-        "id": "cec70989-88c8-4a01-a8f3-89ac1b0337e3",
-        "tool_call_id": "call_czYldoxNeUB1CIynwfO96sUT",
-        "status": "success"
-      },
+      "output": "1 USD = 0.92 EUR",
       "inputParameters": {
         "from_currency": "USD",
         "to_currency": "EUR"
@@ -1516,18 +2454,25 @@
     {
       "name": "calculate",
       "type": "FUNCTION",
-      "output": {
-        "content": "100 * 1.5 = 150.0",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "calculate",
-        "id": "22cce891-caa8-4e50-8125-102939123e07",
-        "tool_call_id": "call_7qaXY1jcHxIcItPAcVL7Z99W",
-        "status": "success"
-      },
+      "output": "100 * 1.5 = 150.0",
       "inputParameters": {
         "expression": "100 * 1.5"
+      }
+    },
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Partly cloudy, 65\u00b0F",
+      "inputParameters": {
+        "city": "Paris"
+      }
+    },
+    {
+      "name": "get_stock_price",
+      "type": "FUNCTION",
+      "output": "$245.60",
+      "inputParameters": {
+        "symbol": "TSLA"
       }
     }
   ]

@@ -474,10 +474,6 @@ class TestMultiTurnApp:
     def test_full_shopping_flow(self):
         app = get_app_with_memory()
 
-        # Prevent cross-run bleed from CallbackHandler’s class-level cache
-        with CallbackHandler._thread_id_lock:
-            CallbackHandler._thread_id_to_trace_uuid.clear()
-
         thread_id = f"full-flow-{uuid4()}"
         config = {"configurable": {"thread_id": thread_id}}
 

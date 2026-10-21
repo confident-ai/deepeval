@@ -1,26 +1,23 @@
 {
-  "uuid": "93d38b22-167b-4ffc-be23-6d2c6997a026",
+  "uuid": "a96e44bfeacdfdee8d997d84d6d1ed5f",
   "baseSpans": [
     {
-      "uuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
+      "uuid": "02e8120a2694b73c",
       "name": "kickoff_for_each",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:26.796Z",
-      "endTime": "2026-06-01T17:24:28.853Z",
-      "input": {},
-      "output": "[CrewOutput(raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User A', name='Reply to the user: User A', expected_output='A short greeting.', summary='Reply to the user: User A...', raw='Hello, User A! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User A\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}])], token_usage=UsageMetrics(total_tokens=90, prompt_tokens=80, cached_prompt_tokens=0, completion_tokens=10, reasoning_tokens=0, cache_creation_tokens=0, successful_requests=1)), CrewOutput(raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, tasks_output=[TaskOutput(description='Reply to the user: User B', name='Reply to the user: User B', expected_output='A short greeting.', summary='Reply to the user: User B...', raw='Hello, User B! How are you today?', pydantic=None, json_dict=None, agent='Simple Greeter _foreach', output_format=<OutputFormat.RAW: 'raw'>, messages=[{'role': 'system', 'content': 'You are Simple Greeter _foreach. You are a friendly bot.\\nYour personal goal is: Reply to greetings'}, {'role': 'user', 'content': '\\nCurrent Task: Reply to the user: User B\\n\\nThis is the expected criteria for your final answer: A short greeting.\\nyou MUST return the actual complete content as the final answer, not a summary.\\n\\nProvide your complete response:'}])], token_usage=UsageMetrics(total_tokens=180, prompt_tokens=160, cached_prompt_tokens=0, completion_tokens=20, reasoning_tokens=0, cache_creation_tokens=0, successful_requests=2))]",
-      "integration": "CrewAI",
+      "startTime": "2026-10-21T17:48:43.608Z",
+      "endTime": "2026-10-21T17:48:45.917Z",
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "63d85d5f-dcbc-421b-9815-744b2caae74d",
-      "name": "kickoff",
+      "uuid": "b9a438ea7cc07cc0",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
-      "startTime": "2026-06-01T17:24:27.849Z",
-      "endTime": "2026-06-01T17:24:28.851Z",
+      "parentUuid": "02e8120a2694b73c",
+      "startTime": "2026-10-21T17:48:44.791Z",
+      "endTime": "2026-10-21T17:48:45.911Z",
       "input": {
         "input": "User B"
       },
@@ -28,44 +25,460 @@
       "integration": "CrewAI"
     },
     {
-      "uuid": "e6cdfcf2-b672-4d6c-927a-4b6c3c4d033e",
-      "name": "kickoff",
+      "uuid": "f4fdaad72521ffbf",
+      "name": "task Task",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2a1fcd9f-4527-472e-910e-f110c3dec421",
-      "startTime": "2026-06-01T17:24:26.798Z",
-      "endTime": "2026-06-01T17:24:27.848Z",
+      "parentUuid": "b9a438ea7cc07cc0",
+      "startTime": "2026-10-21T17:48:44.978Z",
+      "endTime": "2026-10-21T17:48:45.905Z",
+      "input": {
+        "description": "Reply to the user: User B",
+        "context": ""
+      },
+      "output": "Hello, User B! How are you today?",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "4264e8794df38497",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "6690d2b6e7126675",
+      "startTime": "2026-10-21T17:48:44.983Z",
+      "endTime": "2026-10-21T17:48:45.902Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1a56e8003c1c5b6b",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.898Z",
+      "endTime": "2026-10-21T17:48:45.899Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "01fc1a009ef8d366",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.897Z",
+      "endTime": "2026-10-21T17:48:45.898Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "742c696faf675cfc",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.897Z",
+      "endTime": "2026-10-21T17:48:45.897Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "3637a724d633a992",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.896Z",
+      "endTime": "2026-10-21T17:48:45.896Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "89c471ed983f74c0",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.895Z",
+      "endTime": "2026-10-21T17:48:45.895Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "dedcea2a5847e48a",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.892Z",
+      "endTime": "2026-10-21T17:48:45.894Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "bb39ac71e47b8496",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:45.891Z",
+      "endTime": "2026-10-21T17:48:45.892Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "bd196535f6c7e03b",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:44.991Z",
+      "endTime": "2026-10-21T17:48:45.891Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "7b5fd103fa9ffcbe",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:44.990Z",
+      "endTime": "2026-10-21T17:48:44.990Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b1b7b4d43392d487",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:44.987Z",
+      "endTime": "2026-10-21T17:48:44.989Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "84cf0c3e4927ecc0",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:44.986Z",
+      "endTime": "2026-10-21T17:48:44.987Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "bc1aafc07228ceca",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4264e8794df38497",
+      "startTime": "2026-10-21T17:48:44.985Z",
+      "endTime": "2026-10-21T17:48:44.986Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "821fb8e1294941be",
+      "name": "crew crew",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "02e8120a2694b73c",
+      "startTime": "2026-10-21T17:48:43.611Z",
+      "endTime": "2026-10-21T17:48:44.787Z",
       "input": {
         "input": "User A"
       },
       "output": "Hello, User A! How are you today?",
       "integration": "CrewAI"
+    },
+    {
+      "uuid": "c21003baaff5f2d5",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "821fb8e1294941be",
+      "startTime": "2026-10-21T17:48:43.766Z",
+      "endTime": "2026-10-21T17:48:44.783Z",
+      "input": {
+        "description": "Reply to the user: User A",
+        "context": ""
+      },
+      "output": "Hello, User A! How are you today?",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "58817ca3089a7453",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "a971288fed3482db",
+      "startTime": "2026-10-21T17:48:43.769Z",
+      "endTime": "2026-10-21T17:48:44.782Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a606120e9f1d5a9d",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.780Z",
+      "endTime": "2026-10-21T17:48:44.780Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "eaf7c79899885b45",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.780Z",
+      "endTime": "2026-10-21T17:48:44.780Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6068b15b3b4dbd15",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.779Z",
+      "endTime": "2026-10-21T17:48:44.780Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "9f482fcbbc54153d",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.779Z",
+      "endTime": "2026-10-21T17:48:44.779Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "524ecb0559f11c41",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.779Z",
+      "endTime": "2026-10-21T17:48:44.779Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "302969772c1e41d5",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.777Z",
+      "endTime": "2026-10-21T17:48:44.778Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "88afefc31d461fff",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:44.777Z",
+      "endTime": "2026-10-21T17:48:44.777Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "cc7f99bf2bff699a",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:43.772Z",
+      "endTime": "2026-10-21T17:48:44.776Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5b14ffc962ccbc1d",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:43.772Z",
+      "endTime": "2026-10-21T17:48:43.772Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "12954437e0ee13c1",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:43.771Z",
+      "endTime": "2026-10-21T17:48:43.771Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b599855ade66e9ef",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:43.770Z",
+      "endTime": "2026-10-21T17:48:43.771Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5cdfd4402ac08be0",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58817ca3089a7453",
+      "startTime": "2026-10-21T17:48:43.770Z",
+      "endTime": "2026-10-21T17:48:43.770Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "6148c467-aa11-4219-a1d8-213eabbb16c0",
-      "name": "execute_task",
+      "uuid": "6690d2b6e7126675",
+      "name": "Simple Greeter _foreach",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "63d85d5f-dcbc-421b-9815-744b2caae74d",
-      "startTime": "2026-06-01T17:24:27.855Z",
-      "endTime": "2026-06-01T17:24:28.846Z",
-      "input": "Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "f4fdaad72521ffbf",
+      "startTime": "2026-10-21T17:48:44.979Z",
+      "endTime": "2026-10-21T17:48:45.903Z",
+      "input": {
+        "description": "Reply to the user: User B",
+        "context": ""
+      },
       "output": "Hello, User B! How are you today?",
       "integration": "CrewAI",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "f9e6fabd-bdca-46fc-9aa8-9a2881f93d4e",
-      "name": "execute_task",
+      "uuid": "a971288fed3482db",
+      "name": "Simple Greeter _foreach",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "e6cdfcf2-b672-4d6c-927a-4b6c3c4d033e",
-      "startTime": "2026-06-01T17:24:26.806Z",
-      "endTime": "2026-06-01T17:24:27.845Z",
-      "input": "Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "c21003baaff5f2d5",
+      "startTime": "2026-10-21T17:48:43.766Z",
+      "endTime": "2026-10-21T17:48:44.782Z",
+      "input": {
+        "description": "Reply to the user: User A",
+        "context": ""
+      },
       "output": "Hello, User A! How are you today?",
       "integration": "CrewAI",
       "availableTools": [],
@@ -74,53 +487,47 @@
   ],
   "llmSpans": [
     {
-      "uuid": "ef56e306-c19f-46b8-ba7f-743d6162555f",
-      "name": "call",
+      "uuid": "16d632c709531cc1",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6148c467-aa11-4219-a1d8-213eabbb16c0",
-      "startTime": "2026-06-01T17:24:27.859Z",
-      "endTime": "2026-06-01T17:24:28.841Z",
+      "parentUuid": "bd196535f6c7e03b",
+      "startTime": "2026-10-21T17:48:44.991Z",
+      "endTime": "2026-10-21T17:48:45.889Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings",
-          "cache_breakpoint": true
+          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Reply to the user: User B\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "Hello, User B! How are you today?",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "metricCollection": "metric_collection_1"
     },
     {
-      "uuid": "d338f11e-099f-428d-8924-1e87d20a89ae",
-      "name": "call",
+      "uuid": "bf55d5964bf6184f",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f9e6fabd-bdca-46fc-9aa8-9a2881f93d4e",
-      "startTime": "2026-06-01T17:24:26.810Z",
-      "endTime": "2026-06-01T17:24:27.842Z",
+      "parentUuid": "cc7f99bf2bff699a",
+      "startTime": "2026-10-21T17:48:43.772Z",
+      "endTime": "2026-10-21T17:48:44.775Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings",
-          "cache_breakpoint": true
+          "content": "You are Simple Greeter _foreach. You are a friendly bot.\nYour personal goal is: Reply to greetings"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Reply to the user: User A\n\nThis is the expected criteria for your final answer: A short greeting.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "Hello, User A! How are you today?",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "metricCollection": "metric_collection_1"
@@ -128,11 +535,13 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T17:24:26.796Z",
-  "endTime": "2026-06-01T17:24:28.853Z",
+  "startTime": "2026-10-21T17:48:43.608Z",
+  "endTime": "2026-10-21T17:48:45.917Z",
+  "name": "kickoff_for_each",
   "environment": "development",
   "input": {
-    "input": "User B"
+    "description": "Reply to the user: User A",
+    "context": ""
   },
   "output": "Hello, User B! How are you today?",
   "status": "SUCCESS"

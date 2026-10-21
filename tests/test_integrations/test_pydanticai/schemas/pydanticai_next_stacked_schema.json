@@ -1,25 +1,20 @@
 {
-  "uuid": "d1060023702e963c31a0c750870b3478",
+  "uuid": "5712ee4945d92505e5bf68f71d3853e3",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "6630f331b3688d55",
+      "uuid": "f79cdb2bee51da8a",
       "name": "next_span_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:39.903Z",
-      "endTime": "2026-06-01T16:36:40.835Z",
+      "startTime": "2026-10-21T17:17:34.724Z",
+      "endTime": "2026-10-21T17:17:35.851Z",
       "metadata": {
         "layer": "agent",
         "scenario": "stacked"
       },
-      "input": [
-        {
-          "role": "user",
-          "content": "Say goodbye in exactly three words."
-        }
-      ],
-      "output": "Farewell until next.",
+      "input": "Say goodbye in exactly three words.",
+      "output": "Farewell, until next.",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": [],
@@ -28,13 +23,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "a0a6bf47cd760da5",
+      "uuid": "b5c9e477067bc27e",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6630f331b3688d55",
-      "startTime": "2026-06-01T16:36:39.917Z",
-      "endTime": "2026-06-01T16:36:40.827Z",
+      "parentUuid": "f79cdb2bee51da8a",
+      "startTime": "2026-10-21T17:17:34.726Z",
+      "endTime": "2026-10-21T17:17:35.850Z",
       "metadata": {
         "layer": "llm",
         "scenario": "stacked"
@@ -47,44 +42,21 @@
         {
           "role": "user",
           "content": "Say goodbye in exactly three words."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {},
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "Farewell until next."
-        }
-      ],
+      "output": "Farewell, until next.",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 5.0,
+      "outputTokenCount": 7.0,
       "metricCollection": "llm_stacked_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:39.903Z",
-  "endTime": "2026-06-01T16:36:40.835Z",
+  "startTime": "2026-10-21T17:17:34.724Z",
+  "endTime": "2026-10-21T17:17:35.851Z",
   "name": "pydanticai-next-stacked-test",
   "metadata": {
     "test_type": "next_stacked"
@@ -96,12 +68,7 @@
   "environment": "development",
   "threadId": "next-stacked-123",
   "userId": "test-user",
-  "input": [
-    {
-      "role": "user",
-      "content": "Say goodbye in exactly three words."
-    }
-  ],
-  "output": "Farewell until next.",
+  "input": "Say goodbye in exactly three words.",
+  "output": "Farewell, until next.",
   "status": "SUCCESS"
 }

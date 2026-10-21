@@ -1,106 +1,255 @@
 {
-  "uuid": "b780048319dc84f1be54ec8328e10957",
+  "uuid": "ececc3be6de8fd5c70e461feab9de579",
   "baseSpans": [
     {
-      "uuid": "77d52fd892fa6ada",
+      "uuid": "b2ba9a365c1ad399",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "785dc4fbb2de85bb",
-      "startTime": "2026-05-07T11:39:13.623Z",
-      "endTime": "2026-05-07T11:39:14.390Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "parentUuid": "be684958232e8bce",
+      "startTime": "2026-10-21T17:48:03.723Z",
+      "endTime": "2026-10-21T17:48:04.582Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "name": "special_tool",
+                "input": {
+                  "query": "Async Data"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Async Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands"
     },
     {
-      "uuid": "2f01095fa62a0c8a",
+      "uuid": "62486031971fe026",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "785dc4fbb2de85bb",
-      "startTime": "2026-05-07T11:39:12.358Z",
-      "endTime": "2026-05-07T11:39:13.622Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
-      "integration": "Strands"
+      "parentUuid": "be684958232e8bce",
+      "startTime": "2026-10-21T17:48:02.795Z",
+      "endTime": "2026-10-21T17:48:03.723Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "name": "special_tool",
+                "input": {
+                  "query": "Async Data"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "785dc4fbb2de85bb",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "be684958232e8bce",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-07T11:39:12.357Z",
-      "endTime": "2026-05-07T11:39:14.391Z",
+      "startTime": "2026-10-21T17:48:02.795Z",
+      "endTime": "2026-10-21T17:48:04.582Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
       "output": "Processed: Async Data\n",
-      "availableTools": [],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
+      "availableTools": [
+        "special_tool"
+      ],
       "agentHandoffs": [],
       "metricCollection": "agent_metrics_async_v1",
-      "integration": "Strands"
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "flaky": false,
+          "evaluationModel": "gpt-5-nano"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "efda2852dbc907ee",
+      "uuid": "365c677d9174de33",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "77d52fd892fa6ada",
-      "startTime": "2026-05-07T11:39:13.623Z",
-      "endTime": "2026-05-07T11:39:14.389Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
+      "parentUuid": "b2ba9a365c1ad399",
+      "startTime": "2026-10-21T17:48:03.723Z",
+      "endTime": "2026-10-21T17:48:04.580Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "name": "special_tool",
+                "input": {
+                  "query": "Async Data"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Async Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "output": "Processed: Async Data",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 163.0,
-      "outputTokenCount": 5.0,
       "integration": "Strands",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 163.0,
+      "outputTokenCount": 5.0
     },
     {
-      "uuid": "6a5cc5df65ba1506",
+      "uuid": "39e0f5ad318de01c",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "2f01095fa62a0c8a",
-      "startTime": "2026-05-07T11:39:12.358Z",
-      "endTime": "2026-05-07T11:39:13.620Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "{'toolUse': {'toolUseId': 'call_aC0Qt8qsx0BptbzKKTdUCkel', 'name': 'special_tool', 'input': {'query': 'Async Data'}}}",
+      "parentUuid": "62486031971fe026",
+      "startTime": "2026-10-21T17:48:02.795Z",
+      "endTime": "2026-10-21T17:48:03.721Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_EWqErFdzPFHSS8RT6hq90y4y",
+                "name": "special_tool",
+                "input": {
+                  "query": "Async Data"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 136.0,
       "outputTokenCount": 15.0,
-      "metricCollection": "llm_metrics_async_v1",
-      "integration": "Strands",
-      "provider": "OpenAI"
+      "metricCollection": "llm_metrics_async_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "376b7c1024e1cccd",
-      "name": "execute_tool special_tool",
+      "uuid": "5d416cba7831fbed",
+      "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "2f01095fa62a0c8a",
-      "startTime": "2026-05-07T11:39:13.621Z",
-      "endTime": "2026-05-07T11:39:13.622Z",
+      "parentUuid": "62486031971fe026",
+      "startTime": "2026-10-21T17:48:03.721Z",
+      "endTime": "2026-10-21T17:48:03.722Z",
+      "input": {
+        "query": "Async Data"
+      },
       "output": "Processed: Async Data",
-      "toolsCalled": [
-        {
-          "name": "special_tool",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "metricCollection": "special_tool_v1",
-      "integration": "Strands"
+      "integration": "Strands",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+      "metricCollection": "special_tool_v1"
     }
   ],
-  "startTime": "2026-05-07T11:39:12.357Z",
-  "endTime": "2026-05-07T11:39:14.391Z",
+  "startTime": "2026-10-21T17:48:02.795Z",
+  "endTime": "2026-10-21T17:48:04.582Z",
   "name": "strands-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -117,5 +266,16 @@
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
   "output": "Processed: Async Data\n",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+      "output": "Processed: Async Data",
+      "inputParameters": {
+        "query": "Async Data"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_override_async_v1"
 }

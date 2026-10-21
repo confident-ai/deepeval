@@ -1,29 +1,38 @@
 {
-  "uuid": "16d45a68-f546-48a4-b6b6-0a105915d7d3",
+  "uuid": "27f7dcb975031a9a34802bf0ba70486c",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "a30e4c16-1765-4364-a6b7-f8418f214a6f",
-      "name": "llm_generation",
+      "uuid": "e98426d285bfd1ff",
+      "name": "chat claude-sonnet-4-5",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2025-10-29T06:14:53.884Z",
-      "endTime": "2025-10-29T06:14:56.801Z",
-      "input": "Hello, how are you?",
+      "startTime": "2026-10-21T14:45:12.602Z",
+      "endTime": "2026-10-21T14:45:14.861Z",
+      "input": [
+        {
+          "role": "System Instruction",
+          "content": "You are a helpful assistant. Always generate a string response."
+        },
+        {
+          "role": "user",
+          "content": "Hello, how are you?"
+        }
+      ],
       "output": "Hello! I'm doing well, thank you for asking. I'm here and ready to help you with whatever you need. How are you doing today? Is there anything I can assist you with?",
-      "model": "claude-sonnet-4-5",
-      "prompt": {},
-      "inputTokenCount": 25.0,
-      "outputTokenCount": 43.0,
       "integration": "Anthropic",
-      "provider": "Anthropic"
+      "model": "claude-sonnet-4-5",
+      "provider": "Anthropic",
+      "inputTokenCount": 25.0,
+      "outputTokenCount": 43.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2025-10-29T06:14:53.884Z",
-  "endTime": "2025-10-29T06:14:56.801Z",
+  "startTime": "2026-10-21T14:45:12.602Z",
+  "endTime": "2026-10-21T14:45:14.861Z",
+  "name": "chat claude-sonnet-4-5",
   "environment": "development",
   "input": "Hello, how are you?",
   "output": "Hello! I'm doing well, thank you for asking. I'm here and ready to help you with whatever you need. How are you doing today? Is there anything I can assist you with?",

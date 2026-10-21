@@ -1,288 +1,208 @@
 {
-  "uuid": "dc542e29-bb3a-48e7-9513-d39683100019",
+  "uuid": "7c32077d7344942e3d25cc828ef209f1",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "019d050e-27a1-7913-9b06-f6158778d319",
+      "uuid": "3ab5a8f1bc145fb0",
       "name": "city_info_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-19T07:45:06.978Z",
-      "endTime": "2026-03-19T07:45:11.236Z",
+      "startTime": "2026-10-21T17:48:06.031Z",
+      "endTime": "2026-10-21T17:48:08.886Z",
       "input": {
         "messages": [
-          {
-            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
-          }
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+                }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 87,
-                "prompt_tokens": 187,
-                "total_tokens": 274,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2LzFJ2x1gl5pDJYbFCgWaWsMZOW",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050e-27a2-70f2-af80-a509d534db3f-0",
-            "tool_calls": [
-              {
-                "name": "get_weather",
-                "args": {
-                  "city": "Tokyo"
-                },
-                "id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 187,
-              "output_tokens": 87,
-              "total_tokens": 274,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
+              ]
             }
-          },
-          {
-            "content": "Cloudy, 68F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "tool_call_id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-            "status": "success"
-          },
-          {
-            "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 14,
-                "prompt_tokens": 221,
-                "total_tokens": 235,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "get_weather",
+                  "arguments": {
+                    "city": "Tokyo"
+                  },
+                  "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2M2XFpTHWkcmflN7lZZCkW9evMw",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050e-331f-7321-b1db-cd7d7d4de250-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 221,
-              "output_tokens": 14,
-              "total_tokens": 235,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "Cloudy, 68F",
+                  "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "Tokyo weather: Cloudy, 68\u00b0F."
+                }
+              ]
+            }
+          ]
         ]
       },
+      "integration": "LangChain",
       "toolsCalled": [
         {
           "name": "get_weather",
           "type": "FUNCTION",
-          "output": {
-            "content": "Cloudy, 68F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "tool_call_id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-            "status": "success"
-          },
+          "output": "Cloudy, 68F",
           "inputParameters": {
             "city": "Tokyo"
           }
         }
       ],
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d050e-331f-7321-b1db-cd7d7d4de250",
+      "uuid": "bffc2ee1c67a77f0",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050e-27a1-7913-9b06-f6158778d319",
-      "startTime": "2026-03-19T07:45:09.920Z",
-      "endTime": "2026-03-19T07:45:11.236Z",
+      "parentUuid": "3ab5a8f1bc145fb0",
+      "startTime": "2026-10-21T17:48:07.740Z",
+      "endTime": "2026-10-21T17:48:08.885Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Tokyo"
+            },
+            "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
+          }
+        },
+        {
           "role": "tool",
-          "content": "Cloudy, 68F"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+          "content": {
+            "type": "tool_call_response",
+            "response": "Cloudy, 68F",
+            "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 221.0,
-      "outputTokenCount": 14.0,
+      "output": "Tokyo weather: Cloudy, 68\u00b0F.",
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 221.0,
+      "outputTokenCount": 13.0
     },
     {
-      "uuid": "019d050e-27a2-70f2-af80-a509d534db3f",
+      "uuid": "3cd5c51ff8b87afa",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050e-27a1-7913-9b06-f6158778d319",
-      "startTime": "2026-03-19T07:45:06.978Z",
-      "endTime": "2026-03-19T07:45:09.915Z",
+      "parentUuid": "3ab5a8f1bc145fb0",
+      "startTime": "2026-10-21T17:48:06.033Z",
+      "endTime": "2026-10-21T17:48:07.736Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_population', 'description': 'Returns the population of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_timezone', 'description': 'Returns the timezone of a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "arguments": {
               "city": "Tokyo"
             },
-            "id": "call_CZZ727GTw2xUUHRjWnCodnRq"
+            "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 187.0,
-      "outputTokenCount": 87.0,
+        }
+      ],
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 187.0,
+      "outputTokenCount": 17.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d050e-331d-7d33-89af-f22133e7576a",
+      "uuid": "ed737d326a25ca41",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d050e-27a1-7913-9b06-f6158778d319",
-      "startTime": "2026-03-19T07:45:09.917Z",
-      "endTime": "2026-03-19T07:45:09.918Z",
+      "parentUuid": "3ab5a8f1bc145fb0",
+      "startTime": "2026-10-21T17:48:07.739Z",
+      "endTime": "2026-10-21T17:48:07.739Z",
       "input": {
         "city": "Tokyo"
       },
-      "output": {
-        "content": "Cloudy, 68F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-        "status": "success"
-      },
+      "output": "Cloudy, 68F",
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-03-19T07:45:06.978Z",
-  "endTime": "2026-03-19T07:45:11.236Z",
+  "startTime": "2026-10-21T17:48:06.032Z",
+  "endTime": "2026-10-21T17:48:08.886Z",
   "name": "langchain-async-multi-tool",
   "metadata": {
     "test_type": "async_multi_tool"
@@ -297,134 +217,74 @@
   "userId": "async-user",
   "input": {
     "messages": [
-      {
-        "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
-      }
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+            }
+          ]
+        }
+      ]
     ]
   },
   "output": {
     "messages": [
-      {
-        "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 87,
-            "prompt_tokens": 187,
-            "total_tokens": 274,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 64,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2LzFJ2x1gl5pDJYbFCgWaWsMZOW",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050e-27a2-70f2-af80-a509d534db3f-0",
-        "tool_calls": [
-          {
-            "name": "get_weather",
-            "args": {
-              "city": "Tokyo"
-            },
-            "id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 187,
-          "output_tokens": 87,
-          "total_tokens": 274,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 64
-          }
+          ]
         }
-      },
-      {
-        "content": "Cloudy, 68F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-        "status": "success"
-      },
-      {
-        "content": "Weather in Tokyo: Cloudy, 68\u00b0F.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 14,
-            "prompt_tokens": 221,
-            "total_tokens": 235,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Tokyo"
+              },
+              "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2M2XFpTHWkcmflN7lZZCkW9evMw",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050e-331f-7321-b1db-cd7d7d4de250-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 221,
-          "output_tokens": 14,
-          "total_tokens": 235,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "Cloudy, 68F",
+              "id": "call_94RNvemyMPkhmmY1vmnTtxe1"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Tokyo weather: Cloudy, 68\u00b0F."
+            }
+          ]
+        }
+      ]
     ]
   },
   "status": "SUCCESS",
@@ -432,15 +292,7 @@
     {
       "name": "get_weather",
       "type": "FUNCTION",
-      "output": {
-        "content": "Cloudy, 68F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_CZZ727GTw2xUUHRjWnCodnRq",
-        "status": "success"
-      },
+      "output": "Cloudy, 68F",
       "inputParameters": {
         "city": "Tokyo"
       }

@@ -1,24 +1,17 @@
 {
-  "uuid": "45540ddd6f4a7eeb93b6621be528548c",
+  "uuid": "f80089f5005068da65949b471638149c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "dc419612e00cba13",
+      "uuid": "53e9baf8a6d28013",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:29.468Z",
-      "endTime": "2026-06-01T16:36:31.728Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
-        }
-      ],
-      "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+      "startTime": "2026-10-21T17:17:33.392Z",
+      "endTime": "2026-10-21T17:17:35.819Z",
+      "input": "Use the get_weather tool exactly once to get the weather in Tokyo.",
+      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
       "integration": "PydanticAI",
-      "availableTools": [],
-      "agentHandoffs": [],
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -28,18 +21,20 @@
             "city": "Tokyo"
           }
         }
-      ]
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "fe08319bf6aae2ce",
+      "uuid": "f0159899be87aad7",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:30.663Z",
-      "endTime": "2026-06-01T16:36:31.726Z",
+      "parentUuid": "53e9baf8a6d28013",
+      "startTime": "2026-10-21T17:17:34.667Z",
+      "endTime": "2026-10-21T17:17:35.817Z",
       "input": [
         {
           "role": "system",
@@ -53,7 +48,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_VwfTEM9STD1FmXHUcALQ9I5z",
             "name": "get_weather",
             "arguments": "{\"city\":\"Tokyo\"}"
           }
@@ -62,116 +57,27 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_VwfTEM9STD1FmXHUcALQ9I5z",
             "name": "get_weather",
             "result": "Sunny, 72F"
           }
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F."
-        }
-      ],
+      "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 205.0,
+      "inputTokenCount": 201.0,
       "outputTokenCount": 16.0
     },
     {
-      "uuid": "7521745eed0e9010",
+      "uuid": "ae7eceafcfa941c7",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:29.470Z",
-      "endTime": "2026-06-01T16:36:30.659Z",
+      "parentUuid": "53e9baf8a6d28013",
+      "startTime": "2026-10-21T17:17:33.393Z",
+      "endTime": "2026-10-21T17:17:34.662Z",
       "input": [
         {
           "role": "system",
@@ -180,90 +86,6 @@
         {
           "role": "user",
           "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
       "output": [
@@ -271,29 +93,38 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_BkYMpl3EzFlZbY4KQYDLYKkh",
+            "id": "call_VwfTEM9STD1FmXHUcALQ9I5z",
             "name": "get_weather",
             "arguments": "{\"city\":\"Tokyo\"}"
           }
         }
       ],
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 178.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 176.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "a73d0a65f89b9954",
+      "uuid": "4769a51df9e498cb",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "dc419612e00cba13",
-      "startTime": "2026-06-01T16:36:30.660Z",
-      "endTime": "2026-06-01T16:36:30.661Z",
+      "parentUuid": "53e9baf8a6d28013",
+      "startTime": "2026-10-21T17:17:34.665Z",
+      "endTime": "2026-10-21T17:17:34.665Z",
       "input": {
         "city": "Tokyo"
       },
@@ -301,8 +132,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:29.468Z",
-  "endTime": "2026-06-01T16:36:31.728Z",
+  "startTime": "2026-10-21T17:17:33.392Z",
+  "endTime": "2026-10-21T17:17:35.819Z",
   "name": "pydanticai-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -315,12 +146,17 @@
   "environment": "development",
   "threadId": "multiple-tools-weather-123",
   "userId": "test-user",
-  "input": [
+  "input": "Use the get_weather tool exactly once to get the weather in Tokyo.",
+  "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
+  "status": "SUCCESS",
+  "toolsCalled": [
     {
-      "role": "user",
-      "content": "Use the get_weather tool exactly once to get the weather in Tokyo."
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Sunny, 72F",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
     }
-  ],
-  "output": "The current weather in Tokyo is sunny with a temperature of 72\u00b0F.",
-  "status": "SUCCESS"
+  ]
 }

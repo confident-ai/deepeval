@@ -1,4 +1,13 @@
 import pytest
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
+
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.types import EvalMode, EvalSession
+
+from .helpers import MEASURED
 
 COMPLETION = {
     "id": "c1",
@@ -55,3 +64,46 @@ def openai_client():
         )
 
     return build
+
+
+@pytest.fixture
+def provider():
+    return TracerProvider(shutdown_on_exit=False)
+
+
+@pytest.fixture
+def exporter(provider):
+    """A fresh confident-trace that exports to memory, started by deepeval."""
+    pytest.importorskip("confident_trace")
+    from deepeval.tracing.otel.setup import (
+        ensure_confident_trace,
+        shutdown_confident_trace,
+    )
+
+    exporter = InMemorySpanExporter()
+    # Importing an integration elsewhere starts confident-trace for good.
+    shutdown_confident_trace()
+    ensure_confident_trace(exporter=exporter, tracer_provider=provider)
+    MEASURED.clear()
+    yield exporter
+    shutdown_confident_trace()
+    trace_manager.clear_traces()
+    trace_manager.eval_session = EvalSession()
+
+
+@pytest.fixture
+def tracer(provider, exporter):
+    return provider.get_tracer("test")
+
+
+@pytest.fixture
+def posted(monkeypatch):
+    traces = []
+    monkeypatch.setattr(trace_manager, "post_trace", traces.append)
+    return traces
+
+
+@pytest.fixture
+def async_evaluation():
+    trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_ASYNC)
+    return trace_manager.eval_session

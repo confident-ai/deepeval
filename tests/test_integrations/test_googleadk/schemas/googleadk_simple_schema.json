@@ -1,57 +1,73 @@
 {
-  "uuid": "32b05c73fe577592613ad7329c8ca265",
-  "baseSpans": [],
-  "agentSpans": [
+  "uuid": "f40583fbe651a1b59ec96e54602eb340",
+  "baseSpans": [
     {
-      "uuid": "f92de9f191a8e115",
-      "name": "invocation [deepeval-googleadk-simple]",
+      "uuid": "8aa43f1955a75eb3",
+      "name": "invocation",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-07T09:06:19.872Z",
-      "endTime": "2026-05-07T09:06:22.567Z",
-      "input": "{\"user_id\": \"test-user\", \"session_id\": \"7ae444b1-17a8-4948-997a-4e42807cef8b\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Say hello in exactly three words.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
-      "availableTools": [],
-      "agentHandoffs": [],
+      "type": "base",
+      "startTime": "2026-10-21T16:42:39.633Z",
+      "endTime": "2026-10-21T16:42:41.030Z",
       "integration": "Google ADK"
     },
     {
-      "uuid": "ec677f7900bcb843",
+      "uuid": "57cbd6a5be735b2b",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e0b5e56ade770ce5",
+      "startTime": "2026-10-21T16:42:39.668Z",
+      "endTime": "2026-10-21T16:42:41.025Z",
+      "integration": "Google ADK"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "2aaf4e43f9f19fab",
       "name": "simple_assistant",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "f92de9f191a8e115",
-      "startTime": "2026-05-07T09:06:19.872Z",
-      "endTime": "2026-05-07T09:06:22.567Z",
-      "input": [],
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
+      "parentUuid": "8aa43f1955a75eb3",
+      "startTime": "2026-10-21T16:42:39.641Z",
+      "endTime": "2026-10-21T16:42:41.028Z",
+      "input": "Say hello in exactly three words.",
+      "output": "Hello there!",
+      "integration": "Google ADK",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Google ADK"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "83521c8ed2b2e454",
+      "uuid": "e0b5e56ade770ce5",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "ec677f7900bcb843",
-      "startTime": "2026-05-07T09:06:19.873Z",
-      "endTime": "2026-05-07T09:06:22.566Z",
-      "input": "You are a concise assistant. Reply with one short sentence only.\n\nYou are an agent. Your internal name is \"simple_assistant\".",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41}}",
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 37.0,
-      "outputTokenCount": 4.0,
+      "parentUuid": "2aaf4e43f9f19fab",
+      "startTime": "2026-10-21T16:42:39.668Z",
+      "endTime": "2026-10-21T16:42:41.027Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a concise assistant. Reply with one short sentence only.\n\nYou are an agent. Your internal name is \"simple_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "Say hello in exactly three words."
+        }
+      ],
+      "output": "Hello there!",
       "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 37.0,
+      "outputTokenCount": 39.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-07T09:06:19.872Z",
-  "endTime": "2026-05-07T09:06:22.567Z",
+  "startTime": "2026-10-21T16:42:39.633Z",
+  "endTime": "2026-10-21T16:42:41.030Z",
   "name": "googleadk-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -63,7 +79,7 @@
   "environment": "development",
   "threadId": "simple-123",
   "userId": "test-user",
-  "input": "{\"user_id\": \"test-user\", \"session_id\": \"7ae444b1-17a8-4948-997a-4e42807cef8b\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Say hello in exactly three words.\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"Hello there friend.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":4,\"prompt_token_count\":37,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":37}],\"total_token_count\":41},\"invocation_id\":\"e-c09e2d5a-482a-4d88-bfb1-6e4e4a2f84b5\",\"author\":\"simple_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1827adbb-2b6f-4adb-8d2f-2caf48370dac\",\"timestamp\":1778144779.873003}",
+  "input": "Say hello in exactly three words.",
+  "output": "Hello there!",
   "status": "SUCCESS"
 }

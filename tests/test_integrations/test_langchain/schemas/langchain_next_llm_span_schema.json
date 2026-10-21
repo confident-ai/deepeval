@@ -1,198 +1,152 @@
 {
-  "uuid": "384269c9-028a-4f69-9a25-d76eb0f892aa",
+  "uuid": "24f0de6367b779e19a3428742a7ddd19",
   "baseSpans": [
     {
-      "uuid": "019e8428-0248-75c0-8c01-36d2a082fc13",
+      "uuid": "a316d441320eb4f7",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e8427-fd88-7ca2-ac2e-9a90b6da3d4c",
-      "startTime": "2026-06-01T17:07:55.080Z",
-      "endTime": "2026-06-01T17:07:55.708Z",
+      "parentUuid": "7e36dafc535b1ea7",
+      "startTime": "2026-10-21T17:48:18.926Z",
+      "endTime": "2026-10-21T17:48:20.337Z",
       "input": {
         "messages": [
-          {
-            "content": "What is 7 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 16,
-                "prompt_tokens": 181,
-                "total_tokens": 197,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "What is 7 squared? Call the tool and reply with just the number."
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2026-03-17",
-              "system_fingerprint": null,
-              "id": "chatcmpl-Dm0PCNANLWjB9iAwSFDcnS2MSayPT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e8427-fd8c-7780-8e7e-801dc32c7809-0",
-            "tool_calls": [
-              {
-                "name": "square",
-                "args": {
-                  "n": 7
-                },
-                "id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 181,
-              "output_tokens": 16,
-              "total_tokens": 197,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "49",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-            "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-            "status": "success"
-          }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "square",
+                  "arguments": {
+                    "n": 7
+                  },
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "49",
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                }
+              ]
+            }
+          ]
         ]
       },
-      "output": [
-        {
-          "graph": null,
-          "update": {
-            "messages": [
-              {
-                "content": "49",
-                "additional_kwargs": {
-                  "refusal": null
-                },
-                "response_metadata": {
-                  "token_usage": {
-                    "completion_tokens": 4,
-                    "prompt_tokens": 208,
-                    "total_tokens": 212,
-                    "completion_tokens_details": {
-                      "accepted_prediction_tokens": 0,
-                      "audio_tokens": 0,
-                      "reasoning_tokens": 0,
-                      "rejected_prediction_tokens": 0
-                    },
-                    "prompt_tokens_details": {
-                      "audio_tokens": 0,
-                      "cached_tokens": 0
-                    }
-                  },
-                  "model_provider": "openai",
-                  "model_name": "gpt-5.4-mini-2026-03-17",
-                  "system_fingerprint": null,
-                  "id": "chatcmpl-Dm0PDtqj4QRbuFIlxBIX1SHDGDi24",
-                  "service_tier": "default",
-                  "finish_reason": "stop",
-                  "logprobs": null
-                },
-                "type": "ai",
-                "id": "lc_run--019e8428-0249-7fe3-9260-7e53cca0e490-0",
-                "tool_calls": [],
-                "invalid_tool_calls": [],
-                "usage_metadata": {
-                  "input_tokens": 208,
-                  "output_tokens": 4,
-                  "total_tokens": 212,
-                  "input_token_details": {
-                    "audio": 0,
-                    "cache_read": 0
-                  },
-                  "output_token_details": {
-                    "audio": 0,
-                    "reasoning": 0
-                  }
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "49"
                 }
-              }
-            ]
-          },
-          "resume": null,
-          "goto": []
-        }
-      ],
-      "integration": "LangChain"
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019e8428-0246-7fc2-af9d-dd157c9afc2d",
+      "uuid": "35a0a4a672a57398",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e8427-fd88-7ca2-ac2e-9a90b6da3d4c",
-      "startTime": "2026-06-01T17:07:55.078Z",
-      "endTime": "2026-06-01T17:07:55.079Z",
-      "input": [
-        {
+      "parentUuid": "7e36dafc535b1ea7",
+      "startTime": "2026-10-21T17:48:18.922Z",
+      "endTime": "2026-10-21T17:48:18.925Z",
+      "input": {
+        "__type": "tool_call_with_context",
+        "tool_call": {
           "name": "square",
           "args": {
             "n": 7
           },
-          "id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
+          "id": "call_dE61BJ6qma41eck6S6TjfGed",
           "type": "tool_call"
+        },
+        "state": {
+          "messages": [
+            [
+              {
+                "role": "user",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": "What is 7 squared? Call the tool and reply with just the number."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "role": "assistant",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": ""
+                  },
+                  {
+                    "type": "tool_call",
+                    "name": "square",
+                    "arguments": {
+                      "n": 7
+                    },
+                    "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                  }
+                ]
+              }
+            ]
+          ]
         }
-      ],
+      },
       "output": {
         "messages": [
-          {
-            "content": "49",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-            "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-            "status": "success"
-          }
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "49",
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                }
+              ]
+            }
+          ]
         ]
       },
-      "integration": "LangChain",
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "square",
           "type": "FUNCTION",
-          "output": {
-            "content": "49",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-            "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-            "status": "success"
-          },
+          "output": "49",
           "inputParameters": {
             "n": 7
           }
@@ -200,292 +154,206 @@
       ]
     },
     {
-      "uuid": "019e8427-fd89-7110-919b-19faadba0b07",
+      "uuid": "dceb93cf382c953e",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e8427-fd88-7ca2-ac2e-9a90b6da3d4c",
-      "startTime": "2026-06-01T17:07:53.865Z",
-      "endTime": "2026-06-01T17:07:55.078Z",
+      "parentUuid": "7e36dafc535b1ea7",
+      "startTime": "2026-10-21T17:48:17.622Z",
+      "endTime": "2026-10-21T17:48:18.919Z",
       "input": {
         "messages": [
-          {
-            "content": "What is 7 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-          }
-        ]
-      },
-      "output": [
-        {
-          "graph": null,
-          "update": {
-            "messages": [
-              {
-                "content": "",
-                "additional_kwargs": {
-                  "refusal": null
-                },
-                "response_metadata": {
-                  "token_usage": {
-                    "completion_tokens": 16,
-                    "prompt_tokens": 181,
-                    "total_tokens": 197,
-                    "completion_tokens_details": {
-                      "accepted_prediction_tokens": 0,
-                      "audio_tokens": 0,
-                      "reasoning_tokens": 0,
-                      "rejected_prediction_tokens": 0
-                    },
-                    "prompt_tokens_details": {
-                      "audio_tokens": 0,
-                      "cached_tokens": 0
-                    }
-                  },
-                  "model_provider": "openai",
-                  "model_name": "gpt-5.4-mini-2026-03-17",
-                  "system_fingerprint": null,
-                  "id": "chatcmpl-Dm0PCNANLWjB9iAwSFDcnS2MSayPT",
-                  "service_tier": "default",
-                  "finish_reason": "tool_calls",
-                  "logprobs": null
-                },
-                "type": "ai",
-                "id": "lc_run--019e8427-fd8c-7780-8e7e-801dc32c7809-0",
-                "tool_calls": [
-                  {
-                    "name": "square",
-                    "args": {
-                      "n": 7
-                    },
-                    "id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-                    "type": "tool_call"
-                  }
-                ],
-                "invalid_tool_calls": [],
-                "usage_metadata": {
-                  "input_tokens": 181,
-                  "output_tokens": 16,
-                  "total_tokens": 197,
-                  "input_token_details": {
-                    "audio": 0,
-                    "cache_read": 0
-                  },
-                  "output_token_details": {
-                    "audio": 0,
-                    "reasoning": 0
-                  }
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "What is 7 squared? Call the tool and reply with just the number."
                 }
-              }
-            ]
-          },
-          "resume": null,
-          "goto": []
-        }
-      ],
-      "integration": "LangChain"
-    }
-  ],
-  "agentSpans": [
-    {
-      "uuid": "019e8427-fd88-7ca2-ac2e-9a90b6da3d4c",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-06-01T17:07:53.865Z",
-      "endTime": "2026-06-01T17:07:55.709Z",
-      "input": {
-        "messages": [
-          {
-            "content": "What is 7 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-          }
+              ]
+            }
+          ]
         ]
       },
       "output": {
         "messages": [
-          {
-            "content": "What is 7 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 16,
-                "prompt_tokens": 181,
-                "total_tokens": 197,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
                 },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
+                {
+                  "type": "tool_call",
+                  "name": "square",
+                  "arguments": {
+                    "n": 7
+                  },
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
                 }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2026-03-17",
-              "system_fingerprint": null,
-              "id": "chatcmpl-Dm0PCNANLWjB9iAwSFDcnS2MSayPT",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e8427-fd8c-7780-8e7e-801dc32c7809-0",
-            "tool_calls": [
-              {
-                "name": "square",
-                "args": {
-                  "n": 7
-                },
-                "id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 181,
-              "output_tokens": 16,
-              "total_tokens": 197,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
+              ]
             }
-          },
-          {
-            "content": "49",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-            "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-            "status": "success"
-          },
-          {
-            "content": "49",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 4,
-                "prompt_tokens": 208,
-                "total_tokens": 212,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2026-03-17",
-              "system_fingerprint": null,
-              "id": "chatcmpl-Dm0PDtqj4QRbuFIlxBIX1SHDGDi24",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e8428-0249-7fe3-9260-7e53cca0e490-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 208,
-              "output_tokens": 4,
-              "total_tokens": 212,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
+          ]
         ]
       },
-      "integration": "LangChain",
+      "integration": "LangGraph"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "7e36dafc535b1ea7",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-21T17:48:17.619Z",
+      "endTime": "2026-10-21T17:48:20.337Z",
+      "input": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "What is 7 squared? Call the tool and reply with just the number."
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "output": {
+        "messages": [
+          [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "What is 7 squared? Call the tool and reply with just the number."
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "square",
+                  "arguments": {
+                    "n": 7
+                  },
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "tool",
+              "parts": [
+                {
+                  "type": "tool_call_response",
+                  "response": "49",
+                  "id": "call_dE61BJ6qma41eck6S6TjfGed"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "49"
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "square",
+          "type": "FUNCTION",
+          "output": "49",
+          "inputParameters": {
+            "n": 7
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019e8428-0249-7fe3-9260-7e53cca0e490",
+      "uuid": "94d2d69cc9e71d37",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019e8428-0248-75c0-8c01-36d2a082fc13",
-      "startTime": "2026-06-01T17:07:55.081Z",
-      "endTime": "2026-06-01T17:07:55.708Z",
+      "parentUuid": "a316d441320eb4f7",
+      "startTime": "2026-10-21T17:48:18.929Z",
+      "endTime": "2026-10-21T17:48:20.337Z",
       "input": [
         {
           "role": "system",
           "content": "You are a math assistant. Always call the `square` tool to compute squares; do not compute them yourself. After the tool result, reply with the integer result and nothing else."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 7 squared? Call the tool and reply with just the number."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "49"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "square",
+            "arguments": {
+              "n": 7
+            },
+            "id": "call_dE61BJ6qma41eck6S6TjfGed"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'square', 'description': 'Returns the square of the input integer.', 'parameters': {'properties': {'n': {'type': 'integer'}}, 'required': ['n'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "49",
+            "id": "call_dE61BJ6qma41eck6S6TjfGed"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "49",
-        "tool_calls": []
-      },
-      "integration": "LangChain",
-      "model": "gpt-5.4-mini-2026-03-17",
+      "output": "49",
+      "integration": "LangGraph",
+      "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 208.0,
       "outputTokenCount": 4.0
     },
     {
-      "uuid": "019e8427-fd8c-7780-8e7e-801dc32c7809",
+      "uuid": "e663f30e7be3e878",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019e8427-fd89-7110-919b-19faadba0b07",
-      "startTime": "2026-06-01T17:07:53.868Z",
-      "endTime": "2026-06-01T17:07:55.078Z",
+      "parentUuid": "dceb93cf382c953e",
+      "startTime": "2026-10-21T17:48:17.632Z",
+      "endTime": "2026-10-21T17:48:18.917Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "next_llm_only"
@@ -496,29 +364,34 @@
           "content": "You are a math assistant. Always call the `square` tool to compute squares; do not compute them yourself. After the tool result, reply with the integer result and nothing else."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 7 squared? Call the tool and reply with just the number."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'square', 'description': 'Returns the square of the input integer.', 'parameters': {'properties': {'n': {'type': 'integer'}}, 'required': ['n'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "square",
-            "args": {
+            "arguments": {
               "n": 7
             },
-            "id": "call_zub4Q2TiLWzp0BH7hd70KqNr"
+            "id": "call_dE61BJ6qma41eck6S6TjfGed"
           }
-        ]
-      },
-      "integration": "LangChain",
-      "model": "gpt-5.4-mini-2026-03-17",
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "square",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "n": 7
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 181.0,
       "outputTokenCount": 16.0,
@@ -528,31 +401,22 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019e8428-0247-7ed1-985b-ada53fdb841d",
+      "uuid": "1b525bae4b100c70",
       "name": "square",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019e8428-0246-7fc2-af9d-dd157c9afc2d",
-      "startTime": "2026-06-01T17:07:55.079Z",
-      "endTime": "2026-06-01T17:07:55.079Z",
+      "parentUuid": "35a0a4a672a57398",
+      "startTime": "2026-10-21T17:48:18.923Z",
+      "endTime": "2026-10-21T17:48:18.924Z",
       "input": {
         "n": 7
       },
-      "output": {
-        "content": "49",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-        "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "49",
+      "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-06-01T17:07:53.864Z",
-  "endTime": "2026-06-01T17:07:55.709Z",
+  "startTime": "2026-10-21T17:48:17.619Z",
+  "endTime": "2026-10-21T17:48:20.337Z",
   "name": "langchain-next-llm-span",
   "metadata": {
     "test_type": "next_llm_span"
@@ -566,137 +430,74 @@
   "userId": "test-user",
   "input": {
     "messages": [
-      {
-        "content": "What is 7 squared? Call the tool and reply with just the number.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-      }
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "What is 7 squared? Call the tool and reply with just the number."
+            }
+          ]
+        }
+      ]
     ]
   },
   "output": {
     "messages": [
-      {
-        "content": "What is 7 squared? Call the tool and reply with just the number.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "31c440b3-d84c-4b37-8e54-8d64cd4f1dc3"
-      },
-      {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 16,
-            "prompt_tokens": 181,
-            "total_tokens": 197,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+      [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "What is 7 squared? Call the tool and reply with just the number."
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2026-03-17",
-          "system_fingerprint": null,
-          "id": "chatcmpl-Dm0PCNANLWjB9iAwSFDcnS2MSayPT",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019e8427-fd8c-7780-8e7e-801dc32c7809-0",
-        "tool_calls": [
-          {
-            "name": "square",
-            "args": {
-              "n": 7
-            },
-            "id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-            "type": "tool_call"
-          }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 181,
-          "output_tokens": 16,
-          "total_tokens": 197,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      },
-      {
-        "content": "49",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-        "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-        "status": "success"
-      },
-      {
-        "content": "49",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 4,
-            "prompt_tokens": 208,
-            "total_tokens": 212,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": ""
             },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
+            {
+              "type": "tool_call",
+              "name": "square",
+              "arguments": {
+                "n": 7
+              },
+              "id": "call_dE61BJ6qma41eck6S6TjfGed"
             }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2026-03-17",
-          "system_fingerprint": null,
-          "id": "chatcmpl-Dm0PDtqj4QRbuFIlxBIX1SHDGDi24",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019e8428-0249-7fe3-9260-7e53cca0e490-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 208,
-          "output_tokens": 4,
-          "total_tokens": 212,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
+          ]
         }
-      }
+      ],
+      [
+        {
+          "role": "tool",
+          "parts": [
+            {
+              "type": "tool_call_response",
+              "response": "49",
+              "id": "call_dE61BJ6qma41eck6S6TjfGed"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "role": "assistant",
+          "parts": [
+            {
+              "type": "text",
+              "content": "49"
+            }
+          ]
+        }
+      ]
     ]
   },
   "status": "SUCCESS",
@@ -704,16 +505,7 @@
     {
       "name": "square",
       "type": "FUNCTION",
-      "output": {
-        "content": "49",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "63c18c99-51a0-41e5-812c-d4c41769963f",
-        "tool_call_id": "call_zub4Q2TiLWzp0BH7hd70KqNr",
-        "status": "success"
-      },
+      "output": "49",
       "inputParameters": {
         "n": 7
       }
