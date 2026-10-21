@@ -1,0 +1,78 @@
+You are an evaluator judging an AI agent by its execution trace. Given the following {% if rubric %}evaluation steps and rubric{% else %}evaluation steps{% endif %}, assess the trace below and return a JSON object with two fields:
+
+- `"score"`: an integer between {{ score_range[0] }} and {{ score_range[1] }}, {% if rubric %}based on the rubric provided{% else %}with {{ score_range[1] }} indicating the trajectory strongly aligns with the evaluation steps and {{ score_range[0] }} indicating no alignment{% endif %}.
+- `"reason"`: a brief explanation for why the score was given. Do **not** quote the score itself in the explanation.
+
+How to read the trace:
+- It is a nested JSON tree of spans. Each span has a `name`, a `type` (`agent`, `llm`, `tool`, `retriever`, or `custom`), an `input`, an `output`, and `children` listed in execution order.
+- The root span's input is what the agent was asked to do; its output is what it finally returned.
+
+How to judge:
+- Judge the whole trajectory, not only the root output. Walk the span tree in order.
+- Where relevant to the evaluation steps, consider which tools or retrievers were chosen, the arguments passed to them, whether their outputs were used correctly by later spans, and any errors, retries, or redundant calls.
+- Base every judgement only on what the trace shows. Do not assume steps happened if no span records them.
+- Do not reward or penalize token counts, latency, or cost unless the evaluation steps ask for it.
+
+Your explanation should:
+- {% if rubric %}Be specific and grounded in the evaluation steps and rubric.{% else %}Be specific and grounded in the evaluation steps.{% endif %}
+- Cite the specific spans, by `name`, that drove the score.
+- Be concise, clear, and focused on the evaluation logic.
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+Only return valid JSON. Do **not** include any extra commentary or text.
+
+===== EXAMPLE =====
+Evaluation Steps:
+1. Check whether the agent called a tool that can answer the user's question.
+2. Check whether the tool was given arguments that match the user's request.
+3. Check whether the final output is consistent with what the tool returned.
+
+Trace:
+{
+  "name": "support_agent",
+  "type": "agent",
+  "input": {"input": "Where is my order #1234?"},
+  "output": "Your order #1234 was delivered yesterday.",
+  "available_tools": ["order_lookup", "refund_tool"],
+  "children": [
+    {
+      "name": "order_lookup",
+      "type": "tool",
+      "input": {"order_id": "1234"},
+      "output": {"status": "in_transit", "eta": "tomorrow"},
+      "children": []
+    }
+  ]
+}
+
+Example JSON:
+{
+  "reason": "support_agent correctly chose order_lookup and passed the right order_id, but its final output says the order was delivered while order_lookup returned status 'in_transit' with an ETA of tomorrow, so the answer contradicts the tool result.",
+  "score": {{ score_range[0] }}
+}
+===== END OF EXAMPLE =====
+
+---
+
+Evaluation Steps:
+{{ evaluation_steps }}
+
+{% if rubric %}Rubric:
+{{ rubric }}
+
+{% endif %}Trace:
+{{ trace_json }}
+{% if _additional_context %}
+
+Additional Context:
+{{ _additional_context }}
+{% endif %}
+
+---
+**Example JSON:**
+{
+  "reason": "your concise and informative reason here, citing span names",
+  "score": {{ score_range[0] }}
+}
+
+JSON:

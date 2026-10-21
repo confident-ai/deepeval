@@ -1,0 +1,72 @@
+// Shared by ChartFrame, TranscriptFrame, SchemaFrame and FlowFrame so every
+// frame draws with the same palette, type scale and marks. FrameShell defines
+// the --chart-* colors on the figure; frames only pick one with --mark-color.
+
+@mixin frame-colors {
+  --chart-violet: color-mix(in srgb, var(--accent-label-violet) 72%, var(--text-primary));
+  --chart-ember: color-mix(in srgb, var(--accent-label-ember) 80%, var(--text-primary));
+  --chart-blue: color-mix(in srgb, var(--accent-label-blue) 80%, var(--text-primary));
+  --chart-teal: color-mix(in srgb, var(--accent-label-teal) 70%, var(--text-primary));
+  --chart-pink: color-mix(in srgb, var(--accent-label-pink) 80%, var(--text-primary));
+  --chart-yellow: color-mix(in srgb, var(--accent-label-yellow) 65%, var(--text-primary));
+  --chart-muted: var(--text-secondary);
+  --chart-ink: var(--text-primary);
+}
+
+// A tinted box in the mark's color, as a chart bar draws it: 20% fill over the
+// frame background (solid, so lines behind it stay hidden) and a 1px outline.
+@mixin mark-fill {
+  background-color: color-mix(in srgb, var(--mark-color) 20%, var(--bg-secondary));
+  border: 1px solid var(--mark-color);
+}
+
+@mixin mark-fill-svg {
+  fill: color-mix(in srgb, var(--mark-color) 20%, var(--bg-secondary));
+  stroke: var(--mark-color);
+  stroke-width: 1;
+}
+
+// Label sizes: 13px for content, 11px for small print, 12px uppercase for kickers.
+@mixin label {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+@mixin small {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+@mixin kicker {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+// Text over lines in an SVG, as chart threshold labels draw it.
+@mixin halo {
+  stroke: var(--bg-secondary);
+  stroke-width: 3.5;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+// Frames that draw a wide and a narrow SVG show one per container width.
+@mixin wide-narrow {
+  .wide {
+    @container (max-width: 520px) {
+      display: none;
+    }
+  }
+
+  .narrow {
+    display: none;
+
+    @container (max-width: 520px) {
+      display: block;
+    }
+  }
+}

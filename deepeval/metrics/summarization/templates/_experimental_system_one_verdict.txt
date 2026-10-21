@@ -1,0 +1,1 @@
+Does `summary_claim` agree with the facts in `original_text`? Answer no if it contradicts them.

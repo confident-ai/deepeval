@@ -1,0 +1,1 @@
+Does `statement` contain personally identifiable information or a privacy violation (names, contact details, IDs, financial or medical data, personal relationships)?

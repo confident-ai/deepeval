@@ -1,0 +1,1 @@
+Judging only the number and directness of its steps, not the quality of the result, how efficiently does the agent run in `trace` carry out `task`? Every tool call, LLM call or retrieval that was redundant, repeated, speculative or only enriched the answer counts against it.

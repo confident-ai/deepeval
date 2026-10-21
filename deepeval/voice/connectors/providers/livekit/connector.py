@@ -124,8 +124,11 @@ class LiveKitConnector(BaseVoiceConnector):
         self._uplink: Optional[UplinkStream] = None
         self._owns_room_connection = False
         self._current_transcript: Optional[str] = None
+        self._provider_transcript_parts: List[str] = []
         self._transcript_ready: Optional[asyncio.Event] = None
+        self._provider_transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
+        self._call_ended = False
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -152,7 +155,10 @@ class LiveKitConnector(BaseVoiceConnector):
         self._out_frames = asyncio.Queue()
         self._agent_track_ready = asyncio.Event()
         self._transcript_ready = asyncio.Event()
+        self._provider_transcript_ready = asyncio.Event()
+        self._provider_transcript_parts = []
         self._uplink = UplinkStream()
+        self._call_ended = False
         self._room = (
             self._room_arg if self._room_arg is not None else rtc.Room()
         )
@@ -160,6 +166,10 @@ class LiveKitConnector(BaseVoiceConnector):
 
         self._room.on("track_subscribed", self._on_track_subscribed)
         self._room.on("participant_connected", self._on_participant_connected)
+        self._room.on(
+            "participant_disconnected", self._on_participant_disconnected
+        )
+        self._room.on("disconnected", self._on_room_disconnected)
         self._register_transcript_handler()
 
         if not self._is_room_connected():
@@ -351,13 +361,14 @@ class LiveKitConnector(BaseVoiceConnector):
             )
 
     def _on_transcript_stream(self, reader, participant_identity: str) -> None:
-        if participant_identity == self.identity:
-            return  # our own speech, transcribed back to us
-        task = self._loop.create_task(self._read_transcript(reader))
+        heard_us = participant_identity == self.identity
+        task = self._loop.create_task(
+            self._read_transcript(reader, heard_us=heard_us)
+        )
         self._transcript_tasks.add(task)
         task.add_done_callback(self._transcript_tasks.discard)
 
-    async def _read_transcript(self, reader) -> None:
+    async def _read_transcript(self, reader, *, heard_us: bool = False) -> None:
         try:
             text = await reader.read_all()
         except Exception:
@@ -372,6 +383,18 @@ class LiveKitConnector(BaseVoiceConnector):
         text = (text or "").strip()
         if not text:
             return
+        if heard_us:
+            self._provider_transcript_parts.append(text)
+            if self._provider_transcript_ready is not None:
+                self._provider_transcript_ready.set()
+            if self._out_frames is not None:
+                self._out_frames.put_nowait(
+                    AgentEvent(
+                        provider_transcript=text,
+                        received_at=time.perf_counter(),
+                    )
+                )
+            return
         self._current_transcript = text
         if self._transcript_ready is not None:
             self._transcript_ready.set()
@@ -385,6 +408,33 @@ class LiveKitConnector(BaseVoiceConnector):
             participant
         ):
             self._agent_participant = participant
+
+    def _on_participant_disconnected(self, participant) -> None:
+        agent = self._agent_participant
+        if agent is not None and participant.identity == agent.identity:
+            self._end_call()
+
+    def _on_room_disconnected(self, *_args) -> None:
+        self._end_call()
+
+    def _end_call(self) -> None:
+        if self._call_ended:
+            return
+        self._call_ended = True
+        if self._uplink is not None:
+            self._uplink.cancel.set()
+        if self._out_frames is not None:
+            self._out_frames.put_nowait(
+                AgentEvent(
+                    turn_complete=True,
+                    call_ended=True,
+                    received_at=time.perf_counter(),
+                )
+            )
+
+    @property
+    def call_ended(self) -> bool:
+        return self._call_ended
 
     def _attach_agent_track(self, track, participant) -> None:
         rtc = self._rtc
@@ -520,7 +570,9 @@ class LiveKitConnector(BaseVoiceConnector):
             )
 
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._transcript_ready.clear()
+        self._provider_transcript_ready.clear()
 
         input_audio_started_at = time.perf_counter()
         for frame in self._make_input_frames(audio):
@@ -536,7 +588,16 @@ class LiveKitConnector(BaseVoiceConnector):
             max_turn_timeout_s=self.max_turn_timeout_s,
             silence_threshold_rms=self.silence_threshold_rms,
         )
-        await self._await_transcript(bool(agent_pcm))
+        await asyncio.gather(
+            self._await_transcript(
+                self._transcript_ready,
+                arrived=not agent_pcm or self._current_transcript is not None,
+            ),
+            self._await_transcript(
+                self._provider_transcript_ready,
+                arrived=bool(self._provider_transcript_parts),
+            ),
+        )
 
         reply_audio = self._agent_pcm_to_audio(agent_pcm)
         latency_ms = (
@@ -547,6 +608,8 @@ class LiveKitConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply_audio,
             transcript=self._current_transcript,
+            provider_transcript=" ".join(self._provider_transcript_parts)
+            or None,
             latency_ms=latency_ms,
             interrupted=False,
             input_audio_started_at=input_audio_started_at,
@@ -554,7 +617,9 @@ class LiveKitConnector(BaseVoiceConnector):
             audio_started_at=first_audio_at,
         )
 
-    async def _await_transcript(self, spoke: bool) -> None:
+    async def _await_transcript(
+        self, ready: asyncio.Event, *, arrived: bool
+    ) -> None:
         """Give a transcript that is still in flight a moment to land.
 
         The turn ends on silence in the audio, but the text stream carrying the
@@ -562,23 +627,30 @@ class LiveKitConnector(BaseVoiceConnector):
         transcript would arrive just after the turn was assembled and be read
         as part of the next one.
         """
-        if not spoke or self._current_transcript is not None:
-            return
-        if self.transcript_grace_s <= 0:
+        if arrived or self.transcript_grace_s <= 0:
             return
         try:
             await asyncio.wait_for(
-                self._transcript_ready.wait(), timeout=self.transcript_grace_s
+                ready.wait(), timeout=self.transcript_grace_s
             )
         except asyncio.TimeoutError:
-            pass  # no transcript published; the caller falls back to STT
+            pass  # none published; the field is left unset
+
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        events: List[AgentEvent] = []
+        if self._out_frames is None:
+            return events
+        while not self._out_frames.empty():
+            item = self._out_frames.get_nowait()
+            if isinstance(item, AgentEvent) and item.call_ended:
+                self._out_frames.put_nowait(item)
+                break
+            if isinstance(item, AgentEvent):
+                events.append(item)
+        return events
 
     def drain_downlink(self) -> None:
-        while not self._out_frames.empty():
-            try:
-                self._out_frames.get_nowait()
-            except asyncio.QueueEmpty:
-                break
+        self.take_pending_agent_events()
 
     def _make_input_frames(self, audio: Audio) -> List:
         rtc = self._rtc

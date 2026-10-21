@@ -2,22 +2,30 @@ import { BaseConversationalMetric } from "@/metrics/base-conversational-metric";
 import { resolveThreshold } from "@/metrics/base-metrics";
 import { ConversationalTestCase, MultiTurnParams, Turn } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
   prettifyList,
 } from "@/metrics/utils";
 import {
-  checkConversationalTestCaseParams,
-  convertTurnToDict,
-} from "@/metrics/conversational-utils";
+  parseQuestions,
+  runSystemOneEval,
+  systemOneProbability,
+  verdictFromProbability,
+  type SystemOneBinarySpec,
+  type SystemOneEvalSpec,
+} from "@/metrics/system-one";
+import { convertTurnToDict } from "@/metrics/conversational-utils";
 import {
   OutOfCharacterResponseVerdictsSchema,
   RoleAdherenceScoreReasonSchema,
   type OutOfCharacterResponseVerdict,
 } from "@/metrics/role-adherence/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "RoleAdherenceMetric";
 
@@ -28,6 +36,10 @@ export interface RoleAdherenceMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -55,25 +67,22 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
     });
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    this.requiresChatbotRole = true;
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: ConversationalTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this, {
-        requireChatbotRole: true,
-      });
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const role = testCase.chatbotRole ?? "";
       this.outOfCharacterVerdicts = await this.extractOutOfCharacterVerdicts(
         testCase.turns,
         role,
+        testCase.multimodal,
       );
       this.score = this.calculateScore(testCase.turns);
       this.reason = await this.generateReason(role);
@@ -93,7 +102,21 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
   private async extractOutOfCharacterVerdicts(
     turns: Turn[],
     role: string,
+    multimodal: boolean,
   ): Promise<OutOfCharacterResponseVerdict[]> {
+    const specs = this.systemOneVerdictSpecs(turns, role, multimodal);
+    if (specs !== undefined && specs.length > 0) {
+      const probabilities = await Promise.all(
+        specs.map(([, spec]) => systemOneProbability(this, spec)),
+      );
+      if (probabilities.every((p) => p !== undefined)) {
+        return this.systemOneVerdicts(
+          turns,
+          specs.map(([index], i) => [index, probabilities[i] as number]),
+        );
+      }
+    }
+
     const prompt = this.getPrompt(
       "extract_out_of_character_response_verdicts",
       { turns: turns.map((turn) => convertTurnToDict(turn)), role },
@@ -109,6 +132,58 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
       }
     }
     return verdicts;
+  }
+
+  private systemOneVerdictSpecs(
+    turns: Turn[],
+    role: string,
+    multimodal: boolean,
+  ): [number, SystemOneBinarySpec][] | undefined {
+    if (multimodal) return undefined;
+    const instructions = this.getPrompt("_experimental_system_one_verdict");
+    const specs: [number, SystemOneBinarySpec][] = [];
+    turns.forEach((turn, index) => {
+      if (turn.role !== "assistant") return;
+      specs.push([
+        index,
+        {
+          instructions,
+          state: {
+            chatbot_role: role,
+            previous_turns: turns
+              .slice(0, index)
+              .map((t) => convertTurnToDict(t)),
+            ai_message: turn.content,
+          },
+        },
+      ]);
+    });
+    return specs;
+  }
+
+  private systemOneVerdicts(
+    turns: Turn[],
+    probabilities: [number, number][],
+  ): OutOfCharacterResponseVerdict[] {
+    return probabilities
+      .filter(([, p]) => verdictFromProbability(p) === "no")
+      .map(([index, p]) => ({
+        index,
+        reason: `P(in character)=${p.toFixed(2)}`,
+        ai_message: `${turns[index].content} (turn #${index + 1})`,
+      }));
+  }
+
+  systemOneEvalSpec(
+    testCase: ConversationalTestCase,
+  ): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [...this.requiredParams, MultiTurnParams.CHATBOT_ROLE],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
   }
 
   private async generateReason(role: string): Promise<string | undefined> {

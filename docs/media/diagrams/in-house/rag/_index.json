@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "file": "full-eval-flow.webp",
+      "title": "Full RAG evaluation flow with DeepEval",
+      "alt": "RAG flow from a query dataset through a retriever, knowledge base, prompt template and generator, with DeepEval evaluation updating both",
+      "width": 2314,
+      "height": 1335,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-rag-full-flow.png"
+        ]
+      }
+    },
+    {
+      "file": "generator-eval-loop.webp",
+      "title": "Generator evaluation loop",
+      "alt": "Two-box loop where a retriever and generator send their response to DeepEval evaluation and receive updates back to improve generation",
+      "width": 2400,
+      "height": 367,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-rag.png"
+        ]
+      }
+    },
+    {
+      "file": "pipeline-metrics.svg",
+      "title": "RAG pipeline with retriever and generator metrics",
+      "alt": "RAG pipeline of a retriever then generator, listing contextual recall, precision and relevancy for the retriever and two generator metrics",
+      "width": 832,
+      "height": 990,
+      "source": {
+        "urls": [
+          "https://d2lsxfc3p6r9rv.cloudfront.net/rag-pipeline.svg"
+        ]
+      }
+    },
+    {
+      "file": "retriever-eval-loop.webp",
+      "title": "Retriever evaluation loop",
+      "alt": "Two-box loop where a retriever sends retrieved docs to DeepEval evaluation and receives updates back to improve its retrieval",
+      "width": 1792,
+      "height": 832,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-retriever.png"
+        ]
+      }
+    },
+    {
+      "file": "triad-metrics.svg",
+      "title": "RAG triad of metrics",
+      "alt": "RAG triad linking input, retrieval context and actual output through contextual relevancy, faithfulness and answer relevancy",
+      "width": 239,
+      "height": 112,
+      "source": {
+        "urls": [
+          "https://d2lsxfc3p6r9rv.cloudfront.net/rag-triad.svg"
+        ]
+      }
+    }
+  ]
+}

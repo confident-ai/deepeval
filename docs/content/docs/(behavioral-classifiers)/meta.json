@@ -1,0 +1,10 @@
+{
+  "title": "Behavioral",
+  "pages": [
+    "classifiers-refusal",
+    "classifiers-escalation",
+    "classifiers-scope-adherence",
+    "classifiers-clarification",
+    "classifiers-resolution"
+  ]
+}

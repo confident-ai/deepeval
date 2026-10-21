@@ -1,6 +1,6 @@
 from enum import Enum
-from typing import Dict, List, Optional, Union, Literal, Any
-from pydantic import BaseModel, Field
+from typing import Annotated, Dict, List, Optional, Union, Literal, Any
+from pydantic import BaseModel, Field, WrapSerializer
 
 from deepeval.test_case import ToolCall
 from deepeval.utils import make_model_config
@@ -36,6 +36,31 @@ class PromptApi(BaseModel):
     hash: Optional[str] = None
 
 
+class ExpectationKind(Enum):
+    MUST = "MUST"
+    MUST_NOT = "MUST_NOT"
+
+
+class ExpectationVerdict(BaseModel):
+    model_config = make_model_config(use_enum_values=True)
+
+    kind: ExpectationKind
+    condition: str
+    status: Literal["pass", "fail", "unable_to_evaluate"]
+    reason: str
+    evidence: str
+
+
+class ExpectationsData(BaseModel):
+    success: Optional[bool] = None
+    score: Optional[float] = None
+    reason: Optional[str] = None
+    verdicts: List[ExpectationVerdict] = Field(default_factory=list)
+    evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
+    evaluation_cost: Optional[float] = Field(None, alias="evaluationCost")
+    error: Optional[str] = None
+
+
 class MetricData(BaseModel):
     model_config = make_model_config(extra="ignore")
 
@@ -52,6 +77,24 @@ class MetricData(BaseModel):
     input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
     output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
+    expectations_data: Optional[ExpectationsData] = Field(
+        None, alias="expectationsData"
+    )
+
+
+def _drop_expectations_metric_data(metrics_data, handler):
+    return handler(
+        [
+            metric_data
+            for metric_data in metrics_data
+            if metric_data.expectations_data is None
+        ]
+    )
+
+
+ApiMetricsData = Annotated[
+    List[MetricData], WrapSerializer(_drop_expectations_metric_data)
+]
 
 
 class BaseApiSpan(BaseModel):
@@ -165,7 +208,7 @@ class TraceApi(BaseModel):
 
     # evals
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
-    metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
+    metrics_data: Optional[ApiMetricsData] = Field(None, alias="metricsData")
 
     # MLLM attachments
     attachments: Optional[Dict[str, AttachmentApi]] = Field(

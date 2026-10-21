@@ -1,0 +1,5 @@
+Each answer becomes a value in $[0, 1]$ and the score is their [weighted mean](/docs/evaluation-eval-modes). No LLM is called: the reason lists each answer with its probability, and `metric.confidence` reports how decisive Jev was.
+
+:::info
+A `system_one` score comes from Jev's answers, not from the equation the LLM chain computes above, so keep a metric on one eval mode when you compare its results across runs.
+:::

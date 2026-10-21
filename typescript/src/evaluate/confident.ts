@@ -15,6 +15,7 @@ import {
   ArenaCaseResult,
   ContestantRun,
   aggregateSuccess,
+  withoutExpectations,
 } from "@/evaluate/types";
 import {
   processHyperparameters,
@@ -51,7 +52,7 @@ function buildMetricsScores(cases: { metricsData: MetricData[] }[]) {
     { scores: number[]; passes: number; fails: number; errors: number }
   >();
   for (const { metricsData } of cases) {
-    for (const m of metricsData) {
+    for (const m of withoutExpectations(metricsData)) {
       if (m.skipped) continue;
       const e = map.get(m.name) ?? {
         scores: [],
@@ -88,7 +89,12 @@ export function buildTestCaseEntry(
 ): PersistedCase {
   const success = aggregateSuccess(metricsData);
   const evaluationCost = caseCost(metricsData);
-  const metricsDataApi = metricsData.map(convertMetricData);
+  const metricsDataApi = withoutExpectations(metricsData).map(convertMetricData);
+  const expectationsMetric = metricsData.find((m) => m.expectationsData);
+  const expectationsData = expectationsMetric && {
+    ...expectationsMetric.expectationsData,
+    evaluationCost: expectationsMetric.evaluationCost,
+  };
   const datasetAlias = testCase._datasetAlias;
   const datasetId = testCase._datasetId;
 
@@ -104,6 +110,7 @@ export function buildTestCaseEntry(
         success,
         flaky: testCase.flaky,
         metricsData: metricsDataApi,
+        expectationsData,
         runDuration,
         evaluationCost,
         order,
@@ -134,6 +141,7 @@ export function buildTestCaseEntry(
       success,
       flaky: testCase.flaky,
       metricsData: metricsDataApi,
+      expectationsData,
       runDuration,
       evaluationCost,
       order,

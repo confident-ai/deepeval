@@ -13,6 +13,7 @@
 
     "---[FlaskConical]LLM Evals---",
     "evaluation-introduction",
+    "evaluation-eval-modes",
     "(concepts)",
     "evaluation-end-to-end-llm-evals",
     "evaluation-trajectory-based-llm-evals",
@@ -34,6 +35,15 @@
     "(images)",
     "(metrics-others)",
     "(community)",
+
+    "---[Tags]Classifiers---",
+    "classifiers-introduction",
+    "classifiers-custom",
+    "(behavioral-classifiers)",
+    "(grounding-classifiers)",
+    "(security-classifiers)",
+    "(policy-classifiers)",
+    "(format-classifiers)",
 
     "---[Sparkles]Prompt Optimization---",
     "prompt-optimization-introduction",

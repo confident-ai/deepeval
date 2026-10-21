@@ -45,6 +45,73 @@ def test_mix_background_loops_bed_and_scales_by_volume(tmp_path):
     assert list(samples) == [600, -400, 600, -400]
 
 
+class _FakeResponse:
+    def __init__(self, data: bytes):
+        self._data = data
+
+    def read(self) -> bytes:
+        return self._data
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        return False
+
+
+def test_mix_background_downloads_a_wav_url(tmp_path, monkeypatch):
+    bed_path = tmp_path / "cafe.wav"
+    wav = _wav(bed_path, [1000, -1000])
+    seen = {}
+
+    def fake_urlopen(url, timeout):
+        seen["url"] = url
+        return _FakeResponse(wav)
+
+    monkeypatch.setattr("deepeval.voice.background.urlopen", fake_urlopen)
+    speech = Audio.from_bytes(
+        audio_utils.pcm16_to_wav_bytes(
+            array("h", [100, 100, 100, 100]).tobytes(), sample_rate=16000
+        ),
+        "audio/wav",
+    )
+
+    mixed = mix_background(
+        speech,
+        BackgroundNoiseSettings(
+            audio="https://files.test/cafe.wav?X-Amz-Signature=abc", volume=0.5
+        ),
+    )
+
+    pcm, _, _ = audio_utils.wav_bytes_to_pcm16(mixed.get_bytes())
+    samples = array("h")
+    samples.frombytes(pcm)
+    assert seen["url"] == "https://files.test/cafe.wav?X-Amz-Signature=abc"
+    assert list(samples) == [600, -400, 600, -400]
+
+
+def test_mix_background_skips_a_url_that_cannot_be_downloaded(monkeypatch):
+    def failing_urlopen(url, timeout):
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("deepeval.voice.background.urlopen", failing_urlopen)
+    speech = Audio.from_bytes(
+        audio_utils.pcm16_to_wav_bytes(
+            array("h", [100, 100]).tobytes(), sample_rate=16000
+        ),
+        "audio/wav",
+    )
+
+    mixed = mix_background(
+        speech,
+        BackgroundNoiseSettings(
+            audio="https://files.test/gone.wav", volume=0.5
+        ),
+    )
+
+    assert mixed is speech
+
+
 def test_mix_background_resamples_bed_to_the_speech_rate(tmp_path):
     bed_path = tmp_path / "rain.wav"
     _wav(bed_path, [500] * 8, sample_rate=8000)

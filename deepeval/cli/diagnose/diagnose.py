@@ -60,6 +60,7 @@ _PROVIDER_BY_CLASS = {
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
+    "TypeSafeModel": "TypeSafe AI",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",
@@ -89,6 +90,7 @@ _RELEVANT_MARKERS = (
     "DEEPEVAL_RESULTS_FOLDER",
     "DEEPEVAL_LOCAL_STORE",
     "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
+    "DEEPEVAL_EVAL_MODE",
     "DEEPEVAL_VOICE_FOLDER",
     "DEEPEVAL_TTS_MODEL",
     "DEEPEVAL_STT_MODEL",
@@ -466,6 +468,17 @@ def _local_storage_section() -> Dict[str, Any]:
     return info
 
 
+def _eval_mode_section() -> Dict[str, Any]:
+    """Which eval mode is in effect, always shown (even on defaults)."""
+    from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
+
+    return {
+        "eval_mode": resolve_eval_mode().value,
+        "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
+        or "built-in default",
+    }
+
+
 def diagnose_command(
     json_output: bool = typer.Option(
         False,
@@ -480,6 +493,7 @@ def diagnose_command(
         "python_executable": sys.executable,
         "default_models": _models_section(),
         "local_storage": _local_storage_section(),
+        "eval_mode": _eval_mode_section(),
         "configured_settings": _configured_settings_section(),
         "setting_sources": _setting_sources_section(),
         "confident_ai": _confident_section(),
@@ -555,6 +569,20 @@ def diagnose_command(
     console.print(table)
     console.print(
         "[dim]Change with `deepeval set-local-store <json|sqlite> "
+        "--save=dotenv`.[/dim]\n"
+    )
+
+    # Eval mode: who judges LLM-as-a-judge metrics and classifiers
+    eval_mode = report["eval_mode"]
+    table = _kv_table("Eval mode")
+    table.add_row(
+        "Eval mode",
+        f"[bold]{eval_mode['eval_mode']}[/bold] "
+        f"[dim]({eval_mode['eval_mode_source']})[/dim]",
+    )
+    console.print(table)
+    console.print(
+        "[dim]Change with `deepeval set-eval-mode <llm|hybrid|system_one> "
         "--save=dotenv`.[/dim]\n"
     )
 

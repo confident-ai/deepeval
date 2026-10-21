@@ -1,3 +1,4 @@
+import { withExpectations } from "@/evaluate/expectations";
 import { LLMTestCase } from "@/test-case";
 import { asTestCaseString, asToolCalls } from "@/test-case/utils";
 import { Golden } from "@/dataset/golden";
@@ -18,6 +19,7 @@ const asString = asTestCaseString;
 // Build the trace-level test case from the golden, filling gaps from the trace.
 function goldenToTraceTestCase(golden: Golden, trace: Trace): LLMTestCase {
   return new LLMTestCase({
+    expectations: golden.expectations,
     input: golden.input,
     actualOutput:
       trace.output != null
@@ -103,7 +105,7 @@ export interface TraceEvalOptions {
 
 /** Number of metrics that `evaluateTrace` will actually run on this trace. */
 export function countTraceMetrics(trace: Trace, golden?: Golden): number {
-  let count = 0;
+  let count = golden?.expectations?.hasConditions ? 1 : 0;
   for (const span of allSpans(trace.rootSpans)) {
     const metrics = span.metrics ?? [];
     if (metrics.length === 0) continue;
@@ -138,6 +140,11 @@ export async function evaluateTrace(
     ...options.errorConfig,
   };
   const cases: EvaluatedCase[] = [];
+  if (options.golden?.expectations?.hasConditions && !trace.rootSpans.length) {
+    throw new Error(
+      "Unable to evaluate expectations: no observed trace spans were captured.",
+    );
+  }
 
   // Every span scope, then the trace scope (whose trace dict is the full tree).
   const scopes: Array<{
@@ -153,7 +160,13 @@ export async function evaluateTrace(
   }
 
   for (const { scope, node, isTrace } of scopes) {
-    const metrics = scope.metrics ?? [];
+    const metrics =
+      isTrace && options.golden
+        ? withExpectations(
+            scope.metrics ?? [],
+            turnTestCase(trace, options.golden),
+          )
+        : (scope.metrics ?? []);
     if (metrics.length === 0) continue;
 
     const requiresTrace = metrics.some((m) => m.requiresTrace);

@@ -1,0 +1,52 @@
+{
+  "images": [
+    {
+      "file": "component-level-evals.webp",
+      "title": "Component-level evals on spans in a trace",
+      "alt": "Trace of nested agent, retriever, LLM and tool spans, some mapped to their own LLM test case and metrics, with zoomed-in test case fields",
+      "width": 2400,
+      "height": 1220,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/component-level-evals.png"
+        ]
+      }
+    },
+    {
+      "file": "conversational-test-case.webp",
+      "title": "Multi-turn conversational test case structure",
+      "alt": "Multi-turn LLM interaction of alternating user input and LLM output turns, with optional scenario, expected outcome and user description",
+      "width": 2400,
+      "height": 1082,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png"
+        ]
+      }
+    },
+    {
+      "file": "end-to-end-evals.webp",
+      "title": "End-to-end evaluation of an LLM app",
+      "alt": "User input flows through an LLM app's retriever, generator and tools; input and output become one test case with context and tools called",
+      "width": 2400,
+      "height": 891,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:end-to-end-llm-evals.png"
+        ]
+      }
+    },
+    {
+      "file": "llm-test-case.webp",
+      "title": "Parameters of an LLM test case",
+      "alt": "Single LLM interaction: input flows through optional tools called and retrieval context to actual output, beside optional reference fields",
+      "width": 2400,
+      "height": 905,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png"
+        ]
+      }
+    }
+  ]
+}

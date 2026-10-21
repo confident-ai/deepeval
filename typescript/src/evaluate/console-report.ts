@@ -435,6 +435,7 @@ export function printHyperparametersWarning(
 
 /** Mirror Python's wrap-up completion summary (printed when not posting to Confident AI). */
 export function printCompletionSummary(opts: {
+  showLoginPrompt?: boolean;
   runDuration: number;
   tokenCost: number;
   passed: number;
@@ -443,7 +444,8 @@ export function printCompletionSummary(opts: {
   const { runDuration, tokenCost, passed, failed } = opts;
   // This summary ends with the "set CONFIDENT_API_KEY" pitch, so printing it is
   // the login prompt.
-  captureLoginPromptShown(LoginPromptSurface.POST_EVAL);
+  if (opts.showLoginPrompt !== false)
+    captureLoginPromptShown(LoginPromptSurface.POST_EVAL);
   const total = passed + failed;
   const passRate = total ? Math.round((passed / total) * 1000) / 10 : 0;
   const cost = tokenCost ? `${tokenCost} USD` : "None";
@@ -453,8 +455,10 @@ export function printCompletionSummary(opts: {
       `» Test Results (${total} total tests):\n` +
       `  » Pass Rate: ${passRate}% | Passed: ${GREEN}${BOLD}${passed}${RESET} | Failed: ${RED}${BOLD}${failed}${RESET}\n\n` +
       `${SEP}\n\n` +
-      `» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n` +
-      `  » Set ${BOLD}CONFIDENT_API_KEY${RESET} to post test runs to ${PURPLE}Confident AI${RESET}.\n`,
+      (opts.showLoginPrompt === false
+        ? ""
+        : `» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n` +
+          `  » Set ${BOLD}CONFIDENT_API_KEY${RESET} to post test runs to ${PURPLE}Confident AI${RESET}.\n`),
   );
 }
 

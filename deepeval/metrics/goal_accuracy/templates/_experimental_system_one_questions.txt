@@ -1,0 +1,17 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every goal the user states in `turns` is fully and correctly achieved in the assistant turns that follow it, as seen by the user.",
+    "weight": 2
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how fully and correctly do the assistant's visible replies achieve the goals the user states?",
+    "levels": ["Not achieved", "Weak attempt", "Partially achieved", "Mostly achieved", "Fully achieved"]
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how clear and complete is the assistant's plan (including its `tools_called`) for each user goal, and how closely does it follow that plan?",
+    "levels": ["No plan", "Weak or fragmented plan, rarely followed", "Partial plan, partly followed", "Clear plan, mostly followed", "Complete plan, fully followed"]
+  }
+]

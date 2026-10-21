@@ -1,0 +1,28 @@
+You are a classifier. Given the test case below, assign it exactly ONE label from the closed set of labels provided and return a JSON object with two fields:
+
+- `"label"`: the name of the single best-fitting label, copied exactly as written in the list of labels.{% if allow_none %} If none of the labels apply, return `"NONE"`.{% endif %}
+- `"reason"`: a brief explanation for why this label was chosen. Reference specific details from the test case. Do **not** invent labels that are not in the list.
+
+Rules:
+- Use the label descriptions as the boundary for each label. When a description is given, it is authoritative.
+- Choose exactly one label. Never return multiple labels.
+{% if allow_none %}- Only return `"NONE"` when no label fits; do not use it to avoid a hard decision.
+{% else %}- You must choose one of the listed labels, even when the fit is imperfect. Pick the closest one and explain the reservation in the reason.
+{% endif %}- Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+
+Labels:
+{{ labels }}
+
+Test Case:
+{{ test_case_content }}
+
+---
+**Example JSON:**
+{
+  "label": "one of the label names above{% if allow_none %}, or NONE{% endif %}",
+  "reason": "your concise and informative reason here"
+}
+
+JSON:

@@ -1,0 +1,20 @@
+{% if has_trace %}{% set source = "`trace` (in its reasoning, thoughts or an explicit plan)" %}{% set goal = "the task the user gave in the root span's input of `trace`" %}{% else %}{% set source = "`actual_output`" %}{% set goal = "the task the user asked for in `input`" %}{% endif %}
+{% set no_plan = "The agent states no plan" %}
+[
+  {
+    "type": "choice",
+    "question": {{ ("Would the plan the agent states in " ~ source ~ ", if carried out as written, fully accomplish " ~ goal ~ ", covering every requirement and prerequisite?") | tojson }},
+    "options": {"Yes, the plan is complete": 1.0, "No, the plan misses a requirement or prerequisite": 0.0, {{ no_plan | tojson }}: null},
+    "weight": 2
+  },
+  {
+    "type": "choice",
+    "question": {{ ("Is every step of the plan the agent states in " ~ source ~ " specific enough to execute, necessary for " ~ goal ~ ", and in a logical order, with no vague, redundant or off-task step?") | tojson }},
+    "options": {"Yes, every step is clear, necessary and well ordered": 1.0, "No, some step is vague, redundant, off-task or out of order": 0.0, {{ no_plan | tojson }}: null}
+  },
+  {
+    "type": "choice",
+    "question": {{ ("How good is the plan the agent states in " ~ source ~ " for accomplishing " ~ goal ~ "?") | tojson }},
+    "options": {"Inadequate plan": 0.0, "Weak plan": 0.25, "Adequate but flawed plan": 0.5, "Good plan": 0.75, "Excellent plan": 1.0, {{ no_plan | tojson }}: null}
+  }
+]

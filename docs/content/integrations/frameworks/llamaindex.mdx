@@ -440,26 +440,13 @@ async def run_rag(prompt: str):
       ),
     },
     {
-      question: "Is there a cloud view for these traces?",
-      answer: (
-        <>
-          Yes, optionally. <code>deepeval login</code> connects{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, which renders
-          the same dispatcher-traced spans and scores in a shared UI for your
-          team.
-        </>
-      ),
-    },
-    {
       question: "Can I monitor a LlamaIndex app in production?",
       answer: (
         <>
-          Yes. The dispatcher keeps emitting spans in production, and once
-          logged into Confident AI those live traces support{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic, not just offline datasets.
+          Yes. The dispatcher keeps emitting spans in production, and{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> surfaces failing query-engine and
+          agent traces before you've written an eval for them, then turns them
+          into goldens so your next offline dataset covers what actually broke.
         </>
       ),
     },

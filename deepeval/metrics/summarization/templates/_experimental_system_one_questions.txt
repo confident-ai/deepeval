@@ -1,0 +1,22 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every claim in the summary `actual_output` agrees with the facts in the original text `input`; none contradicts it or adds information the original does not contain.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "The summary `actual_output` covers the main points of the original text `input`."
+  },
+  {
+    "type": "score",
+    "question": "How much of the important information in the original text `input` does the summary `actual_output` preserve?",
+    "levels": ["Almost none", "Less than half", "Most of it", "All of it"]
+  }{{ "," if assessment_questions }}
+{% for question in assessment_questions %}
+  {
+    "type": "noul",
+    "statement": {{ ("Reading only the summary `actual_output`, this question can be answered the same way as from the original text `input`: " ~ question) | tojson }}
+  }{{ "," if not loop.last }}
+{% endfor %}
+]

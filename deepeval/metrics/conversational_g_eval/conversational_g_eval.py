@@ -11,7 +11,6 @@ from deepeval.metrics.g_eval.utils import (
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
-    no_log_prob_support,
     validate_and_sort_rubrics,
     validate_criteria_and_evaluation_steps,
     CONVERSATIONAL_G_EVAL_API_PARAMS,
@@ -20,6 +19,7 @@ from deepeval.metrics.g_eval.utils import (
     ensure_required_params,
 )
 from deepeval.test_case import (
+    Audio,
     MultiTurnParams,
     ConversationalTestCase,
 )
@@ -27,12 +27,12 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
-    accrue_token_usage,
+    generate_rubric_score,
+    a_generate_rubric_score,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -63,6 +63,7 @@ class ConversationalGEval(BaseConversationalMetric):
         evaluation_template: Type[
             ConversationalGEvalTemplate
         ] = ConversationalGEvalTemplate,
+        _audio_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -87,6 +88,28 @@ class ConversationalGEval(BaseConversationalMetric):
             if evaluation_steps and len(evaluation_steps) > 0
             else None
         )
+        if (
+            self.evaluation_steps is None
+            and isinstance(self.model, DeepEvalBaseLLM)
+            and self.model.requires_audio()
+        ):
+            raise ValueError(
+                f"{self.evaluation_model} can't turn `criteria` into "
+                "evaluation steps: it only accepts requests that include "
+                "audio, generating the steps from `criteria` is a text-only request. "
+                "Pass `evaluation_steps` instead of `criteria`, or use a "
+                "model that also accepts text-only requests."
+            )
+        if _audio_model is None:
+            self._audio_model = self.model
+            self._using_native_audio_model = self.using_native_model
+        else:
+            self._audio_model, self._using_native_audio_model = (
+                initialize_model(_audio_model)
+            )
+            self.evaluation_model += (
+                f" (audio: {self._audio_model.get_model_name()})"
+            )
         self.threshold = 1 if strict_mode else threshold
         self.top_logprobs = top_logprobs
         self.strict_mode = strict_mode
@@ -111,13 +134,14 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params,
             self,
             False,
-            self.model,
+            self._scoring_model,
             multimodal,
+            audio=self._sends_audio,
         )
 
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        self.evaluation_cost = 0 if self._native_models else None
+        self.input_tokens = 0 if self._native_models else None
+        self.output_tokens = 0 if self._native_models else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -170,13 +194,14 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params,
             self,
             False,
-            self.model,
+            self._scoring_model,
             multimodal,
+            audio=self._sends_audio,
         )
 
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        self.evaluation_cost = 0 if self._native_models else None
+        self.input_tokens = 0 if self._native_models else None
+        self.output_tokens = 0 if self._native_models else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -247,9 +272,23 @@ class ConversationalGEval(BaseConversationalMetric):
             extract_json=lambda data: data["steps"],
         )
 
-    async def _a_evaluate(
+    @property
+    def _sends_audio(self) -> bool:
+        return MultiTurnParams.AUDIO in (self.evaluation_params or [])
+
+    @property
+    def _scoring_model(self) -> DeepEvalBaseLLM:
+        return self._audio_model if self._sends_audio else self.model
+
+    @property
+    def _native_models(self) -> bool:
+        return self.using_native_model and (
+            not self._sends_audio or self._using_native_audio_model
+        )
+
+    def _evaluation_prompt(
         self, test_case: ConversationalTestCase
-    ) -> Tuple[Union[int, float], str]:
+    ) -> Tuple[str, List[Audio]]:
         test_case_content = construct_non_turns_test_case_string(
             self.evaluation_params, test_case
         )
@@ -257,105 +296,56 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
+        turns, audio = [], []
+        for turn in test_case.turns:
+            turn_dict = convert_turn_to_dict(turn, self.evaluation_params)
+            if self._sends_audio and turn.audio is not None:
+                # Clips go after the prompt in turn order; the label tells the
+                # judge which clip is this turn's audio.
+                audio.append(turn.audio)
+                turn_dict["audio"] = (
+                    f"audio clip {len(audio)} (attached after this prompt)"
+                )
+            turns.append(turn_dict)
         prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
             test_case_content=test_case_content,
-            turns=[
-                convert_turn_to_dict(turn, self.evaluation_params)
-                for turn in test_case.turns
-            ],
+            turns=turns,
             parameters=g_eval_params_str,
             rubric=rubric_str,
         )
-        try:
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
+        return prompt, audio
 
-            res, cost = await self.model.a_generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
-
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
-
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except (
-            AttributeError
-        ):  # This catches the case where a_generate_raw_response doesn't exist.
-            return await a_generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=cgschema.ReasonScore,
-                extract_schema=lambda r: (r.score, r.reason),
-                extract_json=lambda data: (data["score"], data["reason"]),
-            )
+    async def _a_evaluate(
+        self, test_case: ConversationalTestCase
+    ) -> Tuple[Union[int, float], str]:
+        prompt, audio = self._evaluation_prompt(test_case)
+        return await a_generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=self.generate_weighted_summed_score,
+            audio=audio,
+            model=self._scoring_model,
+        )
 
     def evaluate(
         self, test_case: ConversationalTestCase
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_non_turns_test_case_string(
-            self.evaluation_params, test_case
+        prompt, audio = self._evaluation_prompt(test_case)
+        return generate_rubric_score(
+            metric=self,
+            prompt=prompt,
+            schema_cls=cgschema.ReasonScore,
+            strict_mode=self.strict_mode,
+            top_logprobs=self.top_logprobs,
+            weighted_score_fn=self.generate_weighted_summed_score,
+            audio=audio,
+            model=self._scoring_model,
         )
-        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
-            self.evaluation_params
-        )
-        rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        prompt = self._get_prompt(
-            "generate_evaluation_results",
-            evaluation_steps=self.number_evaluation_steps(),
-            test_case_content=test_case_content,
-            turns=[
-                convert_turn_to_dict(turn, self.evaluation_params)
-                for turn in test_case.turns
-            ],
-            parameters=g_eval_params_str,
-            rubric=rubric_str,
-        )
-        try:
-            if no_log_prob_support(self.model):
-                raise AttributeError("log_probs unsupported.")
-
-            res, cost = self.model.generate_raw_response(
-                prompt, top_logprobs=self.top_logprobs
-            )
-            self._accrue_cost(cost)
-            accrue_token_usage(self, cost)
-            data = trimAndLoadJson(res.choices[0].message.content, self)
-
-            reason = data["reason"]
-            score = data["score"]
-            if self.strict_mode:
-                return score, reason
-
-            try:
-                weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
-                )
-                return weighted_summed_score, reason
-            except (KeyError, AttributeError, TypeError, ValueError):
-                return score, reason
-        except AttributeError:
-            # This catches the case where a_generate_raw_response doesn't exist.
-            return generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=cgschema.ReasonScore,
-                extract_schema=lambda r: (r.score, r.reason),
-                extract_json=lambda data: (data["score"], data["reason"]),
-            )
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion

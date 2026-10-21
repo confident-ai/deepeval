@@ -2,7 +2,10 @@ import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "@site/src/components/Buttons";
 import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
+import MascotRail from "@site/src/components/MascotRail";
+import { CAST } from "@site/src/components/Mascot/_cast";
 import { DYNAMIC_LOGOS } from "./CompanyLogos";
+import BuildWithAgents from "./BuildWithAgents";
 import styles from "./HomeSection.module.scss";
 
 type Brand = {
@@ -43,6 +46,8 @@ const BANNER_ITEMS = [
   "Adopted by > 50% of Fortune 500s",
 ];
 
+const WALKERS = [CAST.classic];
+
 const HomeHeroSection: React.FC = () => {
   return (
     <section className={styles.hero}>
@@ -67,23 +72,28 @@ const HomeHeroSection: React.FC = () => {
             Explore Guides
           </SecondaryButton>
         </div>
+
+        <BuildWithAgents />
       </div>
-      <PauseOffscreen
-        className={styles.banner}
-        aria-label="DeepEval by the numbers"
-      >
-        <div className={styles.bannerTrack}>
-          {[...BANNER_ITEMS, ...BANNER_ITEMS].map((item, i) => (
-            <span
-              key={i}
-              className={styles.bannerItem}
-              aria-hidden={i >= BANNER_ITEMS.length}
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-      </PauseOffscreen>
+      <div className={styles.bannerWalkway}>
+        <MascotRail walkers={WALKERS} edge="top" />
+        <PauseOffscreen
+          className={styles.banner}
+          aria-label="DeepEval by the numbers"
+        >
+          <div className={styles.bannerTrack}>
+            {[...BANNER_ITEMS, ...BANNER_ITEMS].map((item, i) => (
+              <span
+                key={i}
+                className={styles.bannerItem}
+                aria-hidden={i >= BANNER_ITEMS.length}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </PauseOffscreen>
+      </div>
       <div className={styles.logoGrid} aria-label="Companies using DeepEval">
         {BRANDS.map((brand) => {
           const DynamicLogo = DYNAMIC_LOGOS[brand.slug];

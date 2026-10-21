@@ -1,0 +1,8 @@
+[
+{% for instruction in prompt_instructions %}
+  {
+    "type": "noul",
+    "statement": {{ ("`actual_output` completely follows this prompt instruction when responding to `input`: " ~ instruction) | tojson }}
+  }{{ "," if not loop.last }}
+{% endfor %}
+]

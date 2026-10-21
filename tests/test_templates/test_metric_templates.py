@@ -107,6 +107,39 @@ def test_templates_carry_no_threat_language(feature: str):
     )
 
 
+@pytest.mark.parametrize("multimodal", [False, True])
+def test_geval_trace_templates_render(multimodal: bool):
+    from deepeval.templates.resolver import resolve_template
+
+    def render(method: str, **kwargs) -> str:
+        return resolve_template(
+            "metrics", "GEval", method, multimodal=multimodal, **kwargs
+        )
+
+    assert "criteria-text" in render(
+        "generate_trace_evaluation_steps", criteria="criteria-text"
+    )
+    for rubric in (None, "0-5: bad\n6-10: good"):
+        body = render(
+            "generate_trace_evaluation_results",
+            evaluation_steps="1. step-text",
+            trace_json='{"name": "trace-span"}',
+            rubric=rubric,
+            score_range=(0, 10),
+            _additional_context="extra-context",
+        )
+        assert "step-text" in body and "trace-span" in body
+        assert "extra-context" in body
+        assert (rubric is not None) == ("Rubric:" in body)
+    body = render(
+        "generate_strict_trace_evaluation_results",
+        evaluation_steps="1. step-text",
+        trace_json='{"name": "trace-span"}',
+        _additional_context=None,
+    )
+    assert "step-text" in body and "trace-span" in body
+
+
 def test_simulator_interrupt_templates_present():
     methods = _bundle_data("simulator")["SimulatorInterruptTemplate"]
     assert "decide_interrupt" in methods

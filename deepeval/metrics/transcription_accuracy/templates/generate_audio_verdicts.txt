@@ -1,0 +1,57 @@
+You are judging whether the transcript of a recorded voice call accounts for what was actually said on the line.
+
+Each exchange below is one turn of the call that has its own audio clip, and has these fields:
+- 'role': "user" for the caller, "assistant" for the voice agent.
+- 'spoken': an independent speech-to-text transcription of that turn's audio clip. Treat it as the closest record of what was actually on the line, including thinking sounds, partial words, and noise.
+- 'transcribed': the text the system worked from for that turn. For a "user" turn it is what the agent's own speech-to-text made of the caller. For an "assistant" turn it is the text the agent meant to say, which was sent to its text-to-speech.
+- 'start_time': the clip's offset from the start of the call in seconds when known, otherwise None.
+- 'turn': the position of the turn in the conversation, counting from 0.
+
+Exchanges: {{ exchanges }}
+
+For each exchange, decide whether 'transcribed' faithfully accounts for what was 'spoken'.
+
+Do NOT count any of these as errors — they are the same speech written differently:
+- Punctuation, capitalisation, and sentence splitting ("Yes, could you" vs "Yes. Could you").
+- Numbers written as digits or as words ("fifteen years" vs "15 years", "thirty days" vs "30 days").
+- Filler words, stutters, or backchannels dropped from inside an otherwise captured sentence ("um", "uh", "you know", "I, I think").
+- Spelling variants of the same word, contractions, and obvious formatting of dates, times, money or units.
+- A name spelled differently but pronounced the same ("Karthik" vs "Kartik", "Kavanagh" vs "Cavanaugh"). A recording carries sound, not spelling.
+- The same words repeated twice, which some speech-to-text engines emit for one utterance.
+- Small word-level differences that two speech-to-text engines could reasonably produce from the same clear speech.
+
+DO count these as errors — they mean the system did not account for what was on the line:
+- An empty or near-empty 'transcribed' while 'spoken' shows the person vocalising at all — thinking sounds ("uh… oh wait…"), a partial word, a false start. The system treated speech as silence, and a voice agent that hears silence talks over the caller.
+- Speech, sounds or noise in 'spoken' that 'transcribed' does not account for. On an "assistant" turn, anything beyond the intended text — garbled words, gibberish, or a burst of noise after a sentence — means the caller heard something the agent did not mean to say.
+- A name, place, company or other proper noun that is a different word, not just spelled differently ("Siobhan" vs "Shannon").
+- A number, quantity, date or duration that differs in value ("fifteen" vs "fifty", "two weeks" vs "two months").
+- A negation gained or lost ("I can't start" vs "I can start").
+- Words or whole clauses missing or invented such that the meaning changes.
+
+For each exchange, in the order given, return:
+- "verdict": "yes" if 'transcribed' faithfully accounts for what was heard, "no" if it does not.
+- "reason": when the verdict is "no", say whether it was the caller or the agent, quote what was heard and what the transcript has instead, say what it changed, and give the clip's 'start_time' in seconds whenever it is not None so the moment can be found in the recording. When the verdict is "yes", say briefly why any differences are harmless.
+
+You MUST return exactly one verdict per exchange, in the same order as the exchanges given.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key. No words or explanation is needed.
+**
+
+Example JSON:
+{
+  "verdicts": [
+    {
+      "reason": "At 42.3s the caller was heard saying 'uh… oh wait, um' but the transcript is empty, so the agent treated the caller's thinking as silence and would have spoken over them.",
+      "verdict": "no"
+    },
+    {
+      "reason": "At 58.0s the agent meant to say 'Your interview is at 3.' but was heard saying 'Your interview is at 3. ksshh-ee-ee', so the caller heard noise after the number that the agent did not intend.",
+      "verdict": "no"
+    },
+    {
+      "reason": "Only an 'um' inside the sentence was dropped; every other word was heard correctly.",
+      "verdict": "yes"
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 from pydantic import BaseModel
+from deepeval.metrics.base_metric import YesNo
 from typing import List
 
 
 class RoleViolationVerdict(BaseModel):
-    verdict: str
+    verdict: YesNo
     reason: str
 
 

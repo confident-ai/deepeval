@@ -10,8 +10,10 @@ def test_metrics_imports():
         BaseArenaMetric,
         # Core metrics
         GEval,
+        JevEval,
         ArenaGEval,
         ConversationalGEval,
+        ConversationalJevEval,
         DAGMetric,
         DeepAcyclicGraph,
         # RAG metrics
@@ -72,8 +74,10 @@ def test_metrics_imports():
         BaseConversationalMetric,
         BaseArenaMetric,
         GEval,
+        JevEval,
         ArenaGEval,
         ConversationalGEval,
+        ConversationalJevEval,
         DAGMetric,
         DeepAcyclicGraph,
         AnswerRelevancyMetric,

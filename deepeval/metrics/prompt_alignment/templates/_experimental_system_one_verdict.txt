@@ -1,0 +1,1 @@
+Does `actual_output` COMPLETELY follow the prompt `instruction` when responding to `input`?

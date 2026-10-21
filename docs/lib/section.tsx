@@ -13,7 +13,10 @@ import {
 } from "fumadocs-ui/layouts/notebook/page";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { baseOptions } from "@/lib/layout.shared";
+import path from "node:path";
 import { getMDXComponents } from "@/components/mdx";
+import { createFrameComponents } from "@/components/frames";
+import { loadFrameData } from "@/lib/frames/store";
 import { gitConfig } from "@/lib/shared";
 import { getPageContributors } from "@/lib/contributors";
 import { getPageDescription } from "@/lib/source";
@@ -28,6 +31,8 @@ import { TocLanguageSync } from "@/components/lang/toc-language-sync";
 import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs-layout";
 import { BetaBadge } from "@/components/beta-mark";
 import { PlainBreadcrumb } from "@/components/plain-breadcrumb";
+import MascotPeek from "@/src/components/MascotPeek";
+import { CAST } from "@/src/components/Mascot/_cast";
 import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
@@ -120,10 +125,8 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <Banner id="docs-announcement" height="30px">
-          🎉 NEW: Persistent local storage with SQLite.{" "}
-          <Link href="/blog/introducing-sqlite-local-storage">
-            Read the post →
-          </Link>
+          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
         </Banner>
         <LanguageScopedDocsLayout
           {...rest}
@@ -198,7 +201,13 @@ export function createSection(config: SectionConfig) {
       >
         <PageLanguageScope languages={page.data.languages}>
           <TocLanguageSync />
-          <DocsTitle>{page.data.title}</DocsTitle>
+          <DocsTitle>
+            {page.data.peek === true ? (
+              <MascotPeek mascot={CAST.classic}>{page.data.title}</MascotPeek>
+            ) : (
+              page.data.title
+            )}
+          </DocsTitle>
           <DocsDescription className="mb-0 text-[15px] font-light">
             {page.data.description}
           </DocsDescription>
@@ -233,6 +242,7 @@ export function createSection(config: SectionConfig) {
             <MDX
               components={getMDXComponents({
                 a: createRelativeLink(source, page),
+                ...createFrameComponents(loadFrameData(path.join(process.cwd(), contentDir, page.path))),
                 ...mdxComponents,
               })}
             />

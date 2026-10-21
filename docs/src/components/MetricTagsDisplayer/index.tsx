@@ -4,6 +4,11 @@ import styles from "./MetricTagsDisplayer.module.scss";
 
 interface MetricTagsDisplayerProps {
   usesLLMs?: boolean;
+  // Jev (TypeSafe AI's System One model) can judge this metric: either as
+  // the only judge (JevEval, pass usesLLMs={false}) or as an alternative to
+  // the LLM under the `hybrid` / `system_one` eval modes, in which case both
+  // judge pills show.
+  jev?: boolean;
   singleTurn?: boolean;
   multiTurn?: boolean;
   referenceless?: boolean;
@@ -20,6 +25,7 @@ interface MetricTagsDisplayerProps {
 
 const MetricTagsDisplayer = ({
   usesLLMs = true,
+  jev = false,
   singleTurn = false,
   multiTurn = false,
   referenceless = false,
@@ -32,7 +38,8 @@ const MetricTagsDisplayer = ({
   safety = false,
   multimodal = true,
   community = false,
-}) => {
+}: MetricTagsDisplayerProps) => {
+  // Jev is text-only, so a metric with no LLM judge cannot be multimodal.
   if (!usesLLMs) multimodal = false;
 
   return (
@@ -45,6 +52,9 @@ const MetricTagsDisplayer = ({
       )}
       {usesLLMs && (
         <div className={`${styles.pill} ${styles.usesLLM}`}>LLM-as-a-judge</div>
+      )}
+      {jev && (
+        <div className={`${styles.pill} ${styles.jev}`}>Jev-as-a-judge</div>
       )}
       {custom && (
         <div className={`${styles.pill} ${styles.custom}`}>Custom</div>

@@ -171,6 +171,7 @@ class TestRun(BaseModel):
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     dataset_alias: Optional[str] = Field(None, alias="datasetAlias")
     dataset_id: Optional[str] = Field(None, alias="datasetId")
+    dataset_version: Optional[str] = Field(None, alias="datasetVersion")
     official: bool = False
 
     def add_test_case(
@@ -196,6 +197,8 @@ class TestRun(BaseModel):
 
         if self.dataset_id is None:
             self.dataset_id = test_case._dataset_id
+            # Taken with the id so the version always belongs to that dataset.
+            self.dataset_version = test_case._dataset_version
 
     @staticmethod
     def _assign_unique_orders(test_cases):
@@ -267,6 +270,12 @@ class TestRun(BaseModel):
             metric_name = metric_data.name
             score = metric_data.score
             success = metric_data.success
+
+            # Uploaded as the test case's expectationsData, not as a metric.
+            if metric_data.expectations_data is not None:
+                if score is not None and success is not None:
+                    valid_scores += 1
+                return
 
             if metric_name not in metrics_dict:
                 metrics_dict[metric_name] = {
@@ -600,10 +609,12 @@ class TestRunManager:
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
+        # Classifier-only results are local for now, so a case with no metric
+        # data and no trace has nothing to add to the (uploadable) test run.
         if (
             api_test_case.metrics_data is not None
             and len(api_test_case.metrics_data) == 0
-            and api_test_case.trace is None
+            and getattr(api_test_case, "trace", None) is None
         ):
             return
 

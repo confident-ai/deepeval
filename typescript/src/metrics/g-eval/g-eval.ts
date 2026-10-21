@@ -21,6 +21,7 @@ import {
   validateCriteriaAndEvaluationSteps,
 } from "@/metrics/g-eval/utils";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { MissingTestCaseParamsError } from "@/errors";
 
 const TEMPLATE_CLASS = "GEval";
 
@@ -28,7 +29,8 @@ export type GEvalTemplateOverride = MetricTemplateOverride<"GEval">;
 
 export interface GEvalMetricOptions {
   name: string;
-  evaluationParams: SingleTurnParams[];
+  /** Omit to evaluate the whole trace (or the span subtree the metric is attached to). */
+  evaluationParams?: SingleTurnParams[];
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
@@ -45,7 +47,7 @@ export interface GEvalMetricOptions {
 }
 
 export class GEval extends BaseMetric {
-  evaluationParams: SingleTurnParams[];
+  evaluationParams?: SingleTurnParams[];
   criteria?: string;
   evaluationSteps?: string[];
   rubric?: Rubric[];
@@ -56,7 +58,7 @@ export class GEval extends BaseMetric {
   private readonly topLogprobs: number;
 
   constructor(options: GEvalMetricOptions) {
-    if (!options.evaluationParams || options.evaluationParams.length === 0) {
+    if (options.evaluationParams && options.evaluationParams.length === 0) {
       throw new Error("evaluationParams cannot be an empty list.");
     }
     if (options.criteria != null || options.evaluationSteps != null) {
@@ -78,7 +80,8 @@ export class GEval extends BaseMetric {
 
     this.metricName = options.name;
     this.evaluationParams = options.evaluationParams;
-    this.requiredParams = options.evaluationParams;
+    this.requiredParams = options.evaluationParams ?? [];
+    this.requiresTrace = !options.evaluationParams;
     this.criteria = options.criteria;
     this.rubric = validateAndSortRubrics(options.rubric);
     this.scoreRange = getScoreRange(this.rubric);
@@ -101,6 +104,13 @@ export class GEval extends BaseMetric {
     await this.startProgress();
     try {
       checkSingleTurnParams(testCase, this.requiredParams, this);
+      if (this.requiresTrace && testCase._traceDict == null) {
+        this.error =
+          `The '${this.name}' metric has no evaluationParams, so it evaluates the trace, ` +
+          "but this test case has none. Run it on a traced component (`observe` or " +
+          "`evalsIterator`), or pass evaluationParams to evaluate a plain LLMTestCase.";
+        throw new MissingTestCaseParamsError(this.error);
+      }
       this.evaluationCost = this.usingNativeModel ? 0 : undefined;
 
       this.evaluationSteps = await this.generateEvaluationSteps();
@@ -127,23 +137,56 @@ export class GEval extends BaseMetric {
 
   private async generateEvaluationSteps(): Promise<string[]> {
     if (this.evaluationSteps) return this.evaluationSteps;
-    const prompt = this.getPrompt("generate_evaluation_steps", {
-      criteria: this.criteria,
-      parameters: constructGEvalParamsString(this.evaluationParams),
-    });
+    const prompt = this.evaluationParams
+      ? this.getPrompt("generate_evaluation_steps", {
+          criteria: this.criteria,
+          parameters: constructGEvalParamsString(this.evaluationParams),
+        })
+      : this.getPrompt("generate_trace_evaluation_steps", {
+          criteria: this.criteria,
+        });
     const { steps } = await generateWithSchema(this, prompt, StepsSchema);
     return steps;
   }
 
   private async evaluate(testCase: LLMTestCase): Promise<[number, string]> {
-    const testCaseContent = constructTestCaseString(
-      this.evaluationParams,
-      testCase,
-    );
-    const parameters = constructGEvalParamsString(this.evaluationParams);
+    const prompt = this.evaluationParams
+      ? this.resultsPrompt(testCase, this.evaluationParams)
+      : this.traceResultsPrompt(testCase);
+
+    return evaluateGEvalPrompt(this, prompt, {
+      topLogprobs: this.topLogprobs,
+      strictMode: this.strictMode,
+    });
+  }
+
+  private traceResultsPrompt(testCase: LLMTestCase): string {
+    const numberedSteps = numberEvaluationSteps(this.evaluationSteps ?? []);
+    const traceJson = JSON.stringify(testCase._traceDict, null, 2);
+    return this.strictMode
+      ? this.getPrompt("generate_strict_trace_evaluation_results", {
+          evaluation_steps: numberedSteps,
+          trace_json: traceJson,
+          _additional_context: null,
+        })
+      : this.getPrompt("generate_trace_evaluation_results", {
+          evaluation_steps: numberedSteps,
+          trace_json: traceJson,
+          rubric: this.rubric ? formatRubrics(this.rubric) : null,
+          score_range: this.scoreRange,
+          _additional_context: null,
+        });
+  }
+
+  private resultsPrompt(
+    testCase: LLMTestCase,
+    evaluationParams: SingleTurnParams[],
+  ): string {
+    const testCaseContent = constructTestCaseString(evaluationParams, testCase);
+    const parameters = constructGEvalParamsString(evaluationParams);
     const numberedSteps = numberEvaluationSteps(this.evaluationSteps ?? []);
 
-    const prompt = this.strictMode
+    return this.strictMode
       ? this.getPrompt("generate_strict_evaluation_results", {
           evaluation_steps: numberedSteps,
           test_case_content: testCaseContent,
@@ -158,11 +201,6 @@ export class GEval extends BaseMetric {
           score_range: this.scoreRange,
           _additional_context: null,
         });
-
-    return evaluateGEvalPrompt(this, prompt, {
-      topLogprobs: this.topLogprobs,
-      strictMode: this.strictMode,
-    });
   }
 
   get name(): string {
