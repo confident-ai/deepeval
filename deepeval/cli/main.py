@@ -37,6 +37,11 @@ from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
 from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
+from deepeval.cli.setup import (
+    SETUP_CONTEXT_SETTINGS,
+    SETUP_HELP,
+    setup_command,
+)
 from deepeval.cli.test.command import app as test_app
 from deepeval.cli.utils import (
     handle_save_result as _handle_save_result,
@@ -58,6 +63,9 @@ app.command(name="inspect")(inspect_command)
 app.command(name="diagnose")(diagnose_command)
 app.command(name="login", help=LOGIN_HELP)(login_command)
 app.command(name="logout")(logout_command)
+app.command(
+    name="setup", help=SETUP_HELP, context_settings=SETUP_CONTEXT_SETTINGS
+)(setup_command)
 
 
 class Regions(Enum):

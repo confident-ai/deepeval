@@ -7,7 +7,10 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, List, Optional, Union
 
-from deepeval.errors import MissingTestCaseParamsError
+from deepeval.errors import (
+    ContextWindowExceededError,
+    MissingTestCaseParamsError,
+)
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -25,6 +28,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Providers share no exception type for an over-long prompt, so an overflow is
+# recognised by the wording each one uses.
+_CONTEXT_WINDOW_EXCEEDED_MARKERS = (
+    "context_length_exceeded",  # OpenAI, Azure OpenAI
+    "maximum context length",  # OpenAI, DeepSeek, Mistral, OpenRouter
+    "exceeds the context window",  # OpenAI Responses API
+    "contextwindowexceedederror",  # LiteLLM
+    "prompt is too long",  # Anthropic
+    "input is too long",  # Amazon Bedrock
+    "exceeds the maximum number of tokens",  # Gemini
+    "maximum prompt length",  # Grok
+    "exceeded model token limit",  # Moonshot
+)
+
+
+def _is_context_window_exceeded(error: Optional[BaseException]) -> bool:
+    while error is not None:
+        message = str(error).lower()
+        if any(m in message for m in _CONTEXT_WINDOW_EXCEEDED_MARKERS):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
 
 def format_metric_description(
     metric: Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric],
@@ -41,6 +67,26 @@ def format_metric_description(
         return f"✨ You're running DeepEval's latest [rgb(106,0,255)]{metric.__name__} Metric[/rgb(106,0,255)]! [rgb(55,65,81)](using {metric.evaluation_model}, strict={metric.strict_mode}, async_mode={run_async})...[/rgb(55,65,81)]"
 
 
+def start_measure(
+    metric: BaseMetric,
+    async_mode: Optional[bool] = None,
+    in_component: bool = False,
+) -> None:
+    """Record the measure and clear per-measure System One state
+    (confidence, fallback reason) before any decision is made. Every measure
+    runs this, through `metric_progress_indicator` or the batched System One
+    path in `evaluate()`."""
+    record_metric(
+        metric.__name__,
+        async_mode=False if async_mode is None else async_mode,
+        in_component=in_component,
+        model=getattr(metric, "model", None),
+    )
+    from deepeval.metrics.utils.decision import reset_system_one_state
+
+    reset_system_one_state(metric)
+
+
 @contextmanager
 def metric_progress_indicator(
     metric: BaseMetric,
@@ -50,35 +96,34 @@ def metric_progress_indicator(
     _show_indicator: bool = True,
     _in_component: bool = False,
 ):
-    captured_async_mode = False if async_mode is None else async_mode
-    record_metric(
-        metric.__name__,
-        async_mode=captured_async_mode,
-        in_component=_in_component,
-        model=getattr(metric, "model", None),
-    )
-    # Every metric and classifier enters this indicator at the top of each
-    # measure, so it is the one place to clear per-measure System One state
-    # (confidence, fallback reason) before any decision is made.
-    from deepeval.metrics.utils.decision import reset_system_one_state
-
-    reset_system_one_state(metric)
+    start_measure(metric, async_mode=async_mode, in_component=_in_component)
     console = Console(file=sys.stderr)  # Direct output to standard error
-    if _show_indicator:
-        with Progress(
-            SpinnerColumn(style="rgb(106,0,255)"),
-            BarColumn(bar_width=60),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,  # Use the custom console
-            transient=transient,
-        ) as progress:
-            progress.add_task(
-                description=format_metric_description(metric, async_mode),
-                total=total,
-            )
+    try:
+        if _show_indicator:
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,  # Use the custom console
+                transient=transient,
+            ) as progress:
+                progress.add_task(
+                    description=format_metric_description(metric, async_mode),
+                    total=total,
+                )
+                yield
+        else:
             yield
-    else:
-        yield
+    except Exception as error:
+        if not isinstance(
+            error, ContextWindowExceededError
+        ) and _is_context_window_exceeded(error):
+            raise ContextWindowExceededError(
+                "Too large to evaluate: the test case or trace exceeds the "
+                "evaluation model's context window. Evaluate a smaller test "
+                "case or span, or use a model with a larger context window."
+            ) from error
+        raise
 
 
 async def measure_metric_task(

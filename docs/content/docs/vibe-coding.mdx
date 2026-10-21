@@ -169,7 +169,7 @@ That last prompt maps directly to the iteration loop the skill enforces. With th
 
 ## Connect to Confident AI
 
-DeepEval is local-first and the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
+DeepEval is local-first and the loop above works fully offline. Once your app is in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them and turns them into goldens, which you can pull into the dataset your coding agent iterates on. Log in to connect:
 
 <Switch>
 
@@ -191,7 +191,7 @@ npx deepeval login
 
 </Switch>
 
-Every <Term py="deepeval test run" ts="npx deepeval test run"/> your coding agent kicks off pushes a testing report your reviewers can open with <Term py="deepeval view" ts="npx deepeval view"/>. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+Once you're logged in, each <Term py="deepeval test run" ts="npx deepeval test run"/> your coding agent kicks off also appears on Confident AI, and <Term py="deepeval view" ts="npx deepeval view"/> opens the latest one.
 
 ## Next Steps
 

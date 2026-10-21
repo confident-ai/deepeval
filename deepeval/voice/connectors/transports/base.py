@@ -8,6 +8,7 @@ from typing import (
     AsyncIterator,
     Callable,
     ClassVar,
+    List,
     Optional,
     Tuple,
 )
@@ -69,6 +70,9 @@ async def iter_downlink(queue: asyncio.Queue) -> AsyncIterator[AgentEvent]:
         item = await queue.get()
         if item is None:
             yield AgentEvent(turn_complete=True)
+        elif isinstance(item, AgentEvent) and item.call_ended:
+            queue.put_nowait(item)
+            return
         elif isinstance(item, AgentEvent):
             yield item
         elif isinstance(item, (bytes, bytearray)):
@@ -190,6 +194,13 @@ class BaseVoiceConnector(ABC):
     def supports_duplex(self) -> bool:
         """Whether the agent can be heard while the caller is speaking."""
         return False
+
+    @property
+    def call_ended(self) -> bool:
+        return False
+
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        return []
 
     @property
     def signals_turn_complete(self) -> bool:

@@ -14,6 +14,14 @@ const DEFAULT_MAX_TOKENS = 4096;
 // thinking budget is 1024, so a thinking request needs headroom for both.
 const DEFAULT_THINKING_MAX_TOKENS = 8192;
 const MIN_THINKING_BUDGET_TOKENS = 1024;
+// From Claude Opus 4.7 on, `thinking.type: "enabled"` with a manual budget is
+// rejected; thinking is switched on with `{ type: "adaptive" }` instead.
+const ADAPTIVE_THINKING_PREFIXES = [
+  "claude-opus-4-7",
+  "claude-opus-4-8",
+  "claude-opus-5",
+  "claude-sonnet-5",
+];
 
 /** Any other key is forwarded to `messages.create(...)`. */
 export interface AnthropicModelOptions extends ExtraGenerationParams {
@@ -98,6 +106,13 @@ export class AnthropicModel extends DeepEvalBaseLLM {
 
     if (this.modelData.supportsThinking !== true) return { maxTokens };
     if (!enabled) return { maxTokens, thinking: { type: "disabled" } };
+    if (
+      ADAPTIVE_THINKING_PREFIXES.some((prefix) =>
+        (this.modelName ?? "").startsWith(prefix),
+      )
+    ) {
+      return { maxTokens, thinking: { type: "adaptive" } };
+    }
 
     const budgetTokens = Math.max(
       MIN_THINKING_BUDGET_TOKENS,
@@ -127,7 +142,9 @@ export class AnthropicModel extends DeepEvalBaseLLM {
     const { maxTokens, thinking } = this.resolveThinking();
     // A thinking request only accepts the default temperature.
     const temperature =
-      thinking?.type === "enabled" ? undefined : this.resolveTemperature();
+      thinking?.type === "enabled" || thinking?.type === "adaptive"
+        ? undefined
+        : this.resolveTemperature();
     const message = await client.messages.create({
       model: this.modelName,
       max_tokens: maxTokens,

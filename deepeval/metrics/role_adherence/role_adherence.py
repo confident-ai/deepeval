@@ -8,7 +8,7 @@ from deepeval.metrics.role_adherence.schema import (
     RoleAdherenceScoreReason,
 )
 from deepeval.metrics.utils import (
-    check_conversational_test_case_params,
+    prepare_measure,
     construct_verbose_logs,
     convert_turn_to_dict,
     initialize_model,
@@ -38,6 +38,7 @@ RoleAdherenceTemplate = make_template_class("RoleAdherenceMetric")
 
 class RoleAdherenceMetric(BaseConversationalMetric):
     _required_test_case_params = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE]
+    _requires_chatbot_role = True
 
     def __init__(
         self,
@@ -80,18 +81,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            True,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -134,18 +124,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            True,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,

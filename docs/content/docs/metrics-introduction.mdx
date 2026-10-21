@@ -17,7 +17,7 @@ Most score [test cases](/docs/evaluation-test-cases) representing atomic interac
 
 All of `deepeval`'s metrics output a **score between 0-1** based on its corresponding equation, as well as score **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
 
-<Tabs items={["Custom metrics", "AI Agents", "RAG", "Chatbots (multi-turn)", "Safety", "Image", "Others"]}>
+<Tabs items={["Custom metrics", "AI Agents", "Chatbots (multi-turn)", "RAG", "Safety", "Image", "Others"]}>
 <Tab value="Custom metrics">
 
 Custom metrics allow you to define your **custom criteria** using SOTA implementations of LLM-as-a-Judge (and Jev-as-a-Judge) metrics in everyday language:
@@ -50,6 +50,18 @@ Agentic metrics evaluate AI agents at two different scopes:
 Use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for overall execution quality and [component-level evaluation](/docs/evaluation-component-level-llm-evals) to diagnose individual actions.
 
 </Tab>
+<Tab value="Chatbots (multi-turn)">
+
+Multi-turn metrics' main use case are for evaluating chatbots and uses a `ConversationalTestCase` instead. They include:
+
+- Knowledge Retention
+- Role Adherence
+- Conversation Completeness
+- Conversation Relevancy
+
+Multi-turn metrics evaluates conversations as a whole and takes prior context into consideration when doing so.
+
+</Tab>
 <Tab value="RAG">
 
 RAG (retrieval augmented generation) metrics focus on the **retriever and generator components** independently.
@@ -63,18 +75,6 @@ RAG (retrieval augmented generation) metrics focus on the **retriever and genera
 - Generator:
   - Answer Relevancy
   - Faithfulness
-
-</Tab>
-<Tab value="Chatbots (multi-turn)">
-
-Multi-turn metrics' main use case are for evaluating chatbots and uses a `ConversationalTestCase` instead. They include:
-
-- Knowledge Retention
-- Role Adherence
-- Conversation Completeness
-- Conversation Relevancy
-
-Multi-turn metrics evaluates conversations as a whole and takes prior context into consideration when doing so.
 
 </Tab>
 <Tab value="Safety">
@@ -161,7 +161,7 @@ await evaluate(
 
 </Switch>
 
-If you're logged into [Confident AI](https://confident-ai.com) before running an evaluation (`deepeval login` or `deepeval view` in the CLI), you'll also get entire testing reports on the platform:
+If you're logged in to Confident AI (`deepeval login` in the CLI) before running an evaluation, the test run also appears there:
 
 <VideoDisplayer
   src={ASSETS.evaluationSingleTurnE2eReport}
@@ -169,8 +169,6 @@ If you're logged into [Confident AI](https://confident-ai.com) before running an
   label="Run evaluations on Confident AI"
   description="Get sharable test reports for every metric you run with deepeval."
 />
-
-More information on everything can be found on the [Confident AI evaluation docs.](https://www.confident-ai.com/docs/llm-evaluation/quickstart)
 
 ## Why `deepeval` Metrics?
 
@@ -186,7 +184,6 @@ Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to
 - Make deterministic metric scores possible (when using `DAGMetric`)
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
 - Provide a comprehensive reason for the scores computed
-- Integrated 100% with Confident AI
 
 <Only id="python">
 
@@ -339,7 +336,7 @@ If you're looking for decision-tree based LLM-as-a-Judge, checkout the [Deep Acy
 
 ### Default Metrics
 
-<Tabs items={["AI Agents", "RAG", "Chatbots", "Images", "Safety"]}>
+<Tabs items={["AI Agents", "Chatbots", "RAG", "Images", "Safety"]}>
 <Tab value="AI Agents">
 
 `deepeval` includes six metrics for evaluating AI agents. Choose them based on the scope you need:
@@ -416,53 +413,6 @@ for await (const golden of dataset.evalsIterator({
 </Switch>
 
 </Tab>
-<Tab value="RAG">
-
-The most used RAG metrics include:
-
-- **Answer Relevancy:** Evaluates if the generated answer is relevant to the user query
-- **Faithfulness:** Measures if the generated answer is factually consistent with the provided context
-- **Contextual Relevancy:** Assesses if the retrieved context is relevant to the user query
-- **Contextual Recall:** Evaluates if the retrieved context contains all relevant information
-- **Contextual Precision:** Measures if the retrieved context is precise and focused
-
-Which can be simply imported from the `deepeval.metrics` module:
-
-<Switch>
-
-<Case id="python">
-
-```python title="main.py"
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
-
-test_case = LLMTestCase(input="...", actual_output="...")
-relevancy = AnswerRelevancyMetric(threshold=0.5)
-
-relevancy.measure(test_case)
-print(relevancy.score, relevancy.reason)
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript title="main.ts"
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { LLMTestCase } from "deepeval/test-case";
-
-const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
-const relevancy = new AnswerRelevancyMetric({ threshold: 0.5 });
-
-await relevancy.measure(testCase);
-console.log(relevancy.score, relevancy.reason);
-```
-
-</Case>
-
-</Switch>
-
-</Tab>
 <Tab value="Chatbots">
 
 Chatbots require "conversational" (or multi-turn) metrics and they include:
@@ -507,6 +457,53 @@ const roleAdherence = new RoleAdherenceMetric({ threshold: 0.5 });
 
 await roleAdherence.measure(convoTestCase);
 console.log(roleAdherence.score, roleAdherence.reason);
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="RAG">
+
+The most used RAG metrics include:
+
+- **Answer Relevancy:** Evaluates if the generated answer is relevant to the user query
+- **Faithfulness:** Measures if the generated answer is factually consistent with the provided context
+- **Contextual Relevancy:** Assesses if the retrieved context is relevant to the user query
+- **Contextual Recall:** Evaluates if the retrieved context contains all relevant information
+- **Contextual Precision:** Measures if the retrieved context is precise and focused
+
+Which can be simply imported from the `deepeval.metrics` module:
+
+<Switch>
+
+<Case id="python">
+
+```python title="main.py"
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(input="...", actual_output="...")
+relevancy = AnswerRelevancyMetric(threshold=0.5)
+
+relevancy.measure(test_case)
+print(relevancy.score, relevancy.reason)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="main.ts"
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { LLMTestCase } from "deepeval/test-case";
+
+const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+const relevancy = new AnswerRelevancyMetric({ threshold: 0.5 });
+
+await relevancy.measure(testCase);
+console.log(relevancy.score, relevancy.reason);
 ```
 
 </Case>
@@ -604,8 +601,9 @@ These are the metric categories to consider when choosing your metrics:
 - **Generic metrics** are system specific and use case agnostic:
   - Agent trajectory metrics: evaluate task completion, execution efficiency, planning, and plan adherence across the complete trace
   - Agent component metrics: evaluate tool selection and argument generation at individual action steps
-  - RAG metrics: measures retriever and generator separately
   - Multi-turn metrics: measure overall dialogue quality
+  - Voice metrics: measure how voice agents sound and handle turn-taking
+  - RAG metrics: measures retriever and generator separately
   - Combine these for multi-component LLM systems.
 - **Reference vs. Referenceless**:
   - Reference-based metrics need **ground truth** (e.g., contextual recall or tool correctness).
@@ -618,7 +616,7 @@ If you're running metrics in production, you _must_ choose a referenceless metri
 
 When deciding on metrics, no matter how tempting, try to limit yourself to **no more than 5 metrics**, with this breakdown:
 
-- **2-3** generic, system-specific metrics (e.g. task completion for agents, contextual precision for RAG)
+- **2-3** generic, system-specific metrics (e.g. task completion for AI agents, contextual precision for RAG)
 - **1-2** custom, use case-specific metrics (e.g. helpfulness for a medical chatbot, format correctness for summarization)
 
 The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
@@ -642,8 +640,8 @@ graph TD
 Here are some additional ideas if you're not sure:
 
 - **AI agents**: Start with `TaskCompletionMetric` for overall trajectory quality, add `StepEfficiencyMetric`, `PlanAdherenceMetric`, or `PlanQualityMetric` when the execution path matters, and use `ToolCorrectnessMetric` or `ArgumentCorrectnessMetric` to diagnose individual LLM tool-calling decisions
-- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates <Term py="actual_output" ts="actualOutput"/> alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against <Term py="retrieval_context" ts="retrievalContext"/>)
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
+- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates <Term py="actual_output" ts="actualOutput"/> alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against <Term py="retrieval_context" ts="retrievalContext"/>)
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
 
 In some cases, where your LLM model is doing most of the heavy lifting, it is not uncommon to have more use case specific metrics.
@@ -741,7 +739,7 @@ await evaluate([testCase], [new AnswerRelevancyMetric()]);
 
 </Switch>
 
-The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) or `deepeval test run` **is the best way to run evaluations**. They offer tons of features out of the box, including caching, parallelization, cost tracking, error handling, and integration with [Confident AI.](https://confident-ai.com)
+The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) or `deepeval test run` **is the best way to run evaluations**. They offer tons of features out of the box, including caching, parallelization, cost tracking, and error handling.
 
 :::tip
 [`deepeval test run`](/docs/evaluation-introduction#evaluating-with-pytest) is `deepeval`'s native Pytest integration, which allows you to run evals in CI/CD pipelines.
@@ -1324,7 +1322,7 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
       answer: (
         <>
           No more than 5: roughly <strong>2-3</strong> generic system metrics
-          (e.g. agent or RAG metrics) and <strong>1-2</strong> custom use-case
+          (e.g. AI agent or RAG metrics) and <strong>1-2</strong> custom use-case
           metrics. Capping forces you to prioritize what you actually care
           about.
         </>
@@ -1387,10 +1385,13 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
           live LLM <a href="/docs/evaluation-llm-tracing">traces</a> and spans
           rather than prebuilt test cases. Trajectory metrics can score the
           complete agent path, while component metrics can score selected spans.
-          For continuous online evals, dashboards, and alerts on live traffic,
-          run them on <a href="https://confident-ai.com">Confident AI</a>, the
-          enterprise platform for all-in-one evals, observability, and red
-          teaming.
+          On{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>
+          , evals run on every production trace and flag the failing ones, and
+          failing traces are clustered into failure modes you can turn into
+          goldens for your next eval.
         </>
       ),
     },
@@ -1407,9 +1408,9 @@ The [`scorer` module](https://github.com/confident-ai/deepeval/blob/main/deepeva
           </a>
           , while metrics on individual spans are <a href="/docs/evaluation-component-level-llm-evals">
             component-level
-          </a>. Wire them up on <a href="https://confident-ai.com">
-            Confident AI
-          </a> to track metric scores on production traffic over time.
+          </a>. If you're already in production, Confident AI surfaces failing production
+          traces before anyone has written an eval for them, so they can become
+          goldens for your next eval.
         </>
       ),
     },

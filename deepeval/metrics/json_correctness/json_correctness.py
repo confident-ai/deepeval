@@ -7,8 +7,8 @@ from deepeval.test_case import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.utils import (
+    prepare_measure,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -72,19 +72,7 @@ class JsonCorrectnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -120,19 +108,7 @@ class JsonCorrectnessMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,

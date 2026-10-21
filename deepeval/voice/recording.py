@@ -8,6 +8,8 @@ from typing import BinaryIO, Dict, Optional
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 
+_ARRIVAL_JITTER_S = 0.25
+
 
 @dataclass
 class _Spool:
@@ -22,6 +24,7 @@ class CallRecorder:
     def __init__(self, sample_rate: int = 24000):
         self.sample_rate = sample_rate
         self._origin: Optional[float] = None
+        self._jitter_samples = int(_ARRIVAL_JITTER_S * sample_rate)
         self._spools: Dict[str, _Spool] = {}
         for channel in ("user", "agent"):
             handle, path = tempfile.mkstemp(
@@ -42,7 +45,7 @@ class CallRecorder:
             pcm = audio_utils.resample_pcm16(pcm, sample_rate, self.sample_rate)
         spool = self._spools[channel]
         target = int(max(at - self._origin, 0.0) * self.sample_rate)
-        if target > spool.samples:
+        if target - spool.samples > self._jitter_samples:
             spool.file.write(b"\x00\x00" * (target - spool.samples))
             spool.samples = target
         spool.file.write(pcm)
@@ -167,6 +170,19 @@ class RecordingConnector:
                 yield chunk
 
         return await self._inner.stream_uplink_chunks(tapped(), **kwargs)
+
+    def take_pending_agent_events(self):
+        rate = self._inner.recv_sample_rate
+        events = self._inner.take_pending_agent_events()
+        for event in events:
+            if event.audio:
+                self._recorder.add(
+                    "agent",
+                    bytes(event.audio),
+                    rate,
+                    event.received_at or time.perf_counter(),
+                )
+        return events
 
     async def iter_agent_events(self):
         rate = self._inner.recv_sample_rate

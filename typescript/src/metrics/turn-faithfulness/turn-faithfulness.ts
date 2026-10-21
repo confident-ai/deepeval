@@ -19,7 +19,6 @@ import {
   type SystemOneVerdictSpec,
 } from "@/metrics/system-one";
 import {
-  checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
 } from "@/metrics/conversational-utils";
@@ -32,6 +31,7 @@ import {
   type InteractionFaithfulnessScore,
 } from "@/metrics/turn-faithfulness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "TurnFaithfulnessMetric";
 
@@ -104,8 +104,7 @@ export class TurnFaithfulnessMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const unitInteractions = getUnitInteractions(testCase.turns);

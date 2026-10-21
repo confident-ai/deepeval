@@ -18,10 +18,7 @@ import {
   type SystemOneBinarySpec,
   type SystemOneEvalSpec,
 } from "@/metrics/system-one";
-import {
-  checkConversationalTestCaseParams,
-  convertTurnToDict,
-} from "@/metrics/conversational-utils";
+import { convertTurnToDict } from "@/metrics/conversational-utils";
 import {
   KnowledgeSchema,
   KnowledgeRetentionVerdictSchema,
@@ -30,6 +27,7 @@ import {
   type KnowledgeRetentionVerdict,
 } from "@/metrics/knowledge-retention/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "KnowledgeRetentionMetric";
 
@@ -80,8 +78,7 @@ export class KnowledgeRetentionMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.knowledges = await this.generateKnowledges(testCase.turns);

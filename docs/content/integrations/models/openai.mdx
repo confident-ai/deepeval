@@ -188,6 +188,14 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-6-astra`
+- `gpt-6-sol`
+- `gpt-6-luna`
+- `gpt-5.6-sol`
+- `gpt-5.6-terra`
+- `gpt-5.6-luna`
+- `gpt-5.5`
+- `gpt-5.4`
 - `gpt-5`
 - `gpt-5-mini`
 - `gpt-5-nano`
@@ -213,7 +221,11 @@ Below is a list of commonly used OpenAI models:
 <Case id="python">
 
 :::caution[G-Eval requires log probabilities]
-`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+:::
+
+:::note[Reasoning models]
+Reasoning models such as the GPT-5 and GPT-6 families reject `temperature` values other than the default. `deepeval` omits the parameter for the models it recognizes, so a `temperature` you pass is ignored for them.
 :::
 
 </Case>

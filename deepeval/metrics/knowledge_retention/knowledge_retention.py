@@ -4,10 +4,10 @@ from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
     generate_qag_verdict,
     a_generate_qag_verdict,
     score_qag_verdicts,
-    check_conversational_test_case_params,
     construct_verbose_logs,
     initialize_model,
     initialize_system_one_model,
@@ -79,18 +79,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -135,18 +124,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,

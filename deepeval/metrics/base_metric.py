@@ -223,6 +223,8 @@ class BaseConversationalMetric(PromptMixin):
     flaky: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
+    _requires_chatbot_role: bool = False
+    _requires_mcp_servers: bool = False
     # System One (Jev); see `BaseMetric`.
     eval_mode: Optional[EvalMode] = None
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None

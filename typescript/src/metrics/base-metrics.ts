@@ -206,25 +206,10 @@ export abstract class BaseMetricCore {
     return undefined;
   }
 
-  /** Clear per-measure System One bookkeeping so a reused metric starts clean. */
-  protected resetSystemOneState(): void {
-    this.confidence = undefined;
-    this.systemOneFallbackReason = undefined;
-    this.systemOneOutcomes = undefined;
-    this._systemOneDisabled = false;
-  }
-
   protected async startProgress(): Promise<void> {
-    this.resetSystemOneState();
     // Before the indicator check, which a batch run turns off: this is the one
     // call every metric makes on its way into `measure()`, bare or not.
-    recordMetric(this.name, {
-      // Every TypeScript metric is async; `describe()` reports the same.
-      asyncMode: true,
-      inComponent: inComponentScope(),
-      model: this.model,
-    });
-
+    startMeasure(this);
     if (!this.showIndicator) return;
     const ora = (await import("ora")).default;
     const messageTail = this.describe();
@@ -270,8 +255,28 @@ export abstract class BaseMetricCore {
   }
 }
 
+/**
+ * Record the measure and clear per-measure System One bookkeeping so a reused
+ * metric starts clean. Every measure runs this, through `startProgress` or the
+ * batched System One path in `evaluate()`.
+ * @internal
+ */
+export function startMeasure(metric: BaseMetricCore): void {
+  metric.confidence = undefined;
+  metric.systemOneFallbackReason = undefined;
+  metric.systemOneOutcomes = undefined;
+  metric._systemOneDisabled = false;
+  recordMetric(metric.name, {
+    // Every TypeScript metric is async; `describe()` reports the same.
+    asyncMode: true,
+    inComponent: inComponentScope(),
+    model: metric.model,
+  });
+}
+
 export abstract class BaseMetric extends BaseMetricCore {
-  protected requiredParams: Array<SingleTurnParams> = [];
+  /** @internal Read by `prepareMeasure`. */
+  requiredParams: Array<SingleTurnParams> = [];
 
   abstract measure(testCase: any, ...args: any[]): number | Promise<number>;
 }

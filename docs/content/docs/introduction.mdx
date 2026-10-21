@@ -3,9 +3,11 @@ id: introduction
 title: Introduction to DeepEval
 sidebar_label: Introduction
 languages: [python, typescript]
+peek: true
 ---
 
 import {
+  AudioLines,
   Bot,
   Cloud,
   Database,
@@ -26,18 +28,19 @@ import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 **DeepEval** is an open-source LLM evaluation framework for LLM applications. DeepEval makes it extremely easy to build and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Unit test LLM outputs with Pytest-style assertions.
-- Use 50+ ready-to-use metrics, including LLM-as-a-judge, Jev-as-a-judge, agent, tool-use,
-  conversational, voice, safety, RAG, and multimodal metrics.
-- Evaluate AI agents, conversational agents (chatbots), voice AI, RAG pipelines, MCP systems, and
+- Use 50+ ready-to-use metrics, including LLM-as-a-judge, Jev-as-a-judge, AI agent, tool-use,
+  multi-turn, voice, RAG, safety, and multimodal metrics.
+- Evaluate AI agents, multi-turn chatbots, voice agents, RAG pipelines, MCP systems, and
   other custom workflows.
 - Run end-to-end, trajectory-based, and component-level evals.
 - Generate synthetic datasets for edge cases that are hard to collect manually.
 - Customize metrics, prompts, models, and evaluation templates when built-in
   behavior is not enough.
 
-DeepEval is local-first: your evaluations run in your own environment. When your
-team needs shared dashboards, regression tracking, observability, or production
-monitoring, DeepEval integrates natively with [Confident AI](https://www.confident-ai.com).
+DeepEval is local-first: your evaluations run in your own environment. Once
+your app is live, [Confident AI](https://www.confident-ai.com/products/llm-observability)
+surfaces the production traces that fail before anyone has written an eval for
+them, so they can become your next eval.
 
 :::tip[Vibe coding? Have your coding agent set DeepEval up for you.]
 Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any other AI coding tool, paste a starter prompt, and your coding agent will do the rest of the work. [Click here](/docs/vibe-coder-quickstart) to get started.
@@ -47,7 +50,7 @@ Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any o
 
 DeepEval was designed for a technical audience and here are the main personas we serve well:
 
-- **AI engineers** who need to evaluate agents, RAG pipelines, tool calls, and
+- **AI engineers** who need to evaluate AI agents, multi-turn chatbots, voice agents, RAG pipelines, tool calls, and
   production LLM workflows, write unit tests for AI behavior, and use evals in
   agentic coding tools like Claude Code and Codex.
 - **Data scientists** who want repeatable experiments for comparing prompts,
@@ -107,6 +110,10 @@ Alternatively, if you already have a concrete use case - try out one of our use 
     href="/docs/getting-started-chatbots"
   >
     Evaluate multi-turn conversations, turns, and simulated user interactions.
+  </Card>
+  <Card icon={<AudioLines />} title="Voice Agents" href="/docs/evaluation-voice">
+    Evaluate voice agents on transcripts and call audio, including latency and
+    turn-taking.
   </Card>
   <Card icon={<FileSearch />} title="RAG" href="/docs/getting-started-rag">
     Evaluate RAG quality end-to-end, then test retrieval and generation
@@ -207,7 +214,7 @@ workflow needs collaboration, monitoring, or security testing.
   <Card
     icon={<Cloud />}
     title="Confident AI"
-    description="An AI quality platform for shared eval dashboards, regression analysis, observability, and monitoring."
+    description="AI monitoring that runs evals on production traces, clusters failing traces into failure modes, and turns them into your next eval."
     href="https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=introduction_ecosystem_card&ref_page=/docs/introduction"
     external
   />
@@ -241,14 +248,14 @@ DeepEval is shaped by the people who report bugs, propose ideas, review changes,
         <>
           No. DeepEval runs locally. You only need an LLM provider key, such as{" "}
           <code>OPENAI_API_KEY</code>, for metrics that use an LLM judge. An
-          account is only needed if you want to send results to Confident AI.
+          account is only needed to send traces or results to Confident AI.
         </>
       ),
     },
     {
       question: "What can I evaluate with DeepEval?",
       answer:
-        "AI agents, MCP systems, chatbots, tool-using workflows, LLM arenas, RAG pipelines, summarizers, structured outputs, multimodal apps, and custom LLM workflows.",
+        "AI agents, multi-turn chatbots, voice agents, RAG pipelines, MCP systems, tool-using workflows, LLM arenas, summarizers, structured outputs, multimodal apps, and custom LLM workflows.",
     },
     {
       question: "How is DeepEval different from observability tools?",

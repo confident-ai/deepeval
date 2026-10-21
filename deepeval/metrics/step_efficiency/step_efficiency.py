@@ -2,8 +2,8 @@ from typing import Dict, Optional, List, Union, Type
 
 from deepeval.utils import get_or_create_event_loop, serialize_to_json
 from deepeval.metrics.utils import (
+    prepare_measure,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     initialize_system_one_model,
     a_generate_with_schema_and_extract,
@@ -87,19 +87,7 @@ class StepEfficiencyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -143,19 +131,7 @@ class StepEfficiencyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
 
         with metric_progress_indicator(
             self,

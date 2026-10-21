@@ -78,10 +78,16 @@ For `TurnTakingNaturalnessMetric` the breakdown is one entry per speaker change:
             "score": 0.84,
         },
     ],
+    "response_delays": {
+        "count": 4,
+        "mean_seconds": 0.61,
+        "spread_seconds": 0.38,
+        "score": 0.83,
+    },
 }
 ```
 
-A negative `gap_seconds` is overlap: the next speaker started before the previous one finished.
+A negative `gap_seconds` is overlap: the next speaker started before the previous one finished. `response_delays` summarises the caller-to-agent gaps only — how long the agent waited before replying each time, and how much that wait varied.
 
 ## How Is It Calculated?
 
@@ -102,6 +108,12 @@ where _T_ is the number of speaker changes, Δ is the gap or overlap in seconds,
 A smaller τ decays faster. Agent-on-user overlap is the harshest because it is the most disruptive: half a second of it scores 0.43, where half a second of caller barge-in still scores 0.78.
 
 There is no latency cutoff — the curve is continuous, so a 1.7s silence scores 0.5 and a 4s silence scores 0.2. Judge the score against your own baseline rather than expecting a natural call to reach 1.
+
+Once the call has at least three caller-to-agent gaps, the metric also scores how **consistently** the agent waited before replying. An agent that jumps in after 2s once and waits 9s another time is applying its silence timeout unevenly, which the per-transition mean alone would hide. The spread σ of those gaps (their population standard deviation, in seconds) becomes a second term:
+
+<Equation formula="\text{Turn-Taking Naturalness} = 0.8 \cdot \frac{1}{T} \sum_{t=1}^{T} e^{-|\Delta_t| / \tau_t} + 0.2 \cdot e^{-\sigma / 2}" />
+
+A perfectly even agent keeps the full score; a 1s spread costs about 0.08, a 3s spread about 0.16. With fewer than three caller-to-agent gaps the first term is the whole score and `response_delays.score` is `None`.
 
 The metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
 
@@ -149,6 +161,19 @@ Silence-based end-of-turn detection is part of what this metric measures. A `tur
             interruptions
           </a>{" "}
           is what makes those transitions appear at all.
+        </>
+      ),
+    },
+    {
+      question: "Why does one slow reply lower the score more than its own transition suggests?",
+      answer: (
+        <>
+          Because it also widens the spread of the agent's response delays.
+          Four replies at 0.4s and one at 3s score reasonably well transition
+          by transition, but the agent plainly did not apply the same timeout
+          each time, and <code>response_delays.score</code> records that. The
+          spread term is weighted at 20%, so it adjusts the score rather than
+          dominating it.
         </>
       ),
     },

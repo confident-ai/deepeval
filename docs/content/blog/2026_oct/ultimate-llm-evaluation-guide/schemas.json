@@ -1,0 +1,131 @@
+{
+  "extracted-vs-expected-record": {
+    "objects": [
+      {
+        "id": "extracted",
+        "title": "Extracted record",
+        "subtitle": "Actual output",
+        "color": "violet",
+        "fields": [
+          {
+            "name": "bill_number",
+            "example": "BOL-042"
+          },
+          {
+            "name": "carrier",
+            "example": "Maersk Line"
+          },
+          {
+            "name": "total_weight_kg",
+            "example": "1240"
+          },
+          {
+            "name": "port_of_loading",
+            "example": "Rotterdam"
+          }
+        ]
+      },
+      {
+        "id": "expected",
+        "title": "Expected record",
+        "subtitle": "From the golden",
+        "color": "blue",
+        "fields": [
+          {
+            "name": "bill_number",
+            "example": "BOL-042"
+          },
+          {
+            "name": "carrier",
+            "example": "Maersk"
+          },
+          {
+            "name": "total_weight_kg",
+            "example": "1240"
+          },
+          {
+            "name": "port_of_loading",
+            "example": "Rotterdam"
+          }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "from": "extracted.bill_number",
+        "to": "expected.bill_number"
+      },
+      {
+        "from": "extracted.carrier",
+        "to": "expected.carrier"
+      },
+      {
+        "from": "extracted.total_weight_kg",
+        "to": "expected.total_weight_kg"
+      },
+      {
+        "from": "extracted.port_of_loading",
+        "to": "expected.port_of_loading"
+      }
+    ]
+  },
+  "metric-evidence-in-test-case": {
+    "objects": [
+      {
+        "id": "test-case",
+        "title": "LLM test case",
+        "fields": [
+          {
+            "name": "input",
+            "example": "Was I charged twice?"
+          },
+          {
+            "name": "actual_output",
+            "example": "Yes, I refunded the extra charge."
+          },
+          {
+            "name": "retrieval_context",
+            "optional": true,
+            "note": "Chunks the retriever returned"
+          },
+          {
+            "name": "tools_called",
+            "optional": true,
+            "example": "search_orders, issue_refund"
+          },
+          {
+            "name": "expected_tools",
+            "optional": true,
+            "example": "search_orders, issue_refund"
+          }
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "label": "Answer relevancy",
+        "color": "violet",
+        "fields": [
+          "test-case.input",
+          "test-case.actual_output"
+        ]
+      },
+      {
+        "label": "Faithfulness",
+        "color": "pink",
+        "fields": [
+          "test-case.actual_output",
+          "test-case.retrieval_context"
+        ]
+      },
+      {
+        "label": "Tool correctness",
+        "color": "ember",
+        "fields": [
+          "test-case.tools_called",
+          "test-case.expected_tools"
+        ]
+      }
+    ]
+  }
+}

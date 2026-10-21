@@ -3,6 +3,7 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.multimodal import multimodal_parts, reject_audio
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -13,9 +14,9 @@ from deepeval.models.utils import (
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    token_cost,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.utils import require_dependency, require_param
@@ -30,8 +31,33 @@ retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 # Anthropic's `max_tokens` caps thinking *plus* response text, and its minimum
 # thinking budget is 1024, so a thinking request needs headroom for both.
 MIN_THINKING_BUDGET_TOKENS = 1024
-DEFAULT_MAX_TOKENS = 1024
-DEFAULT_THINKING_MAX_TOKENS = 8192
+DEFAULT_MAX_TOKENS = 8192
+DEFAULT_THINKING_MAX_TOKENS = 16384
+# Claude 3 models cap output at 4096 tokens and reject anything higher.
+LEGACY_MAX_TOKENS = 4096
+_LEGACY_MAX_TOKENS_PREFIXES = (
+    "claude-3-opus",
+    "claude-3-sonnet",
+    "claude-3-haiku",
+)
+# From Claude Opus 4.7 on, `thinking.type: "enabled"` with a manual budget is
+# rejected; thinking is switched on with `{"type": "adaptive"}` instead.
+_ADAPTIVE_THINKING_PREFIXES = (
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-opus-5",
+    "claude-sonnet-5",
+)
+
+_SCHEMA_REJECTION_MARKERS = ("output_config", "output_format", "schema")
+
+
+def _is_schema_rejection(error: Exception) -> bool:
+    """Whether a 400 is about the structured-output schema, as opposed to
+    billing, prompt length, or another problem a text retry would not fix."""
+    message = str(error).lower()
+    return any(marker in message for marker in _SCHEMA_REJECTION_MARKERS)
+
 
 _ALIAS_MAP = {
     "api_key": ["_anthropic_api_key"],
@@ -135,10 +161,14 @@ class AnthropicModel(DeepEvalBaseLLM):
             self._max_tokens = int(explicit_max_tokens)
         elif self._thinking:
             self._max_tokens = DEFAULT_THINKING_MAX_TOKENS
+        elif model.startswith(_LEGACY_MAX_TOKENS_PREFIXES):
+            self._max_tokens = LEGACY_MAX_TOKENS
         else:
             self._max_tokens = DEFAULT_MAX_TOKENS
+        self._structured_outputs_rejected = False
 
-        if self._thinking:
+        self._adaptive_thinking = model.startswith(_ADAPTIVE_THINKING_PREFIXES)
+        if self._thinking and not self._adaptive_thinking:
             self._thinking_budget_tokens = max(
                 MIN_THINKING_BUDGET_TOKENS, self._max_tokens // 2
             )
@@ -161,64 +191,115 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     @retry_anthropic
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
-
-        max_tokens = self._max_tokens
+        content = self._prompt_content(prompt, audio)
+        module = self._anthropic_module()
         chat_model = self.load_model()
-        create_kwargs = dict(
-            max_tokens=max_tokens,
-            messages=[
-                {
-                    "role": "user",
-                    "content": content,
-                }
-            ],
-            model=self.name,
-            **self.generation_kwargs,
-        )
-        create_kwargs.update(self._thinking_kwargs())
-        # Only send `temperature` when explicitly configured and the model
-        # supports it — some models reject/deprecate `temperature`, and a
-        # thinking request only accepts the default.
-        if not self._thinking and (
-            self.temperature is not None
-            and not (
-                self.model_data
-                and self.model_data.supports_temperature is False
+        output_format = self._output_format(module, schema)
+        try:
+            message = chat_model.messages.create(
+                **self._create_kwargs(content, output_format)
             )
-        ):
-            create_kwargs["temperature"] = self.temperature
-        message = chat_model.messages.create(**create_kwargs)
-        cost = self.calculate_cost(
-            message.usage.input_tokens, message.usage.output_tokens
-        )
-        text = self._extract_text(message)
-        if schema is None:
-            return text, cost
-        else:
-            json_output = trim_and_load_json(text)
-            return schema.model_validate(json_output), cost
+        except getattr(module, "BadRequestError", ()) as e:
+            if output_format is None or not _is_schema_rejection(e):
+                raise
+            # The schema was rejected (e.g. unsupported model or schema
+            # feature); parse JSON from text for the rest of this model's life.
+            self._structured_outputs_rejected = True
+            message = chat_model.messages.create(
+                **self._create_kwargs(content, None)
+            )
+        return self._parse_message(message, schema)
 
     @retry_anthropic
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
-
-        max_tokens = self._max_tokens
+        content = self._prompt_content(prompt, audio)
+        module = self._anthropic_module()
         chat_model = self.load_model(async_mode=True)
+        output_format = self._output_format(module, schema)
+        try:
+            message = await chat_model.messages.create(
+                **self._create_kwargs(content, output_format)
+            )
+        except getattr(module, "BadRequestError", ()) as e:
+            if output_format is None or not _is_schema_rejection(e):
+                raise
+            self._structured_outputs_rejected = True
+            message = await chat_model.messages.create(
+                **self._create_kwargs(content, None)
+            )
+        return self._parse_message(message, schema)
+
+    def _prompt_content(
+        self, prompt, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        # The Messages API has no audio content block.
+        reject_audio(audio, "AnthropicModel")
+        parts = multimodal_parts(prompt)
+        if parts is None:
+            return [{"type": "text", "text": prompt}]
+
+        content = []
+        for element in parts:
+            if isinstance(element, str):
+                content.append({"type": "text", "text": element})
+            elif isinstance(element, MLLMImage):
+                if element.url and not element.local:
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": element.url},
+                        }
+                    )
+                else:
+                    element.ensure_images_loaded()
+                    mime_type = element.mimeType or "image/jpeg"
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": element.dataBase64,
+                            },
+                        }
+                    )
+        return content
+
+    def _output_format(
+        self, module, schema: Optional[BaseModel]
+    ) -> Optional[Dict]:
+        """The `output_config.format` block constraining decoding to `schema`.
+
+        None when there is no schema, the model predates Anthropic's native
+        structured outputs, the API already rejected one, or the installed SDK
+        is too old to build one (it would not accept `output_config` either).
+        """
+        if (
+            schema is None
+            or self.model_data.supports_structured_outputs is not True
+            or self._structured_outputs_rejected
+        ):
+            return None
+        transform_schema = getattr(module, "transform_schema", None)
+        if transform_schema is None:
+            return None
+        return {"type": "json_schema", "schema": transform_schema(schema)}
+
+    def _create_kwargs(
+        self, content: List[Dict], output_format: Optional[Dict]
+    ) -> Dict:
         create_kwargs = dict(
-            max_tokens=max_tokens,
+            max_tokens=self._max_tokens,
             messages=[
                 {
                     "role": "user",
@@ -240,17 +321,30 @@ class AnthropicModel(DeepEvalBaseLLM):
             )
         ):
             create_kwargs["temperature"] = self.temperature
-        message = await chat_model.messages.create(**create_kwargs)
+        if output_format is not None:
+            create_kwargs["output_config"] = {
+                **(create_kwargs.get("output_config") or {}),
+                "format": output_format,
+            }
+        return create_kwargs
+
+    def _parse_message(self, message, schema: Optional[BaseModel]):
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
         )
         text = self._extract_text(message)
         if schema is None:
             return text, cost
-        else:
-            json_output = trim_and_load_json(text)
+        json_output = trim_and_load_json(text)
+        return schema.model_validate(json_output), cost
 
-            return schema.model_validate(json_output), cost
+    @staticmethod
+    def _anthropic_module():
+        return require_dependency(
+            "anthropic",
+            provider_label="AnthropicModel",
+            install_hint="Install it with `pip install anthropic`.",
+        )
 
     @staticmethod
     def _extract_text(message) -> str:
@@ -279,6 +373,8 @@ class AnthropicModel(DeepEvalBaseLLM):
             return {}
         if not self._thinking:
             return {"thinking": {"type": "disabled"}}
+        if self._adaptive_thinking:
+            return {"thinking": {"type": "adaptive"}}
         return {
             "thinking": {
                 "type": "enabled",
@@ -286,45 +382,14 @@ class AnthropicModel(DeepEvalBaseLLM):
             }
         }
 
-    def generate_content(self, multimodal_input: List[Union[str, MLLMImage]]):
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {"type": "url", "url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    mime_type = element.mimeType or "image/jpeg"
-                    content.append(
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": mime_type,
-                                "data": element.dataBase64,
-                            },
-                        }
-                    )
-        return content
-
     ###############################################
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int
+    ) -> Optional[EvaluationCost]:
+        return token_cost(self.model_data, input_tokens, output_tokens)
 
     #########################
     # Capabilities          #
@@ -339,6 +404,9 @@ class AnthropicModel(DeepEvalBaseLLM):
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
 
+    def supports_audio(self) -> bool:
+        return False
+
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs
 
@@ -350,12 +418,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
-        module = require_dependency(
-            "anthropic",
-            provider_label="AnthropicModel",
-            install_hint="Install it with `pip install anthropic`.",
-        )
-
+        module = self._anthropic_module()
         if not async_mode:
             return self._build_client(module.Anthropic)
         return self._build_client(module.AsyncAnthropic)

@@ -189,6 +189,15 @@ def _prepare(
                 f"`deepeval set-eval-mode {EvalMode.LLM}`."
             )
         return None
+    return _request_for(metric, test_case, spec)
+
+
+def _request_for(
+    metric: Any, test_case: Any, spec: SystemOneEvalSpec
+) -> Optional[Tuple[SystemOneEvalSpec, Dict[str, Any], Dict[str, Any]]]:
+    """The state and questions `spec` sends for `test_case`, or `None` for a
+    test case type Jev has no state for."""
+    mode = effective_eval_mode(metric)
     if getattr(metric, "system_one_model", None) is None:
         raise DeepEvalError(
             f"{EVAL_MODE_ENV_VAR}={mode} runs {type(metric).__name__} on a "

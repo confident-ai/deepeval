@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "trace-span-tree.webp",
+      "title": "Span tree of a single LLM trace",
+      "alt": "Single LLM trace with nested agent, retriever, embedding, LLM and tool call spans, three of them mapped to an LLM test case and metrics",
+      "width": 2400,
+      "height": 1093,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png"
+        ]
+      }
+    }
+  ]
+}

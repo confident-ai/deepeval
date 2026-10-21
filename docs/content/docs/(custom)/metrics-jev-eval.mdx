@@ -194,7 +194,7 @@ const refundHandling = new ConversationalJevEval({
 There are **THREE** mandatory and <Switch><Case id="python">**SEVEN**</Case><Case id="typescript">**SIX**</Case></Switch> optional parameters when creating a JevEval metric:
 
 - `name`: name of custom metric.
-- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). These fields are the **state** Jev sees; a question can only refer to fields listed here.
+- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). These fields are the **state** Jev sees; a question can only refer to fields listed here. For single-turn JevEval, omit it to [evaluate the trajectory](#evaluating-the-trajectory) instead.
 - `questions`: a list of [`Noul`](#noul), [`Score`](#score) and [`Choice`](#choice) questions. Each has a `weight` (default `1.0`).
 - [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `threshold`: the passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -347,6 +347,111 @@ await evaluate([convoTestCase], [refundHandling]);
 
 </Tab>
 </Tabs>
+
+### Evaluating the trajectory
+
+When you leave out <Term py="evaluation_params" ts="evaluationParams"/>, single-turn JevEval sends your AI agent's trace to Jev instead of test case fields. The state is `{"trace": ...}`: the span tree, where each span keeps its `name`, `type`, inputs, outputs and tool calls, nested under `children`. Token counts, costs and prompts are dropped to save Jev's context, so questions can't ask about them.
+
+Write the questions about the agent's run, and refer to spans by name where you can:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics.jev_eval import Noul, Choice
+from deepeval.tracing import observe
+from deepeval.metrics import JevEval
+
+tool_use = JevEval(
+    name="Tool Use",
+    questions=[
+        Noul("The agent called the order_lookup tool before answering.", weight=2),
+        Noul("The order_id passed to order_lookup matches the order the user asked about."),
+        Choice(
+            "How does the agent's final output relate to what order_lookup returned?",
+            options={"consistent": 1.0, "partly_consistent": 0.5, "contradicts_it": 0.0, "no_tool_called": None},
+        ),
+    ],
+)
+
+@observe(type="tool")
+def order_lookup(order_id: str):
+    return {"status": "in_transit"}
+
+@observe(type="agent")
+def support_agent(input: str):
+    return f"Your order is {order_lookup('1234')['status']}."
+
+dataset = EvaluationDataset(goldens=[Golden(input="Where is my order #1234?")])
+for golden in dataset.evals_iterator(metrics=[tool_use]):
+    support_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { JevEval, Noul, Choice } from "deepeval/metrics";
+import { observe } from "deepeval/tracing";
+
+const toolUse = new JevEval({
+  name: "Tool Use",
+  questions: [
+    new Noul({
+      statement: "The agent called the order_lookup tool before answering.",
+      weight: 2,
+    }),
+    new Noul({
+      statement:
+        "The order_id passed to order_lookup matches the order the user asked about.",
+    }),
+    new Choice({
+      question:
+        "How does the agent's final output relate to what order_lookup returned?",
+      options: {
+        consistent: 1.0,
+        partly_consistent: 0.5,
+        contradicts_it: 0.0,
+        no_tool_called: null,
+      },
+    }),
+  ],
+});
+
+const orderLookup = observe({
+  type: "tool",
+  fn: async (orderId: string) => ({ status: "in_transit" }),
+});
+
+const supportAgent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const { status } = await orderLookup("1234");
+    return `Your order is ${status}.`;
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Where is my order #1234?" })],
+});
+for await (const golden of dataset.evalsIterator({ metrics: [toolUse] })) {
+  await supportAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+Passed to <Term py="evals_iterator" ts="evalsIterator"/>, the metric sees the full trace. Attached to a single component through that component's `metrics`, it sees only that span and its children.
+
+:::note
+Trajectory mode needs a trace. Running it on a plain `LLMTestCase` through `evaluate()` or `measure()` raises a `MissingTestCaseParamsError` before Jev is called. `ConversationalJevEval` has no trajectory mode: conversations are judged turn by turn.
+:::
 
 ## Question Types
 

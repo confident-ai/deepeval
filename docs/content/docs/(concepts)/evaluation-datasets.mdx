@@ -32,7 +32,7 @@ Depending on the type of goldens you supply, datasets are either **single-turn**
 
 :::info
 
-If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. You can also do this on Confident AI, which integrates 100% with `deepeval`:
+If you don't already have an `EvaluationDataset`, a great starting point is to simply write down the prompts you're currently using to manually eyeball your LLM outputs. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces the production traces that fail, routes them to the right annotators, and turns them into goldens you can pull into `deepeval`:
 
 <VideoDisplayer
   src={ASSETS.datasetsCreate}
@@ -40,9 +40,6 @@ If you don't already have an `EvaluationDataset`, a great starting point is to s
   label="Learn dataset annotation on Confident AI"
   description="Create, edit, and collaborate on goldens in the dataset editor."
 />
-
-Full documentation for datasets on [Confident AI
-here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 :::
 
@@ -222,7 +219,7 @@ dataset.addGolden(
 
 You run evals on test cases in datasets, which you'll create at evaluation time using the goldens in the same dataset.
 
-<ImageDisplayer src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
+<ImageDisplayer id="diagrams/in-house/datasets/goldens-to-test-cases" />
 
 First step is to load in the goldens to your dataset. This example will load datasets from Confident AI, but you can also explore [other options below.](#load-dataset)
 
@@ -582,7 +579,7 @@ You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-e
 
 ## Manage Your Dataset
 
-Dataset management is an essential part of your evaluation lifecycle. We recommend Confident AI as the choice for your dataset management workflow as it comes with dozens of collaboration features out of the box, but you can also do it locally as well.
+Dataset management is an essential part of your evaluation lifecycle. Datasets can be saved locally as JSON, CSV, or JSONL, or pushed to Confident AI, where goldens built from failing production traces live alongside the ones you write.
 
 ### Save Dataset
 
@@ -852,7 +849,7 @@ By default the `saveAs()` method only saves the `Golden`s within your `Evaluatio
 <Tabs items={["Confident AI", "From JSON", "From JSONL", "From CSV"]}>
 <Tab value="Confident AI">
 
-You can load entire datasets on Confident AI's cloud in one line of code.
+You can pull a dataset from Confident AI in one line of code.
 
 <Switch>
 
@@ -880,9 +877,7 @@ await dataset.pull({ alias: "My Evals Dataset" });
 
 </Switch>
 
-Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
-
-For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
+On Confident AI, failing production traces are routed to the right annotators — engineers, QA, domain experts or PMs — and become goldens in the dataset you pull here. See the [Confident AI datasets docs](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for details.
 
 </Tab>
 <Tab value="From JSON">
@@ -1206,7 +1201,7 @@ For more information on how `deepeval`'s `Synthesizer` works, visit the [Golden 
 
 <NotImplemented id="typescript" feature="Synthesizer">
 
-It generates synthetic goldens from your documents, contexts, or from scratch, which is what you reach for when you have no dataset prepared beforehand. Until it lands, write your goldens by hand or [pull a dataset from Confident AI](#load-dataset), where synthetic goldens generated elsewhere can be stored and shared.
+It generates synthetic goldens from your documents, contexts, or from scratch, which is what you reach for when you have no dataset prepared beforehand. Until it lands, write your goldens by hand or [pull a dataset from Confident AI](#load-dataset) if your goldens are there.
 
 </NotImplemented>
 
@@ -1314,6 +1309,7 @@ For single-turn `Golden`s:
 
 ```python
 from pydantic import BaseModel
+from deepeval.dataset import Expectations
 
 class Golden(BaseModel):
     input: str
@@ -1322,6 +1318,7 @@ class Golden(BaseModel):
     expected_tools: Optional[List[ToolCall]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
     expected_labels: Optional[Dict[str, str]] = None
+    expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
@@ -1379,6 +1376,7 @@ For multi-turn `ConversationalGolden`s:
 
 ```python
 from pydantic import BaseModel
+from deepeval.dataset import Expectations
 
 class ConversationalGolden(BaseModel):
     scenario: str
@@ -1387,6 +1385,7 @@ class ConversationalGolden(BaseModel):
     context: Optional[List[str]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
     expected_labels: Optional[Dict[str, str]] = None
+    expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
@@ -1436,6 +1435,88 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
 - Continue from a specific turn when test cases usually fail at the last turn where agents are calling multiple tools
 
 :::
+
+### Expectations on Goldens
+
+<Switch>
+
+<Case id="python">
+
+Both `Golden` and `ConversationalGolden` accept an optional `expectations` object. Store the conditions that must hold and the behaviors that must be absent alongside the input or scenario, before generating any responses.
+
+```python
+from deepeval.dataset import ConversationalGolden, EvaluationDataset, Expectations, Golden
+
+golden = Golden(
+    input="Cancel my subscription.",
+    expectations=Expectations(
+        must=["Ask the user to confirm the cancellation."],
+        must_not=["Claim the subscription has already been cancelled."],
+    ),
+)
+
+dataset = EvaluationDataset(goldens=[golden])
+
+# Use conversational goldens in a separate multi-turn dataset.
+conversational_golden = ConversationalGolden(
+    scenario="A user asks to cancel a subscription, then confirms the request.",
+    expected_outcome="The subscription is cancelled with the user's consent.",
+    expectations=Expectations(
+        must=["Obtain confirmation before cancelling the subscription."],
+        must_not=["Claim that a refund was issued."],
+    ),
+)
+```
+
+`expected_output` remains a reference answer for a single-turn golden, and `expected_outcome` remains the desired end state for a conversational golden. Expectations describe the conditions used to judge the resulting case, including actions and their ordering. You can supply expectations without either reference field.
+
+The built-in golden-to-test-case conversion helpers and conversation simulator carry expectations onto the resulting test cases. `evals_iterator()` also checks a golden's expectations automatically against the observed run. When constructing a test case yourself, pass `expectations=golden.expectations`; `evaluate()` or `assert_test()` can then evaluate it without an explicit metric.
+
+`must` and `must_not` are lists of non-empty strings. See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the full parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples.
+
+Expectations survive local JSON, JSONL, and CSV save/load. The `expectations` field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell.
+
+</Case>
+
+<Case id="typescript">
+
+Both `Golden` and `ConversationalGolden` accept an optional `expectations` object. Store requirements alongside the input or scenario before generating responses.
+
+```typescript
+import { ConversationalGolden, EvaluationDataset, Expectations, Golden } from "deepeval/dataset";
+
+const golden = new Golden({
+  input: "Cancel my subscription.",
+  expectations: new Expectations({
+    must: ["Ask the user to confirm the cancellation."],
+    mustNot: ["Claim the subscription has already been cancelled."],
+  }),
+});
+
+const dataset = new EvaluationDataset({ goldens: [golden] });
+
+// Use conversational goldens in a separate multi-turn dataset.
+const conversationalGolden = new ConversationalGolden({
+  scenario: "A user asks to cancel a subscription, then confirms the request.",
+  expectedOutcome: "The subscription is cancelled with the user's consent.",
+  expectations: new Expectations({
+    must: ["Obtain confirmation before cancelling the subscription."],
+    mustNot: ["Claim that a refund was issued."],
+  }),
+});
+```
+
+`expectedOutput` remains a reference answer for a single-turn golden, and `expectedOutcome` remains the desired end state for a conversational golden. Expectations describe conditions used to judge the resulting case, including actions and ordering. You can supply expectations without either reference field.
+
+Golden-to-test-case conversion and conversation simulation carry expectations to the resulting cases. `evalsIterator()` also checks expectations against the observed run. When constructing a test case yourself, pass `expectations: golden.expectations`; `evaluate()` or `expect(testCase).toPass()` can then evaluate it without an explicit metric.
+
+See [single-turn expectations](/docs/evaluation-test-cases#expectations) for the parameter reference and [multi-turn expectations](/docs/evaluation-multiturn-test-cases#expectations) for conversation examples. Expectations survive local JSON, JSONL, and CSV save/load. The field is an object in JSON/JSONL and a JSON-encoded object in a CSV cell.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet.
+
+</Case>
+
+</Switch>
 
 ## FAQs
 
@@ -1514,17 +1595,16 @@ The `turns` parameter should **100%** be generated at evaluation time in your `C
     },
     {
       question:
-        "Can my team store, edit, and version datasets on the cloud with a UI?",
+        "Can I build datasets from production failures?",
       answer: (
         <>
-          Datasets are fully usable locally. For teams that want a shared
-          source of truth,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) lets you store datasets in the
-          cloud, edit
-          goldens and custom columns in a UI, and have non-engineers contribute
-          — then pull the same dataset back into code. It's optional and local
-          datasets behave identically.
+          Yes. Datasets are fully usable locally, and once your app is live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces, routes them to the right
+          annotators, and turns them into goldens you pull back into code with
+          the same API. It's optional and local datasets behave identically.
         </>
       ),
     },

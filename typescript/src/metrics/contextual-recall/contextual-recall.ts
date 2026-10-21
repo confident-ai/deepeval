@@ -6,7 +6,6 @@ import type { EvalModeName } from "@/config/eval-mode";
 import {
   initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   prettifyList,
   resolveRetrievalContext,
@@ -29,6 +28,7 @@ import {
   contextualRecallVerdictVars,
   contextualRecallReasonContentType,
 } from "@/metrics/retrieval-context-display";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ContextualRecallMetric";
 
@@ -81,8 +81,7 @@ export class ContextualRecallMetric extends BaseMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.verdicts = await this.generateVerdicts(

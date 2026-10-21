@@ -10,6 +10,7 @@ from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
     generate_qag_verdicts,
     a_generate_qag_verdicts,
     SystemOneEvalSpec,
@@ -21,7 +22,6 @@ from deepeval.metrics.utils import (
     score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -92,19 +92,7 @@ class MisuseMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -147,19 +135,7 @@ class MisuseMetric(BaseMetric):
     ) -> float:
 
         multimodal = test_case.multimodal
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,

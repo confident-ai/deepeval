@@ -1,0 +1,123 @@
+@import "../vars";
+@import "../FrameShell/frame";
+
+// Sized against the FrameShell figure, which is the container for the queries.
+.plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 4px auto 0;
+  overflow: visible;
+
+  &.wide {
+    max-height: 60vh;
+  }
+
+  &.narrow {
+    display: none;
+  }
+
+  @container (max-width: 520px) {
+    &.wide {
+      display: none;
+    }
+
+    &.narrow {
+      display: block;
+    }
+  }
+
+  .node {
+    @include mark-fill-svg;
+  }
+
+  .dashed {
+    stroke-dasharray: 4 3;
+  }
+
+  .ghost {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-dasharray: 4 3;
+  }
+
+  .storeRim {
+    fill: none;
+    stroke: var(--mark-color);
+    stroke-width: 1;
+  }
+
+  .icon {
+    color: var(--mark-color);
+    fill: none;
+  }
+
+  .nodeLabel {
+    font-size: 13px;
+    fill: var(--text-primary);
+  }
+
+  .sub {
+    font-size: 11px;
+    fill: var(--text-secondary);
+  }
+
+  .group {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-dasharray: 4 4;
+  }
+
+  .groupLabel {
+    @include halo;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--text-secondary);
+  }
+
+  .badge {
+    @include mark-fill-svg;
+  }
+
+  .badgeLabel {
+    font-size: 11px;
+    fill: var(--text-primary);
+  }
+
+  .edge {
+    fill: none;
+    stroke: var(--text-secondary);
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+  }
+
+  .connector {
+    fill: none;
+    stroke: var(--mark-color);
+    stroke-width: 1.5;
+  }
+
+  .connectorEnd {
+    fill: var(--mark-color);
+  }
+
+  .dashedLine {
+    stroke-dasharray: 5 4;
+  }
+
+  .arrowHead {
+    fill: var(--text-secondary);
+  }
+
+  .edgeLabel {
+    @include halo;
+    font-size: 11px;
+    fill: var(--text-secondary);
+  }
+
+  .lifeline {
+    stroke: var(--border-strong);
+    stroke-dasharray: 2 4;
+  }
+}

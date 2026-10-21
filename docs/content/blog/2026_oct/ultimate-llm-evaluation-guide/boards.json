@@ -1,0 +1,710 @@
+{
+  "llm-evaluation-overview": {
+    "main": {
+      "border": "none",
+      "items": [
+        {
+          "id": "application",
+          "label": "LLM application",
+          "color": "violet",
+          "columns": 3,
+          "children": [
+            {
+              "id": "model",
+              "label": "Model",
+              "icons": [
+                "brand:claude",
+                "brand:openai",
+                "brand:googlegemini"
+              ],
+              "arrange": "line"
+            },
+            {
+              "id": "prompts",
+              "label": "Prompts",
+              "icons": [
+                "icon:scroll-text"
+              ]
+            },
+            {
+              "id": "retrieval",
+              "label": "Retrieval",
+              "icons": [
+                "icon:database"
+              ]
+            },
+            {
+              "id": "tools",
+              "label": "Tools and MCP",
+              "icons": [
+                "icon:wrench",
+                "brand:modelcontextprotocol"
+              ],
+              "arrange": "line"
+            },
+            {
+              "id": "memory",
+              "label": "Memory",
+              "icons": [
+                "icon:history"
+              ]
+            },
+            {
+              "id": "guardrails",
+              "label": "Guardrails",
+              "icons": [
+                "icon:shield-check"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "evaluation",
+          "label": "LLM evaluation",
+          "color": "pink",
+          "split": "boxes",
+          "children": [
+            {
+              "id": "deterministic",
+              "label": "Deterministic checks",
+              "icons": [
+                "icon:list-checks"
+              ],
+              "labelAt": "below"
+            },
+            {
+              "id": "judge",
+              "label": "LLM-as-a-judge",
+              "icons": [
+                "icon:gavel"
+              ],
+              "labelAt": "below"
+            },
+            {
+              "id": "human",
+              "label": "Human annotation",
+              "icons": [
+                "icon:users"
+              ],
+              "labelAt": "below"
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "from": "application",
+          "to": "evaluation",
+          "label": "outputs and traces"
+        }
+      ]
+    },
+    "pullouts": {
+      "right": [
+        {
+          "for": "evaluation",
+          "heading": "Scores",
+          "items": [
+            {
+              "label": "Task completion 0.92",
+              "color": "teal"
+            },
+            {
+              "label": "Faithfulness 0.61",
+              "color": "pink"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "app-types-overlap": {
+    "main": {
+      "border": "none",
+      "items": [
+        {
+          "id": "converses",
+          "label": "Talks with users",
+          "color": "blue"
+        },
+        {
+          "id": "acts",
+          "label": "Acts on other systems",
+          "color": "ember"
+        }
+      ],
+      "members": [
+        {
+          "in": [
+            "converses"
+          ],
+          "label": "Conversational",
+          "color": "blue",
+          "lines": [
+            {
+              "text": "FAQ chatbots"
+            },
+            {
+              "text": "Voice receptionists"
+            }
+          ]
+        },
+        {
+          "in": [
+            "converses",
+            "acts"
+          ],
+          "label": "Both",
+          "color": "violet",
+          "lines": [
+            {
+              "text": "Support agents"
+            },
+            {
+              "text": "Voice booking agents"
+            }
+          ]
+        },
+        {
+          "in": [
+            "acts"
+          ],
+          "label": "Autonomous",
+          "color": "ember",
+          "lines": [
+            {
+              "text": "Coding agents"
+            },
+            {
+              "text": "MCP workflows"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "black-box-evaluation": {
+    "main": {
+      "direction": "horizontal",
+      "border": "none",
+      "items": [
+        {
+          "id": "task",
+          "label": "Task",
+          "color": "blue",
+          "lines": [
+            {
+              "text": "Resolve the duplicate charge"
+            }
+          ]
+        },
+        {
+          "id": "app",
+          "label": "LLM application",
+          "color": "muted",
+          "border": "dashed",
+          "children": [
+            {
+              "id": "bb-rag",
+              "label": "RAG",
+              "icons": [
+                "icon:database"
+              ],
+              "iconsAt": "label"
+            },
+            {
+              "id": "bb-tools",
+              "label": "Tools",
+              "icons": [
+                "icon:wrench"
+              ],
+              "iconsAt": "label"
+            },
+            {
+              "id": "bb-mcp",
+              "label": "MCP",
+              "icons": [
+                "brand:modelcontextprotocol"
+              ],
+              "iconsAt": "label"
+            },
+            {
+              "id": "bb-model",
+              "label": "Model calls",
+              "icons": [
+                "icon:brain"
+              ],
+              "iconsAt": "label"
+            }
+          ]
+        },
+        {
+          "id": "outcome",
+          "label": "Final outcome",
+          "color": "blue",
+          "lines": [
+            {
+              "text": "One refund issued"
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "from": "task",
+          "to": "app"
+        },
+        {
+          "from": "app",
+          "to": "outcome"
+        }
+      ]
+    },
+    "notes": {
+      "bottom": {
+        "items": [
+          {
+            "for": "task",
+            "label": "What should happen",
+            "shape": "text",
+            "arrow": "none"
+          },
+          {
+            "for": "app",
+            "label": "Not inspected",
+            "shape": "text",
+            "arrow": "none"
+          },
+          {
+            "for": "outcome",
+            "label": "What did happen",
+            "shape": "text",
+            "arrow": "none"
+          }
+        ]
+      }
+    }
+  },
+  "golden-before-after-execution": {
+    "main": {
+      "direction": "horizontal",
+      "border": "none",
+      "items": [
+        {
+          "id": "golden",
+          "label": "Golden",
+          "color": "yellow",
+          "lines": [
+            {
+              "text": "Task"
+            },
+            {
+              "text": "Initial state"
+            },
+            {
+              "text": "Expected outcome"
+            },
+            {
+              "text": "Constraints"
+            }
+          ]
+        },
+        {
+          "id": "evidence",
+          "label": "Runtime evidence",
+          "split": "boxes",
+          "direction": "vertical",
+          "children": [
+            {
+              "id": "test-case",
+              "label": "Test case",
+              "color": "blue",
+              "lines": [
+                {
+                  "text": "Golden fields + actual output"
+                },
+                {
+                  "text": "Tool calls and scores"
+                }
+              ]
+            },
+            {
+              "id": "trace",
+              "label": "Trace",
+              "color": "violet",
+              "lines": [
+                {
+                  "text": "Spans, prompts and retries"
+                },
+                {
+                  "text": "Timings and errors"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "from": "golden",
+          "to": "evidence",
+          "label": "run the app"
+        }
+      ]
+    },
+    "notes": {
+      "bottom": {
+        "items": [
+          {
+            "for": "golden",
+            "label": "Before execution",
+            "shape": "text",
+            "arrow": "none"
+          },
+          {
+            "for": "evidence",
+            "label": "After execution",
+            "shape": "text",
+            "arrow": "none"
+          }
+        ]
+      }
+    }
+  },
+  "agent-trace-to-test-case": {
+    "heading": {
+      "text": "One agent trace"
+    },
+    "main": {
+      "border": "dashed",
+      "items": [
+        {
+          "id": "agent",
+          "label": "Agent: refund_agent",
+          "color": "muted",
+          "children": [
+            {
+              "id": "plan",
+              "label": "LLM: plan",
+              "color": "violet"
+            },
+            {
+              "id": "retrieve",
+              "label": "Retriever: refund policy",
+              "color": "teal",
+              "children": [
+                {
+                  "id": "embed",
+                  "label": "Embedding",
+                  "color": "teal"
+                }
+              ]
+            },
+            {
+              "id": "lookup",
+              "label": "Tool: search_orders",
+              "color": "ember"
+            },
+            {
+              "id": "refund-timeout",
+              "label": "Tool: issue_refund (timeout)",
+              "color": "pink"
+            },
+            {
+              "id": "refund-retry",
+              "label": "Tool: issue_refund (retry)",
+              "color": "ember"
+            },
+            {
+              "id": "billing",
+              "label": "Sub-agent: billing",
+              "color": "muted",
+              "children": [
+                {
+                  "id": "billing-llm",
+                  "label": "LLM: check ledger",
+                  "color": "violet"
+                }
+              ]
+            },
+            {
+              "id": "answer",
+              "label": "LLM: final answer",
+              "color": "violet"
+            }
+          ]
+        }
+      ]
+    },
+    "notes": {
+      "right": {
+        "heading": "Extracted into",
+        "items": [
+          {
+            "for": "lookup",
+            "label": "tools_called"
+          },
+          {
+            "for": "refund-retry",
+            "label": "tools_called"
+          },
+          {
+            "for": "answer",
+            "label": "actual_output"
+          }
+        ]
+      }
+    },
+    "pullouts": {
+      "left": [
+        {
+          "for": "agent",
+          "heading": "Test case",
+          "items": [
+            {
+              "label": "input",
+              "color": "blue"
+            },
+            {
+              "label": "tools_called",
+              "color": "ember"
+            },
+            {
+              "label": "actual_output",
+              "color": "violet"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "test-cases-to-traces-and-back": {
+    "main": {
+      "direction": "horizontal",
+      "border": "none",
+      "items": [
+        {
+          "id": "known",
+          "label": "Known signals",
+          "color": "blue",
+          "icons": [
+            "icon:table"
+          ],
+          "lines": [
+            {
+              "text": "Structured RAG test cases"
+            }
+          ]
+        },
+        {
+          "id": "discover",
+          "label": "Discovering failures",
+          "color": "ember",
+          "icons": [
+            "icon:git-branch"
+          ],
+          "lines": [
+            {
+              "text": "Free-form agent traces"
+            }
+          ]
+        },
+        {
+          "id": "structure",
+          "label": "Structuring recurring failures",
+          "color": "teal",
+          "icons": [
+            "icon:list-checks"
+          ],
+          "lines": [
+            {
+              "text": "Agent test cases built from traces"
+            }
+          ]
+        }
+      ],
+      "links": [
+        {
+          "from": "known",
+          "to": "discover"
+        },
+        {
+          "from": "discover",
+          "to": "structure"
+        }
+      ]
+    },
+    "notes": {
+      "bottom": {
+        "items": [
+          {
+            "for": "known",
+            "label": "RAG era",
+            "shape": "text",
+            "arrow": "none"
+          },
+          {
+            "for": "discover",
+            "label": "Early agents",
+            "shape": "text",
+            "arrow": "none"
+          },
+          {
+            "for": "structure",
+            "label": "Today",
+            "shape": "text",
+            "arrow": "none"
+          }
+        ]
+      }
+    }
+  },
+  "golden-cards-by-application": {
+    "main": {
+      "border": "none",
+      "columns": 2,
+      "items": [
+        {
+          "id": "agent-golden",
+          "label": "AI agent",
+          "color": "violet",
+          "lines": [
+            {
+              "text": "`input`: refund the duplicate charge"
+            },
+            {
+              "text": "`expected_output`: exactly one refund"
+            },
+            {
+              "text": "`expected_tools`: search_orders, issue_refund"
+            }
+          ]
+        },
+        {
+          "id": "rag-golden",
+          "label": "RAG application",
+          "color": "teal",
+          "lines": [
+            {
+              "text": "`input`: how much annual leave do I get?"
+            },
+            {
+              "text": "`expected_output`: 20 days, per HR Policy 4.2"
+            },
+            {
+              "text": "`context`: HR handbook"
+            }
+          ]
+        },
+        {
+          "id": "chatbot-golden",
+          "label": "Multi-turn chatbot",
+          "color": "blue",
+          "lines": [
+            {
+              "text": "`scenario`: reschedule a dentist visit"
+            },
+            {
+              "text": "`user_description`: in a hurry, on a phone"
+            },
+            {
+              "text": "`expected_outcome`: new slot confirmed"
+            }
+          ]
+        },
+        {
+          "id": "multimodal-golden",
+          "label": "Multimodal app",
+          "color": "ember",
+          "lines": [
+            {
+              "text": "`input`: bill-of-lading-042.pdf"
+            },
+            {
+              "text": "`expected_output`: { carrier: Maersk }"
+            },
+            {
+              "text": "`metadata`: scanned, 2 pages"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "test-case-anatomy": {
+    "main": {
+      "direction": "horizontal",
+      "border": "none",
+      "items": [
+        {
+          "id": "single",
+          "label": "Single-turn test case",
+          "color": "blue",
+          "children": [
+            {
+              "id": "single-golden",
+              "label": "From the golden",
+              "lines": [
+                {
+                  "text": "`input`"
+                },
+                {
+                  "text": "`expected_output`"
+                },
+                {
+                  "text": "`context`"
+                }
+              ]
+            },
+            {
+              "id": "single-run",
+              "label": "From the run",
+              "lines": [
+                {
+                  "text": "`actual_output`"
+                },
+                {
+                  "text": "`retrieval_context`"
+                },
+                {
+                  "text": "`tools_called`"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "multi",
+          "label": "Multi-turn test case",
+          "color": "violet",
+          "children": [
+            {
+              "id": "multi-golden",
+              "label": "From the golden",
+              "lines": [
+                {
+                  "text": "`scenario`"
+                },
+                {
+                  "text": "`expected_outcome`"
+                },
+                {
+                  "text": "`user_description`"
+                }
+              ]
+            },
+            {
+              "id": "multi-run",
+              "label": "From the simulation",
+              "lines": [
+                {
+                  "text": "`turns`"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -443,7 +443,7 @@ So instead of wrapping the run, put your own logic in a Mastra tool or workflow 
 | `userId`                  | `string`                 | Actor identifier for the trace.                                                              |
 | `testCaseId`              | `string`                 | Optional test case identifier.                                                               |
 | `turnId`                  | `string`                 | Optional turn identifier for conversational traces.                                          |
-| `metricCollection`        | `string`                 | Trace-level metric collection, for online evals on live traffic.                             |
+| `metricCollection`        | `string`                 | Trace-level metric collection, for online evals on production traces.                             |
 | `traceMetricCollection`   | `string`                 | Trace-level metric collection. Takes precedence over `metricCollection`.                     |
 | `llmMetricCollection`     | `string`                 | Metric collection applied to every LLM span.                                                 |
 | `agentMetricCollection`   | `string`                 | Metric collection applied to every agent span.                                               |
@@ -506,13 +506,11 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
         <>
           Yes. Keep the exporter registered and pass{" "}
           <code>tracingOptions.metadata</code> with a{" "}
-          <code>threadId</code> / <code>userId</code> per request; those live
-          traces support{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals?utm_source=deepeval&utm_medium=docs&utm_content=faq_online_evals&ref_page=/integrations/frameworks/mastra">
-            online evals
-          </a>{" "}
-          on real traffic when a <code>metricCollection</code> is set on the
-          exporter.
+          <code>threadId</code> / <code>userId</code> per request. With a{" "}
+          <code>metricCollection</code> set on the exporter, every Mastra trace
+          that reaches <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> is evaluated and
+          the failing ones are flagged, ready to become goldens for your next{" "}
+          <code>evalsIterator()</code> run.
         </>
       ),
     },

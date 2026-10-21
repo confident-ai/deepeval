@@ -1,4 +1,3 @@
-import { ASSETS } from "@site/src/assets";
 import HomePytestDemo from "@site/src/sections/home/HomePytestDemo";
 import JudgeCards from "@site/src/sections/home/JudgeCards";
 import SOTACards from "@site/src/sections/home/SOTACards";
@@ -108,9 +107,9 @@ DeepEval is the eval harness for vibe coding agents — closing the build → ev
 
 <br />
 
-## Evaluate in code, scale with platform.
+## Catch what you didn't know to test.
 
-DeepEval integrates natively with Confident AI, an AI observability and evaluation platform. Your traces and eval results stream to a shared workspace where engineering, product, QA, and domain experts work from the same data.
+If you're already in production, Confident AI surfaces failing production traces before anyone has written an eval for them and clusters them into failure modes. Each one routes to the right engineer, PM, QA or domain expert and becomes a golden for your next eval.
 
 <PrimaryButton
   href={CONFIDENT_HOSTS_BY_NAME.WWW}
@@ -126,56 +125,49 @@ DeepEval integrates natively with Confident AI, an AI observability and evaluati
 <Tab value="Regression Testing">
 
 <ImageDisplayer
-  src="/img/confident-regression-testing.png"
-  alt="Confident AI regression testing dashboard"
+  id="platform/evaluation/regression-test-cases"
 />
 
 </Tab>
 <Tab value="Experimentation">
 
 <ImageDisplayer
-  src="/img/confident-experimentation.png"
-  alt="Confident AI experimentation view"
+  id="platform/evaluation/experiment-comparison"
 />
 
 </Tab>
 <Tab value="Tracing & Observability">
 
 <ImageDisplayer
-  src="/img/confident-tracing-observability.png"
-  alt="Confident AI tracing and observability"
+  id="platform/tracing/trace-execution-tree"
 />
 
 </Tab>
 <Tab value="Production Monitoring">
 
 <ImageDisplayer
-  src="/img/confident-production-monitoring.png"
-  alt="Confident AI production monitoring"
+  id="platform/monitoring/signals"
 />
 
 </Tab>
 <Tab value="Dataset Management">
 
 <ImageDisplayer
-  src="/img/confident-dataset-management.png"
-  alt="Confident AI dataset management"
+  id="platform/datasets/dataset-editor"
 />
 
 </Tab>
 <Tab value="Prompt Versioning">
 
 <ImageDisplayer
-  src="/img/confident-prompt-versioning.png"
-  alt="Confident AI prompt versioning"
+  id="platform/prompts/prompt-editor"
 />
 
 </Tab>
 <Tab value="Human Annotation">
 
 <ImageDisplayer
-  src="/img/confident-human-annotation.png"
-  alt="Confident AI human annotation"
+  id="platform/annotation/queue-annotator"
 />
 
 </Tab>
@@ -212,17 +204,17 @@ Nothing would be possible without our community of 250+ contributors, thank you!
     {
       question: "What is DeepEval?",
       answer:
-        "DeepEval is an open-source framework for evaluating LLM applications, AI agents, RAG systems, and prompts. It helps you test quality, reliability, and regressions in your AI stack.",
+        "DeepEval is an open-source framework for evaluating AI agents, multi-turn chatbots, voice agents, RAG pipelines, and other LLM applications. It helps you test quality, reliability, and regressions in your AI stack.",
     },
     {
       question: "Is DeepEval the same as Confident AI?",
       answer:
-        "No. DeepEval is the open-source evaluation framework, while Confident AI is the enterprise platform built for teams that need managed evals, collaboration, observability, and production workflows.",
+        "No. DeepEval is the open-source framework for evaluating LLM apps before they ship. Confident AI is AI monitoring for apps in production: it runs evals on production traces, surfaces failing traces, and turns them into your next eval.",
     },
     {
       question: "What can I evaluate with DeepEval?",
       answer:
-        "You can evaluate chatbots, RAG pipelines, AI agents, prompts, model outputs, and end-to-end LLM workflows. It supports both component-level and system-level evaluation.",
+        "You can evaluate AI agents, multi-turn chatbots, voice agents, RAG pipelines, MCP systems, prompts, and end-to-end LLM workflows. It supports both component-level and system-level evaluation.",
     },
     {
       question: "Does DeepEval only work with OpenAI models?",

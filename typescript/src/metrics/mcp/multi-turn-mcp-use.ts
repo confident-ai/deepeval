@@ -4,16 +4,12 @@ import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
 import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
 import type { EvalModeName } from "@/config/eval-mode";
-import { MissingTestCaseParamsError } from "@/errors";
 import {
   initializeMetricModels,
   generateWithSchema,
   constructVerboseLogs,
 } from "@/metrics/utils";
-import {
-  checkConversationalTestCaseParams,
-  getUnitInteractions,
-} from "@/metrics/conversational-utils";
+import { getUnitInteractions } from "@/metrics/conversational-utils";
 import {
   getTasks,
   taskStepsTakenText,
@@ -36,6 +32,7 @@ import {
   type ArgsScore,
   type Task,
 } from "@/metrics/mcp/schema";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 // Owns no templates: every prompt is borrowed, so there is no `evaluationTemplate`
 // (as in Python, whose constructor also has no `evaluation_template`).
 const BORROWED_TEMPLATE_CLASS = "MCPTaskCompletionMetric";
@@ -84,6 +81,7 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
     });
     this.multimodalAware = true;
     this.requiredParams = [MultiTurnParams.ROLE, MultiTurnParams.CONTENT];
+    this.requiresMcpServers = true;
     initializeMetricModels(this, options);
   }
 
@@ -91,19 +89,13 @@ export class MultiTurnMCPUseMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      if (!testCase.mcpServers || testCase.mcpServers.length === 0) {
-        const msg =
-          "'mcpServers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric.";
-        this.error = msg;
-        throw new MissingTestCaseParamsError(msg);
-      }
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const tasks = getTasks(getUnitInteractions(testCase.turns));
       const { availableTools, availableResources, availablePrompts } =
-        availableMcpServersBlock(testCase.mcpServers);
+        // `requiresMcpServers` makes `prepareMeasure` reject a case without them.
+        availableMcpServersBlock(testCase.mcpServers!);
 
       const toolScores = await Promise.all(
         tasks.map(async (task) => {

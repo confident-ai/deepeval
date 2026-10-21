@@ -19,7 +19,6 @@ import {
   type SystemOneVerdictSpec,
 } from "@/metrics/system-one";
 import {
-  checkConversationalTestCaseParams,
   getUnitInteractions,
   getTurnsInSlidingWindow,
 } from "@/metrics/conversational-utils";
@@ -31,6 +30,7 @@ import {
 } from "@/metrics/turn-contextual-precision/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
 import { idRetrievalContext } from "@/metrics/retrieval-context-display";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "TurnContextualPrecisionMetric";
 
@@ -88,8 +88,7 @@ export class TurnContextualPrecisionMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const expectedOutcome = testCase.expectedOutcome ?? "";

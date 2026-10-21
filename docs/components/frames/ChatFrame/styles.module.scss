@@ -1,0 +1,211 @@
+@import "../vars";
+@import "../FrameShell/frame";
+
+.frame.frame {
+  // tokens:start
+  // Every color and size a chat draws. Unbranded on purpose: a generic chat app, not any real product's look.
+  --chat-surface: var(--bg-card);
+  --chat-sunken: var(--bg-secondary);
+  --chat-border: var(--border-subtle);
+  --chat-text: var(--text-primary);
+  --chat-muted: var(--text-secondary);
+  --chat-user: color-mix(in srgb, var(--chart-violet) 14%, var(--bg-card));
+  --chat-terminal: color-mix(in srgb, var(--text-primary) 88%, #000);
+  --chat-terminal-text: color-mix(in srgb, var(--chart-teal) 55%, #fff);
+  --chat-pass: var(--chart-teal);
+  --chat-fail: var(--chart-pink);
+  --chat-radius: 14px;
+  --chat-text-size: 14px;
+  --chat-small: 12px;
+  // tokens:end
+
+  .highlight {
+    background: none;
+    font-weight: $FONT_MEDIUM;
+    color: var(--chat-fail);
+  }
+
+  .verdict {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: var(--chat-surface);
+
+    &[data-verdict="pass"] {
+      background: var(--chat-pass);
+    }
+
+    &[data-verdict="fail"] {
+      background: var(--chat-fail);
+    }
+  }
+
+  // chat: bubbles in a window.
+  .window {
+    display: flex;
+    flex-direction: column;
+    max-width: 620px;
+    margin: 4px auto 0;
+    border: 1px solid var(--chat-border);
+    border-radius: var(--chat-radius);
+    background: var(--chat-surface);
+    overflow: hidden;
+  }
+
+  .windowHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--chat-border);
+    font-size: var(--chat-small);
+    font-weight: $FONT_MEDIUM;
+    color: var(--chat-text);
+  }
+
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--chat-sunken);
+    color: var(--chat-muted);
+  }
+
+  .messages {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 14px;
+    font-size: var(--chat-text-size);
+    line-height: 1.5;
+    color: var(--chat-text);
+  }
+
+  .userBubble {
+    align-self: flex-end;
+    max-width: 80%;
+    padding: 8px 14px;
+    border-radius: var(--chat-radius);
+    background: var(--chat-user);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .botRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: 92%;
+  }
+
+  .botBubble {
+    min-width: 0;
+    padding-top: 2px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .botRow .verdict {
+    margin-top: 3px;
+  }
+
+  .composer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 12px 12px;
+    padding: 8px 8px 8px 14px;
+    border: 1px solid var(--chat-border);
+    border-radius: var(--chat-radius);
+    font-size: var(--chat-small);
+    color: var(--chat-muted);
+  }
+
+  .send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--chat-text);
+    color: var(--chat-surface);
+  }
+
+  // playground: a prompt field, a Generate button, an output panel.
+  .playground {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 4px;
+    padding: 16px;
+    border: 1px solid var(--chat-border);
+    border-radius: var(--chat-radius);
+    background: var(--chat-surface);
+    font-size: var(--chat-text-size);
+    line-height: 1.5;
+    color: var(--chat-text);
+  }
+
+  .promptBlock,
+  .outputBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .fieldLabel {
+    font-size: var(--chat-small);
+    color: var(--chat-muted);
+  }
+
+  .field {
+    padding: 12px 14px;
+    background: var(--chat-sunken);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  .generate {
+    align-self: flex-start;
+    padding: 6px 14px;
+    border: 1px solid var(--chat-border);
+    border-radius: 8px;
+    font-size: var(--chat-small);
+  }
+
+  .outputHead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .botName {
+    font-weight: $FONT_MEDIUM;
+  }
+
+  .output {
+    min-height: 72px;
+    padding: 12px 14px;
+    background: var(--chat-terminal);
+    font-family: $DM_MONO;
+    font-size: var(--chat-small);
+    line-height: 1.7;
+    color: var(--chat-terminal-text);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+
+    .highlight {
+      color: inherit;
+      text-decoration: underline;
+    }
+  }
+}

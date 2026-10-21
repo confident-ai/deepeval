@@ -18,16 +18,14 @@ import {
   type SystemOneBinarySpec,
   type SystemOneEvalSpec,
 } from "@/metrics/system-one";
-import {
-  checkConversationalTestCaseParams,
-  convertTurnToDict,
-} from "@/metrics/conversational-utils";
+import { convertTurnToDict } from "@/metrics/conversational-utils";
 import {
   OutOfCharacterResponseVerdictsSchema,
   RoleAdherenceScoreReasonSchema,
   type OutOfCharacterResponseVerdict,
 } from "@/metrics/role-adherence/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "RoleAdherenceMetric";
 
@@ -69,6 +67,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
     });
     this.templateClass = TEMPLATE_CLASS;
     this.requiredParams = [MultiTurnParams.CONTENT, MultiTurnParams.ROLE];
+    this.requiresChatbotRole = true;
     initializeMetricModels(this, options);
   }
 
@@ -76,10 +75,7 @@ export class RoleAdherenceMetric extends BaseConversationalMetric {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkConversationalTestCaseParams(testCase, this.requiredParams, this, {
-        requireChatbotRole: true,
-      });
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
       if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       const role = testCase.chatbotRole ?? "";
