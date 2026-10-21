@@ -253,7 +253,11 @@ def _split_cost(cost: Any, weights: Sequence[int]) -> List[Any]:
     if not isinstance(cost, EvaluationCost):
         return [cost * fraction for fraction in fractions]
     return [
-        EvaluationCost(cost.value * fraction, input_tokens, output_tokens)
+        EvaluationCost(
+            cost.value * fraction if cost.value is not None else None,
+            input_tokens,
+            output_tokens,
+        )
         for fraction, input_tokens, output_tokens in zip(
             fractions,
             _apportion(cost.input_tokens, weights),
