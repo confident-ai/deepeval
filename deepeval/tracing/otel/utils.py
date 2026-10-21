@@ -9,16 +9,48 @@ try:
 except ImportError:  # pragma: no cover - not present on very old SDKs
     BoundedAttributes = None
 
+from deepeval.config.settings import get_settings
 from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.test_run.test_run import global_test_run_manager
 from deepeval.tracing.otel.attributes import ConfidentAttr
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing.types import Trace, LLMTestCase, LlmSpan, ToolCall
 from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.utils import serialize_to_json
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
+GEN_AI_AGENT_OPERATION_NAMES = [
+    "create_agent",
+    "invoke_agent",
+    "invoke_workflow",
+]
+
+
+def otlp_traces_endpoint() -> str:
+    settings = get_settings()
+    return str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
+
+
+def is_capturing_traces() -> bool:
+    """True while an evaluation or a trace-shape test consumes traces locally."""
+    try:
+        if trace_manager.is_evaluating:
+            return True
+    except Exception:
+        pass
+    # Trace-shape testing override: when a test harness has set
+    # ``trace_testing_manager.test_name``, force REST so spans flow
+    # through ``trace_manager.end_trace`` (the only writer of
+    # ``trace_testing_manager.test_dict``). Otherwise the
+    # ``@assert_trace_json`` decorator silently times out and compares
+    # ``{}`` to ``{}``, which trivially passes — masking real
+    # trace-shape regressions for bare ``agent.run(...)`` flows.
+    try:
+        return trace_testing_manager.test_name is not None
+    except Exception:
+        return False
 
 
 # Integrations derive attributes at ``on_end`` (output, token counts, resolved

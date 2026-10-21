@@ -31,11 +31,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from deepeval.config.settings import get_settings
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
-from deepeval.tracing.trace_test_manager import trace_testing_manager
-from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.otel.utils import (
+    is_capturing_traces,
+    otlp_traces_endpoint,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -74,11 +75,6 @@ if TYPE_CHECKING:
     from opentelemetry.sdk.trace import SpanProcessor
 
 
-def _otlp_endpoint() -> str:
-    settings = get_settings()
-    return str(settings.CONFIDENT_OTEL_URL) + "v1/traces"
-
-
 class ContextAwareSpanProcessor(_SpanProcessor):
     """Route OTel spans to REST or OTLP based on deepeval context state.
 
@@ -115,7 +111,7 @@ class ContextAwareSpanProcessor(_SpanProcessor):
         otlp_headers = {"x-confident-api-key": api_key} if api_key else {}
         self._otlp_processor = BatchSpanProcessor(
             OTLPSpanExporter(
-                endpoint=_otlp_endpoint(),
+                endpoint=otlp_traces_endpoint(),
                 headers=otlp_headers,
             ),
         )
@@ -130,22 +126,7 @@ class ContextAwareSpanProcessor(_SpanProcessor):
         trace_ctx = current_trace_context.get()
         if trace_ctx is not None and not trace_ctx._is_otel_implicit:
             return True
-        try:
-            if trace_manager.is_evaluating:
-                return True
-        except Exception:
-            pass
-        # Trace-shape testing override: when a test harness has set
-        # ``trace_testing_manager.test_name``, force REST so spans flow
-        # through ``trace_manager.end_trace`` (the only writer of
-        # ``trace_testing_manager.test_dict``). Otherwise the
-        # ``@assert_trace_json`` decorator silently times out and compares
-        # ``{}`` to ``{}``, which trivially passes — masking real
-        # trace-shape regressions for bare ``agent.run(...)`` flows.
-        try:
-            return trace_testing_manager.test_name is not None
-        except Exception:
-            return False
+        return is_capturing_traces()
 
     def on_start(self, span, parent_context=None):
         # Forward to both delegates. Both SDK-provided processors treat
