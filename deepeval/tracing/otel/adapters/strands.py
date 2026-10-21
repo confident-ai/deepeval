@@ -19,7 +19,7 @@ from deepeval.tracing.otel.attribute_values import (
     tool_call_from,
 )
 from deepeval.tracing.otel.attributes import ConfidentAttr, GenAIAttr
-from deepeval.tracing.otel.messages import block_text
+from deepeval.tracing.otel.messages import block_text, llm_io
 from deepeval.tracing.types import SpanType
 
 SCOPE = "strands.telemetry.tracer"
@@ -61,6 +61,10 @@ class StrandsAdapter(Adapter):
                     _event_value(span, "gen_ai.choice", "message")
                 )
             }
+        if span_type is None:
+            # Event loop cycles record the turn they ran.
+            cycle_input, cycle_output = llm_io(span)
+            return {"input": cycle_input, "output": cycle_output}
         if span_type == SpanType.TOOL:
             arguments = _event_value(span, "gen_ai.tool.message", "content")
             result = _event_value(span, "gen_ai.choice", "message")

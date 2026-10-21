@@ -52,7 +52,11 @@ def llm_io(span: ReadableSpan) -> Tuple[Any, Any]:
 
 
 def answer_content(messages: Any) -> Any:
-    """Flattened output messages as their text; output without text stays."""
+    """Flattened output messages as their text.
+
+    Output without text, such as a turn that only calls tools, stays, less
+    the empty text a framework may send with it.
+    """
     if not isinstance(messages, list):
         return messages
     texts = [
@@ -60,7 +64,14 @@ def answer_content(messages: Any) -> Any:
         for message in messages
         if isinstance(message, dict) and isinstance(message.get("content"), str)
     ]
-    return "\n".join(texts) if texts else messages
+    if any(texts):
+        return "\n".join(text for text in texts if text)
+    rest = [
+        message
+        for message in messages
+        if not (isinstance(message, dict) and message.get("content") == "")
+    ]
+    return rest or ("" if texts else messages)
 
 
 def trace_io(key: str, value: Any) -> Any:

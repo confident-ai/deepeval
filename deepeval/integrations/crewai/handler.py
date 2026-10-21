@@ -32,6 +32,7 @@ INSTRUMENTATIONS = (
     "litellm",
 )
 _RETRIEVALS = ("handle_knowledge_retrieval", "ahandle_knowledge_retrieval")
+_FOR_EACH = ("kickoff_for_each", "kickoff_for_each_async", "akickoff_for_each")
 
 
 def is_crewai_installed():
@@ -46,6 +47,7 @@ def instrument_crewai(api_key: Optional[str] = None):
     with capture_tracing_integration(Integration.CREW_AI):
         ensure_confident_trace(INSTRUMENTATIONS, api_key=api_key)
         _trace_knowledge_retrieval()
+        _trace_kickoff_for_each()
 
 
 def reset_crewai_instrumentation():
@@ -99,6 +101,45 @@ def _with_retrieval_span(retrieve: Callable[..., Any]) -> Callable[..., Any]:
                 return prompt
 
     traced._deepeval_patched = True
+    return traced
+
+
+def _trace_kickoff_for_each() -> None:
+    """Run each ``kickoff_for_each`` under one span, carrying the crew's
+    metrics: CrewAI kicks off a copy of the crew per input."""
+    from crewai import Crew
+
+    from deepeval.integrations.crewai.subs import with_staged_metrics
+
+    for name in _FOR_EACH:
+        kickoff = getattr(Crew, name, None)
+        if kickoff is not None and not getattr(
+            kickoff, "_deepeval_patched", False
+        ):
+            spanned = _with_span(kickoff, name)
+            traced = with_staged_metrics(lambda spanned=spanned: spanned, None)
+            traced._deepeval_patched = True
+            setattr(Crew, name, traced)
+
+
+def _with_span(method: Callable[..., Any], name: str) -> Callable[..., Any]:
+    """``method``, run inside a span called ``name``."""
+    import confident_trace
+
+    if inspect.iscoroutinefunction(method):
+
+        @functools.wraps(method)
+        async def traced(*args, **kwargs):
+            with confident_trace.span(name=name):
+                return await method(*args, **kwargs)
+
+    else:
+
+        @functools.wraps(method)
+        def traced(*args, **kwargs):
+            with confident_trace.span(name=name):
+                return method(*args, **kwargs)
+
     return traced
 
 

@@ -50,7 +50,9 @@ def create_deepeval_class(
         if hasattr(base_class, method):
             # Looked up on each call, to run as confident-trace patched it.
             resolve = functools.partial(getattr, base_class, method)
-            setattr(DeepEvalClass, method, _staging(resolve, span_type))
+            setattr(
+                DeepEvalClass, method, with_staged_metrics(resolve, span_type)
+            )
     DeepEvalClass.__name__ = class_name
     DeepEvalClass.__qualname__ = class_name
     return DeepEvalClass
@@ -77,14 +79,16 @@ def create_deepeval_llm(base_factory: Callable) -> Callable:
                 call, "_deepeval_staging", False
             ):
                 setattr(
-                    provider, method, _staging(lambda call=call: call, "llm")
+                    provider,
+                    method,
+                    with_staged_metrics(lambda call=call: call, "llm"),
                 )
         return instance
 
     return factory_wrapper
 
 
-def _staging(
+def with_staged_metrics(
     resolve: Callable[[], Callable[..., Any]], span_type: Optional[str]
 ) -> Callable:
     """The method ``resolve`` returns, staging its object's metrics for the
