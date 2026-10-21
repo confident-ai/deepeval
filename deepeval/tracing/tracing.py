@@ -71,7 +71,9 @@ from deepeval.tracing.utils import (
     validate_sampling_rate,
 )
 from deepeval.utils import dataclass_to_dict
+from deepeval.tracing.internal import confident_trace_setup
 from deepeval.tracing.context import (
+    active_span,
     apply_pending_to_span,
     current_span_context,
     current_trace_context,
@@ -1102,18 +1104,20 @@ trace_manager = TraceManager()
 def flush_traces(timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
     """Block until all pending traces have been sent to Confident AI.
 
-    Traces are posted from a background worker thread, so a process that
-    tears down right after its last traced call can drop them. Call this
-    first to hand the worker a chance to finish.
+    Traces are posted from a background worker thread, and spans that
+    confident-trace exports are batched, so a process that tears down right
+    after its last traced call can drop them. Call this first to hand both a
+    chance to finish.
 
     Args:
-        timeout: Maximum number of seconds to wait.
+        timeout: Maximum number of seconds to wait, for each of them.
 
     Returns:
         ``True`` if every pending trace was sent within ``timeout``,
         ``False`` if traces were still outstanding when it expired.
     """
-    return trace_manager.flush(timeout=timeout)
+    sent = trace_manager.flush(timeout=timeout)
+    return _flush_confident_trace(timeout) and sent
 
 
 async def a_flush_traces(
@@ -1122,18 +1126,48 @@ async def a_flush_traces(
     """Async counterpart of :func:`flush_traces` that yields instead of blocking.
 
     Args:
-        timeout: Maximum number of seconds to wait.
+        timeout: Maximum number of seconds to wait, for each of them.
 
     Returns:
         ``True`` if every pending trace was sent within ``timeout``,
         ``False`` if traces were still outstanding when it expired.
     """
-    return await trace_manager.a_flush(timeout=timeout)
+    sent = await trace_manager.a_flush(timeout=timeout)
+    exported = await asyncio.to_thread(_flush_confident_trace, timeout)
+    return exported and sent
+
+
+def _flush_confident_trace(timeout: float) -> bool:
+    setup = confident_trace_setup()
+    return setup.flush_confident_trace(timeout) if setup else True
 
 
 ########################################################
 ### Observer #############################################
 ########################################################
+
+
+def tool_call_of(span: ToolSpan) -> ToolCall:
+    return ToolCall(
+        name=span.name,
+        description=span.description,
+        input_parameters=prepare_tool_call_input_parameters(span.input),
+        output=span.output,
+    )
+
+
+def tool_calls_under(
+    span: BaseSpan, descendants: bool = False
+) -> List[ToolCall]:
+    """Calls for the tool spans under ``span``: its children or, with
+    ``descendants``, every tool span below it that no nested agent owns."""
+    tool_calls = []
+    for child in span.children:
+        if isinstance(child, ToolSpan):
+            tool_calls.append(tool_call_of(child))
+        elif descendants and not isinstance(child, AgentSpan):
+            tool_calls.extend(tool_calls_under(child, descendants=True))
+    return tool_calls
 
 
 class Observer:
@@ -1176,8 +1210,8 @@ class Observer:
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
         self.start_time = perf_counter()
 
-        # Get the current span from the context
-        parent_span = current_span_context.get()
+        # The innermost open span, which may be a confident-trace span
+        parent_span = active_span()
 
         # Determine trace_uuid and parent_uuid before creating the span instance
         if parent_span:
@@ -1297,20 +1331,9 @@ class Observer:
             current_span.prompt = self.prompt
 
         if not current_span.tools_called:
-            # check any tool span children
-            for child in current_span.children:
-                if isinstance(child, ToolSpan):
-                    current_span.tools_called = current_span.tools_called or []
-                    current_span.tools_called.append(
-                        ToolCall(
-                            name=child.name,
-                            description=child.description,
-                            input_parameters=prepare_tool_call_input_parameters(
-                                child.input
-                            ),
-                            output=child.output,
-                        )
-                    )
+            tool_calls = tool_calls_under(current_span)
+            if tool_calls:
+                current_span.tools_called = tool_calls
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:

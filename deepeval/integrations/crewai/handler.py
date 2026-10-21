@@ -1,60 +1,37 @@
-import copy
-import logging
-import deepeval
-from collections import defaultdict
-from time import perf_counter
-from typing import Optional, Tuple, Any, List, Union
+"""deepeval's CrewAI integration, built on confident-trace.
+
+confident-trace traces crews, tasks, agents and tools once deepeval starts it
+with the ``crewai`` instrumentation, and their model calls with the provider
+ones. deepeval adds a span for each knowledge retrieval; its ``Crew``,
+``Agent``, ``LLM`` and ``tool`` add the metrics they are given.
+"""
+
+import functools
+import inspect
+from typing import Any, Callable, Optional
+
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.tracing.context import current_span_context, current_trace_context
-from deepeval.tracing.tracing import Observer, trace_manager
-from deepeval.tracing.types import ToolSpan, TraceSpanStatus, LlmSpan
-from deepeval.config.settings import get_settings
-from deepeval.tracing.utils import (
-    perf_counter_to_datetime,
-    infer_provider_from_model,
-)
+from deepeval.tracing.context import update_current_span
 from deepeval.tracing.integrations import Integration
-import time
-
-logger = logging.getLogger(__name__)
-
+from deepeval.tracing.otel.setup import ensure_confident_trace
 
 try:
-    from crewai.events import BaseEventListener
-    from crewai.events import (
-        CrewKickoffStartedEvent,
-        CrewKickoffCompletedEvent,
-        LLMCallStartedEvent,
-        LLMCallCompletedEvent,
-        AgentExecutionStartedEvent,
-        AgentExecutionCompletedEvent,
-        ToolUsageStartedEvent,
-        ToolUsageFinishedEvent,
-        KnowledgeRetrievalStartedEvent,
-        KnowledgeRetrievalCompletedEvent,
-    )
+    import crewai  # noqa: F401
 
     crewai_installed = True
-except ImportError as e:
-    if get_settings().DEEPEVAL_VERBOSE_MODE:
-        if isinstance(e, ModuleNotFoundError):
-            logger.warning(
-                "Optional crewai dependency not installed: %s",
-                e.name,
-                stacklevel=2,
-            )
-        else:
-            logger.warning(
-                "Optional crewai import failed: %s",
-                e,
-                stacklevel=2,
-            )
-
+except ImportError:
     crewai_installed = False
 
-# GLOBAL STATE to prevent duplicate listeners
-IS_WRAPPED_ALL = False
-_listener_instance = None
+# CrewAI's model calls are traced through their provider's SDK.
+INSTRUMENTATIONS = (
+    "crewai",
+    "openai",
+    "anthropic",
+    "google_genai",
+    "bedrock",
+    "litellm",
+)
+_RETRIEVALS = ("handle_knowledge_retrieval", "ahandle_knowledge_retrieval")
 
 
 def is_crewai_installed():
@@ -64,430 +41,83 @@ def is_crewai_installed():
         )
 
 
-def _get_metrics_data(obj: Any) -> Tuple[Optional[str], Optional[Any]]:
-    """Helper to safely extract metrics attached to CrewAI objects."""
-
-    if not obj:
-        return None, None
-    metric_collection = getattr(
-        obj, "_metric_collection", getattr(obj, "metric_collection", None)
-    )
-    metrics = getattr(obj, "_metrics", getattr(obj, "metrics", None))
-
-    if metric_collection is not None or metrics is not None:
-        return metric_collection, metrics
-
-    func = getattr(obj, "func", None)
-    if func:
-        metric_collection = getattr(
-            func, "_metric_collection", getattr(func, "metric_collection", None)
-        )
-        metrics = getattr(func, "_metrics", getattr(func, "metrics", None))
-
-    return metric_collection, metrics
-
-
-class CrewAIEventsListener(BaseEventListener):
-    def __init__(self):
-        is_crewai_installed()
-        super().__init__()
-        self.span_observers: dict[str, Observer] = {}
-        self.tool_observers_stack: dict[str, List[Union[Observer, None]]] = (
-            defaultdict(list)
-        )
-
-    def reset_state(self):
-        """Clears all internal state to prevent pollution between tests."""
-        self.span_observers.clear()
-        self.tool_observers_stack.clear()
-
-    @staticmethod
-    def get_tool_stack_key(source, tool_name) -> str:
-        """
-        Generates a unique key for the tool stack.
-        FIX: Uses role/name instead of id() to be robust against object copying by CrewAI.
-        """
-        identifier = getattr(
-            source, "role", getattr(source, "name", str(id(source)))
-        )
-        return f"{tool_name}_{identifier}"
-
-    @staticmethod
-    def get_knowledge_execution_id(source, event) -> str:
-        source_id = id(source)
-        agent_id = id(event.agent) if hasattr(event, "agent") else "unknown"
-        execution_id = f"_knowledge_{source_id}_{agent_id}"
-
-        return execution_id
-
-    @staticmethod
-    def get_llm_execution_id(source, event) -> str:
-        source_id = id(source)
-        return f"llm_{source_id}_{event.call_id}"
-
-    def _flatten_tool_span(self, span):
-        """
-        Callback to move any child ToolSpans up to the parent.
-        """
-        if not span.parent_uuid or not span.children:
-            return
-
-        parent_span = trace_manager.get_span_by_uuid(span.parent_uuid)
-        if not parent_span:
-            return
-
-        # Identify child tool spans (ghost nesting)
-        tools_to_move = [
-            child for child in span.children if isinstance(child, ToolSpan)
-        ]
-
-        if tools_to_move:
-            if parent_span.children is None:
-                parent_span.children = []
-
-            for child in tools_to_move:
-                child.parent_uuid = parent_span.uuid
-                parent_span.children.append(child)
-
-            span.children = [
-                child
-                for child in span.children
-                if not isinstance(child, ToolSpan)
-            ]
-
-    def setup_listeners(self, crewai_event_bus):
-        @crewai_event_bus.on(CrewKickoffStartedEvent)
-        def on_crew_started(source, event: CrewKickoffStartedEvent):
-            current_span = current_span_context.get()
-            if current_span:
-                current_span.input = event.inputs
-            current_trace = current_trace_context.get()
-            if current_trace:
-                current_trace.input = event.inputs
-
-        @crewai_event_bus.on(CrewKickoffCompletedEvent)
-        def on_crew_completed(source, event: CrewKickoffCompletedEvent):
-            current_span = current_span_context.get()
-            output = getattr(
-                event, "output", getattr(event, "result", str(event))
-            )
-            if current_span:
-                current_span.output = str(output)
-            current_trace = current_trace_context.get()
-            if current_trace:
-                current_trace.output = str(output)
-
-        @crewai_event_bus.on(LLMCallStartedEvent)
-        def on_llm_started(source, event: LLMCallStartedEvent):
-            model = getattr(event, "model", "unknown")
-            metric_collection, metrics = _get_metrics_data(source)
-            observer = Observer(
-                span_type="llm",
-                func_name="call",
-                observe_kwargs={"model": model},
-                metric_collection=metric_collection,
-                metrics=metrics,
-            )
-            self.span_observers[self.get_llm_execution_id(source, event)] = (
-                observer
-            )
-            observer.__enter__()
-
-            if observer.trace_uuid:
-                span = trace_manager.get_span_by_uuid(observer.uuid)
-                if span:
-                    msgs = getattr(event, "messages")
-                    span.input = msgs
-                    if isinstance(span, LlmSpan):
-                        span.integration = Integration.CREW_AI.value
-                        span.provider = infer_provider_from_model(model)
-                        from deepeval.tracing.trace_context import (
-                            current_llm_context,
-                        )
-
-                        llm_context = current_llm_context.get()
-                        if llm_context:
-                            if llm_context.prompt:
-                                span.prompt = llm_context.prompt
-                                span.prompt_alias = llm_context.prompt.alias
-                                span.prompt_version = llm_context.prompt.version
-                                span.prompt_label = llm_context.prompt.label
-                                span.prompt_commit_hash = (
-                                    llm_context.prompt.hash
-                                )
-                            if llm_context.metrics and not span.metrics:
-                                span.metrics = llm_context.metrics
-                            if (
-                                llm_context.metric_collection
-                                and not span.metric_collection
-                            ):
-                                span.metric_collection = (
-                                    llm_context.metric_collection
-                                )
-                            if llm_context.expected_output:
-                                span.expected_output = (
-                                    llm_context.expected_output
-                                )
-                            if llm_context.expected_tools:
-                                span.expected_tools = llm_context.expected_tools
-                            if llm_context.context:
-                                span.context = llm_context.context
-                            if llm_context.retrieval_context:
-                                span.retrieval_context = (
-                                    llm_context.retrieval_context
-                                )
-
-        @crewai_event_bus.on(LLMCallCompletedEvent)
-        def on_llm_completed(source, event: LLMCallCompletedEvent):
-            key = self.get_llm_execution_id(source, event)
-            if key in self.span_observers:
-                observer = self.span_observers.pop(key)
-                if observer:
-                    current_span = current_span_context.get()
-                    token = None
-                    span_to_close = trace_manager.get_span_by_uuid(
-                        observer.uuid
-                    )
-
-                    if span_to_close:
-                        output = getattr(
-                            event, "response", getattr(event, "output", "")
-                        )
-                        span_to_close.output = output
-                        if isinstance(span_to_close, LlmSpan):
-                            span_to_close.integration = (
-                                Integration.CREW_AI.value
-                            )
-                            if not span_to_close.provider:
-                                span_to_close.provider = (
-                                    infer_provider_from_model(
-                                        getattr(span_to_close, "model", None)
-                                    )
-                                )
-                        if (
-                            not current_span
-                            or current_span.uuid != observer.uuid
-                        ):
-                            token = current_span_context.set(span_to_close)
-
-                    observer.__exit__(None, None, None)
-                    if token:
-                        current_span_context.reset(token)
-
-        @crewai_event_bus.on(AgentExecutionStartedEvent)
-        def on_agent_started(source, event: AgentExecutionStartedEvent):
-            current_span = current_span_context.get()
-            if current_span:
-                current_span.input = event.task_prompt
-
-        @crewai_event_bus.on(AgentExecutionCompletedEvent)
-        def on_agent_completed(source, event: AgentExecutionCompletedEvent):
-            current_span = current_span_context.get()
-            if current_span:
-                current_span.output = getattr(
-                    event, "output", getattr(event, "result", "")
-                )
-
-        @crewai_event_bus.on(ToolUsageStartedEvent)
-        def on_tool_started(source, event: ToolUsageStartedEvent):
-            key = self.get_tool_stack_key(source, event.tool_name)
-
-            metric_collection = None
-            metrics = None
-
-            if hasattr(source, "tools"):
-                for tool_obj in source.tools:
-                    if getattr(tool_obj, "name", None) == event.tool_name:
-                        metric_collection, metrics = _get_metrics_data(tool_obj)
-                        break
-
-            if not metric_collection:
-                agent = getattr(source, "agent", source)
-                metric_collection, metrics = _get_metrics_data(agent)
-
-            # ToolUsageFinishedEvent can be dispatched and handled before
-            # ToolUsageStartedEvent due to thread pool scheduling.
-            self.tool_observers_stack[key].append(
-                {
-                    "metric_collection": metric_collection,
-                    "metrics": metrics,
-                }
-            )
-
-        @crewai_event_bus.on(ToolUsageFinishedEvent)
-        def on_tool_completed(source, event: ToolUsageFinishedEvent):
-            from deepeval.tracing.utils import (
-                prepare_tool_call_input_parameters,
-            )
-            from deepeval.test_case.llm_test_case import ToolCall
-
-            key = self.get_tool_stack_key(source, event.tool_name)
-            metadata = None
-
-            # Retrieve stored metadata from on_tool_started
-            if (
-                key in self.tool_observers_stack
-                and self.tool_observers_stack[key]
-            ):
-                item = self.tool_observers_stack[key].pop()
-                if isinstance(item, dict):
-                    metadata = item
-
-            # Fallback key search
-            if metadata is None:
-                for stack_key, stack in self.tool_observers_stack.items():
-                    if event.tool_name in stack_key and stack:
-                        item = stack.pop()
-                        if isinstance(item, dict):
-                            metadata = item
-                            break
-
-            metric_collection = (
-                metadata["metric_collection"] if metadata else None
-            )
-            metrics = metadata["metrics"] if metadata else None
-
-            # Resolve tool_args — prefer finished event's args as they are
-            # always fully resolved, fall back to empty dict
-            raw_args = event.tool_args if event.tool_args else {}
-            tool_input = raw_args if isinstance(raw_args, dict) else {}
-
-            output = getattr(event, "output", getattr(event, "result", None))
-
-            # Create, populate, and close the span entirely here using a
-            # context manager so the parent context is correctly restored
-            observer = Observer(
-                span_type="tool",
-                func_name=event.tool_name,
-                function_kwargs=tool_input,
-                metric_collection=metric_collection,
-                metrics=metrics,
-            )
-            observer.__enter__()
-
-            span = trace_manager.get_span_by_uuid(observer.uuid)
-            if span:
-                span.input = tool_input
-                span.output = output
-                span.integration = Integration.CREW_AI.value
-                now_wall = time.time()
-                now_perf = perf_counter()
-                span.start_time = now_perf - (
-                    now_wall - event.started_at.timestamp()
-                )
-                span.end_time = now_perf - (
-                    now_wall - event.finished_at.timestamp()
-                )
-
-            observer.result = output
-            observer.__exit__(None, None, None)
-
-            if span:
-                span.end_time = now_perf - (
-                    now_wall - event.finished_at.timestamp()
-                )
-
-            # Propagate tools_called to parent span
-            if span and span.parent_uuid:
-                parent_span = trace_manager.get_span_by_uuid(span.parent_uuid)
-                if parent_span:
-                    parent_span.tools_called = parent_span.tools_called or []
-                    parent_span.tools_called.append(
-                        ToolCall(
-                            name=span.name,
-                            description=span.description,
-                            input_parameters=prepare_tool_call_input_parameters(
-                                span.input
-                            ),
-                            output=span.output,
-                        )
-                    )
-
-        @crewai_event_bus.on(KnowledgeRetrievalStartedEvent)
-        def on_knowledge_started(source, event: KnowledgeRetrievalStartedEvent):
-            observer = Observer(
-                span_type="tool",
-                func_name="knowledge_retrieval",
-                function_kwargs={},
-            )
-            self.span_observers[
-                self.get_knowledge_execution_id(source, event)
-            ] = observer
-            observer.__enter__()
-
-        @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
-        def on_knowledge_completed(
-            source, event: KnowledgeRetrievalCompletedEvent
-        ):
-            key = self.get_knowledge_execution_id(source, event)
-            if key in self.span_observers:
-                observer = self.span_observers.pop(key)
-                if observer:
-                    current_span = current_span_context.get()
-                    token = None
-                    span_to_close = trace_manager.get_span_by_uuid(
-                        observer.uuid
-                    )
-
-                    if span_to_close:
-                        span_to_close.input = event.query
-                        span_to_close.output = event.retrieved_knowledge
-                        span_to_close.integration = Integration.CREW_AI.value
-
-                        if (
-                            not current_span
-                            or current_span.uuid != observer.uuid
-                        ):
-                            token = current_span_context.set(span_to_close)
-
-                    observer.__exit__(None, None, None)
-
-                    if token:
-                        current_span_context.reset(token)
-
-
 def instrument_crewai(api_key: Optional[str] = None):
-    global _listener_instance
-
     is_crewai_installed()
     with capture_tracing_integration(Integration.CREW_AI):
-        if api_key:
-            deepeval.login(api_key)
-
-        wrap_all()
-
-        if _listener_instance is None:
-            _listener_instance = CrewAIEventsListener()
+        ensure_confident_trace(INSTRUMENTATIONS, api_key=api_key)
+        _trace_knowledge_retrieval()
 
 
 def reset_crewai_instrumentation():
-    global _listener_instance
-    if _listener_instance:
-        _listener_instance.reset_state()
+    """Kept for compatibility: deepeval keeps no CrewAI state of its own."""
 
 
-def wrap_all():
-    global IS_WRAPPED_ALL
+def _trace_knowledge_retrieval() -> None:
+    import crewai.agent.core as core
 
-    if not IS_WRAPPED_ALL:
-        from deepeval.integrations.crewai.wrapper import (
-            wrap_crew_kickoff,
-            wrap_crew_kickoff_for_each,
-            wrap_crew_kickoff_async,
-            wrap_crew_kickoff_for_each_async,
-            wrap_crew_akickoff,
-            wrap_crew_akickoff_for_each,
-            wrap_agent_execute_task,
-            wrap_agent_aexecute_task,
-        )
+    for name in _RETRIEVALS:
+        retrieve = getattr(core, name, None)
+        if retrieve is not None and not getattr(
+            retrieve, "_deepeval_patched", False
+        ):
+            setattr(core, name, _with_retrieval_span(retrieve))
 
-        wrap_crew_kickoff()
-        wrap_crew_kickoff_for_each()
-        wrap_crew_kickoff_async()
-        wrap_crew_kickoff_for_each_async()
-        wrap_crew_akickoff()
-        wrap_crew_akickoff_for_each()
-        wrap_agent_execute_task()
-        wrap_agent_aexecute_task()
 
-        IS_WRAPPED_ALL = True
+def _with_retrieval_span(retrieve: Callable[..., Any]) -> Callable[..., Any]:
+    """``retrieve``, recorded as a retriever span when the agent has knowledge.
+
+    It returns the task prompt with what it retrieved appended.
+    """
+    import confident_trace
+
+    if inspect.iscoroutinefunction(retrieve):
+
+        @functools.wraps(retrieve)
+        async def traced(agent, task, task_prompt, *args, **kwargs):
+            if not _uses_knowledge(agent):
+                return await retrieve(agent, task, task_prompt, *args, **kwargs)
+            with confident_trace.span(
+                name="knowledge_retrieval", type="retriever"
+            ):
+                prompt = await retrieve(
+                    agent, task, task_prompt, *args, **kwargs
+                )
+                _record_retrieval(agent, task_prompt, prompt)
+                return prompt
+
+    else:
+
+        @functools.wraps(retrieve)
+        def traced(agent, task, task_prompt, *args, **kwargs):
+            if not _uses_knowledge(agent):
+                return retrieve(agent, task, task_prompt, *args, **kwargs)
+            with confident_trace.span(
+                name="knowledge_retrieval", type="retriever"
+            ):
+                prompt = retrieve(agent, task, task_prompt, *args, **kwargs)
+                _record_retrieval(agent, task_prompt, prompt)
+                return prompt
+
+    traced._deepeval_patched = True
+    return traced
+
+
+def _uses_knowledge(agent: Any) -> bool:
+    # CrewAI's own test for whether it retrieves anything.
+    crew = agent.crew if not isinstance(agent.crew, str) else None
+    return bool(agent.knowledge or (crew and crew.knowledge))
+
+
+def _record_retrieval(agent: Any, task_prompt: Any, prompt: Any) -> None:
+    retrieved = (
+        prompt[len(task_prompt) :]
+        if isinstance(prompt, str)
+        and isinstance(task_prompt, str)
+        and prompt.startswith(task_prompt)
+        else None
+    )
+    update_current_span(
+        input=getattr(agent, "knowledge_search_query", None),
+        output=retrieved or None,
+        retrieval_context=[retrieved] if retrieved else None,
+    )

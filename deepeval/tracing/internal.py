@@ -2,6 +2,7 @@ import functools
 import inspect
 import sys
 from contextlib import nullcontext
+from types import ModuleType
 from typing import Callable, ContextManager, List, Optional
 
 
@@ -67,8 +68,15 @@ def _without_confident_trace(method: Callable) -> Callable:
     return synchronous
 
 
+def confident_trace_setup() -> Optional[ModuleType]:
+    """deepeval's confident-trace setup module, if anything has imported it.
+
+    Only that module starts confident-trace, so when it was never imported
+    confident-trace isn't running, and importing it here would load OTel.
+    """
+    return sys.modules.get("deepeval.tracing.otel.setup")
+
+
 def _confident_trace_suppressed() -> ContextManager:
-    # Only deepeval's setup module starts confident-trace, so when it was never
-    # imported there is nothing to suppress, and importing it would load OTel.
-    setup = sys.modules.get("deepeval.tracing.otel.setup")
+    setup = confident_trace_setup()
     return setup.suppress_confident_trace() if setup else nullcontext()

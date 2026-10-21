@@ -1,7 +1,7 @@
 """Canonical ``confident.*`` OTel attribute keys.
 
-Integrations write these onto OTel spans and ``ConfidentSpanExporter`` reads
-them back, so a misspelling is invisible: the write lands on a key nobody
+confident-trace writes these onto OTel spans and the converter reads them
+back, so a misspelling is invisible: the write lands on a key nobody
 looks at and the field disappears from the trace with no error.
 """
 
@@ -92,6 +92,7 @@ class GenAIAttr:
     """GenAI semantic-convention keys, read alongside ``confident.*`` keys."""
 
     AGENT_NAME = "gen_ai.agent.name"
+    CONVERSATION_ID = "gen_ai.conversation.id"
     INPUT_MESSAGES = "gen_ai.input.messages"
     OPERATION_NAME = "gen_ai.operation.name"
     OUTPUT_MESSAGES = "gen_ai.output.messages"

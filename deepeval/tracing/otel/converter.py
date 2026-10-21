@@ -7,26 +7,45 @@ which win over legacy GenAI span events. One deliberate difference: a model's
 output is read as its text, since that is what evaluation metrics score.
 """
 
-import json
-import math
-import re
+import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from opentelemetry.sdk.trace import Event, ReadableSpan
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace import StatusCode
 from opentelemetry.util.types import Attributes
-from pydantic import ValidationError
 
-from deepeval.test_case import ToolCall
-from deepeval.test_case.llm_test_case import ToolCallType
 from deepeval.tracing import perf_epoch_bridge as peb
+from deepeval.tracing.otel.adapters import Adapter, detect_adapters
+from deepeval.tracing.otel.attribute_values import (
+    MISSING,
+    attr_coerced_string_list,
+    attr_count,
+    attr_decoded,
+    attr_json_content,
+    attr_json_object,
+    attr_json_string,
+    attr_json_string_list,
+    attr_number,
+    attr_string,
+    attr_string_list,
+    attr_tool_calls,
+    first_defined,
+    structured_value,
+    unsupported,
+)
 from deepeval.tracing.otel.attributes import ConfidentAttr, GenAIAttr
+from deepeval.tracing.otel.messages import (
+    latest_user_text,
+    llm_io,
+    message_tool_calls,
+    tool_arguments,
+    tool_response,
+    trace_io,
+)
 from deepeval.tracing.otel.utils import (
     GEN_AI_AGENT_OPERATION_NAMES,
     GEN_AI_OPERATION_NAMES,
-    _flatten_input,
-    _flatten_system_instructions,
     to_hex_string,
 )
 from deepeval.tracing.types import (
@@ -45,6 +64,8 @@ from deepeval.tracing.utils import (
     normalize_span_provider_for_platform,
 )
 
+logger = logging.getLogger(__name__)
+
 peb.init_clock_bridge()
 
 # ``None`` is a base span. ``custom`` is deliberately absent: like any unknown
@@ -58,21 +79,14 @@ _DECLARED_SPAN_TYPES: Dict[str, Optional[SpanType]] = {
 }
 _RETRIEVAL_OPERATION = "retrieval"
 _TOOL_OPERATION = "execute_tool"
-
-_LEGACY_CHOICE_EVENT = "gen_ai.choice"
-_LEGACY_MESSAGE_EVENT = re.compile(
-    r"^gen_ai\.(system|user|assistant|tool)\.message$"
-)
+# Keys under which retrieved documents carry their text.
+_DOCUMENT_TEXT_KEYS = ("page_content", "text", "content")
 
 _CONFIDENT_TRACE_SCOPE = "confident_trace"
 _AI_ATTRIBUTE_PREFIXES = ("confident.", "gen_ai.")
 _AI_EVENT_PREFIX = "gen_ai."
 
-_TOOL_CALL_TYPES = frozenset(member.value for member in ToolCallType)
 _ENVIRONMENTS = frozenset(member.value for member in Environment)
-
-# Distinguishes an absent attribute from one that holds JSON ``null``.
-_MISSING = object()
 
 
 @dataclass(frozen=True)
@@ -80,16 +94,58 @@ class ConvertedSpan:
     span: BaseSpan
     # Keyed by ``Trace`` field name, holding only the fields this span sets.
     trace_fields: Dict[str, Any]
+    # The conversation the span belongs to; the trace's thread when it has none.
+    conversation_id: Optional[str] = None
 
 
-def convert_span(span: ReadableSpan) -> ConvertedSpan:
-    attributes = span.attributes or {}
-    build = _BUILDERS.get(resolve_span_type(attributes), _base_span)
-    return ConvertedSpan(span=build(span), trace_fields=_trace_fields(span))
+def convert_span(
+    span: ReadableSpan, span_type: Optional[SpanType] = None
+) -> ConvertedSpan:
+    """Convert ``span``, as ``span_type`` when given instead of its own."""
+    adapters = detect_adapters(span)
+    span_type = span_type or resolve_span_type(span, adapters)
+    converted = _BUILDERS.get(span_type, _base_span)(span)
+    trace_fields = _trace_fields(span)
+    if isinstance(converted, LlmSpan) and converted.provider in {
+        provider for adapter in adapters for provider in adapter.self_providers
+    }:
+        converted.provider = None
+    for adapter in adapters:
+        try:
+            _fill_unset(
+                converted,
+                {
+                    "integration": adapter.integration,
+                    **adapter.span_fields(span, span_type),
+                },
+            )
+            for key, value in adapter.trace_fields(span, span_type).items():
+                if value is not None:
+                    trace_fields.setdefault(key, value)
+        except Exception:
+            logger.debug("%s failed to map a span", type(adapter).__name__)
+    if isinstance(converted, LlmSpan) and not converted.provider:
+        converted.provider = infer_provider_from_model(converted.model)
+    if (
+        isinstance(converted, RetrieverSpan)
+        and converted.retrieval_context is None
+    ):
+        converted.retrieval_context = _document_texts(converted.output)
+    if isinstance(converted, ToolSpan):
+        converted.input = tool_arguments(converted.input)
+        converted.output = tool_response(converted.output)
+    return ConvertedSpan(
+        span=converted,
+        trace_fields=trace_fields,
+        conversation_id=_conversation_id(span, adapters),
+    )
 
 
 def is_ai_span(span: ReadableSpan) -> bool:
-    """confident-trace's export rule: other spans only travel as ancestors."""
+    """confident-trace's export rule, plus any span a framework adapter reads.
+
+    Other spans only travel as ancestors.
+    """
     scope = span.instrumentation_scope
     if scope is not None and scope.name == _CONFIDENT_TRACE_SCOPE:
         return True
@@ -97,57 +153,92 @@ def is_ai_span(span: ReadableSpan) -> bool:
         key.startswith(_AI_ATTRIBUTE_PREFIXES) for key in span.attributes or ()
     ):
         return True
-    return any(event.name.startswith(_AI_EVENT_PREFIX) for event in span.events)
+    if any(event.name.startswith(_AI_EVENT_PREFIX) for event in span.events):
+        return True
+    return bool(detect_adapters(span))
 
 
-def resolve_span_type(attributes: Attributes) -> Optional[SpanType]:
-    """Classify a span, returning ``None`` for a base span."""
+def resolve_span_type(
+    span: ReadableSpan,
+    adapters: Optional[Sequence[Adapter]] = None,
+    at_start: bool = False,
+) -> Optional[SpanType]:
+    """Classify a span, returning ``None`` for a base span.
+
+    A declared ``confident.span.type`` wins, then a framework adapter, which
+    knows its framework's spans, then the GenAI conventions. ``at_start``
+    classifies a span that is still opening: frameworks may only set its
+    attributes later, so its GenAI-convention name counts too.
+    """
+    attributes = span.attributes or {}
     declared = attributes.get(ConfidentAttr.SPAN_TYPE)
     if declared in _DECLARED_SPAN_TYPES:
         return _DECLARED_SPAN_TYPES[declared]
-    operation = _string(attributes, GenAIAttr.OPERATION_NAME)
-    if operation in GEN_AI_OPERATION_NAMES:
-        return SpanType.LLM
-    if operation in GEN_AI_AGENT_OPERATION_NAMES:
-        return SpanType.AGENT
-    if operation == _RETRIEVAL_OPERATION:
-        return SpanType.RETRIEVER
-    if operation == _TOOL_OPERATION:
-        return SpanType.TOOL
-    if operation is None and _string(attributes, GenAIAttr.TOOL_NAME):
-        return SpanType.TOOL
+    for adapter in detect_adapters(span) if adapters is None else adapters:
+        try:
+            wire_type = (
+                at_start and adapter.start_span_type(span)
+            ) or adapter.span_type(span)
+        except Exception:
+            logger.debug("%s failed to classify a span", type(adapter).__name__)
+            continue
+        if wire_type is not None:
+            return _DECLARED_SPAN_TYPES.get(wire_type)
+    wire_type = _declared_type(attributes)
+    if wire_type is None and at_start and declared is None:
+        wire_type = _OPERATION_TYPES.get(span.name.split(" ", 1)[0])
+    return _DECLARED_SPAN_TYPES.get(wire_type)
+
+
+def _declared_type(attributes: Attributes) -> Optional[str]:
+    """The type that ``confident.*`` or GenAI attributes settle, by wire name.
+
+    As on the platform, an unrecognised operation settles a base span.
+    """
+    declared = attributes.get(ConfidentAttr.SPAN_TYPE)
+    if declared in _DECLARED_SPAN_TYPES:
+        return declared
+    operation = attr_string(attributes, GenAIAttr.OPERATION_NAME)
+    if operation is not None:
+        return _OPERATION_TYPES.get(operation, "base")
+    if attr_string(attributes, GenAIAttr.TOOL_NAME):
+        return "tool"
     return None
 
 
 def _trace_fields(span: ReadableSpan) -> Dict[str, Any]:
     attributes = span.attributes or {}
-    metadata = _json_object(attributes, ConfidentAttr.TRACE_METADATA)
+    metadata = attr_json_object(attributes, ConfidentAttr.TRACE_METADATA)
     fields = {
-        "name": _string(attributes, ConfidentAttr.TRACE_NAME),
-        "tags": _string_list(attributes, ConfidentAttr.TRACE_TAGS),
+        "name": attr_string(attributes, ConfidentAttr.TRACE_NAME),
+        "tags": attr_string_list(attributes, ConfidentAttr.TRACE_TAGS),
         "metadata": (
             make_json_serializable_for_metadata(metadata) if metadata else None
         ),
-        "thread_id": _string(attributes, ConfidentAttr.TRACE_THREAD_ID),
-        "user_id": _string(attributes, ConfidentAttr.TRACE_USER_ID),
+        "thread_id": attr_string(attributes, ConfidentAttr.TRACE_THREAD_ID),
+        "user_id": attr_string(attributes, ConfidentAttr.TRACE_USER_ID),
         "environment": _environment(span),
-        "retrieval_context": _json_string_list(
+        "retrieval_context": attr_json_string_list(
             attributes, ConfidentAttr.TRACE_RETRIEVAL_CONTEXT
         ),
-        "context": _json_string_list(attributes, ConfidentAttr.TRACE_CONTEXT),
-        "tools_called": _tool_calls(
+        "context": attr_json_string_list(
+            attributes, ConfidentAttr.TRACE_CONTEXT
+        ),
+        "tools_called": attr_tool_calls(
             attributes, ConfidentAttr.TRACE_TOOLS_CALLED
         ),
-        "expected_tools": _tool_calls(
+        "expected_tools": attr_tool_calls(
             attributes, ConfidentAttr.TRACE_EXPECTED_TOOLS
         ),
-        "expected_output": _json_string(
+        "expected_output": attr_json_string(
             attributes, ConfidentAttr.TRACE_EXPECTED_OUTPUT
         ),
-        "test_case_id": _string(attributes, ConfidentAttr.TRACE_TEST_CASE_ID),
-        "test_run_id": _string(attributes, ConfidentAttr.TRACE_TEST_RUN_ID),
-        "turn_id": _string(attributes, ConfidentAttr.TRACE_TURN_ID),
-        "metric_collection": _string(
+        "test_case_id": attr_string(
+            attributes, ConfidentAttr.TRACE_TEST_CASE_ID
+        ),
+        "test_run_id": attr_string(attributes, ConfidentAttr.TRACE_TEST_RUN_ID),
+        "turn_id": attr_string(attributes, ConfidentAttr.TRACE_TURN_ID),
+        "metric_collection": attr_string(
             attributes, ConfidentAttr.TRACE_METRIC_COLLECTION
         ),
     }
@@ -157,9 +248,9 @@ def _trace_fields(span: ReadableSpan) -> Dict[str, Any]:
         ("input", ConfidentAttr.TRACE_INPUT),
         ("output", ConfidentAttr.TRACE_OUTPUT),
     ):
-        value = _json_content(attributes, attribute)
-        if value is not _MISSING:
-            fields[key] = _trace_io(key, value)
+        value = _known_content(attributes, attribute)
+        if value is not MISSING:
+            fields[key] = trace_io(key, value)
     return fields
 
 
@@ -169,9 +260,9 @@ def _trace_fields(span: ReadableSpan) -> Dict[str, Any]:
 def _llm_span(span: ReadableSpan) -> LlmSpan:
     attributes = span.attributes or {}
     model = (
-        _string(attributes, ConfidentAttr.LLM_MODEL)
-        or _string(attributes, GenAIAttr.REQUEST_MODEL)
-        or _string(attributes, GenAIAttr.RESPONSE_MODEL)
+        attr_string(attributes, ConfidentAttr.LLM_MODEL)
+        or attr_string(attributes, GenAIAttr.REQUEST_MODEL)
+        or attr_string(attributes, GenAIAttr.RESPONSE_MODEL)
     )
     provider = next(
         (
@@ -188,26 +279,26 @@ def _llm_span(span: ReadableSpan) -> LlmSpan:
         ),
         None,
     ) or infer_provider_from_model(model)
-    llm_input, llm_output = _llm_io(span)
+    llm_input, llm_output = llm_io(span)
     fields = _with_output_tool_calls(attributes, _common_fields(span))
     return LlmSpan(
         **_with_declared_io(attributes, fields, llm_input, llm_output),
         model=model,
         provider=provider,
-        input_token_count=_first(
-            _count(attributes, ConfidentAttr.LLM_INPUT_TOKEN_COUNT),
-            _count(attributes, GenAIAttr.USAGE_INPUT_TOKENS),
-            _count(attributes, GenAIAttr.LEGACY_USAGE_PROMPT_TOKENS),
+        input_token_count=first_defined(
+            attr_count(attributes, ConfidentAttr.LLM_INPUT_TOKEN_COUNT),
+            attr_count(attributes, GenAIAttr.USAGE_INPUT_TOKENS),
+            attr_count(attributes, GenAIAttr.LEGACY_USAGE_PROMPT_TOKENS),
         ),
-        output_token_count=_first(
-            _count(attributes, ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT),
-            _count(attributes, GenAIAttr.USAGE_OUTPUT_TOKENS),
-            _count(attributes, GenAIAttr.LEGACY_USAGE_COMPLETION_TOKENS),
+        output_token_count=first_defined(
+            attr_count(attributes, ConfidentAttr.LLM_OUTPUT_TOKEN_COUNT),
+            attr_count(attributes, GenAIAttr.USAGE_OUTPUT_TOKENS),
+            attr_count(attributes, GenAIAttr.LEGACY_USAGE_COMPLETION_TOKENS),
         ),
-        cost_per_input_token=_number(
+        cost_per_input_token=attr_number(
             attributes, ConfidentAttr.LLM_COST_PER_INPUT_TOKEN
         ),
-        cost_per_output_token=_number(
+        cost_per_output_token=attr_number(
             attributes, ConfidentAttr.LLM_COST_PER_OUTPUT_TOKEN
         ),
     )
@@ -215,22 +306,24 @@ def _llm_span(span: ReadableSpan) -> LlmSpan:
 
 def _agent_span(span: ReadableSpan) -> AgentSpan:
     attributes = span.attributes or {}
-    agent_input, agent_output = _llm_io(span)
+    agent_input, agent_output = llm_io(span)
+    # An agent serves the latest request in its conversation.
+    agent_input = latest_user_text(agent_input)
     fields = _with_output_tool_calls(
         attributes,
         _common_fields(
             span,
-            typed_name=_string(attributes, ConfidentAttr.AGENT_NAME)
-            or _string(attributes, GenAIAttr.AGENT_NAME),
+            typed_name=attr_string(attributes, ConfidentAttr.AGENT_NAME)
+            or attr_string(attributes, GenAIAttr.AGENT_NAME),
         ),
     )
     return AgentSpan(
         **_with_declared_io(attributes, fields, agent_input, agent_output),
-        available_tools=_coerced_string_list(
+        available_tools=attr_coerced_string_list(
             attributes, ConfidentAttr.AGENT_AVAILABLE_TOOLS
         )
         or [],
-        agent_handoffs=_coerced_string_list(
+        agent_handoffs=attr_coerced_string_list(
             attributes, ConfidentAttr.AGENT_AGENT_HANDOFFS
         )
         or [],
@@ -245,14 +338,15 @@ def _retriever_span(span: ReadableSpan) -> RetrieverSpan:
             attributes,
             fields,
             attributes.get(GenAIAttr.RETRIEVAL_QUERY_TEXT),
-            _structured(attributes.get(GenAIAttr.RETRIEVAL_DOCUMENTS)),
+            structured_value(attributes.get(GenAIAttr.RETRIEVAL_DOCUMENTS)),
         ),
-        embedder=_string(attributes, ConfidentAttr.RETRIEVER_EMBEDDER) or "",
-        top_k=_first(
-            _count(attributes, ConfidentAttr.RETRIEVER_TOP_K),
-            _count(attributes, GenAIAttr.RETRIEVAL_TOP_K),
+        embedder=attr_string(attributes, ConfidentAttr.RETRIEVER_EMBEDDER)
+        or "",
+        top_k=first_defined(
+            attr_count(attributes, ConfidentAttr.RETRIEVER_TOP_K),
+            attr_count(attributes, GenAIAttr.RETRIEVAL_TOP_K),
         ),
-        chunk_size=_count(attributes, ConfidentAttr.RETRIEVER_CHUNK_SIZE),
+        chunk_size=attr_count(attributes, ConfidentAttr.RETRIEVER_CHUNK_SIZE),
     )
 
 
@@ -260,18 +354,18 @@ def _tool_span(span: ReadableSpan) -> ToolSpan:
     attributes = span.attributes or {}
     fields = _common_fields(
         span,
-        typed_name=_string(attributes, ConfidentAttr.TOOL_NAME)
-        or _string(attributes, GenAIAttr.TOOL_NAME),
+        typed_name=attr_string(attributes, ConfidentAttr.TOOL_NAME)
+        or attr_string(attributes, GenAIAttr.TOOL_NAME),
     )
     return ToolSpan(
         **_with_declared_io(
             attributes,
             fields,
-            _structured(attributes.get(GenAIAttr.TOOL_CALL_ARGUMENTS)),
-            _structured(attributes.get(GenAIAttr.TOOL_CALL_RESULT)),
+            attr_decoded(attributes, GenAIAttr.TOOL_CALL_ARGUMENTS),
+            attr_decoded(attributes, GenAIAttr.TOOL_CALL_RESULT),
         ),
-        description=_string(attributes, ConfidentAttr.TOOL_DESCRIPTION)
-        or _string(attributes, GenAIAttr.TOOL_DESCRIPTION),
+        description=attr_string(attributes, ConfidentAttr.TOOL_DESCRIPTION)
+        or attr_string(attributes, GenAIAttr.TOOL_DESCRIPTION),
     )
 
 
@@ -281,6 +375,13 @@ def _base_span(span: ReadableSpan) -> BaseSpan:
         **_with_declared_io(attributes, _common_fields(span), None, None)
     )
 
+
+_OPERATION_TYPES: Dict[str, str] = {
+    **dict.fromkeys(GEN_AI_OPERATION_NAMES, "llm"),
+    **dict.fromkeys(GEN_AI_AGENT_OPERATION_NAMES, "agent"),
+    _RETRIEVAL_OPERATION: "retriever",
+    _TOOL_OPERATION: "tool",
+}
 
 _BUILDERS: Dict[Optional[SpanType], Callable[[ReadableSpan], BaseSpan]] = {
     SpanType.LLM: _llm_span,
@@ -295,7 +396,7 @@ def _common_fields(
 ) -> Dict[str, Any]:
     attributes = span.attributes or {}
     errored = span.status.status_code == StatusCode.ERROR
-    metadata = _json_object(attributes, ConfidentAttr.SPAN_METADATA)
+    metadata = attr_json_object(attributes, ConfidentAttr.SPAN_METADATA)
     return {
         "uuid": to_hex_string(span.context.span_id, 16),
         "trace_uuid": to_hex_string(span.context.trace_id, 32),
@@ -306,7 +407,7 @@ def _common_fields(
         "end_time": peb.epoch_nanos_to_perf_seconds(
             span.end_time or span.start_time
         ),
-        "name": _string(attributes, ConfidentAttr.SPAN_NAME)
+        "name": attr_string(attributes, ConfidentAttr.SPAN_NAME)
         or typed_name
         or span.name,
         "status": (
@@ -316,21 +417,23 @@ def _common_fields(
         "metadata": (
             make_json_serializable_for_metadata(metadata) if metadata else None
         ),
-        "integration": _string(attributes, ConfidentAttr.SPAN_INTEGRATION),
-        "metric_collection": _string(
+        "integration": attr_string(attributes, ConfidentAttr.SPAN_INTEGRATION),
+        "metric_collection": attr_string(
             attributes, ConfidentAttr.SPAN_METRIC_COLLECTION
         ),
-        "retrieval_context": _json_string_list(
+        "retrieval_context": attr_json_string_list(
             attributes, ConfidentAttr.SPAN_RETRIEVAL_CONTEXT
         ),
-        "context": _json_string_list(attributes, ConfidentAttr.SPAN_CONTEXT),
-        "expected_output": _json_string(
+        "context": attr_json_string_list(
+            attributes, ConfidentAttr.SPAN_CONTEXT
+        ),
+        "expected_output": attr_json_string(
             attributes, ConfidentAttr.SPAN_EXPECTED_OUTPUT
         ),
-        "tools_called": _tool_calls(
+        "tools_called": attr_tool_calls(
             attributes, ConfidentAttr.SPAN_TOOLS_CALLED
         ),
-        "expected_tools": _tool_calls(
+        "expected_tools": attr_tool_calls(
             attributes, ConfidentAttr.SPAN_EXPECTED_TOOLS
         ),
     }
@@ -340,11 +443,13 @@ def _with_output_tool_calls(
     attributes: Attributes, fields: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Model and agent spans fall back to the tool calls in their output."""
-    output_messages = _structured(attributes.get(GenAIAttr.OUTPUT_MESSAGES))
+    output_messages = structured_value(
+        attributes.get(GenAIAttr.OUTPUT_MESSAGES)
+    )
     return {
         **fields,
-        "tools_called": _first(
-            fields["tools_called"], _message_tool_calls(output_messages)
+        "tools_called": first_defined(
+            fields["tools_called"], message_tool_calls(output_messages)
         ),
     }
 
@@ -356,28 +461,78 @@ def _with_declared_io(
     fallback_output: Any,
 ) -> Dict[str, Any]:
     """Declared ``confident.span.*`` I/O beats the type-specific I/O."""
-    declared_input = _json_content(attributes, ConfidentAttr.SPAN_INPUT)
-    declared_output = _json_content(attributes, ConfidentAttr.SPAN_OUTPUT)
+    declared_input = _known_content(attributes, ConfidentAttr.SPAN_INPUT)
+    declared_output = _known_content(attributes, ConfidentAttr.SPAN_OUTPUT)
     return {
         **fields,
         "input": (
-            fallback_input if declared_input is _MISSING else declared_input
+            fallback_input if declared_input is MISSING else declared_input
         ),
         "output": (
-            fallback_output if declared_output is _MISSING else declared_output
+            fallback_output if declared_output is MISSING else declared_output
         ),
     }
+
+
+def _known_content(attributes: Attributes, key: str) -> Any:
+    """A content attribute, ``MISSING`` when confident-trace couldn't
+    serialize any of it."""
+    value = attr_json_content(attributes, key)
+    return MISSING if unsupported(value) else value
+
+
+def _fill_unset(converted: BaseSpan, fields: Dict[str, Any]) -> None:
+    for key, value in fields.items():
+        if value is None or not hasattr(converted, key):
+            continue
+        if getattr(converted, key) in (None, "", []):
+            setattr(converted, key, value)
+
+
+def _document_texts(documents: Any) -> Optional[List[str]]:
+    """Retrieved documents' texts, which retrieval metrics read as context."""
+    if not isinstance(documents, list) or not documents:
+        return None
+    texts = []
+    for document in documents:
+        if isinstance(document, dict):
+            document = next(
+                (
+                    document[key]
+                    for key in _DOCUMENT_TEXT_KEYS
+                    if isinstance(document.get(key), str)
+                ),
+                None,
+            )
+        if not isinstance(document, str):
+            return None
+        texts.append(document)
+    return texts
+
+
+def _conversation_id(
+    span: ReadableSpan, adapters: Sequence[Adapter]
+) -> Optional[str]:
+    conversation = attr_string(span.attributes or {}, GenAIAttr.CONVERSATION_ID)
+    for adapter in adapters:
+        if conversation:
+            break
+        try:
+            conversation = adapter.conversation_id(span)
+        except Exception:
+            logger.debug("%s failed to read a span", type(adapter).__name__)
+    return conversation
 
 
 def _error(span: ReadableSpan) -> Optional[str]:
     return (
         span.status.description
-        or _string(span.attributes or {}, "error.type")
+        or attr_string(span.attributes or {}, "error.type")
         or next(
             (
                 message
                 for message in (
-                    _string(event.attributes or {}, "exception.message")
+                    attr_string(event.attributes or {}, "exception.message")
                     for event in span.events
                 )
                 if message
@@ -389,273 +544,7 @@ def _error(span: ReadableSpan) -> Optional[str]:
 
 def _environment(span: ReadableSpan) -> Optional[str]:
     resource = span.resource.attributes if span.resource else {}
-    candidate = _string(resource, ConfidentAttr.TRACE_ENVIRONMENT) or _string(
-        span.attributes or {}, ConfidentAttr.TRACE_ENVIRONMENT
-    )
+    candidate = attr_string(
+        resource, ConfidentAttr.TRACE_ENVIRONMENT
+    ) or attr_string(span.attributes or {}, ConfidentAttr.TRACE_ENVIRONMENT)
     return candidate if candidate in _ENVIRONMENTS else None
-
-
-################ Model and agent messages ################
-
-
-def _llm_io(span: ReadableSpan) -> Tuple[Any, Any]:
-    """Message attributes win, even when empty; legacy events fill gaps."""
-    attributes = span.attributes or {}
-    instructions = _system_instructions(attributes)
-    input_messages = _structured(attributes.get(GenAIAttr.INPUT_MESSAGES))
-    llm_input = None
-    if isinstance(input_messages, list) or instructions:
-        llm_input = instructions + (
-            _flatten_input(input_messages)
-            if isinstance(input_messages, list)
-            else []
-        )
-    output_messages = _structured(attributes.get(GenAIAttr.OUTPUT_MESSAGES))
-    llm_output = (
-        _flatten_input(output_messages)
-        if isinstance(output_messages, list)
-        else None
-    )
-    if llm_input is None or llm_output is None:
-        legacy_input, legacy_output = _legacy_event_io(span.events)
-        llm_input = legacy_input if llm_input is None else llm_input
-        llm_output = legacy_output if llm_output is None else llm_output
-    return llm_input, _answer(llm_output)
-
-
-def _answer(messages: Any) -> Any:
-    """Flattened output messages as their text; output without text stays."""
-    if not isinstance(messages, list):
-        return messages
-    texts = [
-        message["content"]
-        for message in messages
-        if isinstance(message, dict) and isinstance(message.get("content"), str)
-    ]
-    return "\n".join(texts) if texts else messages
-
-
-def _trace_io(key: str, value: Any) -> Any:
-    """Read a model's messages, which confident-trace copies to its trace.
-
-    Like deepeval's own integrations, the trace takes the first user message
-    as input and the answer's text as output.
-    """
-    if not _is_message_array(value):
-        return value
-    messages = _flatten_input(value)
-    if key == "output":
-        return _answer(messages)
-    return next(
-        (
-            message["content"]
-            for message in messages
-            if message.get("role") == "user"
-            and isinstance(message.get("content"), str)
-        ),
-        messages,
-    )
-
-
-def _is_message_array(value: Any) -> bool:
-    return (
-        isinstance(value, list)
-        and bool(value)
-        and all(
-            isinstance(message, dict)
-            and isinstance(message.get("role"), str)
-            and isinstance(message.get("parts"), list)
-            for message in value
-        )
-    )
-
-
-def _system_instructions(attributes: Attributes) -> List[Dict[str, Any]]:
-    raw = attributes.get(GenAIAttr.SYSTEM_INSTRUCTIONS)
-    if raw is None:
-        return []
-    parsed = _structured(raw)
-    return _flatten_system_instructions(raw if parsed is None else parsed)
-
-
-def _legacy_event_io(
-    events: Sequence[Event],
-) -> Tuple[Optional[List[Dict[str, Any]]], Optional[List[Dict[str, Any]]]]:
-    inputs: List[Dict[str, Any]] = []
-    outputs: List[Dict[str, Any]] = []
-    for event in events:
-        attributes = dict(event.attributes or {})
-        body = _structured(attributes.get("body"))
-        if not isinstance(body, dict):
-            body = attributes
-        if event.name == _LEGACY_CHOICE_EVENT:
-            message = body.get("message")
-            if isinstance(message, str):
-                parsed = _structured(message)
-                message = message if parsed is None else parsed
-            if message is not None and not isinstance(message, dict):
-                # Plain text or a content-block list.
-                outputs.append({"role": "assistant", "content": message})
-                continue
-            value = message if isinstance(message, dict) else body
-            role = value.get("role")
-            outputs.append(
-                {
-                    "role": role if isinstance(role, str) else "assistant",
-                    "content": _first(value.get("content"), value),
-                }
-            )
-            continue
-        match = _LEGACY_MESSAGE_EVENT.match(event.name)
-        if match:
-            inputs.append(
-                {
-                    "role": match.group(1),
-                    "content": _first(body.get("content"), body),
-                }
-            )
-    return inputs or None, outputs or None
-
-
-def _message_tool_calls(messages: Any) -> Optional[List[ToolCall]]:
-    if not isinstance(messages, list):
-        return None
-    calls = []
-    for message in messages:
-        parts = message.get("parts") if isinstance(message, dict) else None
-        for part in parts if isinstance(parts, list) else []:
-            if (
-                isinstance(part, dict)
-                and part.get("type") == "tool_call"
-                and isinstance(part.get("name"), str)
-            ):
-                call = _tool_call(
-                    {
-                        "name": part["name"],
-                        "input_parameters": part.get("arguments"),
-                    }
-                )
-                if call:
-                    calls.append(call)
-    return calls or None
-
-
-################ Attribute decoding ################
-
-
-def _first(*values: Any) -> Any:
-    """First value that is not ``None``; an empty list still counts."""
-    return next((value for value in values if value is not None), None)
-
-
-def _structured(value: Any) -> Any:
-    """Parse a JSON string attribute, or ``None`` if it isn't valid JSON."""
-    if not isinstance(value, str):
-        return value
-    try:
-        return json.loads(value)
-    except ValueError:
-        return None
-
-
-def _json_content(attributes: Attributes, key: str) -> Any:
-    """Decode one JSON layer, so a JSON document sent as text stays text.
-
-    confident-trace JSON-encodes every content field, plain strings included.
-    """
-    value = attributes.get(key, _MISSING)
-    if isinstance(value, tuple):
-        return list(value)
-    if not isinstance(value, str):
-        return value
-    try:
-        return json.loads(value)
-    except ValueError:
-        return value
-
-
-def _string(attributes: Attributes, key: str) -> Optional[str]:
-    value = attributes.get(key)
-    return value if isinstance(value, str) and value else None
-
-
-def _json_string(attributes: Attributes, key: str) -> Optional[str]:
-    value = _json_content(attributes, key)
-    return value if isinstance(value, str) else None
-
-
-def _number(attributes: Attributes, key: str) -> Optional[float]:
-    value = attributes.get(key)
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, str) and value.strip():
-        try:
-            value = float(value)
-        except ValueError:
-            return None
-    if isinstance(value, (int, float)) and math.isfinite(value):
-        return value
-    return None
-
-
-def _count(attributes: Attributes, key: str) -> Optional[int]:
-    value = _number(attributes, key)
-    return None if value is None else int(value)
-
-
-def _string_list(attributes: Attributes, key: str) -> Optional[List[str]]:
-    value = attributes.get(key)
-    if not isinstance(value, (list, tuple)):
-        return None
-    return [item for item in value if isinstance(item, str)]
-
-
-def _json_string_list(attributes: Attributes, key: str) -> Optional[List[str]]:
-    value = _json_content(attributes, key)
-    if not isinstance(value, list):
-        return None
-    return [item for item in value if isinstance(item, str)]
-
-
-def _coerced_string_list(
-    attributes: Attributes, key: str
-) -> Optional[List[str]]:
-    value = attributes.get(key)
-    if isinstance(value, str) and value:
-        parsed = _structured(value)
-        value = parsed if isinstance(parsed, list) else [value]
-    if not isinstance(value, (list, tuple)):
-        return None
-    return [
-        item if isinstance(item, str) else json.dumps(item)
-        for item in value
-        if item is not None
-    ]
-
-
-def _json_object(attributes: Attributes, key: str) -> Optional[Dict[str, Any]]:
-    value = _structured(attributes.get(key))
-    return value if isinstance(value, dict) else None
-
-
-def _tool_calls(attributes: Attributes, key: str) -> Optional[List[ToolCall]]:
-    """An empty list is kept; a list with no valid calls is dropped."""
-    items = _structured(attributes.get(key))
-    if not isinstance(items, (list, tuple)):
-        return None
-    if not items:
-        return []
-    calls = [_tool_call(_structured(item)) for item in items]
-    return [call for call in calls if call] or None
-
-
-def _tool_call(candidate: Any) -> Optional[ToolCall]:
-    if not isinstance(candidate, dict):
-        return None
-    if candidate.get("type") not in _TOOL_CALL_TYPES:
-        # An unknown type is dropped, not the call.
-        candidate = {k: v for k, v in candidate.items() if k != "type"}
-    try:
-        return ToolCall.model_validate(candidate)
-    except ValidationError:
-        return None
