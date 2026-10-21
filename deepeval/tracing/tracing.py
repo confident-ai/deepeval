@@ -410,6 +410,18 @@ class TraceManager:
                 except ValueError:
                     pass
 
+    def discard_trace(self, trace_uuid: str):
+        """Forget an active trace without ending, posting or evaluating it."""
+        trace = self.active_traces.pop(trace_uuid, None)
+        if trace is None:
+            return
+        try:
+            self.traces.remove(trace)
+        except ValueError:
+            pass
+        self.eval_session.pending_traces.pop(trace_uuid, None)
+        self.eval_session.trace_uuid_to_golden.pop(trace_uuid, None)
+
     def set_trace_status(self, trace_uuid: str, status: TraceSpanStatus):
         """Manually set the status of a trace."""
         if trace_uuid in self.active_traces:
