@@ -786,7 +786,7 @@ async def main():
 
 This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. It complements `CONFIDENT_TRACE_FLUSH=1`, which only flushes on interpreter exit and gives you no way to know whether the traces landed.
 
-If you send traces through OpenTelemetry, `ConfidentSpanExporter.force_flush()` and `ContextAwareSpanProcessor.force_flush()` wait on the same queue, so the standard `TracerProvider.force_flush()` call also drains pending traces.
+Framework integrations send their traces through confident-trace, which batches spans before exporting them. `flush_traces()` and `a_flush_traces()` wait for those spans too.
 
 ## Evaluating Production Traces
 

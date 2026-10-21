@@ -78,7 +78,7 @@ The `deepeval` integration auto-instruments Google ADK through OpenTelemetry and
 ### Installation
 
 ```bash
-pip install -U deepeval google-adk openinference-instrumentation-google-adk opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
+pip install -U deepeval google-adk opentelemetry-sdk opentelemetry-exporter-otlp-proto-http
 ```
 
 Under the hood the integration uses Google ADK's OpenInference instrumentor and routes its OpenTelemetry spans through `deepeval`'s span processor.
