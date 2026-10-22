@@ -41,7 +41,9 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
         return capture_execution(*args, **kwargs)
 
     monkeypatch.setattr(evaluation_module, "execute_test_cases", capture_execution)
-    monkeypatch.setattr(evaluation_module, "a_execute_test_cases", capture_async_execution)
+    monkeypatch.setattr(
+        evaluation_module, "a_execute_test_cases", capture_async_execution
+    )
     monkeypatch.setattr(
         evaluation_module,
         "capture_evaluation_run",
