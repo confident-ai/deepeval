@@ -40,12 +40,8 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
     async def capture_async_execution(*args, **kwargs):
         return capture_execution(*args, **kwargs)
 
-    monkeypatch.setattr(
-        evaluation_module, "execute_test_cases", capture_execution
-    )
-    monkeypatch.setattr(
-        evaluation_module, "a_execute_test_cases", capture_async_execution
-    )
+    monkeypatch.setattr(evaluation_module, "execute_test_cases", capture_execution)
+    monkeypatch.setattr(evaluation_module, "a_execute_test_cases", capture_async_execution)
     monkeypatch.setattr(
         evaluation_module,
         "capture_evaluation_run",
@@ -54,12 +50,8 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
     monkeypatch.setattr(
         global_test_run_manager, "wrap_up_test_run", Mock(return_value=(None, None))
     )
-    monkeypatch.setattr(
-        global_test_run_manager, "save_test_run", Mock()
-    )
-    monkeypatch.setattr(
-        evaluation_module, "get_is_running_deepeval", lambda: True
-    )
+    monkeypatch.setattr(global_test_run_manager, "save_test_run", Mock())
+    monkeypatch.setattr(evaluation_module, "get_is_running_deepeval", lambda: True)
 
     try:
         evaluation_module.evaluate(
