@@ -154,7 +154,7 @@ LangGraph uses LangChain's callback system, so the `deepeval` integration is per
 <Case id="typescript">
 
 ```bash
-npm install -D deepeval @langchain/langgraph @langchain/core @langchain/openai zod
+npm install -D deepeval confident-trace @langchain/langgraph @langchain/core @langchain/openai zod
 ```
 
 LangGraph uses LangChain's callback system, so the `deepeval` integration is per-call. You decide which graph runs are traced by passing `new DeepEvalCallbackHandler({})` into the graph config.

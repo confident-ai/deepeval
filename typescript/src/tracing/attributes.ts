@@ -12,8 +12,8 @@ export const ConfidentAttr = {
   SPAN_EXPECTED_OUTPUT: "confident.span.expected_output",
   SPAN_EXPECTED_TOOLS: "confident.span.expected_tools",
   SPAN_INPUT: "confident.span.input",
+  SPAN_INTEGRATION: "confident.span.integration",
   SPAN_METADATA: "confident.span.metadata",
-  SPAN_METADATA_TOOL_ID: "confident.span.metadata.tool_id",
   SPAN_METRIC_COLLECTION: "confident.span.metric_collection",
   SPAN_NAME: "confident.span.name",
   SPAN_OUTPUT: "confident.span.output",
@@ -63,10 +63,4 @@ export const ConfidentAttr = {
   TRACE_TOOLS_CALLED: "confident.trace.tools_called",
   TRACE_TURN_ID: "confident.trace.turn_id",
   TRACE_USER_ID: "confident.trace.user_id",
-
-  // Plumbing that never leaves the SDK.
-  INTERNAL_IS_AI_ROOT: "confident.internal.is_ai_root",
-  INTERNAL_IS_OI_SPAN: "confident.internal.is_oi_span",
-  INTERNAL_ROUTE_TO_REST: "confident.internal.route_to_rest",
-  INTERNAL_TRACE_UUID: "confident.internal.trace_uuid",
 } as const;
