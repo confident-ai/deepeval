@@ -62,16 +62,16 @@ class _JudgeModel(DeepEvalBaseLLM):
 ################ Ownership ################
 
 
-def test_spans_outside_deepeval_are_left_to_confident_trace(exporter, posted):
+def test_spans_outside_deepeval_are_left_to_confident_trace(exporter, ended):
     with ct.span("bare"):
         pass
 
     assert exported(exporter) == ["bare"]
-    assert posted == []
+    assert ended == []
     assert trace_manager.active_traces == {}
 
 
-def test_observe_owns_the_spans_inside_it(exporter, posted):
+def test_observe_owns_the_spans_inside_it(exporter, ended):
     @observe(type="agent", name="agent")
     def agent():
         with ct.span("plan"):
@@ -81,8 +81,9 @@ def test_observe_owns_the_spans_inside_it(exporter, posted):
 
     agent()
 
-    assert exported(exporter) == []
-    (collected,) = posted
+    # Outside an evaluation, confident-trace exports the trace too.
+    assert exported(exporter) == ["generate", "plan", "agent"]
+    (collected,) = ended
     (root,) = collected.root_spans
     assert root.name == "agent"
     (plan,) = root.children
@@ -94,7 +95,7 @@ def test_observe_owns_the_spans_inside_it(exporter, posted):
     assert (collected.name, collected.output) == (None, "done")
 
 
-def test_a_root_span_fills_only_unset_trace_fields(exporter, posted):
+def test_a_root_span_fills_only_unset_trace_fields(exporter, ended):
     @ct.span(name="answer")
     def answer(question):
         return question.upper()
@@ -104,7 +105,7 @@ def test_a_root_span_fills_only_unset_trace_fields(exporter, posted):
     with trace(name="mine"):
         answer("q")
 
-    first, second = posted
+    first, second = ended
     assert (first.name, first.input, first.output) == (
         "answer",
         {"args": ["q"], "kwargs": {}},
@@ -113,7 +114,7 @@ def test_a_root_span_fills_only_unset_trace_fields(exporter, posted):
     assert second.name == "mine"
 
 
-def test_a_later_model_call_in_a_deepeval_trace_sets_its_output(tracer, posted):
+def test_a_later_model_call_in_a_deepeval_trace_sets_its_output(tracer, ended):
     def generate(answer):
         reply = [
             {
@@ -138,10 +139,10 @@ def test_a_later_model_call_in_a_deepeval_trace_sets_its_output(tracer, posted):
 
     endpoint()
 
-    assert posted[0].output == "sunny"
+    assert ended[0].output == "sunny"
 
 
-def test_span_defaults_staged_in_deepeval(exporter, posted):
+def test_span_defaults_staged_in_deepeval(exporter, ended):
     from_context, staged = RecordingMetric(), RecordingMetric()
     context = LlmSpanContext(metrics=[from_context], expected_output="x")
 
@@ -150,7 +151,7 @@ def test_span_defaults_staged_in_deepeval(exporter, posted):
             with ct.span("generate", type="llm"):
                 pass
 
-    (generate,) = posted[0].root_spans
+    (generate,) = ended[0].root_spans
     # ``next_*_span`` is more specific than the trace's span context.
     assert generate.metrics == [staged]
     assert generate.expected_output == "x"
@@ -160,7 +161,7 @@ def test_span_defaults_staged_in_deepeval(exporter, posted):
 ################ Tree building ################
 
 
-def test_children_attach_to_a_parent_that_ended_first(tracer, posted):
+def test_children_attach_to_a_parent_that_ended_first(tracer, ended):
     with trace():
         parent = tracer.start_span(
             "parent", attributes={"gen_ai.operation.name": "invoke_agent"}
@@ -173,11 +174,11 @@ def test_children_attach_to_a_parent_that_ended_first(tracer, posted):
         parent.end()
         child.end()
 
-    (parent,) = posted[0].root_spans
+    (parent,) = ended[0].root_spans
     assert names(parent.children) == ["child"]
 
 
-def test_non_ai_spans_stay_only_as_ancestors(tracer, posted):
+def test_non_ai_spans_stay_only_as_ancestors(tracer, ended):
     with trace():
         with tracer.start_as_current_span("request"):
             with tracer.start_as_current_span("http"):
@@ -187,11 +188,11 @@ def test_non_ai_spans_stay_only_as_ancestors(tracer, posted):
         with tracer.start_as_current_span("cleanup"):
             pass
 
-    (request,) = posted[0].root_spans
+    (request,) = ended[0].root_spans
     assert names(request.children) == ["generate"]
 
 
-def test_children_of_a_dropped_span_move_to_its_parent(tracer, posted):
+def test_children_of_a_dropped_span_move_to_its_parent(tracer, ended):
     with trace():
         with ct.span("agent", type="agent"):
             wrapper = tracer.start_span("wrapper")
@@ -203,7 +204,7 @@ def test_children_of_a_dropped_span_move_to_its_parent(tracer, posted):
             wrapper.end()
             child.end()
 
-    (agent,) = posted[0].root_spans
+    (agent,) = ended[0].root_spans
     assert names(agent.children) == ["generate"]
 
 
@@ -355,11 +356,11 @@ def test_an_owned_native_trace_gets_its_content_from_its_spans(
     assert [call.name for call in agent.tools_called] == ["lookup"]
 
 
-def test_a_deepeval_trace_fills_only_what_its_code_left_unset(tracer, posted):
+def test_a_deepeval_trace_fills_only_what_its_code_left_unset(tracer, ended):
     with trace(output="mine"):
         native_agent_run(tracer)
 
-    (collected,) = posted
+    (collected,) = ended
     assert (collected.input, collected.output) == ("q", "mine")
     assert collected.thread_id == "thread"
     assert [call.name for call in collected.tools_called] == ["lookup"]
@@ -368,7 +369,7 @@ def test_a_deepeval_trace_fills_only_what_its_code_left_unset(tracer, posted):
 ################ deepeval code inside collected spans ################
 
 
-def test_span_updates_override_what_a_collected_span_recorded(exporter, posted):
+def test_span_updates_override_what_a_collected_span_recorded(exporter, ended):
     staged = RecordingMetric()
     with trace():
         with ct.span("generate", type="llm", model="recorded"):
@@ -377,13 +378,13 @@ def test_span_updates_override_what_a_collected_span_recorded(exporter, posted):
             )
             update_llm_span(model="gpt-4o")
 
-    (generate,) = posted[0].root_spans
+    (generate,) = ended[0].root_spans
     assert (generate.name, generate.model) == ("renamed", "gpt-4o")
     assert generate.metadata == {"from": "deepeval"}
     assert generate.metrics == [staged]
 
 
-def test_observe_nests_inside_collected_spans_and_back(exporter, posted):
+def test_observe_nests_inside_collected_spans_and_back(exporter, ended):
     @observe(name="helper")
     def helper():
         update_current_span(metadata={"from": "helper"})
@@ -395,7 +396,7 @@ def test_observe_nests_inside_collected_spans_and_back(exporter, posted):
         with ct.span("outer", type="agent"):
             helper()
 
-    (outer,) = posted[0].root_spans
+    (outer,) = ended[0].root_spans
     (helper_span,) = outer.children
     assert (helper_span.name, helper_span.metadata) == (
         "helper",
@@ -417,7 +418,7 @@ def test_trace_updates_win_over_what_spans_recorded(exporter, async_evaluation):
     assert (collected.output, collected.tags) == ("mine", ["deepeval"])
 
 
-def test_updates_inside_exported_spans_reach_confident_trace(exporter, posted):
+def test_updates_inside_exported_spans_reach_confident_trace(exporter, ended):
     with ct.span("bare"):
         update_current_span(
             metadata={"from": "deepeval"},
@@ -436,7 +437,7 @@ def test_updates_inside_exported_spans_reach_confident_trace(exporter, posted):
     ]
     assert bare.attributes["confident.trace.name"] == "renamed"
     assert bare.attributes["confident.trace.thread_id"] == "thread"
-    assert posted == []
+    assert ended == []
 
 
 ################ deepeval's own model calls ################

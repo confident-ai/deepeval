@@ -98,7 +98,7 @@ def test_the_invoked_run_is_the_agent(langchain, async_evaluation):
     assert llm.metrics is None
 
 
-def test_retrievers_and_tools(langchain, posted):
+def test_retrievers_and_tools(langchain, ended):
     tool_metric = RecordingMetric()
 
     @tool(metrics=[tool_metric])
@@ -116,7 +116,7 @@ def test_retrievers_and_tools(langchain, posted):
         )
         lookup.invoke({"city": "Paris"})
 
-    (collected,) = posted
+    (collected,) = ended
     (retriever,) = spans_of(collected, RetrieverSpan)
     assert retriever.retrieval_context == ["about paris"]
     assert retriever.embedder == "openai"
@@ -125,7 +125,7 @@ def test_retrievers_and_tools(langchain, posted):
     assert tool_span.metrics == [tool_metric]
 
 
-def test_handler_settings_reach_an_exported_trace(langchain, posted):
+def test_handler_settings_reach_an_exported_trace(langchain, ended):
     handler = CallbackHandler(
         name="capital", thread_id="thread", metadata={"team": "geo"}
     )
@@ -144,7 +144,7 @@ def test_handler_settings_reach_an_exported_trace(langchain, posted):
     assert json.loads(root.attributes["confident.trace.metadata"]) == {
         "team": "geo"
     }
-    assert posted == []
+    assert ended == []
 
 
 def test_a_langgraph_thread_becomes_the_trace_thread(

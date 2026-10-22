@@ -129,19 +129,6 @@
   "endTime": "2026-10-21T14:05:45.431Z",
   "environment": "development",
   "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
-  "output": [
-    {
-      "role": "assistant",
-      "content": {
-        "type": "tool_call",
-        "id": "call_E9yOsmllFab5ZXYbMaWxiEqJ",
-        "name": "get_weather",
-        "arguments": {
-          "location": "San Francisco",
-          "unit": "c"
-        }
-      }
-    }
-  ],
+  "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
   "status": "SUCCESS"
 }

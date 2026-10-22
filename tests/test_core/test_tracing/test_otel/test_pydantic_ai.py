@@ -77,7 +77,7 @@ def test_staged_fields_reach_their_spans(exporter, async_evaluation):
     assert tool.metadata == {"source": "station"}
 
 
-def test_an_observed_agent_nests_under_observe(exporter, posted):
+def test_an_observed_agent_nests_under_observe(exporter, ended):
     agent = weather_agent(
         DeepEvalInstrumentationSettings(name="weather", thread_id="thread")
     )
@@ -88,7 +88,7 @@ def test_an_observed_agent_nests_under_observe(exporter, posted):
 
     assert endpoint() == "sunny"
 
-    (collected,) = posted
+    (collected,) = ended
     (root,) = collected.root_spans
     assert root.name == "endpoint"
     (agent_span,) = root.children
@@ -97,7 +97,7 @@ def test_an_observed_agent_nests_under_observe(exporter, posted):
     assert (collected.name, collected.thread_id) == (None, "thread")
 
 
-def test_settings_reach_an_exported_trace(exporter, posted):
+def test_settings_reach_an_exported_trace(exporter, ended):
     agent = weather_agent(
         DeepEvalInstrumentationSettings(
             name="weather", thread_id="thread", metadata={"team": "geo"}
@@ -117,7 +117,7 @@ def test_settings_reach_an_exported_trace(exporter, posted):
     assert json.loads(root.attributes["confident.trace.metadata"]) == {
         "team": "geo"
     }
-    assert posted == []
+    assert ended == []
 
 
 def test_api_key_is_the_export_key(exporter, monkeypatch):

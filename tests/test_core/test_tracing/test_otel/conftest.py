@@ -97,9 +97,18 @@ def tracer(provider, exporter):
 
 
 @pytest.fixture
-def posted(monkeypatch):
+def ended(monkeypatch):
+    """The deepeval traces that end outside an evaluation."""
     traces = []
-    monkeypatch.setattr(trace_manager, "post_trace", traces.append)
+    end_trace = trace_manager.end_trace
+
+    def record(trace_uuid):
+        trace = trace_manager.get_trace_by_uuid(trace_uuid)
+        if trace is not None:
+            traces.append(trace)
+        end_trace(trace_uuid)
+
+    monkeypatch.setattr(trace_manager, "end_trace", record)
     return traces
 
 

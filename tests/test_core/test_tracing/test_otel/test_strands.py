@@ -125,7 +125,7 @@ def test_staged_fields_reach_their_spans(provider, exporter, async_evaluation):
     "instrument", [instrument_strands, instrument_agentcore]
 )
 def test_trace_defaults_reach_exported_spans(
-    instrument, provider, exporter, posted
+    instrument, provider, exporter, ended
 ):
     instrument(name="calculator", environment="staging")
 
@@ -141,4 +141,4 @@ def test_trace_defaults_reach_exported_spans(
     assert {
         span.attributes["confident.trace.environment"] for span in spans
     } == {"staging"}
-    assert posted == []
+    assert ended == []
