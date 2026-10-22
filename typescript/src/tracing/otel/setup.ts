@@ -6,8 +6,12 @@
  * the rest to Confident AI over OTLP under deepeval's API key.
  */
 
-import { trace as otelTrace } from "@opentelemetry/api";
-import type { Context } from "@opentelemetry/api";
+import {
+  context as otelContext,
+  createContextKey,
+  trace as otelTrace,
+} from "@opentelemetry/api";
+import type { Context, Span as OtelSpan } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import type {
   ReadableSpan,
@@ -19,12 +23,16 @@ import { type ExportResult, ExportResultCode } from "@opentelemetry/core";
 
 import { getSettings } from "@/config/settings";
 import type { LLMTestCase } from "@/test-case";
+import type { Prompt } from "@/prompt";
 import { ConfidentAttr } from "@/tracing/attributes";
-import { traceManager } from "@/tracing/tracing";
+import { type StagedValues, withStaged } from "@/tracing/pending-context";
+import { type BaseSpan, traceManager } from "@/tracing/tracing";
 import { tracingEnabled } from "@/tracing/utils";
 import {
   DeepEvalSpanBridge,
+  OBSERVE_SCOPE,
   RemoteSpanExporter,
+  dropFromExport,
   traceFieldAttributes,
 } from "@/tracing/otel/bridge";
 import { type ExportedScope, otelHooks } from "@/tracing/otel/hooks";
@@ -101,6 +109,7 @@ export function ensureConfidentTrace(
     if (bridge.isExported(otelTrace.getActiveSpan()))
       sendExported(module, scope, values);
   };
+  otelHooks.drop = dropExported;
   otelHooks.flush = (timeoutMillis) => runtime.flush(timeoutMillis);
   return true;
 }
@@ -138,6 +147,84 @@ export function setTraceDefaults(
   });
 }
 
+/**
+ * Start an `observe` span under the current one, not made active, with
+ * `staged` applied to the deepeval span it becomes.
+ *
+ * Returns nothing when confident-trace isn't running; the placeholder only
+ * when deepeval collects the span.
+ */
+export function startObservedSpan(
+  name: string,
+  spanType: string,
+  staged: StagedValues,
+): { span: OtelSpan; placeholder?: BaseSpan } | undefined {
+  if (!ensureConfidentTrace() || !started) return undefined;
+  const bridge = started.bridge;
+  const span = withStaged(staged, () =>
+    otelTrace
+      .getTracer(OBSERVE_SCOPE)
+      .startSpan(name, { attributes: { [ConfidentAttr.SPAN_TYPE]: spanType } }),
+  );
+  return { span, placeholder: bridge.spanFor(span) };
+}
+
+// confident-trace's marker for a trace's entry, whose span takes the trace's
+// own fields. OTel context keys are global symbols, so this is the same key.
+const ENTRY_KEY = createContextKey("confident-trace.entry-operation");
+
+/**
+ * The active context with `span` active, and the trace's entry when no span
+ * opened under it is yet, so a confident-trace span inside `observe` doesn't
+ * claim the trace.
+ */
+export function observedContext(span: OtelSpan): Context {
+  const active = otelContext.active();
+  const ctx = otelTrace.setSpan(active, span);
+  return active.getValue(ENTRY_KEY) ? ctx : ctx.setValue(ENTRY_KEY, { span });
+}
+
+/** Export span or trace `values` on `span`, if confident-trace exports it. */
+export function exportOn(
+  span: OtelSpan,
+  scope: ExportedScope,
+  values: Record<string, unknown>,
+): void {
+  otelContext.with(otelTrace.setSpan(otelContext.active(), span), () =>
+    otelHooks.updateExported?.(scope, values),
+  );
+}
+
+/** Whether `span` already carries `attribute`. */
+export function carries(span: OtelSpan, attribute: string): boolean {
+  const attributes = (
+    span as unknown as { attributes?: Record<string, unknown> }
+  ).attributes;
+  return attributes?.[attribute] !== undefined;
+}
+
+/** Keep the active span, or its whole trace, out of the export. */
+export function dropExported(wholeTrace: boolean): void {
+  dropFromExport(otelTrace.getActiveSpan(), wholeTrace);
+}
+
+/** Run `fn` with trace fields every span that starts a trace in it exports. */
+export function exportedTraceContext<T>(
+  values: Record<string, unknown>,
+  fn: () => T,
+): T {
+  if (!ensureConfidentTrace() || !started) return fn();
+  const fields = exportable(values, EXPORTED_TRACE_FIELDS);
+  if (Object.keys(fields).length === 0) return fn();
+  try {
+    return started.module.traceContext(fields, fn);
+  } catch (error) {
+    // confident-trace validates the fields before running `fn`.
+    if (error instanceof TypeError) return fn();
+    throw error;
+  }
+}
+
 /** Stamps each span with its integration's defaults that it doesn't set. */
 class ScopeDefaults implements SpanProcessor {
   onStart(span: Span, _parentContext: Context): void {
@@ -165,7 +252,7 @@ class ScopeDefaults implements SpanProcessor {
   async shutdown(): Promise<void> {}
 }
 
-const EXPORTED_SPAN_FIELDS = [
+const CONTENT_FIELDS = [
   "name",
   "input",
   "output",
@@ -177,21 +264,49 @@ const EXPORTED_SPAN_FIELDS = [
   "expectedTools",
   "metricCollection",
 ];
+const EXPORTED_SPAN_FIELDS = [
+  ...CONTENT_FIELDS,
+  "model",
+  "provider",
+  "inputTokenCount",
+  "outputTokenCount",
+  "costPerInputToken",
+  "costPerOutputToken",
+];
 const EXPORTED_TRACE_FIELDS = [
-  ...EXPORTED_SPAN_FIELDS,
+  ...CONTENT_FIELDS,
   "tags",
   "userId",
   "threadId",
   "turnId",
   "testCaseId",
 ];
+const TOOL_FIELDS = ["toolsCalled", "expectedTools"];
+const COUNT_FIELDS = ["inputTokenCount", "outputTokenCount"];
 
-/** Pass an update to confident-trace for the exported span or trace. */
-function sendExported(
-  module: ConfidentTraceModule,
-  scope: ExportedScope,
+// Span fields the platform reads under deepeval's own attributes, which
+// confident-trace has none for.
+const PLATFORM_SPAN_ATTRIBUTES: Record<string, string> = {
+  availableTools: ConfidentAttr.AGENT_AVAILABLE_TOOLS,
+  agentHandoffs: ConfidentAttr.AGENT_AGENT_HANDOFFS,
+  description: ConfidentAttr.TOOL_DESCRIPTION,
+  embedder: ConfidentAttr.RETRIEVER_EMBEDDER,
+  topK: ConfidentAttr.RETRIEVER_TOP_K,
+  chunkSize: ConfidentAttr.RETRIEVER_CHUNK_SIZE,
+  integration: ConfidentAttr.SPAN_INTEGRATION,
+};
+const PROMPT_ATTRIBUTES: Record<string, string> = {
+  _alias: ConfidentAttr.SPAN_PROMPT_ALIAS,
+  version: ConfidentAttr.SPAN_PROMPT_VERSION,
+  label: ConfidentAttr.SPAN_PROMPT_LABEL,
+  hash: ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
+};
+
+/** `values` as confident-trace takes them, limited to `accepted`. */
+function exportable(
   values: Record<string, any>,
-): void {
+  accepted: string[],
+): Record<string, any> {
   const { testCase, ...rest } = values as { testCase?: LLMTestCase };
   const unpacked: Record<string, any> = testCase
     ? {
@@ -204,18 +319,78 @@ function sendExported(
         expectedTools: testCase.expectedTools,
       }
     : {};
-  const accepted =
-    scope === "span" ? EXPORTED_SPAN_FIELDS : EXPORTED_TRACE_FIELDS;
   const fields: Record<string, any> = {};
-  for (const [key, value] of Object.entries({ ...unpacked, ...rest }))
-    if (value !== undefined && accepted.includes(key)) fields[key] = value;
-  if (Object.keys(fields).length === 0) return;
+  for (const [key, value] of Object.entries({ ...unpacked, ...rest })) {
+    if (value === undefined || value === null || !accepted.includes(key))
+      continue;
+    if (TOOL_FIELDS.includes(key))
+      // Plain objects, since confident-trace doesn't serialize class instances.
+      fields[key] = (value as unknown[]).map((call) =>
+        JSON.parse(JSON.stringify(call)),
+      );
+    else if (COUNT_FIELDS.includes(key))
+      fields[key] = Math.trunc(Number(value));
+    else fields[key] = value;
+  }
+  return fields;
+}
+
+function platformSpanAttributes(
+  values: Record<string, any>,
+): Record<string, string | number | string[]> {
+  const attributes: Record<string, string | number | string[]> = {};
+  for (const [key, attribute] of Object.entries(PLATFORM_SPAN_ATTRIBUTES)) {
+    const value = values[key];
+    if (Array.isArray(value)) attributes[attribute] = value.map(String);
+    else if (typeof value === "string" || Number.isFinite(value))
+      attributes[attribute] = value;
+  }
+  const prompt = values.prompt as Prompt | undefined;
+  for (const [key, attribute] of Object.entries(PROMPT_ATTRIBUTES)) {
+    const value = prompt?.[key as keyof Prompt];
+    if (typeof value === "string") attributes[attribute] = value;
+  }
+  return attributes;
+}
+
+// The Confident AI key a trace exports under, when it isn't the default.
+const MAX_ROUTED_TRACES = 10_000;
+const traceKeys = new Map<string, string>();
+
+function routeTrace(span: OtelSpan, apiKey: string): void {
+  traceKeys.set(span.spanContext().traceId, apiKey);
+  if (traceKeys.size > MAX_ROUTED_TRACES)
+    traceKeys.delete(traceKeys.keys().next().value!);
+}
+
+/** Pass an update to confident-trace for the exported span or trace. */
+function sendExported(
+  module: ConfidentTraceModule,
+  scope: ExportedScope,
+  values: Record<string, any>,
+): void {
+  const span = otelTrace.getActiveSpan();
+  if (!span) return;
+  const fields = exportable(
+    values,
+    scope === "span" ? EXPORTED_SPAN_FIELDS : EXPORTED_TRACE_FIELDS,
+  );
   try {
-    if (scope === "span") module.updateSpan(fields);
-    else module.updateTrace(fields);
+    if (Object.keys(fields).length > 0) {
+      if (scope === "span") module.updateSpan(fields);
+      else module.updateTrace(fields);
+    }
   } catch {
     // confident-trace rejects values it can't carry; user code goes on.
   }
+  if (scope === "span") {
+    span.setAttributes(platformSpanAttributes(values));
+    return;
+  }
+  if (typeof values.testRunId === "string")
+    span.setAttribute(ConfidentAttr.TRACE_TEST_RUN_ID, values.testRunId);
+  if (typeof values.confidentApiKey === "string")
+    routeTrace(span, values.confidentApiKey);
 }
 
 /** Wait up to `timeoutMillis` for confident-trace to export its spans. */
@@ -231,42 +406,60 @@ export async function shutdownConfidentTrace(): Promise<void> {
 /**
  * OTLP export to Confident AI under the API key resolved at export time.
  *
- * Resolving per export lets a key set after start-up take effect. As with
- * trace posting, nothing is sent while tracing is off or no key is set.
+ * Resolving per export lets a key set after start-up take effect, and a trace
+ * may carry its own. Nothing is sent while tracing is off or for a trace with
+ * no key.
  */
 export class ConfidentOtlpExporter implements SpanExporter {
-  private exporter?: { key: string; exporter: SpanExporter };
+  private readonly exporters = new Map<string, SpanExporter>();
 
   export(
     spans: ReadableSpan[],
     resultCallback: (result: ExportResult) => void,
   ): void {
-    const apiKey = traceManager.exportApiKey;
-    if (!tracingEnabled() || !apiKey)
+    if (!tracingEnabled() || !traceManager.exportEnabled)
       return resultCallback({ code: ExportResultCode.SUCCESS });
-    this.exporterFor(apiKey).export(spans, resultCallback);
+    const defaultKey = traceManager.exportApiKey;
+    const byKey = new Map<string, ReadableSpan[]>();
+    for (const span of spans) {
+      const apiKey = traceKeys.get(span.spanContext().traceId) ?? defaultKey;
+      if (apiKey) byKey.set(apiKey, [...(byKey.get(apiKey) ?? []), span]);
+    }
+    if (byKey.size === 0)
+      return resultCallback({ code: ExportResultCode.SUCCESS });
+    let pending = byKey.size;
+    let failed: ExportResult | undefined;
+    for (const [apiKey, keyed] of byKey)
+      this.exporterFor(apiKey).export(keyed, (result) => {
+        if (result.code !== ExportResultCode.SUCCESS) failed ??= result;
+        if (--pending === 0)
+          resultCallback(failed ?? { code: ExportResultCode.SUCCESS });
+      });
   }
 
   async forceFlush(): Promise<void> {
-    await this.exporter?.exporter.forceFlush?.();
+    await Promise.all(
+      [...this.exporters.values()].map((exporter) => exporter.forceFlush?.()),
+    );
   }
 
   async shutdown(): Promise<void> {
-    await this.exporter?.exporter.shutdown();
+    await Promise.all(
+      [...this.exporters.values()].map((exporter) => exporter.shutdown()),
+    );
+    this.exporters.clear();
   }
 
   private exporterFor(apiKey: string): SpanExporter {
-    if (this.exporter?.key !== apiKey) {
-      void this.exporter?.exporter.shutdown();
+    let exporter = this.exporters.get(apiKey);
+    if (!exporter) {
       const base = getSettings().CONFIDENT_OTEL_URL.replace(/\/+$/, "");
-      this.exporter = {
-        key: apiKey,
-        exporter: new OTLPTraceExporter({
-          url: `${base}/v1/traces`,
-          headers: { "x-confident-api-key": apiKey },
-        }),
-      };
+      exporter = new OTLPTraceExporter({
+        url: `${base}/v1/traces`,
+        headers: { "x-confident-api-key": apiKey },
+      });
+      this.exporters.set(apiKey, exporter);
     }
-    return this.exporter.exporter;
+    return exporter;
   }
 }

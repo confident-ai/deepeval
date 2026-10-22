@@ -191,6 +191,7 @@
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",
+    "confident-trace": "^0.1.0-alpha.14",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",
@@ -225,7 +226,6 @@
     "@types/uuid": "^9.0.0",
     "ai": "^7.0.93",
     "babel-jest": "^29.7.0",
-    "confident-trace": "^0.1.0-alpha.14",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^16.4.0",
@@ -255,7 +255,6 @@
     "@openai/agents": ">=0.17.0 <0.18.0",
     "@typesafe-ai/sdk": ">=0.6.0",
     "ai": ">=7.0.93 <8",
-    "confident-trace": ">=0.1.0-alpha.14 <0.2.0",
     "ollama": ">=0.5.0",
     "vitest": ">=1.0.0"
   },
@@ -287,9 +286,6 @@
     "ai": {
       "optional": true
     },
-    "confident-trace": {
-      "optional": true
-    },
     "ollama": {
       "optional": true
     },
@@ -300,5 +296,8 @@
   "optionalDependencies": {
     "ink": "^7.1.1",
     "react": "^19.2.8"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

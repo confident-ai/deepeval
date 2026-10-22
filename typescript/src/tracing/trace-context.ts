@@ -108,7 +108,8 @@ export async function setTracingContext<T>(
   fn: () => Promise<T> | T,
 ): Promise<T> {
   let currentTrace = getCurrentTrace();
-  if (!currentTrace) {
+  // One left in context by an earlier call may have ended.
+  if (!currentTrace || !traceManager.getTraceByUuid(currentTrace.uuid)) {
     currentTrace = traceManager.startNewTrace();
   }
 
@@ -146,5 +147,27 @@ export async function setTracingContext<T>(
     setAgentContext(opts.agentSpanContext);
   }
 
-  return await fn();
+  // Loaded on first use, like `observe` does.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const setup = require("./otel/setup") as typeof import("./otel/setup");
+  return await setup.exportedTraceContext(
+    {
+      name: opts.name,
+      tags: opts.tags,
+      metadata: opts.metadata,
+      threadId: opts.threadId,
+      userId: opts.userId,
+      testCaseId: opts.testCaseId,
+      turnId: opts.turnId,
+      input: opts.input,
+      output: opts.output,
+      retrievalContext: opts.retrievalContext,
+      context: opts.context,
+      expectedOutput: opts.expectedOutput,
+      toolsCalled: opts.toolsCalled,
+      expectedTools: opts.expectedTools,
+      metricCollection: opts.metricCollection,
+    },
+    async () => await fn(),
+  );
 }
