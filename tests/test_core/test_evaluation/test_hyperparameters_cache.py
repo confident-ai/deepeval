@@ -58,7 +58,7 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
         global_test_run_manager, "save_test_run", Mock()
     )
     monkeypatch.setattr(
-        evaluation_module, "maybe_offer_inspect_tui", Mock(), raising=False
+        evaluation_module, "get_is_running_deepeval", lambda: True
     )
 
     try:
