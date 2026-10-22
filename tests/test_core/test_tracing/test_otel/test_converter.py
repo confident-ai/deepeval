@@ -1,3 +1,4 @@
+
 """``convert_span`` against real confident-trace spans and its receiver vectors.
 
 ``fixtures/`` holds unmodified copies of confident-trace's ``spec/`` vectors.
@@ -861,3 +862,18 @@ def test_a_turn_that_only_calls_tools_keeps_its_calls_as_output():
         }
     ]
     assert [call.name for call in llm.tools_called] == ["lookup"]
+
+
+def test_a_conversation_is_answered_by_its_final_assistant_turn():
+    def text(role, content):
+        return {"role": role, "parts": [{"type": "text", "content": content}]}
+
+    conversation = [
+        text("user", "Weather?"),
+        text("assistant", "Let me check."),
+        text("tool", "sunny"),
+        text("assistant", "Sunny."),
+    ]
+    span = synthetic_span({"confident.trace.output": json.dumps(conversation)})
+
+    assert convert_span(span).trace_fields["output"] == "Sunny."

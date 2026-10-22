@@ -1,75 +1,64 @@
 {
   "name": "DeepEval Attributes Trace",
-  "uuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
-  "baseSpans": [],
-  "agentSpans": [],
+  "uuid": "79f86797-164a-4ca1-ab7c-468d9b2965b3",
+  "baseSpans": [
+    {
+      "uuid": "edee7148d1cfcb02",
+      "name": "step 1",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "79f86797-164a-4ca1-ab7c-468d9b2965b3",
+      "parentUuid": "ae332677eb7e4d92",
+      "startTime": "2026-10-21T20:45:45.916Z",
+      "endTime": "2026-10-21T20:45:46.847Z"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "ae332677eb7e4d92",
+      "name": "invoke_agent gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "79f86797-164a-4ca1-ab7c-468d9b2965b3",
+      "startTime": "2026-10-21T20:45:45.915Z",
+      "endTime": "2026-10-21T20:45:46.847Z",
+      "input": "What is the capital of France?",
+      "output": "The capital of France is Paris.",
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
   "llmSpans": [
     {
-      "uuid": "376659e0d5b792ae",
-      "name": "ai.generateText",
+      "uuid": "e9b5ebab06df747d",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
-      "startTime": "2026-02-23T14:52:43.311Z",
-      "endTime": "2026-02-23T14:52:44.121Z",
-      "input": {
-        "prompt": "What is the capital of France?"
-      },
-      "output": "The capital of France is Paris.",
-      "metricCollection": "llm-specific-metrics",
-      "model": "gpt-4o-mini",
-      "promptAlias": "ai-sdk-test-prompt",
-      "promptCommitHash": "abcdef123",
-      "promptLabel": "testing",
-      "promptVersion": "01.00.00",
-      "metadata": {
-        "provider": "openai.responses",
-        "finish_reason": "stop",
-        "max_retries": 2
-      }
-    },
-    {
-      "uuid": "c082a634c3b99480",
-      "name": "ai.generateText.doGenerate",
-      "status": "SUCCESS",
-      "type": "llm",
-      "traceUuid": "13450eb8-658b-41a0-82a4-9c1a15922aa5",
-      "parentUuid": "376659e0d5b792ae",
-      "startTime": "2026-02-23T14:52:43.312Z",
-      "endTime": "2026-02-23T14:52:44.118Z",
+      "traceUuid": "79f86797-164a-4ca1-ab7c-468d9b2965b3",
+      "parentUuid": "edee7148d1cfcb02",
+      "startTime": "2026-10-21T20:45:45.916Z",
+      "endTime": "2026-10-21T20:45:46.845Z",
       "input": [
         {
           "role": "user",
-          "content": [
-            {
-              "type": "text",
-              "text": "What is the capital of France?"
-            }
-          ]
+          "content": "What is the capital of France?"
         }
       ],
       "output": "The capital of France is Paris.",
       "metricCollection": "llm-specific-metrics",
-      "model": "gpt-4o-mini",
+      "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 14,
       "outputTokenCount": 8,
       "promptAlias": "ai-sdk-test-prompt",
       "promptCommitHash": "abcdef123",
       "promptLabel": "testing",
-      "promptVersion": "01.00.00",
-      "metadata": {
-        "response_id": "resp_09e3e94eee603a1700699c69bb8b348190b0f6acb2e04a2c2c",
-        "response_model": "gpt-4o-mini-2024-07-18",
-        "provider": "openai.responses",
-        "finish_reason": "stop",
-        "max_retries": 2
-      }
+      "promptVersion": "01.00.00"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T14:52:43.310Z",
-  "endTime": "2026-02-23T14:52:44.123Z",
+  "startTime": "2026-10-21T20:45:45.915Z",
+  "endTime": "2026-10-21T20:45:46.848Z",
   "environment": "testing",
   "metadata": {
     "custom_business_id": "biz_789"
@@ -81,7 +70,8 @@
   ],
   "threadId": "test_thread_id",
   "userId": "test_user_id",
-  "input": "{\"prompt\":\"What is the capital of France?\"}",
+  "input": "What is the capital of France?",
   "output": "The capital of France is Paris.",
-  "metricCollection": "global-trace-metrics"
+  "metricCollection": "global-trace-metrics",
+  "status": "SUCCESS"
 }

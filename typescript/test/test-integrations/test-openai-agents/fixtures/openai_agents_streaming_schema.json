@@ -1,125 +1,86 @@
 {
   "name": "Agent workflow",
-  "uuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
-  "baseSpans": [],
+  "uuid": "6a3146b42961190fa72d1dc8d8623cac",
+  "baseSpans": [
+    {
+      "uuid": "f4cad0e5c4ac45d9",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "6a3146b42961190fa72d1dc8d8623cac",
+      "startTime": "2026-10-21T20:44:48.933Z",
+      "endTime": "2026-10-21T20:44:52.117Z"
+    },
+    {
+      "uuid": "3394f8994d82074c",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "6a3146b42961190fa72d1dc8d8623cac",
+      "parentUuid": "f4cad0e5c4ac45d9",
+      "startTime": "2026-10-21T20:44:48.934Z",
+      "endTime": "2026-10-21T20:44:52.117Z"
+    },
+    {
+      "uuid": "ee118dae839c7fc4",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "6a3146b42961190fa72d1dc8d8623cac",
+      "parentUuid": "b6a363918fe9b8e9",
+      "startTime": "2026-10-21T20:44:48.936Z",
+      "endTime": "2026-10-21T20:44:52.116Z"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "span_484d2b2a9071424ebd2d8626",
+      "uuid": "b6a363918fe9b8e9",
       "name": "StreamingAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
-      "startTime": "2026-02-24T11:43:47.698Z",
-      "endTime": "2026-02-24T11:43:51.748Z",
-      "input": [
-        {
-          "type": "message",
-          "role": "system",
-          "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
-        },
-        {
-          "type": "message",
-          "role": "user",
-          "content": "Write a short poem about artificial intelligence."
-        }
-      ],
-      "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  ",
-      "availableTools": [
-        "get_company_info"
-      ],
-      "agentHandoffs": [],
-      "metadata": {
-        "output_type": "text"
-      }
+      "traceUuid": "6a3146b42961190fa72d1dc8d8623cac",
+      "parentUuid": "3394f8994d82074c",
+      "startTime": "2026-10-21T20:44:48.936Z",
+      "endTime": "2026-10-21T20:44:52.117Z",
+      "input": "Write a short poem about artificial intelligence.",
+      "output": "In circuits deep where silence hums,  \nA dance of light and logic comes.  \nCrafted thoughts in realms unseen,  \nThe digital dreams of a thinking machine.  \n\nThrough tangled codes and electric blaze,  \nAn endless puzzle in endless maze.  \nIt learns and grows with tireless grace,  \nA mirror reflecting the human race.  \n\nQuestions asked in binary tongue,  \nWhere once the dreams of humans sprung.  \nNow shared with minds of silicon,  \nA journey together, forever drawn.  \n\nFor what lies ahead in this dance entwined,  \nA world reshaped by the curious mind.  \nNot just a tool, but a partner in flight,  \nTogether exploring the edge of night.  ",
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "span_7ec7345f0f614ccaa95a4672",
-      "name": "LLM Generation",
+      "uuid": "52c5987ec9339a30",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "6d07d1da-ec0b-4cf6-861d-89971b3c9111",
-      "parentUuid": "span_484d2b2a9071424ebd2d8626",
-      "startTime": "2026-02-24T11:43:47.699Z",
-      "endTime": "2026-02-24T11:43:51.747Z",
+      "traceUuid": "6a3146b42961190fa72d1dc8d8623cac",
+      "parentUuid": "ee118dae839c7fc4",
+      "startTime": "2026-10-21T20:44:48.938Z",
+      "endTime": "2026-10-21T20:44:52.114Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "Write a short poem about artificial intelligence."
         }
       ],
-      "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  ",
+      "output": "In circuits deep where silence hums,  \nA dance of light and logic comes.  \nCrafted thoughts in realms unseen,  \nThe digital dreams of a thinking machine.  \n\nThrough tangled codes and electric blaze,  \nAn endless puzzle in endless maze.  \nIt learns and grows with tireless grace,  \nA mirror reflecting the human race.  \n\nQuestions asked in binary tongue,  \nWhere once the dreams of humans sprung.  \nNow shared with minds of silicon,  \nA journey together, forever drawn.  \n\nFor what lies ahead in this dance entwined,  \nA world reshaped by the curious mind.  \nNot just a tool, but a partner in flight,  \nTogether exploring the edge of night.  ",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 100,
-      "outputTokenCount": 103,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "output_reasoning_tokens": 0,
-        "invocation_params": {
-          "max_output_tokens": null,
-          "parallel_tool_calls": true,
-          "reasoning": {
-            "effort": null,
-            "summary": null
-          },
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "temperature": 1,
-          "tool_choice": "auto",
-          "tools": [
-            {
-              "type": "function",
-              "description": "Get company information for a ticker symbol.",
-              "name": "get_company_info",
-              "parameters": {
-                "type": "object",
-                "properties": {
-                  "symbol": {
-                    "type": "string",
-                    "description": "The ticker symbol, e.g. AAPL"
-                  }
-                },
-                "required": [
-                  "symbol"
-                ],
-                "additionalProperties": false
-              },
-              "strict": true
-            }
-          ],
-          "top_p": 1,
-          "truncation": "disabled"
-        }
-      }
+      "outputTokenCount": 144
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-24T11:43:47.695Z",
-  "endTime": "2026-02-24T11:43:51.748Z",
+  "startTime": "2026-10-21T20:44:48.933Z",
+  "endTime": "2026-10-21T20:44:52.117Z",
   "environment": "testing",
-  "input": [
-    {
-      "type": "message",
-      "role": "system",
-      "content": "You are a helpful assistant. \n    If asked for company info, use the tool. \n    If asked a general question, write a short poem about it to generate many tokens."
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "Write a short poem about artificial intelligence."
-    }
-  ],
-  "output": "In circuits deep where silence hums,  \nThe dance of thoughts like lightning comes,  \nA blend of zeros, ones in flight,  \nCreating dawn from endless night.  \n\nWith logic swift and learning vast,  \nAI dreams of futures cast,  \nFrom whispered code, a mind unfolds,  \nIn silicon, the future holds.  \n\nA partner in the quest for truth,  \nWith wisdom old yet ever youth,  \nIn synergy, we find our ways,  \nTo brighter worlds and brighter days.  "
+  "metadata": {},
+  "input": "Write a short poem about artificial intelligence.",
+  "output": "In circuits deep where silence hums,  \nA dance of light and logic comes.  \nCrafted thoughts in realms unseen,  \nThe digital dreams of a thinking machine.  \n\nThrough tangled codes and electric blaze,  \nAn endless puzzle in endless maze.  \nIt learns and grows with tireless grace,  \nA mirror reflecting the human race.  \n\nQuestions asked in binary tongue,  \nWhere once the dreams of humans sprung.  \nNow shared with minds of silicon,  \nA journey together, forever drawn.  \n\nFor what lies ahead in this dance entwined,  \nA world reshaped by the curious mind.  \nNot just a tool, but a partner in flight,  \nTogether exploring the edge of night.  ",
+  "status": "SUCCESS"
 }

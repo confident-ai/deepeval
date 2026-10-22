@@ -4,7 +4,6 @@ import * as path from "path";
 import { traceManager, observe, SpanType } from "@/tracing/tracing";
 import { Environment } from "@/tracing/utils";
 import { instrumentOpenAI } from "@/openai";
-import { unpatchOpenAI } from "@/openai/patch";
 import { generateTraceJson, assertTraceJson } from "../utils";
 
 const client = new OpenAI();
@@ -94,12 +93,14 @@ const RESPONSES_TOOLS: any[] = [
 ];
 
 describe("OpenAI Tool Calling Flow Tests", () => {
+  let stopTracing: () => void;
+
   beforeAll(() => {
-    instrumentOpenAI(client);
+    stopTracing = instrumentOpenAI(client);
   });
 
   afterAll(() => {
-    unpatchOpenAI(client);
+    stopTracing();
   });
 
   beforeEach(() => {

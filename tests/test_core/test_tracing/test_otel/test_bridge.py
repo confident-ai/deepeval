@@ -113,6 +113,34 @@ def test_a_root_span_fills_only_unset_trace_fields(exporter, posted):
     assert second.name == "mine"
 
 
+def test_a_later_model_call_in_a_deepeval_trace_sets_its_output(tracer, posted):
+    def generate(answer):
+        reply = [
+            {
+                "role": "assistant",
+                "parts": [{"type": "text", "content": answer}],
+            }
+        ]
+        with tracer.start_as_current_span(
+            "chat",
+            attributes={
+                "gen_ai.operation.name": "chat",
+                "gen_ai.output.messages": json.dumps(reply),
+            },
+        ):
+            pass
+
+    # Each call is a trace of its own to OTel, but one deepeval trace.
+    @observe(name="endpoint")
+    def endpoint():
+        generate("thinking")
+        generate("sunny")
+
+    endpoint()
+
+    assert posted[0].output == "sunny"
+
+
 def test_span_defaults_staged_in_deepeval(exporter, posted):
     from_context, staged = RecordingMetric(), RecordingMetric()
     context = LlmSpanContext(metrics=[from_context], expected_output="x")
