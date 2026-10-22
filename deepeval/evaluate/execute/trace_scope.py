@@ -132,6 +132,8 @@ def _assert_test_from_current_trace(
             is_promoted_root = True
         else:
             root_for_dfs = root
+            # A root still parked under the open wrapper points at it too.
+            is_promoted_root = root.parent_uuid is not None
 
     effective_trace_output = (
         current_trace.output
