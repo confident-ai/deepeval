@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "async_hooks";
 import console from "console";
 
 import { getSettings } from "@/config/settings";
-import { isConfident, wait } from "@/utils";
+import { getConfidentApiKey, isConfident, wait } from "@/utils";
 import {
   tracingEnabled,
   validateEnvironment,
@@ -29,6 +29,7 @@ import {
   type PendingPayload,
 } from "@/tracing/pending-context";
 import { isTraceInternalEnabled } from "@/tracing/utils";
+import { otelHooks } from "@/tracing/otel/hooks";
 
 export enum SpanType {
   AGENT = "agent",
@@ -274,7 +275,6 @@ export interface Trace {
   uuid: string;
   status: TraceSpanStatus;
   rootSpans: BaseSpan[];
-  _isOtelImplicit?: boolean;
   startTime: Date;
   endTime?: Date;
   metadata?: Record<string, any>;
@@ -330,6 +330,32 @@ export function setCurrentTrace(trace: Trace | null): void {
     ...current,
     currentTrace: trace ?? undefined,
   });
+}
+
+/**
+ * The innermost open span: deepeval's own, or a confident-trace span deepeval
+ * collects, seen through the placeholder that stands in for it.
+ */
+export function activeSpan(): BaseSpan | undefined {
+  const span = getCurrentSpan();
+  const collected = otelHooks.collectedSpan?.();
+  if (!collected || (span && isDescendant(span, collected.uuid))) return span;
+  return collected;
+}
+
+/** The trace of `activeSpan()`. */
+export function activeTrace(): Trace | undefined {
+  return getCurrentTrace() ?? otelHooks.collectedTrace?.();
+}
+
+/** Whether `span` was opened inside the span `ancestorUuid`. */
+export function isDescendant(span: BaseSpan, ancestorUuid: string): boolean {
+  let current: BaseSpan | undefined = span;
+  while (current?.parentUuid) {
+    if (current.parentUuid === ancestorUuid) return true;
+    current = traceManager.getSpanByUuid(current.parentUuid);
+  }
+  return false;
 }
 
 export function withTracingContext<T>(
@@ -403,6 +429,11 @@ export class TraceManager {
 
   public get isEvaluating(): boolean {
     return this.evaluatingDepth > 0;
+  }
+
+  /** Whether traces are consumed locally: by an evaluation or a capture sink. */
+  public get isCapturingTraces(): boolean {
+    return this.isEvaluating || this.traceCaptureSinks.size > 0;
   }
 
   public beginEvaluation(): () => void {
@@ -503,8 +534,7 @@ export class TraceManager {
     }
   }
 
-  public startNewTrace(): Trace {
-    const traceUuid = crypto.randomUUID();
+  public startNewTrace(traceUuid: string = crypto.randomUUID()): Trace {
     const newTrace: Trace = {
       uuid: traceUuid,
       rootSpans: [],
@@ -531,6 +561,19 @@ export class TraceManager {
       }
       this.activeTraces.delete(traceUuid);
     }
+  }
+
+  /** Drop an unfinished trace without capturing or posting it. */
+  public discardTrace(traceUuid: string): void {
+    const trace = this.activeTraces.get(traceUuid);
+    if (!trace) return;
+    this.activeTraces.delete(traceUuid);
+    this.traces = this.traces.filter((t) => t !== trace);
+  }
+
+  /** The Confident AI key traces are sent with, if any. */
+  public get exportApiKey(): string | undefined {
+    return this.confidentApiKey || getConfidentApiKey() || undefined;
   }
 
   public setTraceStatus(traceUuid: string, status: TraceSpanStatus): void {
@@ -1094,8 +1137,8 @@ export class Tracer {
 
   // Context manager for tracing spans - async version for TypeScript compatibility
   public async trace<T>(callback: () => T | Promise<T>): Promise<T> {
-    const trace = getCurrentTrace() ?? traceManager.startNewTrace();
-    const parentSpan = getCurrentSpan();
+    const parentSpan = activeSpan();
+    const trace = activeTrace() ?? traceManager.startNewTrace();
     const span = this.createSpanInstance();
     // Link span to parent or trace
     span.traceUuid = trace.uuid;
@@ -1484,9 +1527,22 @@ export const updateCurrentSpan = ({
   metricCollection,
   metrics,
 }: UpdateCurrentSpanParams) => {
-  const currentSpan = getCurrentSpan();
+  const currentSpan = activeSpan();
 
   if (!currentSpan) {
+    otelHooks.updateExported?.("span", {
+      name,
+      input,
+      output,
+      testCase,
+      metadata,
+      retrievalContext,
+      toolsCalled,
+      expectedTools,
+      expectedOutput,
+      context,
+      metricCollection,
+    });
     return;
   }
 
@@ -1581,9 +1637,27 @@ export const updateCurrentTrace = ({
   confidentApiKey,
   drop,
 }: UpdateCurrentTraceParams) => {
-  const currentTrace = getCurrentTrace();
+  const currentTrace = activeTrace();
 
   if (!currentTrace) {
+    otelHooks.updateExported?.("trace", {
+      tags,
+      metadata,
+      threadId,
+      userId,
+      testCaseId,
+      turnId,
+      input,
+      output,
+      name,
+      testCase,
+      retrievalContext,
+      toolsCalled,
+      expectedTools,
+      expectedOutput,
+      context,
+      metricCollection,
+    });
     return;
   }
 
@@ -1676,7 +1750,7 @@ export const updateLlmSpan = ({
   tokenIntervals,
   prompt,
 }: UpdateLLMSpanParams) => {
-  const currentSpan = getCurrentSpan();
+  const currentSpan = activeSpan();
   if (!currentSpan) {
     return;
   }
@@ -1722,7 +1796,7 @@ export const updateRetrieverSpan = ({
   topK,
   chunkSize,
 }: UpdateRetrieverSpanParams) => {
-  const currentSpan = getCurrentSpan();
+  const currentSpan = activeSpan();
 
   if (!currentSpan) {
     return;

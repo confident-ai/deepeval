@@ -1,265 +1,78 @@
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import {
-  BatchSpanProcessor,
-  SimpleSpanProcessor,
-  SpanProcessor,
-  ReadableSpan,
-  SpanExporter,
-  Span,
-} from "@opentelemetry/sdk-trace-base";
-import { ExportResult, ExportResultCode } from "@opentelemetry/core";
-import { Tracer, trace, Context } from "@opentelemetry/api";
-import {
-  DeepEvalSpanProcessor,
-  ROOT_VERCEL_SPANS,
-} from "@/integrations/ai-sdk/processor";
-import { getVersion } from "@/cli/version";
-import { getSettings } from "@/config/settings";
+/**
+ * deepeval's AI SDK integration, built on confident-trace (AI SDK 7).
+ *
+ * Pass the tracer to `@ai-sdk/otel`'s integration:
+ *
+ *   const telemetry = {
+ *     integrations: [new OpenTelemetry({ tracer: configureAiSdkTracing() })],
+ *   };
+ *   await generateText({ model, prompt, telemetry });
+ */
+
+import type { Tracer } from "@opentelemetry/api";
+
 import { recordTracingIntegration } from "@/telemetry";
 import { Integration } from "@/tracing/integrations";
-import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
+import { traceManager } from "@/tracing/tracing";
+import {
+  confidentTraceModule,
+  ensureConfidentTrace,
+  flushConfidentTrace,
+  setTraceDefaults,
+} from "@/tracing/otel/setup";
 
-// Creating a Wrapper for exporter to preserve parentIds of root spans
-class DeepEvalExporterWrapper implements SpanExporter {
-  private aiSpanIds = new Set<string>();
+type VercelAdapter = typeof import("confident-trace/vercel-ai");
 
-  constructor(private readonly exporter: SpanExporter) {}
-
-  export(
-    spans: ReadableSpan[],
-    resultCallback: (result: ExportResult) => void,
-  ): void {
-    const currentBatchIds: string[] = [];
-
-    // Track AI spans across batches
-    spans.forEach((span) => {
-      if (span.name.startsWith("ai.")) {
-        const id = span.spanContext().spanId;
-        this.aiSpanIds.add(id);
-        currentBatchIds.push(id);
-      }
-    });
-
-    const sanitized = spans.map((span) => {
-      let parentSpanContext = span.parentSpanContext;
-
-      if (ROOT_VERCEL_SPANS.has(span.name)) {
-        const parentId = span.parentSpanContext?.spanId;
-
-        // Only strip parent if it's not another AI span
-        if (!parentId || !this.aiSpanIds.has(parentId)) {
-          parentSpanContext = undefined;
-        }
-      }
-
-      return Object.assign(Object.create(span), {
-        parentSpanContext,
-      });
-    });
-
-    try {
-      this.exporter.export(sanitized as ReadableSpan[], resultCallback);
-    } catch {
-      resultCallback({ code: ExportResultCode.FAILED });
-    }
-    currentBatchIds.forEach((id) => this.aiSpanIds.delete(id));
-  }
-
-  shutdown(): Promise<void> {
-    return this.exporter.shutdown();
-  }
-
-  forceFlush(): Promise<void> {
-    return this.exporter.forceFlush?.() ?? Promise.resolve();
-  }
-}
-
-// --- DeepEval Custom Export Filter ---
-export class DeepEvalBatchFilterProcessor implements SpanProcessor {
-  constructor(private readonly underlyingProcessor: SpanProcessor) {}
-
-  forceFlush(): Promise<void> {
-    return this.underlyingProcessor.forceFlush();
-  }
-
-  // We filter only the "ai." spans from Vercel AI SDK and abandon any and all spans that are not related to vercel's "ai." spans
-  onStart(span: Span, parentContext: Context): void {
-    const name = (span as any).name;
-    if (name && name.startsWith("ai.")) {
-      this.underlyingProcessor.onStart(span, parentContext);
-    }
-  }
-
-  onEnd(span: ReadableSpan): void {
-    if (!span.name || !span.name.startsWith("ai.")) return;
-    if ((span.attributes as any)?.[ROUTE_TO_REST_ATTRIBUTE]) return;
-    this.underlyingProcessor.onEnd(span);
-  }
-
-  shutdown(): Promise<void> {
-    return this.underlyingProcessor.shutdown();
-  }
-}
+// The label confident-trace gives the AI SDK's spans.
+const INTEGRATION = "Vercel AI SDK";
 
 export interface AiSdkInstrumentationOptions {
+  /** The Confident AI key to send traces with, over `CONFIDENT_API_KEY`. */
   apiKey?: string;
-  otelEndpoint?: string;
+  /** The name of every trace. */
   name?: string;
-  isTestMode?: boolean;
-  debug?: boolean;
   environment?: string;
+  /** The metric collection the platform evaluates every trace with. */
   traceMetricCollection?: string;
+  /** @deprecated Set `CONFIDENT_OTEL_URL` instead. */
+  otelEndpoint?: string;
+  /** @deprecated Evaluations now collect spans locally on their own. */
+  isTestMode?: boolean;
+  /** @deprecated No longer used. */
+  debug?: boolean;
 }
 
-export function createDeepEvalProcessors(
-  options?: AiSdkInstrumentationOptions,
-): SpanProcessor[] {
-  const settings = getSettings();
-  const apiKey =
-    options?.apiKey ??
-    (typeof process !== "undefined"
-      ? process.env.CONFIDENT_API_KEY
-      : undefined);
+let currentOptions: AiSdkInstrumentationOptions | null = null;
 
-  // The local processor is unconditional: it materialises spans in-process,
-  // which is what evals read. Only the OTLP exporter needs a key, so a keyless
-  // caller loses the export to Confident AI and nothing else.
-  if (!apiKey) {
-    return [new DeepEvalSpanProcessor(options, { otlpEnabled: false })];
-  }
-
-  const baseUrl =
-    options?.otelEndpoint ||
-    settings.CONFIDENT_OTEL_URL ||
-    "https://otel.confident-ai.com";
-
-  const endpoint = baseUrl.endsWith("/")
-    ? `${baseUrl}v1/traces`
-    : `${baseUrl}/v1/traces`;
-
-  const otlpExporter = new DeepEvalExporterWrapper(
-    new OTLPTraceExporter({
-      url: endpoint,
-      headers: { "x-confident-api-key": apiKey },
-    }),
-  );
-
-  const baseExporterProcessor = options?.isTestMode
-    ? new SimpleSpanProcessor(otlpExporter)
-    : new BatchSpanProcessor(otlpExporter);
-
-  return [
-    new DeepEvalSpanProcessor(options),
-    new DeepEvalBatchFilterProcessor(baseExporterProcessor),
-  ];
-}
-
-let _deepevalAiSdkTracer: Tracer | null = null;
-let _currentOptions: AiSdkInstrumentationOptions | null = null;
-let _deepevalTracerProvider: NodeTracerProvider | null = null;
-
+/** A tracer that traces AI SDK calls for deepeval. */
 export function configureAiSdkTracing(
-  options?: AiSdkInstrumentationOptions,
-): Tracer | null {
-  _currentOptions = options || {};
-
-  if (_deepevalAiSdkTracer) {
-    return _deepevalAiSdkTracer;
-  }
-
-  const processors = createDeepEvalProcessors(_currentOptions);
-
-  let environment = options?.environment;
-  if (!environment && getSettings().CONFIDENT_TRACE_ENVIRONMENT) {
-    environment = getSettings().CONFIDENT_TRACE_ENVIRONMENT;
-  } else if (!environment) {
-    environment = "development";
-  }
-
+  options: AiSdkInstrumentationOptions = {},
+): Tracer {
+  currentOptions = options;
+  if (options.apiKey)
+    traceManager.configure({ confidentApiKey: options.apiKey });
+  if (options.otelEndpoint)
+    process.env.CONFIDENT_OTEL_URL ??= options.otelEndpoint;
+  ensureConfidentTrace();
   recordTracingIntegration(Integration.AI_SDK);
-
-  const provider = new NodeTracerProvider({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: "deepeval-ts-client",
-      "deepeval.sdk.language": "typescript",
-      "deepeval.sdk.version": getVersion(),
-      "deepeval.environment": environment,
-    }),
-    spanProcessors: processors,
-  });
-
-  _deepevalTracerProvider = provider;
-
-  setupGracefulShutdown(provider, options?.debug);
-
-  provider.register();
-
-  _deepevalAiSdkTracer = trace.getTracer("deepeval-ai-sdk");
-
-  if (options?.debug) {
-    console.log("DeepEval AI SDK tracing configured:", {
-      environment,
-      name: options?.name,
-      isTestMode: options?.isTestMode,
-    });
-  }
-
-  return _deepevalAiSdkTracer;
+  setTraceDefaults(
+    { integration: INTEGRATION },
+    {
+      name: options.name,
+      environment: options.environment,
+      metricCollection: options.traceMetricCollection,
+    },
+  );
+  return confidentTraceModule<VercelAdapter>(
+    "vercel-ai",
+  ).createVercelAITracer();
 }
 
 export function getCurrentOptions(): AiSdkInstrumentationOptions | null {
-  return _currentOptions;
+  return currentOptions;
 }
 
-export function resetTracer(): void {
-  _deepevalAiSdkTracer = null;
-  _currentOptions = null;
-  _deepevalTracerProvider = null;
-}
-
-function setupGracefulShutdown(provider: NodeTracerProvider, debug?: boolean) {
-  let isShuttingDown = false;
-
-  const shutdown = async (signal: string) => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-
-    if (debug) {
-      console.log(`DeepEval: Received ${signal}, flushing traces...`);
-    }
-
-    try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 5000),
-      );
-
-      await Promise.race([provider.shutdown(), timeout]);
-
-      if (debug) console.log("DeepEval: Traces flushed successfully.");
-    } catch (err) {
-      if (debug) console.warn("DeepEval: Failed to flush traces on exit", err);
-    } finally {
-      if (signal === "SIGINT" || signal === "SIGTERM") {
-        process.exit(0);
-      }
-    }
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  process.on("beforeExit", async () => {
-    await provider.forceFlush();
-  });
-}
-
+/** Wait for the AI SDK's spans to be sent. */
 export async function forceFlush(): Promise<void> {
-  if (_deepevalTracerProvider) {
-    await _deepevalTracerProvider.forceFlush();
-  }
+  await flushConfidentTrace(30000);
 }
-
-export { DeepEvalSpanProcessor };

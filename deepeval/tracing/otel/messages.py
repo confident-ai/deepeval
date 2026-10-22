@@ -59,19 +59,32 @@ def answer_content(messages: Any) -> Any:
     """
     if not isinstance(messages, list):
         return messages
+    turn = _final_assistant_turn(messages)
     texts = [
         message["content"]
-        for message in messages
+        for message in turn
         if isinstance(message, dict) and isinstance(message.get("content"), str)
     ]
     if any(texts):
         return "\n".join(text for text in texts if text)
     rest = [
         message
-        for message in messages
+        for message in turn
         if not (isinstance(message, dict) and message.get("content") == "")
     ]
-    return rest or ("" if texts else messages)
+    return rest or ("" if texts else turn)
+
+
+def _final_assistant_turn(messages: List[Any]) -> List[Any]:
+    """A conversation's final assistant turn; a model's output is all one turn."""
+    start = len(messages)
+    while (
+        start
+        and isinstance(messages[start - 1], dict)
+        and messages[start - 1].get("role") == "assistant"
+    ):
+        start -= 1
+    return messages[start:] if 0 < start < len(messages) else messages
 
 
 def trace_io(key: str, value: Any) -> Any:

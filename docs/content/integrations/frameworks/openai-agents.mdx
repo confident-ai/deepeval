@@ -168,7 +168,7 @@ The integration registers `DeepEvalTracingProcessor` against the agents SDK's tr
 <Case id="typescript">
 
 ```bash
-npm install deepeval @openai/agents
+npm install deepeval confident-trace @openai/agents
 ```
 
 Register `DeepEvalTracingProcessor` once with the agents SDK's `addTraceProcessor`. TypeScript uses the SDK's own `Agent` and `tool` — metrics attach through `evalsIterator` / `toPass` and `next*Span` staging rather than Agent kwargs.

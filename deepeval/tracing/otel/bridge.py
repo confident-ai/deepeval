@@ -173,9 +173,14 @@ class DeepEvalSpanBridge(SpanProcessor):
             state.open_spans -= 1
             if state.open_spans:
                 return
-            del self._traces[claim.trace_uuid]
             if not state.owned:
+                # Later spans may still join the deepeval trace, and must see
+                # what these derived for it; ``_open`` drops the state once
+                # the trace ends.
+                if trace_manager.get_trace_by_uuid(claim.trace_uuid) is None:
+                    del self._traces[claim.trace_uuid]
                 return
+            del self._traces[claim.trace_uuid]
             try:
                 _end_owned_trace(claim.trace_uuid, state)
             except Exception:
@@ -229,9 +234,10 @@ class DeepEvalSpanBridge(SpanProcessor):
             # On an exported root, ahead of the defaults confident-trace adds.
             span.set_attributes(trace_field_attributes(staged))
             return None
+        # Staged values are defaults: what deepeval code set on the trace wins.
         trace = trace_manager.get_trace_by_uuid(claim.trace_uuid)
         for key, value in staged.items():
-            if hasattr(trace, key):
+            if hasattr(trace, key) and getattr(trace, key) is None:
                 setattr(trace, key, value)
         return claim
 
@@ -268,6 +274,7 @@ class DeepEvalSpanBridge(SpanProcessor):
         )
         state = self._traces.get(trace_uuid)
         if state is None:
+            self._drop_ended()
             if owned:
                 # In an async evals_iterator this also binds the current golden.
                 trace_manager.start_new_trace(trace_uuid=trace_uuid)
@@ -276,6 +283,15 @@ class DeepEvalSpanBridge(SpanProcessor):
         return _Claim(
             trace_uuid, placeholder, span_type if staged_type else None
         )
+
+    def _drop_ended(self) -> None:
+        """Forget the deepeval traces that ended with none of their spans open."""
+        for trace_uuid, state in list(self._traces.items()):
+            if (
+                not state.open_spans
+                and trace_manager.get_trace_by_uuid(trace_uuid) is None
+            ):
+                del self._traces[trace_uuid]
 
     def _collect(
         self, span: ReadableSpan, claim: _Claim, state: _TraceState
