@@ -9,7 +9,12 @@ from pydantic import BaseModel, Field
 
 from deepeval.utils import make_model_config
 
-from deepeval.test_case import SingleTurnParams, LLMTestCase, ToolCallParams
+from deepeval.test_case import (
+    SingleTurnParams,
+    LLMTestCase,
+    ToolCallParams,
+    ToolCall,
+)
 from deepeval.test_run.api import MetricData, Classification
 from deepeval.utils import (
     delete_file_if_exists,
@@ -59,6 +64,9 @@ class MetricConfiguration(BaseModel):
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
     ] = None
+    should_exact_match: Optional[bool] = None
+    should_consider_ordering: Optional[bool] = None
+    available_tools: Optional[List[ToolCall]] = None
 
 
 class CachedMetricData(BaseModel):
@@ -380,6 +388,9 @@ class Cache:
             "evaluation_params",
             "assessment_questions",
             "evaluation_steps",
+            "should_exact_match",
+            "should_consider_ordering",
+            "available_tools",
         ]
 
         for field in config_fields:
@@ -465,6 +476,9 @@ class Cache:
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
+            "should_exact_match",
+            "should_consider_ordering",
+            "available_tools",
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
