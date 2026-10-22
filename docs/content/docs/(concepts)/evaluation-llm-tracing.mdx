@@ -754,14 +754,13 @@ If you run your `@observe` decorated LLM application outside of `evaluate()` or 
 
 ```bash
 CONFIDENT_TRACE_VERBOSE=0
-CONFIDENT_TRACE_FLUSH=0
 ```
 
 ---
 
 ## Flushing Traces Before Shutdown
 
-Traces are posted from a background worker thread, so a process that tears down immediately after its last traced call can exit before those traces reach Confident AI. Call `flush_traces()` to wait for the worker to finish:
+Traces are exported to Confident AI in batches from a background thread, so a process that tears down immediately after its last traced call can exit before those traces are sent. Call `flush_traces()` to wait for them:
 
 ```python title="main.py" showLineNumbers {6}
 import deepeval
@@ -784,9 +783,7 @@ async def main():
     await deepeval.a_flush_traces(timeout=30.0)
 ```
 
-This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. It complements `CONFIDENT_TRACE_FLUSH=1`, which only flushes on interpreter exit and gives you no way to know whether the traces landed.
-
-Framework integrations send their traces through confident-trace, which batches spans before exporting them. `flush_traces()` and `a_flush_traces()` wait for those spans too.
+This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. Pending traces are also sent when the interpreter exits, but that gives you no way to know whether they landed.
 
 ## Evaluating Production Traces
 
@@ -884,8 +881,7 @@ Now that you have your traces, you can evaluate the observable result end-to-end
           By default, no. When you run your <code>@observe</code>-decorated app
           outside of <code>evaluate()</code> or <code>assert_test()</code>,
           metrics don't run. You can silence local trace logs with{" "}
-          <code>CONFIDENT_TRACE_VERBOSE=0</code> and{" "}
-          <code>CONFIDENT_TRACE_FLUSH=0</code>.
+          <code>CONFIDENT_TRACE_VERBOSE=0</code>.
         </>
       ),
     },

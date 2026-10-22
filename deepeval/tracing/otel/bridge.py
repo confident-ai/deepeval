@@ -3,9 +3,9 @@
 A span belongs to deepeval when it starts inside an active ``@observe`` or
 ``with trace(...)`` scope, during an evaluation, or while a trace-shape test is
 capturing; its local descendants follow it, so a trace is never split. The
-bridge converts those spans into ``trace_manager`` and marks them so
-confident-trace's export skips them. Every other span is left to
-confident-trace.
+bridge converts those spans into ``trace_manager``. While an evaluation or a
+trace-shape test consumes the trace, it also marks them so confident-trace's
+export skips them; otherwise confident-trace exports them too.
 
 While a collected span is open, deepeval code sees it through a placeholder:
 ``update_current_span(...)`` writes to it and ``@observe`` nests under it.
@@ -15,6 +15,7 @@ Whatever is set on the placeholder overrides what the span recorded.
 import json
 import logging
 import threading
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import (
     Any,
@@ -79,6 +80,8 @@ from deepeval.tracing.types import (
 logger = logging.getLogger(__name__)
 
 LOCAL_SPAN_ATTRIBUTE = "deepeval.local"
+# The scope of ``@observe`` spans, which take content from the function they wrap.
+OBSERVE_SCOPE = "deepeval"
 
 # Only a trace's root names it. Any span may fill an unset input or output,
 # as deepeval's native integrations did.
@@ -122,6 +125,9 @@ class _Claim:
 class _TraceState:
     # True when the bridge opened the deepeval trace and so must end it.
     owned: bool
+    # True when an evaluation or a trace-shape test consumes the trace, so
+    # its spans aren't exported.
+    local: bool = False
     open_spans: int = 0
     spans: Dict[str, BaseSpan] = field(default_factory=dict)
     trace_fields: Dict[str, Dict[str, Any]] = field(default_factory=dict)
@@ -155,7 +161,8 @@ class DeepEvalSpanBridge(SpanProcessor):
                 )
                 claim = None
             self._claims[_key(span.context)] = claim
-        if claim is not None:
+            local = claim is not None and self._traces[claim.trace_uuid].local
+        if local:
             span.set_attribute(LOCAL_SPAN_ATTRIBUTE, True)
 
     def on_end(self, span: ReadableSpan) -> None:
@@ -200,9 +207,17 @@ class DeepEvalSpanBridge(SpanProcessor):
         return claim.placeholder if claim is not None else None
 
     def is_exported(self, span: OtelSpan) -> bool:
-        """Whether ``span`` is open and left to confident-trace's export."""
+        """Whether ``span`` is open and confident-trace will export it."""
         key = _key(span.get_span_context())
-        return key in self._claims and self._claims[key] is None
+        if key not in self._claims:
+            return False
+        claim = self._claims[key]
+        return claim is None or not self._traces[claim.trace_uuid].local
+
+    def open_spans(self, trace_uuid: str) -> int:
+        """How many collected spans of the deepeval trace are still open."""
+        state = self._traces.get(trace_uuid)
+        return state.open_spans if state is not None else 0
 
     def _claim(self, span: Span) -> Optional[_Claim]:
         parent = span.parent
@@ -278,7 +293,9 @@ class DeepEvalSpanBridge(SpanProcessor):
             if owned:
                 # In an async evals_iterator this also binds the current golden.
                 trace_manager.start_new_trace(trace_uuid=trace_uuid)
-            state = self._traces[trace_uuid] = _TraceState(owned=owned)
+            state = self._traces[trace_uuid] = _TraceState(
+                owned=owned, local=is_capturing_traces()
+            )
         state.open_spans += 1
         return _Claim(
             trace_uuid, placeholder, span_type if staged_type else None
@@ -302,6 +319,8 @@ class DeepEvalSpanBridge(SpanProcessor):
             return
         uuid = claim.placeholder.uuid
         parent_uuid = _lifted_parent(state, claim.placeholder.parent_uuid)
+        scope = span.instrumentation_scope
+        observed = scope is not None and scope.name == OBSERVE_SCOPE
         # As confident-trace exports them, non-AI spans stay only as
         # ancestors. Anything that ended inside this span is an orphan root.
         if (
@@ -322,11 +341,13 @@ class DeepEvalSpanBridge(SpanProcessor):
         if isinstance(collected, AgentSpan):
             _fill_agent_content(collected)
         if not collected.tools_called:
-            # Like ``@observe``, a span lists the tools run under it; an agent
-            # also lists those its intermediate steps ran.
+            # Like ``@observe``, a span lists the tools run under it; an
+            # integration's agent also lists those its intermediate steps ran.
             collected.tools_called = (
                 tool_calls_under(
-                    collected, descendants=isinstance(collected, AgentSpan)
+                    collected,
+                    descendants=isinstance(collected, AgentSpan)
+                    and not observed,
                 )
                 or collected.tools_called
             )
@@ -342,22 +363,95 @@ class DeepEvalSpanBridge(SpanProcessor):
         )
         if trace.thread_id is None:
             trace.thread_id = converted.conversation_id
+        if observed:
+            # ``@observe`` gives its trace the root function's input and output.
+            return
         _derive_content(trace, state, collected)
         if isinstance(collected, ToolSpan):
             _derive_tool_call(trace, state, collected)
 
 
+# Traces and spans deepeval code dropped, by OTel id, until they export.
+# Bounded, since a dropped trace may never end.
+_MAX_DROPPED = 10_000
+_dropped_traces: "OrderedDict[int, None]" = OrderedDict()
+_dropped_spans: "OrderedDict[Tuple[int, int], None]" = OrderedDict()
+_dropped_lock = threading.Lock()
+
+
+def drop_from_export(span: OtelSpan, whole_trace: bool) -> None:
+    """Keep ``span``, or its whole trace, out of the export."""
+    context = span.get_span_context()
+    if not context.is_valid:
+        return
+    with _dropped_lock:
+        if whole_trace:
+            _remember(_dropped_traces, context.trace_id)
+        else:
+            _remember(_dropped_spans, _key(context))
+
+
+def _remember(dropped: "OrderedDict[Any, None]", key: Any) -> None:
+    dropped[key] = None
+    while len(dropped) > _MAX_DROPPED:
+        dropped.popitem(last=False)
+
+
+def _sampled(trace_id: int) -> bool:
+    """The sampling decision for a whole trace, the same for each of its spans."""
+    rate = trace_manager.sampling_rate
+    return rate >= 1 or (trace_id % 10_000) < rate * 10_000
+
+
+def _exportable(span: ReadableSpan) -> bool:
+    if (span.attributes or {}).get(LOCAL_SPAN_ATTRIBUTE):
+        return False
+    if not _sampled(span.context.trace_id):
+        return False
+    with _dropped_lock:
+        if span.context.trace_id in _dropped_traces:
+            return False
+        if _key(span.context) in _dropped_spans:
+            del _dropped_spans[_key(span.context)]
+            return False
+    return True
+
+
+def _with_environment(span: ReadableSpan) -> ReadableSpan:
+    """``span`` with deepeval's environment, if it starts a trace that set none."""
+    attributes = span.attributes or {}
+    if (
+        span.parent is not None and not span.parent.is_remote
+    ) or ConfidentAttr.TRACE_ENVIRONMENT in attributes:
+        return span
+    return ReadableSpan(
+        name=span.name,
+        context=span.context,
+        parent=span.parent,
+        resource=span.resource,
+        attributes={
+            **attributes,
+            ConfidentAttr.TRACE_ENVIRONMENT: trace_manager.environment,
+        },
+        events=span.events,
+        links=span.links,
+        kind=span.kind,
+        status=span.status,
+        start_time=span.start_time,
+        end_time=span.end_time,
+        instrumentation_scope=span.instrumentation_scope,
+    )
+
+
 class RemoteSpanExporter(SpanExporter):
-    """Exports only the spans the bridge left to confident-trace."""
+    """Exports the spans that aren't local, dropped or sampled out."""
 
     def __init__(self, exporter: SpanExporter):
         self._exporter = exporter
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         remote = [
-            span
-            for span in spans
-            if not (span.attributes or {}).get(LOCAL_SPAN_ATTRIBUTE)
+            _with_environment(span) for span in spans if _exportable(span)
         ]
         if not remote:
             return SpanExportResult.SUCCESS

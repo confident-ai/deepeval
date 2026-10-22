@@ -35,6 +35,7 @@ class SpanContext:
         span = self.current_span.get()
         if span:
             span.drop = True
+        _drop_exported(whole_trace=False)
 
 
 class TraceContext:
@@ -56,6 +57,7 @@ class TraceContext:
         trace = self.current_trace.get()
         if trace:
             trace.drop = True
+        _drop_exported(whole_trace=True)
 
 
 current_span_context = SpanContext()
@@ -91,8 +93,8 @@ def _collected_span() -> Optional[BaseSpan]:
 
 
 def _update_exported(scope: str, values: Dict[str, Any]) -> None:
-    """Pass an update with no deepeval target to an exported confident-trace
-    span, so it still reaches Confident AI."""
+    """Pass an update to the current confident-trace span too, so it reaches
+    Confident AI when that span is exported."""
     setup = confident_trace_setup()
     if setup is None:
         return
@@ -100,6 +102,12 @@ def _update_exported(scope: str, values: Dict[str, Any]) -> None:
         setup.update_exported_trace(**values)
     else:
         setup.update_exported_span(**values)
+
+
+def _drop_exported(whole_trace: bool) -> None:
+    setup = confident_trace_setup()
+    if setup is not None:
+        setup.drop_current(whole_trace)
 
 
 def _collected_trace() -> Optional[Trace]:
@@ -126,10 +134,9 @@ def update_current_span(
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ):
-    values = dict(locals())
+    _update_exported("span", dict(locals()))
     current_span = active_span()
     if not current_span:
-        _update_exported("span", values)
         return
     if test_case:
 
@@ -189,10 +196,9 @@ def update_current_trace(
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ):
-    values = dict(locals())
+    _update_exported("trace", dict(locals()))
     current_trace = current_trace_context.get() or _collected_trace()
     if not current_trace:
-        _update_exported("trace", values)
         return
     if test_case:
         current_trace.input = test_case.input
@@ -249,10 +255,8 @@ def update_llm_span(
     token_intervals: Optional[Dict[float, str]] = None,
     prompt: Optional[Prompt] = None,
 ):
-    values = dict(locals())
+    _update_exported("span", dict(locals()))
     current_span = active_span()
-    if not current_span:
-        _update_exported("span", values)
     if not current_span or not isinstance(current_span, LlmSpan):
         return
     if model:
@@ -292,6 +296,7 @@ def update_agent_span(
     ``update_current_span(...)``. No-op if the current span isn't an
     ``AgentSpan``.
     """
+    _update_exported("span", dict(locals()))
     current_span = active_span()
     if not current_span or not isinstance(current_span, AgentSpan):
         return
@@ -311,6 +316,7 @@ def update_tool_span(
     span creation; use ``update_current_span(name=...)`` to rename
     after the fact. No-op if the current span isn't a ``ToolSpan``.
     """
+    _update_exported("span", dict(locals()))
     current_span = active_span()
     if not current_span or not isinstance(current_span, ToolSpan):
         return
@@ -323,6 +329,7 @@ def update_retriever_span(
     top_k: Optional[int] = None,
     chunk_size: Optional[int] = None,
 ):
+    _update_exported("span", dict(locals()))
     current_span = active_span()
     if not current_span or not isinstance(current_span, RetrieverSpan):
         return

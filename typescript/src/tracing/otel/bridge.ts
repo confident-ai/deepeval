@@ -2,9 +2,10 @@
  * Collect confident-trace's spans as deepeval spans.
  *
  * The bridge claims every span of a trace deepeval consumes: one inside
- * `observe(...)`, during an evaluation, or under a trace-shape test. It marks
- * claimed spans so `RemoteSpanExporter` doesn't send them, and converts each
- * as it ends. confident-trace exports every other span.
+ * `observe(...)`, during an evaluation, or under a trace-shape test, and
+ * converts each as it ends. While an evaluation or a trace-shape test consumes
+ * the trace, it also marks the spans so `RemoteSpanExporter` doesn't send them;
+ * otherwise confident-trace exports them too.
  */
 
 import type {
@@ -49,6 +50,8 @@ import {
 import { latestUserText } from "@/tracing/otel/messages";
 
 export const LOCAL_SPAN_ATTRIBUTE = "deepeval.local";
+/** The scope of `observe` spans, which take content from the function they wrap. */
+export const OBSERVE_SCOPE = "deepeval";
 
 // The spans whose content describes the trace's own input and output.
 const CONTENT_TYPES = new Set<string>([SpanType.AGENT, SpanType.LLM]);
@@ -68,6 +71,8 @@ interface Claim {
 interface TraceState {
   /** True when the bridge opened the deepeval trace and so must end it. */
   owned: boolean;
+  /** True when deepeval consumes the trace, so its spans aren't exported. */
+  local: boolean;
   openSpans: number;
   /** Placeholders of the spans still open. */
   open: Set<string>;
@@ -102,7 +107,8 @@ export class DeepEvalSpanBridge implements SpanProcessor {
       claim = null;
     }
     this.claims.set(key(span.spanContext()), claim);
-    if (claim) span.setAttribute(LOCAL_SPAN_ATTRIBUTE, true);
+    if (claim && this.traces.get(claim.traceUuid)?.local)
+      span.setAttribute(LOCAL_SPAN_ATTRIBUTE, true);
   }
 
   onEnd(span: ReadableSpan): void {
@@ -148,10 +154,13 @@ export class DeepEvalSpanBridge implements SpanProcessor {
     return this.claims.get(key(span.spanContext()))?.placeholder;
   }
 
-  /** Whether `span` is open and left to confident-trace's export. */
+  /** Whether `span` is open and confident-trace will export it. */
   isExported(span: OtelSpan | undefined): boolean {
     if (!span) return false;
-    return this.claims.get(key(span.spanContext())) === null;
+    const spanKey = key(span.spanContext());
+    if (!this.claims.has(spanKey)) return false;
+    const claim = this.claims.get(spanKey);
+    return !claim || !this.traces.get(claim.traceUuid)?.local;
   }
 
   private claim(span: Span): Claim | null {
@@ -218,7 +227,7 @@ export class DeepEvalSpanBridge implements SpanProcessor {
       this.dropEnded();
       // In an evaluation this also captures the trace when it ends.
       if (owned) traceManager.startNewTrace(traceUuid);
-      state = newTraceState(owned);
+      state = newTraceState(owned, traceManager.isCapturingTraces);
       this.traces.set(traceUuid, state);
     }
     state.openSpans++;
@@ -260,7 +269,64 @@ export class DeepEvalSpanBridge implements SpanProcessor {
   }
 }
 
-/** Exports only the spans the bridge left to confident-trace. */
+// Traces and spans deepeval code dropped, by OTel id, until they export.
+// Bounded, since a dropped trace may never end.
+const MAX_DROPPED = 10_000;
+const droppedTraces = new Set<string>();
+const droppedSpans = new Set<string>();
+
+/** Keep `span`, or its whole trace, out of the export. */
+export function dropFromExport(
+  span: OtelSpan | undefined,
+  wholeTrace: boolean,
+): void {
+  if (!span) return;
+  const context = span.spanContext();
+  remember(
+    wholeTrace ? droppedTraces : droppedSpans,
+    wholeTrace ? context.traceId : key(context),
+  );
+}
+
+function remember(dropped: Set<string>, id: string): void {
+  dropped.add(id);
+  if (dropped.size > MAX_DROPPED)
+    dropped.delete(dropped.values().next().value!);
+}
+
+/** The sampling decision for a whole trace, the same for each of its spans. */
+function sampled(traceId: string): boolean {
+  const rate = traceManager.exportSamplingRate;
+  return rate >= 1 || parseInt(traceId.slice(-8), 16) % 10_000 < rate * 10_000;
+}
+
+function exportable(span: ReadableSpan): boolean {
+  const context = span.spanContext();
+  if (span.attributes[LOCAL_SPAN_ATTRIBUTE] || !sampled(context.traceId))
+    return false;
+  if (droppedTraces.has(context.traceId)) return false;
+  return !droppedSpans.delete(key(context));
+}
+
+/** `span` with deepeval's environment, if it starts a trace that set none. */
+function withEnvironment(span: ReadableSpan): ReadableSpan {
+  const parent = span.parentSpanContext;
+  if (
+    (parent && !parent.isRemote) ||
+    span.attributes[ConfidentAttr.TRACE_ENVIRONMENT] !== undefined
+  )
+    return span;
+  return Object.create(span, {
+    attributes: {
+      value: {
+        ...span.attributes,
+        [ConfidentAttr.TRACE_ENVIRONMENT]: traceManager.exportEnvironment,
+      },
+    },
+  }) as ReadableSpan;
+}
+
+/** Exports the spans that aren't local, dropped or sampled out. */
 export class RemoteSpanExporter implements SpanExporter {
   constructor(private readonly exporter: SpanExporter) {}
 
@@ -268,9 +334,7 @@ export class RemoteSpanExporter implements SpanExporter {
     spans: ReadableSpan[],
     resultCallback: (result: ExportResult) => void,
   ): void {
-    const remote = spans.filter(
-      (span) => !span.attributes[LOCAL_SPAN_ATTRIBUTE],
-    );
+    const remote = spans.filter(exportable).map(withEnvironment);
     if (remote.length === 0)
       return resultCallback({ code: ExportResultCode.SUCCESS });
     this.exporter.export(remote, resultCallback);
@@ -296,9 +360,10 @@ function deepevalScope(): { traceUuid: string; spanUuid?: string } | undefined {
   return undefined;
 }
 
-function newTraceState(owned: boolean): TraceState {
+function newTraceState(owned: boolean, local = true): TraceState {
   return {
     owned,
+    local,
     openSpans: 0,
     open: new Set(),
     spans: new Map(),
@@ -327,6 +392,7 @@ function addCollected(
   collected: Collected,
 ): BaseSpan | undefined {
   const parentUuid = liftedParent(state, collected.parentUuid);
+  const observed = span.instrumentationScope?.name === OBSERVE_SCOPE;
   // As confident-trace exports them, non-AI spans stay only as ancestors.
   if (
     !collected.spanType &&
@@ -352,9 +418,12 @@ function addCollected(
   attach(trace, state, converts);
   if (converts.type === SpanType.AGENT) fillAgentContent(converts as AgentSpan);
   if (!converts.toolsCalled?.length) {
-    // Like `observe`, a span lists the tools run under it; an agent also
-    // lists those its intermediate steps ran.
-    const calls = toolCallsUnder(converts, converts.type === SpanType.AGENT);
+    // Like `observe`, a span lists the tools run under it; an integration's
+    // agent also lists those its intermediate steps ran.
+    const calls = toolCallsUnder(
+      converts,
+      converts.type === SpanType.AGENT && !observed,
+    );
     if (calls.length > 0) converts.toolsCalled = calls;
   }
   if (converted.conversationId)
@@ -366,7 +435,8 @@ function addCollected(
   fillUnsetTrace(trace, converted.traceFields, !converts.parentUuid);
   if (!trace.threadId && converted.conversationId)
     trace.threadId = converted.conversationId;
-  deriveContent(trace, state, converts);
+  // `observe` gives its trace the root function's input and output.
+  if (!observed) deriveContent(trace, state, converts);
   return converts;
 }
 

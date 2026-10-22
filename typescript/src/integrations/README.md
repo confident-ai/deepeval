@@ -8,7 +8,9 @@ Contributor reference for the framework integrations.
 
 Every integration runs on confident-trace's manual adapters: no preload or automatic instrumentation is involved. Its entry point calls `ensureConfidentTrace()` (`src/tracing/otel/setup.ts`), which starts confident-trace once with deepeval's `DeepEvalSpanBridge` as an extra span processor, then attaches the adapter for its framework.
 
-The bridge (`src/tracing/otel/bridge.ts`) collects the spans of every trace deepeval consumes: one inside `observe(...)` or `setTracingContext(...)`, in `evalsIterator(...)` or `toPass(...)`, or under a trace-capture sink. It converts them into deepeval spans (`converter.ts`), so metrics, `updateCurrentSpan(...)`, `updateCurrentTrace(...)` and `next*Span(...)` work the same as with `observe`. confident-trace exports every other span to Confident AI.
+`observe(...)` runs on confident-trace too: each observed function is a confident-trace span.
+
+The bridge (`src/tracing/otel/bridge.ts`) collects the spans of every trace deepeval consumes: one inside `observe(...)` or `setTracingContext(...)`, in `evalsIterator(...)` or `toPass(...)`, or under a trace-capture sink. It converts them into deepeval spans (`converter.ts`), so metrics, `updateCurrentSpan(...)`, `updateCurrentTrace(...)` and `next*Span(...)` work the same as with `observe`. confident-trace exports every trace to Confident AI, except one an evaluation or a trace-capture sink consumes locally.
 
 | Integration   | Entry point                                                                      | confident-trace adapter                            |
 | ------------- | -------------------------------------------------------------------------------- | -------------------------------------------------- |

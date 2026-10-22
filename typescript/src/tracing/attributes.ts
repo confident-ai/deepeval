@@ -59,6 +59,7 @@ export const ConfidentAttr = {
   TRACE_SESSION_ID: "confident.trace.session_id",
   TRACE_TAGS: "confident.trace.tags",
   TRACE_TEST_CASE_ID: "confident.trace.test_case_id",
+  TRACE_TEST_RUN_ID: "confident.trace.test_run_id",
   TRACE_THREAD_ID: "confident.trace.thread_id",
   TRACE_TOOLS_CALLED: "confident.trace.tools_called",
   TRACE_TURN_ID: "confident.trace.turn_id",

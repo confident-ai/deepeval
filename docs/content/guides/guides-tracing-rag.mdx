@@ -443,7 +443,7 @@ In production, the goal shifts from local debugging to **catching the traces tha
 [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next eval. The steps below also set up evals that run asynchronously on every trace and flag the failing ones.
 
 :::note
-Traces are sent asynchronously in a background worker thread. For short-lived scripts that exit before the worker finishes, set the `CONFIDENT_TRACE_FLUSH=1` environment variable to ensure all traces are flushed before the process exits. If you need to control when that happens, or to know whether it succeeded, call `deepeval.flush_traces()` (or `await deepeval.a_flush_traces()`) at your shutdown point instead. For long-running servers (FastAPI, Django), neither is needed.
+Traces are exported in batches from a background thread, and whatever is pending is sent when the process exits. If you need to control when that happens, or to know whether it succeeded, call `deepeval.flush_traces()` (or `await deepeval.a_flush_traces()`) at your shutdown point. For long-running servers (FastAPI, Django), this isn't needed.
 :::
 
 <Steps>

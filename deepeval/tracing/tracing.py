@@ -9,29 +9,24 @@ from typing import (
     List,
     Literal,
     Optional,
-    Set,
     Union,
 )
-from time import perf_counter, sleep
-import threading
+from time import perf_counter
 import functools
 import inspect
 import asyncio
-import random
-import atexit
-import queue
 import uuid
 from deepeval.test_case import MLLMImage
 from openai import OpenAI
+from opentelemetry import context as otel_context
+from opentelemetry.trace import Status, StatusCode
 from rich.console import Console
 from rich.progress import Progress
 
 from deepeval.config.settings import get_settings
 from deepeval.constants import (
     CONFIDENT_TRACE_VERBOSE,
-    CONFIDENT_TRACE_FLUSH,
 )
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.api import (
@@ -66,18 +61,16 @@ from deepeval.tracing.utils import (
     normalize_trace_api_span_providers,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
-    tracing_enabled,
     validate_environment,
     validate_sampling_rate,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.internal import confident_trace_setup
+from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.context import (
     active_span,
-    apply_pending_to_span,
     current_span_context,
     current_trace_context,
-    pop_pending_for,
 )
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
@@ -117,55 +110,46 @@ class _ObservedAsyncGenIter:
         return self
 
     async def __anext__(self):
+        return await self._step(self._agen_iter.__anext__)
+
+    async def _step(self, advance):
+        # The span is current only while the generator runs, as each step may
+        # resume in another context.
         if not self._entered:
-            self._observer.__enter__()
+            self._observer.start()
             self._entered = True
+        self._observer.activate()
         try:
-            return await self._agen_iter.__anext__()
+            value = await advance()
         except StopAsyncIteration:
+            self._observer.deactivate()
             self._finish()
             raise
         except Exception as e:
+            self._observer.deactivate()
             self._finish_err(e)
             raise
+        self._observer.deactivate()
+        return value
 
     def _finish(self):
         if self._entered and not self._done:
             self._done = True
-            self._observer.__exit__(None, None, None)
+            self._observer.finish()
 
     def _finish_err(self, e):
         if self._entered and not self._done:
             self._done = True
-            self._observer.__exit__(type(e), e, e.__traceback__)
+            self._observer.finish(e)
 
     async def aclose(self):
         self._finish()
         await self._agen_iter.aclose()
 
     async def athrow(self, typ, val=None, tb=None):
-        if not self._entered:
-            self._observer.__enter__()
-            self._entered = True
-        try:
-            return await self._agen_iter.athrow(typ, val, tb)
-        except StopAsyncIteration:
-            self._finish()
-            raise
-        except Exception as e:
-            self._finish_err(e)
-            raise
+        return await self._step(lambda: self._agen_iter.athrow(typ, val, tb))
 
     def __del__(self):
-        if self._entered and not self._done:
-            # Python 3.11: async for + break doesn't call aclose(), so
-            # nested inner spans may still sit in current_span_context.
-            # Force-restore context to our span so __exit__ sees a match.
-            current = current_span_context.get()
-            if current and current.uuid != self._observer.uuid:
-                our_span = trace_manager.get_span_by_uuid(self._observer.uuid)
-                if our_span:
-                    current_span_context.set(our_span)
         self._finish()
 
 
@@ -178,20 +162,9 @@ class TraceManager:
         )  # Map of span_uuid to BaseSpan
 
         settings = get_settings()
-        # Initialize queue and worker thread for trace posting
-        self._trace_queue = queue.Queue()
-        self._worker_thread = None
-        self._min_interval = 0.2  # Minimum time between API calls (seconds)
-        self._flush_poll_interval = 0.05
-        self._last_post_time = 0
-        self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        self._outstanding_traces = 0
-        self._outstanding_lock = threading.Lock()
         self.task_bindings: "weakref.WeakKeyDictionary[asyncio.Task, dict]" = (
             weakref.WeakKeyDictionary()
         )
-        self._flush_enabled = bool(settings.CONFIDENT_TRACE_FLUSH)
-        self._daemon = not self._flush_enabled
 
         # trace manager attributes
         self.confident_api_key = None
@@ -215,42 +188,6 @@ class TraceManager:
         # ``self.eval_session = EvalSession()``, which makes exit cleanup
         # atomic and impossible to half-do.
         self.eval_session: EvalSession = EvalSession()
-
-        # Register an exit handler to warn about unprocessed traces
-        atexit.register(self._warn_on_exit)
-
-    @property
-    def outstanding_traces(self) -> int:
-        """Number of traces that are queued, being handed off, or in flight.
-
-        Counted from the moment a trace is enqueued until its send task
-        finishes. Neither the queue size nor the in-flight task set is enough
-        on its own: the worker dequeues a trace, awaits the rate-limit sleep,
-        and only then registers a task, so there is a window where a trace
-        belongs to neither and the manager looks idle while a trace is still
-        waiting to be posted.
-        """
-        with self._outstanding_lock:
-            return self._outstanding_traces
-
-    def _track_outstanding_trace(self) -> None:
-        with self._outstanding_lock:
-            self._outstanding_traces += 1
-
-    def _untrack_outstanding_trace(self) -> None:
-        with self._outstanding_lock:
-            if self._outstanding_traces > 0:
-                self._outstanding_traces -= 1
-
-    def _warn_on_exit(self):
-        remaining_tasks = self.outstanding_traces
-
-        if not self._flush_enabled and remaining_tasks > 0:
-            self._print_trace_status(
-                message=f"WARNING: Exiting with {remaining_tasks} abandoned trace(s).",
-                trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
-            )
 
     @property
     def is_evaluating(self) -> bool:
@@ -361,11 +298,8 @@ class TraceManager:
                     by_alias=True, exclude_none=True
                 )
                 trace_testing_manager.test_dict = make_json_serializable(body)
-            #  Post the trace to the server before removing it
-            elif not self.is_evaluating:
-                if not trace.drop:
-                    self.post_trace(trace)
-            else:
+            # Outside these, confident-trace exports the trace's spans.
+            elif self.is_evaluating:
                 if self.eval_session.mode == EvalMode.ITERATOR_ASYNC:
                     session = self.eval_session
                     if session.test_case_metrics:
@@ -545,272 +479,21 @@ class TraceManager:
             else:
                 console.print(message_prefix, env_text, message)
 
-    def _should_sample_trace(self) -> bool:
-        random_number = random.random()
-        if random_number > self.sampling_rate:
-            rate_str = f"{self.sampling_rate:.2f}"
-            self._print_trace_status(
-                message=f"Skipped posting trace due to sampling rate ({rate_str})",
-                trace_worker_status=TraceWorkerStatus.SUCCESS,
-            )
-            return False
-
-        return True
-
-    def _ensure_worker_thread_running(self):
-        if self._worker_thread is None or not self._worker_thread.is_alive():
-            self._worker_thread = threading.Thread(
-                target=self._process_trace_queue,
-                daemon=self._daemon,
-            )
-            self._worker_thread.start()
-
-    def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
-        if not tracing_enabled() or not self.tracing_enabled:
-            return None
-
-        if not trace_api.confident_api_key:
-            if not is_confident() and self.confident_api_key is None:
-                self._print_trace_status(
-                    message="No Confident AI API key found. Skipping trace posting.",
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                )
-                return None
-
-        if not self._should_sample_trace():
-            return None
-
-        self._ensure_worker_thread_running()
-        self._track_outstanding_trace()
-        self._trace_queue.put(trace_api)
-
-        return
-
-    def post_trace(self, trace: Trace) -> Optional[str]:
-        if not tracing_enabled() or not self.tracing_enabled:
-            return None
-
-        if not trace.confident_api_key:
-            if not is_confident() and self.confident_api_key is None:
-                self._print_trace_status(
-                    message="No Confident AI API key found. Skipping trace posting.",
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                )
-                return None
-
-        if not self._should_sample_trace():
-            return None
-
-        # Add the trace to the queue
-        self._track_outstanding_trace()
-        self._trace_queue.put(trace)
-
-        # Start the worker thread if it's not already running
-        self._ensure_worker_thread_running()
-
-        return
-
-    def _process_trace_queue(self):
-        """Worker thread function that processes the trace queue"""
-        import threading
-
-        main_thr = threading.main_thread()
-
-        # Create a new event loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        # buffer for traces that need to be sent after main exits
-        remaining_traces: List[TraceApi] = []
-
-        async def _a_send_trace(trace_obj):
-            nonlocal remaining_traces
-            try:
-                # Build API object & payload
-                if isinstance(trace_obj, TraceApi):
-                    trace_api = trace_obj
-                    normalize_trace_api_span_providers(trace_api)
-                else:
-                    trace_api = self.create_trace_api(trace_obj)
-
-                try:
-                    body = trace_api.model_dump(
-                        by_alias=True,
-                        exclude_none=True,
-                    )
-                except AttributeError:
-                    # Pydantic version below 2.0
-                    body = trace_api.dict(by_alias=True, exclude_none=True)
-                # If the main thread is still alive, send now
-                body = make_json_serializable(body)
-
-                if main_thr.is_alive():
-                    if trace_api.confident_api_key:
-                        api = Api(api_key=trace_api.confident_api_key)
-                    else:
-                        api = Api(api_key=self.confident_api_key)
-
-                    api_response, link = await api.a_send_request(
-                        method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACES_ENDPOINT,
-                        body=body,
-                    )
-                    queue_size = self._trace_queue.qsize()
-                    in_flight = len(self._in_flight_tasks)
-                    status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace {status}",
-                        description=link,
-                        environment=self.environment,
-                    )
-                elif self._flush_enabled:
-                    # Main thread gone → to be flushed
-                    remaining_traces.append(trace_api)
-
-            except Exception as e:
-                queue_size = self._trace_queue.qsize()
-                in_flight = len(self._in_flight_tasks)
-                status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                    message=f"Error posting trace {status}",
-                    description=str(e),
-                )
-            finally:
-                task = asyncio.current_task()
-                if task:
-                    self._in_flight_tasks.discard(task)
-                self._untrack_outstanding_trace()
-
-        async def async_worker():
-            # Continue while user code is running or work remains
-            while (
-                main_thr.is_alive()
-                or not self._trace_queue.empty()
-                or self._in_flight_tasks
-            ):
-                try:
-                    trace = self._trace_queue.get(block=True, timeout=1.0)
-                except queue.Empty:
-                    await asyncio.sleep(0.1)
-                    continue
-
-                try:
-                    # rate-limit
-                    now = perf_counter()
-                    elapsed = now - self._last_post_time
-                    if elapsed < self._min_interval:
-                        await asyncio.sleep(self._min_interval - elapsed)
-                    self._last_post_time = perf_counter()
-
-                    # schedule async send
-                    task = asyncio.create_task(_a_send_trace(trace))
-                    self._in_flight_tasks.add(task)
-
-                except Exception as e:
-                    self._untrack_outstanding_trace()
-                    self._print_trace_status(
-                        message="Error in worker",
-                        trace_worker_status=TraceWorkerStatus.FAILURE,
-                        description=str(e),
-                    )
-                    await asyncio.sleep(1.0)
-                finally:
-                    self._trace_queue.task_done()
-
-        try:
-            loop.run_until_complete(async_worker())
-        finally:
-            # Drain any pending tasks
-            pending = asyncio.all_tasks(loop=loop)
-            if pending:
-                loop.run_until_complete(
-                    asyncio.gather(*pending, return_exceptions=True)
-                )
-            self._post_remaining_traces(remaining_traces)
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-
     def flush(self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
-        """Wait until every posted trace has been sent, or ``timeout`` elapses.
+        """Wait until confident-trace has exported every ended span, or
+        ``timeout`` seconds elapse.
 
-        Returns ``True`` once nothing is outstanding, ``False`` if the timeout
-        expired with traces still queued or in flight. The sending itself
-        happens on the trace worker thread, so this only sleeps — call it
-        before tearing down a short-lived process to avoid abandoning traces.
+        Returns ``True`` once nothing is left to export, ``False`` if the
+        timeout expired first.
         """
-        deadline = perf_counter() + timeout
-        while self.outstanding_traces:
-            if perf_counter() >= deadline:
-                return False
-            sleep(self._flush_poll_interval)
-        return True
+        setup = confident_trace_setup()
+        return setup.flush_confident_trace(timeout) if setup else True
 
     async def a_flush(
         self, timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT
     ) -> bool:
         """Async counterpart of :meth:`flush` that yields instead of blocking."""
-        loop = asyncio.get_running_loop()
-        deadline = loop.time() + timeout
-        while self.outstanding_traces:
-            if loop.time() >= deadline:
-                return False
-            await asyncio.sleep(self._flush_poll_interval)
-        return True
-
-    def _post_remaining_traces(self, remaining_traces: List[TraceApi]):
-        """Synchronously post traces buffered after the main thread exited.
-
-        Only reachable from the worker thread's teardown path, where the
-        event loop is already shutting down and ``a_send_request`` is no
-        longer an option. Distinct from :meth:`flush`, which waits for the
-        normal async pipeline to drain.
-        """
-        if not tracing_enabled() or not self.tracing_enabled:
-            return
-
-        self._print_trace_status(
-            TraceWorkerStatus.WARNING,
-            message=f"Flushing {len(remaining_traces)} remaining trace(s)",
-        )
-        for trace_api in remaining_traces:
-            try:
-                normalize_trace_api_span_providers(trace_api)
-                try:
-                    body = trace_api.model_dump(
-                        by_alias=True,
-                        exclude_none=True,
-                    )
-                except AttributeError:
-                    # Pydantic version below 2.0
-                    body = trace_api.dict(by_alias=True, exclude_none=True)
-
-                body = make_json_serializable(body)
-                if trace_api.confident_api_key:
-                    api = Api(api_key=trace_api.confident_api_key)
-                else:
-                    api = Api(api_key=self.confident_api_key)
-
-                _, link = api.send_request(
-                    method=HttpMethods.POST,
-                    endpoint=Endpoints.TRACES_ENDPOINT,
-                    body=body,
-                )
-                qs = self._trace_queue.qsize()
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.SUCCESS,
-                    message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                    description=link,
-                    environment=self.environment,
-                )
-            except Exception as e:
-                qs = self._trace_queue.qsize()
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                    message="Error flushing remaining trace(s)",
-                    description=str(e),
-                )
+        return await asyncio.to_thread(self.flush, timeout)
 
     def create_nested_spans_dict(self, span: BaseSpan) -> Dict[str, Any]:
         api_span = self._convert_span_to_api_span(span)
@@ -1102,22 +785,20 @@ trace_manager = TraceManager()
 
 
 def flush_traces(timeout: float = DEFAULT_TRACE_FLUSH_TIMEOUT) -> bool:
-    """Block until all pending traces have been sent to Confident AI.
+    """Block until every ended trace has been sent to Confident AI.
 
-    Traces are posted from a background worker thread, and spans that
-    confident-trace exports are batched, so a process that tears down right
-    after its last traced call can drop them. Call this first to hand both a
-    chance to finish.
+    confident-trace exports spans in batches, so a process that tears down
+    right after its last traced call can drop them. Call this first to give
+    them a chance to finish.
 
     Args:
-        timeout: Maximum number of seconds to wait, for each of them.
+        timeout: Maximum number of seconds to wait.
 
     Returns:
-        ``True`` if every pending trace was sent within ``timeout``,
-        ``False`` if traces were still outstanding when it expired.
+        ``True`` if everything was sent within ``timeout``, ``False`` if
+        spans were still waiting when it expired.
     """
-    sent = trace_manager.flush(timeout=timeout)
-    return _flush_confident_trace(timeout) and sent
+    return trace_manager.flush(timeout=timeout)
 
 
 async def a_flush_traces(
@@ -1126,20 +807,13 @@ async def a_flush_traces(
     """Async counterpart of :func:`flush_traces` that yields instead of blocking.
 
     Args:
-        timeout: Maximum number of seconds to wait, for each of them.
+        timeout: Maximum number of seconds to wait.
 
     Returns:
-        ``True`` if every pending trace was sent within ``timeout``,
-        ``False`` if traces were still outstanding when it expired.
+        ``True`` if everything was sent within ``timeout``, ``False`` if
+        spans were still waiting when it expired.
     """
-    sent = await trace_manager.a_flush(timeout=timeout)
-    exported = await asyncio.to_thread(_flush_confident_trace, timeout)
-    return exported and sent
-
-
-def _flush_confident_trace(timeout: float) -> bool:
-    setup = confident_trace_setup()
-    return setup.flush_confident_trace(timeout) if setup else True
+    return await trace_manager.a_flush(timeout=timeout)
 
 
 ########################################################
@@ -1170,7 +844,38 @@ def tool_calls_under(
     return tool_calls
 
 
+# The span types confident-trace knows; any other ``@observe`` type is custom.
+_CUSTOM_SPAN_TYPE = "custom"
+_CONFIDENT_TRACE_TYPES = frozenset(
+    (
+        SpanType.AGENT.value,
+        SpanType.LLM.value,
+        SpanType.RETRIEVER.value,
+        SpanType.TOOL.value,
+    )
+)
+
+# ``@observe`` keyword arguments each span type takes, with their defaults.
+_OBSERVE_FIELDS: Dict[str, Dict[str, Any]] = {
+    SpanType.AGENT.value: {"available_tools": [], "agent_handoffs": []},
+    SpanType.LLM.value: {
+        "model": None,
+        "provider": None,
+        "cost_per_input_token": None,
+        "cost_per_output_token": None,
+    },
+    SpanType.RETRIEVER.value: {"embedder": None},
+    SpanType.TOOL.value: {"description": None},
+}
+
+
 class Observer:
+    """One ``@observe`` span: a confident-trace span that deepeval collects.
+
+    While the span is open, deepeval code sees it through the bridge's
+    placeholder, which is the deepeval span the trace gets when it ends.
+    """
+
     def __init__(
         self,
         span_type: Union[
@@ -1184,11 +889,7 @@ class Observer:
         **kwargs,
     ):
         self.start_time: float
-        self.end_time: float
-        self.status: TraceSpanStatus
-        self.error: Optional[str] = None
-        self.uuid: str = str(uuid.uuid4())
-        # Initialize trace_uuid and parent_uuid as None, they will be set in __enter__
+        self.uuid: Optional[str] = None
         self.trace_uuid: Optional[str] = None
         self.parent_uuid: Optional[str] = None
 
@@ -1206,60 +907,80 @@ class Observer:
         self._pbar_callback_id = _pbar_callback_id
         self.update_span_properties: Optional[Callable] = None
 
+        # The deepeval span, once collected, and the confident-trace span.
+        self.span: Optional[BaseSpan] = None
+        self._otel_span: Any = None
+        self._otel_token: Any = None
+        self._previous_span: Optional[BaseSpan] = None
+        self._started_trace: Optional[str] = None
+
     def __enter__(self):
-        """Enter the tracer context, creating a new span and setting up parent-child relationships."""
+        """Open the span and make it current."""
+        self.start()
+        self.activate()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Close the span, recording ``exc_val`` if the call raised."""
+        self.deactivate()
+        self.finish(exc_val if exc_type is not None else None)
+
+    def start(self) -> None:
+        """Open the span under the innermost open one, without making it
+        current for OpenTelemetry."""
+        from deepeval.tracing.otel import setup
+
         self.start_time = perf_counter()
-
-        # The innermost open span, which may be a confident-trace span
         parent_span = active_span()
-
-        # Determine trace_uuid and parent_uuid before creating the span instance
-        if parent_span:
-            self.parent_uuid = parent_span.uuid
-            self.trace_uuid = parent_span.trace_uuid
-        else:
+        if parent_span is None:
             current_trace = current_trace_context.get()
-            # IMPORTANT: Verify trace is still active, not just in context
-            # (a previous failed async operation might leave a dead trace in context)
+            # A failed async operation may leave a dead trace in context.
             if (
-                current_trace
-                and current_trace.uuid in trace_manager.active_traces
+                current_trace is None
+                or current_trace.uuid not in trace_manager.active_traces
             ):
-                self.trace_uuid = current_trace.uuid
-            else:
-                trace = trace_manager.start_new_trace()
-                self.trace_uuid = trace.uuid
-                current_trace_context.set(trace)
+                current_trace = trace_manager.start_new_trace()
+                current_trace_context.set(current_trace)
+                self._started_trace = current_trace.uuid
+            self.trace_uuid = current_trace.uuid
 
-        # Now create the span instance with the correct trace_uuid and parent_uuid
-        span_instance = self.create_span_instance()
+        span_type = (
+            self.span_type
+            if self.span_type in _CONFIDENT_TRACE_TYPES
+            else _CUSTOM_SPAN_TYPE
+        )
+        self._otel_span, span = setup.start_observed_span(self.name, span_type)
+        if self._otel_span is None:
+            # confident-trace isn't running, so nothing is traced.
+            self._drop_started_trace()
+            return
+        values = self._observe_values()
+        setup.export_on(
+            self._otel_span,
+            **{key: value for key, value in values.items() if value},
+        )
+        if span is None:
+            # Inside a span confident-trace exports on its own, which the
+            # trace this call started doesn't get.
+            self._drop_started_trace()
+            return
 
-        # Apply any ``next_*_span(...)`` defaults the user staged before
-        # we push the span into context, so ``update_current_span(...)``
-        # and downstream readers see them as the baseline. Mirrors what
-        # ``SpanInterceptor.on_start`` does for the OTel path; without
-        # this the native ``@observe`` path silently drops staged
-        # ``metrics``/``available_tools``/etc.
-        pending = pop_pending_for(self.span_type)
-        if pending:
-            apply_pending_to_span(span_instance, pending)
-
+        self.span = span
+        self.uuid, self.trace_uuid = span.uuid, span.trace_uuid
+        self.parent_uuid = span.parent_uuid
+        # ``next_*_span`` and span-context values were applied first and win.
+        for key, value in values.items():
+            if key not in span.model_fields_set and hasattr(span, key):
+                setattr(span, key, value)
         if (
             parent_span
-            and not getattr(span_instance, "integration", None)
+            and not getattr(span, "integration", None)
             and getattr(parent_span, "integration", None)
         ):
-            span_instance.integration = parent_span.integration
+            span.integration = parent_span.integration
 
-        # stash call arguments so they are available during the span lifetime
-        setattr(span_instance, "_function_kwargs", self.function_kwargs)
-
-        # Add the span to active spans and to its trace
-        trace_manager.add_span(span_instance)
-        trace_manager.add_span_to_trace(span_instance)
-
-        # Set this span as the current span in the context
-        current_span_context.set(span_instance)
+        self._previous_span = current_span_context.get()
+        current_span_context.set(span)
         if (
             parent_span
             and parent_span.progress is not None
@@ -1267,172 +988,149 @@ class Observer:
         ):
             self._progress = parent_span.progress
             self._pbar_callback_id = parent_span.pbar_callback_id
-
-        try:
-            import asyncio
-
-            task = asyncio.current_task()
-        except Exception:
-            task = None
-
-        if task is not None:
-            binding = trace_manager.task_bindings.get(task) or {}
-            # record the trace the task is working on
-            binding["trace_uuid"] = span_instance.trace_uuid
-            # only set root_span_uuid when this span is a root. Don't do this for child or we will override our record.
-            if (
-                span_instance.parent_uuid is None
-                and "root_span_uuid" not in binding
-            ):
-                binding["root_span_uuid"] = span_instance.uuid
-            trace_manager.task_bindings[task] = binding
-
         if self._progress is not None and self._pbar_callback_id is not None:
-            span_instance.progress = self._progress
-            span_instance.pbar_callback_id = self._pbar_callback_id
+            span.progress = self._progress
+            span.pbar_callback_id = self._pbar_callback_id
+        self._bind_task(span)
 
-        return self
+    def activate(self) -> None:
+        """Make the span current for the code it wraps."""
+        if self._otel_span is not None and self._otel_token is None:
+            from deepeval.tracing.otel import setup
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit the tracer context, updating the span status and handling trace completion."""
-
-        end_time = perf_counter()
-        # Get the current span from the context instead of looking it up by UUID
-        current_span = current_span_context.get()
-
-        # ContextVar may not match when sync generators run across different
-        # thread-pool threads (e.g. FastAPI StreamingResponse). Fall back to a
-        # direct UUID lookup so the span still gets closed properly.
-        if not current_span or current_span.uuid != self.uuid:
-            current_span = trace_manager.get_span_by_uuid(self.uuid)
-            if not current_span:
-                return
-
-        current_span.end_time = end_time
-        if exc_type is not None:
-            current_span.status = TraceSpanStatus.ERRORED
-            current_span.error = str(exc_val)
-        else:
-            current_span.status = TraceSpanStatus.SUCCESS
-
-        if self.update_span_properties is not None:
-            self.update_span_properties(current_span)
-
-        if current_span.input is None:
-            current_span.input = trace_manager.mask(self.function_kwargs)
-        if current_span.output is None:
-            current_span.output = trace_manager.mask(self.result)
-
-        if (
-            isinstance(current_span, LlmSpan)
-            and self.prompt
-            and not current_span.prompt
-        ):
-            current_span.prompt = self.prompt
-
-        if not current_span.tools_called:
-            tool_calls = tool_calls_under(current_span)
-            if tool_calls:
-                current_span.tools_called = tool_calls
-
-        trace_manager.remove_span(self.uuid)
-        if current_span.parent_uuid:
-            parent_span = trace_manager.get_span_by_uuid(
-                current_span.parent_uuid
+            self._otel_token = otel_context.attach(
+                setup.observed_context(self._otel_span)
             )
-            if parent_span:
-                current_span_context.set(parent_span)
-            else:
-                current_span_context.set(None)
-        else:
-            current_trace = current_trace_context.get()
-            # ContextVar for trace may also be lost in thread-pool scenarios;
-            # fall back to the trace UUID stored on the span.
-            if (
-                not current_trace
-                or current_trace.uuid != current_span.trace_uuid
+
+    def deactivate(self) -> None:
+        """Restore the OpenTelemetry context ``activate`` replaced."""
+        if self._otel_token is not None:
+            otel_context.detach(self._otel_token)
+            self._otel_token = None
+
+    def finish(self, error: Optional[BaseException] = None) -> None:
+        """End the span, and its trace if it was the trace's last."""
+        from deepeval.tracing.otel import setup
+
+        otel_span, span = self._otel_span, self.span
+        if otel_span is None:
+            return
+        self._otel_span = None
+        if error is not None:
+            otel_span.set_status(Status(StatusCode.ERROR, str(error)))
+        function_input = trace_manager.mask(self.function_kwargs)
+        function_output = trace_manager.mask(self.result)
+        if span is not None:
+            span.status = (
+                TraceSpanStatus.ERRORED
+                if error is not None
+                else TraceSpanStatus.SUCCESS
+            )
+            if error is not None:
+                span.error = str(error)
+            if self.update_span_properties is not None:
+                self.update_span_properties(span)
+            if span.input is None:
+                span.input = function_input
+            if span.output is None:
+                span.output = function_output
+            if isinstance(span, LlmSpan) and self.prompt and not span.prompt:
+                span.prompt = self.prompt
+        # What the call didn't set, the function's arguments and result give.
+        setup.export_on(
+            otel_span,
+            input=(
+                None
+                if setup.exports(otel_span, ConfidentAttr.SPAN_INPUT)
+                else function_input
+            ),
+            output=(
+                None
+                if setup.exports(otel_span, ConfidentAttr.SPAN_OUTPUT)
+                else function_output
+            ),
+            prompt=self.prompt,
+        )
+        is_root = (
+            span.parent_uuid is None
+            if span is not None
+            else otel_span.parent is None
+        )
+        if is_root:
+            setup.export_on(
+                otel_span,
+                "trace",
+                input=(
+                    None
+                    if setup.exports(otel_span, ConfidentAttr.TRACE_INPUT)
+                    else function_input
+                ),
+                output=(
+                    None
+                    if setup.exports(otel_span, ConfidentAttr.TRACE_OUTPUT)
+                    else function_output
+                ),
+            )
+        trace = (
+            trace_manager.get_trace_by_uuid(self.trace_uuid)
+            if span is not None and is_root
+            else None
+        )
+        if trace is not None:
+            if trace.input is None:
+                trace.input = function_input
+            if trace.output is None:
+                trace.output = function_output
+            if error is not None:
+                trace.status = TraceSpanStatus.ERRORED
+        otel_span.end()
+
+        if span is not None:
+            # A generator's span may outlive the span it opened under.
+            previous = self._previous_span
+            still_open = (
+                previous is not None
+                and previous.status == TraceSpanStatus.IN_PROGRESS
+            )
+            current_span_context.set(previous if still_open else None)
+            if trace is not None and not setup.open_collected_spans(
+                self.trace_uuid
             ):
-                current_trace = trace_manager.get_trace_by_uuid(
-                    current_span.trace_uuid
-                )
-            if current_trace:
-                if current_trace.input is None:
-                    current_trace.input = trace_manager.mask(
-                        self.function_kwargs
-                    )
-                if current_trace.output is None:
-                    current_trace.output = trace_manager.mask(self.result)
-                if current_span.status == TraceSpanStatus.ERRORED:
-                    current_trace.status = TraceSpanStatus.ERRORED
-                if current_trace.uuid == current_span.trace_uuid:
-                    other_active_spans = [
-                        span
-                        for span in trace_manager.active_spans.values()
-                        if span.trace_uuid == current_span.trace_uuid
-                    ]
-
-                    if not other_active_spans:
-                        trace_manager.end_trace(current_span.trace_uuid)
-                        current_trace_context.set(None)
-
-            current_span_context.set(None)
-
+                trace_manager.end_trace(self.trace_uuid)
+                current_trace_context.set(None)
         if self._progress is not None and self._pbar_callback_id is not None:
             self._progress.update(self._pbar_callback_id, advance=1)
 
-    def create_span_instance(self):
-        """Create a span instance based on the span type."""
-
-        span_kwargs = {
-            "uuid": self.uuid,
-            "trace_uuid": self.trace_uuid,
-            "parent_uuid": self.parent_uuid,
-            "start_time": self.start_time,
-            "end_time": None,
-            "status": TraceSpanStatus.SUCCESS,
-            "children": [],
-            "name": self.name,
-            # "metadata": None,
-            "input": None,
-            "output": None,
-            "metrics": self.metrics,
-            "metric_collection": self.metric_collection,
+    def _observe_values(self) -> Dict[str, Any]:
+        """The span fields ``@observe`` sets, from its arguments or defaults."""
+        values = {
+            key: self.observe_kwargs.get(key, default)
+            for key, default in _OBSERVE_FIELDS.get(self.span_type, {}).items()
         }
+        values["metrics"] = self.metrics
+        values["metric_collection"] = self.metric_collection
+        return values
 
-        if self.span_type == SpanType.AGENT.value:
-            available_tools = self.observe_kwargs.get("available_tools", [])
-            agent_handoffs = self.observe_kwargs.get("agent_handoffs", [])
+    def _drop_started_trace(self) -> None:
+        if self._started_trace is not None:
+            trace_manager.discard_trace(self._started_trace)
+            current_trace_context.set(None)
+            self._started_trace = None
 
-            return AgentSpan(
-                **span_kwargs,
-                available_tools=available_tools,
-                agent_handoffs=agent_handoffs,
-            )
-        elif self.span_type == SpanType.LLM.value:
-            model = self.observe_kwargs.get("model", None)
-            provider = self.observe_kwargs.get("provider", None)
-            cost_per_input_token = self.observe_kwargs.get(
-                "cost_per_input_token", None
-            )
-            cost_per_output_token = self.observe_kwargs.get(
-                "cost_per_output_token", None
-            )
-            return LlmSpan(
-                **span_kwargs,
-                model=model,
-                provider=provider,
-                cost_per_input_token=cost_per_input_token,
-                cost_per_output_token=cost_per_output_token,
-            )
-        elif self.span_type == SpanType.RETRIEVER.value:
-            embedder = self.observe_kwargs.get("embedder", None)
-            return RetrieverSpan(**span_kwargs, embedder=embedder)
-
-        elif self.span_type == SpanType.TOOL.value:
-            description = self.observe_kwargs.get("description", None)
-            return ToolSpan(**span_kwargs, description=description)
-        else:
-            return BaseSpan(**span_kwargs)
+    def _bind_task(self, span: BaseSpan) -> None:
+        """Record the trace the current asyncio task works on."""
+        try:
+            task = asyncio.current_task()
+        except Exception:
+            task = None
+        if task is None:
+            return
+        binding = trace_manager.task_bindings.get(task) or {}
+        binding["trace_uuid"] = span.trace_uuid
+        # Only a root records itself, so a child doesn't override it.
+        if span.parent_uuid is None and "root_span_uuid" not in binding:
+            binding["root_span_uuid"] = span.uuid
+        trace_manager.task_bindings[task] = binding
 
 
 ########################################################
@@ -1540,12 +1238,13 @@ def observe(
                 original_gen = func(*args, **func_kwargs)
 
                 def gen():
-                    observer.__enter__()
-                    # Capture the span and trace refs set by __enter__.
+                    observer.start()
+                    # Capture the span and trace refs set by start().
                     # Generator locals survive across yields, but ContextVars
                     # don't when Starlette dispatches each next() to a
                     # different thread-pool thread. We restore them on every
-                    # resume so child @observe'd calls see the right parent.
+                    # resume so child @observe'd calls see the right parent,
+                    # and the span is current only while the generator runs.
                     _span = current_span_context.get()
                     _trace = current_trace_context.get()
                     it = iter(original_gen)
@@ -1553,6 +1252,7 @@ def observe(
                     return_value = None
                     try:
                         while True:
+                            observer.activate()
                             try:
                                 # 1. Pull the next chunk
                                 value = next(it)
@@ -1560,6 +1260,8 @@ def observe(
                             except StopIteration as e:
                                 return_value = e.value
                                 break
+                            finally:
+                                observer.deactivate()
                             yield value
                             # After resume (potentially in a new thread),
                             # restore ContextVars before the next iteration
@@ -1577,10 +1279,10 @@ def observe(
                         current_span_context.set(_span)
                         if _trace is not None:
                             current_trace_context.set(_trace)
-                        observer.__exit__(e.__class__, e, e.__traceback__)
+                        observer.finish(e)
                         raise
                     finally:  # GeneratorExit exception directly brings us to final block
-                        observer.__exit__(None, None, None)
+                        observer.finish()
 
                 return gen()
 

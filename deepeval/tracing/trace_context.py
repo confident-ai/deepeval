@@ -102,8 +102,25 @@ def trace(
         current_llm_context.set(llm_span_context)
     if agent_span_context:
         current_agent_context.set(agent_span_context)
+    from deepeval.tracing.otel.setup import exported_trace_context
+
     try:
-        yield current_trace
+        with exported_trace_context(
+            name=name,
+            tags=tags,
+            metadata=metadata,
+            thread_id=thread_id,
+            user_id=user_id,
+            input=input,
+            output=output,
+            retrieval_context=retrieval_context,
+            context=context,
+            expected_output=expected_output,
+            tools_called=tools_called,
+            expected_tools=expected_tools,
+            metric_collection=metric_collection,
+        ):
+            yield current_trace
     finally:
         if started_new_trace:
             trace_manager.end_trace(current_trace.uuid)
