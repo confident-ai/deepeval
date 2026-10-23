@@ -2,7 +2,7 @@ from enum import Enum
 import os
 import json
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
 from rich.table import Table
@@ -554,6 +554,7 @@ class TestRunManager:
             except (
                 FileNotFoundError,
                 json.JSONDecodeError,
+                ValidationError,
                 portalocker.exceptions.LockException,
             ) as e:
                 print(
@@ -638,6 +639,7 @@ class TestRunManager:
             except (
                 FileNotFoundError,
                 json.JSONDecodeError,
+                ValidationError,
                 portalocker.exceptions.LockException,
             ) as e:
                 print(
@@ -1257,10 +1259,16 @@ class TestRunManager:
                 else "None"
             )
             capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
+            total_tests = test_run.test_passed + test_run.test_failed
+            pass_rate = (
+                f"{round((test_run.test_passed / total_tests) * 100, 2)}%"
+                if total_tests
+                else "N/A"
+            )
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
-                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
-                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
+                f"» Test Results ({total_tests} total tests):\n",
+                f"  » Pass Rate: {pass_rate} | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
                 "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
                 "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
