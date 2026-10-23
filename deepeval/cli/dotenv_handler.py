@@ -25,7 +25,11 @@ class DotenvHandler:
         Idempotently set/replace keys in a dotenv file. Preserves comments/order.
         Creates file if missing. Sets file mode to 0600 when possible.
         """
-        lines = self.path.read_text().splitlines() if self.path.exists() else []
+        lines = (
+            self.path.read_text(encoding="utf-8").splitlines()
+            if self.path.exists()
+            else []
+        )
         seen = set()
 
         # replace existing keys in-place
@@ -50,7 +54,9 @@ class DotenvHandler:
             lines.extend(to_append)
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text("\n".join(lines) + ("\n" if lines else ""))
+        self.path.write_text(
+            "\n".join(lines) + ("\n" if lines else ""), encoding="utf-8"
+        )
         try:
             self.path.chmod(stat.S_IRUSR | stat.S_IWUSR)  # 0600
         except Exception:
@@ -60,7 +66,7 @@ class DotenvHandler:
         """Remove keys from dotenv file, but leave comments and other lines untouched."""
         if not self.path.exists():
             return
-        lines = self.path.read_text().splitlines()
+        lines = self.path.read_text(encoding="utf-8").splitlines()
         out = []
         keys = set(keys)
         for line in lines:
@@ -68,4 +74,6 @@ class DotenvHandler:
             if m and m.group(1) in keys:
                 continue
             out.append(line)
-        self.path.write_text("\n".join(out) + ("\n" if out else ""))
+        self.path.write_text(
+            "\n".join(out) + ("\n" if out else ""), encoding="utf-8"
+        )
