@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
+import builtins
 from rich.table import Table
 from rich.console import Console
 from rich import print
@@ -51,7 +52,7 @@ if not is_read_only_env():
     try:
         import portalocker
     except Exception as e:
-        print(
+        builtins.print(
             f"Warning: failed to import portalocker: {e}",
             file=sys.stderr,
         )
@@ -68,6 +69,7 @@ LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
+
 
 class TestRunResultDisplay(Enum):
     ALL = "all"
@@ -556,7 +558,7 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
+                builtins.print(
                     f"Warning: Could not load test run from disk: {e}",
                     file=sys.stderr,
                 )
@@ -640,7 +642,7 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
+                builtins.print(
                     f"Warning: Could not update test run on disk: {e}",
                     file=sys.stderr,
                 )
@@ -1112,7 +1114,7 @@ class TestRunManager:
             self.last_saved_path = path
             print(f"Test run saved at {path}")
         except Exception as e:
-            print(
+            builtins.print(
                 f"Warning: failed to save test run to {target_dir}: {e}",
                 file=sys.stderr,
             )
@@ -1137,7 +1139,7 @@ class TestRunManager:
         try:
             run_id = sqlite_store.write_test_run(self.test_run, db_path)
         except Exception as e:
-            print(
+            builtins.print(
                 f"Warning: failed to save test run to {db_path}: {e}",
                 file=sys.stderr,
             )
@@ -1166,7 +1168,7 @@ class TestRunManager:
                 confident_test_run_id,
             )
         except Exception as e:
-            print(
+            builtins.print(
                 f"Warning: could not record Confident AI test run id in "
                 f"{self.last_saved_path}: {e}",
                 file=sys.stderr,
