@@ -1,90 +1,94 @@
 {
   "name": "langchain-parallel-test",
-  "uuid": "67876e5711b2afdfdeec735150d86d3f",
+  "uuid": "e90905212fccce23bcb7bcf492ec2a03",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "d5a14f6299eb2a99",
+      "uuid": "ae8d7a5cd70d370c",
       "name": "parallel_weather_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "67876e5711b2afdfdeec735150d86d3f",
-      "startTime": "2026-10-21T20:44:36.784Z",
-      "endTime": "2026-10-21T20:44:38.813Z",
-      "input": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Tokyo and New York?"
-            }
-          ]
-        }
-      ],
-      "output": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Tokyo and New York?"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "id": "call_bYEXHsWxHJ1matMwIyhpHSva",
-              "arguments": {
-                "city": "Tokyo"
+      "traceUuid": "e90905212fccce23bcb7bcf492ec2a03",
+      "startTime": "2026-10-23T08:55:07.575Z",
+      "endTime": "2026-10-23T08:55:10.839Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Tokyo and New York?"
               }
-            },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "id": "call_oZM0lUuWSUoHh0vY7QRsTyBq",
-              "arguments": {
-                "city": "New York"
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Tokyo and New York?"
               }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "text",
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Sunny, 72F\",\"tool_call_id\":\"call_bYEXHsWxHJ1matMwIyhpHSva\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "text",
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 58F\",\"tool_call_id\":\"call_oZM0lUuWSUoHh0vY7QRsTyBq\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F"
-            }
-          ]
-        }
-      ],
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "id": "call_ebqzrtg83uhLYv1MJlFONu3S",
+                "arguments": {
+                  "city": "Tokyo"
+                }
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "id": "call_XLuF6IzZm9AmLo0YTYXKzad9",
+                "arguments": {
+                  "city": "New York"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Sunny, 72F\",\"tool_call_id\":\"call_ebqzrtg83uhLYv1MJlFONu3S\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 58F\",\"tool_call_id\":\"call_XLuF6IzZm9AmLo0YTYXKzad9\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F"
+              }
+            ]
+          }
+        ]
+      },
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -107,14 +111,14 @@
   ],
   "llmSpans": [
     {
-      "uuid": "0e645300bcdb1fc4",
+      "uuid": "4bdbbecb082af1a2",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "67876e5711b2afdfdeec735150d86d3f",
-      "parentUuid": "d5a14f6299eb2a99",
-      "startTime": "2026-10-21T20:44:36.786Z",
-      "endTime": "2026-10-21T20:44:37.860Z",
+      "traceUuid": "e90905212fccce23bcb7bcf492ec2a03",
+      "parentUuid": "ae8d7a5cd70d370c",
+      "startTime": "2026-10-23T08:55:07.576Z",
+      "endTime": "2026-10-23T08:55:09.373Z",
       "input": [
         {
           "role": "user",
@@ -127,7 +131,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_bYEXHsWxHJ1matMwIyhpHSva",
+            "id": "call_ebqzrtg83uhLYv1MJlFONu3S",
             "arguments": {
               "city": "Tokyo"
             }
@@ -138,7 +142,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_oZM0lUuWSUoHh0vY7QRsTyBq",
+            "id": "call_XLuF6IzZm9AmLo0YTYXKzad9",
             "arguments": {
               "city": "New York"
             }
@@ -164,14 +168,14 @@
       "outputTokenCount": 45
     },
     {
-      "uuid": "35e5a76c43ee8a88",
+      "uuid": "469a23922548a688",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "67876e5711b2afdfdeec735150d86d3f",
-      "parentUuid": "d5a14f6299eb2a99",
-      "startTime": "2026-10-21T20:44:37.865Z",
-      "endTime": "2026-10-21T20:44:38.813Z",
+      "traceUuid": "e90905212fccce23bcb7bcf492ec2a03",
+      "parentUuid": "ae8d7a5cd70d370c",
+      "startTime": "2026-10-23T08:55:09.375Z",
+      "endTime": "2026-10-23T08:55:10.838Z",
       "input": [
         {
           "role": "user",
@@ -186,7 +190,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_bYEXHsWxHJ1matMwIyhpHSva",
+            "id": "call_ebqzrtg83uhLYv1MJlFONu3S",
             "arguments": {
               "city": "Tokyo"
             }
@@ -197,7 +201,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_oZM0lUuWSUoHh0vY7QRsTyBq",
+            "id": "call_XLuF6IzZm9AmLo0YTYXKzad9",
             "arguments": {
               "city": "New York"
             }
@@ -205,59 +209,135 @@
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Sunny, 72F\",\"tool_call_id\":\"call_bYEXHsWxHJ1matMwIyhpHSva\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Sunny, 72F\",\"tool_call_id\":\"call_ebqzrtg83uhLYv1MJlFONu3S\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 58F\",\"tool_call_id\":\"call_oZM0lUuWSUoHh0vY7QRsTyBq\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 58F\",\"tool_call_id\":\"call_XLuF6IzZm9AmLo0YTYXKzad9\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
       "output": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F",
       "model": "gpt-4o-mini-2024-07-18",
-      "inputTokenCount": 328,
+      "inputTokenCount": 329,
       "outputTokenCount": 31
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "a314f0e4f5c74e76",
+      "uuid": "5b97dcb044302628",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "67876e5711b2afdfdeec735150d86d3f",
-      "parentUuid": "d5a14f6299eb2a99",
-      "startTime": "2026-10-21T20:44:37.862Z",
-      "endTime": "2026-10-21T20:44:37.863Z",
+      "traceUuid": "e90905212fccce23bcb7bcf492ec2a03",
+      "parentUuid": "ae8d7a5cd70d370c",
+      "startTime": "2026-10-23T08:55:09.374Z",
+      "endTime": "2026-10-23T08:55:09.374Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Sunny, 72F"
     },
     {
-      "uuid": "b1b493ce3249c6ec",
+      "uuid": "a865196f27a2e797",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "67876e5711b2afdfdeec735150d86d3f",
-      "parentUuid": "d5a14f6299eb2a99",
-      "startTime": "2026-10-21T20:44:37.863Z",
-      "endTime": "2026-10-21T20:44:37.863Z",
+      "traceUuid": "e90905212fccce23bcb7bcf492ec2a03",
+      "parentUuid": "ae8d7a5cd70d370c",
+      "startTime": "2026-10-23T08:55:09.375Z",
+      "endTime": "2026-10-23T08:55:09.375Z",
       "input": {
         "city": "New York"
       },
       "output": "Cloudy, 58F"
     }
   ],
-  "startTime": "2026-10-21T20:44:36.784Z",
-  "endTime": "2026-10-21T20:44:38.814Z",
+  "startTime": "2026-10-23T08:55:07.575Z",
+  "endTime": "2026-10-23T08:55:10.839Z",
   "environment": "testing",
   "tags": [
     "langchain",
     "parallel"
   ],
-  "input": "What's the weather in Tokyo and New York?",
-  "output": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Tokyo and New York?"
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Tokyo and New York?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_ebqzrtg83uhLYv1MJlFONu3S",
+            "arguments": {
+              "city": "Tokyo"
+            }
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_XLuF6IzZm9AmLo0YTYXKzad9",
+            "arguments": {
+              "city": "New York"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Sunny, 72F\",\"tool_call_id\":\"call_ebqzrtg83uhLYv1MJlFONu3S\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 58F\",\"tool_call_id\":\"call_XLuF6IzZm9AmLo0YTYXKzad9\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "The current weather is as follows:\n\n- **Tokyo**: Sunny, 72°F\n- **New York**: Cloudy, 58°F"
+          }
+        ]
+      }
+    ]
+  },
   "toolsCalled": [
     {
       "name": "get_weather",

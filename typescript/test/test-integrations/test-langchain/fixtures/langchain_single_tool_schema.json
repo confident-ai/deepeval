@@ -1,73 +1,77 @@
 {
   "name": "langchain-single-tool-test",
-  "uuid": "2d8af394a43273e01be2ff24c61fb6f3",
+  "uuid": "58ded691540f75b348d02e889a24290d",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "9e77ffab79e26177",
+      "uuid": "c52f09edd570c619",
       "name": "single_tool_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "2d8af394a43273e01be2ff24c61fb6f3",
-      "startTime": "2026-10-21T20:44:28.340Z",
-      "endTime": "2026-10-21T20:44:30.288Z",
-      "input": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get weather for San Francisco."
-            }
-          ]
-        }
-      ],
-      "output": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get weather for San Francisco."
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "id": "call_lYEMjCZbyXjL2YRdjmRzQKWt",
-              "arguments": {
-                "city": "San Francisco"
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "startTime": "2026-10-23T08:54:52.875Z",
+      "endTime": "2026-10-23T08:54:55.011Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco."
               }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "text",
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_lYEMjCZbyXjL2YRdjmRzQKWt\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "The current weather in San Francisco is foggy with a temperature of 58°F."
-            }
-          ]
-        }
-      ],
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+                "arguments": {
+                  "city": "San Francisco"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "The current weather in San Francisco is foggy with a temperature of 58°F."
+              }
+            ]
+          }
+        ]
+      },
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -83,14 +87,14 @@
   ],
   "llmSpans": [
     {
-      "uuid": "072f89b5f43c526a",
+      "uuid": "c9a26a368769ada9",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "2d8af394a43273e01be2ff24c61fb6f3",
-      "parentUuid": "9e77ffab79e26177",
-      "startTime": "2026-10-21T20:44:28.341Z",
-      "endTime": "2026-10-21T20:44:29.218Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:52.875Z",
+      "endTime": "2026-10-23T08:54:53.704Z",
       "input": [
         {
           "role": "user",
@@ -103,7 +107,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_lYEMjCZbyXjL2YRdjmRzQKWt",
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
             "arguments": {
               "city": "San Francisco"
             }
@@ -123,14 +127,14 @@
       "outputTokenCount": 15
     },
     {
-      "uuid": "8dd78f97cd9860d6",
+      "uuid": "97413f34adf35bb5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "2d8af394a43273e01be2ff24c61fb6f3",
-      "parentUuid": "9e77ffab79e26177",
-      "startTime": "2026-10-21T20:44:29.223Z",
-      "endTime": "2026-10-21T20:44:30.287Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:53.708Z",
+      "endTime": "2026-10-23T08:54:55.010Z",
       "input": [
         {
           "role": "user",
@@ -145,7 +149,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_lYEMjCZbyXjL2YRdjmRzQKWt",
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
             "arguments": {
               "city": "San Francisco"
             }
@@ -153,42 +157,101 @@
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_lYEMjCZbyXjL2YRdjmRzQKWt\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
       "output": "The current weather in San Francisco is foggy with a temperature of 58°F.",
       "model": "gpt-4o-mini-2024-07-18",
-      "inputTokenCount": 172,
+      "inputTokenCount": 170,
       "outputTokenCount": 18
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "6d3101322b12d08c",
+      "uuid": "ed5c1a7de05d36b3",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "2d8af394a43273e01be2ff24c61fb6f3",
-      "parentUuid": "9e77ffab79e26177",
-      "startTime": "2026-10-21T20:44:29.221Z",
-      "endTime": "2026-10-21T20:44:29.222Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:53.706Z",
+      "endTime": "2026-10-23T08:54:53.706Z",
       "input": {
         "city": "San Francisco"
       },
       "output": "Foggy, 58F"
     }
   ],
-  "startTime": "2026-10-21T20:44:28.340Z",
-  "endTime": "2026-10-21T20:44:30.289Z",
+  "startTime": "2026-10-23T08:54:52.875Z",
+  "endTime": "2026-10-23T08:54:55.012Z",
   "environment": "testing",
   "tags": [
     "langchain",
     "single-tool"
   ],
   "threadId": "single-tool-123",
-  "input": "Use the get_weather tool to get weather for San Francisco.",
-  "output": "The current weather in San Francisco is foggy with a temperature of 58°F.",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco."
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+            "arguments": {
+              "city": "San Francisco"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "The current weather in San Francisco is foggy with a temperature of 58°F."
+          }
+        ]
+      }
+    ]
+  },
   "toolsCalled": [
     {
       "name": "get_weather",

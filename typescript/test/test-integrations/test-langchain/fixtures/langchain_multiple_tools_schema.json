@@ -1,73 +1,77 @@
 {
   "name": "langchain-multi-tool-test",
-  "uuid": "9e48531d04e5c30489e5dc2617e54935",
+  "uuid": "bc5b4be06f5724c2fc52945e3500834c",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "0826628e18b81924",
+      "uuid": "fe0ddc4bb22e1a74",
       "name": "city_info_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "9e48531d04e5c30489e5dc2617e54935",
-      "startTime": "2026-10-21T20:44:30.290Z",
-      "endTime": "2026-10-21T20:44:32.048Z",
-      "input": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Tokyo?"
-            }
-          ]
-        }
-      ],
-      "output": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Tokyo?"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "id": "call_GEzkP1jnumshTUqtaeu2byW5",
-              "arguments": {
-                "city": "Tokyo"
+      "traceUuid": "bc5b4be06f5724c2fc52945e3500834c",
+      "startTime": "2026-10-23T08:54:55.014Z",
+      "endTime": "2026-10-23T08:54:59.116Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Tokyo?"
               }
-            }
-          ]
-        },
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "text",
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 68F\",\"tool_call_id\":\"call_GEzkP1jnumshTUqtaeu2byW5\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F."
-            }
-          ]
-        }
-      ],
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Tokyo?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "id": "call_ytinZSnm4UYqcT7iGCiFBkTh",
+                "arguments": {
+                  "city": "Tokyo"
+                }
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 68F\",\"tool_call_id\":\"call_ytinZSnm4UYqcT7iGCiFBkTh\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F."
+              }
+            ]
+          }
+        ]
+      },
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -83,14 +87,14 @@
   ],
   "llmSpans": [
     {
-      "uuid": "3106275ee1f7118e",
+      "uuid": "b95226e0cfcfe287",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "9e48531d04e5c30489e5dc2617e54935",
-      "parentUuid": "0826628e18b81924",
-      "startTime": "2026-10-21T20:44:30.291Z",
-      "endTime": "2026-10-21T20:44:31.165Z",
+      "traceUuid": "bc5b4be06f5724c2fc52945e3500834c",
+      "parentUuid": "fe0ddc4bb22e1a74",
+      "startTime": "2026-10-23T08:54:55.016Z",
+      "endTime": "2026-10-23T08:54:56.090Z",
       "input": [
         {
           "role": "user",
@@ -103,7 +107,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_GEzkP1jnumshTUqtaeu2byW5",
+            "id": "call_ytinZSnm4UYqcT7iGCiFBkTh",
             "arguments": {
               "city": "Tokyo"
             }
@@ -123,14 +127,14 @@
       "outputTokenCount": 14
     },
     {
-      "uuid": "9b4624ab1690e716",
+      "uuid": "8dc7de08dced27a1",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "9e48531d04e5c30489e5dc2617e54935",
-      "parentUuid": "0826628e18b81924",
-      "startTime": "2026-10-21T20:44:31.167Z",
-      "endTime": "2026-10-21T20:44:32.048Z",
+      "traceUuid": "bc5b4be06f5724c2fc52945e3500834c",
+      "parentUuid": "fe0ddc4bb22e1a74",
+      "startTime": "2026-10-23T08:54:56.092Z",
+      "endTime": "2026-10-23T08:54:59.114Z",
       "input": [
         {
           "role": "user",
@@ -145,7 +149,7 @@
           "content": {
             "type": "tool_call",
             "name": "get_weather",
-            "id": "call_GEzkP1jnumshTUqtaeu2byW5",
+            "id": "call_ytinZSnm4UYqcT7iGCiFBkTh",
             "arguments": {
               "city": "Tokyo"
             }
@@ -153,41 +157,100 @@
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 68F\",\"tool_call_id\":\"call_GEzkP1jnumshTUqtaeu2byW5\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 68F\",\"tool_call_id\":\"call_ytinZSnm4UYqcT7iGCiFBkTh\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
       "output": "The weather in Tokyo is currently cloudy with a temperature of 68°F.",
       "model": "gpt-4o-mini-2024-07-18",
-      "inputTokenCount": 204,
+      "inputTokenCount": 206,
       "outputTokenCount": 16
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c8757ebe06b69d70",
+      "uuid": "080ff0df81edc043",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "9e48531d04e5c30489e5dc2617e54935",
-      "parentUuid": "0826628e18b81924",
-      "startTime": "2026-10-21T20:44:31.166Z",
-      "endTime": "2026-10-21T20:44:31.166Z",
+      "traceUuid": "bc5b4be06f5724c2fc52945e3500834c",
+      "parentUuid": "fe0ddc4bb22e1a74",
+      "startTime": "2026-10-23T08:54:56.091Z",
+      "endTime": "2026-10-23T08:54:56.091Z",
       "input": {
         "city": "Tokyo"
       },
       "output": "Cloudy, 68F"
     }
   ],
-  "startTime": "2026-10-21T20:44:30.290Z",
-  "endTime": "2026-10-21T20:44:32.049Z",
+  "startTime": "2026-10-23T08:54:55.014Z",
+  "endTime": "2026-10-23T08:54:59.117Z",
   "environment": "testing",
   "tags": [
     "langchain",
     "multiple-tools"
   ],
-  "input": "What's the weather in Tokyo?",
-  "output": "The weather in Tokyo is currently cloudy with a temperature of 68°F.",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Tokyo?"
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Tokyo?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_ytinZSnm4UYqcT7iGCiFBkTh",
+            "arguments": {
+              "city": "Tokyo"
+            }
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Cloudy, 68F\",\"tool_call_id\":\"call_ytinZSnm4UYqcT7iGCiFBkTh\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "The weather in Tokyo is currently cloudy with a temperature of 68°F."
+          }
+        ]
+      }
+    ]
+  },
   "toolsCalled": [
     {
       "name": "get_weather",

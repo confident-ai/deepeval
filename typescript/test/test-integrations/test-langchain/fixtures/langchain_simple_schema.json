@@ -1,61 +1,65 @@
 {
   "name": "langchain-simple-test",
-  "uuid": "4b436a00ec446b272ac0711ba7accac2",
+  "uuid": "7a3ee506e42d4e7a100b531c18a6dbd9",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "7ffa387534823dc6",
+      "uuid": "5a2793e4a36efa2f",
       "name": "simple_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "4b436a00ec446b272ac0711ba7accac2",
-      "startTime": "2026-10-21T20:44:27.372Z",
-      "endTime": "2026-10-21T20:44:28.335Z",
-      "input": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Say hello in one short sentence."
-            }
-          ]
-        }
-      ],
-      "output": [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Say hello in one short sentence."
-            }
-          ]
-        },
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Hello!"
-            }
-          ]
-        }
-      ],
+      "traceUuid": "7a3ee506e42d4e7a100b531c18a6dbd9",
+      "startTime": "2026-10-23T08:54:51.515Z",
+      "endTime": "2026-10-23T08:54:52.871Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Say hello in one short sentence."
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Say hello in one short sentence."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello!"
+              }
+            ]
+          }
+        ]
+      },
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "c7d51ce317cab51c",
+      "uuid": "a52e4de12f530113",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "4b436a00ec446b272ac0711ba7accac2",
-      "parentUuid": "7ffa387534823dc6",
-      "startTime": "2026-10-21T20:44:27.378Z",
-      "endTime": "2026-10-21T20:44:28.333Z",
+      "traceUuid": "7a3ee506e42d4e7a100b531c18a6dbd9",
+      "parentUuid": "5a2793e4a36efa2f",
+      "startTime": "2026-10-23T08:54:51.521Z",
+      "endTime": "2026-10-23T08:54:52.870Z",
       "input": [
         {
           "role": "user",
@@ -70,8 +74,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-10-21T20:44:27.372Z",
-  "endTime": "2026-10-21T20:44:28.337Z",
+  "startTime": "2026-10-23T08:54:51.515Z",
+  "endTime": "2026-10-23T08:54:52.872Z",
   "environment": "testing",
   "metadata": {
     "test_type": "simple"
@@ -82,7 +86,40 @@
   ],
   "threadId": "simple-123",
   "userId": "test-user",
-  "input": "Say hello in one short sentence.",
-  "output": "Hello!",
+  "input": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "messages": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello!"
+          }
+        ]
+      }
+    ]
+  },
   "status": "SUCCESS"
 }
