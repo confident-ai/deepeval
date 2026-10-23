@@ -2,7 +2,7 @@ from enum import Enum
 import os
 import json
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
 from rich.table import Table
@@ -554,6 +554,7 @@ class TestRunManager:
             except (
                 FileNotFoundError,
                 json.JSONDecodeError,
+                ValidationError,
                 portalocker.exceptions.LockException,
             ) as e:
                 print(
@@ -638,6 +639,7 @@ class TestRunManager:
             except (
                 FileNotFoundError,
                 json.JSONDecodeError,
+                ValidationError,
                 portalocker.exceptions.LockException,
             ) as e:
                 print(
