@@ -69,6 +69,7 @@ LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
 
+
 class TestRunResultDisplay(Enum):
     ALL = "all"
     FAILING = "failing"
@@ -1137,9 +1138,11 @@ class TestRunManager:
         try:
             run_id = sqlite_store.write_test_run(self.test_run, db_path)
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {db_path}: {e}",
-                file=sys.stderr,
+            # Avoid rich.print's auto-wrapping so tests and log grep keep
+            # finding the raw error text. `from rich import print` above
+            # shadows builtin.print; for warnings we want raw bytes.
+            sys.stderr.write(
+                f"Warning: failed to save test run to {db_path}: {e}\n"
             )
             return
 
@@ -1166,10 +1169,9 @@ class TestRunManager:
                 confident_test_run_id,
             )
         except Exception as e:
-            print(
+            sys.stderr.write(
                 f"Warning: could not record Confident AI test run id in "
-                f"{self.last_saved_path}: {e}",
-                file=sys.stderr,
+                f"{self.last_saved_path}: {e}\n"
             )
 
     def wrap_up_test_run(
