@@ -272,9 +272,12 @@ def update_retriever_span(
         return
     if embedder:
         current_span.embedder = embedder
-    if top_k:
+    # Guarded on `is not None`, not truthiness: `top_k=0` / `chunk_size=0` are
+    # values a caller can legitimately report, and `next_retriever_span(...)`
+    # already records them through ``_drop_none``.
+    if top_k is not None:
         current_span.top_k = top_k
-    if chunk_size:
+    if chunk_size is not None:
         current_span.chunk_size = chunk_size
 
 
