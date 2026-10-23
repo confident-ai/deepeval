@@ -188,7 +188,7 @@ class TestWorkerDrain:
 
             async def a_send_request(self, method, endpoint, body):
                 sent_bodies.append(body)
-                return None, "https://app.confident-ai.com/trace/1"
+                return None, "https://cloud.confident-ai.com/trace/1"
 
         monkeypatch.setattr(
             "deepeval.tracing.tracing.Api", RecordingApi, raising=True
