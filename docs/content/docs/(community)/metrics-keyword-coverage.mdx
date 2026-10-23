@@ -1,0 +1,132 @@
+---
+id: metrics-keyword-coverage
+title: Keyword Coverage
+sidebar_label: Keyword Coverage
+languages: [python]
+---
+<MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The Keyword Coverage metric measures **what fraction of a required-phrase checklist appears** in your LLM application's `actual_output`, and **hard-fails if any banned phrase appears**. It is useful for rubric-style review requirements such as _"the answer must mention the refund window, the return address and the warranty — and must **not** mention any internal codename or competitor."_
+
+:::note
+The `KeywordCoverageMetric` does **not** rely on an LLM for evaluation. It uses pure **string matching**, so it is deterministic, needs no API key, and costs nothing to run.
+:::
+
+Unlike [`ExactMatchMetric`](/docs/metrics-exact-match) (whole-string equality) and [`PatternMatchMetric`](/docs/metrics-pattern-match) (a single all-or-nothing regex), which are **binary**, Keyword Coverage awards **partial credit** for the portion of the checklist that is covered.
+
+:::info
+`KeywordCoverageMetric` is a **community metric**, so it is not exported from `deepeval.metrics`. Import it explicitly:
+
+```python
+from deepeval.metrics.community import KeywordCoverageMetric
+```
+:::
+
+## Required Arguments
+
+To use the `KeywordCoverageMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+## Usage
+
+```python
+from deepeval.metrics.community import KeywordCoverageMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+metric = KeywordCoverageMetric(
+    keywords=["30-day", "full refund", "return address"],
+    forbidden=["project-halo"],   # e.g. an internal codename that must never leak
+    ignore_case=True,
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="What's the return policy?",
+    actual_output="You get a 30-day full refund — just ship the item to our return address.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** mandatory and **FIVE** optional parameters when creating a `KeywordCoverageMetric`:
+
+- `keywords`: a list of strings, each a required phrase that should appear in the `actual_output`. Must contain at least one non-empty phrase.
+- [Optional] `forbidden`: a list of strings that must **not** appear in the `actual_output`. If any is present, the score is `0.0`. Defaulted to `None`.
+- [Optional] `ignore_case`: a boolean which when set to `True`, matches keywords and forbidden terms case-insensitively. Defaulted to `True`.
+- [Optional] `whole_word`: a boolean which when set to `True`, matches on word boundaries so `"cat"` does not match `"category"`. Defaulted to `False`.
+- [Optional] `threshold`: a number representing the minimum passing coverage fraction. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `KeywordCoverageMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+<Equation formula="\text{Keyword Coverage Score} = \begin{cases} 0 & \text{if any forbidden term is present}, \\ \dfrac{\text{number of required keywords present}}{\text{total number of required keywords}} & \text{otherwise} \end{cases}" />
+
+Membership is a case-normalized substring test by default, or a word-boundary match when `whole_word=True`. With the default `threshold` of `1.0`, every required keyword must be present (and no forbidden term) for the test case to pass; lower the `threshold` to accept partial coverage.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Pattern Match or Exact Match?",
+      answer: (
+        <>
+          Exact Match and Pattern Match are <strong>binary</strong> (1 or 0):
+          Exact Match needs the whole output to equal an expected string, and
+          Pattern Match needs the whole output to match a single regex. Keyword
+          Coverage awards <strong>partial credit</strong> for the fraction of a
+          <em> checklist</em> that appears, and adds a banned-term gate in the same
+          metric.
+        </>
+      ),
+    },
+    {
+      question: "Does the Keyword Coverage metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It uses pure string matching — no model, no API key, zero token
+          cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "What happens if a forbidden term appears?",
+      answer: (
+        <>
+          The score is <code>0.0</code> regardless of how many required keywords
+          are present — a forbidden term is treated as a hard failure.
+        </>
+      ),
+    },
+    {
+      question: "Why does 'cat' match 'category'?",
+      answer: (
+        <>
+          By default matching is substring-based. Set{" "}
+          <code>whole_word=True</code> to match only standalone words, so{" "}
+          <code>"cat"</code> no longer matches <code>"category"</code>.
+        </>
+      ),
+    },
+  ]}
+/>
