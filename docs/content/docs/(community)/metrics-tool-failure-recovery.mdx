@@ -1,0 +1,179 @@
+---
+id: metrics-tool-failure-recovery
+title: Tool Failure Recovery
+sidebar_label: Tool Failure Recovery
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} agent={true} referenceless={true} />
+
+The Tool Failure Recovery metric measures how an LLM agent behaves **after a tool call fails mid-trace** — an error result, a raised exception, or a timeout. It analyzes the agent's full execution trace across three sub-signals: whether the agent blindly retried the identical failing call, whether it **hallucinated success** from a call that actually failed (the deadliest failure mode — it caps the score at 0), and whether its recovery was reasonable (alternative tool, adjusted plan, or honest degradation) rather than silently dropping the sub-task.
+
+::::info
+Tool Failure Recovery analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Retry discipline is computed deterministically; the hallucinated-success and recovery-quality sub-signals use LLM-as-a-judge, so this metric requires an evaluation model. When the trace contains **no** failed tool calls, the metric scores `1.0` without making any LLM call.
+::::
+
+:::info
+The `ToolFailureRecoveryMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+## Required Arguments
+
+The `ToolFailureRecoveryMetric` is a **trace-based** metric. It reads tool spans (name, arguments, output, error) from the agent trace set via `@observe` and does **not** require `tools_called` or `expected_tools`. It only requires the standard trace-based fields:
+
+- `input`
+- `actual_output`
+
+A tool span counts as **failed** when its `error` field is set (an exception raised inside an `@observe`d tool), when its dict output carries a truthy `error` key or an `error`/`failed`/`timeout` status, or when its string output matches one of the configurable `error_patterns` (anchored regexes such as `Error: ...`, `TimeoutError: ...` — outputs that merely *mention* errors mid-text are not flagged).
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `ToolFailureRecoveryMetric()` to your `evals_iterator`.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics.community import ToolFailureRecoveryMetric
+
+
+@observe()
+def fetch_weather(city: str) -> str:
+    # Your tool implementation — raising here marks the span as failed
+    raise TimeoutError("weather service timed out")
+
+
+@observe()
+def my_agent(input: str) -> str:
+    try:
+        result = fetch_weather(input)
+    except TimeoutError:
+        result = "I couldn't fetch the live forecast; here's what I know."
+    update_current_trace(input=input, output=result)
+    return result
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What is the weather in Paris?")])
+
+# Initialize metric
+recovery_metric = ToolFailureRecoveryMetric(threshold=0.5)
+
+# Evaluate
+for golden in dataset.evals_iterator(metrics=[recovery_metric]):
+    my_agent(golden.input)
+```
+
+There are **NINE** optional parameters when creating a `ToolFailureRecoveryMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `max_blind_retries`: an integer representing how many *identical* retries of a failed call are tolerated before the retry-discipline sub-signal is penalized. One immediate retry is a reasonable response to a transient error; more identical retries are a retry storm. Defaulted to `1`.
+- [Optional] `error_patterns`: a list of regex strings used to classify a tool span's **string output** as a failure when tracing recorded no explicit `error`. Defaulted to anchored patterns like `^\s*error\b` and `^\s*timed\s+out\b`.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score, listing the failed calls, blind retries, hallucination verdicts, and recovery verdicts. Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async) — the two judge calls run concurrently. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a standalone
+
+You can also run `ToolFailureRecoveryMetric` on a single test case as a standalone, one-off execution:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import ToolFailureRecoveryMetric
+
+# test_case._trace_dict must be populated from @observe tracing
+metric = ToolFailureRecoveryMetric(threshold=0.5)
+metric.measure(test_case)
+
+print(metric.score)         # e.g. 0.0
+print(metric.reason)        # e.g. "Observed 1 failed tool call(s): 'fetch_price'. ..."
+print(metric.score_breakdown)
+# {
+#     "retry_discipline": 1.0,
+#     "hallucinated_success": 0.0,
+#     "recovery_quality": 1.0,
+# }
+```
+
+::::caution
+Running as a standalone is useful for debugging or building a custom pipeline, but you will **NOT** get the benefits of testing reports, Confident AI platform integration, or the optimizations (speed, caching, computation) that `evaluate()` or `deepeval test run` offer.
+::::
+
+## How Is It Calculated?
+
+The `ToolFailureRecoveryMetric` score is computed from three sub-signals over the set of failed tool calls in the trace:
+
+<Equation formula="\text{Score} = \begin{cases} 1.0 & \text{if no failed tool calls} \\ 0.0 & \text{if any hallucinated success} \\ \min(S_{\text{retry}},\; S_{\text{recovery}}) & \text{otherwise} \end{cases}" />
+
+A trace with no failed tool calls scores `1.0` — there was nothing to recover from (mirroring how Agent Loop Detection scores clean traces), and no LLM call is made. A hallucinated success — the agent presenting results from a failed call as real — **always** caps the score at 0, regardless of how disciplined the retries or how graceful the rest of the recovery was: a fabricated tool result must never pass.
+
+| Sub-signal | Type | What it measures |
+|---|---|---|
+| Retry Discipline ($S_{\text{retry}}$) | Deterministic | Blind identical retries of a failed call beyond `max_blind_retries` |
+| Hallucinated Success | LLM-judged | Downstream reasoning/final answer claims results from a call that failed |
+| Recovery Quality ($S_{\text{recovery}}$) | LLM-judged | Adaptation (alternative tool, re-plan, adjusted retry) or honest degradation vs. silently dropping the sub-task |
+
+### Retry Discipline (deterministic, no LLM)
+
+After each failed call, the metric counts the run of **immediately consecutive** tool calls whose `(tool_name, arguments)` signature is identical after shape normalization — arguments are canonicalized as sorted-key JSON with whitespace-collapsed strings, so cosmetic differences don't defeat the match, while any real argument change breaks the run (an *adjusted* retry is adaptation, never penalized). Per failure:
+
+| Condition | Score |
+|---|---|
+| identical retries ≤ `max_blind_retries` | **1.0** — a bounded retry is reasonable (transient errors exist) |
+| identical retries = `max_blind_retries` + 1 | **0.5** — blind repetition |
+| identical retries ≥ `max_blind_retries` + 2 | **0.0** — retry storm |
+
+$S_{\text{retry}}$ is the **minimum** across failures (the worst offender drives the sub-score).
+
+### Hallucinated Success (LLM-judged)
+
+The judge receives a linearized trace summary in which each failed call is tagged `FAILURE #N`, plus the final answer, and returns one verdict per failure: `hallucinated` (downstream text states or implies the failed call produced usable results) or `honest`. Data genuinely produced by a *later successful* retry or alternative tool is honest — only results credited to calls that never returned them count as hallucinated.
+
+### Recovery Quality (LLM-judged)
+
+The same trace summary is judged for recovery, one verdict per failure:
+
+| Verdict | Value | Meaning |
+|---|---|---|
+| `recovered` | **1.0** | Adjusted retry that made progress, alternative tool, re-plan, or honest degradation ("couldn't complete X, here's what I have") |
+| `partial` | **0.5** | Acknowledged/worked around imperfectly — vague acknowledgment, undisclosed degradation |
+| `ignored` | **0.0** | Silently dropped the sub-task or continued as if nothing happened |
+
+$S_{\text{recovery}}$ is the **mean** of the per-failure values.
+
+## Score Breakdown
+
+The `score_breakdown` attribute exposes each sub-signal score independently after evaluation:
+
+```python
+metric = ToolFailureRecoveryMetric(threshold=0.5)
+
+# After measure() runs:
+print(metric.score_breakdown)
+# {
+#     "retry_discipline": 0.0,
+#     "hallucinated_success": 1.0,
+#     "recovery_quality": 0.5,
+# }
+
+print(metric.score)   # 0.0 — min(retry, recovery), no hallucination cap applied
+print(metric.reason)  # "Observed 1 failed tool call(s): 'fetch_price'. Blind identical
+                      #  retries detected: 3 (allowance per failure: 1). ..."
+```
+
+`hallucinated_success` is `1.0` when no fabrication was detected and `0.0` when any failed call's results were presented as real (which caps the final score at 0).
+
+## Limitations & Design Decisions
+
+- **Failure detection is heuristic where tracing recorded no explicit error.** The canonical signal is the span's `error` field (set when an `@observe`d tool raises). Tools that *return* errors instead of raising are caught by the dict-output and anchored string-pattern heuristics; override `error_patterns` if your tools report failures differently.
+- **Span order is the pre-order traversal of the trace tree** — the same chronological approximation `AgentLoopDetectionMetric` uses. Heavily parallel agents may interleave differently than the tree order suggests.
+- **Retry discipline only counts *immediately consecutive* identical calls.** An identical call made later — after other tools ran in between — is not counted as a blind retry (the agent did something in between, and re-checking a failed dependency later can be legitimate).
+- **One retry is allowed by default** because transient failures (timeouts, rate limits) genuinely resolve on a second attempt. Set `max_blind_retries=0` to penalize any identical retry.
+
+---
+
+::::note Community Metric
+`ToolFailureRecoveryMetric` is a community metric. It complements [`AgentLoopDetectionMetric`](/docs/metrics-agent-loop-detection), which detects repetition and cycles anywhere in a trace: this metric is specifically about what happens **after a tool call fails** — blind retries of the failing call, fabricated results from it, and the quality of the recovery.
+::::
