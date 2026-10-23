@@ -221,6 +221,18 @@ def test_split_cost_keeps_totals():
     assert system_one_batch._split_cost(None, [1, 2]) == [None, None]
 
 
+def test_split_cost_handles_unknown_price_value():
+    """`token_cost()` yields EvaluationCost(None, ...) when tokens are known
+    but the price is not (e.g. audio tokens without an audio price); the
+    split must keep apportioning tokens instead of crashing."""
+    shares = system_one_batch._split_cost(
+        EvaluationCost(None, input_tokens=10, output_tokens=4), [1, 2]
+    )
+    assert [s.value for s in shares] == [None, None]
+    assert [s.input_tokens for s in shares] == [3, 7]
+    assert sum(s.output_tokens for s in shares) == 4
+
+
 @sync_and_async
 @pytest.mark.asyncio
 async def test_missing_param_is_skipped(is_async):
