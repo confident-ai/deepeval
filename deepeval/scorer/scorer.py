@@ -378,7 +378,9 @@ class Scorer:
         return scorer(text)
 
     @classmethod
-    def truth_identification_score(cls, target: str, prediction: str) -> int:
+    def truth_identification_score(
+        cls, target: str, prediction: str
+    ) -> Optional[int]:
         """
         Metrics that calculates the number of correct true answers identified in the prediction.
 
@@ -391,7 +393,8 @@ class Scorer:
             prediction (str): The predicted string from the LLM, representing the guessed answers.
 
         Returns:
-            int: The number of correct answers identified.
+            Optional[int]: The percentage of correct answers identified, or None if the
+            input cannot be meaningfully scored.
         """
         try:
             if not prediction or not target:
@@ -410,7 +413,7 @@ class Scorer:
             )
 
             if not target_list:
-                return 0  # Return 0 if target list is empty to avoid division by zero
+                return None
 
             # Count the number of correct matches
             correct_matches = sum(
@@ -421,8 +424,8 @@ class Scorer:
             score_percentage = (correct_matches / len(target_list)) * 100
 
             return round(score_percentage)  # Return rounded percentage
-        except Exception as e:
-            return 0  # Return score as 0 in case of any exception
+        except Exception:
+            return None
 
     def pass_at_k(self, n, c, k):
         import numpy as np
