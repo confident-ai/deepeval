@@ -823,12 +823,12 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                     span, ConfidentAttr.TRACE_OUTPUT, output_text
                 )
 
-        input_tokens = attrs.get("gen_ai.usage.input_tokens") or attrs.get(
-            "gen_ai.usage.prompt_tokens"
-        )
-        output_tokens = attrs.get("gen_ai.usage.output_tokens") or attrs.get(
-            "gen_ai.usage.completion_tokens"
-        )
+        input_tokens = attrs.get("gen_ai.usage.input_tokens")
+        if input_tokens is None:
+            input_tokens = attrs.get("gen_ai.usage.prompt_tokens")
+        output_tokens = attrs.get("gen_ai.usage.output_tokens")
+        if output_tokens is None:
+            output_tokens = attrs.get("gen_ai.usage.completion_tokens")
         if input_tokens is not None and not attrs.get(
             ConfidentAttr.LLM_INPUT_TOKEN_COUNT
         ):
