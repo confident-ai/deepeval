@@ -1,18 +1,18 @@
 {
-  "uuid": "7ab557f4-c2e9-4df1-abd8-dbe7300379c0",
+  "uuid": "0ddaf74edda1366c9248dc97428db6c9",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "8c3cac68-fe82-41bd-b367-94f0c618977c",
-      "name": "llm_generation",
+      "uuid": "d4039ad9f8a89355",
+      "name": "chat gpt-4o",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-02-15T05:57:14.253Z",
-      "endTime": "2026-02-15T05:57:15.730Z",
+      "startTime": "2026-10-21T14:05:33.096Z",
+      "endTime": "2026-10-21T14:05:34.390Z",
       "input": [
         {
-          "role": "system",
+          "role": "System Instruction",
           "content": "You are a helpful assistant. Always generate a string response."
         },
         {
@@ -20,20 +20,21 @@
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm here and ready to help. How can I assist you today?",
-      "model": "gpt-4o",
-      "inputTokenCount": 29.0,
-      "outputTokenCount": 17.0,
+      "output": "Hello! I'm here and ready to help. How about you?",
       "integration": "OpenAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o",
+      "provider": "OpenAI",
+      "inputTokenCount": 29.0,
+      "outputTokenCount": 14.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T05:57:14.253Z",
-  "endTime": "2026-02-15T05:57:15.730Z",
+  "startTime": "2026-10-21T14:05:33.096Z",
+  "endTime": "2026-10-21T14:05:34.390Z",
+  "name": "chat gpt-4o",
   "environment": "development",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm here and ready to help. How can I assist you today?",
+  "output": "Hello! I'm here and ready to help. How about you?",
   "status": "SUCCESS"
 }

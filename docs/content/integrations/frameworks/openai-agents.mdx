@@ -158,7 +158,7 @@ Historical version mappings are not available. The pair below is the exact versi
 <Case id="python">
 
 ```bash
-pip install -U deepeval openai-agents
+pip install -U deepeval openai-agents openinference-instrumentation-openai-agents
 ```
 
 The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.

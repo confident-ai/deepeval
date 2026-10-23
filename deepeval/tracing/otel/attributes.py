@@ -1,7 +1,7 @@
 """Canonical ``confident.*`` OTel attribute keys.
 
-Integrations write these onto OTel spans and ``ConfidentSpanExporter`` reads
-them back, so a misspelling is invisible: the write lands on a key nobody
+confident-trace writes these onto OTel spans and the converter reads them
+back, so a misspelling is invisible: the write lands on a key nobody
 looks at and the field disappears from the trace with no error.
 """
 
@@ -54,6 +54,7 @@ class ConfidentAttr:
     # Trace-level fields, mirroring ``update_current_trace``.
     TRACE_CONTEXT = "confident.trace.context"
     TRACE_ENVIRONMENT = "confident.trace.environment"
+    TRACE_EXPECTED_OUTPUT = "confident.trace.expected_output"
     TRACE_EXPECTED_TOOLS = "confident.trace.expected_tools"
     TRACE_INPUT = "confident.trace.input"
     TRACE_LLM_TEST_CASE_ACTUAL_OUTPUT = (
@@ -85,3 +86,31 @@ class ConfidentAttr:
     TRACE_TOOLS_CALLED = "confident.trace.tools_called"
     TRACE_TURN_ID = "confident.trace.turn_id"
     TRACE_USER_ID = "confident.trace.user_id"
+
+
+class GenAIAttr:
+    """GenAI semantic-convention keys, read alongside ``confident.*`` keys."""
+
+    AGENT_NAME = "gen_ai.agent.name"
+    CONVERSATION_ID = "gen_ai.conversation.id"
+    INPUT_MESSAGES = "gen_ai.input.messages"
+    OPERATION_NAME = "gen_ai.operation.name"
+    OUTPUT_MESSAGES = "gen_ai.output.messages"
+    PROVIDER_NAME = "gen_ai.provider.name"
+    REQUEST_MODEL = "gen_ai.request.model"
+    RESPONSE_MODEL = "gen_ai.response.model"
+    RETRIEVAL_DOCUMENTS = "gen_ai.retrieval.documents"
+    RETRIEVAL_QUERY_TEXT = "gen_ai.retrieval.query.text"
+    RETRIEVAL_TOP_K = "gen_ai.retrieval.top_k"
+    SYSTEM_INSTRUCTIONS = "gen_ai.system_instructions"
+    TOOL_CALL_ARGUMENTS = "gen_ai.tool.call.arguments"
+    TOOL_CALL_RESULT = "gen_ai.tool.call.result"
+    TOOL_DESCRIPTION = "gen_ai.tool.description"
+    TOOL_NAME = "gen_ai.tool.name"
+    USAGE_INPUT_TOKENS = "gen_ai.usage.input_tokens"
+    USAGE_OUTPUT_TOKENS = "gen_ai.usage.output_tokens"
+
+    # Superseded keys that older instrumentations still send.
+    LEGACY_SYSTEM = "gen_ai.system"
+    LEGACY_USAGE_COMPLETION_TOKENS = "gen_ai.usage.completion_tokens"
+    LEGACY_USAGE_PROMPT_TOKENS = "gen_ai.usage.prompt_tokens"

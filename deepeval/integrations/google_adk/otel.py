@@ -1,28 +1,18 @@
-from __future__ import annotations
+"""deepeval's Google ADK integration, built on confident-trace.
 
-import logging
+confident-trace reads the telemetry ADK emits once deepeval starts it with the
+``google_adk`` instrumentation.
+"""
+
 from typing import List, Optional
 
-from deepeval.confident.api import get_confident_api_key
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing.integrations import Integration
-
-logger = logging.getLogger(__name__)
-
-
-def _require_google_adk_instrumentor():
-    try:
-        from openinference.instrumentation.google_adk import (
-            GoogleADKInstrumentor,
-        )
-
-        return GoogleADKInstrumentor
-    except ImportError as exc:
-        raise ImportError(
-            "openinference-instrumentation-google-adk is not installed. "
-            "Install it with: "
-            "`pip install google-adk openinference-instrumentation-google-adk`."
-        ) from exc
+from deepeval.tracing.otel.adapters.google_adk import SCOPE
+from deepeval.tracing.otel.setup import (
+    ensure_confident_trace,
+    set_trace_defaults,
+)
 
 
 def instrument_google_adk(
@@ -36,63 +26,15 @@ def instrument_google_adk(
     metric_collection: Optional[str] = None,
     test_case_id: Optional[str] = None,
     turn_id: Optional[str] = None,
-    **removed_kwargs,
 ) -> None:
-    """Instrument Google ADK agents and ship traces to Confident AI.
+    """Trace Google ADK agents for deepeval.
 
-    Wraps the community-maintained ``openinference-instrumentation-google-adk``
-    package: every ADK agent, model call, and tool invocation emits an OTel
-    span tagged with OpenInference semantic conventions, which deepeval's
-    OpenInference span interceptor translates into ``confident.span.*``
-    attributes.
-
-    Routing follows the Pydantic AI POC pattern: REST when a deepeval trace
-    context is active (``@observe`` / ``with trace(...)``) or
-    ``trace_manager.is_evaluating`` is True; OTLP otherwise. Pair with
-    ``@observe`` / ``with trace(...)`` to mix native deepeval spans with
-    ADK-emitted OTel spans on the same trace.
-
-    All kwargs are optional and trace-level; span-level fields go on
-    ``with next_*_span(...)`` / ``update_current_span(...)``.
+    The kwargs are defaults for every trace; ``update_current_trace(...)``
+    overrides them at runtime. Span fields are set at the call site with
+    ``update_current_span(...)`` or ``next_*_span(...)``. ``api_key`` is only
+    needed to send traces to Confident AI under a key other than
+    ``CONFIDENT_API_KEY``.
     """
-    if removed_kwargs:
-        offending = ", ".join(sorted(removed_kwargs))
-        raise TypeError(
-            f"instrument_google_adk: unexpected keyword argument(s) "
-            f"{offending}. Span-level kwargs were removed in the OTel POC "
-            "migration; use ``with next_*_span(...)`` or "
-            "``update_current_span(...)``. "
-            "See deepeval/integrations/README.md."
-        )
-
     with capture_tracing_integration(Integration.GOOGLE_ADK):
-        if not api_key:
-            api_key = get_confident_api_key()
-            if not api_key:
-                raise ValueError(
-                    "CONFIDENT_API_KEY is not set. "
-                    "Pass it directly or set the environment variable."
-                )
-
-        GoogleADKInstrumentor = _require_google_adk_instrumentor()
-        GoogleADKInstrumentor().instrument()
-
-        from deepeval.integrations.openinference import (
-            instrument_openinference,
-        )
-
-        instrument_openinference(
-            api_key=api_key,
-            name=name,
-            thread_id=thread_id,
-            user_id=user_id,
-            metadata=metadata,
-            tags=tags,
-            environment=environment,
-            metric_collection=metric_collection,
-            test_case_id=test_case_id,
-            turn_id=turn_id,
-            integration=Integration.GOOGLE_ADK.value,
-        )
-
-        logger.info("Confident AI Google ADK telemetry attached.")
+        ensure_confident_trace(("google_adk",), api_key=api_key)
+        set_trace_defaults(SCOPE, dict(locals()))

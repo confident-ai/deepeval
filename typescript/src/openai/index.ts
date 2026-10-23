@@ -1,14 +1,34 @@
-import { patchOpenAI } from "@/openai/patch";
+/**
+ * deepeval's OpenAI integration, built on confident-trace.
+ *
+ * confident-trace traces each Chat Completions and Responses call of a client
+ * it instruments. Stage span fields with `nextLlmSpan(...)` or
+ * `setTracingContext(...)`.
+ */
 
-let registered = false;
+import {
+  confidentTraceModule,
+  ensureConfidentTrace,
+} from "@/tracing/otel/setup";
 
-function instrumentOpenAI(client: any) {
-  if (registered) {
-    return;
-  }
+type OpenAIAdapter = typeof import("confident-trace/openai");
 
-  patchOpenAI(client);
-  registered = true;
+const instrumented = new WeakMap<object, () => void>();
+
+/** Trace `client`'s calls; returns a function that stops tracing them. */
+export function instrumentOpenAI(client: object): () => void {
+  const existing = instrumented.get(client);
+  if (existing) return existing;
+  ensureConfidentTrace();
+  const restore = confidentTraceModule<OpenAIAdapter>(
+    "openai",
+  ).instrumentOpenAI(
+    client as Parameters<OpenAIAdapter["instrumentOpenAI"]>[0],
+  );
+  const stop = () => {
+    instrumented.delete(client);
+    restore();
+  };
+  instrumented.set(client, stop);
+  return stop;
 }
-
-export { instrumentOpenAI };
