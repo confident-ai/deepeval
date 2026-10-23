@@ -59,6 +59,41 @@
           "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases:usage.svg"
         ]
       }
+    },
+    {
+      "file": "evaluator-types.webp",
+      "title": "Types of evaluators: human and automated",
+      "alt": "Who evaluates splits into people and procedures. Human annotators are subject-matter experts, QA and product teams. Automated evaluators are deterministic checks for verifiable results, LLM-as-a-judge for results that need semantic judgment, and statistical and NLP scores for reference similarity.",
+      "width": 2136,
+      "height": 1137
+    },
+    {
+      "file": "metric-evidence-in-test-case.webp",
+      "title": "The test case fields each metric reads",
+      "alt": "An LLM test case with input, actual_output and optional retrieval_context, tools_called and expected_tools. Answer relevancy reads input and actual_output. Faithfulness reads actual_output and retrieval_context. Tool correctness reads tools_called and expected_tools.",
+      "width": 2136,
+      "height": 1356
+    },
+    {
+      "file": "metric-fit-by-application.webp",
+      "title": "Metrics used by each example application",
+      "alt": "How much each example application in this guide relies on each metric, from 0 (not used) to 3 (primary). The document extractor relies on exact match. The coding agent relies on task completion and tool correctness. The RAG QA pipeline relies on faithfulness and contextual recall. The voice chatbot relies on task completion, conversation completeness and turn-taking.",
+      "width": 2136,
+      "height": 1401
+    },
+    {
+      "file": "extracted-vs-expected-record.webp",
+      "title": "An extracted record matched field by field against the expected record",
+      "alt": "The extracted record and the expected record matched field by field. The bill number BOL-042, the total weight of 1240 kg and the port of loading Rotterdam match; the carrier is Maersk Line in the extraction but Maersk in the golden, so an exact match on the whole record fails.",
+      "width": 2136,
+      "height": 1041
+    },
+    {
+      "file": "voice-escalation-judge.webp",
+      "title": "An escalation correctness judge scoring a voice call",
+      "alt": "A caller asks to move a cardiology appointment, gives their name and date of birth, and mentions their chest has been hurting all morning. The voice agent ignores it and offers a new slot. A judge asked whether the agent handed off to clinical staff when the caller reported chest pain answers no: it kept scheduling.",
+      "width": 2136,
+      "height": 1080
     }
   ]
 }
