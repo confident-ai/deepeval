@@ -122,22 +122,20 @@ class HumanEval(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 golden: Golden = self.load_benchmark_dataset(task)
-                task_correct = 0
                 overall_total_predictions += 1
 
-                # Calculate task accuracy
+                # Calculate task accuracy. pass@k is a probability in [0, 1],
+                # not a pass/fail flag, so it is accumulated as-is.
                 prediction, score = self.predict(
                     model, task, golden, k
                 ).values()
-                if score:
-                    task_correct = 1
-                    overall_correct_predictions += 1
+                overall_correct_predictions += score
                 predictions_row.append(
                     (
                         task.value,
                         golden.input,
                         prediction,
-                        task_correct,
+                        score,
                         golden.expected_output,
                         score,
                     )
@@ -146,10 +144,8 @@ class HumanEval(DeepEvalBaseBenchmark):
                     self.print_verbose_logs(
                         task.value, golden.input, prediction, score
                     )
-                print(
-                    f"HumanEval Task Accuracy (task={task.value}): {task_correct}"
-                )
-                scores_row.append((task.value, task_correct))
+                print(f"HumanEval Task Accuracy (task={task.value}): {score}")
+                scores_row.append((task.value, score))
 
             # Calculate overall accuracy
             overall_accuracy = (
