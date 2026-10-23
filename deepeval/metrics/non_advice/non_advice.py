@@ -328,6 +328,7 @@ class NonAdviceMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.NO,),
+            expected_count=len(self.advices),
         )
 
     @property
