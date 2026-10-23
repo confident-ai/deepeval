@@ -1,13 +1,13 @@
 {
-  "uuid": "e690e4e1-ffac-4abf-ba3c-2ea9a7663c2d",
+  "uuid": "3ec5e4e1-f7fd-484e-9c3f-b65864c64d74",
   "baseSpans": [
     {
-      "uuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "uuid": "37b95ea4-1448-4797-b3b8-8a16b0d672e5",
       "name": "run_main",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-17T12:27:09.507Z",
-      "endTime": "2025-10-17T12:27:14.276Z",
+      "startTime": "2026-10-21T14:05:41.880Z",
+      "endTime": "2026-10-21T14:05:45.431Z",
       "input": {},
       "toolsCalled": [
         {
@@ -24,45 +24,47 @@
             "unit": "c"
           }
         }
-      ],
-      "integration": "OpenAI"
+      ]
     }
   ],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "02d76703-685d-4e5c-a902-444f1e27222b",
-      "name": "llm_generation",
+      "uuid": "5405043b8c3cc61e",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
-      "startTime": "2025-10-17T12:27:12.781Z",
-      "endTime": "2025-10-17T12:27:14.276Z",
+      "parentUuid": "37b95ea4-1448-4797-b3b8-8a16b0d672e5",
+      "startTime": "2026-10-21T14:05:43.622Z",
+      "endTime": "2026-10-21T14:05:45.431Z",
       "input": [
         {
-          "type": "function_call_output",
-          "call_id": "call_XjCbIIBKDMAdpYgdgPA9oAhh",
-          "output": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_E9yOsmllFab5ZXYbMaWxiEqJ",
+            "response": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
+          }
         }
       ],
-      "output": "The weather in San Francisco is 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 85.0,
-      "outputTokenCount": 35.0,
+      "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
       "integration": "OpenAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 85.0,
+      "outputTokenCount": 34.0
     },
     {
-      "uuid": "579160b5-173d-4f24-a1e6-c15bb5a18c69",
-      "name": "llm_generation",
+      "uuid": "bdfc89654b401f2c",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
-      "startTime": "2025-10-17T12:27:09.512Z",
-      "endTime": "2025-10-17T12:27:12.781Z",
+      "parentUuid": "37b95ea4-1448-4797-b3b8-8a16b0d672e5",
+      "startTime": "2026-10-21T14:05:41.888Z",
+      "endTime": "2026-10-21T14:05:43.621Z",
       "input": [
         {
-          "role": "system",
+          "role": "System Instruction",
           "content": "You are a helpful assistant. Use tools when they are needed to get accurate data."
         },
         {
@@ -72,20 +74,23 @@
       ],
       "output": [
         {
-          "name": "get_weather",
-          "type": "FUNCTION",
-          "description": "Get the current weather for a city.",
-          "inputParameters": {
-            "location": "San Francisco",
-            "unit": "c"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_E9yOsmllFab5ZXYbMaWxiEqJ",
+            "name": "get_weather",
+            "arguments": {
+              "location": "San Francisco",
+              "unit": "c"
+            }
           }
         }
       ],
+      "integration": "OpenAI",
       "toolsCalled": [
         {
           "name": "get_weather",
           "type": "FUNCTION",
-          "description": "Get the current weather for a city.",
           "inputParameters": {
             "location": "San Francisco",
             "unit": "c"
@@ -93,22 +98,21 @@
         }
       ],
       "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 106.0,
-      "outputTokenCount": 20.0,
-      "integration": "OpenAI",
-      "provider": "OpenAI"
+      "outputTokenCount": 20.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "83fa29ce-95d3-4806-a5ed-92ac425c7325",
+      "uuid": "0441f634-e1c8-414b-a83b-f45ef297b83e",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
-      "startTime": "2025-10-17T12:27:12.781Z",
-      "endTime": "2025-10-17T12:27:12.781Z",
+      "parentUuid": "37b95ea4-1448-4797-b3b8-8a16b0d672e5",
+      "startTime": "2026-10-21T14:05:43.622Z",
+      "endTime": "2026-10-21T14:05:43.622Z",
       "input": {
         "location": "San Francisco",
         "unit": "c"
@@ -118,24 +122,13 @@
         "temperature": 18,
         "unit": "C",
         "condition": "partly cloudy"
-      },
-      "integration": "OpenAI"
-    }
-  ],
-  "startTime": "2025-10-17T12:27:09.507Z",
-  "endTime": "2025-10-17T12:27:14.276Z",
-  "environment": "development",
-  "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
-  "output": [
-    {
-      "name": "get_weather",
-      "type": "FUNCTION",
-      "description": "Get the current weather for a city.",
-      "inputParameters": {
-        "location": "San Francisco",
-        "unit": "c"
       }
     }
   ],
+  "startTime": "2026-10-21T14:05:41.880Z",
+  "endTime": "2026-10-21T14:05:45.431Z",
+  "environment": "development",
+  "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
+  "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
   "status": "SUCCESS"
 }

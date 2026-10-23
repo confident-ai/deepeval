@@ -12,7 +12,7 @@ multi-node graphs that fire the LLM callback more than once per
 need a regression guard for.
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,9 +26,13 @@ from deepeval.tracing import (
     next_llm_span,
     next_span,
     next_tool_span,
-    trace_manager,
 )
 from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
+from tests.test_integrations.utils import (
+    collecting_traces,
+    confident_trace_instrumentation,
+    walk_spans,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -36,47 +40,38 @@ from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _collect_runs():
+    with confident_trace_instrumentation("langchain", "langgraph"):
+        with collecting_traces() as traces:
+            _COLLECTED.append(traces)
+            yield
+            _COLLECTED.clear()
+
+
+_COLLECTED: List[List[Any]] = []
+
+
+def _collected(span_type) -> list:
+    spans = [
+        span
+        for trace in _COLLECTED[-1]
+        for span in walk_spans(trace.root_spans)
+        if isinstance(span, span_type)
+    ]
+    return sorted(spans, key=lambda span: span.start_time)
+
+
 class _RecordingCallbackHandler(CallbackHandler):
-    """Capture span object refs at start so tests can assert against
-    them after ``graph.ainvoke(...)`` (the trace ends and
-    ``trace_manager.active_spans`` clears, but span objects stay
-    attached to the trace tree)."""
+    """Reads the spans its runs produced, in start order."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.llm_spans: List[LlmSpan] = []
-        self.tool_spans: List[ToolSpan] = []
-        self.root_span: Optional[BaseSpan] = None
+    llm_spans = property(lambda self: _collected(LlmSpan))
+    tool_spans = property(lambda self: _collected(ToolSpan))
 
-    def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
-        res = super().on_chat_model_start(
-            serialized, messages, run_id=run_id, **kwargs
-        )
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_llm_start(self, serialized, prompts, *, run_id, **kwargs):
-        res = super().on_llm_start(serialized, prompts, run_id=run_id, **kwargs)
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_chain_start(
-        self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs
-    ):
-        res = super().on_chain_start(
-            serialized,
-            inputs,
-            run_id=run_id,
-            parent_run_id=parent_run_id,
-            **kwargs,
-        )
-        if parent_run_id is None:
-            self.root_span = trace_manager.get_span_by_uuid(str(run_id))
-        return res
+    @property
+    def root_span(self) -> Optional[BaseSpan]:
+        traces = _COLLECTED[-1]
+        return traces[0].root_spans[0] if traces else None
 
 
 class _State(TypedDict, total=False):
@@ -254,10 +249,9 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
 )
 async def test_base_next_span_lands_on_root_agent_span_in_graph():
     """``next_span(...)`` is "next of any type", and in a graph the
-    first span the handler opens is the root ``agent`` span for
-    ``ainvoke`` itself — not the LLM span inside the node. The root's
-    ``pop_pending_for("agent")`` drains the base slot, so the LLM span
-    downstream sees an empty slot."""
+    first span opened is the graph's root span for ``ainvoke`` itself,
+    not the LLM span inside the node. The root drains the base slot, so
+    the LLM span downstream sees an empty slot."""
     callback = _RecordingCallbackHandler()
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)

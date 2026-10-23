@@ -1,272 +1,198 @@
 {
-  "uuid": "8d0427de-0af7-45eb-acf2-ec2566017013",
+  "uuid": "f7c8f275931ed9411843d081ee883c51",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "019d050f-ceb2-7df2-a911-a82cd833bab8",
+      "uuid": "200087e46af2fb06",
       "name": "summarize_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-19T07:46:55.283Z",
-      "endTime": "2026-03-19T07:46:59.573Z",
+      "startTime": "2026-10-23T08:40:48.928Z",
+      "endTime": "2026-10-23T08:40:51.659Z",
       "input": {
         "messages": [
           {
-            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+              }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 174,
-                "prompt_tokens": 147,
-                "total_tokens": 321,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2NjPl6Z6h1hFVt5v0MFDDsAJ2Yq",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050f-ceb3-72a1-8d31-2dde06dd98ac-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "summarize_text",
-                "args": {
+                "arguments": {
                   "text": "AI is transforming industries worldwide."
                 },
-                "id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-                "type": "tool_call"
+                "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 147,
-              "output_tokens": 174,
-              "total_tokens": 321,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
+            ]
           },
           {
-            "content": "Summary: AI is transforming industries worldwide.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "summarize_text",
-            "tool_call_id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: AI is transforming industries worldwide.",
+                "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
+              }
+            ]
           },
           {
-            "content": "Summary: AI is transforming industries worldwide.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 11,
-                "prompt_tokens": 192,
-                "total_tokens": 203,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2NmT5iqj1DnH1GcLI6mCSFp2nei",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050f-dab2-7a70-9ca4-130bf745ae35-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 192,
-              "output_tokens": 11,
-              "total_tokens": 203,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "AI is transforming industries worldwide."
               }
-            }
+            ]
           }
         ]
       },
+      "integration": "LangChain",
       "toolsCalled": [
         {
           "name": "summarize_text",
           "type": "FUNCTION",
-          "output": {
-            "content": "Summary: AI is transforming industries worldwide.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "summarize_text",
-            "tool_call_id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-            "status": "success"
-          },
+          "output": "Summary: AI is transforming industries worldwide.",
           "inputParameters": {
             "text": "AI is transforming industries worldwide."
           }
         }
       ],
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d050f-dab2-7a70-9ca4-130bf745ae35",
+      "uuid": "492763b60707f4cf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050f-ceb2-7df2-a911-a82cd833bab8",
-      "startTime": "2026-03-19T07:46:58.354Z",
-      "endTime": "2026-03-19T07:46:59.572Z",
+      "parentUuid": "200087e46af2fb06",
+      "startTime": "2026-10-23T08:40:50.623Z",
+      "endTime": "2026-10-23T08:40:51.659Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "Summary: AI is transforming industries worldwide."
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "summarize_text",
+            "arguments": {
+              "text": "AI is transforming industries worldwide."
+            },
+            "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Summary: AI is transforming industries worldwide.",
+            "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "Summary: AI is transforming industries worldwide.",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 192.0,
-      "outputTokenCount": 11.0,
+      "output": "AI is transforming industries worldwide.",
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 192.0,
+      "outputTokenCount": 9.0
     },
     {
-      "uuid": "019d050f-ceb3-72a1-8d31-2dde06dd98ac",
+      "uuid": "fc35f89346316efe",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050f-ceb2-7df2-a911-a82cd833bab8",
-      "startTime": "2026-03-19T07:46:55.283Z",
-      "endTime": "2026-03-19T07:46:58.352Z",
+      "parentUuid": "200087e46af2fb06",
+      "startTime": "2026-10-23T08:40:48.928Z",
+      "endTime": "2026-10-23T08:40:50.621Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'summarize_text', 'description': 'Summarize the given text.', 'parameters': {'properties': {'text': {'type': 'string'}}, 'required': ['text'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "summarize_text",
-            "args": {
+            "arguments": {
               "text": "AI is transforming industries worldwide."
             },
-            "id": "call_SK2TdQEb6m44AIjJyb8d9clL"
+            "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 147.0,
-      "outputTokenCount": 174.0,
+        }
+      ],
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "toolsCalled": [
+        {
+          "name": "summarize_text",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "text": "AI is transforming industries worldwide."
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 147.0,
+      "outputTokenCount": 24.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d050f-dab0-71e0-be72-acfc9b35bb30",
+      "uuid": "f13962c497a6b246",
       "name": "summarize_text",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d050f-ceb2-7df2-a911-a82cd833bab8",
-      "startTime": "2026-03-19T07:46:58.353Z",
-      "endTime": "2026-03-19T07:46:58.354Z",
+      "parentUuid": "200087e46af2fb06",
+      "startTime": "2026-10-23T08:40:50.622Z",
+      "endTime": "2026-10-23T08:40:50.622Z",
       "input": {
         "text": "AI is transforming industries worldwide."
       },
-      "output": {
-        "content": "Summary: AI is transforming industries worldwide.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "summarize_text",
-        "tool_call_id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-        "status": "success"
-      },
+      "output": "Summary: AI is transforming industries worldwide.",
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-03-19T07:46:55.282Z",
-  "endTime": "2026-03-19T07:46:59.573Z",
+  "startTime": "2026-10-23T08:40:48.928Z",
+  "endTime": "2026-10-23T08:40:51.659Z",
   "name": "langchain-conditional-summarize",
   "tags": [
     "langchain",
@@ -277,132 +203,62 @@
   "input": {
     "messages": [
       {
-        "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+          }
+        ]
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+          }
+        ]
       },
       {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 174,
-            "prompt_tokens": 147,
-            "total_tokens": 321,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2NjPl6Z6h1hFVt5v0MFDDsAJ2Yq",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050f-ceb3-72a1-8d31-2dde06dd98ac-0",
-        "tool_calls": [
+        "role": "assistant",
+        "parts": [
           {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
             "name": "summarize_text",
-            "args": {
+            "arguments": {
               "text": "AI is transforming industries worldwide."
             },
-            "id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-            "type": "tool_call"
+            "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
           }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 147,
-          "output_tokens": 174,
-          "total_tokens": 321,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
-          }
-        }
+        ]
       },
       {
-        "content": "Summary: AI is transforming industries worldwide.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "summarize_text",
-        "tool_call_id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-        "status": "success"
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Summary: AI is transforming industries worldwide.",
+            "id": "call_4i18GwvJ2BOEskyXOqFx24e5"
+          }
+        ]
       },
       {
-        "content": "Summary: AI is transforming industries worldwide.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 11,
-            "prompt_tokens": 192,
-            "total_tokens": 203,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2NmT5iqj1DnH1GcLI6mCSFp2nei",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050f-dab2-7a70-9ca4-130bf745ae35-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 192,
-          "output_tokens": 11,
-          "total_tokens": 203,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "AI is transforming industries worldwide."
           }
-        }
+        ]
       }
     ]
   },
@@ -411,15 +267,7 @@
     {
       "name": "summarize_text",
       "type": "FUNCTION",
-      "output": {
-        "content": "Summary: AI is transforming industries worldwide.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "summarize_text",
-        "tool_call_id": "call_SK2TdQEb6m44AIjJyb8d9clL",
-        "status": "success"
-      },
+      "output": "Summary: AI is transforming industries worldwide.",
       "inputParameters": {
         "text": "AI is transforming industries worldwide."
       }

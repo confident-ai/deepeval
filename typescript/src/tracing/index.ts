@@ -17,17 +17,6 @@ export {
 export { setTracingContext } from "@/tracing/trace-context";
 
 export {
-  resolveSpanRoute,
-  shouldRouteToRest,
-  resolveTraceForOtelSpan,
-  isTraceOtelImplicit,
-  markTraceOtelImplicit,
-  ROUTE_TO_REST_ATTRIBUTE,
-  type SpanRoute,
-  type RestRoutingOptions,
-} from "@/tracing/otel-routing";
-
-export {
   nextSpan,
   nextAgentSpan,
   nextLlmSpan,

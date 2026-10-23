@@ -1,25 +1,17 @@
 {
-  "uuid": "ea8da60991ed99754a453b9cd9e8b64b",
+  "uuid": "cb24dd9f38808ef18a5fe8ad65be7cc3",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "8e67fb7fdad8d19c",
+      "uuid": "ee5ba666808e27c6",
       "name": "evals_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:36.995Z",
-      "endTime": "2026-06-01T16:36:39.059Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Use the special_tool to process 'Sync Data'"
-        }
-      ],
+      "startTime": "2026-10-21T17:17:34.745Z",
+      "endTime": "2026-10-21T17:17:37.242Z",
+      "input": "Use the special_tool to process 'Sync Data'",
       "output": "The query \"Sync Data\" has been processed.",
       "integration": "PydanticAI",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
       "toolsCalled": [
         {
           "name": "special_tool",
@@ -29,18 +21,21 @@
             "query": "Sync Data"
           }
         }
-      ]
+      ],
+      "availableTools": [],
+      "agentHandoffs": [],
+      "metricCollection": "agent_metrics_v1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "ac551573e2cb3a46",
+      "uuid": "45650084d0f4a6ba",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:38.293Z",
-      "endTime": "2026-06-01T16:36:39.059Z",
+      "parentUuid": "ee5ba666808e27c6",
+      "startTime": "2026-10-21T17:17:36.016Z",
+      "endTime": "2026-10-21T17:17:37.241Z",
       "input": [
         {
           "role": "system",
@@ -54,7 +49,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_QvEomd7F1haCAmzutgsngEbF",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
@@ -63,83 +58,27 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_QvEomd7F1haCAmzutgsngEbF",
             "name": "special_tool",
             "result": "Processed: Sync Data"
           }
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "special_tool",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "type": "object"
-                },
-                "description": "A tool used by feature tests.",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "special_tool": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "The query \"Sync Data\" has been processed."
-        }
-      ],
+      "output": "The query \"Sync Data\" has been processed.",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 90.0,
-      "outputTokenCount": 11.0
+      "inputTokenCount": 86.0,
+      "outputTokenCount": 12.0
     },
     {
-      "uuid": "48c404fe398d019f",
+      "uuid": "6bfc09cecf20e713",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:36.997Z",
-      "endTime": "2026-06-01T16:36:38.288Z",
+      "parentUuid": "ee5ba666808e27c6",
+      "startTime": "2026-10-21T17:17:34.746Z",
+      "endTime": "2026-10-21T17:17:36.013Z",
       "input": [
         {
           "role": "system",
@@ -148,57 +87,6 @@
         {
           "role": "user",
           "content": "Use the special_tool to process 'Sync Data'"
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "special_tool",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "query": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "query"
-                  ],
-                  "type": "object"
-                },
-                "description": "A tool used by feature tests.",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "special_tool": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
       "output": [
@@ -206,29 +94,38 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_mGP0znNrH6k7P8omd8FN3E9g",
+            "id": "call_QvEomd7F1haCAmzutgsngEbF",
             "name": "special_tool",
             "arguments": "{\"query\":\"Sync Data\"}"
           }
         }
       ],
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "query": "Sync Data"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 63.0,
-      "outputTokenCount": 15.0
+      "inputTokenCount": 61.0,
+      "outputTokenCount": 16.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "2c073e85368feab3",
+      "uuid": "fea471025abcddca",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "8e67fb7fdad8d19c",
-      "startTime": "2026-06-01T16:36:38.290Z",
-      "endTime": "2026-06-01T16:36:38.291Z",
+      "parentUuid": "ee5ba666808e27c6",
+      "startTime": "2026-10-21T17:17:36.015Z",
+      "endTime": "2026-10-21T17:17:36.015Z",
       "input": {
         "query": "Sync Data"
       },
@@ -236,8 +133,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:36.995Z",
-  "endTime": "2026-06-01T16:36:39.059Z",
+  "startTime": "2026-10-21T17:17:34.745Z",
+  "endTime": "2026-10-21T17:17:37.242Z",
   "name": "pydanticai-full-features-sync",
   "metadata": {
     "env": "testing",
@@ -251,13 +148,18 @@
   "environment": "development",
   "threadId": "thread-sync-features-001",
   "userId": "user-sync-001",
-  "input": [
-    {
-      "role": "user",
-      "content": "Use the special_tool to process 'Sync Data'"
-    }
-  ],
+  "input": "Use the special_tool to process 'Sync Data'",
   "output": "The query \"Sync Data\" has been processed.",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "output": "Processed: Sync Data",
+      "inputParameters": {
+        "query": "Sync Data"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_override_v1"
 }

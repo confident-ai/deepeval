@@ -1,41 +1,33 @@
+"""Let a deepeval ``Agent`` and ``function_tool`` configure the spans
+OpenInference opens for them."""
+
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Optional, List
-from deepeval.tracing.context import current_span_context
-from deepeval.tracing.types import AgentSpan, ToolSpan
-from deepeval.tracing.utils import make_json_serializable
-from deepeval.tracing import observe
-from deepeval.tracing.tracing import Observer, trace_manager
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional
+
+from opentelemetry import trace as otel_trace
+
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
-from deepeval.tracing.types import LlmSpan
-from functools import wraps
+from deepeval.tracing.context import (
+    staged_next_span,
+    update_agent_span,
+    update_current_span,
+)
 
 try:
     from agents import function_tool as _agents_function_tool  # type: ignore
-    from deepeval.openai_agents.extractors import parse_response_output
-    from agents.run import AgentRunner
-    from agents.run_internal.run_steps import SingleStepResult
     from agents.models.interface import Model
-    from agents import Agent
-except Exception:
-    pass
+except ImportError:
+    _agents_function_tool = None
+    Model = object
 
+# The OpenTelemetry span open for each agent span, by the SDK's span id.
+agent_spans: Dict[str, otel_trace.Span] = {}
 
-def _agent_span_for_run_step_patch() -> Optional[AgentSpan]:
-    span = current_span_context.get()
-    seen: set[int] = set()
-    while span is not None and id(span) not in seen:
-        seen.add(id(span))
-        if isinstance(span, AgentSpan):
-            return span
-        parent_uuid = getattr(span, "parent_uuid", None)
-        if parent_uuid:
-            span = trace_manager.get_span_by_uuid(parent_uuid)
-        else:
-            break
-    return None
+_RUN_STEPS = ("run_single_turn", "run_single_turn_streamed")
 
 
 def _resolve_agent_from_run_step_args(args: Any, kwargs: Any) -> Any:
@@ -53,11 +45,12 @@ def _resolve_agent_from_run_step_args(args: Any, kwargs: Any) -> Any:
     return None
 
 
-def _wrap_with_observe(
+def _with_tool_metrics(
     func: Callable[..., Any],
-    metrics: Optional[str] = None,
+    metrics: Optional[List[BaseMetric]] = None,
     metric_collection: Optional[str] = None,
 ) -> Callable[..., Any]:
+    """``func``, setting the metrics of the tool span it runs in."""
     if getattr(func, "_is_deepeval_observed", False):
         return func
 
@@ -65,20 +58,18 @@ def _wrap_with_observe(
 
         @wraps(func)
         async def observed(*args: Any, **kwargs: Any) -> Any:
-            current_span = current_span_context.get()
-            if isinstance(current_span, ToolSpan):
-                current_span.metrics = metrics
-                current_span.metric_collection = metric_collection
+            update_current_span(
+                metrics=metrics, metric_collection=metric_collection
+            )
             return await func(*args, **kwargs)
 
     else:
 
         @wraps(func)
         def observed(*args: Any, **kwargs: Any) -> Any:
-            current_span = current_span_context.get()
-            if isinstance(current_span, ToolSpan):
-                current_span.metrics = metrics
-                current_span.metric_collection = metric_collection
+            update_current_span(
+                metrics=metrics, metric_collection=metric_collection
+            )
             return func(*args, **kwargs)
 
     setattr(observed, "_is_deepeval_observed", True)
@@ -101,8 +92,7 @@ def function_tool(
         )
 
     if callable(func):
-
-        wrapped = _wrap_with_observe(
+        wrapped = _with_tool_metrics(
             func,
             metrics=metrics,
             metric_collection=metric_collection,
@@ -110,8 +100,7 @@ def function_tool(
         return _agents_function_tool(wrapped, *args, **kwargs)
 
     def decorator(real_func: Callable[..., Any]) -> Any:
-
-        wrapped = _wrap_with_observe(
+        wrapped = _with_tool_metrics(
             real_func,
             metrics=metrics,
             metric_collection=metric_collection,
@@ -121,223 +110,77 @@ def function_tool(
     return decorator
 
 
-_PATCHED_DEFAULT_RUN_SINGLE_TURN = False
-_PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = False
-_PATCHED_DEFAULT_GET_MODEL = False
-
-
 class _ObservedModel(Model):
+    """Stages an agent's LLM settings for each model call's span."""
+
     def __init__(
         self,
         inner: Model,
-        llm_metric_collection: str = None,
-        llm_metrics: List[BaseMetric] = None,
-        confident_prompt: Prompt = None,
+        llm_metric_collection: Optional[str] = None,
+        llm_metrics: Optional[List[BaseMetric]] = None,
+        confident_prompt: Optional[Prompt] = None,
     ) -> None:
         self._inner = inner
-        self._llm_metric_collection = llm_metric_collection
-        self._llm_metrics = llm_metrics
-        self._confident_prompt = confident_prompt
+        self._span_fields = {
+            "metrics": llm_metrics,
+            "metric_collection": llm_metric_collection,
+            "prompt": confident_prompt,
+        }
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
 
-    async def get_response(
-        self,
-        *args,
-        **kwargs,
-    ):
-        with Observer(
-            span_type="llm",
-            func_name="LLM",
-            observe_kwargs={"model": "temp_model"},
-            metrics=self._llm_metrics,
-            metric_collection=self._llm_metric_collection,
-        ):
-            result = await self._inner.get_response(
-                *args,
-                **kwargs,
-            )
-            llm_span: LlmSpan = current_span_context.get()
-            llm_span.prompt = self._confident_prompt
-            if self._confident_prompt:
-                llm_span.prompt_alias = self._confident_prompt.alias
-                llm_span.prompt_commit_hash = self._confident_prompt.hash
-                llm_span.prompt_version = self._confident_prompt.version
-                llm_span.prompt_label = self._confident_prompt.label
+    async def get_response(self, *args, **kwargs):
+        with staged_next_span("llm", self._span_fields):
+            return await self._inner.get_response(*args, **kwargs)
 
-        return result
-
-    def stream_response(
-        self,
-        *args,
-        **kwargs,
-    ):
-
-        async def _gen():
-            observer = Observer(
-                span_type="llm",
-                func_name="LLM",
-                observe_kwargs={"model": "temp_model"},
-                metrics=self._llm_metrics,
-                metric_collection=self._llm_metric_collection,
-            )
-            observer.__enter__()
-
-            llm_span: LlmSpan = current_span_context.get()
-            llm_span.prompt = self._confident_prompt
-            if self._confident_prompt:
-                llm_span.prompt_alias = self._confident_prompt.alias
-                llm_span.prompt_commit_hash = self._confident_prompt.hash
-                llm_span.prompt_version = self._confident_prompt.version
-                llm_span.prompt_label = self._confident_prompt.label
-
-            try:
-                async for event in self._inner.stream_response(
-                    *args,
-                    **kwargs,
-                ):
+    def stream_response(self, *args, **kwargs):
+        async def stream():
+            with staged_next_span("llm", self._span_fields):
+                async for event in self._inner.stream_response(*args, **kwargs):
                     yield event
-            except Exception as e:
-                observer.__exit__(type(e), e, e.__traceback__)
-                raise
-            finally:
-                observer.__exit__(None, None, None)
 
-        return _gen()
+        return stream()
 
 
-def patch_default_agent_run_single_turn():
-    global _PATCHED_DEFAULT_RUN_SINGLE_TURN
-    if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
-        return
-
+def patch_run_steps() -> None:
+    """Give each agent span its agent's settings once a turn has run."""
+    import agents.run as agents_run
     import agents.run_internal.run_loop as run_loop
 
-    original_run_single_turn = run_loop.run_single_turn
+    for name in _RUN_STEPS:
+        original = getattr(run_loop, name, None)
+        if original is None or getattr(original, "_deepeval_patched", False):
+            continue
 
-    async def patched_run_single_turn(*args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn(*args, **kwargs)
-        try:
-            if isinstance(res, SingleStepResult):
-                agent_span = _agent_span_for_run_step_patch()
-                if isinstance(agent_span, AgentSpan):
+        def patched_step(original):
+            @wraps(original)
+            async def patched(*args, **kwargs):
+                result = await original(*args, **kwargs)
+                try:
+                    _configure_agent_span(
+                        kwargs.get("agent_span"),
+                        _resolve_agent_from_run_step_args(args, kwargs),
+                    )
+                except Exception:
+                    # Never break the run over its tracing.
+                    pass
+                return result
 
-                    agent = _resolve_agent_from_run_step_args(args, kwargs)
-                    _set_agent_metrics(agent, agent_span)
+            patched._deepeval_patched = True
+            return patched
 
-                    # 2. Safely extract input
-                    if agent_span.input is None or agent_span.input == {}:
-                        pre_items = getattr(res, "pre_step_items", []) or []
-                        _pre_step_items_raw_list = [
-                            getattr(item, "raw_item", str(item))
-                            for item in pre_items
-                        ]
-
-                        if _pre_step_items_raw_list:
-                            agent_span.input = make_json_serializable(
-                                _pre_step_items_raw_list
-                            )
-                        else:
-                            agent_span.input = make_json_serializable(
-                                getattr(res, "original_input", None)
-                            )
-
-                    # 3. Safely extract output
-                    model_response = getattr(res, "model_response", None)
-                    if model_response is not None:
-                        out_val = getattr(model_response, "output", "")
-                        agent_span.output = parse_response_output(out_val)
-        except Exception:
-            pass
-        return res
-
-    # Patch the source module
-    run_loop.run_single_turn = patched_run_single_turn
-
-    try:
-        import agents.run as agents_run
-
-        if hasattr(agents_run, "run_single_turn"):
-            agents_run.run_single_turn = patched_run_single_turn
-    except ImportError:
-        pass
-
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True
-
-
-def patch_default_agent_run_single_turn_streamed():
-    global _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED
-    if _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED:
-        return
-
-    import agents.run_internal.run_loop as run_loop
-
-    original_run_single_turn_streamed = run_loop.run_single_turn_streamed
-
-    async def patched_run_single_turn_streamed(*args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn_streamed(
-            *args, **kwargs
-        )
-        try:
-            if isinstance(res, SingleStepResult):
-                agent_span = _agent_span_for_run_step_patch()
-                if isinstance(agent_span, AgentSpan):
-
-                    agent = _resolve_agent_from_run_step_args(args, kwargs)
-                    _set_agent_metrics(agent, agent_span)
-
-                    # 2. Safely extract input
-                    if agent_span.input is None or agent_span.input == {}:
-                        pre_items = getattr(res, "pre_step_items", []) or []
-                        _pre_step_items_raw_list = [
-                            getattr(item, "raw_item", str(item))
-                            for item in pre_items
-                        ]
-
-                        if _pre_step_items_raw_list:
-                            agent_span.input = make_json_serializable(
-                                _pre_step_items_raw_list
-                            )
-                        else:
-                            agent_span.input = make_json_serializable(
-                                getattr(res, "original_input", None)
-                            )
-
-                    # 3. Safely extract output
-                    model_response = getattr(res, "model_response", None)
-                    if model_response is not None:
-                        out_val = getattr(model_response, "output", "")
-                        agent_span.output = parse_response_output(out_val)
-        except Exception:
-            pass
-        return res
-
-    run_loop.run_single_turn_streamed = patched_run_single_turn_streamed
-
-    try:
-        import agents.run as agents_run
-
-        if hasattr(agents_run, "run_single_turn_streamed"):
-            agents_run.run_single_turn_streamed = (
-                patched_run_single_turn_streamed
-            )
-    except ImportError:
-        pass
-
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True
+        patched = patched_step(original)
+        setattr(run_loop, name, patched)
+        if getattr(agents_run, name, None) is original:
+            setattr(agents_run, name, patched)
 
 
 def patch_default_agent_runner_get_model():
-    global _PATCHED_DEFAULT_GET_MODEL
-    if _PATCHED_DEFAULT_GET_MODEL:
-        return
-
     try:
-        # Import the new run_loop module where get_model now lives
         import agents.run_internal.run_loop as run_loop
     except ImportError:
-        return  # Fallback in case the SDK structure changes again
+        return
 
     # Depending on the exact minor version, it might be public or private
     if hasattr(run_loop, "get_model"):
@@ -345,11 +188,12 @@ def patch_default_agent_runner_get_model():
     elif hasattr(run_loop, "_get_model"):
         target_func_name = "_get_model"
     else:
-        return  # Skip patching if the internal API is missing
+        return
 
     original_get_model = getattr(run_loop, target_func_name)
+    if getattr(original_get_model, "_deepeval_patched", False):
+        return
 
-    # Note: No 'cls' argument anymore, it's just a standard function
     def patched_get_model(*args, **kwargs) -> Model:
         model = original_get_model(*args, **kwargs)
 
@@ -358,45 +202,34 @@ def patch_default_agent_runner_get_model():
             if "agent" in kwargs
             else (args[0] if args else None)
         )
-        if agent is None:
+        if agent is None or isinstance(model, _ObservedModel):
             return model
-
-        if isinstance(model, _ObservedModel):
-            return model
-
-        llm_metrics = getattr(agent, "llm_metrics", None)
-        llm_metric_collection = getattr(agent, "llm_metric_collection", None)
-        confident_prompt = getattr(agent, "confident_prompt", None)
 
         return _ObservedModel(
             inner=model,
-            llm_metric_collection=llm_metric_collection,
-            llm_metrics=llm_metrics,
-            confident_prompt=confident_prompt,
+            llm_metric_collection=getattr(agent, "llm_metric_collection", None),
+            llm_metrics=getattr(agent, "llm_metrics", None),
+            confident_prompt=getattr(agent, "confident_prompt", None),
         )
 
-    # Preserve basic metadata
     patched_get_model.__name__ = original_get_model.__name__
     patched_get_model.__doc__ = original_get_model.__doc__
-
-    # Apply the patch to the module
+    patched_get_model._deepeval_patched = True
     setattr(run_loop, target_func_name, patched_get_model)
-    _PATCHED_DEFAULT_GET_MODEL = True
 
 
-def _set_agent_metrics(agent: Agent, agent_span: AgentSpan) -> None:
-    try:
-        if agent is None or agent_span is None:
-            return
-        agent_metrics = getattr(agent, "agent_metrics", None)
-        agent_metric_collection = getattr(
-            agent, "agent_metric_collection", None
+def _configure_agent_span(agent_span: Any, agent: Any) -> None:
+    otel_span = (
+        agent_spans.get(agent_span.span_id) if agent_span is not None else None
+    )
+    if otel_span is None:
+        return
+    with otel_trace.use_span(otel_span, end_on_exit=False):
+        update_current_span(
+            metrics=getattr(agent, "agent_metrics", None),
+            metric_collection=getattr(agent, "agent_metric_collection", None),
         )
-
-        if agent_metrics is not None:
-            agent_span.metrics = agent_metrics
-        if agent_metric_collection is not None:
-            agent_span.metric_collection = agent_metric_collection
-    except Exception:
-        # Be conservative: never break the run on metrics propagation
-        pass
+        update_agent_span(
+            available_tools=agent_span.span_data.tools,
+            agent_handoffs=agent_span.span_data.handoffs,
+        )

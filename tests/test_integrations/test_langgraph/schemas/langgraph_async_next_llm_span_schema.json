@@ -1,383 +1,187 @@
 {
-  "uuid": "9f784be7-3dea-4a66-860f-868a35ccab99",
+  "uuid": "0cabe218fb228fa27c71115c1864d8c2",
   "baseSpans": [
     {
-      "uuid": "019e1a85-fbbf-7de1-963e-d2d23d6ab51c",
+      "uuid": "55d903ee8745d757",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e1a85-f64e-7ee0-b2da-5ae1d4dc9a2a",
-      "startTime": "2026-05-12T04:50:48.895Z",
-      "endTime": "2026-05-12T04:50:49.928Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:18.471Z",
+      "endTime": "2026-10-23T08:41:19.266Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           },
           {
-            "content": "81",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-            "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "81",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 4,
-                "prompt_tokens": 168,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMvZGL7LTIEZ5QgwYTzZPYWCBEt",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-fbbf-7de1-963e-d2effb7d0fa6-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 168,
-              "output_tokens": 4,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
               }
-            }
+            ]
           }
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019e1a85-ffc6-7f80-bac4-32af857ac498",
+      "uuid": "dadbd58c8000a6bd",
       "name": "_should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e1a85-fbbf-7de1-963e-d2d23d6ab51c",
-      "startTime": "2026-05-12T04:50:49.926Z",
-      "endTime": "2026-05-12T04:50:49.927Z",
+      "parentUuid": "55d903ee8745d757",
+      "startTime": "2026-10-23T08:41:19.266Z",
+      "endTime": "2026-10-23T08:41:19.266Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           },
           {
-            "content": "81",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-            "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
           },
           {
-            "content": "81",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 4,
-                "prompt_tokens": 168,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMvZGL7LTIEZ5QgwYTzZPYWCBEt",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-fbbf-7de1-963e-d2effb7d0fa6-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 168,
-              "output_tokens": 4,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
               }
-            }
+            ]
           }
         ]
       },
       "output": "__end__",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019e1a85-fbbc-71d3-b85a-f72464288c7d",
+      "uuid": "b0ba683e60ba4bc0",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e1a85-f64e-7ee0-b2da-5ae1d4dc9a2a",
-      "startTime": "2026-05-12T04:50:48.892Z",
-      "endTime": "2026-05-12T04:50:48.894Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:18.469Z",
+      "endTime": "2026-10-23T08:41:18.471Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "81",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-            "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
           }
         ]
       },
-      "integration": "LangChain",
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "square",
           "type": "FUNCTION",
-          "output": {
-            "content": "81",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-            "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "status": "success"
-          },
+          "output": "81",
           "inputParameters": {
             "n": 9
           }
@@ -385,422 +189,288 @@
       ]
     },
     {
-      "uuid": "019e1a85-f64f-7870-9c9f-85e92f6c7a23",
+      "uuid": "c7b7ce29be556df8",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e1a85-f64e-7ee0-b2da-5ae1d4dc9a2a",
-      "startTime": "2026-05-12T04:50:47.503Z",
-      "endTime": "2026-05-12T04:50:48.892Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:17.342Z",
+      "endTime": "2026-10-23T08:41:18.468Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           }
         ]
       },
-      "integration": "LangChain"
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019e1a85-fbb8-79d1-8c9f-973959b15e30",
+      "uuid": "8e59663b57702292",
       "name": "_should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019e1a85-f64f-7870-9c9f-85e92f6c7a23",
-      "startTime": "2026-05-12T04:50:48.889Z",
-      "endTime": "2026-05-12T04:50:48.891Z",
+      "parentUuid": "c7b7ce29be556df8",
+      "startTime": "2026-10-23T08:41:18.467Z",
+      "endTime": "2026-10-23T08:41:18.468Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           }
         ]
       },
       "output": "tools",
-      "integration": "LangChain"
+      "integration": "LangGraph"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "019e1a85-f64e-7ee0-b2da-5ae1d4dc9a2a",
+      "uuid": "e15e1a9ddb71b5a5",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-12T04:50:47.503Z",
-      "endTime": "2026-05-12T04:50:49.929Z",
+      "startTime": "2026-10-23T08:41:17.340Z",
+      "endTime": "2026-10-23T08:41:19.267Z",
       "input": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "What is 9 squared? Call the tool and reply with just the number.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 86,
-                "prompt_tokens": 141,
-                "total_tokens": 227,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 64,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "square",
-                "args": {
+                "arguments": {
                   "n": 9
                 },
-                "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-                "type": "tool_call"
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 141,
-              "output_tokens": 86,
-              "total_tokens": 227,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 64
-              }
-            }
+            ]
           },
           {
-            "content": "81",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "square",
-            "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-            "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
           },
           {
-            "content": "81",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 4,
-                "prompt_tokens": 168,
-                "total_tokens": 172,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DeZMvZGL7LTIEZ5QgwYTzZPYWCBEt",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019e1a85-fbbf-7de1-963e-d2effb7d0fa6-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 168,
-              "output_tokens": 4,
-              "total_tokens": 172,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
               }
-            }
+            ]
           }
         ]
       },
-      "integration": "LangChain",
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "square",
+          "type": "FUNCTION",
+          "output": "81",
+          "inputParameters": {
+            "n": 9
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019e1a85-fbbf-7de1-963e-d2effb7d0fa6",
+      "uuid": "42b9fc7b27d37703",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019e1a85-fbbf-7de1-963e-d2d23d6ab51c",
-      "startTime": "2026-05-12T04:50:48.895Z",
-      "endTime": "2026-05-12T04:50:49.925Z",
+      "parentUuid": "55d903ee8745d757",
+      "startTime": "2026-10-23T08:41:18.472Z",
+      "endTime": "2026-10-23T08:41:19.265Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 9 squared? Call the tool and reply with just the number."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "81"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "square",
+            "arguments": {
+              "n": 9
+            },
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'square', 'description': 'Returns the square of the input integer.', 'parameters': {'properties': {'n': {'type': 'integer'}}, 'required': ['n'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "81",
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "81",
-        "tool_calls": []
-      },
-      "integration": "LangChain",
-      "model": "gpt-5.4-mini-2025-08-07",
+      "output": "81",
+      "integration": "LangGraph",
+      "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 168.0,
       "outputTokenCount": 4.0
     },
     {
-      "uuid": "019e1a85-f64f-7870-9c9f-85f1504ffd95",
+      "uuid": "789017acc2fe781d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019e1a85-f64f-7870-9c9f-85e92f6c7a23",
-      "startTime": "2026-05-12T04:50:47.503Z",
-      "endTime": "2026-05-12T04:50:48.887Z",
+      "parentUuid": "c7b7ce29be556df8",
+      "startTime": "2026-10-23T08:41:17.343Z",
+      "endTime": "2026-10-23T08:41:18.465Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "async_next_llm_only"
       },
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 9 squared? Call the tool and reply with just the number."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'square', 'description': 'Returns the square of the input integer.', 'parameters': {'properties': {'n': {'type': 'integer'}}, 'required': ['n'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "square",
-            "args": {
+            "arguments": {
               "n": 9
             },
-            "id": "call_rxmZXWvbmkXGH7WJeC352XMu"
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
           }
-        ]
-      },
-      "integration": "LangChain",
-      "model": "gpt-5.4-mini-2025-08-07",
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "square",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "n": 9
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 141.0,
-      "outputTokenCount": 86.0,
+      "outputTokenCount": 16.0,
       "metricCollection": "llm_quality_async_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019e1a85-fbbd-7123-9060-febee0987829",
+      "uuid": "f08bb313eb261298",
       "name": "square",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019e1a85-fbbc-71d3-b85a-f72464288c7d",
-      "startTime": "2026-05-12T04:50:48.893Z",
-      "endTime": "2026-05-12T04:50:48.894Z",
+      "parentUuid": "b0ba683e60ba4bc0",
+      "startTime": "2026-10-23T08:41:18.470Z",
+      "endTime": "2026-10-23T08:41:18.471Z",
       "input": {
         "n": 9
       },
-      "output": {
-        "content": "81",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-        "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "81",
+      "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-05-12T04:50:47.503Z",
-  "endTime": "2026-05-12T04:50:49.929Z",
+  "startTime": "2026-10-23T08:41:17.340Z",
+  "endTime": "2026-10-23T08:41:19.267Z",
   "name": "langgraph-async-next-llm-span",
   "metadata": {
     "test_type": "async_next_llm_span"
@@ -816,135 +486,62 @@
   "input": {
     "messages": [
       {
-        "content": "What is 9 squared? Call the tool and reply with just the number.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "What is 9 squared? Call the tool and reply with just the number.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "848f9807-35e7-4a2c-a45e-862ead9f4fe4"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
       },
       {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 86,
-            "prompt_tokens": 141,
-            "total_tokens": 227,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 64,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DeZMuabbIcQRPextxTHe7SotXaphg",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019e1a85-f64f-7870-9c9f-85f1504ffd95-0",
-        "tool_calls": [
+        "role": "assistant",
+        "parts": [
           {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
             "name": "square",
-            "args": {
+            "arguments": {
               "n": 9
             },
-            "id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-            "type": "tool_call"
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
           }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 141,
-          "output_tokens": 86,
-          "total_tokens": 227,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 64
-          }
-        }
+        ]
       },
       {
-        "content": "81",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-        "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-        "status": "success"
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "81",
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
+          }
+        ]
       },
       {
-        "content": "81",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 4,
-            "prompt_tokens": 168,
-            "total_tokens": 172,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DeZMvZGL7LTIEZ5QgwYTzZPYWCBEt",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019e1a85-fbbf-7de1-963e-d2effb7d0fa6-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 168,
-          "output_tokens": 4,
-          "total_tokens": 172,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "81"
           }
-        }
+        ]
       }
     ]
   },
@@ -953,16 +550,7 @@
     {
       "name": "square",
       "type": "FUNCTION",
-      "output": {
-        "content": "81",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "square",
-        "id": "c9ab7771-e0c8-474c-a065-fa3aab670478",
-        "tool_call_id": "call_rxmZXWvbmkXGH7WJeC352XMu",
-        "status": "success"
-      },
+      "output": "81",
       "inputParameters": {
         "n": 9
       }

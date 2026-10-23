@@ -1,63 +1,152 @@
 {
-  "uuid": "af95d9e0f010f0eee9ca6d7b8c8250a8",
-  "baseSpans": [],
-  "agentSpans": [
+  "uuid": "f7a974be2d9982793b875f0689319b73",
+  "baseSpans": [
     {
-      "uuid": "a9653270ac5b9640",
-      "name": "invocation [deepeval-googleadk-evals]",
+      "uuid": "f14cf881b1c9d3d7",
+      "name": "invocation",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-07T09:09:12.975Z",
-      "endTime": "2026-05-07T09:09:15.322Z",
-      "input": "{\"user_id\": \"test-user\", \"session_id\": \"b8644a84-c3a8-4897-a77f-f48d373d5688\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Async Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247},\"invocation_id\":\"e-3e2174df-8e11-40c6-8ab6-e93431585abc\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1b0f57ac-a23a-4830-bb5a-b10a211db8e4\",\"timestamp\":1778144954.154234}",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1",
+      "type": "base",
+      "startTime": "2026-10-21T16:52:23.603Z",
+      "endTime": "2026-10-21T16:52:26.212Z",
       "integration": "Google ADK"
     },
     {
-      "uuid": "05c00a10235da085",
+      "uuid": "11bbb04a1eb5cb24",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ce5f91ef6eb2cb1f",
+      "startTime": "2026-10-21T16:52:25.195Z",
+      "endTime": "2026-10-21T16:52:26.209Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "2ff544f9a11a6d10",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "461e948300da67ed",
+      "startTime": "2026-10-21T16:52:23.638Z",
+      "endTime": "2026-10-21T16:52:25.190Z",
+      "integration": "Google ADK"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "3f024d5a06547d99",
       "name": "evals_assistant",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "a9653270ac5b9640",
-      "startTime": "2026-05-07T09:09:12.976Z",
-      "endTime": "2026-05-07T09:09:15.322Z",
-      "input": [],
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247},\"invocation_id\":\"e-3e2174df-8e11-40c6-8ab6-e93431585abc\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1b0f57ac-a23a-4830-bb5a-b10a211db8e4\",\"timestamp\":1778144954.154234}",
+      "parentUuid": "f14cf881b1c9d3d7",
+      "startTime": "2026-10-21T16:52:23.605Z",
+      "endTime": "2026-10-21T16:52:26.211Z",
+      "input": "Use the special_tool to process 'Async Data'",
+      "output": "The `special_tool` has processed 'Async Data'.",
+      "integration": "Google ADK",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+          "output": {
+            "processed": "Processed: Async Data"
+          },
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": [],
-      "integration": "Google ADK"
+      "metricCollection": "agent_metrics_async_v1",
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "flaky": false,
+          "evaluationModel": "gpt-4.1-mini"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "fe4167f6b19d770d",
+      "uuid": "ce5f91ef6eb2cb1f",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "05c00a10235da085",
-      "startTime": "2026-05-07T09:09:14.154Z",
-      "endTime": "2026-05-07T09:09:15.321Z",
-      "input": "{\"processed\": \"Processed: Async Data\"}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247}}",
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 227.0,
-      "outputTokenCount": 20.0,
+      "parentUuid": "3f024d5a06547d99",
+      "startTime": "2026-10-21T16:52:25.195Z",
+      "endTime": "2026-10-21T16:52:26.210Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "special_tool",
+            "arguments": {
+              "query": "Async Data"
+            }
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "response": {
+              "processed": "Processed: Async Data"
+            }
+          }
+        }
+      ],
+      "output": "The `special_tool` has processed 'Async Data'.",
       "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 225.0,
+      "outputTokenCount": 12.0
     },
     {
-      "uuid": "e62f7182110ecb20",
+      "uuid": "461e948300da67ed",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "05c00a10235da085",
-      "startTime": "2026-05-07T09:09:12.976Z",
-      "endTime": "2026-05-07T09:09:14.153Z",
-      "input": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\".",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"query\":\"Async Data\"},\"name\":\"special_tool\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":16,\"prompt_token_count\":193,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":193}],\"total_token_count\":209}}",
+      "parentUuid": "3f024d5a06547d99",
+      "startTime": "2026-10-21T16:52:23.637Z",
+      "endTime": "2026-10-21T16:52:25.194Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Be concise.\n\nYou are an agent. Your internal name is \"evals_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "special_tool",
+            "arguments": {
+              "query": "Async Data"
+            }
+          }
+        }
+      ],
+      "integration": "Google ADK",
       "toolsCalled": [
         {
           "name": "special_tool",
@@ -67,40 +156,36 @@
           }
         }
       ],
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 193.0,
-      "outputTokenCount": 16.0,
-      "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 191.0,
+      "outputTokenCount": 53.0,
+      "metricCollection": "llm_metrics_async_v1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "3bb4db2519936cba",
+      "uuid": "edb10d4ba359d7fc",
       "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "e62f7182110ecb20",
-      "startTime": "2026-05-07T09:09:14.152Z",
-      "endTime": "2026-05-07T09:09:14.152Z",
-      "input": "{\"query\": \"Async Data\"}",
-      "output": "{\"id\":\"adk-1e494afd-7b34-4c42-ab20-bc5016a2b16d\",\"name\":\"special_tool\",\"response\":{\"processed\":\"Processed: Async Data\"}}",
-      "toolsCalled": [
-        {
-          "name": "special_tool",
-          "type": "FUNCTION",
-          "inputParameters": {
-            "query": "Async Data"
-          }
-        }
-      ],
-      "metricCollection": "special_tool_v1",
-      "integration": "Google ADK"
+      "parentUuid": "3f024d5a06547d99",
+      "startTime": "2026-10-21T16:52:25.192Z",
+      "endTime": "2026-10-21T16:52:25.193Z",
+      "input": {
+        "query": "Async Data"
+      },
+      "output": {
+        "processed": "Processed: Async Data"
+      },
+      "integration": "Google ADK",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+      "metricCollection": "special_tool_v1"
     }
   ],
-  "startTime": "2026-05-07T09:09:12.975Z",
-  "endTime": "2026-05-07T09:09:15.322Z",
+  "startTime": "2026-10-21T16:52:23.603Z",
+  "endTime": "2026-10-21T16:52:26.212Z",
   "name": "googleadk-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -114,8 +199,21 @@
   "environment": "development",
   "threadId": "thread-async-features-002",
   "userId": "user-async-002",
-  "input": "{\"user_id\": \"test-user\", \"session_id\": \"b8644a84-c3a8-4897-a77f-f48d373d5688\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"Use the special_tool to process 'Async Data'\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The special_tool processed 'Async Data' and the result is: Processed: Async Data.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":20,\"prompt_token_count\":227,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":227}],\"total_token_count\":247},\"invocation_id\":\"e-3e2174df-8e11-40c6-8ab6-e93431585abc\",\"author\":\"evals_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"1b0f57ac-a23a-4830-bb5a-b10a211db8e4\",\"timestamp\":1778144954.154234}",
+  "input": "Use the special_tool to process 'Async Data'",
+  "output": "The `special_tool` has processed 'Async Data'.",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
+      "output": {
+        "processed": "Processed: Async Data"
+      },
+      "inputParameters": {
+        "query": "Async Data"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_override_async_v1"
 }

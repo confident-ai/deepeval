@@ -1,31 +1,28 @@
 {
   "name": "test_name_1",
-  "uuid": "e2ded4c2-46ac-4aca-9d67-3e681393432d",
+  "uuid": "4d270263-d7e8-4679-a6c8-fb82c72f21da",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "71bed055-94cc-47fc-964a-6f22dc540f2d",
-      "name": "create",
+      "uuid": "c4fdbb42b42abbd6",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "e2ded4c2-46ac-4aca-9d67-3e681393432d",
-      "startTime": "2026-02-23T14:59:41.954Z",
-      "endTime": "2026-02-23T14:59:43.540Z",
+      "traceUuid": "4d270263-d7e8-4679-a6c8-fb82c72f21da",
+      "startTime": "2026-10-21T20:45:07.135Z",
+      "endTime": "2026-10-21T20:45:08.151Z",
       "input": [
         {
           "role": "user",
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+      "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
       "metricCollection": "test_collection_1",
-      "retrievalContext": [],
-      "context": [],
-      "expectedTools": [],
-      "model": "gpt-4o-mini",
+      "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 13,
-      "outputTokenCount": 29,
+      "outputTokenCount": 30,
       "promptAlias": "asd",
       "promptCommitHash": "bab04ec",
       "promptLabel": "test-label",
@@ -34,8 +31,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T14:59:41.954Z",
-  "endTime": "2026-02-23T14:59:43.541Z",
+  "startTime": "2026-10-21T20:45:07.135Z",
+  "endTime": "2026-10-21T20:45:08.152Z",
   "environment": "testing",
   "metadata": {
     "test_metadata_1": "test_value_1"
@@ -46,5 +43,6 @@
   "threadId": "test_thread_id_1",
   "userId": "test_user_id_1",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?"
+  "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+  "status": "SUCCESS"
 }

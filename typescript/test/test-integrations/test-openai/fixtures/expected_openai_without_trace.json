@@ -1,71 +1,35 @@
 {
-  "uuid": "f429bde6-b0d7-4b90-a3e6-95baf1d5777a",
+  "name": "chat gpt-4o-mini",
+  "uuid": "edb2cff97bfca6b1fed64ad1fe21a8f6",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "aefe9d79-335a-40c4-88ff-13f74503ee09",
-      "name": "create",
+      "uuid": "dff29f93cea0edbf",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "f429bde6-b0d7-4b90-a3e6-95baf1d5777a",
-      "startTime": "2026-02-23T14:59:40.593Z",
-      "endTime": "2026-02-23T14:59:41.934Z",
-      "input": {
-        "args": [
-          {
-            "model": "gpt-4o-mini",
-            "messages": [
-              {
-                "role": "user",
-                "content": "Hello, how are you?"
-              }
-            ]
-          }
-        ]
-      },
-      "output": {
-        "id": "chatcmpl-DCRhNvA2w5AB77mm7CQFoxMhavxxt",
-        "object": "chat.completion",
-        "created": 1771858781,
-        "model": "gpt-4o-mini-2024-07-18",
-        "choices": [
-          {
-            "index": 0,
-            "message": {
-              "role": "assistant",
-              "content": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
-              "refusal": null,
-              "annotations": []
-            },
-            "logprobs": null,
-            "finish_reason": "stop"
-          }
-        ],
-        "usage": {
-          "prompt_tokens": 13,
-          "completion_tokens": 29,
-          "total_tokens": 42,
-          "prompt_tokens_details": {
-            "cached_tokens": 0,
-            "audio_tokens": 0
-          },
-          "completion_tokens_details": {
-            "reasoning_tokens": 0,
-            "audio_tokens": 0,
-            "accepted_prediction_tokens": 0,
-            "rejected_prediction_tokens": 0
-          }
-        },
-        "service_tier": "default",
-        "system_fingerprint": "fp_fc706eab22"
-      },
-      "model": "gpt-4o-mini"
+      "traceUuid": "edb2cff97bfca6b1fed64ad1fe21a8f6",
+      "startTime": "2026-10-21T20:45:05.923Z",
+      "endTime": "2026-10-21T20:45:07.130Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Hello, how are you?"
+        }
+      ],
+      "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 13,
+      "outputTokenCount": 29
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-23T14:59:40.593Z",
-  "endTime": "2026-02-23T14:59:41.934Z",
-  "environment": "testing"
+  "startTime": "2026-10-21T20:45:05.923Z",
+  "endTime": "2026-10-21T20:45:07.132Z",
+  "environment": "testing",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+  "status": "SUCCESS"
 }

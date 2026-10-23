@@ -1,80 +1,275 @@
 {
-  "uuid": "3d5d60fa-e95c-4d7c-a8ae-121323fba2ed",
+  "uuid": "6cd311fc42d86cef769d8a56771f094c",
   "baseSpans": [
     {
-      "uuid": "c6601e19-2829-45c4-8f8b-0c02d6839fdb",
-      "name": "kickoff",
+      "uuid": "d41b319c92ce64f3",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:28:46.949Z",
-      "endTime": "2026-06-01T17:28:50.338Z",
+      "startTime": "2026-10-21T17:48:25.478Z",
+      "endTime": "2026-10-21T17:48:29.330Z",
       "input": {
         "question": "What city does John live in and how old is he?"
       },
       "output": "John lives in San Francisco and is 30 years old.",
       "integration": "CrewAI"
+    },
+    {
+      "uuid": "c8eafd1405ae550f",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d41b319c92ce64f3",
+      "startTime": "2026-10-21T17:48:26.577Z",
+      "endTime": "2026-10-21T17:48:29.325Z",
+      "input": {
+        "description": "Answer the following questions about the user: What city does John live in and how old is he?",
+        "context": ""
+      },
+      "output": "John lives in San Francisco and is 30 years old.",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "daeea721f3cf3c81",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "7d6d1b0cb1c7bbbc",
+      "startTime": "2026-10-21T17:48:28.368Z",
+      "endTime": "2026-10-21T17:48:29.322Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "90fdf5330f90af10",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.320Z",
+      "endTime": "2026-10-21T17:48:29.320Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f9b5fda21c2c874d",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.319Z",
+      "endTime": "2026-10-21T17:48:29.319Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "0df0c63ec2b629bf",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.318Z",
+      "endTime": "2026-10-21T17:48:29.319Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "3dec9f136159412a",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.318Z",
+      "endTime": "2026-10-21T17:48:29.318Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5e918c0bf130336d",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.317Z",
+      "endTime": "2026-10-21T17:48:29.317Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "31c562da84a22826",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.313Z",
+      "endTime": "2026-10-21T17:48:29.315Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "233fe2a303dce58d",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:29.312Z",
+      "endTime": "2026-10-21T17:48:29.312Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f0d8e61696b0d1f0",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:28.375Z",
+      "endTime": "2026-10-21T17:48:29.311Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6fd42c7d92a9398a",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:28.375Z",
+      "endTime": "2026-10-21T17:48:28.375Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b9e9dc8296ef0ac5",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:28.373Z",
+      "endTime": "2026-10-21T17:48:28.374Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "9001946d3c4ea6ca",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:28.372Z",
+      "endTime": "2026-10-21T17:48:28.372Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "2383ad1b90302722",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "daeea721f3cf3c81",
+      "startTime": "2026-10-21T17:48:28.371Z",
+      "endTime": "2026-10-21T17:48:28.371Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "133509f6-1522-4528-9ad8-64b796919c16",
-      "name": "execute_task",
+      "uuid": "7d6d1b0cb1c7bbbc",
+      "name": "About User",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "c6601e19-2829-45c4-8f8b-0c02d6839fdb",
-      "startTime": "2026-06-01T17:28:47.766Z",
-      "endTime": "2026-06-01T17:28:50.331Z",
-      "input": "Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
+      "parentUuid": "c8eafd1405ae550f",
+      "startTime": "2026-10-21T17:48:26.577Z",
+      "endTime": "2026-10-21T17:48:29.323Z",
+      "input": {
+        "description": "Answer the following questions about the user: What city does John live in and how old is he?",
+        "context": ""
+      },
       "output": "John lives in San Francisco and is 30 years old.",
       "integration": "CrewAI",
-      "toolsCalled": [
-        {
-          "name": "knowledge_retrieval",
-          "type": "FUNCTION",
-          "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
-          "inputParameters": {
-            "output": "Retrieve information about John, specifically his city of residence and age."
-          }
-        }
-      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "6f22fe41-a37e-4ad0-b6b1-a9f66cacf81f",
-      "name": "call",
+      "uuid": "670cf976990e0c92",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
-      "startTime": "2026-06-01T17:28:49.377Z",
-      "endTime": "2026-06-01T17:28:50.323Z",
+      "parentUuid": "f0d8e61696b0d1f0",
+      "startTime": "2026-10-21T17:48:28.376Z",
+      "endTime": "2026-10-21T17:48:29.309Z",
       "input": [
         {
           "role": "system",
-          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user.",
-          "cache_breakpoint": true
+          "content": "You are About User. You are a master at understanding people and their preferences.\nYour personal goal is: You know everything about the user."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.\n\nProvide your complete response:"
         }
       ],
-      "output": "John lives in San Francisco and is 30 years old.",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "f8536b10-6e4a-40c5-84c3-d1afe98c7c76",
-      "name": "call",
+      "uuid": "b93602b43a438c74",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
-      "startTime": "2026-06-01T17:28:47.770Z",
-      "endTime": "2026-06-01T17:28:49.049Z",
+      "parentUuid": "ea1b9696f0482dd9",
+      "startTime": "2026-10-21T17:48:26.580Z",
+      "endTime": "2026-10-21T17:48:27.422Z",
       "input": [
         {
           "role": "system",
@@ -85,29 +280,32 @@
           "content": "The original query is: Answer the following questions about the user: What city does John live in and how old is he?\n\nThis is the expected criteria for your final answer: An answer to the question.\nyou MUST return the actual complete content as the final answer, not a summary.."
         }
       ],
-      "output": "Retrieve information about John, specifically his city of residence and age.",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
-  "retrieverSpans": [],
-  "toolSpans": [
+  "retrieverSpans": [
     {
-      "uuid": "d7d26e35-3ffe-4b92-86ed-7b181b06dc9e",
+      "uuid": "ea1b9696f0482dd9",
       "name": "knowledge_retrieval",
       "status": "SUCCESS",
-      "type": "tool",
-      "parentUuid": "133509f6-1522-4528-9ad8-64b796919c16",
-      "startTime": "2026-06-01T17:28:47.771Z",
-      "endTime": "2026-06-01T17:28:49.372Z",
-      "input": "Retrieve information about John, specifically his city of residence and age.",
+      "type": "retriever",
+      "parentUuid": "7d6d1b0cb1c7bbbc",
+      "startTime": "2026-10-21T17:48:26.578Z",
+      "endTime": "2026-10-21T17:48:28.366Z",
+      "input": "Retrieve information about John's city of residence and his age.",
       "output": "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99.",
-      "integration": "CrewAI"
+      "retrievalContext": [
+        "Additional Information: Users name is John. He is 30 years old and lives in San Francisco.\nThe secret launch code is ALPHA-ZULU-99."
+      ],
+      "embedder": ""
     }
   ],
-  "startTime": "2026-06-01T17:28:46.949Z",
-  "endTime": "2026-06-01T17:28:50.338Z",
+  "toolSpans": [],
+  "startTime": "2026-10-21T17:48:25.478Z",
+  "endTime": "2026-10-21T17:48:29.330Z",
+  "name": "crew crew",
   "environment": "development",
   "input": {
     "question": "What city does John live in and how old is he?"

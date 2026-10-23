@@ -2,9 +2,8 @@ import os
 import json
 import asyncio
 import pytest
-from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+from tests.test_integrations.utils import trace_json
 from deepeval.tracing.tracing import trace_manager
-from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing.context import current_trace_context, current_span_context
 
@@ -63,12 +62,10 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai_component.json")
 
 
-# @generate_trace_json(json_path)
-@assert_trace_json(json_path)
+@trace_json(json_path)
 def test_crewai_component():
     reset_crewai_instrumentation()
     trace_manager.clear_traces()
-    test_exporter.clear_span_json_list()
     trace_testing_manager.test_dict = None
 
     current_trace_context.set(None)

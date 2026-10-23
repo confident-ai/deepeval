@@ -1,21 +1,16 @@
 {
-  "uuid": "66c805c213474849d77666236b140d11",
+  "uuid": "3fa59c264831bbfacf51cca47a2cde7a",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "0e03438bf2d6dfbc",
+      "uuid": "c59fefae47c35df1",
       "name": "streaming_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:07.735Z",
-      "endTime": "2026-06-01T16:36:08.602Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Say hello in exactly three words."
-        }
-      ],
-      "output": "Hello, how are?",
+      "startTime": "2026-10-21T17:17:30.761Z",
+      "endTime": "2026-10-21T17:17:32.034Z",
+      "input": "Say hello in exactly three words.",
+      "output": "Hello, how are you?",
       "integration": "PydanticAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -23,13 +18,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "bddeb8e8fb4b38de",
+      "uuid": "30c92abf963dac99",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0e03438bf2d6dfbc",
-      "startTime": "2026-06-01T16:36:07.737Z",
-      "endTime": "2026-06-01T16:36:08.601Z",
+      "parentUuid": "c59fefae47c35df1",
+      "startTime": "2026-10-21T17:17:30.762Z",
+      "endTime": "2026-10-21T17:17:32.034Z",
       "input": [
         {
           "role": "system",
@@ -38,43 +33,20 @@
         {
           "role": "user",
           "content": "Say hello in exactly three words."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {},
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "Hello, how are?"
-        }
-      ],
+      "output": "Hello, how are you?",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 5.0
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T16:36:07.735Z",
-  "endTime": "2026-06-01T16:36:08.602Z",
+  "startTime": "2026-10-21T17:17:30.761Z",
+  "endTime": "2026-10-21T17:17:32.034Z",
   "name": "pydanticai-streaming-test",
   "metadata": {
     "test_type": "streaming"
@@ -86,12 +58,7 @@
   "environment": "development",
   "threadId": "streaming-123",
   "userId": "test-user-streaming",
-  "input": [
-    {
-      "role": "user",
-      "content": "Say hello in exactly three words."
-    }
-  ],
-  "output": "Hello, how are?",
+  "input": "Say hello in exactly three words.",
+  "output": "Hello, how are you?",
   "status": "SUCCESS"
 }

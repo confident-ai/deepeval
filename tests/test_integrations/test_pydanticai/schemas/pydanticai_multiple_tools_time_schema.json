@@ -1,24 +1,17 @@
 {
-  "uuid": "2499e95b80ee52083b04deb5695b5bd8",
+  "uuid": "31544552e79d304f30020b87043a9a93",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "ffba9fa9e11b74ac",
+      "uuid": "b3850930902455ae",
       "name": "multiple_tools_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-06-01T16:36:31.754Z",
-      "endTime": "2026-06-01T16:36:33.940Z",
-      "input": [
-        {
-          "role": "user",
-          "content": "Use the get_time tool exactly once to get the current time in London."
-        }
-      ],
+      "startTime": "2026-10-21T17:17:32.041Z",
+      "endTime": "2026-10-21T17:17:34.734Z",
+      "input": "Use the get_time tool exactly once to get the current time in London.",
       "output": "The current time in London is 7:00 AM GMT.",
       "integration": "PydanticAI",
-      "availableTools": [],
-      "agentHandoffs": [],
       "toolsCalled": [
         {
           "name": "get_time",
@@ -28,18 +21,20 @@
             "city": "London"
           }
         }
-      ]
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "22bdd3403b06aabe",
+      "uuid": "18a8bc0226b452b6",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:32.833Z",
-      "endTime": "2026-06-01T16:36:33.939Z",
+      "parentUuid": "b3850930902455ae",
+      "startTime": "2026-10-21T17:17:33.444Z",
+      "endTime": "2026-10-21T17:17:34.733Z",
       "input": [
         {
           "role": "system",
@@ -53,7 +48,7 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_FcF2YdeQY6WS82YkT598pbWp",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
@@ -62,116 +57,27 @@
           "role": "user",
           "content": {
             "type": "tool_call_response",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_FcF2YdeQY6WS82YkT598pbWp",
             "name": "get_time",
             "result": "7:00 AM GMT"
           }
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
-      "output": [
-        {
-          "role": "assistant",
-          "content": "The current time in London is 7:00 AM GMT."
-        }
-      ],
+      "output": "The current time in London is 7:00 AM GMT.",
       "integration": "PydanticAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 206.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 202.0,
+      "outputTokenCount": 15.0
     },
     {
-      "uuid": "43617937f0f6af73",
+      "uuid": "d3a3c70a331abcc7",
       "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:31.756Z",
-      "endTime": "2026-06-01T16:36:32.829Z",
+      "parentUuid": "b3850930902455ae",
+      "startTime": "2026-10-21T17:17:32.042Z",
+      "endTime": "2026-10-21T17:17:33.442Z",
       "input": [
         {
           "role": "system",
@@ -180,90 +86,6 @@
         {
           "role": "user",
           "content": "Use the get_time tool exactly once to get the current time in London."
-        },
-        {
-          "role": "Model Request Parameters",
-          "content": {
-            "function_tools": [
-              {
-                "name": "get_weather",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current weather for a city.</summary>\n<returns>\n<description>The current weather conditions</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              },
-              {
-                "name": "get_time",
-                "parameters_json_schema": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "city": {
-                      "description": "The name of the city",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                },
-                "description": "<summary>Get the current time for a city.</summary>\n<returns>\n<description>The current time in that city</description>\n</returns>",
-                "outer_typed_dict_key": null,
-                "strict": true,
-                "sequential": false,
-                "kind": "function",
-                "metadata": null,
-                "timeout": null,
-                "defer_loading": false,
-                "unless_native": null,
-                "with_native": null,
-                "tool_kind": null,
-                "return_schema": null,
-                "include_return_schema": null,
-                "capability_id": null,
-                "toolset_id": "<agent>"
-              }
-            ],
-            "native_tools": [],
-            "output_mode": "text",
-            "output_object": null,
-            "output_tools": [],
-            "prompted_output_template": null,
-            "allow_text_output": true,
-            "allow_image_output": false,
-            "instruction_parts": null,
-            "thinking": null,
-            "tool_visibility": {
-              "get_weather": "visible",
-              "get_time": "visible"
-            },
-            "revealed_tool_names": [],
-            "deferred_capability_ids": []
-          }
         }
       ],
       "output": [
@@ -271,29 +93,38 @@
           "role": "assistant",
           "content": {
             "type": "tool_call",
-            "id": "call_K1PefOjslkFyiA1r3ErrSr03",
+            "id": "call_FcF2YdeQY6WS82YkT598pbWp",
             "name": "get_time",
             "arguments": "{\"city\":\"London\"}"
           }
         }
       ],
       "integration": "PydanticAI",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 179.0,
-      "outputTokenCount": 14.0
+      "inputTokenCount": 177.0,
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c2e3bfd592acafbb",
+      "uuid": "b3deb74bdee9bcb2",
       "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ffba9fa9e11b74ac",
-      "startTime": "2026-06-01T16:36:32.831Z",
-      "endTime": "2026-06-01T16:36:32.832Z",
+      "parentUuid": "b3850930902455ae",
+      "startTime": "2026-10-21T17:17:33.443Z",
+      "endTime": "2026-10-21T17:17:33.443Z",
       "input": {
         "city": "London"
       },
@@ -301,8 +132,8 @@
       "integration": "PydanticAI"
     }
   ],
-  "startTime": "2026-06-01T16:36:31.754Z",
-  "endTime": "2026-06-01T16:36:33.940Z",
+  "startTime": "2026-10-21T17:17:32.041Z",
+  "endTime": "2026-10-21T17:17:34.734Z",
   "name": "pydanticai-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"
@@ -315,12 +146,17 @@
   "environment": "development",
   "threadId": "multiple-tools-time-123",
   "userId": "test-user",
-  "input": [
-    {
-      "role": "user",
-      "content": "Use the get_time tool exactly once to get the current time in London."
-    }
-  ],
+  "input": "Use the get_time tool exactly once to get the current time in London.",
   "output": "The current time in London is 7:00 AM GMT.",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_time",
+      "type": "FUNCTION",
+      "output": "7:00 AM GMT",
+      "inputParameters": {
+        "city": "London"
+      }
+    }
+  ]
 }

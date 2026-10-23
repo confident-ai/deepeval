@@ -55,14 +55,12 @@ def _expose_public_api() -> None:
     telemetry = _telemetry
 
     def instrument(*args, **kwargs):
-        """Set up Confident AI's OTel backend.
+        """Trace whatever OpenInference instrumentors run for deepeval.
 
-        Configures a TracerProvider, attaches deepeval's OpenInference span
-        interceptor, and routes spans through the context-aware processor
-        (REST when a deepeval trace context is active or an evaluation is
-        running, OTLP otherwise). Pair with any community OpenInference
-        instrumentor (e.g. ``GoogleADKInstrumentor``, ``OpenAIInstrumentor``)
-        to capture framework-specific telemetry.
+        Starts confident-trace, whose tracer provider any community
+        OpenInference instrumentor (e.g. ``OpenAIInstrumentor``) traces on.
+        deepeval evaluates the spans it collects, and confident-trace sends
+        the rest to Confident AI.
 
         Accepts the same trace-level kwargs as
         ``deepeval.integrations.openinference.instrument_openinference``:

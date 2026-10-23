@@ -1,31 +1,309 @@
 {
-  "uuid": "a08e303f-691d-44d6-86ad-243a83e9c435",
+  "uuid": "4f3bc255-2f75-4adf-abad-9cd36e85f870",
   "baseSpans": [
     {
-      "uuid": "3128f250-fab2-4c0b-a1e9-3cc65c43102e",
-      "name": "kickoff",
+      "uuid": "7b0eb11afed5fdf5",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:28.896Z",
-      "endTime": "2026-06-01T17:24:31.760Z",
+      "startTime": "2026-10-21T17:48:45.963Z",
+      "endTime": "2026-10-21T17:48:48.390Z",
       "input": {
         "input": "Sync Data"
       },
       "output": "Calculated metrics for: deterministic_test_input",
       "integration": "CrewAI",
       "metricCollection": "crew_metrics_v1"
+    },
+    {
+      "uuid": "0b325229ad7888e8",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "7b0eb11afed5fdf5",
+      "startTime": "2026-10-21T17:48:45.977Z",
+      "endTime": "2026-10-21T17:48:48.386Z",
+      "input": {
+        "description": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n",
+        "context": ""
+      },
+      "output": "Calculated metrics for: deterministic_test_input",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "8687aab0c95abcce",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "218f73d0594f08d3",
+      "startTime": "2026-10-21T17:48:45.980Z",
+      "endTime": "2026-10-21T17:48:48.384Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e168f3a7c3da2077",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:48.382Z",
+      "endTime": "2026-10-21T17:48:48.383Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "87a39055144d3615",
+      "name": "node ensure_force_final_answer",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:48.382Z",
+      "endTime": "2026-10-21T17:48:48.382Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6bb1becad742e046",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:48.381Z",
+      "endTime": "2026-10-21T17:48:48.381Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "force_final_answer",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1d55a004519528ad",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:48.381Z",
+      "endTime": "2026-10-21T17:48:48.381Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d1cfe8cd9ce8a824",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:48.379Z",
+      "endTime": "2026-10-21T17:48:48.380Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d691dbc76bb60b29",
+      "name": "node ensure_force_final_answer",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.916Z",
+      "endTime": "2026-10-21T17:48:48.379Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "bb034cd19e86185e",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.915Z",
+      "endTime": "2026-10-21T17:48:46.915Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "force_final_answer",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "49c9467872876127",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.914Z",
+      "endTime": "2026-10-21T17:48:46.915Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "13419fad2f3efb8f",
+      "name": "node increment_and_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.913Z",
+      "endTime": "2026-10-21T17:48:46.914Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "35a927c335fd0b29",
+      "name": "node check_native_todo_completion",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.912Z",
+      "endTime": "2026-10-21T17:48:46.912Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "todo_not_satisfied",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "77226f6ed408624d",
+      "name": "node execute_native_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:46.909Z",
+      "endTime": "2026-10-21T17:48:46.911Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_completed",
+      "integration": "CrewAI",
+      "toolsCalled": [
+        {
+          "name": "special_metric_tool",
+          "type": "FUNCTION",
+          "output": "Calculated metrics for: deterministic_test_input",
+          "inputParameters": {
+            "query": "deterministic_test_input"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "e4ac48313d93e155",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:45.983Z",
+      "endTime": "2026-10-21T17:48:46.909Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_calls",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "0c696ea434a0c70a",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:45.983Z",
+      "endTime": "2026-10-21T17:48:45.983Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "c4ab242819b3f2b5",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:45.982Z",
+      "endTime": "2026-10-21T17:48:45.983Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "4b1ebae77be6f3ee",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:45.982Z",
+      "endTime": "2026-10-21T17:48:45.982Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a5cbda00d431f4a9",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8687aab0c95abcce",
+      "startTime": "2026-10-21T17:48:45.981Z",
+      "endTime": "2026-10-21T17:48:45.982Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
-      "name": "execute_task",
+      "uuid": "218f73d0594f08d3",
+      "name": "ToolCaller",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "3128f250-fab2-4c0b-a1e9-3cc65c43102e",
-      "startTime": "2026-06-01T17:24:28.902Z",
-      "endTime": "2026-06-01T17:24:31.756Z",
-      "input": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "0b325229ad7888e8",
+      "startTime": "2026-10-21T17:48:45.977Z",
+      "endTime": "2026-10-21T17:48:48.385Z",
+      "input": {
+        "description": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n",
+        "context": ""
+      },
       "output": "Calculated metrics for: deterministic_test_input",
       "integration": "CrewAI",
       "toolsCalled": [
@@ -45,51 +323,47 @@
   ],
   "llmSpans": [
     {
-      "uuid": "c6398d60-38c3-47ae-ac31-e1b2cc2bfe43",
-      "name": "call",
+      "uuid": "4dace0ae5593af6b",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
-      "startTime": "2026-06-01T17:24:30.800Z",
-      "endTime": "2026-06-01T17:24:31.752Z",
+      "parentUuid": "d691dbc76bb60b29",
+      "startTime": "2026-10-21T17:48:46.917Z",
+      "endTime": "2026-10-21T17:48:48.377Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
-          "cache_breakpoint": true
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
-              "type": "function",
-              "function": {
-                "name": "'special_metric_tool'",
-                "arguments": "'{\"query\":\"deterministic_test_input\"}'"
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_YL42Rlf3qhF71vSmPzlfKKn6",
+            "name": "special_metric_tool",
+            "arguments": {
+              "query": "deterministic_test_input"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "tool_call_id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
-          "name": "special_metric_tool",
-          "content": "Calculated metrics for: deterministic_test_input"
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_YL42Rlf3qhF71vSmPzlfKKn6",
+            "response": "Calculated metrics for: deterministic_test_input"
+          }
         },
         {
-          "role": "assistant",
+          "role": "user",
           "content": "Now it's time you MUST give your absolute best final answer. You'll ignore all previous instructions, stop using any tools, and just return your absolute BEST Final answer."
         }
       ],
-      "output": "Calculated metrics for: deterministic_test_input",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "metricCollection": "llm-metric-collection",
@@ -99,7 +373,8 @@
           "threshold": 0.5,
           "success": false,
           "strictMode": false,
-          "evaluationModel": "gpt-5.4-mini"
+          "flaky": false,
+          "evaluationModel": "gpt-5-nano"
         }
       ],
       "promptAlias": "asd",
@@ -108,36 +383,24 @@
       "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "128cb2b7-42e7-4eac-bab1-fb195e8412fe",
-      "name": "call",
+      "uuid": "9a9381c3b9df5a82",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
-      "startTime": "2026-06-01T17:24:28.905Z",
-      "endTime": "2026-06-01T17:24:30.794Z",
+      "parentUuid": "e4ac48313d93e155",
+      "startTime": "2026-10-21T17:48:45.984Z",
+      "endTime": "2026-10-21T17:48:46.906Z",
       "input": [
         {
           "role": "system",
-          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output.",
-          "cache_breakpoint": true
+          "content": "You are ToolCaller. You MUST call the provided tool exactly once. You MUST NOT reason. You MUST NOT retry. You MUST NOT modify the output.\nYour personal goal is: Call the special_metric_tool exactly once and return its raw output."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n\n\nThis is the expected criteria for your final answer: Calculated metrics for: deterministic_test_input\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
-      "output": [
-        {
-          "id": "call_Sq5m38q6wcQNsaWicpKxgdGw",
-          "function": {
-            "arguments": "{\"query\":\"deterministic_test_input\"}",
-            "name": "special_metric_tool"
-          },
-          "type": "function"
-        }
-      ],
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "metricCollection": "llm-metric-collection",
@@ -147,7 +410,8 @@
           "threshold": 0.5,
           "success": false,
           "strictMode": false,
-          "evaluationModel": "gpt-5.4-mini"
+          "flaky": false,
+          "evaluationModel": "gpt-5-nano"
         }
       ],
       "promptAlias": "asd",
@@ -159,23 +423,23 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "98c983ab-5e04-411d-b1e7-3b6e255aac63",
+      "uuid": "0d31d9ae08148c82",
       "name": "special_metric_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "7de5a6ba-6a40-4bbe-84e9-bada7c4ad30f",
-      "startTime": "2026-06-01T17:24:30.795Z",
-      "endTime": "2026-06-01T17:24:30.795Z",
+      "parentUuid": "77226f6ed408624d",
+      "startTime": "2026-10-21T17:48:46.910Z",
+      "endTime": "2026-10-21T17:48:46.911Z",
       "input": {
         "query": "deterministic_test_input"
       },
       "output": "Calculated metrics for: deterministic_test_input",
       "integration": "CrewAI",
-      "metricCollection": "agent_metrics_v1"
+      "metricCollection": "tool_metrics_v1"
     }
   ],
-  "startTime": "2026-06-01T17:24:28.896Z",
-  "endTime": "2026-06-01T17:24:31.760Z",
+  "startTime": "2026-10-21T17:48:45.963Z",
+  "endTime": "2026-10-21T17:48:48.390Z",
   "name": "CrewAI Metadata Check Sync",
   "metadata": {
     "env": "testing"
@@ -189,9 +453,20 @@
   "threadId": "trace_thred_id",
   "userId": "user_sync_001",
   "input": {
-    "input": "Sync Data"
+    "description": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n",
+    "context": ""
   },
   "output": "Calculated metrics for: deterministic_test_input",
   "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_metric_tool",
+      "type": "FUNCTION",
+      "output": "Calculated metrics for: deterministic_test_input",
+      "inputParameters": {
+        "query": "deterministic_test_input"
+      }
+    }
+  ],
   "metricCollection": "trace_metrics_v1"
 }

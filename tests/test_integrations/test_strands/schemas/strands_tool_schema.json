@@ -1,103 +1,258 @@
 {
-  "uuid": "4446a2921a961c6b2e50ed8de3227ed0",
+  "uuid": "0166ccc00d0fc074be62c742154d6754",
   "baseSpans": [
     {
-      "uuid": "74afed9879a8022c",
+      "uuid": "1bc927c5a4abc211",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "06f00380ac708a38",
-      "startTime": "2026-05-07T11:39:27.579Z",
-      "endTime": "2026-05-07T11:39:28.344Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
+      "parentUuid": "13fac9d15b04ed43",
+      "startTime": "2026-10-21T17:50:05.513Z",
+      "endTime": "2026-10-21T17:50:06.455Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "name": "calculate",
+                "input": {
+                  "operation": "multiply",
+                  "a": 7,
+                  "b": 8
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "56.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands"
     },
     {
-      "uuid": "cc2943e533ea4409",
+      "uuid": "1edc581dcc52d245",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "06f00380ac708a38",
-      "startTime": "2026-05-07T11:39:26.624Z",
-      "endTime": "2026-05-07T11:39:27.578Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
-      "integration": "Strands"
+      "parentUuid": "13fac9d15b04ed43",
+      "startTime": "2026-10-21T17:50:04.217Z",
+      "endTime": "2026-10-21T17:50:05.513Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "name": "calculate",
+                "input": {
+                  "operation": "multiply",
+                  "a": 7,
+                  "b": 8
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "56.0",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 7,
+            "b": 8
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "06f00380ac708a38",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "13fac9d15b04ed43",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-07T11:39:26.624Z",
-      "endTime": "2026-05-07T11:39:28.344Z",
+      "startTime": "2026-10-21T17:50:04.216Z",
+      "endTime": "2026-10-21T17:50:06.456Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
       "output": "7 multiplied by 8 is 56.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Strands"
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "56.0",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 7,
+            "b": 8
+          }
+        }
+      ],
+      "availableTools": [
+        "calculate"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "6e4a6797f36d253d",
+      "uuid": "a177cf5792493cc5",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "74afed9879a8022c",
-      "startTime": "2026-05-07T11:39:27.579Z",
-      "endTime": "2026-05-07T11:39:28.343Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
+      "parentUuid": "1bc927c5a4abc211",
+      "startTime": "2026-10-21T17:50:05.513Z",
+      "endTime": "2026-10-21T17:50:06.454Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        },
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "name": "calculate",
+                "input": {
+                  "operation": "multiply",
+                  "a": 7,
+                  "b": 8
+                }
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "56.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
       "output": "7 multiplied by 8 is 56.",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 116.0,
-      "outputTokenCount": 10.0,
       "integration": "Strands",
-      "provider": "OpenAI"
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 116.0,
+      "outputTokenCount": 10.0
     },
     {
-      "uuid": "18dc1ddf5f98c963",
+      "uuid": "5079691b5fe57272",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "cc2943e533ea4409",
-      "startTime": "2026-05-07T11:39:26.624Z",
-      "endTime": "2026-05-07T11:39:27.576Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "{'toolUse': {'toolUseId': 'call_IW6lQhHko4NqfL6M74s5819M', 'name': 'calculate', 'input': {'operation': 'multiply', 'a': 7, 'b': 8}}}",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 85.0,
-      "outputTokenCount": 21.0,
+      "parentUuid": "1edc581dcc52d245",
+      "startTime": "2026-10-21T17:50:04.217Z",
+      "endTime": "2026-10-21T17:50:05.509Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": [
+            {
+              "toolUse": {
+                "toolUseId": "call_caH0Zqn8zwRbnnpI2OtiPZnm",
+                "name": "calculate",
+                "input": {
+                  "operation": "multiply",
+                  "a": 7,
+                  "b": 8
+                }
+              }
+            }
+          ]
+        }
+      ],
       "integration": "Strands",
-      "provider": "OpenAI"
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "operation": "multiply",
+            "a": 7,
+            "b": 8
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 85.0,
+      "outputTokenCount": 21.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d559188028889b7d",
-      "name": "execute_tool calculate",
+      "uuid": "b838cf8a16055630",
+      "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "cc2943e533ea4409",
-      "startTime": "2026-05-07T11:39:27.576Z",
-      "endTime": "2026-05-07T11:39:27.578Z",
+      "parentUuid": "1edc581dcc52d245",
+      "startTime": "2026-10-21T17:50:05.511Z",
+      "endTime": "2026-10-21T17:50:05.512Z",
+      "input": {
+        "operation": "multiply",
+        "a": 7,
+        "b": 8
+      },
       "output": "56.0",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "Strands"
+      "integration": "Strands",
+      "description": "Perform basic arithmetic operations."
     }
   ],
-  "startTime": "2026-05-07T11:39:26.624Z",
-  "endTime": "2026-05-07T11:39:28.344Z",
+  "startTime": "2026-10-21T17:50:04.216Z",
+  "endTime": "2026-10-21T17:50:06.456Z",
   "name": "strands-tool-test",
   "metadata": {
     "test_type": "tool"
@@ -111,5 +266,18 @@
   "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
   "output": "7 multiplied by 8 is 56.\n",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.",
+      "output": "56.0",
+      "inputParameters": {
+        "operation": "multiply",
+        "a": 7,
+        "b": 8
+      }
+    }
+  ]
 }

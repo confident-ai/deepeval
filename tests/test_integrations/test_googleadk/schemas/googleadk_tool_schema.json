@@ -1,62 +1,145 @@
 {
-  "uuid": "b862eb410a91c566e7ce1dc4437a14bd",
-  "baseSpans": [],
-  "agentSpans": [
+  "uuid": "18dce20623198d795033e4feebbe1729",
+  "baseSpans": [
     {
-      "uuid": "05afb67e7e9414d1",
-      "name": "invocation [deepeval-googleadk-tool]",
+      "uuid": "41dd8e23baad0e6a",
+      "name": "invocation",
       "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-07T09:06:22.586Z",
-      "endTime": "2026-05-07T09:06:26.760Z",
-      "input": "{\"user_id\": \"test-user\", \"session_id\": \"9cacf812-2b0e-4ee6-b143-f44046b0fcee\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 7 multiplied by 8?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
-      "availableTools": [],
-      "agentHandoffs": [],
+      "type": "base",
+      "startTime": "2026-10-21T16:42:41.038Z",
+      "endTime": "2026-10-21T16:42:43.434Z",
       "integration": "Google ADK"
     },
     {
-      "uuid": "a578a122b226c4f7",
+      "uuid": "4a9fbd0fbf9874ee",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "95f4ccc375bbb1e0",
+      "startTime": "2026-10-21T16:42:42.516Z",
+      "endTime": "2026-10-21T16:42:43.431Z",
+      "integration": "Google ADK"
+    },
+    {
+      "uuid": "e015912f1bcbbe4f",
+      "name": "generate_content gemini-2.5-flash",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "3506c56c992245f9",
+      "startTime": "2026-10-21T16:42:41.059Z",
+      "endTime": "2026-10-21T16:42:42.507Z",
+      "integration": "Google ADK"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "5f020eb63ae24384",
       "name": "calculator_assistant",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "05afb67e7e9414d1",
-      "startTime": "2026-05-07T09:06:22.586Z",
-      "endTime": "2026-05-07T09:06:26.760Z",
-      "input": [],
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
+      "parentUuid": "41dd8e23baad0e6a",
+      "startTime": "2026-10-21T16:42:41.046Z",
+      "endTime": "2026-10-21T16:42:43.433Z",
+      "input": "What is 7 multiplied by 8?",
+      "output": "The result is 56.",
+      "integration": "Google ADK",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
+          "output": 56,
+          "inputParameters": {
+            "operation": "multiply",
+            "b": 8,
+            "a": 7
+          }
+        }
+      ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "Google ADK"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "411da81b2927806e",
+      "uuid": "95f4ccc375bbb1e0",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a578a122b226c4f7",
-      "startTime": "2026-05-07T09:06:23.791Z",
-      "endTime": "2026-05-07T09:06:26.759Z",
-      "input": "{\"result\": 56}",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206}}",
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 199.0,
-      "outputTokenCount": 7.0,
+      "parentUuid": "5f020eb63ae24384",
+      "startTime": "2026-10-21T16:42:42.516Z",
+      "endTime": "2026-10-21T16:42:43.433Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "What is 7 multiplied by 8?"
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "operation": "multiply",
+              "b": 8,
+              "a": 7
+            }
+          }
+        },
+        {
+          "role": "user",
+          "content": {
+            "type": "tool_call_response",
+            "response": {
+              "result": 56
+            }
+          }
+        }
+      ],
+      "output": "The result is 56.",
       "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 197.0,
+      "outputTokenCount": 7.0
     },
     {
-      "uuid": "dc3f7dfa4812e269",
+      "uuid": "3506c56c992245f9",
       "name": "call_llm",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a578a122b226c4f7",
-      "startTime": "2026-05-07T09:06:22.588Z",
-      "endTime": "2026-05-07T09:06:23.789Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\".",
-      "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"function_call\":{\"args\":{\"operation\":\"multiply\",\"b\":8,\"a\":7},\"name\":\"calculate\"}}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":23,\"prompt_token_count\":162,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":162}],\"total_token_count\":185}}",
+      "parentUuid": "5f020eb63ae24384",
+      "startTime": "2026-10-21T16:42:41.058Z",
+      "endTime": "2026-10-21T16:42:42.515Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise.\n\nYou are an agent. Your internal name is \"calculator_assistant\"."
+        },
+        {
+          "role": "user",
+          "content": "What is 7 multiplied by 8?"
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "operation": "multiply",
+              "b": 8,
+              "a": 7
+            }
+          }
+        }
+      ],
+      "integration": "Google ADK",
       "toolsCalled": [
         {
           "name": "calculate",
@@ -68,41 +151,34 @@
           }
         }
       ],
-      "model": "gemini-2.5-flash-lite",
-      "inputTokenCount": 162.0,
-      "outputTokenCount": 23.0,
-      "integration": "Google ADK",
-      "provider": "Gemini"
+      "model": "gemini-2.5-flash",
+      "provider": "Gemini",
+      "inputTokenCount": 160.0,
+      "outputTokenCount": 69.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "5ef78a50c3b45b6e",
+      "uuid": "b7eb5718806bc837",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "dc3f7dfa4812e269",
-      "startTime": "2026-05-07T09:06:23.786Z",
-      "endTime": "2026-05-07T09:06:23.787Z",
-      "input": "{\"operation\": \"multiply\", \"b\": 8, \"a\": 7}",
-      "output": "{\"id\":\"adk-c235bb6c-c3c8-4815-a12e-3dc28f06b3db\",\"name\":\"calculate\",\"response\":{\"result\":56}}",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {
-            "operation": "multiply",
-            "b": 8,
-            "a": 7
-          }
-        }
-      ],
-      "integration": "Google ADK"
+      "parentUuid": "5f020eb63ae24384",
+      "startTime": "2026-10-21T16:42:42.511Z",
+      "endTime": "2026-10-21T16:42:42.514Z",
+      "input": {
+        "operation": "multiply",
+        "b": 8,
+        "a": 7
+      },
+      "output": 56,
+      "integration": "Google ADK",
+      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result."
     }
   ],
-  "startTime": "2026-05-07T09:06:22.586Z",
-  "endTime": "2026-05-07T09:06:26.760Z",
+  "startTime": "2026-10-21T16:42:41.038Z",
+  "endTime": "2026-10-21T16:42:43.434Z",
   "name": "googleadk-tool-test",
   "metadata": {
     "test_type": "tool"
@@ -114,7 +190,20 @@
   "environment": "development",
   "threadId": "tool-123",
   "userId": "test-user",
-  "input": "{\"user_id\": \"test-user\", \"session_id\": \"9cacf812-2b0e-4ee6-b143-f44046b0fcee\", \"invocation_id\": null, \"new_message\": {\"parts\": [{\"text\": \"What is 7 multiplied by 8?\"}], \"role\": \"user\"}, \"state_delta\": null, \"run_config\": null}",
-  "output": "{\"model_version\":\"gemini-2.5-flash-lite\",\"content\":{\"parts\":[{\"text\":\"The answer is 56.\"}],\"role\":\"model\"},\"finish_reason\":\"STOP\",\"usage_metadata\":{\"candidates_token_count\":7,\"prompt_token_count\":199,\"prompt_tokens_details\":[{\"modality\":\"TEXT\",\"token_count\":199}],\"total_token_count\":206},\"invocation_id\":\"e-d5ec8c1c-b406-41e3-bd2d-5b9ed1bb75e4\",\"author\":\"calculator_assistant\",\"actions\":{\"state_delta\":{},\"artifact_delta\":{},\"requested_auth_configs\":{},\"requested_tool_confirmations\":{}},\"id\":\"90f756d0-27e5-4b29-b285-67bb28d0130a\",\"timestamp\":1778144783.790971}",
-  "status": "SUCCESS"
+  "input": "What is 7 multiplied by 8?",
+  "output": "The result is 56.",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
+      "output": 56,
+      "inputParameters": {
+        "operation": "multiply",
+        "b": 8,
+        "a": 7
+      }
+    }
+  ]
 }

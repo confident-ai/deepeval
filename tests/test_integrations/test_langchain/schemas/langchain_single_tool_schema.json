@@ -1,272 +1,198 @@
 {
-  "uuid": "e3021008-2e42-451b-a657-26240e5d1d9c",
+  "uuid": "4f88f2ff775b5f37fbcc9c2d5b0639ce",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
+      "uuid": "6770aae8842f5304",
       "name": "single_tool_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-03-19T07:46:30.148Z",
-      "endTime": "2026-03-19T07:46:33.669Z",
+      "startTime": "2026-10-23T08:40:43.459Z",
+      "endTime": "2026-10-23T08:40:45.301Z",
       "input": {
         "messages": [
           {
-            "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
+              }
+            ]
           }
         ]
       },
       "output": {
         "messages": [
           {
-            "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions.",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human"
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
+              }
+            ]
           },
           {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 152,
-                "prompt_tokens": 145,
-                "total_tokens": 297,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 128,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2NKSbjELDJq83gzLMnX9mpXrPuN",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050f-6c85-7d62-9658-4107d17a0d64-0",
-            "tool_calls": [
+            "role": "assistant",
+            "parts": [
               {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
                 "name": "get_weather",
-                "args": {
+                "arguments": {
                   "city": "San Francisco"
                 },
-                "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-                "type": "tool_call"
+                "id": "call_GTNslvy2dxU5mUhthzXik5dK"
               }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 145,
-              "output_tokens": 152,
-              "total_tokens": 297,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 128
-              }
-            }
+            ]
           },
           {
-            "content": "Foggy, 58F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Foggy, 58F",
+                "id": "call_GTNslvy2dxU5mUhthzXik5dK"
+              }
+            ]
           },
           {
-            "content": "San Francisco: Foggy, 58\u00b0F.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 13,
-                "prompt_tokens": 180,
-                "total_tokens": 193,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-5.4-mini-2025-08-07",
-              "system_fingerprint": null,
-              "id": "chatcmpl-DL2NMJNwKpQ1JJbxYmuZ3zqudCMZc",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019d050f-7646-79a1-b24a-72344a4efccb-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 180,
-              "output_tokens": 13,
-              "total_tokens": 193,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "San Francisco: Foggy, 58\u00b0F"
               }
-            }
+            ]
           }
         ]
       },
+      "integration": "LangChain",
       "toolsCalled": [
         {
           "name": "get_weather",
           "type": "FUNCTION",
-          "output": {
-            "content": "Foggy, 58F",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "get_weather",
-            "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-            "status": "success"
-          },
+          "output": "Foggy, 58F",
           "inputParameters": {
             "city": "San Francisco"
           }
         }
       ],
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019d050f-7646-79a1-b24a-72344a4efccb",
+      "uuid": "dad38648c23878bf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
-      "startTime": "2026-03-19T07:46:32.646Z",
-      "endTime": "2026-03-19T07:46:33.669Z",
+      "parentUuid": "6770aae8842f5304",
+      "startTime": "2026-10-23T08:40:44.451Z",
+      "endTime": "2026-10-23T08:40:45.301Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "Foggy, 58F"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "San Francisco"
+            },
+            "id": "call_GTNslvy2dxU5mUhthzXik5dK"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "Foggy, 58F",
+            "id": "call_GTNslvy2dxU5mUhthzXik5dK"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "San Francisco: Foggy, 58\u00b0F.",
-        "tool_calls": []
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 180.0,
-      "outputTokenCount": 13.0,
+      "output": "San Francisco: Foggy, 58\u00b0F",
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 180.0,
+      "outputTokenCount": 12.0
     },
     {
-      "uuid": "019d050f-6c85-7d62-9658-4107d17a0d64",
+      "uuid": "a671f4c7d4baa8f0",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
-      "startTime": "2026-03-19T07:46:30.149Z",
-      "endTime": "2026-03-19T07:46:32.645Z",
+      "parentUuid": "6770aae8842f5304",
+      "startTime": "2026-10-23T08:40:43.459Z",
+      "endTime": "2026-10-23T08:40:44.449Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the current weather in a city.', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "arguments": {
               "city": "San Francisco"
             },
-            "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT"
+            "id": "call_GTNslvy2dxU5mUhthzXik5dK"
           }
-        ]
-      },
-      "model": "gpt-5.4-mini-2025-08-07",
-      "inputTokenCount": 145.0,
-      "outputTokenCount": 152.0,
+        }
+      ],
       "integration": "LangChain",
-      "provider": "OpenAI"
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "San Francisco"
+          }
+        }
+      ],
+      "model": "gpt-5.4-mini",
+      "provider": "OpenAI",
+      "inputTokenCount": 145.0,
+      "outputTokenCount": 18.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019d050f-7645-7de3-9246-98b64af85729",
+      "uuid": "22463c005da91567",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019d050f-6c84-7592-af8b-3a0aeadcfdf2",
-      "startTime": "2026-03-19T07:46:32.645Z",
-      "endTime": "2026-03-19T07:46:32.646Z",
+      "parentUuid": "6770aae8842f5304",
+      "startTime": "2026-10-23T08:40:44.450Z",
+      "endTime": "2026-10-23T08:40:44.451Z",
       "input": {
         "city": "San Francisco"
       },
-      "output": {
-        "content": "Foggy, 58F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-        "status": "success"
-      },
+      "output": "Foggy, 58F",
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-03-19T07:46:30.148Z",
-  "endTime": "2026-03-19T07:46:33.669Z",
+  "startTime": "2026-10-23T08:40:43.459Z",
+  "endTime": "2026-10-23T08:40:45.301Z",
   "name": "langchain-single-tool-test",
   "metadata": {
     "test_type": "single_tool"
@@ -281,132 +207,62 @@
   "input": {
     "messages": [
       {
-        "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
+          }
+        ]
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions.",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco. Do not ask clarifying questions."
+          }
+        ]
       },
       {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 152,
-            "prompt_tokens": 145,
-            "total_tokens": 297,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 128,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2NKSbjELDJq83gzLMnX9mpXrPuN",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050f-6c85-7d62-9658-4107d17a0d64-0",
-        "tool_calls": [
+        "role": "assistant",
+        "parts": [
           {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "arguments": {
               "city": "San Francisco"
             },
-            "id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-            "type": "tool_call"
+            "id": "call_GTNslvy2dxU5mUhthzXik5dK"
           }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 145,
-          "output_tokens": 152,
-          "total_tokens": 297,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 128
-          }
-        }
+        ]
       },
       {
-        "content": "Foggy, 58F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-        "status": "success"
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Foggy, 58F",
+            "id": "call_GTNslvy2dxU5mUhthzXik5dK"
+          }
+        ]
       },
       {
-        "content": "San Francisco: Foggy, 58\u00b0F.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 13,
-            "prompt_tokens": 180,
-            "total_tokens": 193,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-5.4-mini-2025-08-07",
-          "system_fingerprint": null,
-          "id": "chatcmpl-DL2NMJNwKpQ1JJbxYmuZ3zqudCMZc",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019d050f-7646-79a1-b24a-72344a4efccb-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 180,
-          "output_tokens": 13,
-          "total_tokens": 193,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "San Francisco: Foggy, 58\u00b0F"
           }
-        }
+        ]
       }
     ]
   },
@@ -415,15 +271,7 @@
     {
       "name": "get_weather",
       "type": "FUNCTION",
-      "output": {
-        "content": "Foggy, 58F",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "get_weather",
-        "tool_call_id": "call_8Cdf9jDbiiB44ZGHRzEpTqdT",
-        "status": "success"
-      },
+      "output": "Foggy, 58F",
       "inputParameters": {
         "city": "San Francisco"
       }

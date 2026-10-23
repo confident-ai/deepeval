@@ -1,21 +1,26 @@
 {
   "name": "LangChain Full Attributes Trace",
-  "uuid": "844ff542-147a-4475-b683-5cb662f80451",
+  "uuid": "65076ceaa761ca6fdc23d69c29aa2476",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
+      "uuid": "e5cf3f9df5e533ad",
       "name": "metric_collection_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
-      "startTime": "2026-06-18T08:28:51.607Z",
-      "endTime": "2026-06-18T08:28:55.895Z",
+      "traceUuid": "65076ceaa761ca6fdc23d69c29aa2476",
+      "startTime": "2026-10-23T08:55:16.191Z",
+      "endTime": "2026-10-23T08:55:23.369Z",
       "input": {
         "messages": [
           {
             "role": "user",
-            "content": "What is 125 * 5?"
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 125 * 5?"
+              }
+            ]
           }
         ]
       },
@@ -23,198 +28,106 @@
         "messages": [
           {
             "role": "user",
-            "content": "What is 125 * 5?"
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 125 * 5?"
+              }
+            ]
           },
           {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "AIMessage"
-            ],
-            "kwargs": {
-              "id": "chatcmpl-Ds2PFYN5rEnwq4CRDdKukqWSpheYo",
-              "content": "",
-              "additional_kwargs": {
-                "tool_calls": [
-                  {
-                    "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-                    "type": "function",
-                    "function": {
-                      "name": "calculate",
-                      "arguments": "{\"expression\":\"125 * 5\"}"
-                    }
-                  }
-                ]
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
               },
-              "response_metadata": {
-                "tokenUsage": {
-                  "promptTokens": 56,
-                  "completionTokens": 16,
-                  "totalTokens": 72
-                },
-                "finish_reason": "tool_calls",
-                "model_provider": "openai",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "usage": {
-                  "prompt_tokens": 56,
-                  "completion_tokens": 16,
-                  "total_tokens": 72,
-                  "prompt_tokens_details": {
-                    "cached_tokens": 0,
-                    "audio_tokens": 0
-                  },
-                  "completion_tokens_details": {
-                    "reasoning_tokens": 0,
-                    "audio_tokens": 0,
-                    "accepted_prediction_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  }
-                },
-                "system_fingerprint": "fp_623c0b2958"
-              },
-              "type": "ai",
-              "tool_calls": [
-                {
-                  "name": "calculate",
-                  "args": {
-                    "expression": "125 * 5"
-                  },
-                  "type": "tool_call",
-                  "id": "call_ZcBoSQHFSbg1U4vuEnB677gK"
-                }
-              ],
-              "invalid_tool_calls": [],
-              "usage_metadata": {
-                "output_tokens": 16,
-                "input_tokens": 56,
-                "total_tokens": 72,
-                "input_token_details": {
-                  "audio": 0,
-                  "cache_read": 0
-                },
-                "output_token_details": {
-                  "audio": 0,
-                  "reasoning": 0
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "id": "call_t5CFTCjxdFGeGBXUv71ouevP",
+                "arguments": {
+                  "expression": "125 * 5"
                 }
               }
-            }
+            ]
           },
           {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "ToolMessage"
-            ],
-            "kwargs": {
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-              "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-              "additional_kwargs": {},
-              "response_metadata": {}
-            }
-          },
-          {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "AIMessage"
-            ],
-            "kwargs": {
-              "id": "chatcmpl-Ds2PHFEWoAS7bzW0Hvr0XytPBeGc9",
-              "content": "The result of \\( 125 \\times 5 \\) is 625.",
-              "additional_kwargs": {},
-              "response_metadata": {
-                "tokenUsage": {
-                  "promptTokens": 163,
-                  "completionTokens": 17,
-                  "totalTokens": 180
-                },
-                "finish_reason": "stop",
-                "model_provider": "openai",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "usage": {
-                  "prompt_tokens": 163,
-                  "completion_tokens": 17,
-                  "total_tokens": 180,
-                  "prompt_tokens_details": {
-                    "cached_tokens": 0,
-                    "audio_tokens": 0
-                  },
-                  "completion_tokens_details": {
-                    "reasoning_tokens": 0,
-                    "audio_tokens": 0,
-                    "accepted_prediction_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  }
-                },
-                "system_fingerprint": "fp_623c0b2958"
-              },
-              "type": "ai",
-              "tool_calls": [],
-              "invalid_tool_calls": [],
-              "usage_metadata": {
-                "output_tokens": 17,
-                "input_tokens": 163,
-                "total_tokens": 180,
-                "input_token_details": {
-                  "audio": 0,
-                  "cache_read": 0
-                },
-                "output_token_details": {
-                  "audio": 0,
-                  "reasoning": 0
-                }
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_t5CFTCjxdFGeGBXUv71ouevP\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
               }
-            }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "The result of \\( 125 \\times 5 \\) is 625."
+              }
+            ]
           }
         ]
       },
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "output": "625",
+          "inputParameters": {
+            "expression": "125 * 5"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019ed9d8-e818-720e-a1f9-d6f2556542fa",
-      "name": "Langchain LLM Run",
+      "uuid": "9b0492dd8c64147d",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
-      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
-      "startTime": "2026-06-18T08:28:51.608Z",
-      "endTime": "2026-06-18T08:28:54.401Z",
+      "traceUuid": "65076ceaa761ca6fdc23d69c29aa2476",
+      "parentUuid": "e5cf3f9df5e533ad",
+      "startTime": "2026-10-23T08:55:16.193Z",
+      "endTime": "2026-10-23T08:55:21.979Z",
       "input": [
         {
           "role": "system",
           "content": "You are a calculator assistant."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 125 * 5?"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "toolCalls": [
-          {
-            "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "calculate",
-            "args": {
+            "id": "call_t5CFTCjxdFGeGBXUv71ouevP",
+            "arguments": {
               "expression": "125 * 5"
             }
           }
-        ]
-      },
+        }
+      ],
       "metricCollection": "llm-span-evals",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "inputParameters": {
+            "expression": "125 * 5"
+          }
+        }
+      ],
       "model": "gpt-4o-mini-2024-07-18",
-      "costPerInputToken": 0,
-      "costPerOutputToken": 0,
       "inputTokenCount": 56,
       "outputTokenCount": 16,
       "promptAlias": "langchain-metric-collection-test",
@@ -223,42 +136,47 @@
       "promptVersion": "01.00.00"
     },
     {
-      "uuid": "019ed9d8-f303-762f-8571-fc47c5751fc8",
-      "name": "Langchain LLM Run",
+      "uuid": "3357cd7a206f35b4",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
-      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
-      "startTime": "2026-06-18T08:28:54.403Z",
-      "endTime": "2026-06-18T08:28:55.895Z",
+      "traceUuid": "65076ceaa761ca6fdc23d69c29aa2476",
+      "parentUuid": "e5cf3f9df5e533ad",
+      "startTime": "2026-10-23T08:55:21.980Z",
+      "endTime": "2026-10-23T08:55:23.369Z",
       "input": [
         {
           "role": "system",
           "content": "You are a calculator assistant."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 125 * 5?"
         },
         {
-          "role": "ai",
-          "content": "[{\"name\":\"calculate\",\"args\":{\"expression\":\"125 * 5\"},\"type\":\"tool_call\",\"id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\"}]"
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "calculate",
+            "id": "call_t5CFTCjxdFGeGBXUv71ouevP",
+            "arguments": {
+              "expression": "125 * 5"
+            }
+          }
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_t5CFTCjxdFGeGBXUv71ouevP\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "The result of \\( 125 \\times 5 \\) is 625.",
-        "toolCalls": []
-      },
+      "output": "The result of \\( 125 \\times 5 \\) is 625.",
       "metricCollection": "llm-span-evals",
       "model": "gpt-4o-mini-2024-07-18",
-      "costPerInputToken": 0,
-      "costPerOutputToken": 0,
-      "inputTokenCount": 163,
+      "inputTokenCount": 162,
       "outputTokenCount": 17,
       "promptAlias": "langchain-metric-collection-test",
       "promptCommitHash": "bab04ec",
@@ -269,41 +187,22 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019ed9d8-f301-77a1-aaee-b54f4fef3702",
+      "uuid": "474d95aec9662b24",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "844ff542-147a-4475-b683-5cb662f80451",
-      "parentUuid": "019ed9d8-e817-739f-83f9-8fff5c657fb9",
-      "startTime": "2026-06-18T08:28:54.402Z",
-      "endTime": "2026-06-18T08:28:54.403Z",
-      "input": "{\"expression\":\"125 * 5\"}",
-      "output": {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "status": "success",
-          "content": "625",
-          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-          "name": "calculate",
-          "metadata": {
-            "versions": {
-              "@langchain/core": "1.1.31"
-            }
-          },
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
-      }
+      "traceUuid": "65076ceaa761ca6fdc23d69c29aa2476",
+      "parentUuid": "e5cf3f9df5e533ad",
+      "startTime": "2026-10-23T08:55:21.979Z",
+      "endTime": "2026-10-23T08:55:21.979Z",
+      "input": {
+        "expression": "125 * 5"
+      },
+      "output": "625"
     }
   ],
-  "startTime": "2026-06-18T08:28:51.607Z",
-  "endTime": "2026-06-18T08:28:55.895Z",
+  "startTime": "2026-10-23T08:55:16.191Z",
+  "endTime": "2026-10-23T08:55:23.370Z",
   "environment": "testing",
   "metadata": {
     "deployment": "test-env",
@@ -320,7 +219,12 @@
     "messages": [
       {
         "role": "user",
-        "content": "What is 125 * 5?"
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 125 * 5?"
+          }
+        ]
       }
     ]
   },
@@ -328,184 +232,56 @@
     "messages": [
       {
         "role": "user",
-        "content": "What is 125 * 5?"
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 125 * 5?"
+          }
+        ]
       },
       {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "AIMessage"
-        ],
-        "kwargs": {
-          "id": "chatcmpl-Ds2PFYN5rEnwq4CRDdKukqWSpheYo",
-          "content": "",
-          "additional_kwargs": {
-            "tool_calls": [
-              {
-                "id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-                "type": "function",
-                "function": {
-                  "name": "calculate",
-                  "arguments": "{\"expression\":\"125 * 5\"}"
-                }
-              }
-            ]
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
           },
-          "response_metadata": {
-            "tokenUsage": {
-              "promptTokens": 56,
-              "completionTokens": 16,
-              "totalTokens": 72
-            },
-            "finish_reason": "tool_calls",
-            "model_provider": "openai",
-            "model_name": "gpt-4o-mini-2024-07-18",
-            "usage": {
-              "prompt_tokens": 56,
-              "completion_tokens": 16,
-              "total_tokens": 72,
-              "prompt_tokens_details": {
-                "cached_tokens": 0,
-                "audio_tokens": 0
-              },
-              "completion_tokens_details": {
-                "reasoning_tokens": 0,
-                "audio_tokens": 0,
-                "accepted_prediction_tokens": 0,
-                "rejected_prediction_tokens": 0
-              }
-            },
-            "system_fingerprint": "fp_623c0b2958"
-          },
-          "type": "ai",
-          "tool_calls": [
-            {
-              "name": "calculate",
-              "args": {
-                "expression": "125 * 5"
-              },
-              "type": "tool_call",
-              "id": "call_ZcBoSQHFSbg1U4vuEnB677gK"
-            }
-          ],
-          "invalid_tool_calls": [],
-          "usage_metadata": {
-            "output_tokens": 16,
-            "input_tokens": 56,
-            "total_tokens": 72,
-            "input_token_details": {
-              "audio": 0,
-              "cache_read": 0
-            },
-            "output_token_details": {
-              "audio": 0,
-              "reasoning": 0
+          {
+            "type": "tool_call",
+            "name": "calculate",
+            "id": "call_t5CFTCjxdFGeGBXUv71ouevP",
+            "arguments": {
+              "expression": "125 * 5"
             }
           }
-        }
+        ]
       },
       {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_ZcBoSQHFSbg1U4vuEnB677gK\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "AIMessage"
-        ],
-        "kwargs": {
-          "id": "chatcmpl-Ds2PHFEWoAS7bzW0Hvr0XytPBeGc9",
-          "content": "The result of \\( 125 \\times 5 \\) is 625.",
-          "additional_kwargs": {},
-          "response_metadata": {
-            "tokenUsage": {
-              "promptTokens": 163,
-              "completionTokens": 17,
-              "totalTokens": 180
-            },
-            "finish_reason": "stop",
-            "model_provider": "openai",
-            "model_name": "gpt-4o-mini-2024-07-18",
-            "usage": {
-              "prompt_tokens": 163,
-              "completion_tokens": 17,
-              "total_tokens": 180,
-              "prompt_tokens_details": {
-                "cached_tokens": 0,
-                "audio_tokens": 0
-              },
-              "completion_tokens_details": {
-                "reasoning_tokens": 0,
-                "audio_tokens": 0,
-                "accepted_prediction_tokens": 0,
-                "rejected_prediction_tokens": 0
-              }
-            },
-            "system_fingerprint": "fp_623c0b2958"
-          },
-          "type": "ai",
-          "tool_calls": [],
-          "invalid_tool_calls": [],
-          "usage_metadata": {
-            "output_tokens": 17,
-            "input_tokens": 163,
-            "total_tokens": 180,
-            "input_token_details": {
-              "audio": 0,
-              "cache_read": 0
-            },
-            "output_token_details": {
-              "audio": 0,
-              "reasoning": 0
-            }
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"625\",\"tool_call_id\":\"call_t5CFTCjxdFGeGBXUv71ouevP\",\"name\":\"calculate\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
           }
-        }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "The result of \\( 125 \\times 5 \\) is 625."
+          }
+        ]
       }
     ]
   },
   "toolsCalled": [
     {
       "name": "calculate",
+      "output": "625",
       "inputParameters": {
         "expression": "125 * 5"
-      },
-      "output": {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "status": "success",
-          "content": "625",
-          "tool_call_id": "call_ZcBoSQHFSbg1U4vuEnB677gK",
-          "name": "calculate",
-          "metadata": {
-            "versions": {
-              "@langchain/core": "1.1.31"
-            }
-          },
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
       }
     }
   ],

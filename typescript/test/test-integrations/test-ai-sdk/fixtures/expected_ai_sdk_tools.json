@@ -1,153 +1,158 @@
 {
   "name": "Vercel Tool Gen Trace",
-  "uuid": "66115d10-eaff-4ccc-852e-43de23d1102c",
-  "baseSpans": [],
-  "agentSpans": [],
-  "llmSpans": [
+  "uuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+  "baseSpans": [
     {
-      "uuid": "f3ee41414be8f889",
-      "name": "ai.generateText",
+      "uuid": "15523298ee999aed",
+      "name": "step 1",
       "status": "SUCCESS",
-      "type": "llm",
-      "traceUuid": "66115d10-eaff-4ccc-852e-43de23d1102c",
-      "startTime": "2026-02-24T13:48:58.650Z",
-      "endTime": "2026-02-24T13:49:01.093Z",
-      "input": {
-        "prompt": "What is the weather in San Francisco? Answer in celsius."
-      },
-      "output": "The weather in San Francisco is currently 18°C and partly cloudy.",
-      "model": "gpt-4o-mini",
-      "metadata": {
-        "provider": "openai.responses",
-        "finish_reason": "stop",
-        "max_retries": 2
-      }
+      "type": "base",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "parentUuid": "0c03843ba60b6040",
+      "startTime": "2026-10-21T20:45:47.237Z",
+      "endTime": "2026-10-21T20:45:49.076Z",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": {
+            "location": "San Francisco",
+            "temperature": 18,
+            "unit": "c",
+            "condition": "partly cloudy"
+          },
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ]
     },
     {
-      "uuid": "a13fd208b1cbefd9",
-      "name": "ai.generateText.doGenerate",
+      "uuid": "336fc58c89b6394f",
+      "name": "step 2",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "parentUuid": "0c03843ba60b6040",
+      "startTime": "2026-10-21T20:45:49.078Z",
+      "endTime": "2026-10-21T20:45:50.130Z"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "0c03843ba60b6040",
+      "name": "invoke_agent gpt-4o-mini",
+      "status": "SUCCESS",
+      "type": "agent",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "startTime": "2026-10-21T20:45:47.236Z",
+      "endTime": "2026-10-21T20:45:50.130Z",
+      "input": "What is the weather in San Francisco? Answer in celsius.",
+      "output": "The weather in San Francisco is currently 18°C and partly cloudy.\n[unsupported content]",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ],
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "d34cc05123da903c",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "66115d10-eaff-4ccc-852e-43de23d1102c",
-      "parentUuid": "f3ee41414be8f889",
-      "startTime": "2026-02-24T13:48:58.652Z",
-      "endTime": "2026-02-24T13:48:59.999Z",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "parentUuid": "15523298ee999aed",
+      "startTime": "2026-10-21T20:45:47.237Z",
+      "endTime": "2026-10-21T20:45:49.073Z",
       "input": [
         {
           "role": "user",
-          "content": [
-            {
-              "type": "text",
-              "text": "What is the weather in San Francisco? Answer in celsius."
-            }
-          ]
+          "content": "What is the weather in San Francisco? Answer in celsius."
         }
       ],
       "output": [
         {
-          "toolCallId": "call_kwNWpzdsBhareqXi1IuftKHn",
-          "toolName": "get_weather",
-          "input": "{\"location\":\"San Francisco\",\"unit\":\"c\"}"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "id": "call_nkaxfz6iJr8mmf39RKWgLaJR",
+            "name": "get_weather",
+            "arguments": {
+              "location": "San Francisco",
+              "unit": "c"
+            }
+          }
         }
       ],
-      "model": "gpt-4o-mini",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 72,
-      "outputTokenCount": 20,
-      "metadata": {
-        "response_id": "resp_071df3ea4f6f75a900699dac4b08a881948b3c1e418b43f86b",
-        "response_model": "gpt-4o-mini-2024-07-18",
-        "provider": "openai.responses",
-        "finish_reason": "tool-calls",
-        "max_retries": 2
-      }
+      "outputTokenCount": 20
     },
     {
-      "uuid": "3ab43d7f621f7b17",
-      "name": "ai.generateText.doGenerate",
+      "uuid": "33eae1129c0d3c4c",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "66115d10-eaff-4ccc-852e-43de23d1102c",
-      "parentUuid": "f3ee41414be8f889",
-      "startTime": "2026-02-24T13:49:00.071Z",
-      "endTime": "2026-02-24T13:49:01.089Z",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "parentUuid": "336fc58c89b6394f",
+      "startTime": "2026-10-21T20:45:49.078Z",
+      "endTime": "2026-10-21T20:45:50.129Z",
       "input": [
         {
           "role": "user",
-          "content": [
-            {
-              "type": "text",
-              "text": "What is the weather in San Francisco? Answer in celsius."
-            }
-          ]
+          "content": "What is the weather in San Francisco? Answer in celsius."
         },
         {
           "role": "assistant",
-          "content": [
-            {
-              "type": "tool-call",
-              "toolCallId": "call_kwNWpzdsBhareqXi1IuftKHn",
-              "toolName": "get_weather",
-              "input": {
-                "location": "San Francisco",
-                "unit": "c"
-              },
-              "providerOptions": {
-                "openai": {
-                  "itemId": "fc_071df3ea4f6f75a900699dac4b8f8c8194abd1e6890cddf8e9"
-                }
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_nkaxfz6iJr8mmf39RKWgLaJR",
+            "name": "get_weather",
+            "arguments": {
+              "location": "San Francisco",
+              "unit": "c"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "content": [
-            {
-              "type": "tool-result",
-              "toolCallId": "call_kwNWpzdsBhareqXi1IuftKHn",
-              "toolName": "get_weather",
-              "output": {
-                "type": "json",
-                "value": {
-                  "location": "San Francisco",
-                  "temperature": 18,
-                  "unit": "c",
-                  "condition": "partly cloudy"
-                }
-              },
-              "providerOptions": {
-                "openai": {
-                  "itemId": "fc_071df3ea4f6f75a900699dac4b8f8c8194abd1e6890cddf8e9"
-                }
-              }
-            }
-          ]
+          "content": "[unsupported content]"
         }
       ],
       "output": "The weather in San Francisco is currently 18°C and partly cloudy.",
-      "model": "gpt-4o-mini",
-      "inputTokenCount": 120,
-      "outputTokenCount": 16,
-      "metadata": {
-        "response_id": "resp_071df3ea4f6f75a900699dac4c45fc81949d01077f5fadeffc",
-        "response_model": "gpt-4o-mini-2024-07-18",
-        "provider": "openai.responses",
-        "finish_reason": "stop",
-        "max_retries": 2
-      }
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 117,
+      "outputTokenCount": 16
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "562c0e8dd3602a69",
+      "uuid": "e84530311d7491ad",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "66115d10-eaff-4ccc-852e-43de23d1102c",
-      "parentUuid": "f3ee41414be8f889",
-      "startTime": "2026-02-24T13:49:00.058Z",
-      "endTime": "2026-02-24T13:49:00.058Z",
+      "traceUuid": "d573f8ea-2f1b-4785-a17f-147da48c17fa",
+      "parentUuid": "15523298ee999aed",
+      "startTime": "2026-10-21T20:45:49.076Z",
+      "endTime": "2026-10-21T20:45:49.076Z",
       "input": {
         "location": "San Francisco",
         "unit": "c"
@@ -160,42 +165,30 @@
       }
     }
   ],
-  "startTime": "2026-02-24T13:48:58.648Z",
-  "endTime": "2026-02-24T13:49:01.093Z",
+  "startTime": "2026-10-21T20:45:47.235Z",
+  "endTime": "2026-10-21T20:45:50.132Z",
   "environment": "testing",
   "tags": [
     "vercel",
     "tool-call"
   ],
   "threadId": "vercel-tools-thread",
-  "input": "{\"prompt\":\"What is the weather in San Francisco? Answer in celsius.\"}",
-  "output": "The weather in San Francisco is currently 18°C and partly cloudy.",
+  "input": "What is the weather in San Francisco? Answer in celsius.",
+  "output": "The weather in San Francisco is currently 18°C and partly cloudy.\n[unsupported content]",
   "toolsCalled": [
     {
       "name": "get_weather",
-      "inputParameters": {
-        "location": "San Francisco",
-        "unit": "c"
-      },
       "output": {
         "location": "San Francisco",
         "temperature": 18,
         "unit": "c",
         "condition": "partly cloudy"
-      }
-    },
-    {
-      "name": "get_weather",
+      },
       "inputParameters": {
         "location": "San Francisco",
         "unit": "c"
-      },
-      "output": {
-        "location": "San Francisco",
-        "temperature": 18,
-        "unit": "c",
-        "condition": "partly cloudy"
       }
     }
-  ]
+  ],
+  "status": "SUCCESS"
 }

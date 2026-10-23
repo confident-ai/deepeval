@@ -1,705 +1,473 @@
 {
-  "uuid": "03515745-cee6-4179-ac81-d09a46c4162e",
+  "uuid": "c7d2cbd8395d45af109cc659638ed984",
   "baseSpans": [
     {
-      "uuid": "019df247-1b9a-7351-9927-1cf4a11d5fab",
+      "uuid": "81f3a8be6c6b0e45",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019df247-17d5-7a80-bc98-13eb4ae1dea2",
-      "startTime": "2026-05-04T09:17:19.642Z",
-      "endTime": "2026-05-04T09:17:20.239Z",
+      "parentUuid": "e8be165256dbe895",
+      "startTime": "2026-10-23T08:40:32.242Z",
+      "endTime": "2026-10-23T08:40:33.601Z",
       "input": {
         "messages": [
           {
-            "content": "What is 8 multiplied by 6?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 17,
-                "prompt_tokens": 67,
-                "total_tokens": 84,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_4727e8d6f3",
-              "id": "chatcmpl-DbjiRePFiZ8fNOSuklPkx00MsF1hu",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019df247-17d7-7c01-b171-1c6b4803641b-0",
-            "tool_calls": [
+            "role": "user",
+            "parts": [
               {
-                "name": "multiply",
-                "args": {
-                  "a": 8,
-                  "b": 6
-                },
-                "id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 67,
-              "output_tokens": 17,
-              "total_tokens": 84,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "48",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "multiply",
-            "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-            "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-            "status": "success"
-          }
-        ]
-      },
-      "output": [
-        {
-          "graph": null,
-          "update": {
-            "messages": [
-              {
-                "content": "8 multiplied by 6 is 48.",
-                "additional_kwargs": {
-                  "refusal": null
-                },
-                "response_metadata": {
-                  "token_usage": {
-                    "completion_tokens": 10,
-                    "prompt_tokens": 92,
-                    "total_tokens": 102,
-                    "completion_tokens_details": {
-                      "accepted_prediction_tokens": 0,
-                      "audio_tokens": 0,
-                      "reasoning_tokens": 0,
-                      "rejected_prediction_tokens": 0
-                    },
-                    "prompt_tokens_details": {
-                      "audio_tokens": 0,
-                      "cached_tokens": 0
-                    }
-                  },
-                  "model_provider": "openai",
-                  "model_name": "gpt-4o-mini-2024-07-18",
-                  "system_fingerprint": "fp_4727e8d6f3",
-                  "id": "chatcmpl-DbjiRWgDUwjHneibERVzkGoJwvkMD",
-                  "service_tier": "default",
-                  "finish_reason": "stop",
-                  "logprobs": null
-                },
-                "type": "ai",
-                "id": "lc_run--019df247-1b9d-7cb2-bb9d-28278a248a10-0",
-                "tool_calls": [],
-                "invalid_tool_calls": [],
-                "usage_metadata": {
-                  "input_tokens": 92,
-                  "output_tokens": 10,
-                  "total_tokens": 102,
-                  "input_token_details": {
-                    "audio": 0,
-                    "cache_read": 0
-                  },
-                  "output_token_details": {
-                    "audio": 0,
-                    "reasoning": 0
-                  }
-                }
+                "type": "text",
+                "content": "What is 8 multiplied by 6?"
               }
             ]
           },
-          "resume": null,
-          "goto": []
-        }
-      ],
-      "integration": "LangChain"
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "multiply",
+                "arguments": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "48",
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "8 multiplied by 6 is 48."
+              }
+            ]
+          }
+        ]
+      },
+      "integration": "LangGraph"
     },
     {
-      "uuid": "019df247-1b97-75f2-bcae-017ea610401e",
+      "uuid": "ecd79bb9b4e717de",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "019df247-17d5-7a80-bc98-13eb4ae1dea2",
-      "startTime": "2026-05-04T09:17:19.639Z",
-      "endTime": "2026-05-04T09:17:19.642Z",
-      "input": [
-        {
+      "parentUuid": "e8be165256dbe895",
+      "startTime": "2026-10-23T08:40:32.241Z",
+      "endTime": "2026-10-23T08:40:32.242Z",
+      "input": {
+        "__type": "tool_call_with_context",
+        "tool_call": {
           "name": "multiply",
           "args": {
             "a": 8,
             "b": 6
           },
-          "id": "call_t5eXouIjGY6DSSUJbtbVvybX",
+          "id": "call_4H3dIAWqpXkARayswDCLUqfa",
           "type": "tool_call"
+        },
+        "state": {
+          "messages": [
+            {
+              "role": "user",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": "What is 8 multiplied by 6?"
+                }
+              ]
+            },
+            {
+              "role": "assistant",
+              "parts": [
+                {
+                  "type": "text",
+                  "content": ""
+                },
+                {
+                  "type": "tool_call",
+                  "name": "multiply",
+                  "arguments": {
+                    "a": 8,
+                    "b": 6
+                  },
+                  "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                }
+              ]
+            }
+          ]
         }
-      ],
+      },
       "output": {
         "messages": [
           {
-            "content": "48",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "multiply",
-            "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-            "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-            "status": "success"
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "48",
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
           }
         ]
       },
+      "integration": "LangGraph",
       "toolsCalled": [
         {
           "name": "multiply",
           "type": "FUNCTION",
-          "output": {
-            "content": "48",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "multiply",
-            "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-            "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-            "status": "success"
+          "output": "48",
+          "inputParameters": {
+            "a": 8,
+            "b": 6
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "e901c04854975fa6",
+      "name": "model",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e8be165256dbe895",
+      "startTime": "2026-10-23T08:40:30.925Z",
+      "endTime": "2026-10-23T08:40:32.240Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 8 multiplied by 6?"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "multiply",
+                "arguments": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
+          }
+        ]
+      },
+      "integration": "LangGraph"
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "e8be165256dbe895",
+      "name": "LangGraph",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-23T08:40:30.924Z",
+      "endTime": "2026-10-23T08:40:33.602Z",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 8 multiplied by 6?"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 8 multiplied by 6?"
+              }
+            ]
           },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "multiply",
+                "arguments": {
+                  "a": 8,
+                  "b": 6
+                },
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "48",
+                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "8 multiplied by 6 is 48."
+              }
+            ]
+          }
+        ]
+      },
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "multiply",
+          "type": "FUNCTION",
+          "output": "48",
           "inputParameters": {
             "a": 8,
             "b": 6
           }
         }
       ],
-      "integration": "LangChain"
-    },
-    {
-      "uuid": "019df247-17d5-7a80-bc98-13f459961266",
-      "name": "model",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "019df247-17d5-7a80-bc98-13eb4ae1dea2",
-      "startTime": "2026-05-04T09:17:18.677Z",
-      "endTime": "2026-05-04T09:17:19.638Z",
-      "input": {
-        "messages": [
-          {
-            "content": "What is 8 multiplied by 6?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
-          }
-        ]
-      },
-      "output": [
-        {
-          "graph": null,
-          "update": {
-            "messages": [
-              {
-                "content": "",
-                "additional_kwargs": {
-                  "refusal": null
-                },
-                "response_metadata": {
-                  "token_usage": {
-                    "completion_tokens": 17,
-                    "prompt_tokens": 67,
-                    "total_tokens": 84,
-                    "completion_tokens_details": {
-                      "accepted_prediction_tokens": 0,
-                      "audio_tokens": 0,
-                      "reasoning_tokens": 0,
-                      "rejected_prediction_tokens": 0
-                    },
-                    "prompt_tokens_details": {
-                      "audio_tokens": 0,
-                      "cached_tokens": 0
-                    }
-                  },
-                  "model_provider": "openai",
-                  "model_name": "gpt-4o-mini-2024-07-18",
-                  "system_fingerprint": "fp_4727e8d6f3",
-                  "id": "chatcmpl-DbjiRePFiZ8fNOSuklPkx00MsF1hu",
-                  "service_tier": "default",
-                  "finish_reason": "tool_calls",
-                  "logprobs": null
-                },
-                "type": "ai",
-                "id": "lc_run--019df247-17d7-7c01-b171-1c6b4803641b-0",
-                "tool_calls": [
-                  {
-                    "name": "multiply",
-                    "args": {
-                      "a": 8,
-                      "b": 6
-                    },
-                    "id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-                    "type": "tool_call"
-                  }
-                ],
-                "invalid_tool_calls": [],
-                "usage_metadata": {
-                  "input_tokens": 67,
-                  "output_tokens": 17,
-                  "total_tokens": 84,
-                  "input_token_details": {
-                    "audio": 0,
-                    "cache_read": 0
-                  },
-                  "output_token_details": {
-                    "audio": 0,
-                    "reasoning": 0
-                  }
-                }
-              }
-            ]
-          },
-          "resume": null,
-          "goto": []
-        }
-      ],
-      "metricCollection": "test_collection_1",
-      "integration": "LangChain"
-    }
-  ],
-  "agentSpans": [
-    {
-      "uuid": "019df247-17d5-7a80-bc98-13eb4ae1dea2",
-      "name": "LangGraph",
-      "status": "SUCCESS",
-      "type": "agent",
-      "startTime": "2026-05-04T09:17:18.677Z",
-      "endTime": "2026-05-04T09:17:20.240Z",
-      "input": {
-        "messages": [
-          {
-            "content": "What is 8 multiplied by 6?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
-          }
-        ]
-      },
-      "output": {
-        "messages": [
-          {
-            "content": "What is 8 multiplied by 6?",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "human",
-            "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
-          },
-          {
-            "content": "",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 17,
-                "prompt_tokens": 67,
-                "total_tokens": 84,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_4727e8d6f3",
-              "id": "chatcmpl-DbjiRePFiZ8fNOSuklPkx00MsF1hu",
-              "service_tier": "default",
-              "finish_reason": "tool_calls",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019df247-17d7-7c01-b171-1c6b4803641b-0",
-            "tool_calls": [
-              {
-                "name": "multiply",
-                "args": {
-                  "a": 8,
-                  "b": 6
-                },
-                "id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-                "type": "tool_call"
-              }
-            ],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 67,
-              "output_tokens": 17,
-              "total_tokens": 84,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          },
-          {
-            "content": "48",
-            "additional_kwargs": {},
-            "response_metadata": {},
-            "type": "tool",
-            "name": "multiply",
-            "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-            "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-            "status": "success"
-          },
-          {
-            "content": "8 multiplied by 6 is 48.",
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "response_metadata": {
-              "token_usage": {
-                "completion_tokens": 10,
-                "prompt_tokens": 92,
-                "total_tokens": 102,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                }
-              },
-              "model_provider": "openai",
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "system_fingerprint": "fp_4727e8d6f3",
-              "id": "chatcmpl-DbjiRWgDUwjHneibERVzkGoJwvkMD",
-              "service_tier": "default",
-              "finish_reason": "stop",
-              "logprobs": null
-            },
-            "type": "ai",
-            "id": "lc_run--019df247-1b9d-7cb2-bb9d-28278a248a10-0",
-            "tool_calls": [],
-            "invalid_tool_calls": [],
-            "usage_metadata": {
-              "input_tokens": 92,
-              "output_tokens": 10,
-              "total_tokens": 102,
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              }
-            }
-          }
-        ]
-      },
-      "integration": "LangChain",
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019df247-1b9d-7cb2-bb9d-28278a248a10",
+      "uuid": "40b4f48f68c0417f",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019df247-1b9a-7351-9927-1cf4a11d5fab",
-      "startTime": "2026-05-04T09:17:19.645Z",
-      "endTime": "2026-05-04T09:17:20.239Z",
+      "parentUuid": "81f3a8be6c6b0e45",
+      "startTime": "2026-10-23T08:40:32.243Z",
+      "endTime": "2026-10-23T08:40:33.601Z",
       "input": [
         {
           "role": "system",
           "content": "You are a helpful assistant that can perform mathematical operations."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 8 multiplied by 6?"
         },
         {
-          "role": "ai",
+          "role": "assistant",
           "content": ""
         },
         {
-          "role": "tool",
-          "content": "48"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "multiply",
+            "arguments": {
+              "a": 8,
+              "b": 6
+            },
+            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+          }
         },
         {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "response": "48",
+            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+          }
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "8 multiplied by 6 is 48.",
-        "tool_calls": []
-      },
-      "model": "gpt-4o-mini-2024-07-18",
+      "output": "8 multiplied by 6 is 48.",
+      "integration": "LangGraph",
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 92.0,
       "outputTokenCount": 10.0,
       "metricCollection": "test_collection_1",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "019df247-17d7-7c01-b171-1c6b4803641b",
+      "uuid": "108a61f62f947678",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "019df247-17d5-7a80-bc98-13f459961266",
-      "startTime": "2026-05-04T09:17:18.679Z",
-      "endTime": "2026-05-04T09:17:19.637Z",
+      "parentUuid": "e901c04854975fa6",
+      "startTime": "2026-10-23T08:40:30.927Z",
+      "endTime": "2026-10-23T08:40:32.239Z",
       "input": [
         {
           "role": "system",
           "content": "You are a helpful assistant that can perform mathematical operations."
         },
         {
-          "role": "human",
+          "role": "user",
           "content": "What is 8 multiplied by 6?"
-        },
-        {
-          "role": "Tool Input",
-          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "tool_calls": [
-          {
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "multiply",
-            "args": {
+            "arguments": {
               "a": 8,
               "b": 6
             },
-            "id": "call_t5eXouIjGY6DSSUJbtbVvybX"
+            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
           }
-        ]
-      },
-      "model": "gpt-4o-mini-2024-07-18",
+        }
+      ],
+      "integration": "LangGraph",
+      "toolsCalled": [
+        {
+          "name": "multiply",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "a": 8,
+            "b": 6
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "provider": "OpenAI",
       "inputTokenCount": 67.0,
       "outputTokenCount": 17.0,
       "metricCollection": "test_collection_1",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "LangChain",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019df247-1b99-7ef1-b948-ff9b48ee0803",
+      "uuid": "1e2c1cd8085378c4",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "019df247-1b97-75f2-bcae-017ea610401e",
-      "startTime": "2026-05-04T09:17:19.641Z",
-      "endTime": "2026-05-04T09:17:19.641Z",
+      "parentUuid": "ecd79bb9b4e717de",
+      "startTime": "2026-10-23T08:40:32.241Z",
+      "endTime": "2026-10-23T08:40:32.241Z",
       "input": {
         "a": 8,
         "b": 6
       },
-      "output": {
-        "content": "48",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "multiply",
-        "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-        "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-        "status": "success"
-      },
-      "integration": "LangChain"
+      "output": "48",
+      "integration": "LangGraph",
+      "metricCollection": "test_collection_1"
     }
   ],
-  "startTime": "2026-05-04T09:17:18.677Z",
-  "endTime": "2026-05-04T09:17:20.240Z",
+  "startTime": "2026-10-23T08:40:30.924Z",
+  "endTime": "2026-10-23T08:40:33.602Z",
+  "name": "LangGraph",
   "environment": "development",
   "input": {
     "messages": [
       {
-        "content": "What is 8 multiplied by 6?",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 8 multiplied by 6?"
+          }
+        ]
       }
     ]
   },
   "output": {
     "messages": [
       {
-        "content": "What is 8 multiplied by 6?",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "human",
-        "id": "f96c94bf-13a0-4166-887c-a487ce32ec20"
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 8 multiplied by 6?"
+          }
+        ]
       },
       {
-        "content": "",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 17,
-            "prompt_tokens": 67,
-            "total_tokens": 84,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_4727e8d6f3",
-          "id": "chatcmpl-DbjiRePFiZ8fNOSuklPkx00MsF1hu",
-          "service_tier": "default",
-          "finish_reason": "tool_calls",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019df247-17d7-7c01-b171-1c6b4803641b-0",
-        "tool_calls": [
+        "role": "assistant",
+        "parts": [
           {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
             "name": "multiply",
-            "args": {
+            "arguments": {
               "a": 8,
               "b": 6
             },
-            "id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-            "type": "tool_call"
+            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
           }
-        ],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 67,
-          "output_tokens": 17,
-          "total_tokens": 84,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          }
-        }
+        ]
       },
       {
-        "content": "48",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "multiply",
-        "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-        "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-        "status": "success"
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "48",
+            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+          }
+        ]
       },
       {
-        "content": "8 multiplied by 6 is 48.",
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "response_metadata": {
-          "token_usage": {
-            "completion_tokens": 10,
-            "prompt_tokens": 92,
-            "total_tokens": 102,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            }
-          },
-          "model_provider": "openai",
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "system_fingerprint": "fp_4727e8d6f3",
-          "id": "chatcmpl-DbjiRWgDUwjHneibERVzkGoJwvkMD",
-          "service_tier": "default",
-          "finish_reason": "stop",
-          "logprobs": null
-        },
-        "type": "ai",
-        "id": "lc_run--019df247-1b9d-7cb2-bb9d-28278a248a10-0",
-        "tool_calls": [],
-        "invalid_tool_calls": [],
-        "usage_metadata": {
-          "input_tokens": 92,
-          "output_tokens": 10,
-          "total_tokens": 102,
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "8 multiplied by 6 is 48."
           }
-        }
+        ]
       }
     ]
   },
@@ -708,16 +476,7 @@
     {
       "name": "multiply",
       "type": "FUNCTION",
-      "output": {
-        "content": "48",
-        "additional_kwargs": {},
-        "response_metadata": {},
-        "type": "tool",
-        "name": "multiply",
-        "id": "dd0f8c81-dc36-497f-8fc0-4cdee777d1f1",
-        "tool_call_id": "call_t5eXouIjGY6DSSUJbtbVvybX",
-        "status": "success"
-      },
+      "output": "48",
       "inputParameters": {
         "a": 8,
         "b": 6
