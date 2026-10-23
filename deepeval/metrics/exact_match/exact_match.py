@@ -38,8 +38,6 @@ class ExactMatchMetric(BaseMetric):
             None,
             None,
             self,
-            None,
-            test_case.multimodal,
         )
 
         with metric_progress_indicator(
