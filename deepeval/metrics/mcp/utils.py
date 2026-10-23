@@ -101,13 +101,48 @@ def available_mcp_servers_block(
     return available_tools, available_resources, available_prompts
 
 
+def mcp_tool_result_text(result: object) -> object:
+    """Render a tool call result for a judge prompt.
+
+    MCP's ``CallToolResult`` always carries ``content`` (a list of content
+    blocks) and only optionally carries ``structuredContent``. Prefer the
+    structured payload when a server sent one, otherwise fall back to the
+    text of the content blocks. Anything that is not a ``CallToolResult``
+    (for example a plain string from a user-built test case) is returned
+    as-is.
+    """
+    # mcp 1.x exposes ``structuredContent``; mcp 2.x renamed the attribute to
+    # ``structured_content`` (``structuredContent`` survives only as a JSON alias).
+    structured = getattr(result, "structured_content", None) or getattr(
+        result, "structuredContent", None
+    )
+    if structured:
+        # FastMCP wraps primitive return values as {"result": value}.
+        if isinstance(structured, dict) and set(structured) == {"result"}:
+            return structured["result"]
+        return structured
+
+    content = getattr(result, "content", None)
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            text = getattr(block, "text", None)
+            if text is not None:
+                parts.append(str(text))
+            else:
+                parts.append(f"<{type(block).__name__}>")
+        return "\n".join(parts)
+
+    return result
+
+
 def turn_mcp_interaction_text(turn) -> str:
     mcp_interaction = "Tools called by agent: \n"
 
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            result = mcp_tool_result_text(tool.result)
         else:
             args = tool.input_parameters
             result = tool.output
