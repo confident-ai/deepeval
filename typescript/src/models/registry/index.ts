@@ -9,10 +9,14 @@ export interface ModelData {
   supportsLogProbs?: boolean;
   maxLogProbs?: number;
   supportsMultimodal?: boolean;
+  supportsAudio?: boolean;
+  requiresAudio?: boolean;
   supportsStructuredOutputs?: boolean;
   supportsJson?: boolean;
   /** USD per input token. */
   inputPrice?: number;
+  /** USD per audio input token. */
+  audioInputPrice?: number;
   /** USD per output token. */
   outputPrice?: number;
   supportsTemperature?: boolean;
