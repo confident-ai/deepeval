@@ -29,7 +29,6 @@ from tests.test_integrations.utils import (
     is_generate_mode,
 )
 
-
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 _schemas_dir = os.path.join(_current_dir, "schemas")
 
