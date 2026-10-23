@@ -46,6 +46,20 @@ def _update_all_attributes(
     if current_span:
         current_span.integration = Integration.ANTHROPIC.value
         current_span.provider = Provider.ANTHROPIC.value
+        cache_meta = {}
+        if output_parameters.cache_creation_input_tokens is not None:
+            cache_meta["cache_creation_input_tokens"] = (
+                output_parameters.cache_creation_input_tokens
+            )
+        if output_parameters.cache_read_input_tokens is not None:
+            cache_meta["cache_read_input_tokens"] = (
+                output_parameters.cache_read_input_tokens
+            )
+        if cache_meta:
+            current_span.metadata = {
+                **(current_span.metadata or {}),
+                **cache_meta,
+            }
 
     if output_parameters.tools_called:
         create_child_tool_spans(output_parameters)
