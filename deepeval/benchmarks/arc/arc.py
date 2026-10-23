@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Dict
 from tqdm import tqdm
 
@@ -44,6 +45,7 @@ class ARC(DeepEvalBaseBenchmark):
         self.predictions: Optional[pd.DataFrame] = None
         self.overall_score: Optional[float] = None
         self.verbose_mode = verbose_mode
+        self._custom_confinement = confinement_instructions is not None
         if not confinement_instructions:
             self.confinement_instructions = (
                 "Output 'A', 'B', 'C', or 'D'. Full answer not needed."
@@ -99,6 +101,13 @@ class ARC(DeepEvalBaseBenchmark):
                 overall_accuracy=overall_accuracy
             )
 
+    def _confinement_for(self, input: str) -> str:
+        if self._custom_confinement:
+            return self.confinement_instructions
+        if re.search(r"\n1\.", input):
+            return "Output '1', '2', '3', or '4'. Full answer not needed."
+        return self.confinement_instructions
+
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
         prompt: dict = ARCTemplate.generate_output(
@@ -113,7 +122,7 @@ class ARC(DeepEvalBaseBenchmark):
             )
             prediction = res.answer
         except TypeError:
-            prompt += f"\n\n{self.confinement_instructions}"
+            prompt += f"\n\n{self._confinement_for(golden.input)}"
             prediction = model.generate(prompt)
 
         # For native models, shouldn't happen but just in case
