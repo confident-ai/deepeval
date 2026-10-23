@@ -440,6 +440,7 @@ class EvaluationDataset:
             expected_output_key_name (str, optional): The key name in the JSON objects corresponding to the expected output for the test case. Defaults to None.
             context_key_name (str, optional): The key name in the JSON objects corresponding to the context for the test case. Defaults to None.
             retrieval_context_key_name (str, optional): The key name in the JSON objects corresponding to the retrieval context for the test case. Defaults to None.
+            addtional_metadata_key_name (str, optional): The key name in the JSON objects corresponding to metadata for the test case. Defaults to None.
 
         Returns:
             None: The method adds test cases to the Dataset instance but does not return anything.
@@ -480,7 +481,7 @@ class EvaluationDataset:
             tools_called = [ToolCall(**tool) for tool in tools_called_data]
             expected_tools_data = json_obj.get(expected_tools_key_name, [])
             expected_tools = [ToolCall(**tool) for tool in expected_tools_data]
-            # additional_metadata = json_obj.get(addtional_metadata_key_name)
+            metadata = json_obj.get(addtional_metadata_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -492,7 +493,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
-                    # additional_metadata=additional_metadata,
+                    metadata=metadata,
                 )
             )
 
