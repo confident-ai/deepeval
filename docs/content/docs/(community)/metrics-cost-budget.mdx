@@ -1,0 +1,132 @@
+---
+id: metrics-cost-budget
+title: Cost Budget
+sidebar_label: Cost Budget
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} />
+
+The Cost Budget metric measures whether your LLM application's `token_cost` for a single request stays within a maximum cost budget. Use it as a deterministic CI gate for production cost budgets.
+
+:::note
+The `CostBudgetMetric` does **not** rely on an LLM for evaluation. It compares `token_cost` against `max_token_cost`, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `CostBudgetMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `token_cost`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import CostBudgetMetric
+from deepeval.test_case import LLMTestCase
+
+metric = CostBudgetMetric(
+    max_token_cost=0.05,  # e.g. USD per request
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="What is my refund status?",
+    actual_output="Your refund is being processed.",
+    token_cost=0.012,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** required and **FIVE** optional parameters when creating a `CostBudgetMetric`:
+
+- `max_token_cost`: the maximum allowed cost for a single test case, in the same currency unit as `token_cost`. Must be greater than `0`.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `1.0` (must be within budget to pass).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason describing the cost outcome. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `CostBudgetMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `CostBudgetMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Cost Budget Score} =
+ \begin{cases}
+ 1 & \text{if } c \le C_{\max}, \\
+ \max(0,\, C_{\max}/c) & \text{otherwise}
+ \end{cases}"
+/>
+
+where \(c\) is `token_cost` and \(C_{\max}\) is `max_token_cost`. For example, spending twice the budget yields a score of `0.5`. The metric is successful when the score is greater than or equal to the `threshold`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Cost Budget metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. The <code>CostBudgetMetric</code> is a plain numeric comparison
+          of <code>token_cost</code> against <code>max_token_cost</code> — no
+          model, no API key, zero token cost, fully deterministic.
+        </>
+      ),
+    },
+    {
+      question: "Is token_cost the cost of my app or of the evaluation?",
+      answer: (
+        <>
+          Your app. <code>token_cost</code> on the test case is the cost of the
+          LLM calls made by the system under test. The cost of running LLM-judge
+          metrics is tracked separately as <code>evaluation_cost</code> on each
+          metric.
+        </>
+      ),
+    },
+    {
+      question: "How should I populate token_cost on the test case?",
+      answer: (
+        <>
+          Compute it from your provider's token usage and pricing (or pull it
+          from your tracing stack) and set{" "}
+          <code>LLMTestCase(token_cost=...)</code>. DeepEval already stores this
+          field; this metric is what scores it.
+        </>
+      ),
+    },
+    {
+      question: "When should I use strict_mode?",
+      answer: (
+        <>
+          Use <code>strict_mode=True</code> when any overspend should fail hard
+          with score <code>0</code>. Without it, overspends get partial credit
+          (for example, 2× the budget scores <code>0.5</code>), which is useful
+          if you lower the threshold for soft regression tracking.
+        </>
+      ),
+    },
+  ]}
+/>

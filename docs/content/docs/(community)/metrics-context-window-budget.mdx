@@ -1,0 +1,107 @@
+---
+id: metrics-context-window-budget
+title: Context Window Budget
+sidebar_label: Context Window Budget
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Context Window Budget metric checks whether the prompt is dangerously close to — or over — the model's context limit: prompt tokens divided by `max_window_tokens`. Use it as a CI gate against truncation and overflow before they corrupt answers.
+
+:::note
+The `ContextWindowBudgetMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `ContextWindowBudgetMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+
+Token counts come from `input_token_count` when set, otherwise from the summed `input_token_count` of the trace's LLM spans, otherwise from a `chars / 4` estimate (flagged in the reason). Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ContextWindowBudgetMetric
+from deepeval.test_case import LLMTestCase
+
+metric = ContextWindowBudgetMetric(max_window_tokens=128000)
+
+test_case = LLMTestCase(
+    input="Summarize this document...",
+    actual_output="Summary.",
+    input_token_count=45210,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `ContextWindowBudgetMetric`:
+
+- [Optional] `max_window_tokens`: the model's context window in tokens (required).
+- [Optional] `warn_threshold`: the share of the window treated as the budget. Defaulted to `0.9` (warn at 90%).
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with the utilization. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `ContextWindowBudgetMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+While prompt tokens stay under `warn_threshold` of the window the score is `1.0`; above that it decays like `LatencyBudgetMetric` over its budget:
+
+<Equation
+  formula="\text{Score} =
+ \begin{cases}
+ 1 & \text{if tokens} \leq \text{window} \times \text{warn}, \\
+ \frac{\text{window} \times \text{warn}}{\text{tokens}} & \text{otherwise}
+ \end{cases}"
+/>
+
+`score_breakdown` reports `utilization`, `prompt_tokens`, `window_tokens`, and `budget_tokens`. Prompts at or over 100% of the window score near `0` — some backends silently truncate there, so treat any failure as urgent.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Where do the token counts come from?",
+      answer: (
+        <>
+          From <code>input_token_count</code> when you set it, else from
+          the trace's LLM spans, else from a rough{" "}
+          <code>chars / 4</code> estimate that the reason flags as
+          estimated.
+        </>
+      ),
+    },
+    {
+      question: "What threshold should I use?",
+      answer: (
+        <>
+          Keep the default <code>threshold=1.0</code> with{" "}
+          <code>warn_threshold=0.9</code>: any prompt crossing 90% of the
+          window fails the gate while leaving headroom for the answer.
+        </>
+      ),
+    },
+  ]}
+/>

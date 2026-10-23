@@ -188,6 +188,8 @@ class SingleTurnParams(Enum):
     TAGS = "tags"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
+    COMPLETION_TIME = "completion_time"
+    TOKEN_COST = "token_cost"
     MCP_SERVERS = "mcp_servers"
     MCP_TOOLS_CALLED = "mcp_tools_called"
     MCP_RESOURCES_CALLED = "mcp_resources_called"
