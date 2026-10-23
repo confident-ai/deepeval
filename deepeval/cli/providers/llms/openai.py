@@ -110,6 +110,13 @@ def set_openai_env(
     model = coerce_blank_to_none(model)
 
     settings = get_settings()
+    effective_model = model or settings.OPENAI_MODEL_NAME
+    if not effective_model:
+        raise typer.BadParameter(
+            "OpenAI model name is not set. Pass --model (or set OPENAI_MODEL_NAME).",
+            param_hint="--model",
+        )
+
     with settings.edit(save=save) as edit_ctx:
         edit_ctx.switch_model_provider(ModelKeyValues.USE_OPENAI_MODEL)
         if model is not None:
@@ -122,13 +129,6 @@ def set_openai_env(
             settings.OPENAI_COST_PER_OUTPUT_TOKEN = cost_per_output_token
 
     handled, path, updates = edit_ctx.result
-
-    effective_model = settings.OPENAI_MODEL_NAME
-    if not effective_model:
-        raise typer.BadParameter(
-            "OpenAI model name is not set. Pass --model (or set OPENAI_MODEL_NAME).",
-            param_hint="--model",
-        )
 
     _handle_save_result(
         handled=handled,
