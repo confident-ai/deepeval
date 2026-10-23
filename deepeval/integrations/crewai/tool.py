@@ -1,9 +1,16 @@
 import functools
 from typing import Callable
-from crewai.tools import tool as crewai_tool
 
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import ToolSpan
+
+try:
+    from crewai.tools import tool as crewai_tool
+
+    crewai_installed = True
+except ImportError:
+    crewai_installed = False
+    crewai_tool = None
 
 
 def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
@@ -13,6 +20,10 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
       - accepts additional parameters: metric and metric_collection
       - remains backward compatible with CrewAI's decorator usage patterns
     """
+    if not crewai_installed:
+        raise ImportError(
+            "CrewAI is not installed. Please install it with `pip install crewai`."
+        )
     crewai_kwargs = kwargs
 
     # Case 1: @tool (function passed directly)
