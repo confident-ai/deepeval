@@ -849,7 +849,8 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        err = capsys.readouterr().err
+        assert "disk I/O error" in " ".join(err.split()), err
         assert mgr.last_saved_path is None
 
 
