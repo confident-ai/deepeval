@@ -35,8 +35,7 @@ DeepEval allows you to run evals with Grok models via xAI’s OpenAI-compatible 
 To configure Grok through the CLI, run the following command:
 
 ```bash
-deepeval set-grok --model grok-4.1 \
-    --temperature=0
+deepeval set-grok --model grok-4.1
 ```
 
 The CLI command above sets the specified Grok model as the default llm-judge for all metrics, unless overridden in code. To use a different default model provider, you must first unset Grok:
