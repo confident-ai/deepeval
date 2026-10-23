@@ -412,13 +412,12 @@ class Scorer:
             if not target_list:
                 return 0  # Return 0 if target list is empty to avoid division by zero
 
-            # Count the number of correct matches
-            correct_matches = sum(
-                1 for item in prediction_list if item in target_list
-            )
+            # Count each answer once, so a repeated index cannot score above 100
+            target_answers = set(target_list)
+            correct_matches = len(target_answers & set(prediction_list))
 
             # Calculate percentage
-            score_percentage = (correct_matches / len(target_list)) * 100
+            score_percentage = (correct_matches / len(target_answers)) * 100
 
             return round(score_percentage)  # Return rounded percentage
         except Exception as e:
