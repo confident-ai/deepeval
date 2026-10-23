@@ -122,10 +122,11 @@ class EvaluationDataset:
         self._goldens = []
         self._conversational_goldens = []
         for golden in goldens:
-            golden._dataset_rank = len(goldens)
             if self._multi_turn:
+                golden._dataset_rank = len(self._conversational_goldens)
                 self._add_conversational_golden(golden)
             else:
+                golden._dataset_rank = len(self._goldens)
                 self._add_golden(golden)
 
         self._llm_test_cases = []
@@ -166,10 +167,11 @@ class EvaluationDataset:
                 golden._dataset_alias = self._alias
                 golden._dataset_id = self._id
                 golden._dataset_version = self._version
-                golden._dataset_rank = len(goldens)
                 if self._multi_turn:
+                    golden._dataset_rank = len(self._conversational_goldens)
                     self._add_conversational_golden(golden)
                 else:
+                    golden._dataset_rank = len(self._goldens)
                     self.add_golden(golden)
         except Exception as e:
             self._goldens = goldens_list
