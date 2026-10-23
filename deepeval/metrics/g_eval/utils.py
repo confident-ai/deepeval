@@ -2,6 +2,8 @@ from typing import List, Optional, Union, Tuple, Dict
 from openai.types.chat.chat_completion import ChatCompletion
 import math
 
+from deepeval.errors import DeepEvalError
+
 from deepeval.models import DeepEvalBaseLLM, OpenAIModel, AzureOpenAIModel
 from deepeval.test_case import (
     SingleTurnParams,
@@ -407,3 +409,20 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
         return (0, 10)
 
     return rubric[0].score_range[0], rubric[-1].score_range[1]
+
+
+def validate_score_in_range(
+    score: Union[int, float], score_range: Tuple[int, int]
+) -> float:
+    """Return ``score`` as a float, raising if the judge scored outside ``score_range``.
+
+    Normalizing an out-of-range score would produce a metric score outside
+    [0, 1] (e.g. 1.5 for a 15 on a 0-10 scale) that still passes the threshold.
+    """
+    low, high = score_range
+    if not low <= float(score) <= high:
+        raise DeepEvalError(
+            f"Judge returned score {score}, which is outside the expected range "
+            f"{low}-{high}. Use a stronger evaluation model or adjust the rubric."
+        )
+    return float(score)
