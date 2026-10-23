@@ -67,7 +67,7 @@ class FakeTrack:
     async def recv(self):
         if not self._frames:
             raise RuntimeError("track ended")
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.3)  # let drain loop process audio frame (CI-safe)
         return self._frames.pop(0)
 
 
@@ -309,7 +309,12 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
+    # Fire transcript → synchronous put_nowait into connector._inbound
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+
+    # Yield so the event loop runs the drain loop's track.recv() and
+    # deposits the audio frame into the queue (CI-safe).
+    await asyncio.sleep(0.3)
 
     events = []
     async for event in connector.iter_agent_events():
