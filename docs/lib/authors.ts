@@ -38,6 +38,12 @@ export const authors = {
     url: "https://github.com/A-Vamshi",
     imageUrl: "https://github.com/A-Vamshi.png",
   },
+  gorakh: {
+    name: "Gorakhnath Yadav",
+    title: "GTM",
+    url: "https://www.linkedin.com/in/gorakhnathyadav7",
+    imageUrl: "https://github.com/gorakhnath-confident.png",
+  },
 } as const satisfies Record<string, Author>;
 
 export type AuthorId = keyof typeof authors;
