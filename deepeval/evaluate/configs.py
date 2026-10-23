@@ -37,6 +37,15 @@ class DisplayConfig:
 
 @dataclass
 class CacheConfig:
+    """Cache behaviour for ``evaluate()``.
+
+    ``use_cache=True`` replays a prior ``MetricData`` when test-case content
+    and metric configuration are unchanged and skips ``_execute_metric``. For
+    stochastic judges three cached runs are one measurement replayed three
+    times — disable the cache (``use_cache=False``) when you need independent
+    repeated measurements.
+    """
+
     write_cache: bool = True
     use_cache: bool = False
 
