@@ -48,6 +48,7 @@ def synthesizer_progress_context(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
     pbar_total: Optional[int] = None,
+    show_progress_bar: bool = True,
 ) -> Generator[Tuple[Progress, int], None, None]:
     with capture_synthesizer_run(
         method, max_generations, num_evolutions, evolutions
@@ -69,6 +70,7 @@ def synthesizer_progress_context(
                 TaskProgressColumn(),
                 TimeElapsedColumn(),
                 console=custom_console,
+                disable=not show_progress_bar,
             )
             pbar_id = progress.add_task(
                 description=description,
