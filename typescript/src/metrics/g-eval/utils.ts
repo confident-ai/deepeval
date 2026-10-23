@@ -139,9 +139,17 @@ export function calculateWeightedSummedScore(
   rawScore: number,
   logProbs: ContentTokenLogProbs[] | undefined,
 ): number {
-  const scoreToken = logProbs?.find(
-    (entry) => entry.token === String(rawScore),
-  );
+  // Search from the end: the prompt asks for "reason" before "score", so the
+  // reason can repeat the score digit (a time, a count, an amount). Only the
+  // last matching token is the score. Python does the same since 4.1.9.
+  const tokens = logProbs ?? [];
+  let scoreToken: ContentTokenLogProbs | undefined;
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    if (tokens[i].token === String(rawScore)) {
+      scoreToken = tokens[i];
+      break;
+    }
+  }
   if (!scoreToken) return rawScore;
 
   const linearProbByScore = new Map<number, number>();
