@@ -1,297 +1,263 @@
 {
-  "uuid": "460abce0bb54289827554b7a3f88afb6",
+  "uuid": "e82101ad93b0cdcb59ca8b8dd381d436",
   "baseSpans": [
     {
-      "uuid": "42cbf2093f9d9343",
+      "uuid": "58617a69a8a2d6bc",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2634313c7674e436",
-      "startTime": "2026-10-21T17:48:25.220Z",
-      "endTime": "2026-10-21T17:48:26.253Z",
+      "parentUuid": "2442c029f1fec075",
+      "startTime": "2026-10-23T08:41:10.206Z",
+      "endTime": "2026-10-23T08:41:11.586Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "[Spanish translation of: Python is a high-level programming language.]",
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "[Spanish translation of: Python is a high-level programming language.]",
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "[Spanish translation of: Python is a high-level programming language.]"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "[Spanish translation of: Python is a high-level programming language.]"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "95d89c3dc086d116",
+      "uuid": "365c0ceec55cc0a8",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "42cbf2093f9d9343",
-      "startTime": "2026-10-21T17:48:26.252Z",
-      "endTime": "2026-10-21T17:48:26.253Z",
+      "parentUuid": "58617a69a8a2d6bc",
+      "startTime": "2026-10-23T08:41:11.585Z",
+      "endTime": "2026-10-23T08:41:11.585Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "[Spanish translation of: Python is a high-level programming language.]",
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "[Spanish translation of: Python is a high-level programming language.]"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "[Spanish translation of: Python is a high-level programming language.]",
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "[Spanish translation of: Python is a high-level programming language.]"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "f94102f6f511c6bd",
+      "uuid": "c21412d6da88a844",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2634313c7674e436",
-      "startTime": "2026-10-21T17:48:25.219Z",
-      "endTime": "2026-10-21T17:48:25.220Z",
+      "parentUuid": "2442c029f1fec075",
+      "startTime": "2026-10-23T08:41:10.205Z",
+      "endTime": "2026-10-23T08:41:10.206Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "[Spanish translation of: Python is a high-level programming language.]",
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "[Spanish translation of: Python is a high-level programming language.]",
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -308,218 +274,196 @@
       ]
     },
     {
-      "uuid": "6607f53be78e01d4",
+      "uuid": "c9fbbddf325dcd2e",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2634313c7674e436",
-      "startTime": "2026-10-21T17:48:24.065Z",
-      "endTime": "2026-10-21T17:48:25.218Z",
+      "parentUuid": "2442c029f1fec075",
+      "startTime": "2026-10-23T08:41:09.086Z",
+      "endTime": "2026-10-23T08:41:10.204Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ]
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "5038799013488117",
+      "uuid": "ca25d2c28122eb76",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6607f53be78e01d4",
-      "startTime": "2026-10-21T17:48:25.217Z",
-      "endTime": "2026-10-21T17:48:25.218Z",
+      "parentUuid": "c9fbbddf325dcd2e",
+      "startTime": "2026-10-23T08:41:10.203Z",
+      "endTime": "2026-10-23T08:41:10.204Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
       "integration": "LangGraph"
     },
     {
-      "uuid": "cb911e9c1f7f97b9",
+      "uuid": "d880739fb8a7bb94",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2634313c7674e436",
-      "startTime": "2026-10-21T17:48:24.063Z",
-      "endTime": "2026-10-21T17:48:24.064Z",
+      "parentUuid": "2442c029f1fec075",
+      "startTime": "2026-10-23T08:41:09.084Z",
+      "endTime": "2026-10-23T08:41:09.085Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ]
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -535,93 +479,85 @@
       ]
     },
     {
-      "uuid": "21047fce7c31b7da",
+      "uuid": "83bc040568977efe",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2634313c7674e436",
-      "startTime": "2026-10-21T17:48:22.449Z",
-      "endTime": "2026-10-21T17:48:24.062Z",
+      "parentUuid": "2442c029f1fec075",
+      "startTime": "2026-10-23T08:41:08.127Z",
+      "endTime": "2026-10-23T08:41:09.084Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ]
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "f9c055240d67f63f",
+      "uuid": "d5c4647d0522f7e9",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "21047fce7c31b7da",
-      "startTime": "2026-10-21T17:48:24.061Z",
-      "endTime": "2026-10-21T17:48:24.062Z",
+      "parentUuid": "83bc040568977efe",
+      "startTime": "2026-10-23T08:41:09.083Z",
+      "endTime": "2026-10-23T08:41:09.083Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ]
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -630,114 +566,100 @@
   ],
   "agentSpans": [
     {
-      "uuid": "2634313c7674e436",
+      "uuid": "2442c029f1fec075",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:22.449Z",
-      "endTime": "2026-10-21T17:48:26.254Z",
+      "startTime": "2026-10-23T08:41:08.126Z",
+      "endTime": "2026-10-23T08:41:11.586Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_database",
+                "arguments": {
+                  "query": "Python (programming language)"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_database",
-                  "arguments": {
-                    "query": "Python (programming language)"
-                  },
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Python is a high-level programming language.",
-                  "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Python is a high-level programming language.",
+                "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "translate",
+                "arguments": {
+                  "text": "Python is a high-level programming language.",
+                  "target_language": "Spanish"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "translate",
-                  "arguments": {
-                    "text": "Python is a high-level programming language.",
-                    "target_language": "Spanish"
-                  },
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "[Spanish translation of: Python is a high-level programming language.]",
-                  "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "[Spanish translation of: Python is a high-level programming language.]"
-                }
-              ]
-            }
-          ]
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "[Spanish translation of: Python is a high-level programming language.]",
+                "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "[Spanish translation of: Python is a high-level programming language.]"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -766,13 +688,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "3d5377a04b3090c4",
+      "uuid": "43331b3261099f1a",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "42cbf2093f9d9343",
-      "startTime": "2026-10-21T17:48:25.221Z",
-      "endTime": "2026-10-21T17:48:26.251Z",
+      "parentUuid": "58617a69a8a2d6bc",
+      "startTime": "2026-10-23T08:41:10.206Z",
+      "endTime": "2026-10-23T08:41:11.583Z",
       "input": [
         {
           "role": "user",
@@ -790,7 +712,7 @@
             "arguments": {
               "query": "Python (programming language)"
             },
-            "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
           }
         },
         {
@@ -798,7 +720,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Python is a high-level programming language.",
-            "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
           }
         },
         {
@@ -814,7 +736,7 @@
               "text": "Python is a high-level programming language.",
               "target_language": "Spanish"
             },
-            "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
+            "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
           }
         },
         {
@@ -822,7 +744,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "[Spanish translation of: Python is a high-level programming language.]",
-            "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
+            "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
           }
         }
       ],
@@ -834,13 +756,13 @@
       "outputTokenCount": 16.0
     },
     {
-      "uuid": "766b24a19131fe91",
+      "uuid": "93064b916fb570cd",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6607f53be78e01d4",
-      "startTime": "2026-10-21T17:48:24.065Z",
-      "endTime": "2026-10-21T17:48:25.217Z",
+      "parentUuid": "c9fbbddf325dcd2e",
+      "startTime": "2026-10-23T08:41:09.086Z",
+      "endTime": "2026-10-23T08:41:10.203Z",
       "input": [
         {
           "role": "user",
@@ -858,7 +780,7 @@
             "arguments": {
               "query": "Python (programming language)"
             },
-            "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
           }
         },
         {
@@ -866,7 +788,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Python is a high-level programming language.",
-            "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
           }
         }
       ],
@@ -880,7 +802,7 @@
               "text": "Python is a high-level programming language.",
               "target_language": "Spanish"
             },
-            "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
+            "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
           }
         }
       ],
@@ -901,13 +823,13 @@
       "outputTokenCount": 27.0
     },
     {
-      "uuid": "e2a853c70cc99624",
+      "uuid": "2e223c52244d4898",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "21047fce7c31b7da",
-      "startTime": "2026-10-21T17:48:22.450Z",
-      "endTime": "2026-10-21T17:48:24.060Z",
+      "parentUuid": "83bc040568977efe",
+      "startTime": "2026-10-23T08:41:08.128Z",
+      "endTime": "2026-10-23T08:41:09.082Z",
       "input": [
         {
           "role": "user",
@@ -923,7 +845,7 @@
             "arguments": {
               "query": "Python (programming language)"
             },
-            "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
           }
         }
       ],
@@ -946,13 +868,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "85be44b02cc2238b",
+      "uuid": "8cd5da469083c90b",
       "name": "translate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "f94102f6f511c6bd",
-      "startTime": "2026-10-21T17:48:25.219Z",
-      "endTime": "2026-10-21T17:48:25.219Z",
+      "parentUuid": "c21412d6da88a844",
+      "startTime": "2026-10-23T08:41:10.205Z",
+      "endTime": "2026-10-23T08:41:10.205Z",
       "input": {
         "text": "Python is a high-level programming language.",
         "target_language": "Spanish"
@@ -961,13 +883,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "020c837946609c9e",
+      "uuid": "cfa72b65f3b437b8",
       "name": "search_database",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "cb911e9c1f7f97b9",
-      "startTime": "2026-10-21T17:48:24.063Z",
-      "endTime": "2026-10-21T17:48:24.064Z",
+      "parentUuid": "d880739fb8a7bb94",
+      "startTime": "2026-10-23T08:41:09.085Z",
+      "endTime": "2026-10-23T08:41:09.085Z",
       "input": {
         "query": "Python (programming language)"
       },
@@ -975,8 +897,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:22.449Z",
-  "endTime": "2026-10-21T17:48:26.254Z",
+  "startTime": "2026-10-23T08:41:08.126Z",
+  "endTime": "2026-10-23T08:41:11.586Z",
   "name": "langgraph-async-multi",
   "metadata": {
     "test_type": "async_multi"
@@ -991,118 +913,96 @@
   "userId": "async-user",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_database tool to look up 'Python (programming language)'. Then translate the result to Spanish using the translate tool. Do not ask clarification questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "search_database",
+            "arguments": {
+              "query": "Python (programming language)"
             },
-            {
-              "type": "tool_call",
-              "name": "search_database",
-              "arguments": {
-                "query": "Python (programming language)"
-              },
-              "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Python is a high-level programming language.",
-              "id": "call_Bv3PMVc4sOgfov5KIWxFrljr"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Python is a high-level programming language.",
+            "id": "call_ntRBJ9emLeFcnv5Us5tmPkoW"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "translate",
+            "arguments": {
+              "text": "Python is a high-level programming language.",
+              "target_language": "Spanish"
             },
-            {
-              "type": "tool_call",
-              "name": "translate",
-              "arguments": {
-                "text": "Python is a high-level programming language.",
-                "target_language": "Spanish"
-              },
-              "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "[Spanish translation of: Python is a high-level programming language.]",
-              "id": "call_bSpUKplILGY5LOWsvXdYfdSj"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "[Spanish translation of: Python is a high-level programming language.]"
-            }
-          ]
-        }
-      ]
+            "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "[Spanish translation of: Python is a high-level programming language.]",
+            "id": "call_pWjh8wrPaMz1IFIhL7v6p8HK"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "[Spanish translation of: Python is a high-level programming language.]"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",
   "toolsCalled": [
-    {
-      "name": "search_database",
-      "type": "FUNCTION",
-      "output": "Python is a high-level programming language.",
-      "inputParameters": {
-        "query": "Python (programming language)"
-      }
-    },
     {
       "name": "translate",
       "type": "FUNCTION",
@@ -1110,6 +1010,14 @@
       "inputParameters": {
         "text": "Python is a high-level programming language.",
         "target_language": "Spanish"
+      }
+    },
+    {
+      "name": "search_database",
+      "type": "FUNCTION",
+      "output": "Python is a high-level programming language.",
+      "inputParameters": {
+        "query": "Python (programming language)"
       }
     }
   ]

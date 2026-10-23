@@ -1,84 +1,74 @@
 {
-  "uuid": "ee1c43689fed0567aaa26f3a00bf62ac",
+  "uuid": "4013ec23627e71c73e63653b2b216f94",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "db9b6b430d49067f",
+      "uuid": "a13549bb7db7764b",
       "name": "multi_step_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:09.732Z",
-      "endTime": "2026-10-21T17:48:12.466Z",
+      "startTime": "2026-10-23T08:39:11.964Z",
+      "endTime": "2026-10-23T08:39:14.478Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_web",
+                "arguments": {
+                  "query": "stock price apple"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_web",
-                  "arguments": {
-                    "query": "stock price apple"
-                  },
-                  "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Apple (AAPL) stock: $178.50, up 1.2%",
-                  "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apple (AAPL) stock: $178.50, up 1.2%"
-                }
-              ]
-            }
-          ]
+                "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Apple (AAPL) stock: $178.50, up 1.2%",
+                "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apple (AAPL) stock: $178.50, up 1.2%"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "3ce0e22b33786f13",
+      "uuid": "dd80c554fdc302d5",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "db9b6b430d49067f",
-      "startTime": "2026-10-21T17:48:11.348Z",
-      "endTime": "2026-10-21T17:48:12.464Z",
+      "parentUuid": "a13549bb7db7764b",
+      "startTime": "2026-10-23T08:39:13.558Z",
+      "endTime": "2026-10-23T08:39:14.476Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "query": "stock price apple"
             },
-            "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
+            "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
           }
         },
         {
@@ -130,7 +120,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Apple (AAPL) stock: $178.50, up 1.2%",
-            "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
+            "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
           }
         }
       ],
@@ -142,13 +132,13 @@
       "outputTokenCount": 21.0
     },
     {
-      "uuid": "68d73b6442383955",
+      "uuid": "6226ecf2b3bbe4fd",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "db9b6b430d49067f",
-      "startTime": "2026-10-21T17:48:09.733Z",
-      "endTime": "2026-10-21T17:48:11.339Z",
+      "parentUuid": "a13549bb7db7764b",
+      "startTime": "2026-10-23T08:39:11.965Z",
+      "endTime": "2026-10-23T08:39:13.554Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "query": "stock price apple"
             },
-            "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
+            "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "9a5e641503ed7fd1",
+      "uuid": "8cc95d183e88f719",
       "name": "search_web",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "db9b6b430d49067f",
-      "startTime": "2026-10-21T17:48:11.342Z",
-      "endTime": "2026-10-21T17:48:11.345Z",
+      "parentUuid": "a13549bb7db7764b",
+      "startTime": "2026-10-23T08:39:13.556Z",
+      "endTime": "2026-10-23T08:39:13.557Z",
       "input": {
         "query": "stock price apple"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:09.732Z",
-  "endTime": "2026-10-21T17:48:12.466Z",
+  "startTime": "2026-10-23T08:39:11.964Z",
+  "endTime": "2026-10-23T08:39:14.478Z",
   "name": "langchain-async-agent-multi-step",
   "tags": [
     "langchain",
@@ -213,74 +203,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_web tool to search for 'stock price apple'. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "search_web",
+            "arguments": {
+              "query": "stock price apple"
             },
-            {
-              "type": "tool_call",
-              "name": "search_web",
-              "arguments": {
-                "query": "stock price apple"
-              },
-              "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Apple (AAPL) stock: $178.50, up 1.2%",
-              "id": "call_JSnUSprGCWJnzBYWHIGhGAgm"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Apple (AAPL) stock: $178.50, up 1.2%"
-            }
-          ]
-        }
-      ]
+            "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Apple (AAPL) stock: $178.50, up 1.2%",
+            "id": "call_cpl18NeYPcgpJOrWKFDQDSCp"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Apple (AAPL) stock: $178.50, up 1.2%"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

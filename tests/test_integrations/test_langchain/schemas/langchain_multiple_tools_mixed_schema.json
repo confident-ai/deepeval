@@ -1,84 +1,74 @@
 {
-  "uuid": "4fcb6cc33648b0b562f5dff24c8e1cf8",
+  "uuid": "8f633a22af60f6ec4cd7a47a80b3624e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "149f5335d73e0c3a",
+      "uuid": "ad1855bf27e19001",
       "name": "mixed_tools_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:10.533Z",
-      "endTime": "2026-10-21T17:48:12.578Z",
+      "startTime": "2026-10-23T08:40:44.456Z",
+      "endTime": "2026-10-23T08:40:46.893Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Partly cloudy, 62F",
-                  "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Paris weather: Partly cloudy, 62\u00b0F."
-                }
-              ]
-            }
-          ]
+                "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Partly cloudy, 62F",
+                "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Paris weather: Partly cloudy, 62\u00b0F."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "83774528737eee16",
+      "uuid": "a5e9794446e59f61",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "149f5335d73e0c3a",
-      "startTime": "2026-10-21T17:48:11.618Z",
-      "endTime": "2026-10-21T17:48:12.576Z",
+      "parentUuid": "ad1855bf27e19001",
+      "startTime": "2026-10-23T08:40:45.601Z",
+      "endTime": "2026-10-23T08:40:46.893Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "city": "Paris"
             },
-            "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
+            "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
           }
         },
         {
@@ -130,7 +120,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Partly cloudy, 62F",
-            "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
+            "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
           }
         }
       ],
@@ -142,13 +132,13 @@
       "outputTokenCount": 14.0
     },
     {
-      "uuid": "2e2a3a86d6a7fcaa",
+      "uuid": "20780cb2ea402584",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "149f5335d73e0c3a",
-      "startTime": "2026-10-21T17:48:10.533Z",
-      "endTime": "2026-10-21T17:48:11.615Z",
+      "parentUuid": "ad1855bf27e19001",
+      "startTime": "2026-10-23T08:40:44.457Z",
+      "endTime": "2026-10-23T08:40:45.593Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "city": "Paris"
             },
-            "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
+            "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "76515d88ef3f19b5",
+      "uuid": "095c45afffae5923",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "149f5335d73e0c3a",
-      "startTime": "2026-10-21T17:48:11.616Z",
-      "endTime": "2026-10-21T17:48:11.617Z",
+      "parentUuid": "ad1855bf27e19001",
+      "startTime": "2026-10-23T08:40:45.595Z",
+      "endTime": "2026-10-23T08:40:45.595Z",
       "input": {
         "city": "Paris"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:10.533Z",
-  "endTime": "2026-10-21T17:48:12.578Z",
+  "startTime": "2026-10-23T08:40:44.456Z",
+  "endTime": "2026-10-23T08:40:46.893Z",
   "name": "langchain-mixed-tools-test",
   "metadata": {
     "test_type": "mixed_tools"
@@ -214,74 +204,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather in Paris. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
             },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "arguments": {
-                "city": "Paris"
-              },
-              "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Partly cloudy, 62F",
-              "id": "call_doYjUYvbx2p4HOPJf9fym4lW"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Paris weather: Partly cloudy, 62\u00b0F."
-            }
-          ]
-        }
-      ]
+            "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 62F",
+            "id": "call_ykDrbTRfy5kwHQf1LlH69PBA"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Paris weather: Partly cloudy, 62\u00b0F."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

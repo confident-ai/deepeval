@@ -1,17 +1,89 @@
 {
-  "uuid": "e0847e5a9b58209720c7c4b8b5382f7c",
+  "uuid": "2be416f6e15faf44d0cf9d86d8f14064",
   "baseSpans": [
     {
-      "uuid": "860c8c6e8a77853f",
+      "uuid": "fec2df4c6a2ffbf6",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "20e37ed6963246d3",
-      "startTime": "2026-10-21T17:48:26.564Z",
-      "endTime": "2026-10-21T17:48:27.416Z",
+      "parentUuid": "f707ab89afa490af",
+      "startTime": "2026-10-23T08:41:05.065Z",
+      "endTime": "2026-10-23T08:41:05.888Z",
       "input": {
         "messages": [
-          [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "15 * 3"
+                },
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "45",
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "45"
+              }
+            ]
+          }
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "76b35cb3e7c0a7ad",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f707ab89afa490af",
+      "startTime": "2026-10-23T08:41:05.064Z",
+      "endTime": "2026-10-23T08:41:05.065Z",
+      "input": {
+        "__type": "tool_call_with_context",
+        "tool_call": {
+          "name": "calculate",
+          "args": {
+            "expression": "15 * 3"
+          },
+          "id": "call_JIhEF9LST5nuuHWycdlxebzg",
+          "type": "tool_call"
+        },
+        "state": {
+          "messages": [
             {
               "role": "user",
               "parts": [
@@ -20,9 +92,7 @@
                   "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
                 }
               ]
-            }
-          ],
-          [
+            },
             {
               "role": "assistant",
               "parts": [
@@ -36,109 +106,25 @@
                   "arguments": {
                     "expression": "15 * 3"
                   },
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
+                  "id": "call_JIhEF9LST5nuuHWycdlxebzg"
                 }
               ]
             }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "45",
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                }
-              ]
-            }
-          ]
-        ]
-      },
-      "output": {
-        "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "45"
-                }
-              ]
-            }
-          ]
-        ]
-      },
-      "integration": "LangGraph"
-    },
-    {
-      "uuid": "44addff344a9af3d",
-      "name": "tools",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "20e37ed6963246d3",
-      "startTime": "2026-10-21T17:48:26.561Z",
-      "endTime": "2026-10-21T17:48:26.563Z",
-      "input": {
-        "__type": "tool_call_with_context",
-        "tool_call": {
-          "name": "calculate",
-          "args": {
-            "expression": "15 * 3"
-          },
-          "id": "call_llI6V19Ogsxl93ng8a2atUT2",
-          "type": "tool_call"
-        },
-        "state": {
-          "messages": [
-            [
-              {
-                "role": "user",
-                "parts": [
-                  {
-                    "type": "text",
-                    "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                "role": "assistant",
-                "parts": [
-                  {
-                    "type": "text",
-                    "content": ""
-                  },
-                  {
-                    "type": "tool_call",
-                    "name": "calculate",
-                    "arguments": {
-                      "expression": "15 * 3"
-                    },
-                    "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                  }
-                ]
-              }
-            ]
           ]
         }
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "45",
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "45",
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -154,49 +140,45 @@
       ]
     },
     {
-      "uuid": "b2c77106775e9726",
+      "uuid": "a166d2d9d0804e49",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "20e37ed6963246d3",
-      "startTime": "2026-10-21T17:48:25.438Z",
-      "endTime": "2026-10-21T17:48:26.561Z",
+      "parentUuid": "f707ab89afa490af",
+      "startTime": "2026-10-23T08:41:03.101Z",
+      "endTime": "2026-10-23T08:41:05.063Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "15 * 3"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "15 * 3"
-                  },
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                }
-              ]
-            }
-          ]
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
@@ -204,82 +186,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "20e37ed6963246d3",
+      "uuid": "f707ab89afa490af",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:25.436Z",
-      "endTime": "2026-10-21T17:48:27.417Z",
+      "startTime": "2026-10-23T08:41:03.099Z",
+      "endTime": "2026-10-23T08:41:05.889Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "15 * 3"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "15 * 3"
-                  },
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "45",
-                  "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "45"
-                }
-              ]
-            }
-          ]
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "45",
+                "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "45"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -299,13 +271,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "169c4b0c6ca10f70",
+      "uuid": "86f257c6a0c6109c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "860c8c6e8a77853f",
-      "startTime": "2026-10-21T17:48:26.565Z",
-      "endTime": "2026-10-21T17:48:27.416Z",
+      "parentUuid": "fec2df4c6a2ffbf6",
+      "startTime": "2026-10-23T08:41:05.067Z",
+      "endTime": "2026-10-23T08:41:05.888Z",
       "input": [
         {
           "role": "system",
@@ -327,7 +299,7 @@
             "arguments": {
               "expression": "15 * 3"
             },
-            "id": "call_llI6V19Ogsxl93ng8a2atUT2"
+            "id": "call_JIhEF9LST5nuuHWycdlxebzg"
           }
         },
         {
@@ -335,7 +307,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "45",
-            "id": "call_llI6V19Ogsxl93ng8a2atUT2"
+            "id": "call_JIhEF9LST5nuuHWycdlxebzg"
           }
         }
       ],
@@ -352,13 +324,13 @@
       "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "75c4a57a675aef98",
+      "uuid": "99722384cc5e8f30",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b2c77106775e9726",
-      "startTime": "2026-10-21T17:48:25.443Z",
-      "endTime": "2026-10-21T17:48:26.560Z",
+      "parentUuid": "a166d2d9d0804e49",
+      "startTime": "2026-10-23T08:41:03.103Z",
+      "endTime": "2026-10-23T08:41:05.062Z",
       "input": [
         {
           "role": "system",
@@ -378,7 +350,7 @@
             "arguments": {
               "expression": "15 * 3"
             },
-            "id": "call_llI6V19Ogsxl93ng8a2atUT2"
+            "id": "call_JIhEF9LST5nuuHWycdlxebzg"
           }
         }
       ],
@@ -406,13 +378,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "927cba0d2596c001",
+      "uuid": "fe416d30f464a776",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "44addff344a9af3d",
-      "startTime": "2026-10-21T17:48:26.562Z",
-      "endTime": "2026-10-21T17:48:26.563Z",
+      "parentUuid": "76b35cb3e7c0a7ad",
+      "startTime": "2026-10-23T08:41:05.064Z",
+      "endTime": "2026-10-23T08:41:05.065Z",
       "input": {
         "expression": "15 * 3"
       },
@@ -421,8 +393,8 @@
       "metricCollection": "tool_accuracy"
     }
   ],
-  "startTime": "2026-10-21T17:48:25.436Z",
-  "endTime": "2026-10-21T17:48:27.417Z",
+  "startTime": "2026-10-23T08:41:03.099Z",
+  "endTime": "2026-10-23T08:41:05.889Z",
   "name": "langchain-metric-collection",
   "metadata": {
     "test_type": "metric_collection"
@@ -434,74 +406,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the calculate tool to compute 15 * 3. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "expression": "15 * 3"
             },
-            {
-              "type": "tool_call",
-              "name": "calculate",
-              "arguments": {
-                "expression": "15 * 3"
-              },
-              "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "45",
-              "id": "call_llI6V19Ogsxl93ng8a2atUT2"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "45"
-            }
-          ]
-        }
-      ]
+            "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "45",
+            "id": "call_JIhEF9LST5nuuHWycdlxebzg"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "45"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

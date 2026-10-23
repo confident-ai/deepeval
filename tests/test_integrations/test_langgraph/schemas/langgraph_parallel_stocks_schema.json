@@ -1,441 +1,395 @@
 {
-  "uuid": "16889d12a63e0cb5f83439c360602435",
+  "uuid": "f0f4eb07b168966c5a90bbb7b9b85b5f",
   "baseSpans": [
     {
-      "uuid": "c088c3273ed341bd",
+      "uuid": "d4c396e6f8fc7ee0",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a582d9b35a4dead1",
-      "startTime": "2026-10-21T17:48:39.075Z",
-      "endTime": "2026-10-21T17:48:40.339Z",
+      "parentUuid": "23f025120bcb6519",
+      "startTime": "2026-10-23T08:41:41.542Z",
+      "endTime": "2026-10-23T08:41:43.185Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$178.50",
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30",
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$378.90",
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$245.60",
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$185.20",
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$178.50",
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30",
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$378.90",
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$245.60",
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$185.20",
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "3b17586e02a14a33",
+      "uuid": "f922a4e4b7595d82",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c088c3273ed341bd",
-      "startTime": "2026-10-21T17:48:40.339Z",
-      "endTime": "2026-10-21T17:48:40.339Z",
+      "parentUuid": "d4c396e6f8fc7ee0",
+      "startTime": "2026-10-23T08:41:43.185Z",
+      "endTime": "2026-10-23T08:41:43.185Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$178.50",
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30",
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$378.90",
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$245.60",
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$185.20",
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$178.50",
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30",
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$378.90",
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$245.60",
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$185.20",
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "68f8f0c26bd2dbbb",
+      "uuid": "8c90ae075bb8aa00",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a582d9b35a4dead1",
-      "startTime": "2026-10-21T17:48:39.065Z",
-      "endTime": "2026-10-21T17:48:39.074Z",
+      "parentUuid": "23f025120bcb6519",
+      "startTime": "2026-10-23T08:41:41.534Z",
+      "endTime": "2026-10-23T08:41:41.541Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$178.50",
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30",
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$378.90",
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$245.60",
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$185.20",
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$178.50",
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30",
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$378.90",
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$245.60",
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$185.20",
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -483,157 +437,149 @@
       ]
     },
     {
-      "uuid": "df97c6cdc97cdbf9",
+      "uuid": "3682c1b5599a3429",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a582d9b35a4dead1",
-      "startTime": "2026-10-21T17:48:37.701Z",
-      "endTime": "2026-10-21T17:48:39.064Z",
+      "parentUuid": "23f025120bcb6519",
+      "startTime": "2026-10-23T08:41:40.286Z",
+      "endTime": "2026-10-23T08:41:41.533Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "02d59c5150710e69",
+      "uuid": "dafd88d72cacfc89",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "df97c6cdc97cdbf9",
-      "startTime": "2026-10-21T17:48:39.063Z",
-      "endTime": "2026-10-21T17:48:39.064Z",
+      "parentUuid": "3682c1b5599a3429",
+      "startTime": "2026-10-23T08:41:41.532Z",
+      "endTime": "2026-10-23T08:41:41.533Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -642,162 +588,144 @@
   ],
   "agentSpans": [
     {
-      "uuid": "a582d9b35a4dead1",
+      "uuid": "23f025120bcb6519",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:37.701Z",
-      "endTime": "2026-10-21T17:48:40.340Z",
+      "startTime": "2026-10-23T08:41:40.285Z",
+      "endTime": "2026-10-23T08:41:43.186Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "MSFT"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "MSFT"
-                  },
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AMZN"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AMZN"
-                  },
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$178.50",
-                  "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30",
-                  "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$378.90",
-                  "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$245.60",
-                  "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$185.20",
-                  "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
-                }
-              ]
-            }
-          ]
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$178.50",
+                "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30",
+                "id": "call_qy42qnED5VPRpEH15fteHKVn"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$378.90",
+                "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$245.60",
+                "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$185.20",
+                "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -849,13 +777,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "3bcd5821c50769fa",
+      "uuid": "5684e76dd4e47767",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c088c3273ed341bd",
-      "startTime": "2026-10-21T17:48:39.076Z",
-      "endTime": "2026-10-21T17:48:40.338Z",
+      "parentUuid": "d4c396e6f8fc7ee0",
+      "startTime": "2026-10-23T08:41:41.543Z",
+      "endTime": "2026-10-23T08:41:43.185Z",
       "input": [
         {
           "role": "user",
@@ -877,7 +805,7 @@
             "arguments": {
               "symbol": "AAPL"
             },
-            "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+            "id": "call_1LCgj78M4s19p8QSabKUlTw3"
           }
         },
         {
@@ -888,7 +816,7 @@
             "arguments": {
               "symbol": "GOOGL"
             },
-            "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+            "id": "call_qy42qnED5VPRpEH15fteHKVn"
           }
         },
         {
@@ -899,7 +827,7 @@
             "arguments": {
               "symbol": "MSFT"
             },
-            "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+            "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
           }
         },
         {
@@ -910,7 +838,7 @@
             "arguments": {
               "symbol": "TSLA"
             },
-            "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+            "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
           }
         },
         {
@@ -921,7 +849,7 @@
             "arguments": {
               "symbol": "AMZN"
             },
-            "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
+            "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
           }
         },
         {
@@ -929,7 +857,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "$178.50",
-            "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+            "id": "call_1LCgj78M4s19p8QSabKUlTw3"
           }
         },
         {
@@ -937,7 +865,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "$142.30",
-            "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+            "id": "call_qy42qnED5VPRpEH15fteHKVn"
           }
         },
         {
@@ -945,7 +873,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "$378.90",
-            "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+            "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
           }
         },
         {
@@ -953,7 +881,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "$245.60",
-            "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+            "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
           }
         },
         {
@@ -961,7 +889,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "$185.20",
-            "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
+            "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
           }
         }
       ],
@@ -973,13 +901,13 @@
       "outputTokenCount": 54.0
     },
     {
-      "uuid": "4a1c31d8218270e7",
+      "uuid": "ad59117e8d3583c7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "df97c6cdc97cdbf9",
-      "startTime": "2026-10-21T17:48:37.702Z",
-      "endTime": "2026-10-21T17:48:39.062Z",
+      "parentUuid": "3682c1b5599a3429",
+      "startTime": "2026-10-23T08:41:40.286Z",
+      "endTime": "2026-10-23T08:41:41.530Z",
       "input": [
         {
           "role": "user",
@@ -999,7 +927,7 @@
             "arguments": {
               "symbol": "AAPL"
             },
-            "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+            "id": "call_1LCgj78M4s19p8QSabKUlTw3"
           }
         },
         {
@@ -1010,7 +938,7 @@
             "arguments": {
               "symbol": "GOOGL"
             },
-            "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+            "id": "call_qy42qnED5VPRpEH15fteHKVn"
           }
         },
         {
@@ -1021,7 +949,7 @@
             "arguments": {
               "symbol": "MSFT"
             },
-            "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+            "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
           }
         },
         {
@@ -1032,7 +960,7 @@
             "arguments": {
               "symbol": "TSLA"
             },
-            "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+            "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
           }
         },
         {
@@ -1043,7 +971,7 @@
             "arguments": {
               "symbol": "AMZN"
             },
-            "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
+            "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
           }
         }
       ],
@@ -1094,13 +1022,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d257b8c7f2e001d5",
+      "uuid": "b2e64d32b1038aa9",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "68f8f0c26bd2dbbb",
-      "startTime": "2026-10-21T17:48:39.073Z",
-      "endTime": "2026-10-21T17:48:39.074Z",
+      "parentUuid": "8c90ae075bb8aa00",
+      "startTime": "2026-10-23T08:41:41.540Z",
+      "endTime": "2026-10-23T08:41:41.541Z",
       "input": {
         "symbol": "AMZN"
       },
@@ -1108,13 +1036,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "9683d7324a55b7b5",
+      "uuid": "687d981bdcedd952",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "68f8f0c26bd2dbbb",
-      "startTime": "2026-10-21T17:48:39.072Z",
-      "endTime": "2026-10-21T17:48:39.073Z",
+      "parentUuid": "8c90ae075bb8aa00",
+      "startTime": "2026-10-23T08:41:41.539Z",
+      "endTime": "2026-10-23T08:41:41.540Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -1122,13 +1050,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "33c4431c30f29cf7",
+      "uuid": "394bc53167678220",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "68f8f0c26bd2dbbb",
-      "startTime": "2026-10-21T17:48:39.071Z",
-      "endTime": "2026-10-21T17:48:39.072Z",
+      "parentUuid": "8c90ae075bb8aa00",
+      "startTime": "2026-10-23T08:41:41.538Z",
+      "endTime": "2026-10-23T08:41:41.539Z",
       "input": {
         "symbol": "MSFT"
       },
@@ -1136,13 +1064,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "89a24bc84b8d17dd",
+      "uuid": "e44bd0fa0c605450",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "68f8f0c26bd2dbbb",
-      "startTime": "2026-10-21T17:48:39.069Z",
-      "endTime": "2026-10-21T17:48:39.070Z",
+      "parentUuid": "8c90ae075bb8aa00",
+      "startTime": "2026-10-23T08:41:41.537Z",
+      "endTime": "2026-10-23T08:41:41.538Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -1150,13 +1078,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "e3fa2236b5e120e2",
+      "uuid": "2f5a5993cf9cc297",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "68f8f0c26bd2dbbb",
-      "startTime": "2026-10-21T17:48:39.067Z",
-      "endTime": "2026-10-21T17:48:39.068Z",
+      "parentUuid": "8c90ae075bb8aa00",
+      "startTime": "2026-10-23T08:41:41.536Z",
+      "endTime": "2026-10-23T08:41:41.537Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -1164,8 +1092,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:37.701Z",
-  "endTime": "2026-10-21T17:48:40.340Z",
+  "startTime": "2026-10-23T08:41:40.285Z",
+  "endTime": "2026-10-23T08:41:43.186Z",
   "name": "langgraph-parallel-stocks",
   "tags": [
     "langgraph",
@@ -1175,154 +1103,136 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Get stock prices for AAPL, GOOGL, MSFT, TSLA, and AMZN"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "AAPL"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "AAPL"
-              },
-              "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
+            "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "GOOGL"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "GOOGL"
-              },
-              "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
+            "id": "call_qy42qnED5VPRpEH15fteHKVn"
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "MSFT"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "MSFT"
-              },
-              "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
+            "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "TSLA"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "TSLA"
-              },
-              "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
+            "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "AMZN"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "AMZN"
-              },
-              "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$178.50",
-              "id": "call_Y6U94n0a1bLtUbgrxlEvFUIs"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$142.30",
-              "id": "call_5lMvUnNXOlBu8xNgRPz0vvx0"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$378.90",
-              "id": "call_hlEkhBD6TGioFAnxvftx0PFR"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$245.60",
-              "id": "call_qnC583O9pFUdpVLWjgi8WJ6V"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$185.20",
-              "id": "call_BPm1Fftm3lOOqzpDHSbV6Suf"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
-            }
-          ]
-        }
-      ]
+            "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$178.50",
+            "id": "call_1LCgj78M4s19p8QSabKUlTw3"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$142.30",
+            "id": "call_qy42qnED5VPRpEH15fteHKVn"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$378.90",
+            "id": "call_SiSP6DMUkUJRRxCYJT7XQFnH"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$245.60",
+            "id": "call_pZSAWWMIajMPMdZl5JcAjFUp"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$185.20",
+            "id": "call_k0RGSAEKcleT6C7HRO3xLsQZ"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Here are the stock prices:\n\n- AAPL: $178.50\n- GOOGL: $142.30\n- MSFT: $378.90\n- TSLA: $245.60\n- AMZN: $185.20"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",
@@ -1330,17 +1240,17 @@
     {
       "name": "get_stock_price",
       "type": "FUNCTION",
-      "output": "$378.90",
+      "output": "$178.50",
       "inputParameters": {
-        "symbol": "MSFT"
+        "symbol": "AAPL"
       }
     },
     {
       "name": "get_stock_price",
       "type": "FUNCTION",
-      "output": "$142.30",
+      "output": "$378.90",
       "inputParameters": {
-        "symbol": "GOOGL"
+        "symbol": "MSFT"
       }
     },
     {
@@ -1362,9 +1272,9 @@
     {
       "name": "get_stock_price",
       "type": "FUNCTION",
-      "output": "$178.50",
+      "output": "$142.30",
       "inputParameters": {
-        "symbol": "AAPL"
+        "symbol": "GOOGL"
       }
     }
   ]

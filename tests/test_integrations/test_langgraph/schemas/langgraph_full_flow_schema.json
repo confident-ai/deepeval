@@ -1,669 +1,575 @@
 {
-  "uuid": "2a9bb6a55869c5bd0a6cc0b92ce86b09",
+  "uuid": "b4010b9f8270f68f2eb0fc5c7f9e321f",
   "baseSpans": [
     {
-      "uuid": "f87ae34f909e3c08",
+      "uuid": "895029318f2530f0",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "767fd5568f9574d8",
-      "startTime": "2026-10-21T17:48:48.178Z",
-      "endTime": "2026-10-21T17:48:49.583Z",
+      "parentUuid": "54fa28ed6fa22094",
+      "startTime": "2026-10-23T08:41:53.235Z",
+      "endTime": "2026-10-23T08:41:54.266Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "CONFIRMED"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "CONFIRMED"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "c6d27bb811896ce7",
+      "uuid": "dca4856c1b76bf09",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "f87ae34f909e3c08",
-      "startTime": "2026-10-21T17:48:49.582Z",
-      "endTime": "2026-10-21T17:48:49.583Z",
+      "parentUuid": "895029318f2530f0",
+      "startTime": "2026-10-23T08:41:54.265Z",
+      "endTime": "2026-10-23T08:41:54.266Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "CONFIRMED"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "CONFIRMED"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "a92da6739d948a68",
+      "uuid": "124c06803f974627",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "767fd5568f9574d8",
-      "startTime": "2026-10-21T17:48:48.175Z",
-      "endTime": "2026-10-21T17:48:48.178Z",
+      "parentUuid": "54fa28ed6fa22094",
+      "startTime": "2026-10-23T08:41:53.232Z",
+      "endTime": "2026-10-23T08:41:53.234Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -677,405 +583,349 @@
       ]
     },
     {
-      "uuid": "8031e3c717b21a93",
+      "uuid": "6b55596e7bc7c301",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "767fd5568f9574d8",
-      "startTime": "2026-10-21T17:48:47.297Z",
-      "endTime": "2026-10-21T17:48:48.174Z",
+      "parentUuid": "54fa28ed6fa22094",
+      "startTime": "2026-10-23T08:41:52.264Z",
+      "endTime": "2026-10-23T08:41:53.231Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "2e1df2315bb528b1",
+      "uuid": "e7fd241ebc6a6f9d",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8031e3c717b21a93",
-      "startTime": "2026-10-21T17:48:48.173Z",
-      "endTime": "2026-10-21T17:48:48.174Z",
+      "parentUuid": "6b55596e7bc7c301",
+      "startTime": "2026-10-23T08:41:53.230Z",
+      "endTime": "2026-10-23T08:41:53.231Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -1084,238 +934,204 @@
   ],
   "agentSpans": [
     {
-      "uuid": "767fd5568f9574d8",
+      "uuid": "54fa28ed6fa22094",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:47.296Z",
-      "endTime": "2026-10-21T17:48:49.584Z",
+      "startTime": "2026-10-23T08:41:52.263Z",
+      "endTime": "2026-10-23T08:41:54.268Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 2
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 2
-                  },
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 2x apples to cart",
-                  "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Added 2 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 2x apples to cart",
+                "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Added 2 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "SAVE20"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "SAVE20"
-                  },
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "20% discount applied",
-                  "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon SAVE20 applied successfully."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "checkout",
-                  "arguments": {},
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-                  "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "confirm_order",
-                  "arguments": {},
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-                  "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "CONFIRMED"
-                }
-              ]
-            }
-          ]
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "20% discount applied",
+                "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon SAVE20 applied successfully."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "checkout",
+                "arguments": {},
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+                "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "confirm_order",
+                "arguments": {},
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+                "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "CONFIRMED"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -1333,13 +1149,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "0fce2f9f03929123",
+      "uuid": "0e4c3f85257844d1",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f87ae34f909e3c08",
-      "startTime": "2026-10-21T17:48:48.179Z",
-      "endTime": "2026-10-21T17:48:49.581Z",
+      "parentUuid": "895029318f2530f0",
+      "startTime": "2026-10-23T08:41:53.235Z",
+      "endTime": "2026-10-23T08:41:54.264Z",
       "input": [
         {
           "role": "user",
@@ -1362,7 +1178,7 @@
               "item": "apples",
               "quantity": 2
             },
-            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
           }
         },
         {
@@ -1370,7 +1186,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Added 2x apples to cart",
-            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
           }
         },
         {
@@ -1393,7 +1209,7 @@
             "arguments": {
               "code": "SAVE20"
             },
-            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
           }
         },
         {
@@ -1401,7 +1217,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "20% discount applied",
-            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
           }
         },
         {
@@ -1422,7 +1238,7 @@
             "type": "tool_call",
             "name": "checkout",
             "arguments": {},
-            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
           }
         },
         {
@@ -1430,12 +1246,12 @@
           "content": {
             "type": "tool_call_response",
             "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
           }
         },
         {
           "role": "assistant",
-          "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+          "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
         },
         {
           "role": "user",
@@ -1451,7 +1267,7 @@
             "type": "tool_call",
             "name": "confirm_order",
             "arguments": {},
-            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+            "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
           }
         },
         {
@@ -1459,7 +1275,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+            "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
           }
         }
       ],
@@ -1467,17 +1283,17 @@
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 581.0,
+      "inputTokenCount": 585.0,
       "outputTokenCount": 6.0
     },
     {
-      "uuid": "eeb799c08f124638",
+      "uuid": "bf08f4c33642c041",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8031e3c717b21a93",
-      "startTime": "2026-10-21T17:48:47.298Z",
-      "endTime": "2026-10-21T17:48:48.173Z",
+      "parentUuid": "6b55596e7bc7c301",
+      "startTime": "2026-10-23T08:41:52.265Z",
+      "endTime": "2026-10-23T08:41:53.228Z",
       "input": [
         {
           "role": "user",
@@ -1500,7 +1316,7 @@
               "item": "apples",
               "quantity": 2
             },
-            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
           }
         },
         {
@@ -1508,7 +1324,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Added 2x apples to cart",
-            "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
           }
         },
         {
@@ -1531,7 +1347,7 @@
             "arguments": {
               "code": "SAVE20"
             },
-            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
           }
         },
         {
@@ -1539,7 +1355,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "20% discount applied",
-            "id": "call_10v79gTBvDEHeVwAjdCDt23t"
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
           }
         },
         {
@@ -1560,7 +1376,7 @@
             "type": "tool_call",
             "name": "checkout",
             "arguments": {},
-            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
           }
         },
         {
@@ -1568,12 +1384,12 @@
           "content": {
             "type": "tool_call_response",
             "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-            "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
           }
         },
         {
           "role": "assistant",
-          "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
+          "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
         },
         {
           "role": "user",
@@ -1587,7 +1403,7 @@
             "type": "tool_call",
             "name": "confirm_order",
             "arguments": {},
-            "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
+            "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
           }
         }
       ],
@@ -1601,260 +1417,226 @@
       ],
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
-      "inputTokenCount": 541.0,
+      "inputTokenCount": 545.0,
       "outputTokenCount": 13.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "8e47a85c6e89b1af",
+      "uuid": "db081b2df44bc131",
       "name": "confirm_order",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "a92da6739d948a68",
-      "startTime": "2026-10-21T17:48:48.176Z",
-      "endTime": "2026-10-21T17:48:48.177Z",
+      "parentUuid": "124c06803f974627",
+      "startTime": "2026-10-23T08:41:53.233Z",
+      "endTime": "2026-10-23T08:41:53.234Z",
       "input": {},
       "output": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:47.296Z",
-  "endTime": "2026-10-21T17:48:49.584Z",
+  "startTime": "2026-10-23T08:41:52.263Z",
+  "endTime": "2026-10-23T08:41:54.268Z",
   "name": "langgraph-full-flow",
   "tags": [
     "langgraph",
     "full-flow"
   ],
   "environment": "development",
-  "threadId": "full-flow-1786650b-6c3d-46f7-bc31-c58cd5dcd88d",
+  "threadId": "full-flow-a642bfbd-c4cf-4406-85af-bb301be58c9d",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Add exactly 2 apples to the cart.\nIf you use tools in this system, you MUST call the tool required to update the cart.\nDo not answer from memory."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "add_to_cart",
+            "arguments": {
+              "item": "apples",
+              "quantity": 2
             },
-            {
-              "type": "tool_call",
-              "name": "add_to_cart",
-              "arguments": {
-                "item": "apples",
-                "quantity": 2
-              },
-              "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Added 2x apples to cart",
-              "id": "call_989fgw48TgmmLoWNLtOCJ1O1"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Added 2 apples to your cart."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Added 2x apples to cart",
+            "id": "call_yKuKNlxzaHDqBes5szExQGUd"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Added 2 apples to your cart."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Apply the coupon code SAVE20.\nYou MUST call the coupon tool (do not apply it yourself).\nDo not answer from memory."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "apply_coupon",
+            "arguments": {
+              "code": "SAVE20"
             },
-            {
-              "type": "tool_call",
-              "name": "apply_coupon",
-              "arguments": {
-                "code": "SAVE20"
-              },
-              "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "20% discount applied",
-              "id": "call_10v79gTBvDEHeVwAjdCDt23t"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Coupon SAVE20 applied successfully."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "checkout",
-              "arguments": {},
-              "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
-              "id": "call_zaSrtgpdXzEnRoZdmknaVaEA"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Checkout initiated. Total: $25.99. Please confirm to place the order."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "confirm_order",
-              "arguments": {},
-              "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
-              "id": "call_hNfAT3Tlid0dtpKiVzHK4y0M"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "CONFIRMED"
-            }
-          ]
-        }
-      ]
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "20% discount applied",
+            "id": "call_3WWAuOeZB3BJCYZXjdceYylG"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Coupon SAVE20 applied successfully."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Proceed to checkout now.\nYou MUST call the checkout tool.\nDo not answer from memory."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "checkout",
+            "arguments": {},
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Checkout initiated. Total: $25.99. Confirm to place order.",
+            "id": "call_FghKPUewyEI9H2e7FdQlcYxv"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Checkout initiated. Total: $25.99. Please confirm if you want me to place the order."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Confirm my order.\nYou MUST call the confirm tool.\nAfter tool output, reply with exactly: CONFIRMED"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "confirm_order",
+            "arguments": {},
+            "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Order #12345 placed successfully! Estimated delivery: 3-5 days.",
+            "id": "call_Ik1XYjnQT5c5o3gLMyGIF7XO"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "CONFIRMED"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

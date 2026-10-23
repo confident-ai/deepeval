@@ -1,84 +1,74 @@
 {
-  "uuid": "d0d741399c949c0d31b079e50249212e",
+  "uuid": "09a0195fae0885ea2e2167279011fe9d",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "6bb9ff5d0ac3d86a",
+      "uuid": "58a870ec079f1399",
       "name": "simple_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:17.651Z",
-      "endTime": "2026-10-21T17:48:19.948Z",
+      "startTime": "2026-10-23T08:41:00.404Z",
+      "endTime": "2026-10-23T08:41:04.388Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "search_web",
+                "arguments": {
+                  "query": "weather san francisco"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "search_web",
-                  "arguments": {
-                    "query": "weather san francisco"
-                  },
-                  "id": "call_RDVvS752q2AgnjinaODFt61Z"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "San Francisco weather: Foggy, 58F, humidity 75%",
-                  "id": "call_RDVvS752q2AgnjinaODFt61Z"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Weather in San Francisco: foggy, 58\u00b0F, humidity 75%."
-                }
-              ]
-            }
-          ]
+                "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "San Francisco weather: Foggy, 58F, humidity 75%",
+                "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Weather in San Francisco: foggy, 58\u00b0F, humidity 75%."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "20e5b3262290b1cd",
+      "uuid": "c767c35312969d77",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6bb9ff5d0ac3d86a",
-      "startTime": "2026-10-21T17:48:18.599Z",
-      "endTime": "2026-10-21T17:48:19.947Z",
+      "parentUuid": "58a870ec079f1399",
+      "startTime": "2026-10-23T08:41:01.495Z",
+      "endTime": "2026-10-23T08:41:04.384Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "query": "weather san francisco"
             },
-            "id": "call_RDVvS752q2AgnjinaODFt61Z"
+            "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
           }
         },
         {
@@ -130,7 +120,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "San Francisco weather: Foggy, 58F, humidity 75%",
-            "id": "call_RDVvS752q2AgnjinaODFt61Z"
+            "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
           }
         }
       ],
@@ -142,13 +132,13 @@
       "outputTokenCount": 19.0
     },
     {
-      "uuid": "ecdb89b8390191f2",
+      "uuid": "ae2e0751028238b6",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6bb9ff5d0ac3d86a",
-      "startTime": "2026-10-21T17:48:17.652Z",
-      "endTime": "2026-10-21T17:48:18.597Z",
+      "parentUuid": "58a870ec079f1399",
+      "startTime": "2026-10-23T08:41:00.407Z",
+      "endTime": "2026-10-23T08:41:01.492Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "query": "weather san francisco"
             },
-            "id": "call_RDVvS752q2AgnjinaODFt61Z"
+            "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "46d608eac2d78e26",
+      "uuid": "a64602ec5a9ffd31",
       "name": "search_web",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "6bb9ff5d0ac3d86a",
-      "startTime": "2026-10-21T17:48:18.598Z",
-      "endTime": "2026-10-21T17:48:18.598Z",
+      "parentUuid": "58a870ec079f1399",
+      "startTime": "2026-10-23T08:41:01.494Z",
+      "endTime": "2026-10-23T08:41:01.494Z",
       "input": {
         "query": "weather san francisco"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:17.651Z",
-  "endTime": "2026-10-21T17:48:19.948Z",
+  "startTime": "2026-10-23T08:41:00.404Z",
+  "endTime": "2026-10-23T08:41:04.388Z",
   "name": "langchain-agent-simple",
   "metadata": {
     "test_type": "agent"
@@ -215,74 +205,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the search_web tool to search for 'weather san francisco'. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "search_web",
+            "arguments": {
+              "query": "weather san francisco"
             },
-            {
-              "type": "tool_call",
-              "name": "search_web",
-              "arguments": {
-                "query": "weather san francisco"
-              },
-              "id": "call_RDVvS752q2AgnjinaODFt61Z"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "San Francisco weather: Foggy, 58F, humidity 75%",
-              "id": "call_RDVvS752q2AgnjinaODFt61Z"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Weather in San Francisco: foggy, 58\u00b0F, humidity 75%."
-            }
-          ]
-        }
-      ]
+            "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "San Francisco weather: Foggy, 58F, humidity 75%",
+            "id": "call_SGuwDBf6s7dKIqiyCaspzwZ4"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Weather in San Francisco: foggy, 58\u00b0F, humidity 75%."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

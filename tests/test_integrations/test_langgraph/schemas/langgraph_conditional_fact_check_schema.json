@@ -1,141 +1,125 @@
 {
-  "uuid": "62caffcc7903980a565ade1a4b8fbc18",
+  "uuid": "9e69fc4ccef50b268c7f5b4206ed65b1",
   "baseSpans": [
     {
-      "uuid": "eb6b53224ecb6446",
+      "uuid": "3ca76af20ed9b45d",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "9139e47c8c710134",
-      "startTime": "2026-10-21T17:48:36.665Z",
-      "endTime": "2026-10-21T17:48:37.697Z",
+      "parentUuid": "83369caa24562a34",
+      "startTime": "2026-10-23T08:41:37.037Z",
+      "endTime": "2026-10-23T08:41:37.947Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Verdict: Unverified."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Verdict: Unverified."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "dc3eababdaa0086c",
+      "uuid": "f6f90cc3a1a3ae8a",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "eb6b53224ecb6446",
-      "startTime": "2026-10-21T17:48:37.697Z",
-      "endTime": "2026-10-21T17:48:37.697Z",
+      "parentUuid": "3ca76af20ed9b45d",
+      "startTime": "2026-10-23T08:41:37.946Z",
+      "endTime": "2026-10-23T08:41:37.947Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Verdict: Unverified."
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Verdict: Unverified."
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
@@ -143,62 +127,56 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "7fd721e1a92d0ccf",
+      "uuid": "32f99b3d92121132",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "9139e47c8c710134",
-      "startTime": "2026-10-21T17:48:36.662Z",
-      "endTime": "2026-10-21T17:48:36.664Z",
+      "parentUuid": "83369caa24562a34",
+      "startTime": "2026-10-23T08:41:37.033Z",
+      "endTime": "2026-10-23T08:41:37.036Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -214,57 +192,51 @@
       ]
     },
     {
-      "uuid": "43ffdde830bcf8be",
+      "uuid": "41591270cffd9bb1",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7fd721e1a92d0ccf",
-      "startTime": "2026-10-21T17:48:36.664Z",
-      "endTime": "2026-10-21T17:48:36.664Z",
+      "parentUuid": "32f99b3d92121132",
+      "startTime": "2026-10-23T08:41:37.035Z",
+      "endTime": "2026-10-23T08:41:37.036Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
@@ -272,94 +244,86 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "b629c85ca21e23f4",
+      "uuid": "4f4b030667f3555b",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "9139e47c8c710134",
-      "startTime": "2026-10-21T17:48:35.569Z",
-      "endTime": "2026-10-21T17:48:36.661Z",
+      "parentUuid": "83369caa24562a34",
+      "startTime": "2026-10-23T08:41:35.326Z",
+      "endTime": "2026-10-23T08:41:37.032Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "895e516c6f7ad4bd",
+      "uuid": "ad84d9d4a496223a",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b629c85ca21e23f4",
-      "startTime": "2026-10-21T17:48:36.661Z",
-      "endTime": "2026-10-21T17:48:36.661Z",
+      "parentUuid": "4f4b030667f3555b",
+      "startTime": "2026-10-23T08:41:37.031Z",
+      "endTime": "2026-10-23T08:41:37.031Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
@@ -367,67 +331,61 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "ff2d56e0df603780",
+      "uuid": "bbe3ce0f6246cbba",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "9139e47c8c710134",
-      "startTime": "2026-10-21T17:48:35.568Z",
-      "endTime": "2026-10-21T17:48:35.569Z",
+      "parentUuid": "83369caa24562a34",
+      "startTime": "2026-10-23T08:41:35.325Z",
+      "endTime": "2026-10-23T08:41:35.326Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "906f5a9d91560a52",
+      "uuid": "588c03f9c03b16d9",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "ff2d56e0df603780",
-      "startTime": "2026-10-21T17:48:35.568Z",
-      "endTime": "2026-10-21T17:48:35.568Z",
+      "parentUuid": "bbe3ce0f6246cbba",
+      "startTime": "2026-10-23T08:41:35.326Z",
+      "endTime": "2026-10-23T08:41:35.326Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
@@ -437,82 +395,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "9139e47c8c710134",
+      "uuid": "83369caa24562a34",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:35.566Z",
-      "endTime": "2026-10-21T17:48:37.698Z",
+      "startTime": "2026-10-23T08:41:35.324Z",
+      "endTime": "2026-10-23T08:41:37.947Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "fact_check",
+                "arguments": {
+                  "claim": "The earth is round."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "fact_check",
-                  "arguments": {
-                    "claim": "The earth is round."
-                  },
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-                  "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Verdict: Unverified."
-                }
-              ]
-            }
-          ]
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+                "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Verdict: Unverified."
+              }
+            ]
+          }
         ],
         "intent": "fact_check"
       },
@@ -533,13 +481,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "bc1394529ac23748",
+      "uuid": "27803564a7c46173",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "eb6b53224ecb6446",
-      "startTime": "2026-10-21T17:48:36.665Z",
-      "endTime": "2026-10-21T17:48:37.697Z",
+      "parentUuid": "3ca76af20ed9b45d",
+      "startTime": "2026-10-23T08:41:37.037Z",
+      "endTime": "2026-10-23T08:41:37.946Z",
       "input": [
         {
           "role": "user",
@@ -561,7 +509,7 @@
             "arguments": {
               "claim": "The earth is round."
             },
-            "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
+            "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
           }
         },
         {
@@ -569,7 +517,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-            "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
+            "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
           }
         }
       ],
@@ -581,13 +529,13 @@
       "outputTokenCount": 9.0
     },
     {
-      "uuid": "898aae5b23e86dd3",
+      "uuid": "4d40b1c8eb15b68d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b629c85ca21e23f4",
-      "startTime": "2026-10-21T17:48:35.570Z",
-      "endTime": "2026-10-21T17:48:36.660Z",
+      "parentUuid": "4f4b030667f3555b",
+      "startTime": "2026-10-23T08:41:35.326Z",
+      "endTime": "2026-10-23T08:41:37.029Z",
       "input": [
         {
           "role": "user",
@@ -607,7 +555,7 @@
             "arguments": {
               "claim": "The earth is round."
             },
-            "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
+            "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
           }
         }
       ],
@@ -630,13 +578,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "fb41cb851b85207a",
+      "uuid": "ff888aee4012d255",
       "name": "fact_check",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "7fd721e1a92d0ccf",
-      "startTime": "2026-10-21T17:48:36.663Z",
-      "endTime": "2026-10-21T17:48:36.663Z",
+      "parentUuid": "32f99b3d92121132",
+      "startTime": "2026-10-23T08:41:37.034Z",
+      "endTime": "2026-10-23T08:41:37.035Z",
       "input": {
         "claim": "The earth is round."
       },
@@ -644,8 +592,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:35.566Z",
-  "endTime": "2026-10-21T17:48:37.698Z",
+  "startTime": "2026-10-23T08:41:35.324Z",
+  "endTime": "2026-10-23T08:41:37.947Z",
   "name": "langgraph-conditional-factcheck",
   "tags": [
     "langgraph",
@@ -655,74 +603,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the fact_check tool exactly once to verify: The earth is round. Do not use any other tools. After the tool returns, respond with a brief verdict and stop."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "fact_check",
+            "arguments": {
+              "claim": "The earth is round."
             },
-            {
-              "type": "tool_call",
-              "name": "fact_check",
-              "arguments": {
-                "claim": "The earth is round."
-              },
-              "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
-              "id": "call_nSxfUCg7v5ZQwbOFsUJxHaLQ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Verdict: Unverified."
-            }
-          ]
-        }
-      ]
+            "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Fact check: UNVERIFIED - Unable to confirm this claim.",
+            "id": "call_DLXLCvgeGi2VTonCJ1aqPc7b"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Verdict: Unverified."
+          }
+        ]
+      }
     ],
     "intent": "fact_check"
   },

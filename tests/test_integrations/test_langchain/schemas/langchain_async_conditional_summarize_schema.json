@@ -1,84 +1,74 @@
 {
-  "uuid": "c973b8a67118b42bf4abd1478aaf9475",
+  "uuid": "5b6a4df1b06133814aa2eae281fc293e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "980010ebe6c404ef",
+      "uuid": "218ff4cb451a22a3",
       "name": "summarize_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:03.874Z",
-      "endTime": "2026-10-21T17:48:06.684Z",
+      "startTime": "2026-10-23T08:38:38.919Z",
+      "endTime": "2026-10-23T08:40:28.840Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "AI is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "AI is transforming industries worldwide."
-                  },
-                  "id": "call_0C5ccBNC3SaubwvjijknzuGO"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: AI is transforming industries worldwide.",
-                  "id": "call_0C5ccBNC3SaubwvjijknzuGO"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "AI is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+                "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: AI is transforming industries worldwide.",
+                "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "AI is transforming industries worldwide."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "e15998561fe9ec33",
+      "uuid": "b4585fa85ba15ad1",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "980010ebe6c404ef",
-      "startTime": "2026-10-21T17:48:05.532Z",
-      "endTime": "2026-10-21T17:48:06.682Z",
+      "parentUuid": "218ff4cb451a22a3",
+      "startTime": "2026-10-23T08:38:40.650Z",
+      "endTime": "2026-10-23T08:40:28.839Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "text": "AI is transforming industries worldwide."
             },
-            "id": "call_0C5ccBNC3SaubwvjijknzuGO"
+            "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
           }
         },
         {
@@ -130,7 +120,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Summary: AI is transforming industries worldwide.",
-            "id": "call_0C5ccBNC3SaubwvjijknzuGO"
+            "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
           }
         }
       ],
@@ -142,13 +132,13 @@
       "outputTokenCount": 9.0
     },
     {
-      "uuid": "bcd939aa350853d8",
+      "uuid": "c088483ce75e18e7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "980010ebe6c404ef",
-      "startTime": "2026-10-21T17:48:03.875Z",
-      "endTime": "2026-10-21T17:48:05.529Z",
+      "parentUuid": "218ff4cb451a22a3",
+      "startTime": "2026-10-23T08:38:38.920Z",
+      "endTime": "2026-10-23T08:38:40.648Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "text": "AI is transforming industries worldwide."
             },
-            "id": "call_0C5ccBNC3SaubwvjijknzuGO"
+            "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "84fb1c6486a6a787",
+      "uuid": "e6151bafd40ad3e6",
       "name": "summarize_text",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "980010ebe6c404ef",
-      "startTime": "2026-10-21T17:48:05.531Z",
-      "endTime": "2026-10-21T17:48:05.531Z",
+      "parentUuid": "218ff4cb451a22a3",
+      "startTime": "2026-10-23T08:38:40.649Z",
+      "endTime": "2026-10-23T08:38:40.649Z",
       "input": {
         "text": "AI is transforming industries worldwide."
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:03.875Z",
-  "endTime": "2026-10-21T17:48:06.684Z",
+  "startTime": "2026-10-23T08:38:38.919Z",
+  "endTime": "2026-10-23T08:40:28.840Z",
   "name": "langchain-async-conditional-summarize",
   "tags": [
     "langchain",
@@ -213,74 +203,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the summarize_text tool to summarize this: AI is transforming industries worldwide. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "summarize_text",
+            "arguments": {
+              "text": "AI is transforming industries worldwide."
             },
-            {
-              "type": "tool_call",
-              "name": "summarize_text",
-              "arguments": {
-                "text": "AI is transforming industries worldwide."
-              },
-              "id": "call_0C5ccBNC3SaubwvjijknzuGO"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Summary: AI is transforming industries worldwide.",
-              "id": "call_0C5ccBNC3SaubwvjijknzuGO"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "AI is transforming industries worldwide."
-            }
-          ]
-        }
-      ]
+            "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Summary: AI is transforming industries worldwide.",
+            "id": "call_Y9MGnu81tDvhC4T6GaKnKXUx"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "AI is transforming industries worldwide."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

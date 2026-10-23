@@ -1,84 +1,74 @@
 {
-  "uuid": "bb8dff8538671ca658bac44803c615b9",
+  "uuid": "49541e15ffba366cd8fc24fe7fed2d6b",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "2a8bc6d7cb635385",
+      "uuid": "b6f46b3a67d20b74",
       "name": "city_info_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:08.440Z",
-      "endTime": "2026-10-21T17:48:10.529Z",
+      "startTime": "2026-10-23T08:40:44.264Z",
+      "endTime": "2026-10-23T08:40:46.199Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Tokyo"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Tokyo"
-                  },
-                  "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Cloudy, 68F",
-                  "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Tokyo weather: Cloudy, 68\u00b0F."
-                }
-              ]
-            }
-          ]
+                "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Cloudy, 68F",
+                "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Tokyo weather: Cloudy, 68\u00b0F."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "d450e41fc176e96a",
+      "uuid": "0c85e1019f2ada59",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "2a8bc6d7cb635385",
-      "startTime": "2026-10-21T17:48:09.509Z",
-      "endTime": "2026-10-21T17:48:10.529Z",
+      "parentUuid": "b6f46b3a67d20b74",
+      "startTime": "2026-10-23T08:40:45.210Z",
+      "endTime": "2026-10-23T08:40:46.199Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "city": "Tokyo"
             },
-            "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
+            "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
           }
         },
         {
@@ -130,7 +120,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Cloudy, 68F",
-            "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
+            "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
           }
         }
       ],
@@ -142,13 +132,13 @@
       "outputTokenCount": 13.0
     },
     {
-      "uuid": "c757bf8ffb567c95",
+      "uuid": "934a92a5fcf673ea",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "2a8bc6d7cb635385",
-      "startTime": "2026-10-21T17:48:08.443Z",
-      "endTime": "2026-10-21T17:48:09.508Z",
+      "parentUuid": "b6f46b3a67d20b74",
+      "startTime": "2026-10-23T08:40:44.265Z",
+      "endTime": "2026-10-23T08:40:45.209Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "city": "Tokyo"
             },
-            "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
+            "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f04d4d49b3706d28",
+      "uuid": "d437c5ffb87209a0",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "2a8bc6d7cb635385",
-      "startTime": "2026-10-21T17:48:09.509Z",
-      "endTime": "2026-10-21T17:48:09.509Z",
+      "parentUuid": "b6f46b3a67d20b74",
+      "startTime": "2026-10-23T08:40:45.209Z",
+      "endTime": "2026-10-23T08:40:45.210Z",
       "input": {
         "city": "Tokyo"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:08.440Z",
-  "endTime": "2026-10-21T17:48:10.529Z",
+  "startTime": "2026-10-23T08:40:44.264Z",
+  "endTime": "2026-10-23T08:40:46.199Z",
   "name": "langchain-multi-tool-test",
   "metadata": {
     "test_type": "multiple_tools"
@@ -216,74 +206,64 @@
   "userId": "test-user",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get the weather for Tokyo. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Tokyo"
             },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "arguments": {
-                "city": "Tokyo"
-              },
-              "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Cloudy, 68F",
-              "id": "call_g6uicJPEzFDWwfGfa8N0kRUJ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Tokyo weather: Cloudy, 68\u00b0F."
-            }
-          ]
-        }
-      ]
+            "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Cloudy, 68F",
+            "id": "call_hrlYUvb6HI4dKBng070Z6fK2"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Tokyo weather: Cloudy, 68\u00b0F."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

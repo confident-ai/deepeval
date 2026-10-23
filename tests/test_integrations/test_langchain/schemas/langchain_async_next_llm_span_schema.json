@@ -1,17 +1,89 @@
 {
-  "uuid": "229b95dd0d99df40a0c7696e04dbdde5",
+  "uuid": "3874658a0f589c4d2f03c187d07a6914",
   "baseSpans": [
     {
-      "uuid": "c274e26973c5aa1b",
+      "uuid": "a3f8a3ca59e6f6ca",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4af00ec3027a236d",
-      "startTime": "2026-10-21T17:48:02.268Z",
-      "endTime": "2026-10-21T17:48:03.323Z",
+      "parentUuid": "58803a0bc4677b3c",
+      "startTime": "2026-10-23T08:40:32.656Z",
+      "endTime": "2026-10-23T08:40:34.192Z",
       "input": {
         "messages": [
-          [
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
+                },
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          }
+        ]
+      },
+      "output": {
+        "messages": [
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
+              }
+            ]
+          }
+        ]
+      },
+      "integration": "LangGraph"
+    },
+    {
+      "uuid": "f61de2dd36a77d02",
+      "name": "tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "58803a0bc4677b3c",
+      "startTime": "2026-10-23T08:40:32.654Z",
+      "endTime": "2026-10-23T08:40:32.655Z",
+      "input": {
+        "__type": "tool_call_with_context",
+        "tool_call": {
+          "name": "square",
+          "args": {
+            "n": 9
+          },
+          "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN",
+          "type": "tool_call"
+        },
+        "state": {
+          "messages": [
             {
               "role": "user",
               "parts": [
@@ -20,9 +92,7 @@
                   "content": "What is 9 squared? Call the tool and reply with just the number."
                 }
               ]
-            }
-          ],
-          [
+            },
             {
               "role": "assistant",
               "parts": [
@@ -36,109 +106,25 @@
                   "arguments": {
                     "n": 9
                   },
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
+                  "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
                 }
               ]
             }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                }
-              ]
-            }
-          ]
-        ]
-      },
-      "output": {
-        "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "81"
-                }
-              ]
-            }
-          ]
-        ]
-      },
-      "integration": "LangGraph"
-    },
-    {
-      "uuid": "c2797586b97aa1df",
-      "name": "tools",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "4af00ec3027a236d",
-      "startTime": "2026-10-21T17:48:02.264Z",
-      "endTime": "2026-10-21T17:48:02.268Z",
-      "input": {
-        "__type": "tool_call_with_context",
-        "tool_call": {
-          "name": "square",
-          "args": {
-            "n": 9
-          },
-          "id": "call_11uZHMB5YOCEFEk3ACdBGTkG",
-          "type": "tool_call"
-        },
-        "state": {
-          "messages": [
-            [
-              {
-                "role": "user",
-                "parts": [
-                  {
-                    "type": "text",
-                    "content": "What is 9 squared? Call the tool and reply with just the number."
-                  }
-                ]
-              }
-            ],
-            [
-              {
-                "role": "assistant",
-                "parts": [
-                  {
-                    "type": "text",
-                    "content": ""
-                  },
-                  {
-                    "type": "tool_call",
-                    "name": "square",
-                    "arguments": {
-                      "n": 9
-                    },
-                    "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                  }
-                ]
-              }
-            ]
           ]
         }
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -154,49 +140,45 @@
       ]
     },
     {
-      "uuid": "61c814c690018f60",
+      "uuid": "9ee7f396aa2b56b8",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4af00ec3027a236d",
-      "startTime": "2026-10-21T17:48:01.191Z",
-      "endTime": "2026-10-21T17:48:02.261Z",
+      "parentUuid": "58803a0bc4677b3c",
+      "startTime": "2026-10-23T08:40:31.020Z",
+      "endTime": "2026-10-23T08:40:32.653Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                }
-              ]
-            }
-          ]
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
@@ -204,82 +186,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "4af00ec3027a236d",
+      "uuid": "58803a0bc4677b3c",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:01.189Z",
-      "endTime": "2026-10-21T17:48:03.324Z",
+      "startTime": "2026-10-23T08:40:31.019Z",
+      "endTime": "2026-10-23T08:40:34.192Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "81"
-                }
-              ]
-            }
-          ]
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -299,13 +271,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "f2f516e0bc5140a3",
+      "uuid": "8a4efb4d38a8d19c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c274e26973c5aa1b",
-      "startTime": "2026-10-21T17:48:02.270Z",
-      "endTime": "2026-10-21T17:48:03.322Z",
+      "parentUuid": "a3f8a3ca59e6f6ca",
+      "startTime": "2026-10-23T08:40:32.657Z",
+      "endTime": "2026-10-23T08:40:34.191Z",
       "input": [
         {
           "role": "system",
@@ -327,7 +299,7 @@
             "arguments": {
               "n": 9
             },
-            "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
+            "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
           }
         },
         {
@@ -335,7 +307,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "81",
-            "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
+            "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
           }
         }
       ],
@@ -347,13 +319,13 @@
       "outputTokenCount": 4.0
     },
     {
-      "uuid": "603d3127c41a9490",
+      "uuid": "1dd6f83f98af7936",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "61c814c690018f60",
-      "startTime": "2026-10-21T17:48:01.192Z",
-      "endTime": "2026-10-21T17:48:02.259Z",
+      "parentUuid": "9ee7f396aa2b56b8",
+      "startTime": "2026-10-23T08:40:31.021Z",
+      "endTime": "2026-10-23T08:40:32.652Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "async_next_llm_only"
@@ -377,7 +349,7 @@
             "arguments": {
               "n": 9
             },
-            "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
+            "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
           }
         }
       ],
@@ -401,13 +373,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "87915da48f05111e",
+      "uuid": "454b4243693633dc",
       "name": "square",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "c2797586b97aa1df",
-      "startTime": "2026-10-21T17:48:02.266Z",
-      "endTime": "2026-10-21T17:48:02.267Z",
+      "parentUuid": "f61de2dd36a77d02",
+      "startTime": "2026-10-23T08:40:32.655Z",
+      "endTime": "2026-10-23T08:40:32.655Z",
       "input": {
         "n": 9
       },
@@ -415,8 +387,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:01.189Z",
-  "endTime": "2026-10-21T17:48:03.324Z",
+  "startTime": "2026-10-23T08:40:31.019Z",
+  "endTime": "2026-10-23T08:40:34.192Z",
   "name": "langchain-async-next-llm-span",
   "metadata": {
     "test_type": "async_next_llm_span"
@@ -431,74 +403,64 @@
   "userId": "async-test-user",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What is 9 squared? Call the tool and reply with just the number."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What is 9 squared? Call the tool and reply with just the number."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "square",
+            "arguments": {
+              "n": 9
             },
-            {
-              "type": "tool_call",
-              "name": "square",
-              "arguments": {
-                "n": 9
-              },
-              "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "81",
-              "id": "call_11uZHMB5YOCEFEk3ACdBGTkG"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "81"
-            }
-          ]
-        }
-      ]
+            "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "81",
+            "id": "call_Hfgv3s2pJpyd4r52V0ZmABuN"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "81"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

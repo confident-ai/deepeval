@@ -1,201 +1,179 @@
 {
-  "uuid": "eadfec468b11fe6e5e2a7468ec58ee43",
+  "uuid": "aeb7f42c6ea9bafec8d5831a24a6ab62",
   "baseSpans": [
     {
-      "uuid": "6bfb99294b3d5a91",
+      "uuid": "22815f12ce16fb97",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "080d91ab94f9a1c4",
-      "startTime": "2026-10-21T17:48:26.589Z",
-      "endTime": "2026-10-21T17:48:27.911Z",
+      "parentUuid": "7e42a6d7efac15c9",
+      "startTime": "2026-10-23T08:41:11.032Z",
+      "endTime": "2026-10-23T08:41:12.874Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30 (-0.5%)",
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30 (-0.5%)",
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "GOOGL is at **$142.30**, down **0.5%**."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "GOOGL is trading at **$142.30** (**-0.5%**)."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "9aca6eb3ad043e57",
+      "uuid": "b70e6df5d2c317c2",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6bfb99294b3d5a91",
-      "startTime": "2026-10-21T17:48:27.910Z",
-      "endTime": "2026-10-21T17:48:27.911Z",
+      "parentUuid": "22815f12ce16fb97",
+      "startTime": "2026-10-23T08:41:12.873Z",
+      "endTime": "2026-10-23T08:41:12.874Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30 (-0.5%)",
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "GOOGL is at **$142.30**, down **0.5%**."
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30 (-0.5%)",
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "GOOGL is trading at **$142.30** (**-0.5%**)."
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "fd90f14699c9b928",
+      "uuid": "757914253b8064ae",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "080d91ab94f9a1c4",
-      "startTime": "2026-10-21T17:48:26.586Z",
-      "endTime": "2026-10-21T17:48:26.587Z",
+      "parentUuid": "7e42a6d7efac15c9",
+      "startTime": "2026-10-23T08:41:11.029Z",
+      "endTime": "2026-10-23T08:41:11.031Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30 (-0.5%)",
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30 (-0.5%)",
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -211,93 +189,85 @@
       ]
     },
     {
-      "uuid": "1533b86428d7e5d8",
+      "uuid": "f11dcf2bba636c95",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "080d91ab94f9a1c4",
-      "startTime": "2026-10-21T17:48:24.786Z",
-      "endTime": "2026-10-21T17:48:26.585Z",
+      "parentUuid": "7e42a6d7efac15c9",
+      "startTime": "2026-10-23T08:41:08.952Z",
+      "endTime": "2026-10-23T08:41:11.028Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "690de3393eb815a1",
+      "uuid": "3f67041f365914ec",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "1533b86428d7e5d8",
-      "startTime": "2026-10-21T17:48:26.585Z",
-      "endTime": "2026-10-21T17:48:26.585Z",
+      "parentUuid": "f11dcf2bba636c95",
+      "startTime": "2026-10-23T08:41:11.027Z",
+      "endTime": "2026-10-23T08:41:11.028Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -306,82 +276,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "080d91ab94f9a1c4",
+      "uuid": "7e42a6d7efac15c9",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:24.785Z",
-      "endTime": "2026-10-21T17:48:27.912Z",
+      "startTime": "2026-10-23T08:41:08.951Z",
+      "endTime": "2026-10-23T08:41:12.875Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the stock price of GOOGL?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the stock price of GOOGL?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "GOOGL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "GOOGL"
-                  },
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$142.30 (-0.5%)",
-                  "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "GOOGL is at **$142.30**, down **0.5%**."
-                }
-              ]
-            }
-          ]
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$142.30 (-0.5%)",
+                "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "GOOGL is trading at **$142.30** (**-0.5%**)."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -401,13 +361,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "8cb5b4b02f937650",
+      "uuid": "1553c53d7963c8a1",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6bfb99294b3d5a91",
-      "startTime": "2026-10-21T17:48:26.589Z",
-      "endTime": "2026-10-21T17:48:27.908Z",
+      "parentUuid": "22815f12ce16fb97",
+      "startTime": "2026-10-23T08:41:11.033Z",
+      "endTime": "2026-10-23T08:41:12.872Z",
       "input": [
         {
           "role": "user",
@@ -425,7 +385,7 @@
             "arguments": {
               "symbol": "GOOGL"
             },
-            "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
+            "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
           }
         },
         {
@@ -433,25 +393,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "$142.30 (-0.5%)",
-            "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
+            "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
           }
         }
       ],
-      "output": "GOOGL is at **$142.30**, down **0.5%**.",
+      "output": "GOOGL is trading at **$142.30** (**-0.5%**).",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 202.0,
-      "outputTokenCount": 22.0
+      "outputTokenCount": 23.0
     },
     {
-      "uuid": "fa0ab2976804c6f7",
+      "uuid": "d90ac373eecfb4bf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "1533b86428d7e5d8",
-      "startTime": "2026-10-21T17:48:24.786Z",
-      "endTime": "2026-10-21T17:48:26.584Z",
+      "parentUuid": "f11dcf2bba636c95",
+      "startTime": "2026-10-23T08:41:08.953Z",
+      "endTime": "2026-10-23T08:41:11.026Z",
       "input": [
         {
           "role": "user",
@@ -467,7 +427,7 @@
             "arguments": {
               "symbol": "GOOGL"
             },
-            "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
+            "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
           }
         }
       ],
@@ -490,13 +450,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "2a89fcab8b78bcb9",
+      "uuid": "e6f395728c4a67dd",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "fd90f14699c9b928",
-      "startTime": "2026-10-21T17:48:26.586Z",
-      "endTime": "2026-10-21T17:48:26.587Z",
+      "parentUuid": "757914253b8064ae",
+      "startTime": "2026-10-23T08:41:11.030Z",
+      "endTime": "2026-10-23T08:41:11.031Z",
       "input": {
         "symbol": "GOOGL"
       },
@@ -504,8 +464,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:24.785Z",
-  "endTime": "2026-10-21T17:48:27.912Z",
+  "startTime": "2026-10-23T08:41:08.951Z",
+  "endTime": "2026-10-23T08:41:12.875Z",
   "name": "langgraph-streaming-async",
   "metadata": {
     "test_type": "streaming_async"
@@ -518,74 +478,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the stock price of GOOGL?"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the stock price of GOOGL?"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the stock price of GOOGL?"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the stock price of GOOGL?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "GOOGL"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "GOOGL"
-              },
-              "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$142.30 (-0.5%)",
-              "id": "call_MCpA4EzwiTPTtnzUN1l1nRbf"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "GOOGL is at **$142.30**, down **0.5%**."
-            }
-          ]
-        }
-      ]
+            "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$142.30 (-0.5%)",
+            "id": "call_NdZjaXdeebjFuk35kMP8MG3i"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "GOOGL is trading at **$142.30** (**-0.5%**)."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

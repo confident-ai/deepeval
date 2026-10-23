@@ -1,82 +1,72 @@
 {
-  "uuid": "776d128d40ecbfd031dc3ec81d815143",
+  "uuid": "f984719f1fcd98a3f13afc8931f463a9",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "9c75e37e4017899d",
+      "uuid": "0f918159cc3c9e41",
       "name": "complex_agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:22.209Z",
-      "endTime": "2026-10-21T17:48:25.432Z",
+      "startTime": "2026-10-23T08:41:02.785Z",
+      "endTime": "2026-10-23T08:41:06.693Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "get_current_time",
-                  "arguments": {},
-                  "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Current time: 2024-01-15 10:30:00 UTC",
-                  "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Current time: 2024-01-15 10:30:00 UTC"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_current_time",
+                "arguments": {},
+                "id": "call_lpxic8WrMfKwJuobMQPUKBak"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Current time: 2024-01-15 10:30:00 UTC",
+                "id": "call_lpxic8WrMfKwJuobMQPUKBak"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Current time: 2024-01-15 10:30:00 UTC"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -94,13 +84,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "fcc88351ce72bacf",
+      "uuid": "c204a929d96d0fae",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9c75e37e4017899d",
-      "startTime": "2026-10-21T17:48:23.208Z",
-      "endTime": "2026-10-21T17:48:25.432Z",
+      "parentUuid": "0f918159cc3c9e41",
+      "startTime": "2026-10-23T08:41:05.064Z",
+      "endTime": "2026-10-23T08:41:06.692Z",
       "input": [
         {
           "role": "user",
@@ -116,7 +106,7 @@
             "type": "tool_call",
             "name": "get_current_time",
             "arguments": {},
-            "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
+            "id": "call_lpxic8WrMfKwJuobMQPUKBak"
           }
         },
         {
@@ -124,7 +114,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Current time: 2024-01-15 10:30:00 UTC",
-            "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
+            "id": "call_lpxic8WrMfKwJuobMQPUKBak"
           }
         }
       ],
@@ -136,13 +126,13 @@
       "outputTokenCount": 20.0
     },
     {
-      "uuid": "9de2cf1425664c3e",
+      "uuid": "666abe8bfe77a047",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9c75e37e4017899d",
-      "startTime": "2026-10-21T17:48:22.209Z",
-      "endTime": "2026-10-21T17:48:23.206Z",
+      "parentUuid": "0f918159cc3c9e41",
+      "startTime": "2026-10-23T08:41:02.786Z",
+      "endTime": "2026-10-23T08:41:05.062Z",
       "input": [
         {
           "role": "user",
@@ -156,7 +146,7 @@
             "type": "tool_call",
             "name": "get_current_time",
             "arguments": {},
-            "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
+            "id": "call_lpxic8WrMfKwJuobMQPUKBak"
           }
         }
       ],
@@ -177,20 +167,20 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "d15782b149bf115e",
+      "uuid": "fc297638b74347d1",
       "name": "get_current_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "9c75e37e4017899d",
-      "startTime": "2026-10-21T17:48:23.207Z",
-      "endTime": "2026-10-21T17:48:23.207Z",
+      "parentUuid": "0f918159cc3c9e41",
+      "startTime": "2026-10-23T08:41:05.063Z",
+      "endTime": "2026-10-23T08:41:05.064Z",
       "input": {},
       "output": "Current time: 2024-01-15 10:30:00 UTC",
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:22.209Z",
-  "endTime": "2026-10-21T17:48:25.432Z",
+  "startTime": "2026-10-23T08:41:02.785Z",
+  "endTime": "2026-10-23T08:41:06.693Z",
   "name": "langchain-agent-complex",
   "tags": [
     "langchain",
@@ -200,72 +190,62 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
-            },
-            {
-              "type": "tool_call",
-              "name": "get_current_time",
-              "arguments": {},
-              "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Current time: 2024-01-15 10:30:00 UTC",
-              "id": "call_8o1yGtxjThFkQoxLcBuR2zqt"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Current time: 2024-01-15 10:30:00 UTC"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_current_time tool to get the current time. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_current_time",
+            "arguments": {},
+            "id": "call_lpxic8WrMfKwJuobMQPUKBak"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Current time: 2024-01-15 10:30:00 UTC",
+            "id": "call_lpxic8WrMfKwJuobMQPUKBak"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Current time: 2024-01-15 10:30:00 UTC"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

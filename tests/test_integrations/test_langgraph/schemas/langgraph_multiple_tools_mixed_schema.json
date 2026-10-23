@@ -1,261 +1,233 @@
 {
-  "uuid": "813b75c4658b2d39f0bd62deb3a39b60",
+  "uuid": "151d94229cf1895456f265597684eed3",
   "baseSpans": [
     {
-      "uuid": "6d0321c6e61def0c",
+      "uuid": "235cdd48da506cd6",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4363492124462519",
-      "startTime": "2026-10-21T17:48:29.632Z",
-      "endTime": "2026-10-21T17:48:30.600Z",
+      "parentUuid": "cb2bc818cced4ba4",
+      "startTime": "2026-10-23T08:41:29.717Z",
+      "endTime": "2026-10-23T08:41:30.794Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Partly cloudy, 62\u00b0F",
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "100 * 1.5 + 50 = 200.0",
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Partly cloudy, 62\u00b0F",
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "100 * 1.5 + 50 = 200.0",
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation result: 200.0"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation: 100 * 1.5 + 50 = 200.0"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "3f82eb20aebae16b",
+      "uuid": "27d5bb9a91c0a4a1",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6d0321c6e61def0c",
-      "startTime": "2026-10-21T17:48:30.600Z",
-      "endTime": "2026-10-21T17:48:30.600Z",
+      "parentUuid": "235cdd48da506cd6",
+      "startTime": "2026-10-23T08:41:30.793Z",
+      "endTime": "2026-10-23T08:41:30.793Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Partly cloudy, 62\u00b0F",
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "100 * 1.5 + 50 = 200.0",
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation result: 200.0"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Partly cloudy, 62\u00b0F",
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "100 * 1.5 + 50 = 200.0",
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation: 100 * 1.5 + 50 = 200.0"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "7936d0a632ed0a0d",
+      "uuid": "51c20f2dfa0f5aec",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4363492124462519",
-      "startTime": "2026-10-21T17:48:29.628Z",
-      "endTime": "2026-10-21T17:48:29.631Z",
+      "parentUuid": "cb2bc818cced4ba4",
+      "startTime": "2026-10-23T08:41:29.714Z",
+      "endTime": "2026-10-23T08:41:29.717Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Partly cloudy, 62\u00b0F",
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "100 * 1.5 + 50 = 200.0",
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Partly cloudy, 62\u00b0F",
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "100 * 1.5 + 50 = 200.0",
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -279,109 +251,101 @@
       ]
     },
     {
-      "uuid": "a6fc60070e17d745",
+      "uuid": "36d9aaf7433fef7e",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4363492124462519",
-      "startTime": "2026-10-21T17:48:28.120Z",
-      "endTime": "2026-10-21T17:48:29.627Z",
+      "parentUuid": "cb2bc818cced4ba4",
+      "startTime": "2026-10-23T08:41:27.871Z",
+      "endTime": "2026-10-23T08:41:29.714Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "e5c719427b9e552a",
+      "uuid": "bc1c348280af72c6",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a6fc60070e17d745",
-      "startTime": "2026-10-21T17:48:29.627Z",
-      "endTime": "2026-10-21T17:48:29.627Z",
+      "parentUuid": "36d9aaf7433fef7e",
+      "startTime": "2026-10-23T08:41:29.713Z",
+      "endTime": "2026-10-23T08:41:29.713Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -390,102 +354,90 @@
   ],
   "agentSpans": [
     {
-      "uuid": "4363492124462519",
+      "uuid": "cb2bc818cced4ba4",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:28.120Z",
-      "endTime": "2026-10-21T17:48:30.601Z",
+      "startTime": "2026-10-23T08:41:27.870Z",
+      "endTime": "2026-10-23T08:41:30.794Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "arguments": {
+                  "city": "Paris"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_weather",
-                  "arguments": {
-                    "city": "Paris"
-                  },
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              },
+              {
+                "type": "tool_call",
+                "name": "calculate",
+                "arguments": {
+                  "expression": "100 * 1.5 + 50"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "calculate",
-                  "arguments": {
-                    "expression": "100 * 1.5 + 50"
-                  },
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Partly cloudy, 62\u00b0F",
-                  "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "100 * 1.5 + 50 = 200.0",
-                  "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation result: 200.0"
-                }
-              ]
-            }
-          ]
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Partly cloudy, 62\u00b0F",
+                "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "100 * 1.5 + 50 = 200.0",
+                "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation: 100 * 1.5 + 50 = 200.0"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -513,13 +465,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "c3efdb2e74c22b69",
+      "uuid": "0f90dd4c53eac6aa",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6d0321c6e61def0c",
-      "startTime": "2026-10-21T17:48:29.632Z",
-      "endTime": "2026-10-21T17:48:30.599Z",
+      "parentUuid": "235cdd48da506cd6",
+      "startTime": "2026-10-23T08:41:29.718Z",
+      "endTime": "2026-10-23T08:41:30.793Z",
       "input": [
         {
           "role": "user",
@@ -537,7 +489,7 @@
             "arguments": {
               "city": "Paris"
             },
-            "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+            "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
           }
         },
         {
@@ -548,7 +500,7 @@
             "arguments": {
               "expression": "100 * 1.5 + 50"
             },
-            "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
+            "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
           }
         },
         {
@@ -556,7 +508,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Partly cloudy, 62\u00b0F",
-            "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+            "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
           }
         },
         {
@@ -564,25 +516,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "100 * 1.5 + 50 = 200.0",
-            "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
+            "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
           }
         }
       ],
-      "output": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation result: 200.0",
+      "output": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation: 100 * 1.5 + 50 = 200.0",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 301.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 31.0
     },
     {
-      "uuid": "5cb57d0dfe6c5a20",
+      "uuid": "c9ba636f9986e461",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a6fc60070e17d745",
-      "startTime": "2026-10-21T17:48:28.121Z",
-      "endTime": "2026-10-21T17:48:29.626Z",
+      "parentUuid": "36d9aaf7433fef7e",
+      "startTime": "2026-10-23T08:41:27.872Z",
+      "endTime": "2026-10-23T08:41:29.712Z",
       "input": [
         {
           "role": "user",
@@ -598,7 +550,7 @@
             "arguments": {
               "city": "Paris"
             },
-            "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+            "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
           }
         },
         {
@@ -609,7 +561,7 @@
             "arguments": {
               "expression": "100 * 1.5 + 50"
             },
-            "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
+            "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
           }
         }
       ],
@@ -639,13 +591,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f0326979dfa4a232",
+      "uuid": "3028fa4dc6d9f50a",
       "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "7936d0a632ed0a0d",
-      "startTime": "2026-10-21T17:48:29.630Z",
-      "endTime": "2026-10-21T17:48:29.631Z",
+      "parentUuid": "51c20f2dfa0f5aec",
+      "startTime": "2026-10-23T08:41:29.716Z",
+      "endTime": "2026-10-23T08:41:29.717Z",
       "input": {
         "expression": "100 * 1.5 + 50"
       },
@@ -653,13 +605,13 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "d47dab6c06170678",
+      "uuid": "5596b208797043e6",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "7936d0a632ed0a0d",
-      "startTime": "2026-10-21T17:48:29.629Z",
-      "endTime": "2026-10-21T17:48:29.630Z",
+      "parentUuid": "51c20f2dfa0f5aec",
+      "startTime": "2026-10-23T08:41:29.715Z",
+      "endTime": "2026-10-23T08:41:29.716Z",
       "input": {
         "city": "Paris"
       },
@@ -667,8 +619,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:28.120Z",
-  "endTime": "2026-10-21T17:48:30.601Z",
+  "startTime": "2026-10-23T08:41:27.870Z",
+  "endTime": "2026-10-23T08:41:30.794Z",
   "name": "langgraph-mixed-tools-test",
   "metadata": {
     "test_type": "mixed_tools"
@@ -680,112 +632,100 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What's the weather in Paris? Also calculate 100 * 1.5 + 50"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "arguments": {
+              "city": "Paris"
             },
-            {
-              "type": "tool_call",
-              "name": "get_weather",
-              "arguments": {
-                "city": "Paris"
-              },
-              "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
+            "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+          },
+          {
+            "type": "tool_call",
+            "name": "calculate",
+            "arguments": {
+              "expression": "100 * 1.5 + 50"
             },
-            {
-              "type": "tool_call",
-              "name": "calculate",
-              "arguments": {
-                "expression": "100 * 1.5 + 50"
-              },
-              "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Partly cloudy, 62\u00b0F",
-              "id": "call_CifO8iVuRFzaKWSTosoVZQsY"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "100 * 1.5 + 50 = 200.0",
-              "id": "call_l9QHOCStQf90gjzWRu22p3Jn"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation result: 200.0"
-            }
-          ]
-        }
-      ]
+            "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Partly cloudy, 62\u00b0F",
+            "id": "call_KP6yTH43VFf2bFu70vLhyWg4"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "100 * 1.5 + 50 = 200.0",
+            "id": "call_90EA7CfqPD6cSUa5yXdzsxlO"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Paris weather: Partly cloudy, 62\u00b0F\n\nCalculation: 100 * 1.5 + 50 = 200.0"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",
   "toolsCalled": [
-    {
-      "name": "get_weather",
-      "type": "FUNCTION",
-      "output": "Partly cloudy, 62\u00b0F",
-      "inputParameters": {
-        "city": "Paris"
-      }
-    },
     {
       "name": "calculate",
       "type": "FUNCTION",
       "output": "100 * 1.5 + 50 = 200.0",
       "inputParameters": {
         "expression": "100 * 1.5 + 50"
+      }
+    },
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Partly cloudy, 62\u00b0F",
+      "inputParameters": {
+        "city": "Paris"
       }
     }
   ]

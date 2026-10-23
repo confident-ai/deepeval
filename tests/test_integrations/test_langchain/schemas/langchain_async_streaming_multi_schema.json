@@ -1,84 +1,74 @@
 {
-  "uuid": "8b5b86b24c48c6446d21e52f0662912b",
+  "uuid": "9ad4185db5cca07f7de46fb0eed7db73",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "a52d52596b0d4956",
+      "uuid": "ad91b3e192a87f50",
       "name": "streaming_multi_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:14.785Z",
-      "endTime": "2026-10-21T17:48:17.613Z",
+      "startTime": "2026-10-23T08:38:33.828Z",
+      "endTime": "2026-10-23T08:40:31.151Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "TSLA"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "TSLA"
-                  },
-                  "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$245.60 (+2.1%)",
-                  "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "TSLA is at **$245.60** (**+2.1%**)."
-                }
-              ]
-            }
-          ]
+                "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$245.60 (+2.1%)",
+                "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "TSLA is trading at **$245.60** (**+2.1%**)."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "d77166324a1fea72",
+      "uuid": "3afaada988b797ff",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a52d52596b0d4956",
-      "startTime": "2026-10-21T17:48:16.296Z",
-      "endTime": "2026-10-21T17:48:17.612Z",
+      "parentUuid": "ad91b3e192a87f50",
+      "startTime": "2026-10-23T08:40:28.811Z",
+      "endTime": "2026-10-23T08:40:31.150Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "symbol": "TSLA"
             },
-            "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
+            "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
           }
         },
         {
@@ -130,25 +120,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "$245.60 (+2.1%)",
-            "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
+            "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
           }
         }
       ],
-      "output": "TSLA is at **$245.60** (**+2.1%**).",
+      "output": "TSLA is trading at **$245.60** (**+2.1%**).",
       "integration": "LangChain",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 214.0,
-      "outputTokenCount": 21.0
+      "outputTokenCount": 22.0
     },
     {
-      "uuid": "d742da4e6d6656ed",
+      "uuid": "5d7a4aef3b4f150c",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a52d52596b0d4956",
-      "startTime": "2026-10-21T17:48:14.786Z",
-      "endTime": "2026-10-21T17:48:16.295Z",
+      "parentUuid": "ad91b3e192a87f50",
+      "startTime": "2026-10-23T08:38:33.829Z",
+      "endTime": "2026-10-23T08:40:28.807Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "symbol": "TSLA"
             },
-            "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
+            "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "faca7627653c3a44",
+      "uuid": "5c368174f5e3f410",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "a52d52596b0d4956",
-      "startTime": "2026-10-21T17:48:16.296Z",
-      "endTime": "2026-10-21T17:48:16.296Z",
+      "parentUuid": "ad91b3e192a87f50",
+      "startTime": "2026-10-23T08:40:28.809Z",
+      "endTime": "2026-10-23T08:40:28.810Z",
       "input": {
         "symbol": "TSLA"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:14.785Z",
-  "endTime": "2026-10-21T17:48:17.613Z",
+  "startTime": "2026-10-23T08:38:33.829Z",
+  "endTime": "2026-10-23T08:40:31.151Z",
   "name": "langchain-async-streaming-multi",
   "tags": [
     "langchain",
@@ -213,74 +203,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_stock_price tool to get the stock price for TSLA. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "TSLA"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "TSLA"
-              },
-              "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$245.60 (+2.1%)",
-              "id": "call_FItt8oOPMsTEXNXCVzqRPbaw"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "TSLA is at **$245.60** (**+2.1%**)."
-            }
-          ]
-        }
-      ]
+            "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$245.60 (+2.1%)",
+            "id": "call_OMwEORHn4HZQBlPyjhe8wa23"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "TSLA is trading at **$245.60** (**+2.1%**)."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

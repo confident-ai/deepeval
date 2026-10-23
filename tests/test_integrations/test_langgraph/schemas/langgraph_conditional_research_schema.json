@@ -1,141 +1,125 @@
 {
-  "uuid": "47558062e8383234415fc3f9222cb011",
+  "uuid": "c1d801fe9a93acb432f6a1fe43363b16",
   "baseSpans": [
     {
-      "uuid": "c09d736b116ffec5",
+      "uuid": "d022077684f3b031",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "37e277b2d58a5dc4",
-      "startTime": "2026-10-21T17:48:34.085Z",
-      "endTime": "2026-10-21T17:48:35.555Z",
+      "parentUuid": "eec470cc57c21ead",
+      "startTime": "2026-10-23T08:41:33.322Z",
+      "endTime": "2026-10-23T08:41:34.604Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Quantum computing achieves new milestone in error correction.",
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Quantum computing achieves new milestone in error correction.",
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "- Quantum computing uses quantum bits, or qubits, which can represent multiple states through superposition and entanglement.\n- It promises major speedups for certain problems like factoring, optimization, and quantum simulation, though practical applications are still limited.\n- A key challenge is error correction, because qubits are fragile and highly sensitive to noise and decoherence."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "- Quantum computing uses quantum bits, or qubits, which can exist in superposition and enable new kinds of computation.\n- A major challenge is error correction, since qubits are fragile and easily disturbed by noise.\n- Recent progress suggests quantum error correction is improving, which is a key step toward practical large-scale quantum computers."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "d3307b3175f40b6a",
+      "uuid": "960160fc74f39d48",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "c09d736b116ffec5",
-      "startTime": "2026-10-21T17:48:35.555Z",
-      "endTime": "2026-10-21T17:48:35.555Z",
+      "parentUuid": "d022077684f3b031",
+      "startTime": "2026-10-23T08:41:34.604Z",
+      "endTime": "2026-10-23T08:41:34.604Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Quantum computing achieves new milestone in error correction.",
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "- Quantum computing uses quantum bits, or qubits, which can represent multiple states through superposition and entanglement.\n- It promises major speedups for certain problems like factoring, optimization, and quantum simulation, though practical applications are still limited.\n- A key challenge is error correction, because qubits are fragile and highly sensitive to noise and decoherence."
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Quantum computing achieves new milestone in error correction.",
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "- Quantum computing uses quantum bits, or qubits, which can exist in superposition and enable new kinds of computation.\n- A major challenge is error correction, since qubits are fragile and easily disturbed by noise.\n- Recent progress suggests quantum error correction is improving, which is a key step toward practical large-scale quantum computers."
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
@@ -143,62 +127,56 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "2be7887477478172",
+      "uuid": "300c7942334e633e",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "37e277b2d58a5dc4",
-      "startTime": "2026-10-21T17:48:34.082Z",
-      "endTime": "2026-10-21T17:48:34.085Z",
+      "parentUuid": "eec470cc57c21ead",
+      "startTime": "2026-10-23T08:41:33.319Z",
+      "endTime": "2026-10-23T08:41:33.322Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Quantum computing achieves new milestone in error correction.",
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Quantum computing achieves new milestone in error correction.",
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -214,57 +192,51 @@
       ]
     },
     {
-      "uuid": "38970eacbb9f903c",
+      "uuid": "861baca839b12140",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2be7887477478172",
-      "startTime": "2026-10-21T17:48:34.084Z",
-      "endTime": "2026-10-21T17:48:34.085Z",
+      "parentUuid": "300c7942334e633e",
+      "startTime": "2026-10-23T08:41:33.322Z",
+      "endTime": "2026-10-23T08:41:33.322Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Quantum computing achieves new milestone in error correction.",
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Quantum computing achieves new milestone in error correction.",
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
@@ -272,94 +244,86 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "0badd1d364a29a71",
+      "uuid": "c8ba3a239f21c212",
       "name": "research",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "37e277b2d58a5dc4",
-      "startTime": "2026-10-21T17:48:33.003Z",
-      "endTime": "2026-10-21T17:48:34.082Z",
+      "parentUuid": "eec470cc57c21ead",
+      "startTime": "2026-10-23T08:41:32.413Z",
+      "endTime": "2026-10-23T08:41:33.318Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "7a315ba89fbb6385",
+      "uuid": "d86fa0b909ffd8f1",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "0badd1d364a29a71",
-      "startTime": "2026-10-21T17:48:34.081Z",
-      "endTime": "2026-10-21T17:48:34.082Z",
+      "parentUuid": "c8ba3a239f21c212",
+      "startTime": "2026-10-23T08:41:33.318Z",
+      "endTime": "2026-10-23T08:41:33.318Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
@@ -367,67 +331,61 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "79f9ec1a40cd5b17",
+      "uuid": "1b8d71375ee98866",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "37e277b2d58a5dc4",
-      "startTime": "2026-10-21T17:48:33.001Z",
-      "endTime": "2026-10-21T17:48:33.002Z",
+      "parentUuid": "eec470cc57c21ead",
+      "startTime": "2026-10-23T08:41:32.412Z",
+      "endTime": "2026-10-23T08:41:32.412Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "22e1269126d14439",
+      "uuid": "a76af6a920dfca0c",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "79f9ec1a40cd5b17",
-      "startTime": "2026-10-21T17:48:33.002Z",
-      "endTime": "2026-10-21T17:48:33.002Z",
+      "parentUuid": "1b8d71375ee98866",
+      "startTime": "2026-10-23T08:41:32.412Z",
+      "endTime": "2026-10-23T08:41:32.412Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
@@ -437,82 +395,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "37e277b2d58a5dc4",
+      "uuid": "eec470cc57c21ead",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:33.000Z",
-      "endTime": "2026-10-21T17:48:35.556Z",
+      "startTime": "2026-10-23T08:41:32.411Z",
+      "endTime": "2026-10-23T08:41:34.604Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "research_topic",
+                "arguments": {
+                  "topic": "quantum computing"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "research_topic",
-                  "arguments": {
-                    "topic": "quantum computing"
-                  },
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Quantum computing achieves new milestone in error correction.",
-                  "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "- Quantum computing uses quantum bits, or qubits, which can represent multiple states through superposition and entanglement.\n- It promises major speedups for certain problems like factoring, optimization, and quantum simulation, though practical applications are still limited.\n- A key challenge is error correction, because qubits are fragile and highly sensitive to noise and decoherence."
-                }
-              ]
-            }
-          ]
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Quantum computing achieves new milestone in error correction.",
+                "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "- Quantum computing uses quantum bits, or qubits, which can exist in superposition and enable new kinds of computation.\n- A major challenge is error correction, since qubits are fragile and easily disturbed by noise.\n- Recent progress suggests quantum error correction is improving, which is a key step toward practical large-scale quantum computers."
+              }
+            ]
+          }
         ],
         "intent": "research"
       },
@@ -533,13 +481,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "f721fc97703f265a",
+      "uuid": "bb2caaee26ad1675",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c09d736b116ffec5",
-      "startTime": "2026-10-21T17:48:34.086Z",
-      "endTime": "2026-10-21T17:48:35.553Z",
+      "parentUuid": "d022077684f3b031",
+      "startTime": "2026-10-23T08:41:33.323Z",
+      "endTime": "2026-10-23T08:41:34.603Z",
       "input": [
         {
           "role": "user",
@@ -561,7 +509,7 @@
             "arguments": {
               "topic": "quantum computing"
             },
-            "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
+            "id": "call_GgqPDeK8J90j06US4cLeeRn7"
           }
         },
         {
@@ -569,25 +517,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "Quantum computing achieves new milestone in error correction.",
-            "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
+            "id": "call_GgqPDeK8J90j06US4cLeeRn7"
           }
         }
       ],
-      "output": "- Quantum computing uses quantum bits, or qubits, which can represent multiple states through superposition and entanglement.\n- It promises major speedups for certain problems like factoring, optimization, and quantum simulation, though practical applications are still limited.\n- A key challenge is error correction, because qubits are fragile and highly sensitive to noise and decoherence.",
+      "output": "- Quantum computing uses quantum bits, or qubits, which can exist in superposition and enable new kinds of computation.\n- A major challenge is error correction, since qubits are fragile and easily disturbed by noise.\n- Recent progress suggests quantum error correction is improving, which is a key step toward practical large-scale quantum computers.",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 259.0,
-      "outputTokenCount": 74.0
+      "outputTokenCount": 68.0
     },
     {
-      "uuid": "d21a7bc26108ff0d",
+      "uuid": "80f013e4e987b38e",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0badd1d364a29a71",
-      "startTime": "2026-10-21T17:48:33.003Z",
-      "endTime": "2026-10-21T17:48:34.081Z",
+      "parentUuid": "c8ba3a239f21c212",
+      "startTime": "2026-10-23T08:41:32.413Z",
+      "endTime": "2026-10-23T08:41:33.316Z",
       "input": [
         {
           "role": "user",
@@ -607,7 +555,7 @@
             "arguments": {
               "topic": "quantum computing"
             },
-            "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
+            "id": "call_GgqPDeK8J90j06US4cLeeRn7"
           }
         }
       ],
@@ -630,13 +578,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "3907d3f23a15f9e2",
+      "uuid": "20940be1c913491e",
       "name": "research_topic",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "2be7887477478172",
-      "startTime": "2026-10-21T17:48:34.083Z",
-      "endTime": "2026-10-21T17:48:34.084Z",
+      "parentUuid": "300c7942334e633e",
+      "startTime": "2026-10-23T08:41:33.320Z",
+      "endTime": "2026-10-23T08:41:33.321Z",
       "input": {
         "topic": "quantum computing"
       },
@@ -644,8 +592,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:33.000Z",
-  "endTime": "2026-10-21T17:48:35.556Z",
+  "startTime": "2026-10-23T08:41:32.411Z",
+  "endTime": "2026-10-23T08:41:34.604Z",
   "name": "langgraph-conditional-research",
   "metadata": {
     "test_type": "conditional_research"
@@ -658,74 +606,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the research tool exactly once to research: quantum computing. Do not ask clarification questions. After the tool returns, respond with a short 3-bullet summary and stop."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "research_topic",
+            "arguments": {
+              "topic": "quantum computing"
             },
-            {
-              "type": "tool_call",
-              "name": "research_topic",
-              "arguments": {
-                "topic": "quantum computing"
-              },
-              "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Quantum computing achieves new milestone in error correction.",
-              "id": "call_VVxOWjnd0gTuarHsqQjBkzJY"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "- Quantum computing uses quantum bits, or qubits, which can represent multiple states through superposition and entanglement.\n- It promises major speedups for certain problems like factoring, optimization, and quantum simulation, though practical applications are still limited.\n- A key challenge is error correction, because qubits are fragile and highly sensitive to noise and decoherence."
-            }
-          ]
-        }
-      ]
+            "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Quantum computing achieves new milestone in error correction.",
+            "id": "call_GgqPDeK8J90j06US4cLeeRn7"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "- Quantum computing uses quantum bits, or qubits, which can exist in superposition and enable new kinds of computation.\n- A major challenge is error correction, since qubits are fragile and easily disturbed by noise.\n- Recent progress suggests quantum error correction is improving, which is a key step toward practical large-scale quantum computers."
+          }
+        ]
+      }
     ],
     "intent": "research"
   },

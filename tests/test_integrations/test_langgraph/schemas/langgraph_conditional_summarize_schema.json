@@ -1,141 +1,125 @@
 {
-  "uuid": "eac9a79766bb041a2fa3200af4567206",
+  "uuid": "908c1fb9628d09fab2da0f9d4604d7e1",
   "baseSpans": [
     {
-      "uuid": "94f643e88b9193f4",
+      "uuid": "ac812542a6f985b8",
       "name": "summarize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "882ed59f2e5a2916",
-      "startTime": "2026-10-21T17:48:36.534Z",
-      "endTime": "2026-10-21T17:48:37.661Z",
+      "parentUuid": "280b684af9ab8bb0",
+      "startTime": "2026-10-23T08:41:34.406Z",
+      "endTime": "2026-10-23T08:41:38.632Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summary: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Artificial intelligence is changing industries around the world."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "1fc14c6511358c92",
+      "uuid": "1c695596de3b9a7b",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "94f643e88b9193f4",
-      "startTime": "2026-10-21T17:48:37.660Z",
-      "endTime": "2026-10-21T17:48:37.661Z",
+      "parentUuid": "ac812542a6f985b8",
+      "startTime": "2026-10-23T08:41:38.631Z",
+      "endTime": "2026-10-23T08:41:38.631Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summary: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Artificial intelligence is changing industries around the world."
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
@@ -143,62 +127,56 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "0de29304736a39ab",
+      "uuid": "acdc29dd6a65f46f",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "882ed59f2e5a2916",
-      "startTime": "2026-10-21T17:48:36.530Z",
-      "endTime": "2026-10-21T17:48:36.533Z",
+      "parentUuid": "280b684af9ab8bb0",
+      "startTime": "2026-10-23T08:41:34.404Z",
+      "endTime": "2026-10-23T08:41:34.406Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -214,57 +192,51 @@
       ]
     },
     {
-      "uuid": "f60e9d4e23e8fa94",
+      "uuid": "3b4b7f2b57c4756d",
       "name": "route_after_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "0de29304736a39ab",
-      "startTime": "2026-10-21T17:48:36.533Z",
-      "endTime": "2026-10-21T17:48:36.533Z",
+      "parentUuid": "acdc29dd6a65f46f",
+      "startTime": "2026-10-23T08:41:34.406Z",
+      "endTime": "2026-10-23T08:41:34.406Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
@@ -272,94 +244,86 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "a68e450c50a863e3",
+      "uuid": "7b5b8440f16384f7",
       "name": "summarize",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "882ed59f2e5a2916",
-      "startTime": "2026-10-21T17:48:35.374Z",
-      "endTime": "2026-10-21T17:48:36.529Z",
+      "parentUuid": "280b684af9ab8bb0",
+      "startTime": "2026-10-23T08:41:32.884Z",
+      "endTime": "2026-10-23T08:41:34.404Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "25d7b4f85db2f778",
+      "uuid": "8e08a7eb74913e52",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a68e450c50a863e3",
-      "startTime": "2026-10-21T17:48:36.528Z",
-      "endTime": "2026-10-21T17:48:36.529Z",
+      "parentUuid": "7b5b8440f16384f7",
+      "startTime": "2026-10-23T08:41:34.404Z",
+      "endTime": "2026-10-23T08:41:34.404Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
@@ -367,67 +331,61 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "8a5d7d65a740000a",
+      "uuid": "786dd4c85d759d00",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "882ed59f2e5a2916",
-      "startTime": "2026-10-21T17:48:35.373Z",
-      "endTime": "2026-10-21T17:48:35.374Z",
+      "parentUuid": "280b684af9ab8bb0",
+      "startTime": "2026-10-23T08:41:32.883Z",
+      "endTime": "2026-10-23T08:41:32.884Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "a1007df2f730d1f0",
+      "uuid": "d739b738b70ebabc",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8a5d7d65a740000a",
-      "startTime": "2026-10-21T17:48:35.373Z",
-      "endTime": "2026-10-21T17:48:35.374Z",
+      "parentUuid": "786dd4c85d759d00",
+      "startTime": "2026-10-23T08:41:32.884Z",
+      "endTime": "2026-10-23T08:41:32.884Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
@@ -437,82 +395,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "882ed59f2e5a2916",
+      "uuid": "280b684af9ab8bb0",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:35.371Z",
-      "endTime": "2026-10-21T17:48:37.661Z",
+      "startTime": "2026-10-23T08:41:32.883Z",
+      "endTime": "2026-10-23T08:41:38.632Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "summarize_text",
+                "arguments": {
+                  "text": "Artificial intelligence is transforming industries worldwide."
                 },
-                {
-                  "type": "tool_call",
-                  "name": "summarize_text",
-                  "arguments": {
-                    "text": "Artificial intelligence is transforming industries worldwide."
-                  },
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-                  "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Summary: Artificial intelligence is transforming industries worldwide."
-                }
-              ]
-            }
-          ]
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+                "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Artificial intelligence is changing industries around the world."
+              }
+            ]
+          }
         ],
         "intent": "summarize"
       },
@@ -533,13 +481,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "fe54103bb5f2fdc5",
+      "uuid": "72a80c3d85656ddb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "94f643e88b9193f4",
-      "startTime": "2026-10-21T17:48:36.534Z",
-      "endTime": "2026-10-21T17:48:37.660Z",
+      "parentUuid": "ac812542a6f985b8",
+      "startTime": "2026-10-23T08:41:34.406Z",
+      "endTime": "2026-10-23T08:41:38.631Z",
       "input": [
         {
           "role": "user",
@@ -561,7 +509,7 @@
             "arguments": {
               "text": "Artificial intelligence is transforming industries worldwide."
             },
-            "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
+            "id": "call_5BVIg5eytvFqclD2Hus6oULe"
           }
         },
         {
@@ -569,11 +517,11 @@
           "content": {
             "type": "tool_call_response",
             "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-            "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
+            "id": "call_5BVIg5eytvFqclD2Hus6oULe"
           }
         }
       ],
-      "output": "Summary: Artificial intelligence is transforming industries worldwide.",
+      "output": "Artificial intelligence is changing industries around the world.",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
@@ -581,13 +529,13 @@
       "outputTokenCount": 12.0
     },
     {
-      "uuid": "7e0443437a81faae",
+      "uuid": "d86df1bc7950a2b0",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a68e450c50a863e3",
-      "startTime": "2026-10-21T17:48:35.375Z",
-      "endTime": "2026-10-21T17:48:36.527Z",
+      "parentUuid": "7b5b8440f16384f7",
+      "startTime": "2026-10-23T08:41:32.885Z",
+      "endTime": "2026-10-23T08:41:34.403Z",
       "input": [
         {
           "role": "user",
@@ -607,7 +555,7 @@
             "arguments": {
               "text": "Artificial intelligence is transforming industries worldwide."
             },
-            "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
+            "id": "call_5BVIg5eytvFqclD2Hus6oULe"
           }
         }
       ],
@@ -630,13 +578,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "5c1a3969df5571ec",
+      "uuid": "43fc8c5d4695b916",
       "name": "summarize_text",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "0de29304736a39ab",
-      "startTime": "2026-10-21T17:48:36.531Z",
-      "endTime": "2026-10-21T17:48:36.532Z",
+      "parentUuid": "acdc29dd6a65f46f",
+      "startTime": "2026-10-23T08:41:34.405Z",
+      "endTime": "2026-10-23T08:41:34.405Z",
       "input": {
         "text": "Artificial intelligence is transforming industries worldwide."
       },
@@ -644,8 +592,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:35.371Z",
-  "endTime": "2026-10-21T17:48:37.661Z",
+  "startTime": "2026-10-23T08:41:32.883Z",
+  "endTime": "2026-10-23T08:41:38.632Z",
   "name": "langgraph-conditional-summarize",
   "tags": [
     "langgraph",
@@ -655,74 +603,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Summarize this: Artificial intelligence is transforming industries worldwide."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "summarize_text",
+            "arguments": {
+              "text": "Artificial intelligence is transforming industries worldwide."
             },
-            {
-              "type": "tool_call",
-              "name": "summarize_text",
-              "arguments": {
-                "text": "Artificial intelligence is transforming industries worldwide."
-              },
-              "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Summary: Artificial intelligence is transforming industries worldwide.",
-              "id": "call_i5Oq6UfwILHl0wFQrsDKASks"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Summary: Artificial intelligence is transforming industries worldwide."
-            }
-          ]
-        }
-      ]
+            "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Summary: Artificial intelligence is transforming industries worldwide.",
+            "id": "call_5BVIg5eytvFqclD2Hus6oULe"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Artificial intelligence is changing industries around the world."
+          }
+        ]
+      }
     ],
     "intent": "summarize"
   },

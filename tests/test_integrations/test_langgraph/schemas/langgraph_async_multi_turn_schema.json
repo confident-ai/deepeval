@@ -1,363 +1,317 @@
 {
-  "uuid": "aa68a5f7c5f6f06cb3ae53de9293d507",
+  "uuid": "40e053d0ca8393f58fdd2435a6f3ce79",
   "baseSpans": [
     {
-      "uuid": "9919f94227728084",
+      "uuid": "7c8d0f39a0daeed0",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b20bea8db62d3334",
-      "startTime": "2026-10-21T17:48:33.881Z",
-      "endTime": "2026-10-21T17:48:34.944Z",
+      "parentUuid": "124dce08e918efdd",
+      "startTime": "2026-10-23T08:41:20.657Z",
+      "endTime": "2026-10-23T08:41:21.685Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Free shipping applied",
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Free shipping applied",
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon applied: FREESHIP. Free shipping is now on your order."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon applied: FREESHIP. Free shipping is now active."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "43918c96647152f1",
+      "uuid": "bc1b2375cb901282",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "9919f94227728084",
-      "startTime": "2026-10-21T17:48:34.943Z",
-      "endTime": "2026-10-21T17:48:34.944Z",
+      "parentUuid": "7c8d0f39a0daeed0",
+      "startTime": "2026-10-23T08:41:21.685Z",
+      "endTime": "2026-10-23T08:41:21.685Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Free shipping applied",
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon applied: FREESHIP. Free shipping is now on your order."
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Free shipping applied",
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon applied: FREESHIP. Free shipping is now active."
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "f28a8a0d871b52c5",
+      "uuid": "69d5bf7306d4fb3f",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b20bea8db62d3334",
-      "startTime": "2026-10-21T17:48:33.878Z",
-      "endTime": "2026-10-21T17:48:33.880Z",
+      "parentUuid": "124dce08e918efdd",
+      "startTime": "2026-10-23T08:41:20.656Z",
+      "endTime": "2026-10-23T08:41:20.656Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Free shipping applied",
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Free shipping applied",
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -373,201 +327,177 @@
       ]
     },
     {
-      "uuid": "48d9578252a126c6",
+      "uuid": "26caa6d083304627",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "b20bea8db62d3334",
-      "startTime": "2026-10-21T17:48:32.388Z",
-      "endTime": "2026-10-21T17:48:33.877Z",
+      "parentUuid": "124dce08e918efdd",
+      "startTime": "2026-10-23T08:41:19.806Z",
+      "endTime": "2026-10-23T08:41:20.655Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ]
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "fe49cc0331554bd1",
+      "uuid": "ec0ee8f96de52de3",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "48d9578252a126c6",
-      "startTime": "2026-10-21T17:48:33.876Z",
-      "endTime": "2026-10-21T17:48:33.876Z",
+      "parentUuid": "26caa6d083304627",
+      "startTime": "2026-10-23T08:41:20.655Z",
+      "endTime": "2026-10-23T08:41:20.655Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -576,136 +506,118 @@
   ],
   "agentSpans": [
     {
-      "uuid": "b20bea8db62d3334",
+      "uuid": "124dce08e918efdd",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:32.384Z",
-      "endTime": "2026-10-21T17:48:34.946Z",
+      "startTime": "2026-10-23T08:41:19.804Z",
+      "endTime": "2026-10-23T08:41:21.686Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 5 apples to cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 5 apples to cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "apples",
+                  "quantity": 5
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "apples",
-                    "quantity": 5
-                  },
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 5x apples to cart",
-                  "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 5 apples to your cart."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Apply FREESHIP coupon"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 5x apples to cart",
+                "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 5 apples to your cart."
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Apply FREESHIP coupon"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "apply_coupon",
+                "arguments": {
+                  "code": "FREESHIP"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "apply_coupon",
-                  "arguments": {
-                    "code": "FREESHIP"
-                  },
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Free shipping applied",
-                  "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Coupon applied: FREESHIP. Free shipping is now on your order."
-                }
-              ]
-            }
-          ]
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Free shipping applied",
+                "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Coupon applied: FREESHIP. Free shipping is now active."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -725,13 +637,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "eeeb9e5a07fb5d1d",
+      "uuid": "0e63789362052087",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9919f94227728084",
-      "startTime": "2026-10-21T17:48:33.882Z",
-      "endTime": "2026-10-21T17:48:34.942Z",
+      "parentUuid": "7c8d0f39a0daeed0",
+      "startTime": "2026-10-23T08:41:20.657Z",
+      "endTime": "2026-10-23T08:41:21.684Z",
       "input": [
         {
           "role": "user",
@@ -754,7 +666,7 @@
               "item": "apples",
               "quantity": 5
             },
-            "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
           }
         },
         {
@@ -762,7 +674,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Added 5x apples to cart",
-            "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
           }
         },
         {
@@ -785,7 +697,7 @@
             "arguments": {
               "code": "FREESHIP"
             },
-            "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
+            "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
           }
         },
         {
@@ -793,25 +705,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "Free shipping applied",
-            "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
+            "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
           }
         }
       ],
-      "output": "Coupon applied: FREESHIP. Free shipping is now on your order.",
+      "output": "Coupon applied: FREESHIP. Free shipping is now active.",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 350.0,
-      "outputTokenCount": 18.0
+      "outputTokenCount": 16.0
     },
     {
-      "uuid": "d627177011da1643",
+      "uuid": "9f4308c2449660b4",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "48d9578252a126c6",
-      "startTime": "2026-10-21T17:48:32.389Z",
-      "endTime": "2026-10-21T17:48:33.875Z",
+      "parentUuid": "26caa6d083304627",
+      "startTime": "2026-10-23T08:41:19.806Z",
+      "endTime": "2026-10-23T08:41:20.654Z",
       "input": [
         {
           "role": "user",
@@ -834,7 +746,7 @@
               "item": "apples",
               "quantity": 5
             },
-            "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
           }
         },
         {
@@ -842,7 +754,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Added 5x apples to cart",
-            "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
           }
         },
         {
@@ -863,7 +775,7 @@
             "arguments": {
               "code": "FREESHIP"
             },
-            "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
+            "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
           }
         }
       ],
@@ -886,13 +798,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "5b7b02643125ddb1",
+      "uuid": "48373f2a601bb8f0",
       "name": "apply_coupon",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "f28a8a0d871b52c5",
-      "startTime": "2026-10-21T17:48:33.879Z",
-      "endTime": "2026-10-21T17:48:33.879Z",
+      "parentUuid": "69d5bf7306d4fb3f",
+      "startTime": "2026-10-23T08:41:20.656Z",
+      "endTime": "2026-10-23T08:41:20.656Z",
       "input": {
         "code": "FREESHIP"
       },
@@ -900,8 +812,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:32.384Z",
-  "endTime": "2026-10-21T17:48:34.946Z",
+  "startTime": "2026-10-23T08:41:19.804Z",
+  "endTime": "2026-10-23T08:41:21.686Z",
   "name": "langgraph-async-multi-2",
   "tags": [
     "langgraph",
@@ -912,128 +824,110 @@
   "threadId": "async-shopping-001",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Apply FREESHIP coupon"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Apply FREESHIP coupon"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Add 5 apples to cart"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Add 5 apples to cart"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "add_to_cart",
+            "arguments": {
+              "item": "apples",
+              "quantity": 5
             },
-            {
-              "type": "tool_call",
-              "name": "add_to_cart",
-              "arguments": {
-                "item": "apples",
-                "quantity": 5
-              },
-              "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Added 5x apples to cart",
-              "id": "call_ucQxOG2dzd4FCR41Uz3JJGXd"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Done \u2014 I added 5 apples to your cart."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Apply FREESHIP coupon"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Added 5x apples to cart",
+            "id": "call_ZFBdP3MDip5lfHLWpj7uLiqM"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Done \u2014 I added 5 apples to your cart."
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Apply FREESHIP coupon"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "apply_coupon",
+            "arguments": {
+              "code": "FREESHIP"
             },
-            {
-              "type": "tool_call",
-              "name": "apply_coupon",
-              "arguments": {
-                "code": "FREESHIP"
-              },
-              "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Free shipping applied",
-              "id": "call_k4kS1vnT3EyJqVnME6hwdDiT"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Coupon applied: FREESHIP. Free shipping is now on your order."
-            }
-          ]
-        }
-      ]
+            "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Free shipping applied",
+            "id": "call_xXFMyGjK4zZnf1Xg0M4kXoZr"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Coupon applied: FREESHIP. Free shipping is now active."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

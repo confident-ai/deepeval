@@ -1,204 +1,182 @@
 {
-  "uuid": "82bd08413c49c0306f735984bfebbf8f",
+  "uuid": "024a82c88f655620fb5fc8d2f87be889",
   "baseSpans": [
     {
-      "uuid": "4b248a2ebd606c88",
+      "uuid": "359bd36c633c562e",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a95e61d13f324cb1",
-      "startTime": "2026-10-21T17:48:45.340Z",
-      "endTime": "2026-10-21T17:48:46.452Z",
+      "parentUuid": "2f1431025b591bfe",
+      "startTime": "2026-10-23T08:41:45.567Z",
+      "endTime": "2026-10-23T08:41:46.822Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 3x oranges to cart",
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 3x oranges to cart",
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 3 oranges to your cart."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 3 oranges to your cart."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "8fddc7270acc3534",
+      "uuid": "7fc607e81a2c179a",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4b248a2ebd606c88",
-      "startTime": "2026-10-21T17:48:46.452Z",
-      "endTime": "2026-10-21T17:48:46.452Z",
+      "parentUuid": "359bd36c633c562e",
+      "startTime": "2026-10-23T08:41:46.822Z",
+      "endTime": "2026-10-23T08:41:46.822Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 3x oranges to cart",
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 3 oranges to your cart."
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 3x oranges to cart",
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 3 oranges to your cart."
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "467dcb566dddeded",
+      "uuid": "9ef4621ff5635709",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a95e61d13f324cb1",
-      "startTime": "2026-10-21T17:48:45.336Z",
-      "endTime": "2026-10-21T17:48:45.339Z",
+      "parentUuid": "2f1431025b591bfe",
+      "startTime": "2026-10-23T08:41:45.564Z",
+      "endTime": "2026-10-23T08:41:45.566Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 3x oranges to cart",
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 3x oranges to cart",
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -215,95 +193,87 @@
       ]
     },
     {
-      "uuid": "faac85bcf8f6e9c8",
+      "uuid": "734c8b27dcd8a1fd",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "a95e61d13f324cb1",
-      "startTime": "2026-10-21T17:48:44.200Z",
-      "endTime": "2026-10-21T17:48:45.335Z",
+      "parentUuid": "2f1431025b591bfe",
+      "startTime": "2026-10-23T08:41:44.433Z",
+      "endTime": "2026-10-23T08:41:45.562Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "a6ad71abeec36a8e",
+      "uuid": "a1e7e0f4e63dda49",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "faac85bcf8f6e9c8",
-      "startTime": "2026-10-21T17:48:45.335Z",
-      "endTime": "2026-10-21T17:48:45.335Z",
+      "parentUuid": "734c8b27dcd8a1fd",
+      "startTime": "2026-10-23T08:41:45.561Z",
+      "endTime": "2026-10-23T08:41:45.562Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -312,83 +282,73 @@
   ],
   "agentSpans": [
     {
-      "uuid": "a95e61d13f324cb1",
+      "uuid": "2f1431025b591bfe",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:44.199Z",
-      "endTime": "2026-10-21T17:48:46.453Z",
+      "startTime": "2026-10-23T08:41:44.432Z",
+      "endTime": "2026-10-23T08:41:46.823Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Add 3 oranges to my cart"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Add 3 oranges to my cart"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "add_to_cart",
+                "arguments": {
+                  "item": "oranges",
+                  "quantity": 3
                 },
-                {
-                  "type": "tool_call",
-                  "name": "add_to_cart",
-                  "arguments": {
-                    "item": "oranges",
-                    "quantity": 3
-                  },
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "Added 3x oranges to cart",
-                  "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Done \u2014 I added 3 oranges to your cart."
-                }
-              ]
-            }
-          ]
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "Added 3x oranges to cart",
+                "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Done \u2014 I added 3 oranges to your cart."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -409,13 +369,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "f5052ba03d7d177f",
+      "uuid": "8b78dfff989692d2",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "4b248a2ebd606c88",
-      "startTime": "2026-10-21T17:48:45.341Z",
-      "endTime": "2026-10-21T17:48:46.451Z",
+      "parentUuid": "359bd36c633c562e",
+      "startTime": "2026-10-23T08:41:45.568Z",
+      "endTime": "2026-10-23T08:41:46.822Z",
       "input": [
         {
           "role": "user",
@@ -438,7 +398,7 @@
               "item": "oranges",
               "quantity": 3
             },
-            "id": "call_JJwSL92eW41y3btX8GJemwFJ"
+            "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
           }
         },
         {
@@ -446,7 +406,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "Added 3x oranges to cart",
-            "id": "call_JJwSL92eW41y3btX8GJemwFJ"
+            "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
           }
         }
       ],
@@ -458,13 +418,13 @@
       "outputTokenCount": 14.0
     },
     {
-      "uuid": "437a8c437a9de11b",
+      "uuid": "94cd253ec20f70f3",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "faac85bcf8f6e9c8",
-      "startTime": "2026-10-21T17:48:44.200Z",
-      "endTime": "2026-10-21T17:48:45.334Z",
+      "parentUuid": "734c8b27dcd8a1fd",
+      "startTime": "2026-10-23T08:41:44.433Z",
+      "endTime": "2026-10-23T08:41:45.558Z",
       "input": [
         {
           "role": "user",
@@ -485,7 +445,7 @@
               "item": "oranges",
               "quantity": 3
             },
-            "id": "call_JJwSL92eW41y3btX8GJemwFJ"
+            "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
           }
         }
       ],
@@ -509,13 +469,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "eccced9158c632ca",
+      "uuid": "2d2626e2d4abd0f7",
       "name": "add_to_cart",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "467dcb566dddeded",
-      "startTime": "2026-10-21T17:48:45.338Z",
-      "endTime": "2026-10-21T17:48:45.339Z",
+      "parentUuid": "9ef4621ff5635709",
+      "startTime": "2026-10-23T08:41:45.565Z",
+      "endTime": "2026-10-23T08:41:45.566Z",
       "input": {
         "item": "oranges",
         "quantity": 3
@@ -524,8 +484,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:44.199Z",
-  "endTime": "2026-10-21T17:48:46.453Z",
+  "startTime": "2026-10-23T08:41:44.432Z",
+  "endTime": "2026-10-23T08:41:46.823Z",
   "name": "langgraph-stateless",
   "tags": [
     "langgraph",
@@ -534,75 +494,65 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Add 3 oranges to my cart"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Add 3 oranges to my cart"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Add 3 oranges to my cart"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Add 3 oranges to my cart"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "add_to_cart",
+            "arguments": {
+              "item": "oranges",
+              "quantity": 3
             },
-            {
-              "type": "tool_call",
-              "name": "add_to_cart",
-              "arguments": {
-                "item": "oranges",
-                "quantity": 3
-              },
-              "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "Added 3x oranges to cart",
-              "id": "call_JJwSL92eW41y3btX8GJemwFJ"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Done \u2014 I added 3 oranges to your cart."
-            }
-          ]
-        }
-      ]
+            "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "Added 3x oranges to cart",
+            "id": "call_u5NkG2RILK5uV6Uj7z3g4Qur"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Done \u2014 I added 3 oranges to your cart."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

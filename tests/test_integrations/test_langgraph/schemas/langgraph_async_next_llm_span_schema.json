@@ -1,201 +1,179 @@
 {
-  "uuid": "f2702a4800283956b906906196bc7ca6",
+  "uuid": "0cabe218fb228fa27c71115c1864d8c2",
   "baseSpans": [
     {
-      "uuid": "bde1ab9ed34b76ac",
+      "uuid": "55d903ee8745d757",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8551886ee9fd9ca3",
-      "startTime": "2026-10-21T17:48:36.178Z",
-      "endTime": "2026-10-21T17:48:37.117Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:18.471Z",
+      "endTime": "2026-10-23T08:41:19.266Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "81"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "943b5a96680d24b4",
+      "uuid": "dadbd58c8000a6bd",
       "name": "_should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "bde1ab9ed34b76ac",
-      "startTime": "2026-10-21T17:48:37.116Z",
-      "endTime": "2026-10-21T17:48:37.117Z",
+      "parentUuid": "55d903ee8745d757",
+      "startTime": "2026-10-23T08:41:19.266Z",
+      "endTime": "2026-10-23T08:41:19.266Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "81"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "2570ae49081bce87",
+      "uuid": "b0ba683e60ba4bc0",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8551886ee9fd9ca3",
-      "startTime": "2026-10-21T17:48:36.175Z",
-      "endTime": "2026-10-21T17:48:36.177Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:18.469Z",
+      "endTime": "2026-10-23T08:41:18.471Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -211,93 +189,85 @@
       ]
     },
     {
-      "uuid": "455c88df6939180d",
+      "uuid": "c7b7ce29be556df8",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "8551886ee9fd9ca3",
-      "startTime": "2026-10-21T17:48:34.960Z",
-      "endTime": "2026-10-21T17:48:36.174Z",
+      "parentUuid": "e15e1a9ddb71b5a5",
+      "startTime": "2026-10-23T08:41:17.342Z",
+      "endTime": "2026-10-23T08:41:18.468Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "6d42359b04e2770e",
+      "uuid": "8e59663b57702292",
       "name": "_should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "455c88df6939180d",
-      "startTime": "2026-10-21T17:48:36.173Z",
-      "endTime": "2026-10-21T17:48:36.174Z",
+      "parentUuid": "c7b7ce29be556df8",
+      "startTime": "2026-10-23T08:41:18.467Z",
+      "endTime": "2026-10-23T08:41:18.468Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -306,82 +276,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "8551886ee9fd9ca3",
+      "uuid": "e15e1a9ddb71b5a5",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:34.958Z",
-      "endTime": "2026-10-21T17:48:37.119Z",
+      "startTime": "2026-10-23T08:41:17.340Z",
+      "endTime": "2026-10-23T08:41:19.267Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 9 squared? Call the tool and reply with just the number."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "What is 9 squared? Call the tool and reply with just the number."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "square",
+                "arguments": {
+                  "n": 9
                 },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 9
-                  },
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "81",
-                  "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "81"
-                }
-              ]
-            }
-          ]
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "81",
+                "id": "call_InbqCErkiEs6b75Lolx5phrI"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "81"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -401,13 +361,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "85447ffeddd22b85",
+      "uuid": "42b9fc7b27d37703",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "bde1ab9ed34b76ac",
-      "startTime": "2026-10-21T17:48:36.178Z",
-      "endTime": "2026-10-21T17:48:37.115Z",
+      "parentUuid": "55d903ee8745d757",
+      "startTime": "2026-10-23T08:41:18.472Z",
+      "endTime": "2026-10-23T08:41:19.265Z",
       "input": [
         {
           "role": "user",
@@ -425,7 +385,7 @@
             "arguments": {
               "n": 9
             },
-            "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
           }
         },
         {
@@ -433,7 +393,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "81",
-            "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
           }
         }
       ],
@@ -445,13 +405,13 @@
       "outputTokenCount": 4.0
     },
     {
-      "uuid": "de3fd281af9b73a5",
+      "uuid": "789017acc2fe781d",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "455c88df6939180d",
-      "startTime": "2026-10-21T17:48:34.961Z",
-      "endTime": "2026-10-21T17:48:36.172Z",
+      "parentUuid": "c7b7ce29be556df8",
+      "startTime": "2026-10-23T08:41:17.343Z",
+      "endTime": "2026-10-23T08:41:18.465Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "async_next_llm_only"
@@ -471,7 +431,7 @@
             "arguments": {
               "n": 9
             },
-            "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
           }
         }
       ],
@@ -495,13 +455,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "e1271267eda20c2d",
+      "uuid": "f08bb313eb261298",
       "name": "square",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "2570ae49081bce87",
-      "startTime": "2026-10-21T17:48:36.176Z",
-      "endTime": "2026-10-21T17:48:36.176Z",
+      "parentUuid": "b0ba683e60ba4bc0",
+      "startTime": "2026-10-23T08:41:18.470Z",
+      "endTime": "2026-10-23T08:41:18.471Z",
       "input": {
         "n": 9
       },
@@ -509,8 +469,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-21T17:48:34.958Z",
-  "endTime": "2026-10-21T17:48:37.119Z",
+  "startTime": "2026-10-23T08:41:17.340Z",
+  "endTime": "2026-10-23T08:41:19.267Z",
   "name": "langgraph-async-next-llm-span",
   "metadata": {
     "test_type": "async_next_llm_span"
@@ -525,74 +485,64 @@
   "userId": "async-test-user",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What is 9 squared? Call the tool and reply with just the number."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "What is 9 squared? Call the tool and reply with just the number."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "What is 9 squared? Call the tool and reply with just the number."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "square",
+            "arguments": {
+              "n": 9
             },
-            {
-              "type": "tool_call",
-              "name": "square",
-              "arguments": {
-                "n": 9
-              },
-              "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "81",
-              "id": "call_5SL3HrHjJCLKCt8VS1Jyarln"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "81"
-            }
-          ]
-        }
-      ]
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "81",
+            "id": "call_InbqCErkiEs6b75Lolx5phrI"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "81"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

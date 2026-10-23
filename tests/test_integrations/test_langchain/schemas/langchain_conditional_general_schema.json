@@ -1,53 +1,47 @@
 {
-  "uuid": "26f895c975aa1dc1b36f5ca48fd49729",
+  "uuid": "636fc24f455298ba580b2ca72ce2d23e",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "359f1af7b9503646",
+      "uuid": "9e841c1e5de45153",
       "name": "general_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:15.295Z",
-      "endTime": "2026-10-21T17:48:16.281Z",
+      "startTime": "2026-10-23T08:40:52.657Z",
+      "endTime": "2026-10-23T08:40:53.576Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Say hello in one short sentence."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Say hello in one short sentence."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Say hello in one short sentence."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello!"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Say hello in one short sentence."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello!"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -57,13 +51,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "c161768c12085a38",
+      "uuid": "d7dc2f9bce12faec",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "359f1af7b9503646",
-      "startTime": "2026-10-21T17:48:15.296Z",
-      "endTime": "2026-10-21T17:48:16.281Z",
+      "parentUuid": "9e841c1e5de45153",
+      "startTime": "2026-10-23T08:40:52.658Z",
+      "endTime": "2026-10-23T08:40:53.575Z",
       "input": [
         {
           "role": "user",
@@ -80,8 +74,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-10-21T17:48:15.295Z",
-  "endTime": "2026-10-21T17:48:16.281Z",
+  "startTime": "2026-10-23T08:40:52.657Z",
+  "endTime": "2026-10-23T08:40:53.576Z",
   "name": "langchain-conditional-general",
   "tags": [
     "langchain",
@@ -91,43 +85,37 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Say hello in one short sentence."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Say hello in one short sentence."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Hello!"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Say hello in one short sentence."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello!"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS"

@@ -1,84 +1,74 @@
 {
-  "uuid": "0e42e8842eeabeb9e087f760b20c3596",
+  "uuid": "fa76b6345746477b8f3d6107305eb086",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "aa1cd9e6f52d02fe",
+      "uuid": "415659130cda9d08",
       "name": "parallel_stocks_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:01.189Z",
-      "endTime": "2026-10-21T17:48:03.163Z",
+      "startTime": "2026-10-23T08:38:56.747Z",
+      "endTime": "2026-10-23T08:38:58.807Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "get_stock_price",
+                "arguments": {
+                  "symbol": "AAPL"
                 },
-                {
-                  "type": "tool_call",
-                  "name": "get_stock_price",
-                  "arguments": {
-                    "symbol": "AAPL"
-                  },
-                  "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "$178.50",
-                  "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "AAPL is at **$178.50**."
-                }
-              ]
-            }
-          ]
+                "id": "call_8pEj5ZTfdddrUWJ89dued37K"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "$178.50",
+                "id": "call_8pEj5ZTfdddrUWJ89dued37K"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "AAPL is **$178.50**."
+              }
+            ]
+          }
         ]
       },
       "integration": "LangChain",
@@ -98,13 +88,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "e18743172f350848",
+      "uuid": "d672792b7f2260dc",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "aa1cd9e6f52d02fe",
-      "startTime": "2026-10-21T17:48:02.226Z",
-      "endTime": "2026-10-21T17:48:03.162Z",
+      "parentUuid": "415659130cda9d08",
+      "startTime": "2026-10-23T08:38:57.819Z",
+      "endTime": "2026-10-23T08:38:58.805Z",
       "input": [
         {
           "role": "user",
@@ -122,7 +112,7 @@
             "arguments": {
               "symbol": "AAPL"
             },
-            "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
+            "id": "call_8pEj5ZTfdddrUWJ89dued37K"
           }
         },
         {
@@ -130,25 +120,25 @@
           "content": {
             "type": "tool_call_response",
             "response": "$178.50",
-            "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
+            "id": "call_8pEj5ZTfdddrUWJ89dued37K"
           }
         }
       ],
-      "output": "AAPL is at **$178.50**.",
+      "output": "AAPL is **$178.50**.",
       "integration": "LangChain",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 181.0,
-      "outputTokenCount": 14.0
+      "outputTokenCount": 13.0
     },
     {
-      "uuid": "b47d65411c6b7617",
+      "uuid": "91bf4436c1e7e3bf",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "aa1cd9e6f52d02fe",
-      "startTime": "2026-10-21T17:48:01.190Z",
-      "endTime": "2026-10-21T17:48:02.220Z",
+      "parentUuid": "415659130cda9d08",
+      "startTime": "2026-10-23T08:38:56.748Z",
+      "endTime": "2026-10-23T08:38:57.817Z",
       "input": [
         {
           "role": "user",
@@ -164,7 +154,7 @@
             "arguments": {
               "symbol": "AAPL"
             },
-            "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
+            "id": "call_8pEj5ZTfdddrUWJ89dued37K"
           }
         }
       ],
@@ -187,13 +177,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "79be23cc3df967a4",
+      "uuid": "e5ff9644c233aee3",
       "name": "get_stock_price",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "aa1cd9e6f52d02fe",
-      "startTime": "2026-10-21T17:48:02.224Z",
-      "endTime": "2026-10-21T17:48:02.225Z",
+      "parentUuid": "415659130cda9d08",
+      "startTime": "2026-10-23T08:38:57.818Z",
+      "endTime": "2026-10-23T08:38:57.819Z",
       "input": {
         "symbol": "AAPL"
       },
@@ -201,8 +191,8 @@
       "integration": "LangChain"
     }
   ],
-  "startTime": "2026-10-21T17:48:01.189Z",
-  "endTime": "2026-10-21T17:48:03.163Z",
+  "startTime": "2026-10-23T08:38:56.747Z",
+  "endTime": "2026-10-23T08:38:58.807Z",
   "name": "langchain-async-parallel-stocks",
   "tags": [
     "langchain",
@@ -213,74 +203,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_stock_price tool to get prices for AAPL. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "get_stock_price",
+            "arguments": {
+              "symbol": "AAPL"
             },
-            {
-              "type": "tool_call",
-              "name": "get_stock_price",
-              "arguments": {
-                "symbol": "AAPL"
-              },
-              "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "$178.50",
-              "id": "call_f3zsZ7rKxlUWak2mBaTjbQJx"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "AAPL is at **$178.50**."
-            }
-          ]
-        }
-      ]
+            "id": "call_8pEj5ZTfdddrUWJ89dued37K"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "$178.50",
+            "id": "call_8pEj5ZTfdddrUWJ89dued37K"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "AAPL is **$178.50**."
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

@@ -1,79 +1,71 @@
 {
-  "uuid": "c922f4564493abc35a317a75079c1dce",
+  "uuid": "e17ad1674e982d7e45ae76e0bdbd39e2",
   "baseSpans": [
     {
-      "uuid": "cdc387bb38c1d0d6",
+      "uuid": "260db8f3954274da",
       "name": "general",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "40902ad8027c2d00",
-      "startTime": "2026-10-21T17:48:35.950Z",
-      "endTime": "2026-10-21T17:48:37.117Z",
+      "parentUuid": "9d3cd3a873ab291c",
+      "startTime": "2026-10-23T08:41:36.591Z",
+      "endTime": "2026-10-23T08:41:37.728Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          }
         ],
         "intent": "general"
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "I\u2019m doing well, thanks for asking. How can I help you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello! I\u2019m doing well, thanks for asking. How can I help you today?"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "2b8c899fdc9e6c7e",
+      "uuid": "31e08d681436544d",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "cdc387bb38c1d0d6",
-      "startTime": "2026-10-21T17:48:37.116Z",
-      "endTime": "2026-10-21T17:48:37.116Z",
+      "parentUuid": "260db8f3954274da",
+      "startTime": "2026-10-23T08:41:37.728Z",
+      "endTime": "2026-10-23T08:41:37.728Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "I\u2019m doing well, thanks for asking. How can I help you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello! I\u2019m doing well, thanks for asking. How can I help you today?"
+              }
+            ]
+          }
         ],
         "intent": "general"
       },
@@ -81,67 +73,61 @@
       "integration": "LangGraph"
     },
     {
-      "uuid": "6d5348a608958d95",
+      "uuid": "16a29a3d2f30237c",
       "name": "classifier",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "40902ad8027c2d00",
-      "startTime": "2026-10-21T17:48:35.949Z",
-      "endTime": "2026-10-21T17:48:35.949Z",
+      "parentUuid": "9d3cd3a873ab291c",
+      "startTime": "2026-10-23T08:41:36.590Z",
+      "endTime": "2026-10-23T08:41:36.591Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          }
         ],
         "intent": "general"
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "3c5a7e767d3f4e65",
+      "uuid": "3c9a59c38963cd32",
       "name": "route_by_intent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6d5348a608958d95",
-      "startTime": "2026-10-21T17:48:35.949Z",
-      "endTime": "2026-10-21T17:48:35.949Z",
+      "parentUuid": "16a29a3d2f30237c",
+      "startTime": "2026-10-23T08:41:36.591Z",
+      "endTime": "2026-10-23T08:41:36.591Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          }
         ],
         "intent": "general"
       },
@@ -151,51 +137,45 @@
   ],
   "agentSpans": [
     {
-      "uuid": "40902ad8027c2d00",
+      "uuid": "9d3cd3a873ab291c",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:35.948Z",
-      "endTime": "2026-10-21T17:48:37.118Z",
+      "startTime": "2026-10-23T08:41:36.589Z",
+      "endTime": "2026-10-23T08:41:37.729Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello, how are you today?"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "I\u2019m doing well, thanks for asking. How can I help you today?"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello, how are you today?"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello! I\u2019m doing well, thanks for asking. How can I help you today?"
+              }
+            ]
+          }
         ],
         "intent": "general"
       },
@@ -206,31 +186,31 @@
   ],
   "llmSpans": [
     {
-      "uuid": "82089189a5b288fc",
+      "uuid": "eb2ee999feb4e511",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "cdc387bb38c1d0d6",
-      "startTime": "2026-10-21T17:48:35.950Z",
-      "endTime": "2026-10-21T17:48:37.115Z",
+      "parentUuid": "260db8f3954274da",
+      "startTime": "2026-10-23T08:41:36.591Z",
+      "endTime": "2026-10-23T08:41:37.727Z",
       "input": [
         {
           "role": "user",
           "content": "Hello, how are you today?"
         }
       ],
-      "output": "I\u2019m doing well, thanks for asking. How can I help you today?",
+      "output": "Hello! I\u2019m doing well, thanks for asking. How can I help you today?",
       "integration": "LangGraph",
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 172.0,
-      "outputTokenCount": 19.0
+      "outputTokenCount": 21.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-10-21T17:48:35.948Z",
-  "endTime": "2026-10-21T17:48:37.118Z",
+  "startTime": "2026-10-23T08:41:36.589Z",
+  "endTime": "2026-10-23T08:41:37.729Z",
   "name": "langgraph-conditional-general",
   "tags": [
     "langgraph",
@@ -240,43 +220,37 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Hello, how are you today?"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello, how are you today?"
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Hello, how are you today?"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "I\u2019m doing well, thanks for asking. How can I help you today?"
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello, how are you today?"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello! I\u2019m doing well, thanks for asking. How can I help you today?"
+          }
+        ]
+      }
     ],
     "intent": "general"
   },

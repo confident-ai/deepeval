@@ -1,201 +1,179 @@
 {
-  "uuid": "823c564a579775b2dca2f72753f57bb6",
+  "uuid": "c5e26cd1a0644b343d498ca66d05ce97",
   "baseSpans": [
     {
-      "uuid": "0b8c98c0f50bf551",
+      "uuid": "2b2108a3cab6e953",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6b751c07a9c9c6cf",
-      "startTime": "2026-10-21T17:48:42.765Z",
-      "endTime": "2026-10-21T17:48:43.748Z",
+      "parentUuid": "69dc1cb154f8f4c5",
+      "startTime": "2026-10-23T08:41:52.297Z",
+      "endTime": "2026-10-23T08:41:53.020Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "25.0\u00b0C = 77.0\u00b0F",
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "25.0\u00b0C = 77.0\u00b0F",
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "25\u00b0C = 77\u00b0F"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "25\u00b0C = 77\u00b0F"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "3e5854a0014be339",
+      "uuid": "165b9d86128e1a06",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "0b8c98c0f50bf551",
-      "startTime": "2026-10-21T17:48:43.747Z",
-      "endTime": "2026-10-21T17:48:43.748Z",
+      "parentUuid": "2b2108a3cab6e953",
+      "startTime": "2026-10-23T08:41:53.019Z",
+      "endTime": "2026-10-23T08:41:53.020Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "25.0\u00b0C = 77.0\u00b0F",
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "25\u00b0C = 77\u00b0F"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "25.0\u00b0C = 77.0\u00b0F",
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "25\u00b0C = 77\u00b0F"
+              }
+            ]
+          }
         ]
       },
       "output": "__end__",
       "integration": "LangGraph"
     },
     {
-      "uuid": "f8206227460b3c20",
+      "uuid": "c3d1a1dec62ea1c4",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6b751c07a9c9c6cf",
-      "startTime": "2026-10-21T17:48:42.762Z",
-      "endTime": "2026-10-21T17:48:42.765Z",
+      "parentUuid": "69dc1cb154f8f4c5",
+      "startTime": "2026-10-23T08:41:52.295Z",
+      "endTime": "2026-10-23T08:41:52.296Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "25.0\u00b0C = 77.0\u00b0F",
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ]
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "25.0\u00b0C = 77.0\u00b0F",
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -211,93 +189,85 @@
       ]
     },
     {
-      "uuid": "efee7e5f322676db",
+      "uuid": "16c6836879c7572b",
       "name": "agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "6b751c07a9c9c6cf",
-      "startTime": "2026-10-21T17:48:41.810Z",
-      "endTime": "2026-10-21T17:48:42.762Z",
+      "parentUuid": "69dc1cb154f8f4c5",
+      "startTime": "2026-10-23T08:41:51.257Z",
+      "endTime": "2026-10-23T08:41:52.294Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph"
     },
     {
-      "uuid": "1727dbf689428f85",
+      "uuid": "14573556a158e786",
       "name": "should_continue",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "efee7e5f322676db",
-      "startTime": "2026-10-21T17:48:42.761Z",
-      "endTime": "2026-10-21T17:48:42.761Z",
+      "parentUuid": "16c6836879c7572b",
+      "startTime": "2026-10-23T08:41:52.294Z",
+      "endTime": "2026-10-23T08:41:52.294Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          }
         ]
       },
       "output": "tools",
@@ -306,82 +276,72 @@
   ],
   "agentSpans": [
     {
-      "uuid": "6b751c07a9c9c6cf",
+      "uuid": "69dc1cb154f8f4c5",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:41.809Z",
-      "endTime": "2026-10-21T17:48:43.748Z",
+      "startTime": "2026-10-23T08:41:51.256Z",
+      "endTime": "2026-10-23T08:41:53.021Z",
       "input": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ]
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          }
         ]
       },
       "output": {
         "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
+          {
+            "role": "user",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
+              },
+              {
+                "type": "tool_call",
+                "name": "convert_temperature",
+                "arguments": {
+                  "celsius": 25
                 },
-                {
-                  "type": "tool_call",
-                  "name": "convert_temperature",
-                  "arguments": {
-                    "celsius": 25
-                  },
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "tool",
-              "parts": [
-                {
-                  "type": "tool_call_response",
-                  "response": "25.0\u00b0C = 77.0\u00b0F",
-                  "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "25\u00b0C = 77\u00b0F"
-                }
-              ]
-            }
-          ]
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          },
+          {
+            "role": "tool",
+            "parts": [
+              {
+                "type": "tool_call_response",
+                "response": "25.0\u00b0C = 77.0\u00b0F",
+                "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "25\u00b0C = 77\u00b0F"
+              }
+            ]
+          }
         ]
       },
       "integration": "LangGraph",
@@ -401,13 +361,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "2e3a96ccb6c4e07a",
+      "uuid": "e86b4fbb549a12df",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "0b8c98c0f50bf551",
-      "startTime": "2026-10-21T17:48:42.766Z",
-      "endTime": "2026-10-21T17:48:43.747Z",
+      "parentUuid": "2b2108a3cab6e953",
+      "startTime": "2026-10-23T08:41:52.297Z",
+      "endTime": "2026-10-23T08:41:53.018Z",
       "input": [
         {
           "role": "user",
@@ -425,7 +385,7 @@
             "arguments": {
               "celsius": 25
             },
-            "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
+            "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
           }
         },
         {
@@ -433,7 +393,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "25.0\u00b0C = 77.0\u00b0F",
-            "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
+            "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
           }
         }
       ],
@@ -450,13 +410,13 @@
       "promptCommitHash": "bab04ec"
     },
     {
-      "uuid": "e671e5c76505f30a",
+      "uuid": "665187b0bf998243",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "efee7e5f322676db",
-      "startTime": "2026-10-21T17:48:41.811Z",
-      "endTime": "2026-10-21T17:48:42.760Z",
+      "parentUuid": "16c6836879c7572b",
+      "startTime": "2026-10-23T08:41:51.257Z",
+      "endTime": "2026-10-23T08:41:52.292Z",
       "input": [
         {
           "role": "user",
@@ -472,7 +432,7 @@
             "arguments": {
               "celsius": 25
             },
-            "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
+            "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
           }
         }
       ],
@@ -500,13 +460,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "576a4770d35a64d6",
+      "uuid": "7bdb62b19509b8d2",
       "name": "convert_temperature",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "f8206227460b3c20",
-      "startTime": "2026-10-21T17:48:42.763Z",
-      "endTime": "2026-10-21T17:48:42.764Z",
+      "parentUuid": "c3d1a1dec62ea1c4",
+      "startTime": "2026-10-23T08:41:52.296Z",
+      "endTime": "2026-10-23T08:41:52.296Z",
       "input": {
         "celsius": 25
       },
@@ -515,8 +475,8 @@
       "metricCollection": "tool_performance"
     }
   ],
-  "startTime": "2026-10-21T17:48:41.809Z",
-  "endTime": "2026-10-21T17:48:43.748Z",
+  "startTime": "2026-10-23T08:41:51.256Z",
+  "endTime": "2026-10-23T08:41:53.021Z",
   "name": "langgraph-metric-collection",
   "metadata": {
     "test_type": "metric_collection"
@@ -528,74 +488,64 @@
   "environment": "development",
   "input": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ]
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+          }
+        ]
+      }
     ]
   },
   "output": {
     "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": ""
+      {
+        "role": "user",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the convert_temperature tool to convert 25 degrees Celsius to Fahrenheit. Do not ask clarifying questions."
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
+          },
+          {
+            "type": "tool_call",
+            "name": "convert_temperature",
+            "arguments": {
+              "celsius": 25
             },
-            {
-              "type": "tool_call",
-              "name": "convert_temperature",
-              "arguments": {
-                "celsius": 25
-              },
-              "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "tool",
-          "parts": [
-            {
-              "type": "tool_call_response",
-              "response": "25.0\u00b0C = 77.0\u00b0F",
-              "id": "call_YECdU7JsQ9iJ0ucdKM8XXmKn"
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "25\u00b0C = 77\u00b0F"
-            }
-          ]
-        }
-      ]
+            "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+          }
+        ]
+      },
+      {
+        "role": "tool",
+        "parts": [
+          {
+            "type": "tool_call_response",
+            "response": "25.0\u00b0C = 77.0\u00b0F",
+            "id": "call_nAWBm00nGFOvWcrvJz2t7Ziw"
+          }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "25\u00b0C = 77\u00b0F"
+          }
+        ]
+      }
     ]
   },
   "status": "SUCCESS",

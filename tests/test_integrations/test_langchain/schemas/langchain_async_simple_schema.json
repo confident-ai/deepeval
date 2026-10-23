@@ -1,16 +1,27 @@
 {
-  "uuid": "f566019559417753f2aad44ece281564",
+  "uuid": "4d5fa52dfafcce2cd5df3af38e745ec4",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "11534cc0ce42662b",
+      "uuid": "379d8e0644c263d6",
       "name": "simple_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-21T17:48:01.189Z",
-      "endTime": "2026-10-21T17:48:02.642Z",
+      "startTime": "2026-10-23T08:38:25.850Z",
+      "endTime": "2026-10-23T08:40:28.341Z",
       "input": [
-        [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "type": "text",
+              "content": "Say hello in one short sentence."
+            }
+          ]
+        }
+      ],
+      "output": {
+        "messages": [
           {
             "role": "user",
             "parts": [
@@ -19,33 +30,16 @@
                 "content": "Say hello in one short sentence."
               }
             ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "Hello!"
+              }
+            ]
           }
-        ]
-      ],
-      "output": {
-        "messages": [
-          [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Say hello in one short sentence."
-                }
-              ]
-            }
-          ],
-          [
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "Hello!"
-                }
-              ]
-            }
-          ]
         ]
       },
       "integration": "LangChain",
@@ -55,13 +49,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "5cffec8c5a4ae4fa",
+      "uuid": "67e76d5cda2346d7",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "11534cc0ce42662b",
-      "startTime": "2026-10-21T17:48:01.190Z",
-      "endTime": "2026-10-21T17:48:02.640Z",
+      "parentUuid": "379d8e0644c263d6",
+      "startTime": "2026-10-23T08:38:25.851Z",
+      "endTime": "2026-10-23T08:40:28.335Z",
       "input": [
         {
           "role": "user",
@@ -78,8 +72,8 @@
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-10-21T17:48:01.189Z",
-  "endTime": "2026-10-21T17:48:02.642Z",
+  "startTime": "2026-10-23T08:38:25.850Z",
+  "endTime": "2026-10-23T08:40:28.341Z",
   "name": "langchain-async-simple",
   "metadata": {
     "test_type": "async_simple"
@@ -92,8 +86,9 @@
   "environment": "development",
   "threadId": "async-simple-123",
   "userId": "async-user",
-  "input": [
-    [
+  "input": "Say hello in one short sentence.",
+  "output": {
+    "messages": [
       {
         "role": "user",
         "parts": [
@@ -102,33 +97,16 @@
             "content": "Say hello in one short sentence."
           }
         ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "Hello!"
+          }
+        ]
       }
-    ]
-  ],
-  "output": {
-    "messages": [
-      [
-        {
-          "role": "user",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Say hello in one short sentence."
-            }
-          ]
-        }
-      ],
-      [
-        {
-          "role": "assistant",
-          "parts": [
-            {
-              "type": "text",
-              "content": "Hello!"
-            }
-          ]
-        }
-      ]
     ]
   },
   "status": "SUCCESS"
