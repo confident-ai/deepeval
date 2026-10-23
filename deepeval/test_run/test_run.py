@@ -7,8 +7,6 @@ from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
 from rich.table import Table
 from rich.console import Console
-from rich import print
-
 
 from deepeval.metrics import BaseMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
@@ -921,11 +919,12 @@ class TestRunManager:
             if index < len(test_run.test_cases) - 1:
                 self._add_separator_row(table)
 
-        table.add_row(
-            "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            *[""] * (len(table.columns) - 1),
-        )
-        print(table)
+        if not _has_expectations(test_run):
+            table.add_row(
+                "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+                *[""] * (len(table.columns) - 1),
+            )
+        console.print(table)
 
     def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
         if (
