@@ -17,7 +17,7 @@ export interface AmazonBedrockModelOptions extends ExtraGenerationParams {
   awsAccessKeyId?: string;
   awsSecretAccessKey?: string;
   awsSessionToken?: string;
-  /** Defaults to `0`. Pass `null` to omit it from the request entirely. */
+  /** Omitted from the request unless set, as in Python's `AmazonBedrockModel`. */
   temperature?: number | null;
   costPerInputToken?: number;
   costPerOutputToken?: number;
@@ -56,7 +56,9 @@ export class AmazonBedrockModel extends DeepEvalBaseLLM {
     this.awsSecretAccessKey =
       awsSecretAccessKey ?? process.env.AWS_SECRET_ACCESS_KEY;
     this.awsSessionToken = awsSessionToken ?? process.env.AWS_SESSION_TOKEN;
-    this.temperature = temperature;
+    // Python's AmazonBedrockModel sends no temperature unless asked, and
+    // several Bedrock models (e.g. OpenAI GPT-6) reject the field.
+    this.temperature = temperature ?? null;
     this.costPerInputToken = costPerInputToken;
     this.costPerOutputToken = costPerOutputToken;
     this.extraParams = extraParams;
