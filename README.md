@@ -225,7 +225,7 @@ Let's pretend your LLM application is a customer support AI agent; here's how De
 
 ## Installation
 
-Deepeval works with **Python>=3.9+**.
+Deepeval works with **Python 3.9+**.
 
 ```
 pip install -U deepeval
