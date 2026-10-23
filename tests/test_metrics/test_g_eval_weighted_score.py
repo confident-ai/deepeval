@@ -18,7 +18,8 @@ def _token(token, alternatives):
         token=token,
         logprob=math.log([p for t, p in alternatives if t == token][0]),
         top_logprobs=[
-            SimpleNamespace(token=t, logprob=math.log(p)) for t, p in alternatives
+            SimpleNamespace(token=t, logprob=math.log(p))
+            for t, p in alternatives
         ],
     )
 
