@@ -383,15 +383,16 @@ class Scorer:
         Metrics that calculates the number of correct true answers identified in the prediction.
 
         This method assumes both target and prediction are strings representing lists of integers,
-        formatted like '1,2,3'. It converts these strings to lists of integers, counts how many items
-        in the prediction list are also in the target list, and returns this count as the score.
+        formatted like '1,2,3'. It converts these strings to lists of integers, counts how many
+        distinct items in the prediction list are also in the target list, and returns that count
+        as a percentage of the target list length.
 
         Args:
             target (str): The target string representing the list of correct answers.
             prediction (str): The predicted string from the LLM, representing the guessed answers.
 
         Returns:
-            int: The number of correct answers identified.
+            int: The share of correct answers identified, as a rounded percentage in [0, 100].
         """
         try:
             if not prediction or not target:
@@ -414,7 +415,7 @@ class Scorer:
 
             # Count the number of correct matches
             correct_matches = sum(
-                1 for item in prediction_list if item in target_list
+                1 for item in set(prediction_list) if item in target_list
             )
 
             # Calculate percentage
