@@ -107,7 +107,29 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            result = getattr(tool.result, "structuredContent", None)
+            if isinstance(result, dict) and "result" in result:
+                result = result["result"]
+            elif result is None:
+                content = getattr(tool.result, "content", None)
+                if content:
+                    texts = [
+                        getattr(
+                            c,
+                            "text",
+                            (
+                                c.get("text", str(c))
+                                if isinstance(c, dict)
+                                else str(c)
+                            ),
+                        )
+                        for c in content
+                    ]
+                    result = "\n".join(texts)
+                elif isinstance(tool.result, dict):
+                    result = tool.result.get("result", tool.result)
+                else:
+                    result = str(tool.result)
         else:
             args = tool.input_parameters
             result = tool.output
