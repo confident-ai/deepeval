@@ -1,10 +1,14 @@
 import time
 import asyncio
+import threading
 import pytest
 import tenacity
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate import execute as execute_module
-from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseConversationalMetric, BaseMetric
+from deepeval.test_case import ConversationalTestCase, LLMTestCase, Turn
+from deepeval.test_run.test_run import TestRun, TestRunManager
 from deepeval.evaluate.configs import (
     ErrorConfig,
     DisplayConfig,
@@ -263,3 +267,153 @@ def test_disable_timeouts_disables_per_attempt_sync(settings):
         display_config=display_config,
         cache_config=cache_config,
     )
+
+
+class _Gated:
+    """Scores 1.0 right away. Cases keyed in `missing` raise
+    MissingTestCaseParamsError, and the case keyed "stuck" waits on `gate`
+    like a judge call that outlives the per-task timeout."""
+
+    threshold = 0.5
+
+    def __init__(self, gate: threading.Event, missing=()):
+        self.gate = gate
+        self.missing = missing
+
+    def measure(self, test_case, *_args, **_kwargs):
+        if isinstance(test_case, LLMTestCase):
+            key = test_case.input
+        else:
+            key = test_case.turns[0].content
+        if key in self.missing:
+            raise MissingTestCaseParamsError("missing params")
+        if key == "stuck":
+            self.gate.wait(30)
+        self.score = 1.0
+        self.reason = f"scored {key}"
+        self.verbose_logs = f"logs for {key}"
+        self.success = self.score >= self.threshold
+        return self.score
+
+    async def a_measure(self, test_case, *args, **kwargs):
+        return self.measure(test_case)
+
+    @property
+    def __name__(self):
+        return "gated"
+
+
+class _GatedMetric(_Gated, BaseMetric):
+    pass
+
+
+class _GatedConversationalMetric(_Gated, BaseConversationalMetric):
+    pass
+
+
+@pytest.fixture
+def gate():
+    gate = threading.Event()
+    yield gate
+    # let the abandoned worker thread finish, after the assertions
+    gate.set()
+
+
+def _make_test_run_manager() -> TestRunManager:
+    trm = TestRunManager()
+    trm.save_to_disk = False
+    trm.set_test_run(TestRun(identifier="sync-timeout-metric-state"))
+    return trm
+
+
+def _run_sync_with_stuck_second_case(
+    settings, trm, gate, kind="llm", missing=(), ignore_errors=True
+):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE = None
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 1
+
+    if kind == "llm":
+        test_cases = [
+            LLMTestCase(input=key, actual_output="a")
+            for key in ("first", "stuck")
+        ]
+        metric = _GatedMetric(gate, missing=missing)
+    else:
+        test_cases = [
+            ConversationalTestCase(turns=[Turn(role="user", content=key)])
+            for key in ("first", "stuck")
+        ]
+        metric = _GatedConversationalMetric(gate, missing=missing)
+
+    return execute_module.execute_test_cases(
+        test_cases=test_cases,
+        metrics=[metric],
+        error_config=ErrorConfig(
+            ignore_errors=ignore_errors, skip_on_missing_params=True
+        ),
+        display_config=DisplayConfig(show_indicator=False, verbose_mode=False),
+        cache_config=CacheConfig(write_cache=False, use_cache=False),
+        test_run_manager=trm,
+    )
+
+
+def _recorded_stuck_case(trm, kind="llm"):
+    test_run = trm.get_test_run()
+    if kind == "llm":
+        return test_run.test_cases[-1]
+    return test_run.conversational_test_cases[-1]
+
+
+def _assert_timed_out(metric_data):
+    assert metric_data.error is not None
+    assert "Timed out" in metric_data.error
+    assert metric_data.score is None
+    assert metric_data.success is False
+    assert metric_data.verbose_logs is None
+
+
+@pytest.mark.parametrize("kind", ["llm", "conversational"])
+@pytest.mark.parametrize(
+    "missing", [(), ("first",)], ids=["first_scored", "first_skipped"]
+)
+def test_sync_timeout_does_not_reuse_previous_case_result(
+    settings, gate, kind, missing
+):
+    """
+    The sync executor reuses metric instances across test cases. A case that
+    times out must report the timeout, not the previous case's result.
+    """
+    trm = _make_test_run_manager()
+    results = _run_sync_with_stuck_second_case(
+        settings, trm, gate, kind, missing
+    )
+
+    stuck = results[1]
+    assert stuck.success is False
+    [metric_data] = stuck.metrics_data
+    _assert_timed_out(metric_data)
+
+    recorded = _recorded_stuck_case(trm, kind)
+    assert recorded.success is False
+    [recorded_metric_data] = recorded.metrics_data
+    _assert_timed_out(recorded_metric_data)
+
+
+def test_sync_timeout_records_failure_before_raising(settings, gate):
+    """
+    With ignore_errors=False the timeout raises, but the case is already in
+    the test run that `deepeval test run` reports at the end. It must be
+    recorded as a timeout, not as the previous case's pass.
+    """
+    trm = _make_test_run_manager()
+    with pytest.raises((asyncio.TimeoutError, TimeoutError)):
+        _run_sync_with_stuck_second_case(
+            settings, trm, gate, ignore_errors=False
+        )
+
+    recorded = _recorded_stuck_case(trm)
+    assert recorded.success is False
+    [metric_data] = recorded.metrics_data
+    _assert_timed_out(metric_data)
