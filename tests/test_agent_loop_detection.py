@@ -370,3 +370,139 @@ def test_reordered_stagnation_detected():
 
     # SequenceMatcher should push the similarity above 0.75
     assert metric.score_breakdown["reasoning_stagnation"] < 1.0
+
+
+# ---------------------------------------------------------------------------
+# Test 11: Reordered dict keys in tool arguments are detected as repetition
+# ---------------------------------------------------------------------------
+
+
+def test_reordered_dict_keys_detected_as_repetition():
+    """Tool calls with identical key-value pairs in different insertion orders
+    should produce the same signature and trigger repetition detection."""
+    trace = _make_agent_span(
+        "looping_agent",
+        [
+            _make_tool_span(
+                "get_weather", {"city": "Paris", "unit": "celsius"}
+            ),
+            _make_tool_span(
+                "get_weather", {"unit": "celsius", "city": "Paris"}
+            ),
+            _make_tool_span(
+                "get_weather", {"city": "Paris", "unit": "celsius"}
+            ),
+            _make_tool_span(
+                "get_weather", {"unit": "celsius", "city": "Paris"}
+            ),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        threshold=0.7,
+        repetition_threshold=3,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] <= 0.5
+    assert metric.success is False
+    assert "Tool 'get_weather' called 4 times" in metric.reason
+
+
+# ---------------------------------------------------------------------------
+# Test 12: Nested reordered dict keys in tool arguments are detected
+# ---------------------------------------------------------------------------
+
+
+def test_nested_reordered_dict_keys_detected_as_repetition():
+    """Tool calls with nested dict arguments whose sub-keys are reordered
+    should canonicalize to the same signature."""
+    trace = _make_agent_span(
+        "looping_agent",
+        [
+            _make_tool_span(
+                "search", {"query": "Paris", "meta": {"page": 1, "limit": 10}}
+            ),
+            _make_tool_span(
+                "search", {"meta": {"limit": 10, "page": 1}, "query": "Paris"}
+            ),
+            _make_tool_span(
+                "search", {"query": "Paris", "meta": {"page": 1, "limit": 10}}
+            ),
+            _make_tool_span(
+                "search", {"meta": {"limit": 10, "page": 1}, "query": "Paris"}
+            ),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        threshold=0.7,
+        repetition_threshold=3,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] <= 0.5
+    assert metric.success is False
+    assert "Tool 'search' called 4 times" in metric.reason
+
+
+# ---------------------------------------------------------------------------
+# Test 13: Stringified JSON blobs with reordered keys are detected
+# ---------------------------------------------------------------------------
+
+
+def test_stringified_json_reordered_keys_detected_as_repetition():
+    """Stringified JSON input with reordered keys should be parsed and canonicalized."""
+    trace = _make_agent_span(
+        "looping_agent",
+        [
+            _make_tool_span(
+                "execute", '{"action": "click", "target": "button"}'
+            ),
+            _make_tool_span(
+                "execute", '{"target": "button", "action": "click"}'
+            ),
+            _make_tool_span(
+                "execute", '{"action": "click", "target": "button"}'
+            ),
+            _make_tool_span(
+                "execute", '{"target": "button", "action": "click"}'
+            ),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        threshold=0.7,
+        repetition_threshold=3,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] <= 0.5
+    assert metric.success is False
+
+
+# ---------------------------------------------------------------------------
+# Test 14: List arguments preserve semantic element order
+# ---------------------------------------------------------------------------
+
+
+def test_args_signature_preserves_list_ordering():
+    """List ordering is semantically significant and must not be collapsed."""
+    sig1 = AgentLoopDetectionMetric._args_signature({"items": [1, 2]})
+    sig2 = AgentLoopDetectionMetric._args_signature({"items": [2, 1]})
+    assert sig1 != sig2
+
+    # But nested dicts inside lists SHOULD have their keys sorted
+    sig3 = AgentLoopDetectionMetric._args_signature(
+        [{"a": 1, "b": 2}, {"x": 10, "y": 20}]
+    )
+    sig4 = AgentLoopDetectionMetric._args_signature(
+        [{"b": 2, "a": 1}, {"y": 20, "x": 10}]
+    )
+    assert sig3 == sig4
