@@ -337,6 +337,29 @@ def construct_test_case_string(
     return text
 
 
+# Rubric.score_range is validated to lie within 0..10, so 10 is the highest
+# score GEval can ask for, and the only multi-digit one.
+MAX_SCORE_RANGE_END = 10
+
+
+def is_ambiguous_score_token(token: str, raw_score: int) -> bool:
+    """Whether a candidate token may be only the opening of a multi-digit score.
+
+    Some tokenizers split numbers into single digits — Qwen emits "10" as "1"
+    followed by "0". When that happens a candidate of "1" can mean either 1 or
+    10, and one step of logprobs cannot tell which.
+
+    ``Rubric.score_range`` is validated to lie within 0..10, so 10 is the only
+    multi-digit score possible and "1" the only token that can open another
+    valid score. A candidate equal to the emitted score is excluded: it denotes
+    that score itself rather than the opening of a longer one.
+    """
+    value = int(token)
+    if value == raw_score:
+        return False
+    return token[0] != "0" and value * 10 <= MAX_SCORE_RANGE_END
+
+
 def calculate_weighted_summed_score(
     raw_score: int, raw_response: ChatCompletion
 ) -> Union[int, float]:
@@ -349,6 +372,11 @@ def calculate_weighted_summed_score(
             if token_logprobs.token == str(raw_score):
                 score_logprobs = token_logprobs
                 break
+        if score_logprobs is None:
+            # The score spans several tokens, so no single token equals it and
+            # there is no distribution to weight. Fall back to the raw score
+            # rather than reading attributes off None.
+            return raw_score
         # Then, calculate the score based on the logprobs
         token_linear_probability: Dict[int, float] = {}
         sum_linear_probability = 0
@@ -363,6 +391,13 @@ def calculate_weighted_summed_score(
             # Filter out non-decimal token to prevent errors in later int(token) conversion
             if not token_logprob.token.isdecimal():
                 continue
+
+            # A digit that opens a multi-digit score would be read as a
+            # different score by int(token), dragging the weighted score down.
+            # When that ambiguity exists, discard the distribution rather than
+            # return a score the judge did not intend.
+            if is_ambiguous_score_token(token_logprob.token, raw_score):
+                return raw_score
 
             # Calculate the linear probability
             linear_prob = math.exp(logprob)
