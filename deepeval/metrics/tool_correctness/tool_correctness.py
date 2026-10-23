@@ -285,7 +285,9 @@ class ToolCorrectnessMetric(BaseMetric):
             expected_tool.name for expected_tool in self.expected_tools
         ]
 
-        type_mismatches = self._get_type_mismatches()
+        type_mismatches = self._get_type_mismatches(
+            positional=self.should_exact_match
+        )
 
         if self.should_exact_match:
             return (
@@ -339,8 +341,24 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
-    def _get_type_mismatches(self) -> List[str]:
+    def _get_type_mismatches(self, positional: bool = False) -> List[str]:
+        # In exact-match mode the score compares corresponding positions, so
+        # the diagnostics must too: comparing every same-named pair across
+        # positions produces phantom mismatches (e.g. [search/FUNCTION,
+        # search/MCP] vs itself reports two mismatches). Non-exact modes keep
+        # the original any-pair behavior.
         mismatches = []
+        if positional:
+            pairs = zip(self.expected_tools, self.tools_called)
+            for expected_tool, called_tool in pairs:
+                if (
+                    expected_tool.name == called_tool.name
+                    and expected_tool.type != called_tool.type
+                ):
+                    mismatches.append(
+                        f"{expected_tool.name} (expected {expected_tool.type.value}, called {called_tool.type.value})"
+                    )
+            return mismatches
         for expected_tool in self.expected_tools:
             for called_tool in self.tools_called:
                 if (
