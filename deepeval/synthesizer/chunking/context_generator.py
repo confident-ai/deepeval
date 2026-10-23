@@ -27,6 +27,7 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
 )
+from deepeval.errors import DeepEvalError
 from deepeval.utils import update_pbar, add_pbar, remove_pbars
 from deepeval.config.settings import get_settings
 
@@ -209,6 +210,7 @@ class ContextGenerator:
             update_pbar(progress, pbar_id, remove=False)
 
             # process each doc end-to-end (sync), with per-doc error logging
+            docs_with_errors: List[str] = []
             for path, chunker in source_file_to_chunker_map.items():
                 collection = None
                 try:
@@ -267,6 +269,7 @@ class ContextGenerator:
                     source_files.extend([path] * len(ctxs_for_doc))
 
                 except Exception as exc:
+                    docs_with_errors.append(path)
                     # record and continue with other docs
                     show_trace = bool(get_settings().DEEPEVAL_LOG_STACK_TRACES)
                     exc_info = (
@@ -304,6 +307,12 @@ class ContextGenerator:
                     SynthesizerStatus.WARNING,
                     "Filtering not applied",
                     "Not enough chunks in smallest document",
+                )
+
+            if docs_with_errors and not contexts:
+                raise DeepEvalError(
+                    f"Context generation failed for all {len(docs_with_errors)} "
+                    f"document(s). Check the logs above for per-document errors."
                 )
 
             return contexts, source_files, scores
@@ -432,8 +441,10 @@ class ContextGenerator:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Collect results, surface any errors after cleanup
+            docs_with_errors: List[str] = []
             for path, res in zip(paths, results):
                 if isinstance(res, Exception):
+                    docs_with_errors.append(path)
                     logger.error(
                         "Document pipeline failed for %s",
                         path,
@@ -461,6 +472,12 @@ class ContextGenerator:
                     SynthesizerStatus.WARNING,
                     "Filtering not applied",
                     "Not enough chunks in smallest document",
+                )
+
+            if docs_with_errors and not contexts:
+                raise DeepEvalError(
+                    f"Context generation failed for all {len(docs_with_errors)} "
+                    f"document(s). Check the logs above for per-document errors."
                 )
 
             return contexts, source_files, scores
@@ -837,7 +854,8 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ContextScore)
-            self.total_cost += cost
+            if cost is not None:
+                self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
@@ -862,7 +880,8 @@ class ContextGenerator:
         prompt = FilterTemplate.evaluate_context(chunk)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ContextScore)
-            self.total_cost += cost
+            if cost is not None:
+                self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
 
