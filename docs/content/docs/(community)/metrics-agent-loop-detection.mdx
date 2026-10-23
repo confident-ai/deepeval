@@ -249,13 +249,13 @@ A future `model` parameter could enable an LLM-as-judge mode for the reasoning s
 
 ### Cycle detection uses `type:name:input_hash` labels
 
-The call graph cycle detector identifies spans by a `type:name:input_hash` label (where `input_hash` is a 64-character truncated serialization of the span's input). This is a **heuristic** — the trace dict does not expose span UUIDs (they are stripped internally), so exact span identity is unavailable.
+The call graph cycle detector identifies spans by a `type:name:input_hash` label (where `input_hash` is the 64-character SHA-256 digest of the span's full serialized input). This is a **heuristic** — the trace dict does not expose span UUIDs (they are stripped internally), so exact span identity is unavailable.
 
 **Trade-offs:**
 
 - Including the input hash reduces false positives when two genuinely different spans share the same `type:name` (e.g. an outer `"planner"` agent delegating to an inner `"planner"` with different input).
-- A true recursive loop passes the same or similar input back to itself, so the input hash matches and the cycle is correctly detected.
-- In the rare edge case where two unrelated same-name spans happen to receive identical truncated inputs, a false positive could theoretically occur. In practice this is extremely unlikely.
+- A recursive loop that passes the same input back to itself produces a matching hash and is detected. Different inputs remain distinct even when they share a long prefix.
+- Two unrelated same-name spans that receive identical inputs can still produce a false positive because the labels do not include span UUIDs.
 
 ### Stagnation detection: dual-signal approach
 
