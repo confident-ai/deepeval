@@ -195,3 +195,66 @@ def test_conversational_geval_requires_tags_when_selected():
             [MultiTurnParams.TAGS],
             DummyConversationalMetric(),
         )
+
+
+@pytest.mark.parametrize(
+    "param", [MultiTurnParams.SCENARIO, MultiTurnParams.EXPECTED_OUTCOME]
+)
+@pytest.mark.parametrize("value", [None, ""])
+def test_conversational_required_strings_reject_missing_values(param, value):
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")], **{param.value: value}
+    )
+    metric = DummyConversationalMetric()
+
+    with pytest.raises(MissingTestCaseParamsError) as error:
+        check_conversational_test_case_params(test_case, [param], metric)
+
+    assert str(error.value) == (
+        f"'{param.value}' in a conversational test case cannot be empty "
+        "for the 'DummyConversationalMetric' metric."
+    )
+    assert metric.error == str(error.value)
+
+
+@pytest.mark.parametrize(
+    "param", [MultiTurnParams.SCENARIO, MultiTurnParams.EXPECTED_OUTCOME]
+)
+@pytest.mark.parametrize("value", ["usable text", " ", "\t\n"])
+def test_conversational_required_strings_accept_present_values(param, value):
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")], **{param.value: value}
+    )
+    metric = DummyConversationalMetric()
+
+    check_conversational_test_case_params(test_case, [param], metric)
+
+    assert metric.error is None
+
+
+@pytest.mark.parametrize(
+    "param", [MultiTurnParams.SCENARIO, MultiTurnParams.EXPECTED_OUTCOME]
+)
+@pytest.mark.parametrize("value", [None, ""])
+def test_conversational_optional_strings_remain_optional(param, value):
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")], **{param.value: value}
+    )
+    metric = DummyConversationalMetric()
+
+    check_conversational_test_case_params(test_case, [], metric)
+
+    assert metric.error is None
+
+
+def test_conversational_required_empty_containers_remain_valid():
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")], metadata={}, tags=[]
+    )
+    metric = DummyConversationalMetric()
+
+    check_conversational_test_case_params(
+        test_case, [MultiTurnParams.METADATA, MultiTurnParams.TAGS], metric
+    )
+
+    assert metric.error is None
