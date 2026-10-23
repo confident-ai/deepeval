@@ -191,7 +191,7 @@
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",
-    "confident-trace": "^0.1.0-alpha.14",
+    "confident-trace": "^0.1.0-alpha.15",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",

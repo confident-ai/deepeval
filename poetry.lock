@@ -986,14 +986,14 @@ cron = ["capturer (>=2.4)"]
 
 [[package]]
 name = "confident-trace"
-version = "0.1.9"
+version = "0.1.11"
 description = "OpenTelemetry-first tracing for AI applications"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "confident_trace-0.1.9-py3-none-any.whl", hash = "sha256:38353cfb0e4c16b7128add88aba0624c699d10507ecb8a6e3b25457f5cd5767a"},
-    {file = "confident_trace-0.1.9.tar.gz", hash = "sha256:dee680ea1e224ba4d0e56511fd91f924159def1fb07a4d1bd0c9e512d42a72c9"},
+    {file = "confident_trace-0.1.11-py3-none-any.whl", hash = "sha256:38036c1762ecb07eb3f4b5fb3d46f61344361c819677423936d02640e655558a"},
+    {file = "confident_trace-0.1.11.tar.gz", hash = "sha256:ff2b9805b9ed3efd8eefade5e070b4005e855a1616be5983665fce72550a4ffe"},
 ]
 
 [package.dependencies]
@@ -9805,4 +9805,4 @@ inspect = ["pyperclip", "textual"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <4.0"
-content-hash = "594699047ea3280b40bd2cd0bbb97e68d0ca11eccf94ab06bd78fd1be0668e4c"
+content-hash = "e678b9f8e19f7ca61500b4f53e4d5aadf0d9df528f37b0e95aad9dce4e8c55bf"
