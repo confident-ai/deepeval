@@ -105,7 +105,7 @@ During optimization, `deepeval` will pass you a `Prompt` instance (the rewritten
 
 ```python title="main.py"
 from deepeval.prompt import Prompt
-from deepeval.datasets import Golden, ConversationalGolden
+from deepeval.dataset import Golden, ConversationalGolden
 
 async def model_callback(prompt: Prompt, golden: Union[Golden, ConversationalGolden]) -> str:
     # Interpolate the prompt with the golden's input or any other field
