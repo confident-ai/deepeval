@@ -11,7 +11,7 @@
  *    read the current URL's `utm_*` params and persist them in localStorage as
  *    first_touch (write-once within 180-day TTL) + last_touch (overwrites).
  *    This lets the original Google / LinkedIn / etc. campaign survive the
- *    deepeval-docs hop into app.confident-ai.com at signup.
+ *    deepeval-docs hop into cloud.confident-ai.com at signup.
  *
  * 2. OUTBOUND: on every click that targets a Confident AI host, stamp the full
  *    UTM payload onto the anchor's href before the browser navigates.

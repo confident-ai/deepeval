@@ -37,7 +37,7 @@ export const parseArgs = (
   const parsed: CliArgs = {
     from: "deepeval",
     projectDir: cwd,
-    appUrl: "https://app.confident-ai.com",
+    appUrl: "https://cloud.confident-ai.com",
     apiUrl: "https://api.confident-ai.com",
     help: false,
   };
@@ -94,7 +94,7 @@ Runs as \`deepeval setup\` (Python) or \`npx deepeval setup\` (TypeScript).
 Options:
   --from <source>        Entry point label for sign-in and analytics (default: deepeval)
   --project-dir <path>   Project directory (default: current directory)
-  --app-url <url>        Confident app URL (default: https://app.confident-ai.com)
+  --app-url <url>        Confident app URL (default: https://cloud.confident-ai.com)
   --api-url <url>        Confident API URL (default: https://api.confident-ai.com)
   --org-id <id>          Require this organization
   --proj-id <id>         Select this project
