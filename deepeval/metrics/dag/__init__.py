@@ -1,5 +1,6 @@
 from .nodes import (
     BaseNode,
+    CustomNode,
     VerdictNode,
     TaskNode,
     BinaryJudgementNode,
