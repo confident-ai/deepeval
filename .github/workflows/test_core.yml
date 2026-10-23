@@ -65,7 +65,7 @@ jobs:
       #    install dev dependencies (including chromadb and model deps)
       #----------------------------------------------
       - name: Install dev dependencies
-        run: poetry install --no-interaction --with dev
+        run: poetry install --no-interaction --with dev --extras otel
         
       #----------------------------------------------
       #              run test suite
