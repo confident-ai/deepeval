@@ -1,9 +1,9 @@
 """Regression tests for trimAndLoadJson trailing-comma handling.
 
-Both the metrics and dataset copies stripped ``,\\s*`` before a closing ``]``/``}``
-unconditionally, which corrupted valid JSON whose string values happened to
-contain ``", ]"`` or ``", }"``. The cleanup must only run as a fallback when a
-direct parse fails.
+The metrics, dataset, and models/llms copies all stripped ``,\\s*`` before a
+closing ``]``/``}`` unconditionally, which corrupted valid JSON whose string
+values happened to contain ``", ]"`` or ``", }"``. The cleanup must only run
+as a fallback when a direct parse fails.
 """
 
 import json
@@ -11,9 +11,11 @@ import json
 import pytest
 
 from deepeval.dataset.utils import trimAndLoadJson as trim_dataset
+from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils import trimAndLoadJson as trim_metrics
+from deepeval.models.llms.utils import trim_and_load_json as trim_llms
 
-TRIM_FNS = [trim_metrics, trim_dataset]
+TRIM_FNS = [trim_metrics, trim_dataset, trim_llms]
 
 
 @pytest.mark.parametrize("trim", TRIM_FNS)
@@ -35,5 +37,5 @@ def test_trailing_comma_is_still_stripped(trim):
 
 @pytest.mark.parametrize("trim", TRIM_FNS)
 def test_invalid_json_still_raises(trim):
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, DeepEvalError)):
         trim("not json at all {[")
