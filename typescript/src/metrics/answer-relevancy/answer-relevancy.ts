@@ -167,7 +167,9 @@ export class AnswerRelevancyMetric extends BaseMetric {
   }
 
   private calculateScore(): number {
-    const total = this.verdicts.length;
+    // Judge every extracted item: a truncated or empty verdict list must
+    // count against the score, not shrink the denominator.
+    const total = Math.max(this.verdicts.length, this.statements.length);
     if (total === 0) return 1;
     let relevant = 0;
     for (const v of this.verdicts) {
