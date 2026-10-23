@@ -42,7 +42,6 @@ from deepeval.test_case import (
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
-
 TranscriptionAccuracyTemplate = make_template_class(
     "TranscriptionAccuracyMetric"
 )
