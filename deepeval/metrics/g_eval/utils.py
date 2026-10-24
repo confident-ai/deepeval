@@ -349,6 +349,12 @@ def calculate_weighted_summed_score(
             if token_logprobs.token == str(raw_score):
                 score_logprobs = token_logprobs
                 break
+        # The raw score may be emitted as several tokens (e.g. "10" split into
+        # "1" and "0") so no single token matches it. In that case there are no
+        # score logprobs to weigh, so fall back to the raw score rather than
+        # raising deep in the caller.
+        if score_logprobs is None:
+            return raw_score
         # Then, calculate the score based on the logprobs
         token_linear_probability: Dict[int, float] = {}
         sum_linear_probability = 0
@@ -362,6 +368,12 @@ def calculate_weighted_summed_score(
                 continue
             # Filter out non-decimal token to prevent errors in later int(token) conversion
             if not token_logprob.token.isdecimal():
+                continue
+            # A token that is just the first digit of a larger score in range
+            # can't be treated as a complete score when the tokenizer splits
+            # numbers into single digits. GEval scores are capped at 10, so "1"
+            # is ambiguous: it may be the complete score 1 or the start of "10".
+            if token_logprob.token == "1":
                 continue
 
             # Calculate the linear probability
