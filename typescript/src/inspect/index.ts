@@ -102,7 +102,5 @@ export function listStoredRuns(options: RunInspectOptions = {}): void {
       "cost (USD)": fmt(r.evaluation_cost, 4),
     })),
   );
-  console.log(
-    `Open one with: deepeval inspect ${parsed.dbPath} --run-id <id>`,
-  );
+  console.log(`Open one with: deepeval inspect ${parsed.dbPath} --run-id <id>`);
 }
