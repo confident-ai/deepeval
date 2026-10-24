@@ -1,11 +1,8 @@
-"""CalibrationMetric (ECE + Brier) -- DRAFT, Phase 5.
+"""CalibrationMetric: aggregate calibration (ECE + Brier) for DeepEval.
 
-Goes to deepeval/metrics/community/calibration/calibration.py.
-Assumes Phase 2-4 modules in the same package (names per decisions file):
-    calibration_math: calculate_calibration, calibration_bins, BinStat
-    store:            CalibrationRunStore, create_calibration_store
-    schema:           CalibrationResult, CalibrationBin
-VERIFY against the clone: BinStat attribute names, calibration_bins() args.
+Reads a confidence in [0, 1] and a correctness outcome from each test case's
+metadata, collects them in a per-run store, and reports ECE and Brier score
+over the whole run via ``get_calibration_result()``. No LLM call is made.
 """
 
 import os
