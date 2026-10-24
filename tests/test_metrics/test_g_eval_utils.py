@@ -53,6 +53,20 @@ def create_token(token, top_token):
     )
 
 
+def create_token_with_alts(token, alternatives):
+    """top_logprobs with several candidates. `alternatives` maps a token
+    string to its linear probability; logprob is stored as ln(probability)."""
+    import math
+
+    return SimpleNamespace(
+        token=token,
+        top_logprobs=[
+            SimpleNamespace(token=t, logprob=math.log(p))
+            for t, p in alternatives.items()
+        ],
+    )
+
+
 def test_calculate_weighted_summed_score_uses_final_score_token():
     raw_response = create_raw_response(
         [
@@ -69,6 +83,39 @@ def test_calculate_weighted_summed_score_with_single_score_token():
     raw_response = create_raw_response([create_token("6", "4")])
 
     assert calculate_weighted_summed_score(6, raw_response) == 4
+
+
+def test_calculate_weighted_summed_score_ignores_multi_digit_prefix():
+    # The judge hovers between 9 and 8 but also considers 10. A tokenizer that
+    # splits 10 into "1"+"0" puts "1" (a prefix of 10) at the score position;
+    # it must not be weighted as a complete score of 1.
+    raw_response = create_raw_response(
+        [
+            create_token_with_alts(
+                "9", {"9": 0.812, "1": 0.16, "8": 0.028}
+            )
+        ]
+    )
+
+    # The "1" candidate (16% mass) is dropped and the rest are renormalized
+    # to 1, so the weighted score ignores the ambiguous multi-digit prefix.
+    assert calculate_weighted_summed_score(9, raw_response) == pytest.approx(
+        (9 * 0.812 + 8 * 0.028) / (0.812 + 0.028)
+    )
+
+
+def test_calculate_weighted_summed_score_falls_back_for_multi_token_score():
+    # A raw score of 10 is emitted as "1" then "0", so no single token equals
+    # "10". There are no usable score logprobs: fall back to the raw score
+    # instead of failing.
+    raw_response = create_raw_response(
+        [
+            create_token_with_alts("1", {"1": 0.7, "9": 0.3}),
+            create_token("0", "0"),
+        ]
+    )
+
+    assert calculate_weighted_summed_score(10, raw_response) == 10
 
 
 def test_geval_accepts_metadata_and_tags():
