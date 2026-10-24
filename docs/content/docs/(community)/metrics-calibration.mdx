@@ -1,0 +1,158 @@
+---
+id: metrics-calibration
+title: Calibration (ECE / Brier)
+sidebar_label: Calibration
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} referenceless={true} />
+
+The calibration metric is a **fully deterministic** (no LLM required) metric that measures whether the confidence scores your system reports can be trusted **in aggregate**. Across a labeled dataset it computes **Expected Calibration Error (ECE)** and the **Brier score**: if your system says it is 80% confident, is it right about 80% of the time? Both numbers range from **0.0** (perfectly calibrated) to **1.0**, and lower is better.
+
+:::info
+The `CalibrationMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+Most metrics score one output at a time. Calibration is a property of a **whole set** of outputs, so the headline numbers (ECE and Brier) are read from the metric after the run with `get_calibration_result()`. The per-test-case `score` is a secondary signal — see [Per-test-case score](#per-test-case-score).
+:::
+
+## Required Arguments
+
+The `CalibrationMetric` reads its inputs from `test_case.metadata`, so you provide the following when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `metadata`, containing two keys:
+  - `confidence`: a number in `[0, 1]`, the probability your system assigns to its answer being correct.
+  - `correct`: `True`/`False` (or `1`/`0`), whether the answer actually was correct.
+
+The confidence can come from anywhere: token log probabilities, a retrieval distance mapped to a probability, a classifier, a self-reported score. The metric does **not** derive confidence from log probabilities, so it works for black-box APIs too. The key names are configurable with `confidence_key` and `correct_key`.
+
+:::caution
+`correct` records **whether the answer was right**, nothing else. A query that has no ground-truth answer counts as `False`, because any answer would be wrong, so low confidence is the calibrated outcome there. Whether a system _abstained appropriately_ is a different event and is **not** scored by this metric.
+:::
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import CalibrationMetric
+
+test_cases = [
+    LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris",
+        name="q1",
+        metadata={"confidence": 0.95, "correct": True},
+    ),
+    LLMTestCase(
+        input="Who wrote Hamlet?",
+        actual_output="Christopher Marlowe",
+        name="q2",
+        metadata={"confidence": 0.90, "correct": False},
+    ),
+    # ... one test case per labeled query
+]
+
+metric = CalibrationMetric(n_bins=10)
+evaluate(test_cases=test_cases, metrics=[metric])
+
+result = metric.get_calibration_result()
+print(result.ece, result.brier_score, result.n_samples)
+print(result.warnings)
+```
+
+There are **TEN** optional parameters when creating a `CalibrationMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold for the [per-test-case score](#per-test-case-score). Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `confidence_key`: a string, the `metadata` key holding the confidence. Defaulted to `"confidence"`.
+- [Optional] `correct_key`: a string, the `metadata` key holding the correctness label. Defaulted to `"correct"`.
+- [Optional] `n_bins`: an integer between `1` and `1000`, the number of equal-width confidence bins used for ECE. Defaulted to `10`.
+- [Optional] `run_store`: an advanced option. A store created with `create_calibration_store()` (from `deepeval.metrics.community.calibration.store`) that accumulates rows across runs. Defaulted to a fresh store per metric instance, which is what you want in almost every case.
+- [Optional] `include_reason`: a boolean which when set to `False`, disables the `reason` summary. Defaulted to `True`.
+- [Optional] `async_mode`: a boolean kept for consistency with other metrics. Calibration performs no I/O, so it does not change any result. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary per-test-case score: scores below the threshold become `0`. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+::::info
+The `CalibrationMetric` does **not** accept a `model` parameter. ECE and Brier are plain statistics over the rows you provide, so no LLM is involved and a run costs nothing.
+::::
+
+### Reading the aggregate
+
+`get_calibration_result()` returns a frozen `CalibrationResult` computed over every row seen so far:
+
+- `ece` and `brier_score`: the two aggregate numbers.
+- `n_samples` and `n_bins`.
+- `bins`: one `CalibrationBin` per bin with `lower`, `upper`, `count`, `avg_confidence` and `accuracy`. This is the data behind a reliability diagram. An empty bin has `count == 0` and zero placeholders for the other fields, so check `count` first.
+- `outcome_definition`: the event that was scored, stated explicitly.
+- `warnings` and `reasoning`: a short deterministic summary.
+
+:::tip
+With `evaluate()` run in async mode (the default), `deepeval` creates a **copy of your metric for every test case**, so your own `metric` object is never measured directly. Read the aggregate from `metric.get_calibration_result()`, as in the example above. All copies share one run store, so the result covers every row.
+:::
+
+### As a standalone
+
+You can also run `CalibrationMetric` one test case at a time:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import CalibrationMetric
+
+metric = CalibrationMetric()
+for test_case in test_cases:
+    metric.measure(test_case)
+
+result = metric.get_calibration_result()
+print(result.ece, result.brier_score)
+
+print(metric.score)            # per-test-case score of the LAST row
+print(metric.score_breakdown)  # aggregates over the rows seen so far
+```
+
+Each `measure()` call adds one row and recomputes the aggregate over the rows seen so far, so the final call sees the full dataset. To start a new run on the same metric instance, call `metric.reset()`.
+
+:::tip
+Set `name` on your test cases to make re-runs idempotent: a test case with a `name` **replaces** the earlier row with the same name instead of being counted twice. Test cases without a `name` are always appended.
+:::
+
+### Within `assert_test`
+
+Because the aggregate needs many rows, `assert_test` on a single test case only checks the [per-test-case score](#per-test-case-score). To gate a pipeline on calibration, run `evaluate()` over your dataset and assert on `get_calibration_result().ece` yourself:
+
+```python
+assert metric.get_calibration_result().ece < 0.1
+```
+
+## How Is It Calculated?
+
+Each test case contributes one pair of confidence $c_i$ and outcome $o_i$ (`1` if correct, else `0`). The metric then computes:
+
+<Equation formula="\text{Brier} = \frac{1}{N} \sum_{i=1}^{N} (c_i - o_i)^2" />
+
+<Equation formula="\text{ECE} = \sum_{b=1}^{B} \frac{n_b}{N} \left| \text{accuracy}_b - \text{confidence}_b \right|" />
+
+Where $N$ is the number of rows, $B$ is `n_bins`, $n_b$ is the number of rows in bin $b$, $\text{accuracy}_b$ is the fraction of correct answers in the bin, and $\text{confidence}_b$ is the mean confidence in the bin.
+
+- Bins are **equal-width** (the standard in Guo et al., 2017): `[0, 1/B)`, `[1/B, 2/B)`, ..., with the last bin closed so a confidence of exactly `1.0` is included. Empty bins contribute `0`.
+- ECE measures the gap between stated confidence and observed accuracy. Brier measures the squared error of the probabilities themselves, so it also rewards confident correct answers.
+- Values are validated strictly: a confidence outside `[0, 1]`, a NaN, or an outcome that is not `0`/`1` raises a `ValueError` rather than being silently clipped.
+
+### Per-test-case score
+
+Each test case also gets a score of `1 - (confidence - outcome)^2` (the complement of its own squared error), and it passes if that score is at least the `threshold`.
+
+:::caution
+The per-test-case pass rate is **not a verdict on calibration**. A confident wrong answer at confidence `0.52` still scores about `0.73` and passes the default threshold. Judge calibration by `ece` and `brier_score`, not by how many test cases passed.
+:::
+
+## Limitations
+
+- **Single process only.** Rows are stored in memory. Under `deepeval test run -n N` (pytest-xdist) every worker has its own store, so each aggregate covers only that worker's rows. The result carries a warning when it detects xdist. Run calibration in a single process.
+- **`evaluate()`, `assert_test()` and direct `measure()` only.** Metrics attached to a span with `@observe(metrics=[...])` or to a trace through `evals_iterator(metrics=[...])` receive a test case without `metadata` or `name`, so this metric cannot read its inputs there and raises a `MissingTestCaseParamsError`.
+- **Small samples are noisy.** ECE and Brier are unreliable on a few rows; with fewer than 30 rows the result includes a warning. ECE also depends on the number of bins.
+- **Confidence is your input.** The metric tells you whether the numbers you provide are trustworthy, not how to produce them. When you map a raw score (such as a distance) to a confidence, remember that different monotone mappings give different ECE values, so keep one mapping fixed when comparing runs.
