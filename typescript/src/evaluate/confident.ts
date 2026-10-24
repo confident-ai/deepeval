@@ -89,7 +89,8 @@ export function buildTestCaseEntry(
 ): PersistedCase {
   const success = aggregateSuccess(metricsData);
   const evaluationCost = caseCost(metricsData);
-  const metricsDataApi = withoutExpectations(metricsData).map(convertMetricData);
+  const metricsDataApi =
+    withoutExpectations(metricsData).map(convertMetricData);
   const expectationsMetric = metricsData.find((m) => m.expectationsData);
   const expectationsData = expectationsMetric && {
     ...expectationsMetric.expectationsData,
