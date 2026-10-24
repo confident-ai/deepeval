@@ -90,11 +90,7 @@ def test_calculate_weighted_summed_score_ignores_multi_digit_prefix():
     # splits 10 into "1"+"0" puts "1" (a prefix of 10) at the score position;
     # it must not be weighted as a complete score of 1.
     raw_response = create_raw_response(
-        [
-            create_token_with_alts(
-                "9", {"9": 0.812, "1": 0.16, "8": 0.028}
-            )
-        ]
+        [create_token_with_alts("9", {"9": 0.812, "1": 0.16, "8": 0.028})]
     )
 
     # The "1" candidate (16% mass) is dropped and the rest are renormalized

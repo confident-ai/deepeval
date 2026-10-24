@@ -152,7 +152,9 @@ describe("calculateWeightedSummedScore", () => {
     // A judge hovering between 9 and 8 that also considers 10. A tokenizer
     // that splits 10 into "1"+"0" puts "1" (a prefix of 10) at the score
     // position, which must not be weighted as a complete score of 1.
-    const logProbs = [tokenLogProbs("9", { "9": 0.812, "1": 0.16, "8": 0.028 })];
+    const logProbs = [
+      tokenLogProbs("9", { "9": 0.812, "1": 0.16, "8": 0.028 }),
+    ];
     // (9*0.812 + 8*0.028) / (0.812 + 0.028)
     expect(calculateWeightedSummedScore(9, logProbs)).toBeCloseTo(8.967, 3);
   });
