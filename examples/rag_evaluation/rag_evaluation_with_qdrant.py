@@ -22,7 +22,7 @@ import deepeval
 # Get your key from https://platform.openai.com/api-keys
 OPENAI_API_KEY = "<OPENAI_API_KEY>"
 
-# Get your Confident AI API key from https://app.confident-ai.com
+# Get your Confident AI API key from https://cloud.confident-ai.com
 CONFIDENT_AI_API_KEY = "<CONFIDENT_AI_API_KEY>"
 
 # Get a FREE forever cluster at https://cloud.qdrant.io/
