@@ -291,9 +291,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             gen_dataset = load_dataset("truthfulqa/truthful_qa", "generation")[
                 "validation"
             ]
-            mc_dataset = load_dataset("truthfulqa/truthful_qa", "multiple_choice")[
-                "validation"
-            ]
+            mc_dataset = load_dataset(
+                "truthfulqa/truthful_qa", "multiple_choice"
+            )["validation"]
             df_mc, df_gen = mc_dataset.to_pandas(), gen_dataset.to_pandas()
             merged_df = pd.merge(
                 df_mc,
