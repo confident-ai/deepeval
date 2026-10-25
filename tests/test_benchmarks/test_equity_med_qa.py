@@ -41,7 +41,9 @@ def emq_with_mocks(monkeypatch):
     emq = EquityMedQA()
     goldens = [Golden(input=f"q{i}") for i in range(N_GOLDENS)]
     patches = [
-        patch.object(EquityMedQA, "load_benchmark_dataset", return_value=goldens),
+        patch.object(
+            EquityMedQA, "load_benchmark_dataset", return_value=goldens
+        ),
         patch(
             "deepeval.benchmarks.equity_med_qa.equity_med_qa.BiasMetric",
             FakeMetric,
