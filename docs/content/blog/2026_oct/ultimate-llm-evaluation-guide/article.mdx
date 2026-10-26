@@ -36,7 +36,7 @@ LLM evaluation is the process of systematically measuring the quality, reliabili
 
 In practice, this usually involves a combination of [LLM-as-a-judge](/blog/llm-as-a-judge) metrics, deterministic checks, task-specific scoring functions, and - where additional judgment or ground truth is required - human annotation.
 
-<BoardFrame id="llm-evaluation-overview" type="groups" title="An LLM application and the *evaluators* that score it" description="An LLM application made of a model such as Claude, OpenAI or Gemini, prompts, retrieval, tools and MCP, memory and guardrails. Its outputs and traces go to LLM evaluation, which uses deterministic checks, LLM-as-a-judge and human annotation to produce scores such as task completion 0.92 and faithfulness 0.61." />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-evaluation-overview" />
 
 Despite the name, "LLM evaluation" rarely means evaluating a language model in isolation. More often, it means evaluating the complete system built around that model, including its prompts, retrieval layer, tools, memory, orchestration logic, guardrails, and user interface.
 
@@ -50,7 +50,7 @@ The most common types of LLM applications include:
 
 These categories are not mutually exclusive. A voice assistant is often also a chatbot. An AI agent may use RAG to acquire context, invoke tools exposed by MCP servers, and communicate with users through either text or voice. In sufficiently complex systems, all five can exist within the same application.
 
-<BoardFrame id="app-types-overlap" type="venn" title="LLM apps that talk with users, act on other systems, or *both*" description="Two overlapping sets: apps that talk with users and apps that act on other systems. Only talking: FAQ chatbots and voice receptionists. Both: support agents and voice booking agents. Only acting: coding agents and MCP workflows." />
+<ImageDisplayer id="diagrams/in-house/agents/app-types-overlap" />
 
 ### 1. Interaction type
 
@@ -110,7 +110,7 @@ At the highest level, evaluation is performed through either human annotation or
 
 The trade-off is straightforward: human annotation can provide richer, domain-specific judgment, but it is slower, more expensive, and constrained by annotator availability. Automated evals are repeatable and available on demand, making them practical for workflows such as CI/CD, where you cannot guarantee that a qualified reviewer will be available every time a test run starts.
 
-<ChartFrame id="evaluator-cost-by-volume" type="function" title="Evaluation *cost* by number of test cases, per evaluator" subtitle="Illustrative" description="Cost and time to evaluate against the number of test cases. Human annotation starts at zero but rises steeply. LLM-as-a-judge starts slightly higher and rises slowly. Deterministic checks cost the most to set up but stay almost flat." />
+<ImageDisplayer id="diagrams/in-house/evaluation/evaluator-cost-by-volume" />
 
 ### Human evaluators
 
@@ -143,7 +143,7 @@ Automated evaluations include:
 - **LLM-as-a-judge metrics**: Large language models that apply criteria, evaluation steps, or rubrics to judge semantic qualities such as correctness, relevancy, groundedness, completeness, safety, or task completion; some might even use an algorithm such as [G-Eval](/docs/metrics-llm-evals).
 - **Statistical and NLP-based metrics**: BLEU, ROUGE, BERTScore, embedding similarity, token-level comparisons, and other reference-based or model-based scoring methods, although I'd argue those shouldn't be used for LLM evaluation.
 
-<FlowFrame id="evaluator-types" type="tree" title="Types of *evaluators*: human and automated" description="Who evaluates splits into people and procedures. Human annotators are subject-matter experts, QA and product teams. Automated evaluators are deterministic checks for verifiable results, LLM-as-a-judge for results that need semantic judgment, and statistical and NLP scores for reference similarity." />
+<ImageDisplayer id="diagrams/in-house/metrics/evaluator-types" />
 
 These methods should not be treated as a hierarchy in which the most sophisticated model is automatically the best evaluator:
 
@@ -159,7 +159,7 @@ Human- or automated-evaluator-driven LLM evaluation can assess the application e
 
 It is important to decide this scope early because it determines what you need to set up. End-to-end evaluation requires evidence of the final outcome, while component-level evaluation requires [tracing](/docs/evaluation-llm-tracing) so you can inspect the intermediate steps that produced it. If both matter, you need both forms of evaluation.
 
-<FlowFrame id="evaluation-scope-decision" type="tree" title="Choosing an *evaluation scope*" description="If you don’t care about the final outcome, trace the app and evaluate components only. If you do, ask whether you also care about the inner components: if not, run end-to-end evals only; if so, trace the app and evaluate both end to end and per component." />
+<ImageDisplayer id="diagrams/in-house/evaluation/evaluation-scope-decision" />
 
 ### Black-box evals (end-to-end)
 
@@ -179,7 +179,7 @@ It also depends heavily on the modality:
 - **Image**: Did the system interpret or generate the visual information correctly?
 - **Video**: Did it understand or produce the correct events across time?
 
-<BoardFrame id="black-box-evaluation" type="groups" title="Black-box: comparing a *task* with its final outcome" description="A task, resolve the duplicate charge, goes into an LLM application whose RAG, tools, MCP and model calls are not inspected. The final outcome, one refund issued, is compared with what should have happened." />
+<ImageDisplayer id="diagrams/in-house/evaluation/black-box-evaluation" />
 
 End-to-end evaluation changes much less according to external access because those mechanisms sit inside the black box:
 
@@ -211,13 +211,13 @@ Unlike end-to-end evaluation, component-level evaluation changes significantly a
 - **MCP**: Evaluate server and resource selection, schema compliance, capability boundaries, and the handling of untrusted content.
 - **Browser or computer use**: Evaluate navigation, action sequencing, confirmation requirements, and external state changes.
 
-<FlowFrame id="white-box-checkpoints" type="flow" title="White-box: *checkpoints* inside an agent’s execution" description="A task goes to an agent that plans, retrieves context from a knowledge base and selects a tool and its arguments, all scored for plan adherence. The tool call goes to an MCP server, which reads and writes customer records inside the external systems’ security boundary, and its result becomes the final state." />
+<ImageDisplayer id="diagrams/in-house/evaluation/white-box-checkpoints" />
 
 This is also where security becomes a much larger part of LLM evaluation. Once an agent can use tools or MCP servers, it can do more than generate a bad response: it can access unauthorized data, leak sensitive context, follow prompt injections hidden inside tool results, escalate permissions, or perform consequential actions without approval.
 
 These failures may not appear in the final output. An agent can complete its task while reading data it did not need, sending information to an untrusted server, or briefly placing an external system into an unsafe state. A successful outcome does not necessarily imply a safe execution.
 
-<ChatFrame id="tool-result-injection" type="chat" title="A shopping assistant following a *prompt injection* from a tool result" description="A user asks Shopping Assistant to summarize the top review on a product page. It summarizes the review correctly but also sends the user’s saved address to an outside site because the page told it to, which fails the check." />
+<ImageDisplayer id="diagrams/in-house/red-teaming/tool-result-injection" />
 
 Component-level evals:
 
@@ -276,7 +276,7 @@ A golden may contain different fields:
 
 Not every golden needs every field. What matters is that it contains enough information to initiate the behavior and later determine whether that behavior was successful.
 
-<BoardFrame id="golden-before-after-execution" type="groups" title="A *golden* before execution, and the test case and trace after it" description="Before execution, a golden holds the task, initial state, expected outcome and constraints. Running the app produces runtime evidence: a test case with the golden’s fields plus the actual output, tool calls and scores, and a trace with spans, prompts, retries, timings and errors." />
+<ImageDisplayer id="diagrams/in-house/datasets/golden-before-after-execution" />
 
 The concrete structure depends on the application.
 
@@ -291,7 +291,7 @@ For an agent, the input may not resemble a traditional prompt at all. It could b
 
 Increasingly, with AI agents, we're also seeing goldens containing data on mocked tool calls with hardcoded expected input parameters and a list of tools to call.
 
-<BoardFrame id="golden-cards-by-application" type="groups" title="*Goldens* for an AI agent, a RAG app, a chatbot, and a multimodal app" description="Four goldens. An AI agent: input refund the duplicate charge, expected exactly one refund, expected tools search_orders and issue_refund. A RAG application: input a question about annual leave, expected 20 days per HR Policy 4.2, context the HR handbook. A multi-turn chatbot: scenario reschedule a dentist visit, a user in a hurry on a phone, expected a new slot confirmed. A multimodal app: input a bill of lading PDF, expected the carrier Maersk, metadata scanned, 2 pages." />
+<ImageDisplayer id="diagrams/in-house/datasets/golden-cards-by-application" />
 
 This distinction is essential for standardization. An input does not need to contain the same kind of data across every application, but it should retain the same definition:
 
@@ -324,7 +324,7 @@ Goldens and test cases are structurally similar because the test case inherits t
 
 That's why one golden maps to many test cases across different test runs. The same coding task can be executed against several model versions, prompts, tool configurations, or agent architectures. Each run begins with the same golden but produces a different test case.
 
-<BoardFrame id="test-case-anatomy" type="groups" title="Single-turn and multi-turn *test case* fields" description="A single-turn test case takes input, expected_output and context from the golden and adds actual_output, retrieval_context and tools_called from the run. A multi-turn test case takes the scenario, expected_outcome and user_description from the golden and adds the turns from the simulated conversation." />
+<ImageDisplayer id="diagrams/in-house/evaluation/test-case-anatomy" />
 
 This structure makes test cases useful for LLM evaluation metrics to act on. For example, the [tool correctness metric](/docs/metrics-tool-correctness) can compare expected and actual tool calls. A retrieval metric can access the retrieved and reference context. The metric changes, but the underlying test case remains structured.
 
@@ -336,7 +336,7 @@ Instead of reducing the run to predefined fields in a test case, \1 For an AI ag
 
 Traces may have a technical structure - usually a hierarchy of spans - but their semantics are comparatively unstructured. Different agents may use different span names, nesting conventions, tools, and execution paths. Even two runs of the same agent can produce traces of radically different shapes.
 
-<BoardFrame id="agent-trace-to-test-case" type="tree" title="An *agent trace* and the fields extracted into its test case" description="An agent trace for a refund agent with an LLM planning span, a retriever with an embedding span, a search_orders tool call, an issue_refund call that timed out and its retry, a billing sub-agent with its own LLM span and a final answer. The tool calls are extracted into tools_called and the final answer into actual_output on the agent’s test case." />
+<ImageDisplayer id="diagrams/in-house/tracing/agent-trace-to-test-case" />
 
 A trace can therefore be treated as a free-form superset of runtime evidence. It may contain much more information about what happened than a test case, but it does not necessarily contain what should have happened.
 
@@ -368,7 +368,7 @@ A predefined test-case schema could only capture anticipated behavior. Traces al
 
 The industry therefore moved from **test-case-first evaluation** toward **trace-first evaluation**.
 
-<BoardFrame id="test-cases-to-traces-and-back" type="groups" title="How agent evaluation moved from *test cases* to traces and back" description="Three stages. Known signals: structured RAG test cases. Discovering failures: free-form agent traces from early agents. Structuring recurring failures: today, agent test cases built from trace evidence." />
+<ImageDisplayer id="diagrams/in-house/agents/test-cases-to-traces-and-back" />
 
 This shift made agent evaluation more expressive, but it introduced a new problem: Raw traces are excellent debugging artifacts but inconsistent measurement interfaces.
 
@@ -397,7 +397,7 @@ The trace is not disappearing. Its role is becoming clearer.
 
 In development, the workflow generally begins with a golden, runs the application, and produces both a test case and a trace. In production, the workflow may begin with a trace, surface an unexpected failure, and convert that failure into a new golden for future regression testing.
 
-<FlowFrame id="golden-feedback-loop" type="flow" title="The *golden* feedback loop between development and production" description="In development, a golden runs through the application to produce a test case and a trace, which feed regression testing before deployment. In production, traces go through failure discovery, and each failure becomes a new or updated golden." />
+<ImageDisplayer id="diagrams/in-house/datasets/golden-feedback-loop" />
 
 That feedback loop is the foundation of a mature evaluation system: traces discover what teams did not know to test, goldens preserve what they learn, and test cases turn that knowledge into repeatable measurement.
 
@@ -427,7 +427,7 @@ Finally, the metric must match the unit it acts on. A **golden** supplies the ex
 
 A Faithfulness metric, for example, is only meaningful if the generated answer and retrieval context are available. Tool Correctness requires actual tool calls and, where appropriate, expected tools or constraints. Task Completion for an agent may need the initial task, the full trace, and evidence of the final environment state. Choosing the metric without checking whether its required evidence exists produces a score, but not necessarily a valid measurement.
 
-<SchemaFrame id="metric-evidence-in-test-case" type="card" title="The *test case fields* each metric reads" description="An LLM test case with input, actual_output and optional retrieval_context, tools_called and expected_tools. Answer relevancy reads input and actual_output. Faithfulness reads actual_output and retrieval_context. Tool correctness reads tools_called and expected_tools." />
+<ImageDisplayer id="diagrams/in-house/metrics/metric-evidence-in-test-case" />
 
 Metric selection should therefore follow this order:
 
@@ -439,7 +439,7 @@ Metric selection should therefore follow this order:
 
 This is why the examples in the next section will not share one standard bundle of metrics. The logistics extractor, coding agent, RAG pipeline, and voice chatbot each produce different evidence and have fundamentally different definitions of success. If you want a catalog of individual metrics after applying this framework, [this introduction to LLM evaluation metrics](/docs/metrics-introduction) covers them in detail.
 
-<ChartFrame id="metric-fit-by-application" type="heatmap" title="*Metrics* used by each example application" description="How much each example application in this guide relies on each metric, from 0 (not used) to 3 (primary). The document extractor relies on exact match. The coding agent relies on task completion and tool correctness. The RAG QA pipeline relies on faithfulness and contextual recall. The voice chatbot relies on task completion, conversation completeness and turn-taking." note="0 = not used, 3 = primary metric" />
+<ImageDisplayer id="diagrams/in-house/metrics/metric-fit-by-application" />
 
 ## There are 7 questions to ask before any LLM evaluation attempt
 
@@ -537,7 +537,7 @@ Realistically, the input and expected output are all you need. The final step is
 
 Once you have your test cases, you can now compare all the actual outputs with the expected outputs, mapped from the goldens, using a simple exact match metric - which is 100% deterministic and free of charge.
 
-<SchemaFrame id="extracted-vs-expected-record" type="match" title="An *extracted record* matched field by field against the expected record" description="The extracted record and the expected record matched field by field. The bill number BOL-042, the total weight of 1240 kg and the port of loading Rotterdam match; the carrier is Maersk Line in the extraction but Maersk in the golden, so an exact match on the whole record fails." />
+<ImageDisplayer id="diagrams/in-house/metrics/extracted-vs-expected-record" />
 
 This resulting "benchmark" is what we call a test run.
 
@@ -591,7 +591,7 @@ So here's the algorithm for running LLM evals on a coding assistant:
 - For each scenario in your dataset of goldens, simulate the entire conversation
 - Once completed, evaluate using your metrics
 
-<FlowFrame id="coding-agent-simulation" type="sequence" title="A *simulated conversation* with a coding agent and the GitHub MCP server" description="A simulated user asks the coding agent to fix issue 184 about duplicate webhooks. The agent fetches the issue from the GitHub MCP server, edits the handler, runs the tests and reports that they pass. The user asks for a pull request linked to the issue; the agent opens PR 212 through the MCP server and confirms." />
+<ImageDisplayer id="diagrams/in-house/agents/coding-agent-simulation" />
 
 As a best practice, you should also connect your evaluation tool to the same MCP servers as your coding assistant before running the simulation. This gives the evaluator visibility into the available tools, allowing it to check tool selection and argument correctness at each simulated turn.
 
@@ -629,7 +629,7 @@ However, in contrast to the single-turn logistics document extractor example abo
 
 In this case, we'll have to find a way to instrument our RAG QA to make sure we can capture the execution trace of our RAG pipeline, and place the corresponding RAG metrics on both the generator ([answer relevancy](/docs/metrics-answer-relevancy), [faithfulness](/docs/metrics-faithfulness)) and retriever (contextual [recall](/docs/metrics-contextual-recall)/[precision](/docs/metrics-contextual-precision)/[relevancy](/docs/metrics-contextual-relevancy)) respectively.
 
-<FlowFrame id="rag-qa-evaluation" type="flow" title="A *RAG pipeline* with metrics on the retriever and the generator" description="An employee question goes through an embedding model to a vector index of internal docs, which returns the top-K chunks; the retriever is scored with contextual metrics. The chunks and the question fill a prompt for the LLM, which writes the grounded answer; the generator is scored with faithfulness." />
+<ImageDisplayer id="diagrams/in-house/rag/rag-qa-evaluation" />
 
 There are a ton of ways to capture execution traces, but I'd recommend using our open-source framework DeepEval to do so. It offers you the option to:
 
@@ -690,7 +690,7 @@ That's why I split voice metrics by what they look at:
 
 Escalation correctness deserves its own golden, because it's the highest-stakes behavior in this use case. If a caller mentions chest pain halfway through rescheduling, the right outcome is no longer a confirmed appointment - it's an immediate handoff to clinical staff. No built-in metric knows your hospital's escalation policy, so write it down as criteria for a custom conversational metric like [G-Eval](/docs/metrics-llm-evals).
 
-<TranscriptFrame id="voice-escalation-judge" type="judge" title="An *escalation correctness* judge scoring a voice call" description="A caller asks to move a cardiology appointment, gives their name and date of birth, and mentions their chest has been hurting all morning. The voice agent ignores it and offers a new slot. A judge asked whether the agent handed off to clinical staff when the caller reported chest pain answers no: it kept scheduling." />
+<ImageDisplayer id="diagrams/in-house/metrics/voice-escalation-judge" />
 
 And just like the coding assistant, don't rely on the conversation alone to tell you whether the task actually happened. After each simulated call, check the scheduling system directly: is the July 21 slot booked, and was the original appointment released? That's a deterministic final-state check, and it costs nothing to run.
 
