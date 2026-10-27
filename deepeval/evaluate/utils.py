@@ -24,7 +24,15 @@ from deepeval.evaluate.types import TestResult
 
 if TYPE_CHECKING:
     from deepeval.classifiers.base_classifier import BaseClassifier
-from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
+from deepeval.tracing.api import (
+    BaseApiSpan,
+    ExpectationKind,
+    ExpectationVerdict,
+    ExpectationsData,
+    TraceApi,
+    TraceSpanApiStatus,
+)
+from deepeval.evaluate.expectations import _ExpectationEvaluator
 from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.utils import (
@@ -56,9 +64,41 @@ def _is_metric_successful(metric_data: MetricData) -> bool:
     return False
 
 
+def create_expectations_data(
+    metric: _ExpectationEvaluator, metric_data: MetricData
+) -> ExpectationsData:
+    conditions = [
+        (ExpectationKind.MUST, condition)
+        for condition in metric.expectations.must
+    ] + [
+        (ExpectationKind.MUST_NOT, condition)
+        for condition in metric.expectations.must_not
+    ]
+    return ExpectationsData(
+        success=metric_data.success,
+        score=metric_data.score,
+        reason=metric_data.reason,
+        verdicts=[
+            ExpectationVerdict(
+                kind=kind,
+                condition=condition,
+                status=verdict.status,
+                reason=verdict.reason,
+                evidence=verdict.evidence,
+            )
+            for (kind, condition), verdict in zip(
+                conditions, metric.verdicts or []
+            )
+        ],
+        evaluationModel=metric_data.evaluation_model,
+        evaluationCost=metric_data.evaluation_cost,
+        error=metric_data.error,
+    )
+
+
 def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:
-        return MetricData(
+        metric_data = MetricData(
             name=metric.__name__,
             threshold=metric.threshold,
             score=None,
@@ -74,7 +114,7 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             verboseLogs=metric.verbose_logs,
         )
     else:
-        return MetricData(
+        metric_data = MetricData(
             name=metric.__name__,
             score=metric.score,
             threshold=metric.threshold,
@@ -89,6 +129,11 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
         )
+    if isinstance(metric, _ExpectationEvaluator):
+        metric_data.expectations_data = create_expectations_data(
+            metric, metric_data
+        )
+    return metric_data
 
 
 def create_classification(

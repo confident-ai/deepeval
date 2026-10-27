@@ -6,8 +6,6 @@ languages: [python]
 ---
 
 
-import { ASSETS } from "@site/src/assets";
-
 You can also generate **synthetic Goldens from scratch**, without needing any documents or contexts.
 
 <div
@@ -17,7 +15,7 @@ You can also generate **synthetic Goldens from scratch**, without needing any do
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.synthesizeFromScratch} />
+  <ImageDisplayer id="diagrams/in-house/datasets/goldens-from-scratch" />
 </div>
 
 :::info
@@ -135,13 +133,16 @@ There is **ONE** mandatory parameter when using the `generate_goldens_from_scrat
       ),
     },
     {
-      question: "Can my team generate goldens from scratch without code?",
+      question: "When should I stop relying on goldens generated from scratch?",
       answer: (
         <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can connect your knowledge bases and run the generation pipeline
-          no-code — tweak filtration, evolutions, and styling, experiment with
-          variations, and collaborate on the resulting dataset as a team.
+          Generating from scratch is useful when you have no data at all. Once
+          you're in production, failing traces are a better source:{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces them before anyone has written an eval, clusters them into
+          failure modes, and turns them into goldens for your next eval.
         </>
       ),
     },

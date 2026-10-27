@@ -314,7 +314,7 @@ Note that **simulation** and **evaluation** are separate phases: the simulator r
 
 </Switch>
 
-We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe your application's performance over time:
+If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run also appears there:
 
 <VideoDisplayer
   src={ASSETS.evaluationMultiTurnE2eReport}
@@ -325,7 +325,7 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 
 ## Hyperparameters
 
-Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts). Pass them directly to `evaluate()`:
+Log the model, prompt, and other configuration values with each test run to record which configuration produced which scores. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts). Pass them directly to `evaluate()`:
 
 <Switch>
 
@@ -353,7 +353,7 @@ await evaluate(conversationalTestCases, [new TurnRelevancyMetric()], {
 
 </Switch>
 
-On Confident AI, the logged values become filterable axes for comparing test runs and surfacing the configuration that performs best.
+The values are stored with the test run, and on Confident AI too if you're logged in.
 
 ## In CI/CD
 
@@ -476,16 +476,16 @@ See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for assertio
     },
     {
       question:
-        "Can my team review long conversations on the cloud in a shared UI?",
+        "Can I catch failing conversations in production?",
       answer: (
         <>
-          Multi-turn runs work locally, but inspecting long transcripts in a
-          terminal is painful. When logged into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team), the same run produces a cloud
-          testing report
-          where your team can read each conversation, see per-turn scores, and
-          track trends over time — optional and requiring no code changes.
+          Yes. Multi-turn runs work locally, and once you're live{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing conversation traces, routes them to the right
+          annotators, and turns them into conversational goldens for your next
+          eval — optional and requiring no code changes.
         </>
       ),
     },

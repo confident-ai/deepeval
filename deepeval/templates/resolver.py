@@ -31,6 +31,8 @@ MetricTemplateMethod = Literal[
     "generate_alignment_verdicts",
     "generate_answers",
     "generate_arena_winner",
+    "generate_audio_reason",
+    "generate_audio_verdicts",
     "generate_binary_verdict",
     "generate_claims",
     "generate_evaluation_results",
@@ -70,6 +72,7 @@ MetricTemplateMethod = Literal[
     # Score asked where the LLM prompt returned a graded score.
     "_experimental_system_one_verdict",
     "_experimental_system_one_answered_verdict",
+    "_experimental_system_one_audio_verdict",
     "_experimental_system_one_on_topic_verdict",
     "_experimental_system_one_score",
     "_experimental_system_one_args_score",
@@ -83,6 +86,7 @@ MetricTemplateMethod = Literal[
     # `system_one`: a JSON array of Noul / Score / Choice questions that
     # describe the whole metric as one System One request.
     "_experimental_system_one_questions",
+    "_experimental_system_one_audio_questions",
     "_experimental_system_one_mcp_use_questions",
 ]
 

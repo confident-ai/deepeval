@@ -4,7 +4,10 @@ import tempfile
 import json
 import csv
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
-from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
+from deepeval.dataset.utils import (
+    convert_convo_goldens_to_convo_test_cases,
+    convert_goldens_to_test_cases,
+)
 from deepeval.test_case import (
     Turn,
     LLMTestCase,
@@ -692,3 +695,62 @@ class TestSaveAndLoad:
 
             assert reloaded.test_cases[0].context == ["c1", "c2"]
             assert reloaded.test_cases[0].retrieval_context == ["r1", "r2"]
+
+
+class TestDatasetVersion:
+    def _pulled_dataset(self) -> EvaluationDataset:
+        dataset = EvaluationDataset()
+        dataset._alias = "my-dataset"
+        dataset._id = "dataset-id"
+        dataset._version = "00.00.03"
+        return dataset
+
+    def test_add_test_case_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        test_case = LLMTestCase(input="What is 2 + 2?")
+
+        dataset.add_test_case(test_case)
+
+        assert test_case._dataset_id == "dataset-id"
+        assert test_case._dataset_version == "00.00.03"
+
+    def test_test_cases_setter_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        test_case = LLMTestCase(input="What is 2 + 2?")
+
+        dataset.test_cases = [test_case]
+
+        assert test_case._dataset_version == "00.00.03"
+
+    def test_goldens_setter_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        golden = Golden(input="What is 2 + 2?")
+
+        dataset.goldens = [golden]
+
+        assert golden._dataset_version == "00.00.03"
+
+    def test_converted_test_cases_carry_dataset_version(self):
+        goldens = [Golden(input="What is 2 + 2?")]
+
+        test_cases = convert_goldens_to_test_cases(
+            goldens, "my-dataset", "dataset-id", "00.00.03"
+        )
+
+        assert test_cases[0]._dataset_id == "dataset-id"
+        assert test_cases[0]._dataset_version == "00.00.03"
+
+    def test_converted_convo_test_cases_carry_dataset_version(self):
+        goldens = [
+            ConversationalGolden(
+                scenario="User books a flight",
+                turns=[Turn(role="user", content="Book me a flight")],
+            )
+        ]
+
+        test_cases = convert_convo_goldens_to_convo_test_cases(
+            goldens, "my-dataset", "dataset-id", "00.00.03"
+        )
+
+        assert test_cases[0]._dataset_id == "dataset-id"
+        assert test_cases[0]._dataset_version == "00.00.03"

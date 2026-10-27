@@ -5,8 +5,6 @@ sidebar_label: Improve Your RAG Agent
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In this section, we are going to iterate on multiple hyperparameters for our RAG agent to see which of them perform the best by using `deepeval`'s evaluations.
 
 **Retrieval-Augmented Generation (RAG)** applications in particular among most LLM applications have a very large set of tunable hyperparameters that significantly improve the performance of the agent, some of these hyperparameters are:
@@ -60,7 +58,7 @@ print(len(retriever_test_cases))
 print(len(generator_test_cases))
 ```
 
-You can use these test cases to evaluate your RAG agent anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
+You can use these test cases to evaluate your RAG agent anywhere and anytime. This assumes you pushed the dataset with `dataset.push()` in the previous section, since `pull()` loads it from Confident AI. See [evaluation datasets](/docs/evaluation-datasets) to learn more.
 
 ## Iterating on Hyperparameters
 
@@ -348,7 +346,7 @@ The new `RAGAgent` now answers reliably in the desired `json` format. This is th
 <Tabs items={["UI", "Raw"]}>
 <Tab value="UI">
 
-<ImageDisplayer src={ASSETS.tutorialQaAgentOverview} alt="UI Image" />
+<ImageDisplayer id="screenshots/example-apps/rag-qa-agent" />
 
 </Tab>
 <Tab value="Raw">

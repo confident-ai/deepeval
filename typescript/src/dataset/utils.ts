@@ -182,6 +182,18 @@ export function trimAndLoadJson(jsonString: string): any {
   }
 }
 
+const LOCAL_ONLY_EXPECTATION_FIELDS = ["model", "evalMode"];
+
+export function stripLocalExpectationFields(
+  goldenBodies: Record<string, any>[] | undefined,
+): void {
+  for (const goldenBody of goldenBodies ?? []) {
+    for (const field of LOCAL_ONLY_EXPECTATION_FIELDS) {
+      delete goldenBody.expectations?.[field];
+    }
+  }
+}
+
 export function stripPrivateFields(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(stripPrivateFields);
