@@ -135,12 +135,10 @@ from deepeval.tracing import evaluate_thread
 evaluate_thread(thread_id="your-thread-id", metric_collection="Metric Collection")
 ```
 
-You can create a metric collection on the Confident AI platform to run online evaluations and catch regression or bugs, [learn more here](https://www.confident-ai.com/docs/metrics/metric-collections).
+The metric collection you pass is created on Confident AI and holds the conversational metrics the thread is evaluated against. See the [metric collections docs](https://www.confident-ai.com/docs/metrics/metric-collections) for how to set one up.
 
 And that's it! You now have a reliable medical chatbot with component level tracing with just a few lines of code.
 
 :::tip[Next Steps]
-Setup [Confident AI](https://deepeval.com/tutorials/tutorial-setup) to track your medical chatbot's performance across builds, regressions, and evolving datasets. **It's free to get started.** _(No credit card required)_
-
-Learn more [here](https://www.confident-ai.com).
+Once your chatbot is talking to real patients, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces the failing production threads before anyone has written an eval for them, routes them to the right annotators, and turns them into `ConversationalGolden`s for your next simulation run. **It's free to get started.** _(No credit card required)_ To connect, follow the [Confident AI setup steps](/tutorials/tutorial-setup#setting-up-confident-ai).
 :::

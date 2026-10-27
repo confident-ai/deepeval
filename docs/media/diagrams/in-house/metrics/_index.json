@@ -1,0 +1,99 @@
+{
+  "images": [
+    {
+      "file": "conversational-dag-turns-window.webp",
+      "title": "Turns window in a conversational DAG",
+      "alt": "Conversational test case where a window of turns feeds a node that summarizes the assistant's replies before the rest of the DAG",
+      "width": 2400,
+      "height": 722,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:turn-windows.png"
+        ]
+      }
+    },
+    {
+      "file": "conversational-dag.webp",
+      "title": "Conversational DAG for assistant replies",
+      "alt": "Conversational DAG that summarizes a chat's assistant replies, checks they answer the user, then scores 0, 5 or 10 by the assistant's tone",
+      "width": 2400,
+      "height": 1493,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:conversational-dag.png"
+        ]
+      }
+    },
+    {
+      "file": "dag-decision-tree-summary-headings.webp",
+      "title": "DAG decision tree for summary headings",
+      "alt": "DAG that extracts headings from a summary, checks for intro, body and conclusion, then scores 0, 2, 4 or 10 depending on their order",
+      "width": 2400,
+      "height": 1840,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png"
+        ]
+      }
+    },
+    {
+      "file": "dag-g-eval-leaf.webp",
+      "title": "DAG metric with a G-Eval leaf node",
+      "alt": "DAG that checks whether a sales email has four sentences or fewer, scoring 0 if not and otherwise passing it to a persuasiveness G-Eval",
+      "width": 2400,
+      "height": 1357,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/metrics:dag:sales-email.png"
+        ]
+      }
+    },
+    {
+      "file": "g-eval-usage-by-criteria.svg",
+      "title": "G-Eval usage by criteria",
+      "alt": "One month of G-Eval usage by criteria: Correctness 8.05M, Coherence 4.21M, Tonality 3.15M, Safety 2.74M and Custom RAG 2.04M runs",
+      "width": 960,
+      "height": 540,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases:usage.svg"
+        ]
+      }
+    },
+    {
+      "file": "evaluator-types.webp",
+      "title": "Types of evaluators: human and automated",
+      "alt": "Who evaluates splits into people and procedures. Human annotators are subject-matter experts, QA and product teams. Automated evaluators are deterministic checks for verifiable results, LLM-as-a-judge for results that need semantic judgment, and statistical and NLP scores for reference similarity.",
+      "width": 2136,
+      "height": 1137
+    },
+    {
+      "file": "metric-evidence-in-test-case.webp",
+      "title": "The test case fields each metric reads",
+      "alt": "An LLM test case with input, actual_output and optional retrieval_context, tools_called and expected_tools. Answer relevancy reads input and actual_output. Faithfulness reads actual_output and retrieval_context. Tool correctness reads tools_called and expected_tools.",
+      "width": 2136,
+      "height": 1356
+    },
+    {
+      "file": "metric-fit-by-application.webp",
+      "title": "Metrics used by each example application",
+      "alt": "How much each example application in this guide relies on each metric, from 0 (not used) to 3 (primary). The document extractor relies on exact match. The coding agent relies on task completion and tool correctness. The RAG QA pipeline relies on faithfulness and contextual recall. The voice chatbot relies on task completion, conversation completeness and turn-taking.",
+      "width": 2136,
+      "height": 1401
+    },
+    {
+      "file": "extracted-vs-expected-record.webp",
+      "title": "An extracted record matched field by field against the expected record",
+      "alt": "The extracted record and the expected record matched field by field. The bill number BOL-042, the total weight of 1240 kg and the port of loading Rotterdam match; the carrier is Maersk Line in the extraction but Maersk in the golden, so an exact match on the whole record fails.",
+      "width": 2136,
+      "height": 1041
+    },
+    {
+      "file": "voice-escalation-judge.webp",
+      "title": "An escalation correctness judge scoring a voice call",
+      "alt": "A caller asks to move a cardiology appointment, gives their name and date of birth, and mentions their chest has been hurting all morning. The voice agent ignores it and offers a new slot. A judge asked whether the agent handed off to clinical staff when the caller reported chest pain answers no: it kept scheduling.",
+      "width": 2136,
+      "height": 1080
+    }
+  ]
+}

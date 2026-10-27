@@ -67,6 +67,7 @@ API_KEY_PATTERN = re.compile(
     r"[A-Za-z0-9+/]+={0,2}$",
     re.IGNORECASE,
 )
+MIN_API_KEY_LENGTH = 20
 
 
 def _prompt_and_persist_region(save: Optional[str]) -> None:
@@ -90,6 +91,15 @@ def _print_api_key_location() -> None:
         f"[link={settings_url}]{settings_url}[/link] under "
         "[bold]Project Settings > API Keys[/bold]."
     )
+
+
+def _get_pasted_api_key_error(api_key: str) -> Optional[str]:
+    if len(api_key) < MIN_API_KEY_LENGTH or any(c.isspace() for c in api_key):
+        return (
+            "That doesn't look like a Confident AI API key. Copy the full "
+            "key from Project Settings > API Keys."
+        )
+    return None
 
 
 def _get_pasted_api_key_warnings(
@@ -132,10 +142,15 @@ def _prompt_paste_api_key() -> str:
         api_key = coerce_blank_to_none(
             typer.prompt("🔐 Enter your project API key", hide_input=True)
         )
-        if api_key:
-            _warn_for_pasted_api_key(api_key)
-            return api_key
-        print("❌ Project API key cannot be empty. Please try again.\n")
+        if not api_key:
+            print("❌ Project API key cannot be empty. Please try again.\n")
+            continue
+        error = _get_pasted_api_key_error(api_key)
+        if error:
+            print(f"❌ {error}\n")
+            continue
+        _warn_for_pasted_api_key(api_key)
+        return api_key
 
 
 def _open_platform_and_prompt_api_key() -> str:
@@ -359,6 +374,9 @@ def login_command(
             if api_key is not None:
                 span.set_method(LoginMethod.API_KEY_FLAG)
                 key = api_key
+                error = _get_pasted_api_key_error(key)
+                if error:
+                    raise AuthFlowError(error)
                 _warn_for_pasted_api_key(key)
             else:
                 key = _resolve_login_key(save, span)
@@ -396,9 +414,15 @@ def login_command(
                 "Follow our quickstart tutorial here: "
                 f"[bold][link={quickstart_url}]{quickstart_url}[/link][/bold]"
             )
+        except (typer.Abort, KeyboardInterrupt):
+            span.set_outcome(LoginOutcome.ABANDONED)
+            print("\nLogin cancelled. You are not logged in.")
         except Exception as e:
             span.set_outcome(LoginOutcome.FAILED)
             print(f"Login failed: {e}")
+
+    if span.outcome is not LoginOutcome.COMPLETED:
+        raise typer.Exit(code=1)
 
 
 def logout_command(

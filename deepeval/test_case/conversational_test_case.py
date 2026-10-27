@@ -34,6 +34,7 @@ class MultiTurnParams(Enum):
     ROLE = "role"
     CONTENT = "content"
     PROVIDER_TRANSCRIPT = "provider_transcript"
+    AUDIO = "audio"
     METADATA = "metadata"
     TAGS = "tags"
     SCENARIO = "scenario"
@@ -270,6 +271,7 @@ class ConversationalTestCase(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _dataset_version: Optional[str] = PrivateAttr(default=None)
 
     @property
     def additional_metadata(self) -> Optional[Dict]:

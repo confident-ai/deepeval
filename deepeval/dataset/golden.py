@@ -236,6 +236,7 @@ class Golden(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _dataset_version: Optional[str] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def set_is_multimodal(self):
@@ -354,6 +355,7 @@ class ConversationalGolden(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _dataset_version: Optional[str] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def sync_persona(self):

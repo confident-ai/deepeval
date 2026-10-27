@@ -29,6 +29,7 @@ from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
 from .transcription_accuracy.transcription_accuracy import (
     TranscriptionAccuracyMetric,
 )
+from .audio_glitch.audio_glitch import AudioGlitchMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .tool_permission.tool_permission import ToolPermissionMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
@@ -149,6 +150,7 @@ __all__ = [
     "TurnContextualRecallMetric",
     "TurnContextualRelevancyMetric",
     "TranscriptionAccuracyMetric",
+    "AudioGlitchMetric",
     # Multimodal metrics
     "TextToImageMetric",
     "ImageEditingMetric",

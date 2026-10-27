@@ -17,7 +17,7 @@ Tracing your LLM application records its full execution from start to finish. Th
 
 An LLM trace is made up of multiple individual spans. A **span** is a flexible, user-defined scope for evaluation or debugging. A full **trace** of your application contains one or more spans.
 
-<ImageDisplayer src={ASSETS.llmTrace} alt="LLM Trace" />
+<ImageDisplayer id="diagrams/in-house/tracing/trace-span-tree" />
 
 The most important thing to understand is how traces and spans map to evaluation scopes in `deepeval`:
 
@@ -128,7 +128,7 @@ To set up tracing in your LLM app, you need to understand two key concepts:
 - **Trace**: The full execution of your app, whose ordered spans form the trajectory taken through the run.
 - **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
-You should login to see traces for free on Confident AI:
+Tracing works locally with no account. To also send traces to Confident AI, log in:
 
 ```bash
 deepeval login
@@ -717,8 +717,8 @@ const supervisorAgent = observe({
 
 </Switch>
 
-:::tip[Pairs well with Confident AI]
-If you also push your traces to [Confident AI](#visualize-and-monitor-on-confident-ai), span types unlock tailored displays in the observability dashboard — model + token cost rendered on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.
+:::tip[Span types carry over]
+If you also send your traces to [Confident AI](#evaluating-production-traces), span types carry over — model + token cost on LLM spans, chunk size and top-k on retriever spans, tool descriptions on tool spans. Same `type` parameter, no extra code.
 :::
 
 ## Reference goldens at runtime
@@ -788,11 +788,9 @@ This is the right tool for short-lived jobs, serverless handlers, and sandboxes 
 
 If you send traces through OpenTelemetry, `ConfidentSpanExporter.force_flush()` and `ContextAwareSpanProcessor.force_flush()` wait on the same queue, so the standard `TracerProvider.force_flush()` call also drains pending traces.
 
-## Visualize and Monitor on Confident AI
+## Evaluating Production Traces
 
-Everything above runs entirely locally — you don't need an account for any of it. But once your traces start carrying real data (test cases, span types, tags, metadata, token costs), reading them in a terminal stops scaling.
-
-[Confident AI](https://www.confident-ai.com) is the official platform for `deepeval` and renders the exact same trace data you're already producing into a UI:
+Everything above runs entirely locally — you don't need an account for any of it. Once your app is live, the same traces can go to [Confident AI](https://www.confident-ai.com/products/llm-observability), which surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and shows user sentiment and behavior across traces:
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
@@ -807,7 +805,7 @@ You get this with **zero additional code** — just log in:
 deepeval login
 ```
 
-Once logged in, the same `@observe`-decorated app will also stream traces in real-time, let you run [online evaluations](https://www.confident-ai.com/docs/llm-tracing/online-evals) on complete trajectories or individual spans, [log prompt versions](https://www.confident-ai.com/docs/llm-tracing/features/log-prompts) on LLM spans, and visualize [token costs](https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost) across runs.
+Once logged in, the same `@observe`-decorated app streams its traces in real time. Failing traces can be routed to the right annotators and turned into goldens for your next eval, and [online evals](https://www.confident-ai.com/docs/llm-tracing/online-evals) run on complete trajectories or individual spans as traces come in.
 
 ## Next Steps
 
@@ -894,28 +892,21 @@ Now that you have your traces, you can evaluate the observable result end-to-end
     {
       question: "Do I need an account to use tracing?",
       answer:
-        "No. Everything — spans, test cases on spans, span types, metadata, token costs — runs entirely locally. An account is only needed if you want to stream and visualize traces on the cloud.",
+        "No. Everything — spans, test cases on spans, span types, metadata, token costs — runs entirely locally. An account is only needed if you want to send traces to Confident AI.",
     },
     {
       question:
-        "Can my team visualize traces in a UI, keep them on the cloud, and monitor production?",
+        "Can I use these traces to catch failures in production?",
       answer: (
         <>
-          Once traces carry real data, reading them in a terminal stops
-          scaling. Logging into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the official
-          platform for <code>deepeval</code>) renders the exact same trace data
-          into a UI
-          with zero extra code — your team gets a shared cloud view, real-time
-          production traces,{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>
-          , and{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/features/token-usage-cost">
-            token cost
+          Yes. Logging into{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
           </a>{" "}
-          tracking. It's optional and local tracing works the same without it.
+          sends the same traces with zero extra code. It surfaces failing
+          production traces before anyone has written an eval for them, routes
+          them to the right annotators, and turns them into goldens for your
+          next eval. It's optional and local tracing works the same without it.
         </>
       ),
     },

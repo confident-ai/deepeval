@@ -291,7 +291,7 @@ Results are keyed by test case content plus metric configuration, so a cached re
 
 ## Hyperparameters
 
-Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination.
+Log the model, prompt, and other configuration values with each test run so you know which configuration produced which scores.
 
 <Switch>
 
@@ -347,7 +347,7 @@ A `Prompt` is logged by reference, so pull it before passing it as a hyperparame
 
 </Switch>
 
-Non-string values are stringified, and any key with an empty value is dropped. On Confident AI the logged values become filterable axes for comparing test runs and surfacing the configuration that performs best.
+Non-string values are stringified, and any key with an empty value is dropped. If you're logged in, the values are also attached to the run on Confident AI.
 
 ## Flags for `deepeval test run`
 
@@ -504,7 +504,7 @@ npx deepeval test run llm_app.test.ts -s
 
 ### Identifier
 
-Name test runs to better identify them on [Confident AI](https://confident-ai.com). An example of where this is helpful is if you're running automated deployment pipelines, have deployment IDs, or just want a way to identify which test run is which for comparison purposes.
+Name test runs to better identify them, including on Confident AI if you're logged in. An example of where this is helpful is if you're running automated deployment pipelines, have deployment IDs, or just want a way to identify which test run is which for comparison purposes.
 
 <Switch>
 
@@ -566,7 +566,7 @@ deepeval test run test_example.py -d "failing"
 npx deepeval test run llm_app.test.ts -d "failing"
 ```
 
-Every test case is still posted to Confident AI — `-d` only filters the terminal output.
+If you're logged in, every test case is still posted to Confident AI — `-d` only filters the terminal output.
 
 </Case>
 
@@ -586,7 +586,7 @@ deepeval test run test_example.py -r 2
 
 ### Official Test Runs
 
-The `--official` flag (or `-o`) marks the resulting test run as the **official test run** on [Confident AI](https://confident-ai.com). The official run is used as the point of comparison for regression testing. This requires a `CONFIDENT_API_KEY`.
+The `--official` flag (or `-o`) marks the resulting test run as the **official test run** on Confident AI. The official run is used as the point of comparison for regression testing. This requires a `CONFIDENT_API_KEY`.
 
 <Switch>
 
@@ -697,15 +697,13 @@ def function_to_be_called_after_test_run():
     },
     {
       question:
-        "Can I tag a run with an identifier so my team can find it later on the cloud?",
+        "Can I tag a run with an identifier so it's easier to find later?",
       answer: (
         <>
           Yes. The <code>identifier</code> config (and flag) labels a test run
-          so it's easy to locate. That's especially handy when results are sent
-          to <a href="https://www.confident-ai.com">Confident AI</a> (the
-          platform from the <code>deepeval</code> team), where your team can
-          browse identified runs in a shared cloud UI and compare them over
-          time. Sending results there is optional — runs work the same locally.
+          so it's easy to locate, for example by deployment ID in an automated
+          pipeline. If you're logged in, the label also shows on the run in
+          Confident AI. Runs work the same locally either way.
         </>
       ),
     },

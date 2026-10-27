@@ -1,0 +1,94 @@
+{
+  "images": [
+    {
+      "file": "component-level-evals.webp",
+      "title": "Component-level evals on spans in a trace",
+      "alt": "Trace of nested agent, retriever, LLM and tool spans, some mapped to their own LLM test case and metrics, with zoomed-in test case fields",
+      "width": 2400,
+      "height": 1220,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/component-level-evals.png"
+        ]
+      }
+    },
+    {
+      "file": "conversational-test-case.webp",
+      "title": "Multi-turn conversational test case structure",
+      "alt": "Multi-turn LLM interaction of alternating user input and LLM output turns, with optional scenario, expected outcome and user description",
+      "width": 2400,
+      "height": 1082,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png"
+        ]
+      }
+    },
+    {
+      "file": "end-to-end-evals.webp",
+      "title": "End-to-end evaluation of an LLM app",
+      "alt": "User input flows through an LLM app's retriever, generator and tools; input and output become one test case with context and tools called",
+      "width": 2400,
+      "height": 891,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:end-to-end-llm-evals.png"
+        ]
+      }
+    },
+    {
+      "file": "llm-test-case.webp",
+      "title": "Parameters of an LLM test case",
+      "alt": "Single LLM interaction: input flows through optional tools called and retrieval context to actual output, beside optional reference fields",
+      "width": 2400,
+      "height": 905,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png"
+        ]
+      }
+    },
+    {
+      "file": "llm-evaluation-overview.webp",
+      "title": "An LLM application and the evaluators that score it",
+      "alt": "An LLM application made of a model such as Claude, OpenAI or Gemini, prompts, retrieval, tools and MCP, memory and guardrails. Its outputs and traces go to LLM evaluation, which uses deterministic checks, LLM-as-a-judge and human annotation to produce scores such as task completion 0.92 and faithfulness 0.61.",
+      "width": 2136,
+      "height": 1113
+    },
+    {
+      "file": "evaluator-cost-by-volume.webp",
+      "title": "Evaluation cost by number of test cases, per evaluator",
+      "alt": "Cost and time to evaluate against the number of test cases. Human annotation starts at zero but rises steeply. LLM-as-a-judge starts slightly higher and rises slowly. Deterministic checks cost the most to set up but stay almost flat.",
+      "width": 2136,
+      "height": 1386
+    },
+    {
+      "file": "evaluation-scope-decision.webp",
+      "title": "Choosing an evaluation scope",
+      "alt": "If you don’t care about the final outcome, trace the app and evaluate components only. If you do, ask whether you also care about the inner components: if not, run end-to-end evals only; if so, trace the app and evaluate both end to end and per component.",
+      "width": 2136,
+      "height": 1392
+    },
+    {
+      "file": "black-box-evaluation.webp",
+      "title": "Black-box: comparing a task with its final outcome",
+      "alt": "A task, resolve the duplicate charge, goes into an LLM application whose RAG, tools, MCP and model calls are not inspected. The final outcome, one refund issued, is compared with what should have happened.",
+      "width": 2136,
+      "height": 1083
+    },
+    {
+      "file": "white-box-checkpoints.webp",
+      "title": "White-box: checkpoints inside an agent’s execution",
+      "alt": "A task goes to an agent that plans, retrieves context from a knowledge base and selects a tool and its arguments, all scored for plan adherence. The tool call goes to an MCP server, which reads and writes customer records inside the external systems’ security boundary, and its result becomes the final state.",
+      "width": 2136,
+      "height": 2409
+    },
+    {
+      "file": "test-case-anatomy.webp",
+      "title": "Single-turn and multi-turn test case fields",
+      "alt": "A single-turn test case takes input, expected_output and context from the golden and adds actual_output, retrieval_context and tools_called from the run. A multi-turn test case takes the scenario, expected_outcome and user_description from the golden and adds the turns from the simulated conversation.",
+      "width": 2136,
+      "height": 1233
+    }
+  ]
+}
