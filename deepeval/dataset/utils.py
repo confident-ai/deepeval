@@ -32,6 +32,7 @@ def strip_local_expectation_fields(golden_bodies: List[Dict[str, Any]]):
         for field in _LOCAL_ONLY_EXPECTATION_FIELDS:
             expectations.pop(field, None)
 
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -231,11 +232,15 @@ def trimAndLoadJson(input_string: str) -> Any:
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
-        # Strip a trailing comma before a closing ] or } and retry, but only
-        # after a direct parse fails, so valid JSON string values containing
-        # ", ]" or ", }" are never corrupted.
+        # Match quoted strings first, including escaped quotes/backslashes,
+        # so repairing a structural comma never rewrites string contents.
         try:
-            return json.loads(re.sub(r",\s*([\]}])", r"\1", stripped))
+            repaired = re.sub(
+                r'("(?:\\.|[^"\\])*")|,\s*(?=[\]}])',
+                lambda match: match.group(1) or "",
+                stripped,
+            )
+            return json.loads(repaired)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
     except Exception as e:
