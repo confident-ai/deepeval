@@ -32,6 +32,7 @@ def strip_local_expectation_fields(golden_bodies: List[Dict[str, Any]]):
         for field in _LOCAL_ONLY_EXPECTATION_FIELDS:
             expectations.pop(field, None)
 
+
 # RetrievedContextData declares an @model_serializer, so a plain model_dump
 # flattens it and a save/load round-trip loses the source. Serialize each item
 # to a namespaced, parseable marker instead, and reconstruct it on load.
@@ -132,6 +133,7 @@ def convert_test_cases_to_goldens(
             "output_token_count": test_case.output_token_count,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
+            "expected_labels": test_case.expected_labels,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -193,6 +195,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
+            "expected_labels": test_case.expected_labels,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
