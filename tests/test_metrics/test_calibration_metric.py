@@ -519,6 +519,42 @@ def test_reset_starts_a_new_run():
     assert m.get_calibration_result().n_samples == 3
 
 
+@pytest.mark.parametrize("mode", ["measure", "sync_evaluate", "async_evaluate"])
+def test_same_name_different_outcome_keeps_both_rows(mode):
+    # Scenario from review feedback on #3485: distinct cases sharing a name.
+    m = CalibrationMetric(async_mode=False)
+    cases = [
+        make_case(0.9, 1, name="example"),
+        make_case(0.9, 0, name="example"),
+    ]
+    if mode == "measure":
+        run_sync(m, cases)
+    else:
+        run_evaluate(m, cases, run_async=(mode == "async_evaluate"))
+    result = m.get_calibration_result()
+    assert result.n_samples == 2
+    assert result.brier_score == pytest.approx(0.41)  # (0.01 + 0.81) / 2
+    assert result.ece == pytest.approx(0.4)  # |0.9 - 0.5|
+
+
+def test_same_name_same_numbers_different_input_keeps_both_rows():
+    m = CalibrationMetric(async_mode=False)
+    cases = [
+        LLMTestCase(
+            input=q,
+            actual_output="a",
+            name="example",
+            metadata={"confidence": 0.9, "correct": 1},
+        )
+        for q in ("q1", "q2")
+    ]
+    run_sync(m, cases)
+    result = m.get_calibration_result()
+    assert result.n_samples == 2
+    assert result.brier_score == pytest.approx(0.01)
+    assert result.ece == pytest.approx(0.1)
+
+
 def test_two_metrics_do_not_share_state():
     a, b = CalibrationMetric(async_mode=False), CalibrationMetric(
         async_mode=False

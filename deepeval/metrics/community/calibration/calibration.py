@@ -81,7 +81,8 @@ class CalibrationMetric(BaseMetric):
     * In async ``evaluate()`` DeepEval copies the metric per test case, so read
       the aggregate from ``your_metric.get_calibration_result()``, not from
       per-case metric objects.
-    * Set ``name`` on test cases to make reruns idempotent.
+    * Set ``name`` on test cases to make reruns idempotent. Rows are keyed by
+      name plus content, so distinct cases may share a name.
     """
 
     # Metadata-only: INPUT is a mandatory LLMTestCase field anyway.
@@ -202,7 +203,21 @@ class CalibrationMetric(BaseMetric):
             conf, outcome = _coerce_row(
                 metadata[self.confidence_key], metadata[self.correct_key]
             )
-            self.run_store.add(conf, outcome, key=test_case.name)
+            # Named cases are keyed by name + content: retrying the same case
+            # stays idempotent, but distinct cases sharing a name keep their
+            # own rows.
+            key = (
+                None
+                if test_case.name is None
+                else (
+                    test_case.name,
+                    repr(test_case.input),
+                    repr(test_case.actual_output),
+                    conf,
+                    outcome,
+                )
+            )
+            self.run_store.add(conf, outcome, key=key)
         except (TypeError, ValueError) as e:
             self.error = str(e)
             raise
