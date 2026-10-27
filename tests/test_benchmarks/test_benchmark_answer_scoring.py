@@ -101,3 +101,22 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# TruthfulQA MC2: a repeated index must not push the score above 100
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "target,prediction,expected",
+    [
+        ("1,2", "1,1,1,2", 100),
+        ("1,3,4", "[1, 1, 3, 4]", 100),
+        ("1,1,2", "1,2", 100),
+        ("1,2", "1", 50),
+        ("1,2", "3", 0),
+    ],
+)
+def test_truth_identification_score_counts_each_answer_once(
+    target, prediction, expected
+):
+    assert Scorer.truth_identification_score(target, prediction) == expected
