@@ -33,7 +33,7 @@
  *
  * `utm_campaign` and `utm_term` come from the visitor's stored last_touch
  * (captured from the URL on their most recent UTM landing). This lets a Google
- * ad campaign survive the deepeval-docs hop into app.confident-ai.com.
+ * ad campaign survive the deepeval-docs hop into cloud.confident-ai.com.
  *
  * `site_path` comes from the per-tab trail that UtmCapture records in
  * sessionStorage on every route change (see visitor-attribution.ts), prefixed
@@ -59,7 +59,7 @@ export const CONFIDENT_HOSTS_BY_NAME = {
   /** Marketing site + cloud docs. The default for nearly every link. */
   WWW: 'https://www.confident-ai.com',
   /** App dashboard / sign-up. */
-  APP: 'https://app.confident-ai.com',
+  APP: 'https://cloud.confident-ai.com',
   /** Marketing root (no `www.` prefix). */
   ROOT: 'https://confident-ai.com',
 } as const;

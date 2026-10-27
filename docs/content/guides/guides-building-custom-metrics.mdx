@@ -10,7 +10,7 @@ In `deepeval`, anyone can easily build their own custom LLM evaluation metric th
 
 - Running your custom metric in **CI/CD pipelines**.
 - Taking advantage of `deepeval`'s capabilities such as **metric caching and multi-processing**.
-- Have custom metric results **automatically sent to Confident AI**.
+- Reporting custom metric results in the same **test runs and reports** as built-in metrics.
 
 Here are a few reasons why you might want to build your own LLM evaluation metric:
 
@@ -19,7 +19,7 @@ Here are a few reasons why you might want to build your own LLM evaluation metri
 - **You wish to combine several `deepeval` metrics** (eg., it makes a lot of sense to have a metric that checks for both answer relevancy and faithfulness).
 
 :::info
-There are many ways one can implement an LLM evaluation metric. Here is a [great article on everything you need to know about scoring LLM evaluation metrics.](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation)
+There are many ways one can implement an LLM evaluation metric. The [metrics introduction](/docs/metrics-introduction) covers how `deepeval`'s built-in metrics are scored, which is a good reference before writing your own.
 :::
 
 ## Rules To Follow When Creating A Custom Metric
@@ -39,7 +39,7 @@ This is important because the `BaseMetric` class will help `deepeval` acknowledg
 
 ### 2. Implement the `__init__()` method
 
-The `BaseMetric` class gives your custom metric a few properties that you can configure and be displayed post-evaluation, either locally or on Confident AI.
+The `BaseMetric` class gives your custom metric a few properties that you can configure and be displayed post-evaluation.
 
 An example is the `threshold` property, which determines whether the `LLMTestCase` being evaluated has passed or not. Although **the `threshold` property is all you need to make a custom metric functional**, here are some additional properties for those who want even more customizability:
 
@@ -197,7 +197,7 @@ class CustomMetric(BaseMetric):
 
 ## Building a Custom Non-LLM Eval
 
-An LLM-Eval is an LLM evaluation metric that is scored using an LLM, and so a non-LLM eval is simply a metric that is not scored using an LLM. In this example, we'll demonstrate how to use the [rouge score](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) instead:
+An LLM-Eval is an LLM evaluation metric that is scored using an LLM, and so a non-LLM eval is simply a metric that is not scored using an LLM. In this example, we'll demonstrate how to use the rouge score instead:
 
 ```python
 from deepeval.scorer import Scorer

@@ -5,8 +5,6 @@ sidebar_label: MCP
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 **Model Context Protocol (MCP)** is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
 
 ## Architecture
@@ -17,7 +15,7 @@ The MCP architecture is composed of three main components:
 - **Client** – Maintains a one-to-one connection with a server and retrieves context from it for the host to use.
 - **Server** – Paired with a single client, providing the context the client passes to the host.
 
-<ImageDisplayer src={ASSETS.mcpArchitecture} alt="MCP Architecture Image" />
+<ImageDisplayer id="diagrams/in-house/agents/mcp-architecture" />
 
 For example, Claude acts as the MCP host. When Claude connects to an MCP server such as Google Sheets, the Claude runtime instantiates an MCP client that maintains a dedicated connection to that server. When Claude subsequently connects to another MCP server, such as Google Docs, it instantiates an additional MCP client to maintain that second connection. This preserves a one-to-one relationship between MCP clients and MCP servers, with the host (Claude) orchestrating multiple clients.
 
@@ -657,16 +655,16 @@ The [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness) matches on the typ
     },
     {
       question:
-        "Can my team visualize MCP tool/resource calls on the cloud in a UI?",
+        "Can I catch failing MCP tool calls in production?",
       answer: (
         <>
-          MCP evals run locally. For teams that want to inspect which tools,
-          resources, and prompts were invoked across runs,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) can visualize MCP interactions
-          and their
-          scores in a shared cloud UI — optional, with no change to your
-          evaluation code.
+          MCP evals run locally. Once you're live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces production traces where tool, resource, or prompt calls
+          went wrong and turns them into your next eval — optional, with no
+          change to your evaluation code.
         </>
       ),
     },

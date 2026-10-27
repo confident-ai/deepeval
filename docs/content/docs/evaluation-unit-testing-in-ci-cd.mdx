@@ -53,7 +53,7 @@ Pick the flavor that matches your application — [single-turn](/docs/evaluation
 
 <Tab value="Single-Turn">
 
-Within single-turn, we strongly recommend **instrumenting your app with tracing** so `deepeval` can build the `LLMTestCase` automatically from each run, and you get a full per-test-case trace on Confident AI for free.
+Within single-turn, we strongly recommend **instrumenting your app with tracing** so `deepeval` can build the `LLMTestCase` automatically from each run.
 
 The same setup also unlocks [component-level evaluation](/docs/evaluation-component-level-llm-evals), where metrics live on individual spans (retrievers, tool calls, sub-agents) instead of the trace as a whole.
 
@@ -432,8 +432,8 @@ jobs:
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to <Term py="deepeval test run" ts="npx deepeval test run"/>.
 
-:::tip
-We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance over time:
+:::tip[Goldens from production]
+A green CI run only covers the goldens you wrote. On [Confident AI](https://www.confident-ai.com/products/llm-observability), evals run on every production trace and flag the failing ones, and those failing traces become goldens for your next CI run:
 
 <VideoDisplayer
   src={ASSETS.tracingSpans}
@@ -560,16 +560,16 @@ Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs li
     },
     {
       question:
-        "Can my team see professional test reports on the cloud and track results over time?",
+        "How do I find what my CI suite is missing?",
       answer: (
         <>
-          Yes — and it's optional. Add <code>CONFIDENT_API_KEY</code> to your CI
-          secrets and the same <code>deepeval test run</code> sends results to{" "}
-          <a href="https://app.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team), giving your team sharable
-          testing reports, a
-          UI to inspect failing cases, and trend lines of performance across
-          commits. Without the key, the exact same tests still run locally.
+          Your CI suite tests the cases you expected. Once your app is live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces the production traces that fail anyway and turns them into
+          goldens for the next run of this suite. Without it, the exact same
+          tests still run locally.
         </>
       ),
     },
