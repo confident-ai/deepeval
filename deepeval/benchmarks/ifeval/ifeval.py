@@ -168,10 +168,17 @@ class IFEvalInstructionVerifier:
     ) -> bool:
         """Verify case-related constraints."""
         if instruction_id == "change_case:english_lowercase":
-            return response.lower() == response and response.islower()
+            # `response.lower() == response` already means "no uppercase
+            # letter is present" -- exactly what "No capital letters are
+            # allowed" requires. The extra `and response.islower()` doesn't
+            # narrow that; it adds an unrelated requirement that at least one
+            # *lowercase* letter be present, so a response with no cased
+            # characters at all (e.g. "42", or an empty string) fails a
+            # constraint it never violated.
+            return response.lower() == response
 
         elif instruction_id == "change_case:english_uppercase":
-            return response.upper() == response and response.isupper()
+            return response.upper() == response
 
         elif instruction_id == "change_case:english_titlecase":
             return response.istitle()
