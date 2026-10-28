@@ -19,7 +19,12 @@ import pytest
 
 from deepeval import assert_test, evaluate
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.evaluate.configs import AsyncConfig, DisplayConfig, ErrorConfig
+from deepeval.evaluate.configs import (
+    AsyncConfig,
+    CacheConfig,
+    DisplayConfig,
+    ErrorConfig,
+)
 from deepeval.metrics.community.calibration.calibration import (
     CalibrationMetric,
 )
@@ -37,6 +42,7 @@ from deepeval.metrics.community.calibration.store import (
 )
 from deepeval.metrics.utils.metrics import copy_metrics
 from deepeval.test_case import LLMTestCase
+from deepeval.test_run.cache import global_test_run_cache_manager
 
 DISTANCES = [
     0.917121,
@@ -774,3 +780,125 @@ def test_no_xdist_warning_without_the_env_var(monkeypatch):
     m = CalibrationMetric(async_mode=False)
     run_sync(m, named_cases())
     assert not any("xdist" in w for w in m.get_calibration_result().warnings)
+
+
+CACHE_ROWS = [(0.9, 1), (0.8, 0), (0.7, 1), (0.6, 0)]
+NEW_ROWS = [(0.5, 1), (0.4, 0)]
+
+
+class _CacheableCalibrationMetric(CalibrationMetric):
+    """CalibrationMetric that does NOT opt out of DeepEval's result cache."""
+
+    cacheable = True
+
+
+@pytest.fixture
+def isolated_cache(tmp_path, monkeypatch):
+    mgr = global_test_run_cache_manager
+    monkeypatch.setattr(mgr, "cache_file_name", str(tmp_path / "cache.json"))
+    monkeypatch.setattr(
+        mgr, "temp_cache_file_name", str(tmp_path / "temp.json")
+    )
+    monkeypatch.setattr(mgr, "cached_test_run", None)
+    monkeypatch.setattr(mgr, "temp_cached_test_run", None)
+    monkeypatch.setattr(mgr, "disable_write_cache", None)
+    return mgr
+
+
+def cache_cases(rows, tag):
+    return [
+        LLMTestCase(
+            input=f"{tag}-{i}",
+            actual_output="a",
+            name=f"{tag}-{i}",
+            metadata={"confidence": c, "correct": o},
+        )
+        for i, (c, o) in enumerate(rows)
+    ]
+
+
+def run_cached(metric, cases, run_async):
+    return evaluate(
+        test_cases=cases,
+        metrics=[metric],
+        async_config=AsyncConfig(run_async=run_async),
+        display_config=DisplayConfig(show_indicator=False, print_results=False),
+        cache_config=CacheConfig(write_cache=True, use_cache=True),
+    )
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_fully_cached_run_still_records_every_row(isolated_cache, run_async):
+    cases = cache_cases(CACHE_ROWS, "full")
+    run_cached(
+        CalibrationMetric(async_mode=False), cases, run_async
+    )  # warm cache
+    m = CalibrationMetric(async_mode=False)
+    run_cached(m, cases, run_async)
+    result = m.get_calibration_result()
+    assert result.n_samples == 4
+    assert result.brier_score == pytest.approx(0.275)
+    assert result.ece == pytest.approx(0.45)
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_partially_cached_run_aggregates_every_row(isolated_cache, run_async):
+    warm = cache_cases(CACHE_ROWS[:2], "part")
+    run_cached(CalibrationMetric(async_mode=False), warm, run_async)
+    m = CalibrationMetric(async_mode=False)
+    mixed = cache_cases(CACHE_ROWS[:2], "part") + cache_cases(NEW_ROWS, "new")
+    run_cached(m, mixed, run_async)
+    result = m.get_calibration_result()
+    assert result.n_samples == 4
+    assert result.brier_score == pytest.approx(0.265)
+    assert result.ece == pytest.approx(0.45)
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_metrics_that_stay_cacheable_are_still_served_from_cache(
+    isolated_cache, run_async
+):
+    cases = cache_cases(CACHE_ROWS, "keep")
+    run_cached(_CacheableCalibrationMetric(async_mode=False), cases, run_async)
+    m = _CacheableCalibrationMetric(async_mode=False)
+    run_cached(m, cases, run_async)
+    # measure() never ran on the second pass: the result came from the cache.
+    assert len(m.run_store) == 0
+
+
+def test_identical_named_cases_count_once():
+    m = CalibrationMetric(async_mode=False)
+    run_sync(m, [make_case(0.9, 1, name="dup"), make_case(0.9, 1, name="dup")])
+    assert m.get_calibration_result().n_samples == 1
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_identical_unnamed_cases_count_separately_through_evaluate(run_async):
+    m = CalibrationMetric(async_mode=False)
+    run_evaluate(m, [make_case(0.9, 1), make_case(0.9, 1)], run_async=run_async)
+    assert m.get_calibration_result().n_samples == 2
+
+
+def test_cache_lookup_skips_non_cacheable_metrics(monkeypatch):
+    from types import SimpleNamespace
+
+    from deepeval.test_run.cache import Cache
+
+    # Treat any cached entry with a matching name as a config match, so the
+    # only thing that can stop the lookup is the cacheable opt-out.
+    monkeypatch.setattr(
+        Cache, "same_metric_configs", staticmethod(lambda metric, config: True)
+    )
+    cacheable = _CacheableCalibrationMetric(async_mode=False)
+    opted_out = CalibrationMetric(async_mode=False)
+    cached_case = SimpleNamespace(
+        cached_metrics_data=[
+            SimpleNamespace(
+                metric_data=SimpleNamespace(name=m.__name__),
+                metric_configuration=None,
+            )
+            for m in (cacheable, opted_out)
+        ]
+    )
+    assert Cache.get_metric_data(cacheable, cached_case) is not None
+    assert Cache.get_metric_data(opted_out, cached_case) is None

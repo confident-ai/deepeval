@@ -88,6 +88,10 @@ class CalibrationMetric(BaseMetric):
     # Metadata-only: INPUT is a mandatory LLMTestCase field anyway.
     _required_params: List[SingleTurnParams] = [SingleTurnParams.METADATA]
 
+    # DeepEval's result cache returns a cached score without calling
+    # measure(), so cached rows would never reach the run store.
+    cacheable = False
+
     def __init__(
         self,
         threshold: Optional[float] = 0.5,

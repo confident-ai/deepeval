@@ -116,8 +116,10 @@ print(metric.score_breakdown)  # aggregates over the rows seen so far
 
 Each `measure()` call adds one row and recomputes the aggregate over the rows seen so far, so the final call sees the full dataset. To start a new run on the same metric instance, call `metric.reset()`.
 
+`CalibrationMetric` opts out of DeepEval's result cache (`cacheable = False`), so `use_cache=True` re-runs it every time and the aggregate always covers every row.
+
 :::tip
-Set `name` on your test cases to make re-runs idempotent: a test case with a `name` **replaces** the earlier row with the same name instead of being counted twice. Test cases without a `name` are always appended.
+Set `name` on your test cases to make re-runs idempotent: rows are keyed by name plus content (input, output, confidence and outcome), so re-running an identical named case counts once, while distinct cases may share a name. If a case's label changes under the same name, call `metric.reset()`. Test cases without a `name` are always appended.
 :::
 
 ### Within `assert_test`
