@@ -4,6 +4,11 @@
     "community-metrics-overview",
     "metrics-citation-faithfulness",
     "metrics-agent-loop-detection",
-    "metrics-tool-permission"
+    "metrics-tool-permission",
+    "metrics-latency-budget",
+    "metrics-cost-budget",
+    "metrics-deterministic-pii",
+    "metrics-citation-integrity",
+    "metrics-tool-outcome"
   ]
 }
