@@ -293,6 +293,7 @@ class PromptAlignmentMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES,),
+            expected_count=len(self.prompt_instructions),
         )
 
     @property

@@ -107,6 +107,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 elif run_system_one_eval(self, test_case):
                     return self.score
                 else:
+                    self.tools_called: List[ToolCall] = test_case.tools_called
                     self.verdicts: List[ArgumentCorrectnessVerdict] = (
                         self._generate_verdicts(
                             test_case.input,
@@ -149,6 +150,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             elif await a_run_system_one_eval(self, test_case):
                 return self.score
             else:
+                self.tools_called: List[ToolCall] = test_case.tools_called
                 self.verdicts: List[ArgumentCorrectnessVerdict] = (
                     await self._a_generate_verdicts(
                         test_case.input,
@@ -287,6 +289,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES,),
+            expected_count=len(self.tools_called),
         )
 
     @property
