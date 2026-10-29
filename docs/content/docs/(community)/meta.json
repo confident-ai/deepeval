@@ -4,6 +4,25 @@
     "community-metrics-overview",
     "metrics-citation-faithfulness",
     "metrics-agent-loop-detection",
-    "metrics-tool-permission"
+    "metrics-tool-permission",
+    "metrics-latency-budget",
+    "metrics-cost-budget",
+    "metrics-deterministic-pii",
+    "metrics-citation-integrity",
+    "metrics-tool-outcome",
+    "metrics-retrieval-ranking",
+    "metrics-streaming-latency",
+    "metrics-secret-leakage",
+    "metrics-context-sufficiency",
+    "metrics-retrieval-redundancy",
+    "metrics-chunk-utilization",
+    "metrics-context-window-budget",
+    "metrics-output-length-budget",
+    "metrics-delegation-outcome",
+    "metrics-tool-retry-thrash",
+    "metrics-self-consistency",
+    "metrics-classic-text-overlap",
+    "metrics-pairwise-elo",
+    "metrics-fluency-coherence"
   ]
 }
