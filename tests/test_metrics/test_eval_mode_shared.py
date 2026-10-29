@@ -43,14 +43,21 @@ def _clean_env(monkeypatch):
 # Which metrics honour `system_one`
 ###############################################
 
+# The System One-native custom metrics: they always decide with their
+# System One model (Jev or Drex by design), so they take no `eval_mode`.
+SYSTEM_ONE_NATIVE = {
+    "JevEval",
+    "ConversationalJevEval",
+    "DrexEval",
+    "ConversationalDrexEval",
+}
+
 # Metrics that take a System One model but have no whole-metric form: the
-# DAGs (task nodes need the LLM) and JevEval (Jev by design).
+# DAGs (task nodes need the LLM) and the System One-native metrics.
 NO_WHOLE_METRIC_FORM = {
     "DAGMetric",
     "ConversationalDAGMetric",
-    "JevEval",
-    "ConversationalJevEval",
-}
+} | SYSTEM_ONE_NATIVE
 
 
 def _metric_classes():
@@ -85,7 +92,7 @@ def test_every_system_one_metric_takes_eval_mode():
         for cls in _metric_classes()
         if _takes(cls, "system_one_model")
         and not _takes(cls, "eval_mode")
-        and cls.__name__ not in {"JevEval", "ConversationalJevEval"}
+        and cls.__name__ not in SYSTEM_ONE_NATIVE
     ]
     assert missing == []
 

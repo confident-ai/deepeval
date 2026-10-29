@@ -20,6 +20,7 @@ from .answer_relevancy.answer_relevancy import AnswerRelevancyMetric
 from .summarization.summarization import SummarizationMetric
 from .g_eval.g_eval import GEval, GEvalTemplate
 from .jev_eval.jev_eval import JevEval
+from .drex_eval.drex_eval import DrexEval
 from .arena_g_eval.arena_g_eval import ArenaGEval
 from .faithfulness.faithfulness import FaithfulnessMetric
 from .contextual_recall.contextual_recall import ContextualRecallMetric
@@ -69,6 +70,9 @@ from .conversational_g_eval.conversational_g_eval import ConversationalGEval
 from .conversational_jev_eval.conversational_jev_eval import (
     ConversationalJevEval,
 )
+from .conversational_drex_eval.conversational_drex_eval import (
+    ConversationalDrexEval,
+)
 from .multimodal_metrics import (
     TextToImageMetric,
     ImageEditingMetric,
@@ -99,9 +103,11 @@ __all__ = [
     "GEval",
     "GEvalTemplate",
     "JevEval",
+    "DrexEval",
     "ArenaGEval",
     "ConversationalGEval",
     "ConversationalJevEval",
+    "ConversationalDrexEval",
     "DAGMetric",
     "DeepAcyclicGraph",
     "ConversationalDAGMetric",

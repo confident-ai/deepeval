@@ -12,6 +12,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
     accrue_token_usage,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneScoreSpec,
     format_decision_reason,
     parse_questions,
@@ -439,7 +440,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         """`system_one` eval mode: the whole conversation as one Jev
         request, each turn carrying its `role`, `content` and
         `tools_called`; see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=[

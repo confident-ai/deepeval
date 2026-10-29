@@ -22,6 +22,7 @@ from deepeval.metrics.utils import (
     run_system_one_eval,
     a_run_system_one_eval,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
 )
 from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
@@ -311,7 +312,7 @@ class FaithfulnessMetric(BaseMetric):
     ) -> Optional[SystemOneEvalSpec]:
         """`system_one` eval mode: the whole metric as one Jev request over
         `actual_output` and `retrieval_context`; see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=[

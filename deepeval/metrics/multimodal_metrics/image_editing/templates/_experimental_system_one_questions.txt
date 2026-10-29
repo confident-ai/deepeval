@@ -1,0 +1,47 @@
+[
+  {
+    "type": "score",
+    "question": "[Image 1] in `input` is the original image and [Image 2] in `actual_output` is the edited version. How well does [Image 2] carry out the editing instruction in `input`?",
+    "levels": [
+      "Does not follow the editing instruction at all",
+      "Follows little of the instruction",
+      "Follows part of the instruction",
+      "Follows most of the instruction",
+      "Follows the instruction perfectly"
+    ],
+    "weight": 2
+  },
+  {
+    "type": "score",
+    "question": "How minimal is the edit from the original [Image 1] to the edited [Image 2]: is [Image 2] recognisably [Image 1] with only the requested change?",
+    "levels": [
+      "A completely different image",
+      "Heavily overedited",
+      "Noticeably overedited",
+      "Slightly overedited",
+      "A minimal yet effective edit of the original"
+    ]
+  },
+  {
+    "type": "score",
+    "question": "How natural does [Image 2] look (sense of distance, shadows, lighting)?",
+    "levels": [
+      "Not natural at all",
+      "Mostly unnatural",
+      "Somewhat natural",
+      "Mostly natural",
+      "Completely natural"
+    ]
+  },
+  {
+    "type": "score",
+    "question": "How free is [Image 2] of artifacts (distortion, watermarks, scratches, blurred faces, unusual body parts, subjects that do not fit together)?",
+    "levels": [
+      "Large portions are distorted or broken",
+      "Many artifacts",
+      "Some artifacts",
+      "Few artifacts",
+      "No artifacts"
+    ]
+  }
+]

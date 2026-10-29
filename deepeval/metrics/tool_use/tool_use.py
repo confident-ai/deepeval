@@ -10,6 +10,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneScoreSpec,
     format_decision_reason,
     parse_questions,
@@ -569,7 +570,7 @@ class ToolUseMetric(BaseConversationalMetric):
         """`system_one` eval mode: the whole conversation as one Jev request,
         each turn carrying its `role`, `content` and `tools_called`, with the
         metric's `available_tools`; see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=[

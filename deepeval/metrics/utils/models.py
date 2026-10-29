@@ -3,9 +3,12 @@ from typing import Optional, Tuple, Union
 from pydantic import SecretStr
 
 from deepeval.config.eval_mode import (
+    DECISION_PROVIDER_ENV_VAR,
     EVAL_MODE_ENV_VAR,
+    DecisionProvider,
     EvalMode,
     EvalModeName,
+    resolve_decision_provider,
     resolve_eval_mode,
 )
 from deepeval.config.settings import get_settings
@@ -35,6 +38,7 @@ from deepeval.models import (
     DeepSeekModel,
     OpenRouterModel,
     TypeSafeModel,
+    NaceModel,
 )
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
@@ -272,12 +276,13 @@ def initialize_system_one_model(
     eval mode never calls one.
 
     ``model`` is the metric's ``system_one_model`` argument: a configured
-    ``DeepEvalBaseSystemOneModel``, a TypeSafe model name, or ``None`` for
-    the default. ``eval_mode`` is the metric's eval mode; ``None`` resolves
-    it from settings (for metrics that take no ``eval_mode`` argument).
-    Under ``llm`` no model is built, so a missing TypeSafe key is not an
-    error; under ``hybrid`` and ``system_one`` a missing key or SDK fails
-    here, at construction, rather than mid-evaluation."""
+    ``DeepEvalBaseSystemOneModel``, a model name for the configured provider
+    (``DEEPEVAL_DECISION_PROVIDER``: TypeSafe by default, or Nace), or
+    ``None`` for that provider's default. ``eval_mode`` is the metric's eval
+    mode; ``None`` resolves it from settings (for metrics that take no
+    ``eval_mode`` argument). Under ``llm`` no model is built, so a missing
+    key is not an error; under ``hybrid`` and ``system_one`` a missing key or
+    SDK fails here, at construction, rather than mid-evaluation."""
     mode = _as_mode(eval_mode) if eval_mode is not None else resolve_eval_mode()
     if not mode.uses_system_one:
         return None
@@ -289,14 +294,73 @@ def initialize_system_one_model(
             "None, str, or DeepEvalBaseSystemOneModel."
         )
     try:
-        return TypeSafeModel(model=model)
+        return build_system_one_model(model)
     except DeepEvalError as e:
         raise DeepEvalError(
-            f"{EVAL_MODE_ENV_VAR}={mode} routes metric decisions to TypeSafe "
-            f"AI Jev, but it is not usable: {e} Configure it with `deepeval "
-            f"set-typesafe --prompt-api-key` or switch back with `deepeval "
+            f"{EVAL_MODE_ENV_VAR}={mode} routes metric decisions to "
+            f"{system_one_provider_label()}, but it is not usable: {e} "
+            f"{system_one_setup_hint()} Or switch back with `deepeval "
             f"set-eval-mode {EvalMode.LLM}`."
         ) from e
+
+
+def initialize_image_system_one_model(
+    model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
+    eval_mode: Optional[EvalModeName] = None,
+) -> Tuple[EvalMode, Optional[DeepEvalBaseSystemOneModel]]:
+    """The eval mode and System One model of an image metric. Image metrics
+    have no ``hybrid`` form, and the ``system_one`` setting moves them off
+    the LLM only onto a model that reads images: with Jev they stay on the
+    LLM, as before they had an eval mode. ``eval_mode="system_one"`` passed
+    to the metric is kept as asked."""
+    mode = resolve_eval_mode(eval_mode)
+    if mode is EvalMode.HYBRID:
+        return EvalMode.LLM, None
+    system_one_model = initialize_system_one_model(model, mode)
+    if (
+        eval_mode is None
+        and system_one_model is not None
+        and not system_one_model.supports_images()
+    ):
+        return EvalMode.LLM, None
+    return mode, system_one_model
+
+
+def build_system_one_model(
+    model: Optional[str] = None,
+) -> DeepEvalBaseSystemOneModel:
+    """The System One model for ``model``: a Drex or Jev model name picks
+    its own provider, anything else (or ``None``, the provider's default)
+    goes to the one ``DEEPEVAL_DECISION_PROVIDER`` names."""
+    name = (model or "").strip().lower()
+    if name.startswith(("drex-", "nace-ai/")):
+        return NaceModel(model=model)
+    if name.startswith("jev-"):
+        return TypeSafeModel(model=model)
+    if resolve_decision_provider() is DecisionProvider.NACE:
+        return NaceModel(model=model)
+    return TypeSafeModel(model=model)
+
+
+def system_one_provider_label() -> str:
+    if resolve_decision_provider() is DecisionProvider.NACE:
+        return "Nace Drex"
+    return "TypeSafe AI Jev"
+
+
+def system_one_setup_hint() -> str:
+    """How to configure the provider ``DEEPEVAL_DECISION_PROVIDER`` names,
+    for errors raised when it is not usable."""
+    if resolve_decision_provider() is DecisionProvider.NACE:
+        return (
+            "Configure it with `deepeval set-nace --prompt-api-key` (sets "
+            "NACE_API_KEY; needs `pip install nace-sdk`)."
+        )
+    return (
+        "Configure it with `deepeval set-typesafe --prompt-api-key` (sets "
+        f"TYPESAFE_API_KEY), or judge with Nace Drex: `deepeval set-nace` "
+        f"({DECISION_PROVIDER_ENV_VAR}={DecisionProvider.NACE})."
+    )
 
 
 ###############################################
