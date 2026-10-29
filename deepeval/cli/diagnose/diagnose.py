@@ -59,6 +59,7 @@ _PROVIDER_BY_CLASS = {
     "GrokModel": "Grok",
     "DeepSeekModel": "DeepSeek",
     "OpenRouterModel": "OpenRouter",
+    "AtlasCloudModel": "Atlas Cloud",
     "PortkeyModel": "Portkey",
     "TypeSafeModel": "TypeSafe AI",
     "OpenAIEmbeddingModel": "OpenAI",

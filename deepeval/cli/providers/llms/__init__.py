@@ -18,4 +18,5 @@ from deepeval.cli.providers.llms import (  # noqa: F401
     litellm,
     portkey,
     openrouter,
+    atlascloud,
 )
