@@ -28,7 +28,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 TOOL_SELECTION_LEVELS = [
@@ -38,6 +37,21 @@ TOOL_SELECTION_LEVELS = [
     "Mostly appropriate",
     "Fully appropriate",
 ]
+
+
+def _json_values_match(expected, called) -> bool:
+    """Compare tool values without equating JSON booleans with numbers."""
+    if isinstance(expected, bool) or isinstance(called, bool):
+        return type(expected) is type(called) and expected == called
+    if isinstance(expected, dict) and isinstance(called, dict):
+        return expected.keys() == called.keys() and all(
+            _json_values_match(expected[key], called[key]) for key in expected
+        )
+    if isinstance(expected, list) and isinstance(called, list):
+        return len(expected) == len(called) and all(
+            _json_values_match(a, b) for a, b in zip(expected, called)
+        )
+    return expected == called
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -504,13 +518,15 @@ class ToolCorrectnessMetric(BaseMetric):
             if self.tools_called[i].type != self.expected_tools[i].type:
                 return 0.0
             if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
-                if (
-                    self.tools_called[i].input_parameters
-                    != self.expected_tools[i].input_parameters
+                if not _json_values_match(
+                    self.tools_called[i].input_parameters,
+                    self.expected_tools[i].input_parameters,
                 ):
                     return 0.0
             if ToolCallParams.OUTPUT in self.evaluation_params:
-                if self.tools_called[i].output != self.expected_tools[i].output:
+                if not _json_values_match(
+                    self.tools_called[i].output, self.expected_tools[i].output
+                ):
                     return 0.0
         return 1.0
 
@@ -538,7 +554,9 @@ class ToolCorrectnessMetric(BaseMetric):
                         )
                     if (
                         ToolCallParams.OUTPUT in self.evaluation_params
-                        and expected_tool.output != called_tool.output
+                        and not _json_values_match(
+                            expected_tool.output, called_tool.output
+                        )
                     ):
                         match_score = 0.0
                     if match_score > best_score:
@@ -581,7 +599,9 @@ class ToolCorrectnessMetric(BaseMetric):
                     )
                 if (
                     ToolCallParams.OUTPUT in self.evaluation_params
-                    and expected_tool.output != called_tool.output
+                    and not _json_values_match(
+                        expected_tool.output, called_tool.output
+                    )
                 ):
                     score = 0.0
                 dp[i][j] = max(
@@ -604,15 +624,15 @@ class ToolCorrectnessMetric(BaseMetric):
 
     # For matching input parameters
     def _compare_dicts(self, dict1: Dict, dict2: Dict):
-        if dict1 == dict2:
+        if _json_values_match(dict1, dict2):
             return 1.0
         if self.should_exact_match:
-            return 1.0 if dict1 == dict2 else 0.0
+            return 0.0
         match_score = 0
         matched_keys = set(dict1.keys()).intersection(set(dict2.keys()))
         total_keys = set(dict1.keys()).union(set(dict2.keys()))
         for key in matched_keys:
-            if dict1[key] == dict2[key]:
+            if _json_values_match(dict1[key], dict2[key]):
                 match_score += 1 / len(total_keys)
             elif isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
                 match_score += self._compare_dicts(
