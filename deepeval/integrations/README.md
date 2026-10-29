@@ -1,68 +1,47 @@
 # `deepeval.integrations`
 
-Contributor reference for the framework integrations. Each integration plugs deepeval's tracing / evaluation into a third-party framework using one of four mechanisms.
+Contributor reference for the framework integrations.
 
 > Note: `deepeval.openai`, `deepeval.anthropic`, and `deepeval.openai_agents` live at the top level of the `deepeval` package, not under this folder. They're listed here so the matrix is complete.
 
-## Integration matrix
+## How an integration traces
 
-Capability columns:
+Every integration runs on confident-trace. Its entry point calls `ensure_confident_trace(...)` (`deepeval/tracing/otel/setup.py`) with the confident-trace instrumentations it needs. Those instrumentations, or the framework's own OpenTelemetry telemetry that they switch on, produce the spans.
 
-- **Bare** — calling the framework directly without an enclosing `@observe` / `with trace(...)` produces a trace in Confident AI. Each integration auto-creates a trace on first activity (callback fire, OTel root span, internal `@observe` wrap on the native client, etc.).
-- **`@observe` / `with trace(...)`** — when wrapped, the integration's spans flow into deepeval's native trace context: `update_current_trace(...)` / `update_current_span(...)` work anywhere in the call stack, single REST POST per trace, no UUID-reconciliation needed.
-- **`evals_iterator`** — works inside `dataset.evals_iterator(...)`, both end-to-end (`metrics=[...]` on the iterator) and component-level (`@observe(metrics=[...])` on a span). For OTel-mode integrations, `ContextAwareSpanProcessor` flips to REST routing automatically when `trace_manager.is_evaluating` is True so spans flow through `trace_manager` instead of OTLP.
-- **`deepeval test run`** — works under the pytest tracing-eval entry point (`@assert_test`, `@generate_trace_json`, `@assert_trace_json`).
+`@observe` runs on confident-trace too: each observed function is a confident-trace span.
 
-| Integration   | Mode                              | Entry point                                       | Bare | `@observe` / `with trace()` | `evals_iterator` | `deepeval test run` | Source                               |
-| ------------- | --------------------------------- | ------------------------------------------------- | :--: | :-------------------------: | :--------------: | :-----------------: | ------------------------------------ |
-| OpenAI        | Native client wrapper             | `from deepeval.openai import OpenAI`              | Yes  | Yes                         | Yes              | Yes                 | `deepeval/openai/`                   |
-| Anthropic     | Native client wrapper             | `from deepeval.anthropic import Anthropic`        | Yes  | Yes                         | Yes              | Yes                 | `deepeval/anthropic/`                |
-| LangChain     | Callback handler                  | `CallbackHandler()`                               | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/langchain/`   |
-| LangGraph     | Callback handler (LangChain's)    | `CallbackHandler()`                               | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/langchain/`   |
-| LlamaIndex    | Event handler                     | `instrument_llama_index()`                        | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/llama_index/` |
-| CrewAI        | Event listener + wrapper classes  | `instrument_crewai()`                             | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/crewai/`      |
-| OpenAI Agents | Trace processor + agent wrapper   | `add_trace_processor(DeepEvalTracingProcessor())` | Yes  | Yes                         | Yes              | Yes                 | `deepeval/openai_agents/`            |
-| AgentCore     | OpenTelemetry                     | `instrument_agentcore()`                          | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/agentcore/`   |
-| Strands       | OpenTelemetry                     | `instrument_strands()`                            | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/strands/`     |
-| Google ADK    | OpenTelemetry (via OpenInference) | `instrument_google_adk()`                         | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/google_adk/`  |
-| Pydantic AI   | OpenTelemetry                     | `DeepEvalInstrumentationSettings(...)`            | Yes  | Yes                         | Yes              | Yes                 | `deepeval/integrations/pydantic_ai/` |
+`DeepEvalSpanBridge` (`deepeval/tracing/otel/bridge.py`) collects the spans of every trace deepeval consumes: one inside `@observe` / `with trace(...)`, in `evals_iterator` or `evaluate`, or under a trace-shape test. It converts them into deepeval spans (`converter.py`), so metrics, `update_current_span(...)`, `update_current_trace(...)` and `next_*_span(...)` work the same as with `@observe`. confident-trace exports every trace to Confident AI, except one an evaluation or a trace-shape test consumes locally.
 
-> Every cell is Yes because of the recent OTel POC migrations: native-client / callback-handler / event-listener / trace-processor integrations were already feature-complete via direct `trace_manager` access, and the four OTel-mode integrations (Pydantic AI, AgentCore, Google ADK, Strands) now follow the same SpanInterceptor + `ContextAwareSpanProcessor` pattern[^poc] so their spans behave identically across all four surfaces. New integrations should target the same parity.
+| Integration   | Entry point                                       | confident-trace instrumentations                             | Adapter         |
+| ------------- | ------------------------------------------------- | ------------------------------------------------------------ | --------------- |
+| OpenAI        | `from deepeval.openai import OpenAI`              | `openai`                                                     | —               |
+| Anthropic     | `from deepeval.anthropic import Anthropic`        | `anthropic`                                                  | —               |
+| LangChain     | `CallbackHandler()`                               | `langchain`, `langgraph`                                     | —               |
+| LangGraph     | `CallbackHandler()`                               | `langchain`, `langgraph`                                     | —               |
+| LlamaIndex    | `instrument_llama_index()`                        | `llamaindex` and the model providers                         | `llamaindex`    |
+| CrewAI        | `instrument_crewai()`                             | `crewai` and the model providers                             | —               |
+| OpenAI Agents | `add_trace_processor(DeepEvalTracingProcessor())` | `openai_agents` (OpenInference), `openai`                    | `openinference` |
+| Pydantic AI   | `DeepEvalInstrumentationSettings(...)`            | `pydantic_ai` (Pydantic AI's own telemetry)                  | `pydantic_ai`   |
+| Strands       | `instrument_strands()`                            | `strands` (Strands' own telemetry)                           | `strands`       |
+| AgentCore     | `instrument_agentcore()`                          | `agentcore`, `strands`                                       | `strands`       |
+| Google ADK    | `instrument_google_adk()`                         | `google_adk` (ADK's own telemetry)                           | `google_adk`    |
+| OpenInference | `instrument_openinference()` / `deepeval.instrument()` | none: pair it with any `openinference-instrumentation-*` | `openinference` |
 
-[^poc]: Each OTel-mode `SpanInterceptor` reads trace-level metadata from `current_trace_context` per span (instead of baking it at `instrument_*()` time) and pushes a `BaseSpan` placeholder onto `current_span_context` for each OTel span's lifetime so `update_current_span(...)` from anywhere lands in `confident.span.*` attributes at `on_end`. The `ContextAwareSpanProcessor` (`deepeval/tracing/otel/context_aware_processor.py`) routes spans to REST when a deepeval trace context is active or an evaluation is running, OTLP otherwise.
+## What an integration adds
 
-## Mode reference
+confident-trace records what a framework does. An integration adds only what deepeval knows and the framework doesn't:
 
-- **Native client wrapper** — drop-in replacement for the vendor SDK's client class (e.g. `deepeval.openai.OpenAI` instead of `openai.OpenAI`). Spans are built directly via `trace_manager`. Lowest friction, but only covers calls that go through that client.
-- **Callback handler / event listener** — registers with the framework's own callback or event API (LangChain `BaseCallbackHandler`, LlamaIndex `BaseEventHandler`, CrewAI `BaseEventListener`, etc.). Spans are built directly via `trace_manager`. Covers all calls the framework dispatches through that surface — no need to swap clients.
-- **Trace processor** — for frameworks that already have their own tracing pipeline (OpenAI Agents SDK), we plug into it as a processor and translate events into deepeval spans.
-- **OpenTelemetry** — registers an OTel `SpanProcessor` against the global `TracerProvider`. The framework (or a community-maintained instrumentor like `openinference-instrumentation-google-adk`) emits OTel spans; deepeval translates them into Confident span attributes and ships them via OTLP.
+- **Trace settings** such as `name`, `thread_id` and `tags`. An integration that sees a run start stages them with `stage_next_trace(...)` (the LangChain handler). One that only configures instrumentation stamps them on its instrumentation scope's spans with `set_trace_defaults(...)` (Strands, ADK, OpenInference), or on one agent's tracer (Pydantic AI).
+- **Span settings** such as metrics. For a span the user can't reach from inside, stage them before it opens with `stage_next_span(...)` / `staged_next_span(...)`, which a user's `next_*_span(...)` overrides (CrewAI's `Crew` / `Agent` / `LLM`, OpenAI Agents' `Agent`). Inside a span's body, such as a tool's, call `update_current_span(...)`.
+- **Span type**, for a span only the integration can classify: `stage_next_span_type(...)` (LangChain types the invoked run as the agent).
 
-## Transport reference
+## Writing an adapter
 
-- **REST** — `trace_manager` posts the full trace to `api.confident-ai.com/v1/traces` once per trace.
-- **OTLP** — `BatchSpanProcessor` flushes OTel spans to `otel.confident-ai.com/v1/traces` on a timer / queue threshold.
+Most spans convert by the GenAI semantic conventions and `confident.*` attributes alone. When a framework records content elsewhere, add an `Adapter` (`deepeval/tracing/otel/adapters/base.py`) and register it in `ADAPTERS`, framework adapters ahead of the generic `openinference` one.
 
-## OpenInference (generic OTel backend for community instrumentors)
+- `detect(span)` claims the framework's spans, usually by instrumentation scope.
+- `start_span_type(span)` / `span_type(span)` classify spans the conventions don't. A declared `confident.span.type` still wins, and an adapter wins over the GenAI operation name.
+- `span_fields(...)` and `trace_fields(...)` only fill fields the span didn't set.
+- `self_providers` lists names a framework reports as the provider in place of the model's vendor.
 
-`deepeval/integrations/openinference/` is the SpanInterceptor + processor wiring shared by Google ADK and any other community-maintained OpenInference instrumentor. It sets up the `TracerProvider`, registers `OpenInferenceSpanInterceptor` (translates OpenInference semantic-convention attributes — `openinference.span.kind`, `llm.input_messages.{idx}`, `llm.output_messages.{idx}`, `tool.name`, `llm.token_count.*` — into `confident.span.*`), and routes spans through `ContextAwareSpanProcessor` (REST or OTLP).
-
-It is exposed at the top level as `deepeval.instrument(...)` so users can pair it with any OpenInference instrumentor directly:
-
-```python
-import deepeval
-from openinference.instrumentation.google_adk import GoogleADKInstrumentor
-
-deepeval.instrument(name="my-app", environment="development")
-GoogleADKInstrumentor().instrument()
-```
-
-`instrument_google_adk(...)` is just a convenience wrapper that calls `GoogleADKInstrumentor().instrument()` then `deepeval.instrument(...)` for you.
-
-AgentCore, Strands, and Pydantic AI do NOT delegate here — they have their own SpanInterceptors (`AgentCoreSpanInterceptor`, `StrandsSpanInterceptor`, `PydanticAISpanInterceptor`). AgentCore and Strands both read OTel GenAI semconv (`gen_ai.*`) attributes — Strands emits these natively, and AgentCore picks them up from the Strands runtime AWS Bedrock typically runs under, plus Traceloop / AWS Bedrock fallbacks; Pydantic AI uses its own logfire-shaped attrs. All four interceptors share the same processor wiring and the same `ContextAwareSpanProcessor` for routing.
-
-## Mixing OTel-mode with `@observe`
-
-When an OTel-mode integration runs inside an active `@observe` / `with trace(...)` context, the OTel span interceptor synchronizes the trace UUID (`current_trace_context.uuid = OTel trace_id`) so both transports land on the same trace server-side.
-
-For all OTel-mode integrations above, `ContextAwareSpanProcessor` automatically routes the OTel spans through `ConfidentSpanExporter` (REST) when a deepeval trace context is active or an evaluation is running — so a mixed trace produces a single REST POST and `update_current_trace(...)` / `update_current_span(...)` from anywhere in the call stack land on the right span. Pydantic AI is the reference implementation; AgentCore, Strands, and Google ADK (the latter via the shared `openinference/` backend) follow the same pattern.
+Map fields the way the Confident AI backend does for the same framework, so a trace looks the same locally and on the platform. The deliberate difference is content that evaluation reads: model and agent output becomes its answer text, and agent input the latest user message.

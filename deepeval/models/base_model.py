@@ -94,6 +94,7 @@ class DeepEvalBaseLLM(ABC):
                 "batch_generate",
                 "generate_samples",
             ],
+            suppress_confident_trace=True,
         )
 
     @abstractmethod

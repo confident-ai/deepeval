@@ -1,48 +1,35 @@
-from time import perf_counter
+"""deepeval's OpenAI Agents integration, built on confident-trace.
 
-from deepeval.tracing.tracing import (
-    Observer,
-    current_span_context,
-    trace_manager,
-)
-from deepeval.openai_agents.extractors import (
-    update_span_properties,
-    update_trace_properties_from_span_data,
-)
-from deepeval.tracing.context import current_trace_context
-from deepeval.tracing.utils import make_json_serializable
-from deepeval.tracing.types import (
-    BaseSpan,
-    LlmSpan,
-    TraceSpanStatus,
-)
+confident-trace traces agent runs through OpenInference's processor once
+deepeval starts it with the ``openai_agents`` instrumentation.
+``DeepEvalTracingProcessor`` adds what only deepeval knows: each run's trace
+settings, and the settings a deepeval ``Agent`` gives its spans.
+"""
+
+from typing import Any, Dict
+
+from opentelemetry import trace as otel_trace
+
+from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.integrations import Integration
+from deepeval.tracing.otel.bridge import trace_field_attributes
+from deepeval.tracing.otel.setup import ensure_confident_trace
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
-    from agents.tracing.span_data import (
-        AgentSpanData,
-        CustomSpanData,
-        FunctionSpanData,
-        GenerationSpanData,
-        GuardrailSpanData,
-        HandoffSpanData,
-        MCPListToolsSpanData,
-        ResponseSpanData,
-        SpanData,
-        TaskSpanData,
-        TurnSpanData,
-        TranscriptionSpanData,
-        SpeechSpanData,
-        SpeechGroupSpanData,
-    )
+    from agents.tracing.span_data import AgentSpanData
+
     from deepeval.openai_agents.patch import (
-        patch_default_agent_run_single_turn,
-        patch_default_agent_run_single_turn_streamed,
+        agent_spans,
+        patch_run_steps,
     )
 
     openai_agents_available = True
 except ImportError:
     openai_agents_available = False
+    TracingProcessor = object
+
+INSTRUMENTATIONS = ("openai_agents", "openai")
 
 
 def _check_openai_agents_available():
@@ -50,124 +37,58 @@ def _check_openai_agents_available():
         raise ImportError(
             "openai-agents is required for this integration. Install it via your package manager"
         )
+    try:
+        import openinference.instrumentation.openai_agents  # noqa: F401
+    except ImportError as error:
+        raise ImportError(
+            "openinference-instrumentation-openai-agents is required to trace "
+            "OpenAI Agents. Install it with "
+            "`pip install openinference-instrumentation-openai-agents`."
+        ) from error
 
 
 class DeepEvalTracingProcessor(TracingProcessor):
+    """Add it with ``agents.add_trace_processor(DeepEvalTracingProcessor())``.
+
+    It runs after OpenInference's processor, so the OpenTelemetry span for
+    each SDK span is current when that span starts.
+    """
+
     def __init__(self) -> None:
         _check_openai_agents_available()
-        patch_default_agent_run_single_turn()
-        patch_default_agent_run_single_turn_streamed()
-        self.span_observers: dict[str, Observer] = {}
+        with capture_tracing_integration(Integration.OPENAI_AGENTS):
+            ensure_confident_trace(INSTRUMENTATIONS)
+        patch_run_steps()
+        self._trace_fields: Dict[str, Dict[str, Any]] = {}
 
     def on_trace_start(self, trace: "Trace") -> None:
-        trace_dict = trace.export()
-        _trace_uuid = trace_dict.get("id")
-        _thread_id = trace_dict.get("group_id")
-        _trace_name = trace_dict.get("workflow_name")
-        _trace_metadata = trace_dict.get("metadata")
-
-        _trace = trace_manager.start_new_trace(trace_uuid=str(_trace_uuid))
-        _trace.thread_id = str(_thread_id)
-        _trace.name = str(_trace_name)
-        _trace.metadata = make_json_serializable(_trace_metadata)
-        current_trace_context.set(_trace)
-
-        trace_manager.add_span(  # adds a dummy root span
-            BaseSpan(
-                uuid=_trace_uuid,
-                trace_uuid=_trace_uuid,
-                parent_uuid=None,
-                start_time=perf_counter(),
-                name=_trace_name,
-                status=TraceSpanStatus.IN_PROGRESS,
-                children=[],
-            )
+        exported = trace.export() or {}
+        self._trace_fields[trace.trace_id] = trace_field_attributes(
+            {
+                "name": exported.get("workflow_name"),
+                "thread_id": exported.get("group_id"),
+                "metadata": exported.get("metadata"),
+            }
         )
 
     def on_trace_end(self, trace: "Trace") -> None:
-        trace_dict = trace.export()
-        _trace_uuid = trace_dict.get("id")
-        _trace_name = trace_dict.get("workflow_name")
-
-        trace_manager.remove_span(_trace_uuid)  # removing the dummy root span
-        trace_manager.end_trace(_trace_uuid)
-        current_trace_context.set(None)
+        self._trace_fields.pop(trace.trace_id, None)
 
     def on_span_start(self, span: "Span") -> None:
-        if not span.started_at:
+        otel_span = otel_trace.get_current_span()
+        if not otel_span.get_span_context().is_valid:
             return
-        current_span = current_span_context.get()
-        if current_span and isinstance(
-            current_span, LlmSpan
-        ):  # llm span started by
-            return
-
-        span_type = self.get_span_kind(span.span_data)
-        if span_type == "noop":
-            return
-
-        observer = Observer(span_type=span_type, func_name="NA")
-        if span_type == "llm":
-            observer.observe_kwargs["model"] = "temporary model"
-        observer.update_span_properties = (
-            lambda span_type: update_span_properties(span_type, span.span_data)
-        )
-        self.span_observers[span.span_id] = observer
-        observer.__enter__()
+        if span.parent_id is None:
+            # A run's first spans carry its trace settings.
+            otel_span.set_attributes(self._trace_fields.get(span.trace_id, {}))
+        if isinstance(span.span_data, AgentSpanData):
+            agent_spans[span.span_id] = otel_span
 
     def on_span_end(self, span: "Span") -> None:
-        if self.get_span_kind(span.span_data) == "noop":
-            return
-
-        update_trace_properties_from_span_data(
-            current_trace_context.get(), span.span_data
-        )
-
-        span_type = self.get_span_kind(span.span_data)
-        current_span = current_span_context.get()
-        if (
-            current_span
-            and isinstance(current_span, LlmSpan)
-            and span_type == "llm"
-        ):  # additional check if the span kind data is llm too
-            update_span_properties(current_span, span.span_data)
-
-        observer = self.span_observers.pop(span.span_id, None)
-        if observer:
-            observer.__exit__(None, None, None)
+        agent_spans.pop(span.span_id, None)
 
     def force_flush(self) -> None:
         pass
 
     def shutdown(self) -> None:
         pass
-
-    def get_span_kind(self, span_data: "SpanData") -> str:
-        if isinstance(span_data, AgentSpanData):
-            return "agent"
-        if isinstance(span_data, FunctionSpanData):
-            return "tool"
-        if isinstance(span_data, MCPListToolsSpanData):
-            return "tool"
-        if isinstance(span_data, GenerationSpanData):
-            return "llm"
-        if isinstance(span_data, ResponseSpanData):
-            return "llm"
-        if isinstance(span_data, HandoffSpanData):
-            return "custom"
-        if isinstance(span_data, CustomSpanData):
-            return "base"
-        if isinstance(span_data, GuardrailSpanData):
-            return "base"
-        if isinstance(
-            span_data,
-            (
-                TaskSpanData,
-                TurnSpanData,
-                TranscriptionSpanData,
-                SpeechSpanData,
-                SpeechGroupSpanData,
-            ),
-        ):
-            return "noop"
-        return "base"

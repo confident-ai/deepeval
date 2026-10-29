@@ -1,15 +1,15 @@
 {
-  "uuid": "59810b66-fe8e-407e-a368-bf60002d9dee",
+  "uuid": "227669e5-3259-4979-8d6b-b310a1070378",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "c04e242d-9bbe-4599-be93-2d88308efc49",
-      "name": "llm_generation",
+      "uuid": "cbecdac578161f28",
+      "name": "chat gpt-4o",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-02-15T05:57:13.379Z",
-      "endTime": "2026-02-15T05:57:14.245Z",
+      "startTime": "2026-10-21T14:05:31.709Z",
+      "endTime": "2026-10-21T14:05:33.091Z",
       "input": [
         {
           "role": "user",
@@ -17,22 +17,22 @@
         }
       ],
       "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here to help you. How can I assist you today?",
+      "integration": "OpenAI",
       "model": "gpt-4o",
+      "provider": "OpenAI",
       "inputTokenCount": 13.0,
       "outputTokenCount": 28.0,
       "metricCollection": "test_collection_1",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "OpenAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T05:57:13.379Z",
-  "endTime": "2026-02-15T05:57:14.246Z",
+  "startTime": "2026-10-21T14:05:31.708Z",
+  "endTime": "2026-10-21T14:05:33.092Z",
   "name": "test_name_1",
   "metadata": {
     "test_metadata_1": "test_value_1"

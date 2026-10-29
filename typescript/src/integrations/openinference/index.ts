@@ -1,120 +1,29 @@
-import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import {
-  BatchSpanProcessor,
-  SimpleSpanProcessor,
-  SpanProcessor,
-  ReadableSpan,
-  Span,
-  SpanExporter,
-} from "@opentelemetry/sdk-trace-base";
-import { Context } from "@opentelemetry/api";
-import { OpenInferenceSpanProcessor } from "@/integrations/openinference/processor";
-import { getVersion } from "@/cli/version";
-import { getSettings } from "@/config/settings";
-import { ExportResult, ExportResultCode } from "@opentelemetry/core";
-import { Prompt } from "@/prompt";
+/**
+ * deepeval's OpenInference integration, built on confident-trace.
+ *
+ * Any `@arizeai/openinference-instrumentation-*` instrumentor traces on the
+ * global tracer provider, which confident-trace runs once deepeval starts it.
+ * Register your instrumentor after `instrumentOpenInference(...)`.
+ */
+
+import type { Span } from "@opentelemetry/sdk-trace-base";
+
+import type { Prompt } from "@/prompt";
 import { recordTracingIntegration } from "@/telemetry";
-import { Integration } from "@/tracing/integrations";
-import { ROUTE_TO_REST_ATTRIBUTE } from "@/tracing/otel-routing";
 import { ConfidentAttr } from "@/tracing/attributes";
-
-// OpenInference exporter filter to remove the parent Id for root spans
-class OpenInferenceExporterWrapper implements SpanExporter {
-  private aiSpanIds = new Set<string>();
-
-  constructor(private readonly exporter: SpanExporter) {}
-
-  export(
-    spans: ReadableSpan[],
-    resultCallback: (result: ExportResult) => void,
-  ): void {
-    const currentBatchIds: string[] = [];
-
-    spans.forEach((span) => {
-      const attrs = (span as any).attributes || {};
-      if (
-        attrs[ConfidentAttr.INTERNAL_IS_OI_SPAN] ||
-        attrs["openinference.span.kind"]
-      ) {
-        const id = span.spanContext().spanId;
-        this.aiSpanIds.add(id);
-        currentBatchIds.push(id);
-      }
-    });
-
-    const sanitized = spans.map((span) => {
-      let parentSpanContext = span.parentSpanContext;
-      const attrs = (span as any).attributes || {};
-      const kind = attrs["openinference.span.kind"];
-
-      // 2. Identify potential root AI spans (LLM, AGENT, CHAIN)
-      if (kind === "LLM" || kind === "AGENT" || kind === "CHAIN") {
-        const parentId = span.parentSpanContext?.spanId;
-
-        if (!parentId || !this.aiSpanIds.has(parentId)) {
-          parentSpanContext = undefined;
-        }
-      }
-
-      return Object.assign(Object.create(span), {
-        parentSpanContext,
-      });
-    });
-
-    try {
-      this.exporter.export(sanitized as ReadableSpan[], resultCallback);
-    } catch {
-      resultCallback({ code: ExportResultCode.FAILED });
-    }
-
-    currentBatchIds.forEach((id) => this.aiSpanIds.delete(id));
-  }
-
-  shutdown(): Promise<void> {
-    return this.exporter.shutdown();
-  }
-
-  forceFlush(): Promise<void> {
-    return this.exporter.forceFlush?.() ?? Promise.resolve();
-  }
-}
-
-// --- OpenInference Filter Processor ---
-// Filters out non-OpenInference spans so foreign spans from other instrumentation
-export class OpenInferenceFilterProcessor implements SpanProcessor {
-  constructor(private readonly underlyingProcessor: SpanProcessor) {}
-
-  forceFlush(): Promise<void> {
-    return this.underlyingProcessor.forceFlush();
-  }
-
-  onStart(span: Span, parentContext: Context): void {
-    this.underlyingProcessor.onStart(span, parentContext);
-  }
-
-  onEnd(span: ReadableSpan): void {
-    const attrs = (span as any).attributes || {};
-    if (attrs[ROUTE_TO_REST_ATTRIBUTE]) return;
-    // Also allow spans that were flagged by OpenInferenceSpanProcessor in onStart
-    if (
-      attrs["openinference.span.kind"] ||
-      attrs[ConfidentAttr.INTERNAL_IS_OI_SPAN]
-    ) {
-      this.underlyingProcessor.onEnd(span);
-    }
-  }
-
-  shutdown(): Promise<void> {
-    return this.underlyingProcessor.shutdown();
-  }
-}
+import { Integration } from "@/tracing/integrations";
+import { SpanType, traceManager } from "@/tracing/tracing";
+import { resolveSpanType } from "@/tracing/otel/converter";
+import { SCOPE } from "@/tracing/otel/adapters/openinference";
+import {
+  ensureConfidentTrace,
+  flushConfidentTrace,
+  setTraceDefaults,
+} from "@/tracing/otel/setup";
 
 export interface OpenInferenceInstrumentationOptions {
+  /** The Confident AI key to send traces with, over `CONFIDENT_API_KEY`. */
   apiKey?: string;
-  otelEndpoint?: string;
   name?: string;
   threadId?: string;
   userId?: string;
@@ -129,146 +38,82 @@ export interface OpenInferenceInstrumentationOptions {
   agentMetricCollection?: string;
   toolMetricCollectionMap?: Record<string, string>;
   prompt?: Prompt;
+  /** @deprecated Set `CONFIDENT_OTEL_URL` instead. */
+  otelEndpoint?: string;
+  /** @deprecated Evaluations now collect spans locally on their own. */
   isTestMode?: boolean;
+  /** @deprecated No longer used. */
   debug?: boolean;
 }
 
-export function createOpenInferenceProcessors(
-  options?: OpenInferenceInstrumentationOptions,
-): SpanProcessor[] {
-  const settings = getSettings();
-  const apiKey =
-    options?.apiKey ??
-    (typeof process !== "undefined"
-      ? process.env.CONFIDENT_API_KEY
-      : undefined);
+let currentOptions: OpenInferenceInstrumentationOptions | null = null;
 
-  // The local processor is unconditional: it materialises spans in-process,
-  // which is what evals read. Only the OTLP exporter needs a key, so a keyless
-  // caller loses the export to Confident AI and nothing else.
-  if (!apiKey) {
-    return [new OpenInferenceSpanProcessor(options, { otlpEnabled: false })];
-  }
-
-  const baseUrl =
-    options?.otelEndpoint ||
-    settings.CONFIDENT_OTEL_URL ||
-    "https://otel.confident-ai.com";
-
-  const endpoint = baseUrl.endsWith("/")
-    ? `${baseUrl}v1/traces`
-    : `${baseUrl}/v1/traces`;
-
-  const otlpExporter = new OpenInferenceExporterWrapper(
-    new OTLPTraceExporter({
-      url: endpoint,
-      headers: { "x-confident-api-key": apiKey },
-    }),
+/** Trace whatever OpenInference instrumentors run for deepeval. */
+export function instrumentOpenInference(
+  options: OpenInferenceInstrumentationOptions = {},
+): void {
+  currentOptions = options;
+  if (options.apiKey)
+    traceManager.configure({ confidentApiKey: options.apiKey });
+  if (options.otelEndpoint)
+    process.env.CONFIDENT_OTEL_URL ??= options.otelEndpoint;
+  ensureConfidentTrace();
+  recordTracingIntegration(Integration.OPEN_INFERENCE);
+  setTraceDefaults(
+    { scope: SCOPE },
+    {
+      name: options.name,
+      threadId: options.threadId,
+      userId: options.userId,
+      testCaseId: options.testCaseId,
+      turnId: options.turnId,
+      metadata: options.metadata,
+      tags: options.tags,
+      environment: options.environment,
+      metricCollection:
+        options.traceMetricCollection ?? options.metricCollection,
+    },
+    // The label also has confident-trace export these spans.
+    { [ConfidentAttr.SPAN_INTEGRATION]: Integration.OPEN_INFERENCE },
+    (span) => spanSettings(span, options),
   );
-
-  const baseExporterProcessor = options?.isTestMode
-    ? new SimpleSpanProcessor(otlpExporter)
-    : new BatchSpanProcessor(otlpExporter);
-
-  return [
-    new OpenInferenceSpanProcessor(options),
-    new OpenInferenceFilterProcessor(baseExporterProcessor),
-  ];
 }
 
-let _openInferenceTracerProvider: NodeTracerProvider | null = null;
-let _currentOptions: OpenInferenceInstrumentationOptions | null = null;
-
-export function instrumentOpenInference(
-  options?: OpenInferenceInstrumentationOptions,
-): void {
-  _currentOptions = options || {};
-
-  const processors = createOpenInferenceProcessors(_currentOptions);
-
-  let environment = options?.environment;
-  if (!environment && getSettings().CONFIDENT_TRACE_ENVIRONMENT) {
-    environment = getSettings().CONFIDENT_TRACE_ENVIRONMENT;
-  } else if (!environment) {
-    environment = "development";
+/** The metric collection and prompt that `options` give `span`. */
+function spanSettings(
+  span: Span,
+  options: OpenInferenceInstrumentationOptions,
+): Record<string, string> {
+  const type = resolveSpanType(span, true);
+  const toolName = span.attributes["tool.name"];
+  const collection =
+    type === SpanType.LLM
+      ? options.llmMetricCollection
+      : type === SpanType.AGENT
+        ? options.agentMetricCollection
+        : type === SpanType.TOOL && typeof toolName === "string"
+          ? options.toolMetricCollectionMap?.[toolName]
+          : undefined;
+  const settings: Record<string, string> = {};
+  if (collection) settings[ConfidentAttr.SPAN_METRIC_COLLECTION] = collection;
+  const prompt = options.prompt;
+  if (type === SpanType.LLM && prompt) {
+    if (prompt._alias)
+      settings[ConfidentAttr.SPAN_PROMPT_ALIAS] = prompt._alias;
+    if (prompt.hash)
+      settings[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH] = prompt.hash;
+    if (prompt.label) settings[ConfidentAttr.SPAN_PROMPT_LABEL] = prompt.label;
+    if (prompt.version)
+      settings[ConfidentAttr.SPAN_PROMPT_VERSION] = prompt.version;
   }
-
-  recordTracingIntegration(Integration.OPEN_INFERENCE);
-
-  const provider = new NodeTracerProvider({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: "deepeval-ts-client",
-      "deepeval.sdk.language": "typescript",
-      "deepeval.sdk.version": getVersion(),
-      "deepeval.environment": environment,
-    }),
-    spanProcessors: processors,
-  });
-
-  _openInferenceTracerProvider = provider;
-
-  setupGracefulShutdown(provider, options?.debug);
-
-  provider.register();
-
-  if (options?.debug) {
-    console.log("DeepEval OpenInference tracing configured:", {
-      environment,
-      name: options?.name,
-      isTestMode: options?.isTestMode,
-    });
-  }
+  return settings;
 }
 
 export function getCurrentOptions(): OpenInferenceInstrumentationOptions | null {
-  return _currentOptions;
+  return currentOptions;
 }
 
-export function resetInstrumentation(): void {
-  _currentOptions = null;
-  _openInferenceTracerProvider = null;
-}
-
-function setupGracefulShutdown(provider: NodeTracerProvider, debug?: boolean) {
-  let isShuttingDown = false;
-
-  const shutdown = async (signal: string) => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-
-    if (debug) {
-      console.log(`DeepEval: Received ${signal}, flushing traces...`);
-    }
-
-    try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout")), 5000),
-      );
-
-      await Promise.race([provider.shutdown(), timeout]);
-
-      if (debug) console.log("DeepEval: Traces flushed successfully.");
-    } catch (err) {
-      if (debug) console.warn("DeepEval: Failed to flush traces on exit", err);
-    } finally {
-      if (signal === "SIGINT" || signal === "SIGTERM") {
-        process.exit(0);
-      }
-    }
-  };
-
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-
-  process.on("beforeExit", async () => {
-    await provider.forceFlush();
-  });
-}
-
+/** Wait for the OpenInference spans to be sent. */
 export async function forceFlush(): Promise<void> {
-  if (_openInferenceTracerProvider) {
-    await _openInferenceTracerProvider.forceFlush();
-  }
+  await flushConfidentTrace(30000);
 }
-
-export { OpenInferenceSpanProcessor };

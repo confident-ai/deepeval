@@ -67,21 +67,17 @@ This page covers **tracing and evaluating** AI SDK apps. To use an AI SDK `Langu
 
 `deepeval`'s Vercel AI SDK integration enables you to:
 
-- **Trace every AI SDK call** — `configureAiSdkTracing(...)` once, then pass the tracer into `experimental_telemetry` on each call.
+- **Trace every AI SDK call** — `configureAiSdkTracing(...)` once, then pass its tracer to `@ai-sdk/otel`'s `OpenTelemetry` integration in each call's `telemetry`.
 - **Evaluate the complete ordered [generation/tool-loop trajectory](/docs/evaluation-trajectory-based-llm-evals)** across all applicable LLM, tool, and retriever spans.
 - **Evaluate traces or individual components** with any `deepeval` metric.
 - **Run evals from scripts or CI/CD** — same instrumentation, different surfaces.
-- **Customize trace and span data** through configure options, AI SDK telemetry metadata, and `deepeval`'s span-staging helpers.
+- **Customize trace and span data** through configure options and `deepeval`'s span-staging helpers.
 
 ## Version Compatibility
 
-:::warning[Compatibility evidence]
-Historical version mappings are not available. The pair below is the exact version tested in CI.
+:::warning[AI SDK 7 only]
+`deepeval` traces AI SDK 7 (`ai>=7.0.93 <8`) through `@ai-sdk/otel`, on [confident-trace](https://www.npmjs.com/package/confident-trace), which needs Node.js 22 or later. AI SDK 5 and 6's `experimental_telemetry` is no longer supported.
 :::
-
-| AI SDK package | Compatible `deepeval` versions |
-| --- | --- |
-| `ai==6.0.97`; `@ai-sdk/openai==3.0.30` | `0.9.11` |
 
 ## Getting Started
 
@@ -92,7 +88,7 @@ Historical version mappings are not available. The pair below is the exact versi
 ### Installation
 
 ```bash
-npm install deepeval ai @ai-sdk/openai
+npm install deepeval ai @ai-sdk/openai @ai-sdk/otel
 ```
 
 No Confident AI account is needed to evaluate locally. Traces are built in-process either way; a `CONFIDENT_API_KEY` only adds the upload, so run `npx deepeval login` when you want them in a shared dashboard too.
@@ -103,18 +99,23 @@ No Confident AI account is needed to evaluate locally. Traces are built in-proce
 
 ### Instrument and evaluate
 
-Call `configureAiSdkTracing(...)` once at startup, then pass the returned tracer into `experimental_telemetry` on every AI SDK call you want traced.
+Call `configureAiSdkTracing(...)` once at startup, then pass its tracer to `@ai-sdk/otel`'s `OpenTelemetry` integration in the `telemetry` of every AI SDK call you want traced.
 
 ```typescript title="ai-sdk-agent.ts" showLineNumbers
 import { generateText, tool, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
+import { OpenTelemetry } from "@ai-sdk/otel";
 import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 import { TaskCompletionMetric } from "deepeval/metrics";
 
-const tracer = configureAiSdkTracing({ name: "weather-app" });
+const telemetry = {
+  integrations: [
+    new OpenTelemetry({ tracer: configureAiSdkTracing({ name: "weather-app" }) }),
+  ],
+};
 
 const ask = (question: string) =>
   generateText({
@@ -130,10 +131,7 @@ const ask = (question: string) =>
       }),
     },
     stopWhen: stepCountIs(2),
-    experimental_telemetry: {
-      isEnabled: true,
-      tracer,
-    },
+    telemetry,
   });
 
 // Goldens are the inputs you want to evaluate.
@@ -156,30 +154,28 @@ Done ✅. You've run your first eval with full traceability into the Vercel AI S
 </Steps>
 
 :::caution[Telemetry is opt-in per call]
-AI SDK only emits spans when `experimental_telemetry.isEnabled` is `true` and a `tracer` is provided. Forgetting either means `deepeval` never sees the call — configure once, pass the tracer on every `generateText` / `streamText` / `embed` you care about.
+AI SDK only emits spans for calls whose `telemetry` lists the `OpenTelemetry` integration with `deepeval`'s tracer. Forgetting it means `deepeval` never sees the call — configure once, pass `telemetry` on every `generateText` / `streamText` you care about.
 :::
 
 ## What gets traced
 
-Each top-level AI SDK call (`generateText`, `streamText`, `generateObject`, `streamObject`, `embed`, `embedMany`) that has telemetry enabled produces a **trace**. Inside it, Vercel’s `ai.*` spans map to `deepeval` span types:
+Each top-level AI SDK call (`generateText`, `streamText`, `generateObject`, `streamObject`) that has telemetry enabled produces a **trace**. Inside it, AI SDK's spans map to `deepeval` span types:
 
 | AI SDK span                                              | `deepeval` span |
 | -------------------------------------------------------- | --------------- |
-| `ai.generateText`, `ai.streamText`, `ai.generateObject`, `ai.streamObject`, and their `.doGenerate` / `.doStream` children | LLM |
+| `ai.generateText`, `ai.streamText`, `ai.generateObject`, `ai.streamObject` | Agent |
+| their model calls (`.doGenerate` / `.doStream`)          | LLM             |
 | `ai.toolCall`                                            | Tool            |
-| `ai.embed`, `ai.embedMany`, and their `.doEmbed` children | Retriever       |
 
 ```text
 Trace                              ← what the user observes
-└── LLM: ai.generateText            ← one generateText(...) call
-    ├── LLM: ai.generateText.doGenerate   ← model chooses a tool
-    ├── Tool: getWeather                  ← tool input + output
-    └── LLM: ai.generateText.doGenerate   ← final answer
+└── Agent: ai.generateText          ← one generateText(...) call
+    ├── LLM: chat gpt-4o-mini        ← model chooses a tool
+    ├── Tool: getWeather             ← tool input + output
+    └── LLM: chat gpt-4o-mini        ← final answer
 ```
 
-The trace and its component spans are independently evaluable. Every tool call is also collected onto the trace's `toolsCalled` so trace-level metrics can reason about tool use.
-
-There is **no agent span** — AI SDK's root is the generation call itself. Stage LLM / tool / retriever metrics with `nextLlmSpan` / `nextToolSpan` / `nextRetrieverSpan`, or score the whole run with trace-level metrics on `evalsIterator`.
+The trace and its component spans are independently evaluable. Every tool call is also collected onto the agent and the trace's `toolsCalled` so trace-level metrics can reason about tool use. Stage agent / LLM / tool metrics with `nextAgentSpan` / `nextLlmSpan` / `nextToolSpan`, or score the whole run with trace-level metrics on `evalsIterator`. Embedding calls aren't traced.
 
 ## Running evals
 
@@ -239,14 +235,14 @@ for await (const golden of dataset.evalsIterator({
 ```
 
 :::note[Evals keep spans in-process automatically]
-While `evalsIterator()` or `toPass()` is running, the processor routes spans into `deepeval`'s in-process trace manager so metrics can read them — you do not need `isTestMode: true` for that. Pass `isTestMode: true` when you want the same local path **outside** an eval (for example, asserting on traces in a unit test). Outside evals with a `CONFIDENT_API_KEY`, spans export over OTLP to Confident AI by default.
+While `evalsIterator()` or `toPass()` is running, `deepeval` collects the spans in-process so metrics can read them. Outside evals, with a `CONFIDENT_API_KEY`, spans export over OTLP to Confident AI.
 :::
 
 ## Evaluate agent trajectories
 
 For AI SDK, trajectory evaluation scores the complete ordered generation/tool-loop trace: the root generation and every applicable model, tool, and retriever span in execution order. There is no separate agent span. This differs from output-only evaluation, which judges only the final response, and component evaluation, which scores one span without considering the full tool loop.
 
-Pass trajectory metrics to `evalsIterator(...)`, then call the instrumented `ask(...)` function from above once per golden. Its `experimental_telemetry` configuration keeps the generation and tool loop in one trace.
+Pass trajectory metrics to `evalsIterator(...)`, then call the instrumented `ask(...)` function from above once per golden. Its `telemetry` configuration keeps the generation and tool loop in one trace.
 
 ```typescript title="ai-sdk-agent.ts" showLineNumbers
 import {
@@ -321,35 +317,13 @@ const getWeather = tool({
 
 `nextToolSpan(...)` stages the same fields from outside the tool, on the same one-shot semantic as `nextLlmSpan`.
 
-### Retriever calls (embeddings)
-
-`ai.embed` / `ai.embedMany` become retriever spans, so `nextRetrieverSpan(...)` stages a metric (or a Confident AI `metricCollection`) on the first one in the callback.
-
-```typescript title="ai-sdk-agent.ts" showLineNumbers
-import { embed } from "ai";
-import { openai } from "@ai-sdk/openai";
-import { nextRetrieverSpan } from "deepeval/tracing";
-...
-
-for await (const golden of dataset.evalsIterator()) {
-  await nextRetrieverSpan({ metricCollection: "embeddings_v1" }, () =>
-    embed({
-      model: openai.embedding("text-embedding-3-small"),
-      value: (golden as Golden).input,
-      experimental_telemetry: { isEnabled: true, tracer },
-    }),
-  );
-}
-```
-
 ## Customizing trace and span data
 
-AI SDK owns the span lifecycle, so customization happens at configure time, per-call telemetry metadata, or the span-staging boundary.
+AI SDK owns the span lifecycle, so customization happens at configure time or the span-staging boundary.
 
 - Use `configureAiSdkTracing({...})` for defaults that apply to every trace.
-- Use `experimental_telemetry.metadata` / `functionId` for values that change per call.
-- Use `nextLlmSpan(...)` / `nextToolSpan(...)` / `nextRetrieverSpan(...)` to stage component-level fields onto the next span the processor opens.
-- Use `updateCurrentSpan(...)` inside a tool body, where your code already sits on the span.
+- Use `nextAgentSpan(...)` / `nextLlmSpan(...)` / `nextToolSpan(...)` to stage component-level fields onto the next span AI SDK opens.
+- Use `updateCurrentSpan(...)` / `updateCurrentTrace(...)` inside a tool body, where your code already sits on the span.
 
 Configure-level defaults:
 
@@ -360,28 +334,6 @@ const tracer = configureAiSdkTracing({
   traceMetricCollection: "online_weather_v1",
 });
 ```
-
-Per-call telemetry — `functionId` becomes the trace name; recognized metadata keys become trace fields:
-
-```typescript title="ai-sdk-agent.ts" showLineNumbers
-await generateText({
-  model: openai("gpt-4o-mini"),
-  prompt: "What's the weather in Tokyo?",
-  experimental_telemetry: {
-    isEnabled: true,
-    tracer,
-    functionId: "weather-ask",
-    metadata: {
-      threadId: "thread-123",
-      userId: "user-xyz",
-      tags: ["production"],
-      traceName: "weather-ask",
-    },
-  },
-});
-```
-
-Recognized metadata keys: `threadId`, `userId`, `testCaseId`, `turnId`, `tags`, `context`, `traceName`, `traceMetricCollection`, `metricCollection`, `expectedOutput`, `sessionId`, `promptAlias`, `promptCommitHash`. Other keys fall through to span metadata.
 
 ## Advanced patterns
 
@@ -418,7 +370,7 @@ import { streamText } from "ai";
 const { textStream } = streamText({
   model: openai("gpt-4o-mini"),
   prompt: "Count from 1 to 5.",
-  experimental_telemetry: { isEnabled: true, tracer },
+  telemetry,
 });
 
 for await (const chunk of textStream) {
@@ -428,23 +380,18 @@ for await (const chunk of textStream) {
 
 ## API reference
 
-`configureAiSdkTracing({...})` accepts the following options and returns an OpenTelemetry `Tracer` to pass into `experimental_telemetry`.
+`configureAiSdkTracing({...})` accepts the following options and returns an OpenTelemetry `Tracer` to pass to `@ai-sdk/otel`'s `OpenTelemetry` integration.
 
 | Field                   | Type      | Description                                                                 |
 | ----------------------- | --------- | --------------------------------------------------------------------------- |
 | `apiKey`                | `string`  | Confident AI API key. Defaults to `CONFIDENT_API_KEY`.                        |
-| `otelEndpoint`          | `string`  | OTLP endpoint override. Defaults to Confident AI's OTel URL.                  |
 | `name`                  | `string`  | Default trace name.                                                         |
 | `environment`           | `string`  | Trace environment, e.g. `"development"` or `"production"`.                    |
 | `traceMetricCollection` | `string`  | Trace-level metric collection, for online evals on production traces.              |
-| `isTestMode`            | `boolean` | Force in-process spans outside of an eval session (unit tests, local debug).  |
-| `debug`                 | `boolean` | Log configure / flush diagnostics.                                          |
 
 Also exported:
 
-- `createDeepEvalProcessors(options?)` — build the span processors without registering a global provider (bring-your-own `NodeTracerProvider`).
-- `forceFlush()` — flush the registered provider (useful before a process exits outside an eval).
-- `DeepEvalSpanProcessor` — the processor that materializes `deepeval` spans from `ai.*` OTel spans.
+- `forceFlush()` — wait for pending spans to be sent (useful before a process exits outside an eval).
 
 For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`, `nextLlmSpan`) see the [tracing reference](/docs/evaluation-llm-tracing).
 
@@ -456,8 +403,8 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
       question: "Do I need an API key to evaluate an AI SDK app locally?",
       answer: (
         <>
-          No. Without a <code>CONFIDENT_API_KEY</code>, the processor still builds
-          every span in-process, so metrics, datasets,{" "}
+          No. Without a <code>CONFIDENT_API_KEY</code>, <code>deepeval</code> still
+          collects every span in-process, so metrics, datasets,{" "}
           <code>evalsIterator()</code> and <code>toPass()</code> all work. The key
           buys one thing: uploading the trace to Confident AI.
         </>
@@ -468,13 +415,10 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
       answer: (
         <>
           AI SDK telemetry is opt-in. Confirm you called{" "}
-          <code>configureAiSdkTracing(...)</code> once and passed{" "}
-          <code>
-            experimental_telemetry: {"{ isEnabled: true, tracer }"}
-          </code>{" "}
-          into the <code>generateText</code> / <code>streamText</code> /{" "}
-          <code>embed</code> call. Without both, no <code>ai.*</code> spans are
-          emitted.
+          <code>configureAiSdkTracing(...)</code> once and passed its tracer to{" "}
+          <code>@ai-sdk/otel</code>'s <code>OpenTelemetry</code> integration in
+          the <code>telemetry</code> of the <code>generateText</code> /{" "}
+          <code>streamText</code> call. Without it, AI SDK emits no spans.
         </>
       ),
     },
@@ -509,8 +453,9 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
       answer: (
         <>
           Yes. Keep <code>configureAiSdkTracing(...)</code> registered, pass
-          telemetry on each call, and set <code>threadId</code> /{" "}
-          <code>userId</code> in <code>experimental_telemetry.metadata</code>.
+          <code>telemetry</code> on each call, and set <code>threadId</code> /{" "}
+          <code>userId</code> with <code>updateCurrentTrace(...)</code> from a
+          tool.
           With a <code>traceMetricCollection</code> set,{" "}
           <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> runs evals on every production
           trace and flags the failing ones.

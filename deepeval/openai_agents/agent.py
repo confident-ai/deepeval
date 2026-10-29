@@ -5,7 +5,6 @@ from typing import Generic, TypeVar, List
 
 from deepeval.prompt import Prompt
 from deepeval.metrics import BaseMetric
-from deepeval.tracing.types import LlmSpan
 
 try:
     from agents.agent import Agent as BaseAgent

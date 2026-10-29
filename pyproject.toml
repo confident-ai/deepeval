@@ -16,7 +16,7 @@ deepeval = 'deepeval.cli.main:app'
 deepeval = "deepeval.plugins.plugin"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <4.0"
+python = ">=3.10, <4.0"
 requests = "^2.31.0"
 tqdm = "^4.66.1"
 pytest = "*"
@@ -52,6 +52,7 @@ jinja2 = "*"
 
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
+confident-trace = ">=0.1.11,<0.2.0"
 questionary = ">=2.0.0,<3.0.0"
 
 [tool.poetry.extras]
