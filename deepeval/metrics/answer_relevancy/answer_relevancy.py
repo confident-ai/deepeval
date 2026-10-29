@@ -57,6 +57,7 @@ class AnswerRelevancyMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        penalize_ambiguous_claims: bool = False,
         evaluation_template: Type[
             AnswerRelevancyTemplate
         ] = AnswerRelevancyTemplate,
@@ -77,6 +78,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.penalize_ambiguous_claims = penalize_ambiguous_claims
         self.evaluation_template = evaluation_template
 
     def measure(
@@ -173,6 +175,11 @@ class AnswerRelevancyMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
+            if (
+                verdict.verdict == Verdict.BORDERLINE
+                and self.penalize_ambiguous_claims
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -198,6 +205,11 @@ class AnswerRelevancyMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
+            if (
+                verdict.verdict == Verdict.BORDERLINE
+                and self.penalize_ambiguous_claims
+            ):
+                irrelevant_statements.append(f"(Ambiguous) {verdict.reason}")
 
         prompt = self._get_prompt(
             "generate_reason",
@@ -324,10 +336,15 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
+        passing = (
+            (Verdict.YES,)
+            if self.penalize_ambiguous_claims
+            else (Verdict.YES, Verdict.BORDERLINE)
+        )
         return score_qag_verdicts(
             self,
             self.verdicts,
-            passing=(Verdict.YES, Verdict.BORDERLINE),
+            passing=passing,
         )
 
     @property
