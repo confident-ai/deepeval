@@ -272,6 +272,12 @@ def evaluate(
                     )
                 )
 
+        # Cache lookups occur during execution, so set these beforehand.
+        test_run = global_test_run_manager.get_test_run()
+        if hyperparameters is not None or test_run.hyperparameters is None:
+            test_run.hyperparameters = process_hyperparameters(hyperparameters)
+            test_run.prompts = process_prompts(hyperparameters)
+
         with capture_evaluation_run(Entrypoint.EVALUATE):
             if async_config.run_async:
                 loop = get_or_create_event_loop()
@@ -324,11 +330,6 @@ def evaluate(
                     raise ValueError(
                         f"Invalid file type: {display_config.file_type}"
                     )
-
-        test_run = global_test_run_manager.get_test_run()
-        if hyperparameters is not None or test_run.hyperparameters is None:
-            test_run.hyperparameters = process_hyperparameters(hyperparameters)
-            test_run.prompts = process_prompts(hyperparameters)
 
         global_test_run_manager.configure_local_store(
             results_folder=display_config.results_folder,
