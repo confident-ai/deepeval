@@ -130,6 +130,8 @@ def convert_test_cases_to_goldens(
             "token_cost": test_case.token_cost,
             "input_token_count": test_case.input_token_count,
             "output_token_count": test_case.output_token_count,
+            "name": test_case.name,
+            "comments": test_case.comments,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
         }
@@ -191,6 +193,8 @@ def convert_convo_test_cases_to_convo_goldens(
                 else None
             ),
             "context": test_case.context,
+            "name": test_case.name,
+            "comments": test_case.comments,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
         }
