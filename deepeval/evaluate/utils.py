@@ -234,6 +234,7 @@ def create_test_result(
             expectations=api_test_case.expectations,
             conversational=True,
             index=index,
+            tags=api_test_case.tags,
             metadata=api_test_case.metadata,
             turns=api_test_case.turns,
         )
@@ -251,6 +252,7 @@ def create_test_result(
                 conversational=False,
                 index=index,
                 multimodal=True,
+                tags=api_test_case.tags,
                 metadata=api_test_case.metadata,
             )
         else:
@@ -268,6 +270,7 @@ def create_test_result(
                 conversational=False,
                 index=index,
                 multimodal=False,
+                tags=api_test_case.tags,
                 metadata=api_test_case.metadata,
             )
 

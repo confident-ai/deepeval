@@ -133,6 +133,23 @@ def test_evaluation_console_report_aggregate_metrics():
     assert list(table.columns[3].cells)[0] == "2"
 
 
+def _make_metric_named(
+    name: str, success: bool, score: float = None
+) -> MetricData:
+    return MetricData(
+        name=name,
+        score=score if score is not None else (1.0 if success else 0.0),
+        threshold=0.5,
+        reason=None,
+        success=success,
+        strictMode=False,
+        evaluationModel=None,
+        error=None,
+        evaluationCost=None,
+        verboseLogs=None,
+    )
+
+
 def _make_metric(success: bool) -> MetricData:
     return MetricData(
         name="Answer Relevancy",
@@ -253,3 +270,166 @@ def test_display_option_passing_all_hidden_shows_all_failed_note():
 
     assert "failing_case" not in text
     assert "All 1 test case failed — no passing test cases to display." in text
+
+
+# ---------------------------------------------------------------------------
+# group_by tests
+# ---------------------------------------------------------------------------
+
+
+def _make_tagged_case(
+    name: str, success: bool, tags=None, metadata=None
+) -> EvalTestResult:
+    return EvalTestResult(
+        name=name,
+        success=success,
+        input="test input",
+        actual_output="test output",
+        conversational=False,
+        metrics_data=[_make_metric(success)],
+        turns=None,
+        tags=tags,
+        metadata=metadata,
+    )
+
+
+def test_group_by_tag_adds_group_column():
+    """group_by a tag adds a 'Group' column and per-tag rows alongside the
+    pooled '(all)' row."""
+    case_a = _make_tagged_case("case_a", True, tags=["short-answer"])
+    case_b = _make_tagged_case("case_b", False, tags=["multi-hop"])
+    case_c = _make_tagged_case("case_c", True, tags=["short-answer"])
+
+    report = EvaluationConsoleReport([case_a, case_b, case_c])
+    text = _render_text(report, truncate=False, group_by="short-answer")
+
+    # The pooled row is still present
+    assert "(all)" in text
+    # The group label appears
+    assert "short-answer" in text
+    # The column header is present
+    assert "Group" in text
+
+
+def test_group_by_tag_correct_counts():
+    """Per-group aggregate contains only the cases that carry the tag."""
+    case_a = _make_tagged_case("case_a", True, tags=["easy"])
+    case_b = _make_tagged_case("case_b", False, tags=["easy"])
+    case_c = _make_tagged_case("case_c", True, tags=["hard"])
+
+    report = EvaluationConsoleReport([case_a, case_b, case_c])
+    group = report._build_display_elements(truncate=False, group_by="easy")
+
+    agg_panel = group.renderables[-1]
+    table = agg_panel.renderable
+
+    # The table has the "(all)" row plus the "easy" row
+    assert len(table.rows) == 2
+
+    group_col = list(table.columns[4].cells)
+    assert "(all)" in group_col
+    assert "easy" in group_col
+
+    # The "easy" row covers 2 cases (case_a and case_b), 1 pass
+    total_col = list(table.columns[3].cells)
+    pass_rate_col = list(table.columns[2].cells)
+
+    easy_idx = group_col.index("easy")
+    assert total_col[easy_idx] == "2"
+    assert "passed=1" in pass_rate_col[easy_idx]
+    assert "failed=1" in pass_rate_col[easy_idx]
+
+
+def test_group_by_metadata_key():
+    """group_by a metadata key slices by cases whose metadata contains
+    that key (any value)."""
+    case_a = _make_tagged_case("case_a", True, metadata={"difficulty": "hard"})
+    case_b = _make_tagged_case("case_b", False, metadata={"difficulty": "easy"})
+    case_c = _make_tagged_case("case_c", True)
+
+    report = EvaluationConsoleReport([case_a, case_b, case_c])
+    text = _render_text(report, truncate=False, group_by="difficulty")
+
+    assert "difficulty" in text
+    assert "(all)" in text
+
+
+def test_group_by_no_matching_cases_skips_group_row():
+    """A group_by key that matches no cases produces no extra row."""
+    case_a = _make_tagged_case("case_a", True, tags=["easy"])
+
+    report = EvaluationConsoleReport([case_a])
+    group = report._build_display_elements(
+        truncate=False, group_by="nonexistent-tag"
+    )
+    agg_panel = group.renderables[-1]
+    table = agg_panel.renderable
+
+    # Only the pooled "(all)" row; the unmatched group produces nothing
+    assert len(table.rows) == 1
+    group_col = list(table.columns[4].cells)
+    assert group_col[0] == "(all)"
+
+
+def test_group_by_list_of_tags():
+    """group_by accepts a list of tag strings and emits one row per tag."""
+    case_a = _make_tagged_case("case_a", True, tags=["easy"])
+    case_b = _make_tagged_case("case_b", False, tags=["hard"])
+    case_c = _make_tagged_case("case_c", True, tags=["easy", "hard"])
+
+    report = EvaluationConsoleReport([case_a, case_b, case_c])
+    text = _render_text(report, truncate=False, group_by=["easy", "hard"])
+
+    assert "easy" in text
+    assert "hard" in text
+    assert "(all)" in text
+
+
+def test_group_by_none_preserves_original_table_shape():
+    """Without group_by the table has no Group column (backward compat)."""
+    case_a = _make_tagged_case("case_a", True, tags=["easy"])
+
+    report = EvaluationConsoleReport([case_a])
+    group = report._build_display_elements(truncate=False, group_by=None)
+    agg_panel = group.renderables[-1]
+    table = agg_panel.renderable
+
+    # Only 4 columns: Metric, Average Score, Pass Rate, Total
+    assert len(table.columns) == 4
+
+
+def test_group_by_markdown_export(tmp_path):
+    """export_to_markdown with group_by includes a Group column."""
+    case_a = _make_tagged_case("case_a", True, tags=["qa"])
+    case_b = _make_tagged_case("case_b", False, tags=["qa"])
+
+    report = EvaluationConsoleReport([case_a, case_b])
+    report.export_to_markdown(
+        output_dir=str(tmp_path),
+        evaluation_name="grouped",
+        group_by="qa",
+    )
+    md_files = list(tmp_path.glob("grouped_*.md"))
+    assert len(md_files) == 1
+    content = md_files[0].read_text()
+
+    assert "Group" in content
+    assert "(all)" in content
+    assert "qa" in content
+
+
+def test_tags_propagated_to_test_result():
+    """Tags on LLMApiTestCase flow through create_test_result to TestResult."""
+    from deepeval.evaluate.utils import create_test_result
+    from deepeval.test_run.api import LLMApiTestCase
+
+    api_case = LLMApiTestCase(
+        name="tagged",
+        input="hi",
+        actualOutput="hello",
+        success=True,
+        metricsData=[],
+        tags=["foo", "bar"],
+    )
+    result = create_test_result(api_case)
+    assert result.tags == ["foo", "bar"]
