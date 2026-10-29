@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from pydantic import BaseModel
+
 from deepeval.test_run.test_run import TestRun, TestRunEncoder
 from deepeval.utils import is_read_only_env
 
@@ -142,7 +144,7 @@ def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
 
 def write_test_run(
     target_dir: Path,
-    test_run: TestRun,
+    test_run: BaseModel,
 ) -> Path:
     """Write `test_run` to `target_dir` as `test_run_<YYYYMMDD_HHMMSS>.json`.
 
@@ -167,7 +169,29 @@ def write_test_run(
     return path
 
 
-def _dump(test_run: TestRun, path: Path) -> None:
+def save_results_locally(
+    results: BaseModel,
+    results_folder: Optional[str],
+    results_subfolder: Optional[str] = None,
+) -> Optional[Path]:
+    """Write `results` to the results folder, for runs with no `TestRun` to
+    finalize (classifier-only). Failures warn instead of raising."""
+    target_dir = resolve_target_dir(results_folder, results_subfolder)
+    if target_dir is None:
+        return None
+    try:
+        path = write_test_run(target_dir, results)
+    except Exception as e:
+        print(
+            f"Warning: failed to save test run to {target_dir}: {e}",
+            file=sys.stderr,
+        )
+        return None
+    print(f"Test run saved at {path}")
+    return path
+
+
+def _dump(test_run: BaseModel, path: Path) -> None:
     try:
         body = test_run.model_dump(by_alias=True, exclude_none=True)
     except AttributeError:
