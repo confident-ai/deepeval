@@ -69,6 +69,7 @@ LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
 
+
 class TestRunResultDisplay(Enum):
     ALL = "all"
     FAILING = "failing"
@@ -1137,9 +1138,9 @@ class TestRunManager:
         try:
             run_id = sqlite_store.write_test_run(self.test_run, db_path)
         except Exception as e:
-            print(
+            Console(file=sys.stderr).print(
                 f"Warning: failed to save test run to {db_path}: {e}",
-                file=sys.stderr,
+                soft_wrap=True,
             )
             return
 
