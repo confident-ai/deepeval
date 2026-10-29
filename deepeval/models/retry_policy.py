@@ -639,7 +639,7 @@ def create_retry_decorator(provider: Provider):
         retry=dynamic_retry(slug),
         before_sleep=make_before_sleep_log(slug),
         after=make_after_log(slug),
-        reraise=False,
+        reraise=True,
     )
 
     def _decorator(func):
