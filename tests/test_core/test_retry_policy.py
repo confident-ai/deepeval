@@ -1,6 +1,6 @@
+import asyncio
 import logging
 import pytest
-import tenacity
 import time
 
 
@@ -338,7 +338,7 @@ def test_retry_respects_max_attempts_env(monkeypatch, policy, settings):
     with settings.edit(persist=False):
         settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 2
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(NetTimeout):
         flaky_twice_then_ok()
     assert calls["n"] == 2  # stopped at the cap
 
@@ -479,7 +479,7 @@ def test_dynamic_retry_invokes_static_predicate_when_sdk_off(
     def boom():
         raise NetTimeout()
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(NetTimeout):
         boom()
 
     assert calls["seen"] >= 1  # static predicate was consulted
@@ -538,7 +538,7 @@ def test_sync_timeout_is_retryable_and_capped(monkeypatch, policy, settings):
         settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
         settings.DEEPEVAL_RETRY_CAP_SECONDS = 0  # keep the test fast
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(asyncio.TimeoutError):
         slow()
 
     # We should have hit the cap: 1 initial + (max_attempts-1) retries => attempts == 3
@@ -566,7 +566,7 @@ def test_dynamic_toggle_sdk_retries_runtime(monkeypatch, policy, settings):
         settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
         settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
 
-    with pytest.raises(tenacity.RetryError):
+    with pytest.raises(NetTimeout):
         flaky()
     assert calls["n"] == 3
 
@@ -609,7 +609,7 @@ def test_retry_logging_levels_change_at_runtime(
 
     caplog.clear()
     with caplog.at_level(logging.INFO, logger=f"deepeval.retry.{slug}"):
-        with pytest.raises(tenacity.RetryError):  # <- expect RetryError
+        with pytest.raises(NetTimeout):
             boom()
 
     # There should be an ERROR "after" record, and no INFO-level records
@@ -631,7 +631,7 @@ def test_retry_logging_levels_change_at_runtime(
     # Ensure we have at least 2 attempts so before_sleep runs.
     monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "2")
     with caplog.at_level(logging.DEBUG, logger=f"deepeval.retry.{slug}"):
-        with pytest.raises(tenacity.RetryError):
+        with pytest.raises(NetTimeout):
             boom()
 
     # Both INFO (before) and DEBUG (after) should appear
