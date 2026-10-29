@@ -902,3 +902,34 @@ def test_cache_lookup_skips_non_cacheable_metrics(monkeypatch):
     )
     assert Cache.get_metric_data(cacheable, cached_case) is not None
     assert Cache.get_metric_data(opted_out, cached_case) is None
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_metrics_without_the_attribute_are_cached_by_default(
+    isolated_cache, run_async
+):
+    from deepeval.metrics import ExactMatchMetric
+
+    calls = []
+
+    class CountingExactMatch(ExactMatchMetric):
+        def measure(self, *args, **kwargs):
+            calls.append(1)
+            return super().measure(*args, **kwargs)
+
+        async def a_measure(self, *args, **kwargs):
+            calls.append(1)
+            return await super().a_measure(*args, **kwargs)
+
+    assert not hasattr(CountingExactMatch(), "cacheable")
+    cases = [
+        LLMTestCase(
+            input="q", actual_output="a", expected_output="a", name="em"
+        )
+    ]
+    run_cached(CountingExactMatch(), cases, run_async)
+    calls_after_first_run = len(calls)
+    assert calls_after_first_run >= 1
+    run_cached(CountingExactMatch(), cases, run_async)
+    # The second pass is served from the cache: measure() is not called again.
+    assert len(calls) == calls_after_first_run
