@@ -1,0 +1,162 @@
+---
+id: nace
+title: Nace (Drex)
+sidebar_label: Nace
+languages: [python]
+---
+
+`deepeval` supports using [Nace](https://nace.ai)'s Drex, a family of decision models that answer typed questions with calibrated probabilities, as the judge for its metrics and classifiers under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`DrexEval`](/docs/metrics-drex-eval). Drex takes the same questions as TypeSafe AI's [Jev](/integrations/models/typesafe-ai), so every metric that Jev can judge, Drex can judge too.
+
+Drex Max also reads **images**, so under `system_one` it judges multimodal test cases, including the [image metrics](/docs/multimodal-metrics-image-coherence), that a text-only System One model has to send back to the LLM. See [Drex Max as a multimodal judge](#drex-max-as-a-multimodal-judge).
+
+### Setting Up Your API Key
+
+Install the Nace SDK (Python 3.11+), then provide your `NACE_API_KEY` and choose Nace as the System One provider:
+
+```bash
+pip install nace-sdk
+export NACE_API_KEY=<your-nace-api-key>
+export DEEPEVAL_DECISION_PROVIDER=nace
+```
+
+Alternatively, if you're working in a notebook environment (e.g., Jupyter or Colab), set them in a cell:
+
+```bash
+%env NACE_API_KEY=<your-nace-api-key>
+%env DEEPEVAL_DECISION_PROVIDER=nace
+```
+
+You can also save them with `deepeval`'s CLI, which accepts `--model`, `--base-url` and `--cost-per-input-token` too. `deepeval set-nace` sets `DEEPEVAL_DECISION_PROVIDER=nace`; `deepeval unset-nace` (or `deepeval set-typesafe`) switches back to Jev:
+
+```bash
+deepeval set-nace --prompt-api-key --save=dotenv
+deepeval set-eval-mode system_one --save=dotenv
+```
+
+### In Code
+
+To use Drex for `deepeval` metrics, define a `NaceModel` and pass it as the metric's `system_one_model`. By default it uses `drex-max-v1.1`, which judges text and images.
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import NaceModel
+
+model = NaceModel()
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model=model,
+    eval_mode="system_one",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating a `NaceModel`:
+
+- [Optional] `model`: A string specifying which Drex model to use: any id Nace's `GET /v1/models` lists. Defaults to `NACE_MODEL_NAME` if not passed; falls back to `drex-max-v1.1` if unset. A text-only model (`drex-v1.5`, `drex-v2.0`) refuses images instead of dropping them.
+- [Optional] `api_key`: A string specifying your Nace API key (`nace_sk_...`). Defaults to `NACE_API_KEY` if not passed; raises an error when the model is created if unset.
+- [Optional] `base_url`: The API base URL. Defaults to `NACE_BASE_URL` if not passed, then to `https://console.nace.ai`. See [other backends](#other-backends).
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `NACE_COST_PER_INPUT_TOKEN`, then to `deepeval`'s pricing for the Drex model. Drex does not charge for output tokens.
+
+Extra `**kwargs` passed to `NaceModel(...)` (for example `timeout`, which defaults to 60 seconds) are forwarded to the underlying `NaceClient`.
+
+</Tab>
+<Tab value="ENV">
+
+With `NACE_API_KEY` and `DEEPEVAL_DECISION_PROVIDER=nace` set, pass the name of your desired Drex model as the metric's `system_one_model`, or leave it out to use `NACE_MODEL_NAME` (falling back to `drex-max-v1.1`). A Drex model name picks Nace whatever `DEEPEVAL_DECISION_PROVIDER` says:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model="drex-max-v1.1",
+    eval_mode="system_one",
+)
+```
+
+To use Drex in every metric without passing `eval_mode`, set the eval mode once with `deepeval set-eval-mode hybrid` or `deepeval set-eval-mode system_one`.
+
+</Tab>
+</Tabs>
+
+### Drex Max As A Multimodal Judge
+
+A System One model that reads text only cannot judge a test case with an image in it, so an eval suite with screenshots, product photos or generated images could never run on System One alone. Drex Max closes that gap: under `system_one`, a multimodal test case goes to Drex Max with its images. Every `MLLMImage` in the fields the metric reads is sent alongside the state, which refers to it as `[Image 1]`, `[Image 2]`, ... in order of first appearance:
+
+```python
+from deepeval.metrics import ImageCoherenceMetric
+from deepeval.models import NaceModel
+from deepeval.test_case import LLMTestCase, MLLMImage
+
+metric = ImageCoherenceMetric(system_one_model=NaceModel(), eval_mode="system_one")
+metric.measure(
+    LLMTestCase(
+        input="Show me a red square with a caption.",
+        actual_output=f"Here is a plain red square: {MLLMImage(url='./red.png')} It is filled with a single red colour.",
+    )
+)
+print(metric.reason)
+# Decided by drex-max-v1.1 (Nace), minimum confidence 0.89.
+# 1. How coherent is [Image 1] with the text around it in `actual_output` (the text just above and below it)?
+#    -> "Perfectly coherent: it corresponds with and enhances the text" (expected level=0.97 of 1.00, confidence=0.89)
+# Score: 0.97 (weighted mean of 1 applicable question).
+```
+
+All five image metrics (coherence, helpfulness, reference, text-to-image and image editing) have a System One form, and so does every built-in metric that accepts images. For your own multimodal criteria, use [`DrexEval`](/docs/metrics-drex-eval):
+
+```python
+from deepeval.metrics import DrexEval
+from deepeval.metrics.drex_eval import Noul, Choice
+from deepeval.test_case import SingleTurnParams
+
+product_photo = DrexEval(
+    name="Product Photo",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+    questions=[
+        Noul("actual_output describes what [Image 1] shows accurately."),
+        Choice("Does [Image 1] show visible damage?", options={"damaged": 0.0, "undamaged": 1.0}),
+    ],
+)
+```
+
+- A text-only Drex model (`drex-v1.5`, `drex-v2.0`) refuses images with a clear error instead of dropping them.
+- Drex Max reads PNG, JPEG and WebP, at most 8 images per request.
+- Images that would push the request past Drex's 4 MiB body limit are uploaded to your Nace account for the request and deleted right after. Remote image URLs are downloaded first, since Drex never fetches a URL.
+- Image tokens are billed as input tokens, at Drex Max's price.
+
+### Limits And Errors
+
+`deepeval` checks each request against the chosen model's limits before sending it, so an oversized test case fails with a clear error (or, under `hybrid`, falls back to the LLM):
+
+| Model           | Questions per request | State          | State plus the longest question |
+| --------------- | --------------------- | -------------- | ------------------------------- |
+| `drex-v1.5`     | 512                   | 131,072 tokens | 139,264 tokens                  |
+| `drex-v2.0`     | 512                   | 131,072 tokens | 262,144 tokens                  |
+| `drex-max`      | 512                   | 262,144 tokens | 262,144 tokens, images included |
+| `drex-max-v1.1` | 512                   | 262,144 tokens | 262,144 tokens for the request  |
+
+Under `hybrid`, each extracted item (a claim, a statement, an opinion, ...) is one question, and a metric asks about all its items in one request. When `evaluate()` batches several metrics' questions about one test case into one request, it starts a new request before the model's limits.
+
+- `429` (rate limit) and `529` (overloaded) are retried with `deepeval`'s usual backoff.
+- `422` errors list each issue's `path` and `message`.
+- `402` (no available funds) points you to the [Billing page](https://console.nace.ai/dashboard/billing).
+
+### Other Backends
+
+`base_url` (or `NACE_BASE_URL`) points the same code at another host:
+
+- **OpenRouter**: `https://openrouter.ai/api`, with an OpenRouter key as `api_key`. `deepeval` sends the `nace-ai/` model ids and the request shape OpenRouter expects. Images must fit inline.
+- **Vercel AI Gateway**, or any TypeSafe-compatible host serving `/v1/systemone`.
+
+### Available Drex Models
+
+:::note
+For the full list, refer to [Nace's models page](https://console.nace.ai/docs/drex/reference/models).
+:::
+
+| Model                       | Reads                 | Questions per request | Price per 1M input tokens |
+| --------------------------- | --------------------- | --------------------- | ------------------------- |
+| `drex-max-v1.1` (default)   | Text, JSON and images | 512                   | $0.03                     |
+| `drex-max`                  | Text, JSON and images | 512                   | $0.03                     |
+| `drex-v1.5`                 | Text and JSON         | 512                   | $0.05                     |
+| `drex-v2.0` (`drex-latest`) | Text and JSON         | 512                   | $0.06                     |
