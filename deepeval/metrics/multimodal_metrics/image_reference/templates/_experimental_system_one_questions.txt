@@ -1,0 +1,13 @@
+[
+{% for k in range(1, image_count + 1) %}  {
+    "type": "score",
+    "question": "How properly does the text in `actual_output` reference or explain [Image {{ k }}]?",
+    "levels": [
+      "Not mentioned or referenced at all",
+      "Referenced implicitly, and improperly or incorrectly",
+      "Referenced explicitly but improperly, or only implicitly",
+      "Referenced explicitly, and generally properly and correctly",
+      "Referenced explicitly, with completely proper placement and explanation"
+    ]
+  }{% if not loop.last %},{% endif %}
+{% endfor %}]

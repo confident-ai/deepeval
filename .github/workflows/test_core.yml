@@ -66,6 +66,10 @@ jobs:
       #----------------------------------------------
       - name: Install dev dependencies
         run: poetry install --no-interaction --with dev
+
+      # Optional System One SDK (Python 3.11+), so the NaceModel tests run.
+      - name: Install nace-sdk
+        run: poetry run pip install nace-sdk
         
       #----------------------------------------------
       #              run test suite

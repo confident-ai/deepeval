@@ -399,6 +399,14 @@ class Settings(BaseSettings):
         )
     )
 
+    # Which System One provider `hybrid` and `system_one` decide with:
+    # `typesafe` (Jev, the default) or `nace` (Drex). `deepeval set-typesafe`
+    # and `deepeval set-nace` set it. See deepeval.config.eval_mode.
+    DEEPEVAL_DECISION_PROVIDER: Optional[Literal["typesafe", "nace"]] = Field(
+        None,
+        description="System One provider for the 'hybrid' and 'system_one' eval modes: 'typesafe' (Jev, default) or 'nace' (Drex).",
+    )
+
     # SQLite store only. When truthy, `test_cases`, `traces` and `spans` rows
     # also store their full serialized object in `payload_json` (the
     # `test_runs` row always does). Off by default: it roughly doubles the
@@ -787,6 +795,23 @@ class Settings(BaseSettings):
     TYPESAFE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
         None,
         description="TypeSafe AI input token cost (used for cost reporting).",
+    )
+
+    # Nace (System One, Drex). Chosen with DEEPEVAL_DECISION_PROVIDER=nace.
+    NACE_API_KEY: Optional[SecretStr] = Field(
+        None, description="Nace API key (nace_sk_...)."
+    )
+    NACE_MODEL_NAME: Optional[str] = Field(
+        None,
+        description="Nace Drex model name (default 'drex-max-v1.1').",
+    )
+    NACE_BASE_URL: Optional[AnyUrl] = Field(
+        None,
+        description="Nace API base URL (default https://console.nace.ai; e.g. https://openrouter.ai/api for OpenRouter).",
+    )
+    NACE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
+        None,
+        description="Nace input token cost override (used for cost reporting).",
     )
 
     #
@@ -1336,6 +1361,15 @@ class Settings(BaseSettings):
 
         mode = normalize_eval_mode(v)
         return mode.value if mode is not None else None
+
+    @field_validator("DEEPEVAL_DECISION_PROVIDER", mode="before")
+    @classmethod
+    def _normalize_decision_provider(cls, v):
+        # Same leniency as DEEPEVAL_EVAL_MODE: unrecognised means unset.
+        from deepeval.config.eval_mode import normalize_decision_provider
+
+        provider = normalize_decision_provider(v)
+        return provider.value if provider is not None else None
 
     @field_validator("CONFIDENT_REGION", mode="before")
     @classmethod

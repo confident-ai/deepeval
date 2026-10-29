@@ -20,22 +20,35 @@ from deepeval.utils import convert_to_multi_modal_array
 from .models import MULTIMODAL_SUPPORTED_MODELS
 
 
-def _reject_multimodal_without_llm(metric, model: Optional[DeepEvalBaseLLM]):
-    """A metric has no LLM only when a System One model (Jev) is judging it,
-    and Jev reads text only."""
-    if model is None:
-        name = getattr(metric, "__name__", type(metric).__name__)
-        raise ValueError(
-            f"{name} is judged by System One (Jev) in this eval mode, and Jev "
-            f"evaluates text only. Run multimodal test cases with "
-            f'`eval_mode="llm"` or `eval_mode="hybrid"`.'
-        )
+def _reject_multimodal_without_llm(
+    metric, model: Optional[DeepEvalBaseLLM], images: bool = True
+):
+    """A metric has no LLM only when a System One model is judging it. That
+    model reads images only if it says so (Drex Max), and audio never."""
+    if model is not None:
+        return
+    system_one_model = getattr(metric, "system_one_model", None)
+    if images and system_one_model is not None:
+        if system_one_model.supports_images():
+            return
+    judge = (
+        system_one_model.get_model_name()
+        if system_one_model is not None
+        else "Jev"
+    )
+    name = getattr(metric, "__name__", type(metric).__name__)
+    raise ValueError(
+        f"{name} is judged by System One ({judge}) in this eval mode, and "
+        f"{judge} evaluates text only. Run multimodal test cases with "
+        f'`eval_mode="llm"` or `eval_mode="hybrid"`'
+        + (", or judge images with Nace Drex Max." if images else ".")
+    )
 
 
 def _check_audio_model(metric, model: Optional[DeepEvalBaseLLM], audio: bool):
     # Fail before any request when the judge can't take what the metric sends.
     if audio:
-        _reject_multimodal_without_llm(metric, model)
+        _reject_multimodal_without_llm(metric, model, images=False)
     if not isinstance(model, DeepEvalBaseLLM):
         return
     name = getattr(metric, "__name__", type(metric).__name__)
@@ -63,7 +76,8 @@ def check_conversational_test_case_params(
 
     if multimodal:
         _reject_multimodal_without_llm(metric, model)
-        if not model or not model.supports_multimodal():
+        # No LLM means a System One model that reads images is judging.
+        if model is not None and not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
@@ -156,7 +170,8 @@ def check_llm_test_case_params(
 ):
     if multimodal:
         _reject_multimodal_without_llm(metric, model)
-        if not model or not model.supports_multimodal():
+        # No LLM means a System One model that reads images is judging.
+        if model is not None and not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
                 valid_multimodal_models = []
                 for model_name, model_data in MULTIMODAL_SUPPORTED_MODELS.get(
@@ -230,12 +245,15 @@ def prepare_measure(
     metric: Union[BaseMetric, BaseConversationalMetric],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     multimodal: Optional[bool] = None,
+    input_image_count: Optional[int] = None,
+    actual_output_image_count: Optional[int] = None,
 ) -> None:
     """What every measure does before judging: validate the test case
     against the metric's required params and zero its cost and token
     counters. Shared with the batched System One path in `evaluate()`, which
     judges the metric without calling its `measure`. `multimodal` defaults
-    to the test case's own flag."""
+    to the test case's own flag; the image counts, when given, are the exact
+    number of images a multimodal single-turn test case must carry."""
     if multimodal is None:
         multimodal = test_case.multimodal
     if isinstance(metric, BaseConversationalMetric):
@@ -252,8 +270,8 @@ def prepare_measure(
         check_llm_test_case_params(
             test_case,
             metric._required_params,
-            None,
-            None,
+            input_image_count,
+            actual_output_image_count,
             metric,
             metric.model,
             multimodal,

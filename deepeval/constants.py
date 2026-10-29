@@ -42,8 +42,9 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     PORTKEY = "portkey"
-    # System One (typed decision) provider; not an LLM.
+    # System One (typed decision) providers; not LLMs.
     TYPESAFE = "typesafe"
+    NACE = "nace"
     # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
     # to carry a retry policy, not as selectable LLM providers.
     ASSEMBLYAI = "assemblyai"
