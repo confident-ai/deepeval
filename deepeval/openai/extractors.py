@@ -36,6 +36,7 @@ def extract_input_parameters_from_completion(
         {
             tool["function"]["name"]: tool["function"]["description"]
             for tool in tools
+            if tool.get("function", {}).get("description") is not None
         }
         if tools is not None
         else None
@@ -72,7 +73,11 @@ def extract_input_parameters_from_response(
     instructions = kwargs.get("instructions")
     tools = kwargs.get("tools")
     tool_descriptions = (
-        {tool["name"]: tool["description"] for tool in tools}
+        {
+            tool["name"]: tool["description"]
+            for tool in tools
+            if tool.get("description") is not None
+        }
         if tools is not None
         else None
     )
