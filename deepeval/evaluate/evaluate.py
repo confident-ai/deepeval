@@ -345,8 +345,9 @@ def evaluate(
             )
 
         if not metrics and not has_expectations:
-            # Classifier-only run: classifications are local-only for now, so
-            # there is no test run to finalize or upload.
+            # Classifier-only run: classifications are local-only, but still
+            # persist the test run to results_folder when configured.
+            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
             return EvaluationResult(
                 test_results=test_results,
                 confident_link=None,

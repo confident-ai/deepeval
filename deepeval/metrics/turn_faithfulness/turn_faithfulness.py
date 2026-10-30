@@ -179,17 +179,18 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
                     unit_interactions, self.window_size
                 )
             ]
-            scores = []
+            scores = [None] * len(turns_windows)
             tasks = []
 
-            async def get_individual_scores(window):
-                scores.extend(
-                    await self._a_get_faithfulness_scores(window, multimodal)
-                )
+            async def get_individual_scores(window_idx, window):
+                scores[window_idx] = await self._a_get_faithfulness_scores(window, multimodal)
 
-            for window in turns_windows:
-                tasks.append(get_individual_scores(window))
+            for window_idx, window in enumerate(turns_windows):
+                tasks.append(get_individual_scores(window_idx, window))
             await asyncio.gather(*tasks)
+
+            # Flatten scores in window order
+            scores = [item for window_scores in scores for item in window_scores]
             self.score = self._calculate_score(scores)
             self.success = self.is_successful()
             self.reason = await self._a_generate_reason(scores)

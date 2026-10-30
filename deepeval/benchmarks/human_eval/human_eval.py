@@ -223,7 +223,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("openai_humaneval")
+            dataset = load_dataset("openai/openai_humaneval")
             self.dataset = dataset
 
         # Filter tasks
