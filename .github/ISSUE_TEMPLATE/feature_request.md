@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **❗BEFORE YOU BEGIN❗**
-Are you on discord? 🤗 We'd love to have you asking questions on discord instead: https://discord.com/invite/a3K9c8GRGt
+Are you on discord? 🤗 We'd love to have you asking questions on discord instead: https://discord.com/invite/3SEyvpgu2f
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]

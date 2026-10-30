@@ -41,7 +41,7 @@ from deepeval.metrics.community import YourNewMetric
 
 When adding a community metric, mirror the structure of existing metrics (a folder containing the metric class, `schema.py`, and `template.py`), export it from `deepeval/metrics/community/__init__.py`, add a docs page under the community section, and include tests.
 
-Thank you and come ask any questions or discuss any new PRs you have in mind on our [Discord](https://discord.com/invite/a3K9c8GRGt)!
+Thank you and come ask any questions or discuss any new PRs you have in mind on our [Discord](https://discord.com/invite/3SEyvpgu2f)!
 
 
 ## Issue lifecycle & staleness policy
