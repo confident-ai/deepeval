@@ -1,0 +1,720 @@
+---
+title: Top 10 LLM Observability Tools in 2026, Compared
+description: A practical comparison of the top LLM observability tools in 2026 for tracing, monitoring, and evaluating the quality of AI agents, RAG pipelines, and conversational agents in production.
+date: 2026-10-23
+authors: [gorakh]
+category: comparisons
+---
+
+Many teams first hear about a quality problem in their LLM app from a user,
+because error logs and latency charts catch requests that fail or slow down
+but say nothing about whether the answer was correct, relevant, or safe.
+
+LLM observability tools are meant to fill that gap, and they approach it from
+different directions. Old observability tools like Datadog and Honeycomb have
+added LLM views beside the rest of their infrastructure, whereas newer tools
+like Langfuse, LangSmith, and Arize grew up around AI tracing. Confident AI,
+LangWatch, and Latitude were initially built around evaluating AI production
+traffic but have since extended to observability as well.
+
+This guide compares ten of them for teams shipping AI agents, RAG pipelines,
+and conversational agents, based on each vendor's own documentation as of
+October 2026.
+
+## What is LLM observability?
+
+**LLM observability** is the practice of capturing what your AI application
+did in production, including every LLM call, tool call, retrieval, and agent
+step, and using that record to debug failures, monitor quality, and decide what
+to improve next.
+
+It's built on [tracing](/docs/evaluation-llm-tracing), where a trace records
+one request from start to finish and the spans inside it record each step
+along the way, which lets you follow a bad answer back to the step, tool call,
+AI decision, or component of the system that caused it.
+
+LLM observability overlaps with a few neighboring categories, so it's
+important to be clear about how it differs from traditional APM, an AI
+gateway, or an LLM evaluation framework. Traditional APM monitors
+infrastructure such as latency, uptime, and error rates, so it can tell you a
+request succeeded but not whether the answer was correct. An AI gateway routes
+requests across model providers and logs them along the way, which gives you
+request-level visibility but little about the steps inside an agent. An
+[LLM evaluation framework](/blog/top-5-llm-evaluation-frameworks) such as
+DeepEval scores your app in code, usually before launch and in CI, whereas LLM
+observability captures and evaluates what your app does with real users in
+production.
+
+In our view, the most useful observability tools in 2026 are the ones that
+judge the quality of what they record, because once traffic grows, nobody on
+the team can read every trace by hand.
+
+## What to look for in an LLM observability tool
+
+Most tools on this list will catch errors and slow requests, so the harder
+problem to solve is spotting outputs that are technically valid but actually
+wrong, such as a hallucinated response, a wrong claim, a tone that drifts
+during a conversation, or a violation of your policies or instructions. All of
+these can lead to a bad user experience, so we compared the tools below on how
+well they handle them across the following eight criteria:
+
+1. **Tracing granularity:** you should be able to see every step of a
+   multi-step agent or RAG pipeline, including tool calls, retrieved
+   documents, and intermediate reasoning.
+2. **Built-in evaluation:** look for metrics that score production outputs for
+   faithfulness, relevance, hallucination, and safety without you writing each
+   judge prompt from scratch.
+3. **Quality-aware alerting:** a drop in evaluation scores should reach your
+   team through the same channels as a latency spike.
+4. **Multi-turn monitoring:** many conversational failures only show up a few
+   turns in, so the tool should evaluate whole conversations as well as
+   individual requests.
+5. **Production-to-development loop:** traces that fail in production should
+   become test cases for the next release instead of staying in a dashboard.
+6. **Collaboration beyond engineering:** PMs, QA, and domain experts often
+   know what a good answer looks like better than engineers do, so they need
+   a way to review and annotate traces themselves.
+7. **Framework flexibility:** OpenTelemetry support keeps your instrumentation
+   portable, while tools tied to one framework tend to lose depth outside it.
+8. **Deployment and cost:** check whether self-hosting is available on the
+   plan you can afford, and how pricing grows with trace volume.
+
+## Top LLM observability tools at a glance
+
+This table maps each tool to five of the eight criteria above, the ones where
+the tools differ most, and its last column shows whether each tool is open
+source.
+
+<span className="comparison-status comparison-status--strong">✓ Strong</span> means the capability is native and central to the product, <span className="comparison-status comparison-status--partial">~ Partial</span> means it is narrower or requires additional setup, and <span className="comparison-status comparison-status--unsupported">✕ Not supported</span> means the capability is unavailable as a native workflow.
+
+<div className="framework-comparison-table">
+
+| Tool | Built-in evaluation | Quality-aware alerting | Multi-turn monitoring | Production-to-development loop | Collaboration beyond engineering | Open source |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Confident AI** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 50+ metrics on traces, spans, and threads | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Slack, Teams, PagerDuty, Discord, email | <span className="comparison-status comparison-status--strong">✓ Strong:</span> thread-level evals | <span className="comparison-status comparison-status--strong">✓ Strong:</span> dataset ingestion turns traces into goldens | <span className="comparison-status comparison-status--strong">✓ Strong:</span> annotation queues, no-code evals over HTTP | No (self-hosting on Enterprise) |
+| **LangWatch** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluator library plus custom judges | <span className="comparison-status comparison-status--strong">✓ Strong:</span> automations on monitor results | <span className="comparison-status comparison-status--strong">✓ Strong:</span> thread-level production monitors | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets and experiments | <span className="comparison-status comparison-status--partial">~ Partial:</span> visual workflows, unlimited lite users | Yes (Apache-2.0 core) |
+| **Pydantic Logfire** | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom evaluators | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no documented alerts on eval scores | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom evaluators only | <span className="comparison-status comparison-status--strong">✓ Strong:</span> "Add to Dataset" from production traces | <span className="comparison-status comparison-status--partial">~ Partial:</span> run annotations (beta) | Partial (SDKs MIT, platform closed) |
+| **OpenObserve** | <span className="comparison-status comparison-status--partial">~ Partial:</span> LLM judges and remote scorers (Cloud, Enterprise) | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no documented alerts on eval scores | <span className="comparison-status comparison-status--strong">✓ Strong:</span> session-scoped eval jobs (Cloud, Enterprise) | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets and offline experiments | <span className="comparison-status comparison-status--partial">~ Partial:</span> review queues | Yes (AGPL-3.0) |
+| **Latitude** | <span className="comparison-status comparison-status--partial">~ Partial:</span> 14 built-in flaggers plus custom evaluations | <span className="comparison-status comparison-status--strong">✓ Strong:</span> email and Slack alerts on signals | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluations score completed sessions | <span className="comparison-status comparison-status--partial">~ Partial:</span> fix PRs through coding agents | <span className="comparison-status comparison-status--partial">~ Partial:</span> human annotations on sessions | Yes (MIT) |
+| **Arize AI** | <span className="comparison-status comparison-status--partial">~ Partial:</span> judge templates and custom evaluators | <span className="comparison-status comparison-status--strong">✓ Strong:</span> custom monitors on every AX plan | <span className="comparison-status comparison-status--strong">✓ Strong:</span> session evals for multi-turn conversations | <span className="comparison-status comparison-status--partial">~ Partial:</span> datasets, experiments, and trace replay | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotations and labeling queues | Source-available (Phoenix, ELv2) |
+| **Honeycomb** | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> stores scores you send in | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no built-in eval scores to alert on | <span className="comparison-status comparison-status--partial">~ Partial:</span> Agent Timeline view, no evals | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no datasets | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no review or annotation workflow | Partial (SDKs and Refinery, platform closed) |
+| **Langfuse** | <span className="comparison-status comparison-status--partial">~ Partial:</span> LLM-as-a-judge and code evaluators | <span className="comparison-status comparison-status--strong">✓ Strong:</span> monitors on eval scores | <span className="comparison-status comparison-status--partial">~ Partial:</span> session-level scoring | <span className="comparison-status comparison-status--strong">✓ Strong:</span> add production traces to datasets | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues | Yes (MIT, except `ee` folders) |
+| **LangSmith** | <span className="comparison-status comparison-status--partial">~ Partial:</span> 30+ judge templates plus custom | <span className="comparison-status comparison-status--strong">✓ Strong:</span> alerts on feedback and eval scores | <span className="comparison-status comparison-status--strong">✓ Strong:</span> thread-level online evaluators | <span className="comparison-status comparison-status--strong">✓ Strong:</span> rules add traces to datasets | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues | No (self-hosting on Enterprise) |
+| **Datadog** | <span className="comparison-status comparison-status--partial">~ Partial:</span> nine judge templates plus custom | <span className="comparison-status comparison-status--strong">✓ Strong:</span> monitors on evaluation results | <span className="comparison-status comparison-status--partial">~ Partial:</span> session-level Goal Completeness | <span className="comparison-status comparison-status--strong">✓ Strong:</span> import traces into LLM Experiments | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues | No |
+
+</div>
+
+## 1. Confident AI
+
+[Confident AI](https://www.confident-ai.com/products/llm-observability) is an
+LLM observability platform whose starting point is that a trace nobody
+evaluates doesn't tell you much. It runs evaluations on
+traces and spans as they're ingested, and on conversation threads once they
+complete, using the same 50+ metrics that DeepEval provides, so quality sits
+on the same dashboards as latency and cost.
+
+Alerts fire on threshold rules over traces, spans, and threads, and on
+regressions or anomalies that Drift, Confident AI's version-comparison view,
+detects in evaluation scores, and they go out through Slack, Teams, PagerDuty,
+Discord, or email. Automated tasks can pull matching traces into annotation
+queues and assign them to reviewers, who label what went wrong, and Confident
+AI's error analysis then groups that feedback into named failure modes with a
+suggested metric for each one. Dataset ingestion tasks add matching traces,
+spans, or threads to a dataset as goldens (test cases), so the cases your app
+sees in production end up in your next evaluation run.
+
+Confident AI is also designed for people outside engineering, so PMs, QA, and
+domain experts can work through annotation queues and, once an engineer has
+connected your app's HTTPS endpoint, run evaluations against it without
+writing code. That way the engineering team doesn't become a bottleneck for
+product quality, which PMs, QA, and domain experts are often better placed to
+judge.
+
+### Key features
+
+- Online evaluation of traces and spans, plus thread evaluation for
+  multi-turn conversations, with 50+ research-backed metrics
+- Alerts on threshold rules and on Drift regressions in evaluation scores,
+  delivered to Slack, Teams, PagerDuty, Discord, or email
+- Signals, which label traces and threads with LLM-driven categories you
+  define and surface spikes and trends over time
+- Drift detection across quality, reliability, latency, cost, and classifier
+  outcomes
+- Annotation queues and error analysis that turn reviewer feedback into
+  failure modes and metric suggestions
+- Dataset ingestion that adds production traces, spans, or threads to
+  datasets as goldens
+- Python and TypeScript SDKs, OpenTelemetry for other languages, and an
+  OpenInference integration
+
+### Getting started
+
+Create a free account at
+[cloud.confident-ai.com](https://cloud.confident-ai.com), install
+[`confident-trace`](https://github.com/confident-ai/confident-trace), Confident
+AI's OpenTelemetry-native tracing SDK for Python and TypeScript, and set your
+project API key:
+
+```bash
+pip install confident-trace
+export CONFIDENT_API_KEY="your-api-key"
+```
+
+Then call `init()` once when your app starts. It instruments the providers and
+frameworks you have installed, such as OpenAI and LangChain, so each LLM call
+shows up as a trace without further code changes:
+
+```python
+from confident_trace import init
+
+init()
+```
+
+Apps already instrumented with OpenTelemetry can send traces to Confident AI
+in any language by pointing their OTLP exporter at its endpoint, although
+Confident AI still recommends `confident-trace` for its built-in integrations.
+
+### Pricing
+
+| Plan       | Price        | Includes                                                                    |
+| ---------- | ------------ | --------------------------------------------------------------------------- |
+| Free       | $0           | 2 seats, 1 project, 1 GB-month of traces (additional spans are dropped)     |
+| Starter    | $200/month   | Unlimited seats, 5 projects, 5 GB-months, then $1 per GB-month, alerting    |
+| Team       | $2,000/month | Unlimited seats and projects, 75 GB-months, then $1 per GB-month, SSO        |
+| Enterprise | Custom       | Unlimited usage and dedicated on-prem deployment                            |
+
+A GB-month is one gigabyte of trace data stored for a month, so the bill
+depends on how much you ingest and how long you keep it.
+
+**Confident AI is for you if...**
+
+- You want production traces evaluated automatically, with alerts when
+  quality metrics drop
+- PMs, QA, and domain experts need to review traces and run evaluations
+  without waiting on engineering
+
+## 2. LangWatch
+
+[LangWatch](https://langwatch.ai) combines tracing with evaluation and agent
+testing in one open-core platform. On the evaluation side, it runs experiments
+on datasets and monitors that evaluate production traffic, drawing on a
+library of evaluators that includes safety checks such as PII detection,
+secret detection, and prompt injection screening. Thread-level monitors wait
+until a conversation has been idle for a set time before scoring it as a
+whole, and automations on monitor results can send an email, a Slack message,
+or a webhook when a check fails. A visual Workflows editor lets you build
+evaluation pipelines from prompts, code, HTTP calls, and evaluators and run
+them on datasets.
+
+A distinctive part of LangWatch is that its guardrails reuse the same
+evaluators at runtime to block or redact a response before it reaches
+the user, and its Agent Testing feature runs multi-turn conversations against
+your agent with a simulated user. LangWatch also ships an AI gateway with a single
+OpenAI- and Anthropic-compatible endpoint for routing model calls.
+
+### Key features
+
+- Evaluator library covering quality and safety, plus custom LLM-as-a-judge
+  evaluators
+- Production monitors at trace and thread level, with alerts through email,
+  Slack, or webhooks
+- A visual Workflows editor for evaluation pipelines
+- Guardrails that block or redact responses using PII and jailbreak detection
+- Simulated multi-turn agent tests before release
+- AI gateway with an OpenAI- and Anthropic-compatible endpoint
+- Self-hostable Apache-2.0 core, with enterprise features under a separate
+  license
+
+### Pricing
+
+| Plan       | Price                | Includes                                                                   |
+| ---------- | -------------------- | -------------------------------------------------------------------------- |
+| Developer  | €0                   | 2 users, 50K events/month, 14 days of data                                 |
+| Growth     | €29 per core seat/month | 200K events/month, then €5 per 100K, unlimited lite users, 30-day retention |
+| Enterprise | Custom               | Hybrid, self-hosted, or on-prem deployment and custom retention            |
+
+LangWatch charges for core seats and lets you add lite users at no extra cost.
+
+**LangWatch is for you if...**
+
+- You want guardrails and evaluation to share the same evaluators
+- You test agents by simulating multi-turn conversations
+- An Apache-2.0 core you can self-host matters to you
+
+## 3. Pydantic Logfire
+
+[Pydantic Logfire](https://pydantic.dev/logfire) comes from the team behind
+Pydantic and Pydantic AI. Because it's built on OpenTelemetry, LLM and tool
+calls show up in the same trace as the HTTP requests and database queries
+around them, which makes it easier to tell a model problem apart from an
+application or infrastructure problem.
+
+You query your data with standard SQL and run evaluations alongside your
+traces, and a run that fails in Live View can be saved to a hosted dataset
+with "Add to Dataset". Reviewers can also grade runs with Pass, Neutral, or
+Fail verdicts through run annotations, which are still in beta. Logfire also includes an AI gateway for
+routing model calls, though the overall workflow assumes engineers who are
+comfortable writing SQL and their own evaluators, so it suits engineering-led teams better
+than teams that want a large preset metric library.
+
+### Key features
+
+- OpenTelemetry-based traces covering LLM calls and the application around
+  them
+- Open-source SDKs for Python, TypeScript, and Rust under the MIT license
+- Standard SQL over your telemetry, which also works with existing BI tools
+- Hosted datasets built from production traces with "Add to Dataset"
+- Run annotations (beta) for human review, plus an AI gateway
+
+### Pricing
+
+| Plan       | Price      | Includes                                                                   |
+| ---------- | ---------- | -------------------------------------------------------------------------- |
+| Personal   | $0         | 1 seat, 10M records/month (ingestion pauses at the cap), 30-day retention  |
+| Team       | $49/month  | 5 seats, then $25 per extra seat, 10M records, then $2 per million, 30-day retention |
+| Growth     | $249/month | Unlimited seats, 10M records, then $2 per million, up to 90-day retention  |
+| Enterprise | Custom     | SSO, custom retention, and cloud, dedicated, or self-hosted deployment     |
+
+**Pydantic Logfire is for you if...**
+
+- You want LLM, application, and infrastructure traces in one place
+- Your engineers prefer SQL to a proprietary query language
+- You already use Pydantic or Pydantic AI
+
+## 4. OpenObserve
+
+[OpenObserve](https://openobserve.ai) is an OpenTelemetry-native observability
+backend that keeps logs, metrics, traces, and LLM spans in one system. For LLM
+workloads, it tracks cost, tokens, latency, and errors, and lets you replay
+agent sessions turn by turn.
+
+Its online evaluations score live traces with LLM judges or remote scorers at
+the span, trace, or session level. They're available in OpenObserve Cloud and
+the Enterprise edition, and the scores land in a stream you can query like the
+rest of your data. OpenObserve also covers review queues, prompt versioning, a
+playground, and offline experiments on datasets, which makes it a reasonable
+choice for infrastructure teams that want one backend for everything.
+
+### Key features
+
+- LLM spans stored next to logs, metrics, and distributed traces
+- Cost, token, latency, and error tracking, with session replay
+- Online evaluations with LLM judges or remote scorers (Cloud and Enterprise)
+- Review queues, prompt management, a playground, and dataset experiments
+- An MCP integration for querying observability data from AI agents and IDEs
+
+### Pricing
+
+| Plan                    | Price                                  | Includes                                      |
+| ----------------------- | -------------------------------------- | --------------------------------------------- |
+| Open Source (self-hosted) | Free (AGPL-3.0)                      | Core platform                                 |
+| Enterprise (self-hosted) | Free up to 50 GB/day of ingestion     | Enterprise features                           |
+| Cloud                   | $0.50/GB ingested, $0.01/GB queried    | 14-day free trial, 30% off ingestion with annual commitment |
+| Enterprise (cloud)      | Custom                                 | Volume discounts and bring-your-own-bucket    |
+
+**OpenObserve is for you if...**
+
+- You want infrastructure and LLM telemetry in one self-hosted backend
+- Fewer observability tools is a priority for your team
+
+## 5. Latitude
+
+[Latitude](https://latitude.so) focuses on what happens after a failure shows
+up in production. It runs 14 built-in flaggers that detect problems such as
+user frustration, jailbreak attempts, refusals, PII leakage, and tool call
+errors, groups similar failing traces into signals, and alerts you by email or
+Slack when a signal appears or gets worse. Its Evaluations feature scores
+completed sessions with conditions, an LLM judge, or a custom script, and
+reviewers can annotate any session with a verdict and feedback.
+
+According to Latitude's homepage, it can also hand a problem to Claude Code or
+Cursor with the full context, and the coding agent opens a pull request with a
+proposed fix for a human to review. Latitude is open source under the MIT
+license and works with existing OpenTelemetry pipelines.
+
+### Key features
+
+- Similar failing traces grouped into signals
+- 14 built-in flaggers covering user signals, agent behavior, cost, and
+  response validity
+- Evaluations that score completed sessions with conditions, an LLM judge, or
+  a script
+- Human annotations on sessions, plus semantic search across traces
+- Email and Slack alerts when a signal appears or escalates
+- Handoff to Claude Code or Cursor, which opens a fix PR
+- OpenTelemetry-compatible ingestion, MIT license
+
+### Pricing
+
+| Plan       | Price     | Includes                                                         |
+| ---------- | --------- | ---------------------------------------------------------------- |
+| Starter    | $0        | Unlimited seats, 20K credits/month, 30-day retention             |
+| Pro        | $99/month | Unlimited seats, 100K credits/month, then $20 per 10K, 90-day retention |
+| Enterprise | Custom    | Custom credits and retention, on-prem or custom cloud            |
+
+Latitude measures usage in credits rather than traces, so check how your
+volume maps to credits before choosing a plan.
+
+**Latitude is for you if...**
+
+- You want production failures grouped into signals and handed to your coding
+  agent
+- An MIT-licensed tool is important to your team
+
+## 6. Arize AI
+
+[Arize AI](https://arize.com) brings its ML monitoring background to LLM
+observability through two products. Phoenix is a free, source-available
+platform you can run locally or deploy with Docker or Kubernetes, and AX is
+the managed platform for teams that need enterprise-scale monitoring.
+
+Phoenix uses OpenInference, which is built on OpenTelemetry, to instrument
+frameworks such as LangChain, LlamaIndex, DSPy, CrewAI, the OpenAI Agents SDK,
+and the Vercel AI SDK. Every AX plan, including the free one, comes with
+online evals on traces and spans, session evals for multi-turn conversations,
+custom monitors and dashboards, and human annotation with labeling queues,
+while custom code evaluators in AX are limited to Enterprise. Most quality
+scoring starts from judge templates that you adapt to your use case, and the product is aimed
+mainly at engineers.
+
+### Key features
+
+- OpenInference instrumentation across major agent frameworks and providers
+- Phoenix as a free starting point that runs locally or in your own
+  infrastructure
+- Online evals on traces and spans, and session evals for multi-turn
+  conversations
+- Custom monitors, dashboards, and agent trajectory views
+- Datasets, experiments, and trace replay in the playground
+- Human annotations and labeling queues
+
+### Pricing
+
+| Plan          | Price     | Includes                                                                    |
+| ------------- | --------- | --------------------------------------------------------------------------- |
+| Phoenix       | Free      | Source-available (ELv2), self-hosted                                        |
+| AX Free       | $0        | 25K spans/month, 1 GB ingestion, 15-day retention, unlimited users and evals |
+| AX Pro        | $50/month | 50K spans/month, 10 GB ingestion, 30-day retention, unlimited users and evals |
+| AX Enterprise | Custom    | Custom volume and retention, SaaS or self-hosted, SSO and audit logs        |
+
+**Arize AI is for you if...**
+
+- Your organization already uses Arize for ML monitoring
+- You want a free, self-hosted starting point with a managed upgrade path
+
+## 7. Honeycomb
+
+[Honeycomb](https://www.honeycomb.io) is a general observability platform built
+on distributed tracing and high-cardinality event data. Because it ingests
+OpenTelemetry natively, LLM and tool calls appear in the same traces as the
+HTTP requests and database queries around them, and you can slice them by
+user, prompt version, model, or any other field you send.
+
+Its Agent Timeline shows an agent conversation in sequence, with prompts, tool
+calls, and failures in order, and a "Show Failures Only" option narrows it to
+the failing tool calls. Honeycomb doesn't run LLM evaluations itself, so any
+quality scores would have to come from another tool and be sent in as span
+attributes.
+
+### Key features
+
+- Agent Timeline for multi-agent conversations, available to all customers
+- Agent spans alongside API calls, database queries, and infrastructure
+- High-cardinality queries on any field
+- BubbleUp for finding what separates outlier requests from healthy ones
+- Canvas AI copilot and a Honeycomb MCP server on the Free plan
+
+### Pricing
+
+| Plan       | Price              | Includes                                       |
+| ---------- | ------------------ | ---------------------------------------------- |
+| Free       | $0                 | Up to 20M events/month                         |
+| Pro        | From $150/month    | 50M events/month, up to 750M, 2 SLOs           |
+| Enterprise | Custom             | Base allowance of 10B events/year, 100 SLOs    |
+
+Honeycomb lists unlimited seats as part of its pricing rather than on a
+specific plan.
+
+**Honeycomb is for you if...**
+
+- Your team already debugs production with distributed tracing
+- You want agent failures and the downstream services they depend on in the
+  same view
+
+## 8. Langfuse
+
+[Langfuse](https://langfuse.com) is an open-source LLM engineering platform
+that combines tracing, prompt management, evaluation, and datasets. The
+repository is MIT-licensed apart from its `ee` (enterprise edition) folders
+and can be self-hosted with Docker Compose or Kubernetes, which makes it a good
+fit for teams that want to own their trace data. Production traces can be added
+to datasets from the UI, and Langfuse Cloud bills by units of ingested tracing
+data.
+
+Langfuse supports LLM-as-a-judge and code evaluators, user feedback, manual
+labeling, and annotation queues for human review. Since June 2026 it also has
+Monitors, which notify you over Slack, webhooks, or GitHub Actions when a
+metric such as an evaluation score falls outside the range you set, on both
+Langfuse Cloud and self-hosted Langfuse v4. Its evaluators are
+flexible, though each one needs its own prompt or code and some setup before
+it starts scoring traces.
+
+### Key features
+
+- OpenTelemetry-based Python and JS/TS SDKs
+- LLM-as-a-judge and code evaluators, plus user feedback and manual labeling
+- Monitors that alert on evaluation scores, cost, and latency
+- Annotation queues, datasets, and prompt management with versioning
+- Self-hosting with Docker Compose or Kubernetes
+
+### Pricing
+
+| Plan        | Price                 | Includes                                                    |
+| ----------- | --------------------- | ----------------------------------------------------------- |
+| Self-hosted | Free (MIT)            | Open-source platform; `ee` features licensed separately     |
+| Hobby       | $0                    | 50K units/month, 2 users, 30-day data access                |
+| Core        | $29/month             | 100K units/month, then $8 per 100K, unlimited users, 90 days |
+| Pro         | $199/month            | 100K units/month, then $8 per 100K, unlimited users, 3 years |
+| Enterprise  | $2,499/month base fee | Enterprise features and support                             |
+
+**Langfuse is for you if...**
+
+- Self-hosting and full data ownership are requirements
+- You want tracing, prompt management, and evaluation in one open-source tool
+
+## 9. LangSmith
+
+[LangSmith](https://smith.langchain.com) is the managed platform from the
+LangChain team, combining tracing, evaluation, and prompt management. Its
+traces show the full execution tree of an agent, including tool selections,
+retrieved documents, and the exact parameters at every step, and it works with
+any framework, although it goes deepest with LangChain and LangGraph.
+
+Evaluation is built around LLM-as-a-judge evaluators, and since April 2026
+LangSmith offers 30+ evaluator templates for safety, response quality,
+trajectory, user behavior, and multimodal checks that work both online and
+offline, along with multi-turn evaluators that score a whole conversation
+thread once it goes idle. Automation rules can send traces to an annotation
+queue or a dataset, or call a webhook when an evaluator gives a low score, and
+alerts can fire when a feedback or online evaluation score crosses a threshold
+over a 5 or 15 minute window, notifying Slack, PagerDuty, or a webhook.
+Annotation queues let subject matter experts review and label traces, and that
+feedback flows back into datasets.
+
+### Key features
+
+- Full execution-tree tracing for agents
+- 30+ LLM-as-a-judge evaluator templates, plus thread-level evaluators for
+  multi-turn conversations
+- Automation rules that add traces to datasets or annotation queues, or
+  trigger webhooks
+- Annotation queues for structured human review
+- Alerts on feedback and evaluation scores through Slack, PagerDuty, or
+  webhooks
+- Dashboards and prompt management with versioning
+
+### Pricing
+
+| Plan       | Price          | Includes                                                     |
+| ---------- | -------------- | ------------------------------------------------------------ |
+| Developer  | $0             | 1 seat, 5K base traces/month, then pay as you go             |
+| Plus       | $39/seat/month | Unlimited seats, 10K base traces/month, then pay as you go   |
+| Enterprise | Custom         | Self-hosted and hybrid options                               |
+
+Retention depends on the trace type rather than the plan: base traces are kept
+for 14 days and extended traces for 180 days.
+
+**LangSmith is for you if...**
+
+- Your stack is built on LangChain or LangGraph
+- You want multi-turn evaluators and annotation queues in a managed product
+
+## 10. Datadog LLM Observability
+
+[Datadog LLM Observability](https://www.datadoghq.com/product/llm-observability/),
+which Datadog now also calls Agent Observability, extends Datadog's monitoring
+platform to LLM applications. LLM spans sit next to your APM traces and
+infrastructure metrics, so teams already on Datadog can add AI monitoring
+without bringing in another vendor.
+
+Datadog also ships LLM-as-a-judge templates for failure to answer, goal completeness,
+hallucination, prompt injection, sentiment, tool argument correctness, tool
+selection, topic relevancy, and toxicity, and the Goal Completeness check runs
+at the session level for multi-turn conversations. You can also write custom judges, set monitors on
+evaluation results, and import production traces into LLM Experiments with a
+single click. For human review, annotation queues with label schemas let
+reviewers grade traces, and automation rules can route a sample of new
+traces into them.
+
+### Key features
+
+- LLM spans correlated with APM traces and infrastructure metrics
+- Nine LLM-as-a-judge templates and custom LLM-as-a-judge evaluations
+- Session-level Goal Completeness for multi-turn conversations
+- Monitors on evaluation results
+- LLM Experiments with one-click import of production traces
+- Annotation queues with label schemas and automated routing
+
+### Pricing
+
+| Plan | Price                                             | Includes                                                  |
+| ---- | ------------------------------------------------- | --------------------------------------------------------- |
+| Free | $0                                                | Up to 40K LLM spans/month, 15-day trace retention         |
+| Pro  | $160/month annual, $200 month-to-month, $240 on-demand | 100K LLM spans/month, then $3.50 per 10K spans (annual) |
+
+**Datadog is for you if...**
+
+- You already run Datadog and want LLM monitoring in the same place
+- Your AI quality work is owned by engineering and SRE teams, with reviewers
+  labeling traces in annotation queues
+
+## Which LLM observability tool should you choose?
+
+### Step 1: Decide how much evaluation you need in production
+
+If latency, token usage, and errors are all you need, your existing APM or any
+tracing tool on this list will do the job. If you need to know whether outputs
+were good, you need evaluation running on production traffic. Every tool here
+can do that in some form except Honeycomb and the open-source edition of
+OpenObserve, whose online evaluations need Cloud or Enterprise, but they
+differ a lot in how much you have to build yourself. If you want evaluation
+and observability together with the least setup, Confident AI offers one of
+the best combinations of the two, with 50+ metrics that run on production
+traces out of the box. Among the others, LangWatch has an evaluator library,
+LangSmith, Datadog, and Arize offer judge templates, Latitude ships built-in
+flaggers, and Langfuse and Logfire expect you to write or configure most
+evaluators.
+
+### Step 2: Match the tool to your stack
+
+- **Mixed or changing stacks:** Confident AI's `confident-trace` instruments
+  OpenAI, LangChain, LangGraph, LlamaIndex, CrewAI, Pydantic AI, and the Vercel
+  AI SDK, among others, and any OpenTelemetry app can send traces to it, so
+  the same setup works across teams on different frameworks.
+- **LangChain or LangGraph:** LangSmith has the tightest integration.
+- **Full-stack context:** Pydantic Logfire and Honeycomb put agent spans next
+  to the services and queries around them.
+
+### Step 3: Decide who owns AI quality
+
+Any tool on this list can work when only engineers look at traces, but once
+PMs, QA, and domain experts need to take part, it's worth looking at how far
+each tool goes. Langfuse,
+LangSmith, Datadog, OpenObserve, and Arize offer annotation or review queues,
+Latitude lets reviewers annotate sessions, and LangWatch includes unlimited
+lite users on its paid plan along with a visual Workflows editor for building
+evaluation pipelines. In our view, Confident AI goes furthest here, because
+reviewers can work through annotation queues and also run evaluations against
+your app over HTTP without writing code.
+
+### Step 4: Check the constraint that decides it
+
+- **Self-hosting on a free plan:** Langfuse (MIT), Latitude (MIT), LangWatch
+  (Apache-2.0 core), and OpenObserve (AGPL-3.0) are open source. Arize Phoenix
+  is free to self-host under the source-available Elastic License 2.0.
+- **Turning failures into fixes:** Latitude hands signals to your coding agent,
+  and Confident AI turns reviewer feedback into failure modes and metrics.
+- **Cost at scale:** pricing units differ across vendors, including GB-months
+  (Confident AI), GB ingested and queried (OpenObserve), events (Honeycomb,
+  LangWatch), spans (Datadog, Arize), records (Logfire), units (Langfuse),
+  credits (Latitude), and seats plus traces (LangSmith), so estimate your own
+  volume against each one.
+
+## Final comparison
+
+| Tool                 | Open source                 | Primary interface      | Best for                                                    | You may also need                                   |
+| -------------------- | --------------------------- | ---------------------- | ----------------------------------------------------------- | --------------------------------------------------- |
+| **Confident AI**     | No (self-hosting on Enterprise) | UI + HTTP + SDK + OTel | Evaluating production traces and involving non-engineers    | DeepEval for code-first evals before launch         |
+| **LangWatch**        | Apache-2.0 core             | UI + SDK + gateway     | Evaluation, guardrails, and simulated agent tests together  | Infrastructure monitoring                           |
+| **Pydantic Logfire** | SDKs only (MIT)             | UI + SQL + SDK         | One trace across the AI and application stack               | Ready-made quality metrics                          |
+| **OpenObserve**      | AGPL-3.0                    | UI + SQL + OTel        | Self-hosted infrastructure and LLM telemetry                | Cloud or Enterprise for online evaluations          |
+| **Latitude**         | MIT                         | UI + SDK + OTel        | Turning recurring failures into signals and fix PRs         | Research-backed metrics                             |
+| **Arize AI**         | Phoenix (ELv2, source-available) | UI + OTel + Phoenix | Monitoring-led teams adding LLM observability               | Deeper built-in LLM metrics                         |
+| **Honeycomb**        | SDKs and Refinery only      | UI + OTel              | Agent traces beside the services they depend on             | An evaluation tool                                  |
+| **Langfuse**         | MIT (except `ee`)           | UI + SDK + self-host   | Self-hosted tracing, prompts, and configurable evals        | DeepEval for ready-made metrics                     |
+| **LangSmith**        | No (self-hosting on Enterprise) | UI + SDK           | LangChain-native tracing and multi-turn evaluators          | Research-backed metrics beyond its templates        |
+| **Datadog**          | No                          | UI + SDK               | LLM monitoring inside an existing Datadog setup             | No-code evaluation runs for non-engineers           |
+
+### Recommendations by team type
+
+**For cross-functional AI teams**
+
+- **Confident AI** if PMs, QA, and domain experts need to review traces and
+  run evaluations alongside engineers
+
+**For teams already invested in an observability platform**
+
+- **Datadog** if you're on Datadog and want LLM spans, judges, and monitors in
+  the same place
+- **Honeycomb** if you debug with distributed tracing and will score quality
+  in another tool
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the best LLM observability tool in 2026?",
+      answer: (
+        <>
+          We think it's Confident AI, which evaluates production traces with 50+ metrics, alerts when quality
+          drops, and lets non-engineers review traces and run evaluations.
+          Another tool may fit better if you're committed to LangChain
+          (LangSmith), need free self-hosting (Langfuse), or want LLM
+          monitoring inside an existing Datadog setup.
+        </>
+      ),
+    },
+    {
+      question: "How is LLM observability different from traditional APM?",
+      answer: (
+        <>
+          APM monitors infrastructure such as latency, uptime, and error rates,
+          while LLM observability also looks at the content of each response, since
+          a model can return a 200 in 50ms and still hallucinate, leak PII, or
+          drift off tone.
+        </>
+      ),
+    },
+    {
+      question: "Does DeepEval do LLM observability?",
+      answer: (
+        <>
+          DeepEval{" "}
+          <a href="/docs/evaluation-llm-tracing">traces your app in code</a> so
+          you can evaluate individual components during development, and
+          tracing works locally without an account. For production monitoring,
+          including evaluations on live traces, alerting, and dashboards,
+          instrument your app with <code>confident-trace</code> and send its
+          traces to Confident AI.
+        </>
+      ),
+    },
+    {
+      question: "Which LLM observability tools are open source?",
+      answer: (
+        <>
+          Langfuse (MIT, except its <code>ee</code> folders), Latitude (MIT),
+          LangWatch (Apache-2.0 core), and OpenObserve (AGPL-3.0). Arize
+          Phoenix is free to self-host but uses the source-available Elastic
+          License 2.0. Pydantic Logfire's SDKs are MIT-licensed while its
+          platform is closed, and Honeycomb open-sources its SDKs and its
+          Refinery sampling proxy under Apache-2.0 while keeping the platform
+          closed.
+        </>
+      ),
+    },
+    {
+      question: "What metrics should I monitor in production?",
+      answer: (
+        <>
+          Start with faithfulness, answer relevancy, and safety checks such as
+          toxicity, bias, and PII leakage. Add contextual relevancy for RAG,
+          tool correctness and task completion for agents, and
+          conversation-level metrics for conversational agents, and keep
+          tracking latency and cost alongside these quality metrics.
+        </>
+      ),
+    },
+  ]}
+/>
