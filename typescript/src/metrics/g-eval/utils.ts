@@ -151,6 +151,12 @@ export function calculateWeightedSummedScore(
     if (candidate.logprob < MIN_LOG_PROB) continue;
     // Anything non-decimal isn't a score, and would parse to NaN.
     if (!/^\d+$/.test(candidate.token)) continue;
+    // "1" is ambiguous when the tokenizer splits numbers into single digits:
+    // it may be the complete score 1 or the first digit of "10" (GEval scores
+    // top out at 10). Don't treat a multi-digit score's leading digit as a
+    // complete score, or a judge hovering between 9 and 10 gets dragged down
+    // toward 1.
+    if (candidate.token === "1") continue;
 
     const linearProb = Math.exp(candidate.logprob);
     const tokenScore = parseInt(candidate.token, 10);

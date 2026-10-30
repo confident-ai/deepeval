@@ -148,6 +148,27 @@ describe("calculateWeightedSummedScore", () => {
     expect(calculateWeightedSummedScore(5, logProbs)).toBeCloseTo(4.6, 10);
   });
 
+  it("ignores a multi-digit score's leading digit", () => {
+    // A judge hovering between 9 and 8 that also considers 10. A tokenizer
+    // that splits 10 into "1"+"0" puts "1" (a prefix of 10) at the score
+    // position, which must not be weighted as a complete score of 1.
+    const logProbs = [
+      tokenLogProbs("9", { "9": 0.812, "1": 0.16, "8": 0.028 }),
+    ];
+    // (9*0.812 + 8*0.028) / (0.812 + 0.028)
+    expect(calculateWeightedSummedScore(9, logProbs)).toBeCloseTo(8.967, 3);
+  });
+
+  it("keeps the raw score when the score is split across tokens", () => {
+    // A raw score of 10 is emitted as "1" then "0", so no single token equals
+    // "10". There are no usable score logprobs; fall back to the raw score.
+    const logProbs = [
+      tokenLogProbs("1", { "1": 0.7, "9": 0.3 }),
+      tokenLogProbs("0", { "0": 1 }),
+    ];
+    expect(calculateWeightedSummedScore(10, logProbs)).toBe(10);
+  });
+
   it("keeps the raw score when nothing survives the filters", () => {
     const logProbs = [tokenLogProbs("3", { "3": 0.001, x: 0.002 })];
     expect(calculateWeightedSummedScore(3, logProbs)).toBe(3);
