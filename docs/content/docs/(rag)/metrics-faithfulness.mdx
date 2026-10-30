@@ -205,7 +205,7 @@ There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/>: a number which when set, determines the maximum number of factual truths to extract from the <Term py="retrieval_context" ts="retrievalContext"/>. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to <Term py="None" ts="null"/>.
-- [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, will **not** count claims that are ambiguous as faithful. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, will **not** count claims rated borderline as faithful. A claim is borderline when the <Term py="retrieval_context" ts="retrievalContext"/> neither supports nor contradicts it, which includes claims the <Term py="retrieval_context" ts="retrievalContext"/> never mentions. With the default <Term py="False" ts="false"/>, only claims that contradict the <Term py="retrieval_context" ts="retrievalContext"/> lower the score. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: of type <Term py="FaithfulnessTemplate" ts="FaithfulnessTemplateOverride"/>, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s default prompts.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
@@ -319,7 +319,7 @@ The `FaithfulnessMetric` score is calculated according to the following equation
 
 The `FaithfulnessMetric` first uses an LLM to extract all claims made in the <Term py="actual_output" ts="actualOutput"/>, before using the same LLM to classify whether each claim is truthful based on the facts presented in the <Term py="retrieval_context" ts="retrievalContext"/>.
 
-**A claim is considered truthful if it does not contradict any facts** presented in the <Term py="retrieval_context" ts="retrievalContext"/>.
+**A claim is considered truthful if it does not contradict any facts** presented in the <Term py="retrieval_context" ts="retrievalContext"/>. A claim the <Term py="retrieval_context" ts="retrievalContext"/> doesn't mention is rated borderline and still counts as truthful, unless <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/> is <Term py="True" ts="true"/>.
 
 :::note
 Sometimes, you may want to only consider the most important factual truths in the <Term py="retrieval_context" ts="retrievalContext"/>. If this is the case, you can choose to set the <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> parameter to limit the maximum number of truths to consider during evaluation.
@@ -447,7 +447,8 @@ const metric = new FaithfulnessMetric({
         <>
           Generation. It grades <Term py="actual_output" ts="actualOutput"/> against the
           already-retrieved <Term py="retrieval_context" ts="retrievalContext"/>, so a low score means
-          unsupported claims (a prompt or model issue). Retrieval quality is
+          claims that contradict it, or, with <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>, claims it
+          doesn't support (a prompt or model issue). Retrieval quality is
           covered by{" "}
           <a href="/docs/metrics-contextual-recall">Contextual Recall</a> and{" "}
           <a href="/docs/metrics-contextual-precision">Contextual Precision</a>.
@@ -473,7 +474,7 @@ const metric = new FaithfulnessMetric({
         <>
           The classic confidently-wrong case: an on-topic answer (high{" "}
           <a href="/docs/metrics-answer-relevancy">answer relevancy</a>) backed
-          by claims your <Term py="retrieval_context" ts="retrievalContext"/> doesn't support. The
+          by claims your <Term py="retrieval_context" ts="retrievalContext"/> contradicts (or, with <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>, doesn't support). The
           model is leaning on parametric knowledge instead of retrieved
           evidence — tighten your prompt to force grounding.
         </>
@@ -483,9 +484,10 @@ const metric = new FaithfulnessMetric({
       question: "Why is a claim I know is true being marked unfaithful?",
       answer: (
         <>
-          Faithfulness only rewards claims supported by the{" "}
-          <Term py="retrieval_context" ts="retrievalContext"/> — a real-world truth absent from the
-          retrieved text still counts as unfaithful. Use{" "}
+          By default only claims that contradict the{" "}
+          <Term py="retrieval_context" ts="retrievalContext"/> count as unfaithful. With <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/> set to <Term py="True" ts="true"/>,
+          claims it doesn't support count too, so a real-world truth absent from the
+          retrieved text is marked unfaithful. Use{" "}
           <Term py="truths_extraction_limit" ts="truthsExtractionLimit"/> to focus on key truths and{" "}
           <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/> to control borderline scoring.
         </>
