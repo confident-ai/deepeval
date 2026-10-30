@@ -565,6 +565,36 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=0.10 / 1e6,
             output_price=0.50 / 1e6,
         ),
+        "gpt-6-sol-2026-09-22": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-6-luna-2026-09-22": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=0.10 / 1e6,
+            output_price=0.50 / 1e6,
+        ),
+        "gpt-6-astra-2026-09-03": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=10.00 / 1e6,
+            output_price=50.00 / 1e6,
+        ),
         # Audio models take text and audio (no images) and reject any
         # request without audio in it.
         "gpt-audio": make_model_data(
