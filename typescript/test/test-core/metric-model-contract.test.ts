@@ -161,6 +161,62 @@ describe("calculateWeightedSummedScore", () => {
   it("keeps the raw score when the model reported no log probs", () => {
     expect(calculateWeightedSummedScore(6, undefined)).toBe(6);
   });
+
+  it("drops a digit-split prefix that may start a larger score (#3517)", () => {
+    // Raw 9; "1" is the first token of a possible 10, not the score 1.
+    const logProbs = [
+      tokenLogProbs("score", { score: 1 }),
+      tokenLogProbs("9", { "9": 0.812, "1": 0.16, "8": 0.028 }),
+      tokenLogProbs("}", { "}": 1 }),
+    ];
+    // (9*0.812 + 8*0.028) / (0.812 + 0.028) ≈ 8.97, not 7.69.
+    expect(calculateWeightedSummedScore(9, logProbs)).toBeCloseTo(
+      (9 * 0.812 + 8 * 0.028) / (0.812 + 0.028),
+      6,
+    );
+  });
+
+  it("weights a multi-digit raw score split across tokens (#3517)", () => {
+    // Raw 10 as "1","0": P(10) = 0.7*0.95 along the taken branch; the
+    // single-token alternative "9" carries 0.3. ≈ 9.69, not a bare 10.
+    const logProbs = [
+      tokenLogProbs("score", { score: 1 }),
+      tokenLogProbs("1", { "1": 0.7, "9": 0.3 }),
+      tokenLogProbs("0", { "0": 0.95 }),
+      tokenLogProbs("}", { "}": 1 }),
+    ];
+    expect(calculateWeightedSummedScore(10, logProbs)).toBeCloseTo(
+      (10 * 0.7 * 0.95 + 9 * 0.3) / (0.7 * 0.95 + 0.3),
+      6,
+    );
+  });
+
+  it("keeps the raw score when no token span spells it", () => {
+    const logProbs = [tokenLogProbs("7", { "7": 1 })];
+    expect(calculateWeightedSummedScore(10, logProbs)).toBe(10);
+  });
+
+  it("weights a prefix fully when the range makes it unambiguous", () => {
+    const logProbs = [tokenLogProbs("2", { "2": 0.6, "1": 0.4 })];
+    expect(calculateWeightedSummedScore(2, logProbs, 9)).toBeCloseTo(
+      2 * 0.6 + 1 * 0.4,
+      6,
+    );
+  });
+
+  it("ignores candidates outside the rubric range", () => {
+    const logProbs = [tokenLogProbs("9", { "9": 0.5, "11": 0.5 })];
+    expect(calculateWeightedSummedScore(9, logProbs)).toBe(9);
+  });
+
+  it("uses the last span, so earlier digits in the reason do not win", () => {
+    const logProbs = [
+      tokenLogProbs("9", { "9": 1 }),
+      tokenLogProbs("because", { because: 1 }),
+      tokenLogProbs("6", { "6": 0.8, "5": 0.2 }),
+    ];
+    expect(calculateWeightedSummedScore(6, logProbs)).toBeCloseTo(5.8, 6);
+  });
 });
 
 describe("evaluateGEvalPrompt", () => {
