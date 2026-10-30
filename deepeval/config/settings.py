@@ -1022,10 +1022,10 @@ class Settings(BaseSettings):
     #   - the default outer budget (180s) if no outer override is set.
     #
     # Tip: Set this OR the outer override, but generally not both
-    DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(gt=0)] = (
+    DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = (
         Field(
             None,
-            description="Override per-attempt provider call timeout (seconds). Leave unset to derive from task timeout.",
+            description="Override per-attempt provider call timeout (seconds). Leave unset or set 0 to derive from task timeout.",
         )
     )
 
