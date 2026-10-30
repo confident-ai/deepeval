@@ -87,6 +87,9 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
             str(base_url).rstrip("/") if base_url is not None else None
         )
 
+        # Track whether temperature was explicitly provided by user
+        self._temperature_explicit = temperature is not None
+
         if temperature is not None:
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
@@ -231,8 +234,10 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         params: Dict[str, Any] = {
             "model": self.name,
             "messages": [{"role": "user", "content": content}],
-            "temperature": self.temperature,
         }
+        # Only pass temperature if explicitly provided by user
+        if getattr(self, "_temperature_explicit", False):
+            params["temperature"] = self.temperature
         if self.api_key:
             params["api_key"] = require_secret_api_key(
                 self.api_key,
