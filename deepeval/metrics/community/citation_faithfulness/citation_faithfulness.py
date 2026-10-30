@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Union
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -110,6 +111,17 @@ class CitationFaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
+                # Check for out-of-bounds citation markers before judge call
+                oob_result = self._validate_citation_markers(test_case)
+                if oob_result is not None:
+                    self.verbose_logs = construct_verbose_logs(
+                        self,
+                        steps=[
+                            f"Out-of-bounds citation markers detected: {oob_result[1]}",
+                            f"Score: {oob_result[0]}",
+                        ],
+                    )
+                    return oob_result[0]
                 if run_system_one_eval(self, test_case):
                     return self._round_system_one_score()
 
@@ -140,6 +152,17 @@ class CitationFaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            # Check for out-of-bounds citation markers before judge call
+            oob_result = self._validate_citation_markers(test_case)
+            if oob_result is not None:
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Out-of-bounds citation markers detected: {oob_result[1]}",
+                        f"Score: {oob_result[0]}",
+                    ],
+                )
+                return oob_result[0]
             if await a_run_system_one_eval(self, test_case):
                 return self._round_system_one_score()
 
@@ -155,6 +178,25 @@ class CitationFaithfulnessMetric(BaseMetric):
                 ],
             )
             return self.score
+
+    def _validate_citation_markers(
+        self, test_case: LLMTestCase
+    ) -> Optional[tuple[float, str]]:
+        """Check for out-of-bounds citation markers before judge call.
+        Returns (score, reason) if invalid markers found, else None."""
+        markers = re.findall(r"\[(\d+)\]", test_case.actual_output)
+        if not markers:
+            return None
+        max_valid = len(test_case.retrieval_context)
+        invalid = [int(m) for m in markers if int(m) < 1 or int(m) > max_valid]
+        if invalid:
+            reason = f"Citation markers {sorted(set(invalid))} are out of bounds (valid range: [1, {max_valid}])"
+            self.verdict = CitationFaithfulnessVerdict(verdict="unfaithful", reasoning=reason)
+            self.score = 0.0
+            self.reason = reason
+            self.success = False
+            return (0.0, reason)
+        return None
 
     def _build_prompt(self, test_case: LLMTestCase) -> str:
         numbered_passages = CitationFaithfulnessTemplate.number_passages(

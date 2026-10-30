@@ -342,31 +342,71 @@ def calculate_weighted_summed_score(
 ) -> Union[int, float]:
     try:
         generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the final token matching the score. The reasoning may
-        # contain the same token before the model emits its final score.
+        # Find the score position - look for the token after "score":
         score_logprobs = None
-        for token_logprobs in reversed(generated_logprobs):
-            if token_logprobs.token == str(raw_score):
-                score_logprobs = token_logprobs
-                break
-        # Then, calculate the score based on the logprobs
+        for i, token_logprobs in enumerate(generated_logprobs):
+            if token_logprobs.token.strip() == '"score"':
+                # The score should be in the next few tokens (after colon, space, etc.)
+                for j in range(i + 1, min(i + 5, len(generated_logprobs))):
+                    t = generated_logprobs[j].token.strip()
+                    if t and (t.isdecimal() or t in [",", "}", "\n"]):
+                        if t.isdecimal():
+                            score_logprobs = generated_logprobs[j]
+                            break
+                if score_logprobs is not None:
+                    break
+        
+        # Fallback: search for exact raw_score token (original behavior)
+        if score_logprobs is None:
+            for token_logprobs in reversed(generated_logprobs):
+                if token_logprobs.token == str(raw_score):
+                    score_logprobs = token_logprobs
+                    break
+
+        if score_logprobs is None:
+            return raw_score
+
+        # Collect all alternative tokens at the score position
         token_linear_probability: Dict[int, float] = {}
         sum_linear_probability = 0
-        # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
         min_logprob = math.log(0.01)
+        
+        # Build a set of valid scores based on the rubric range
+        # Default 0-10, could be expanded based on rubric
+        valid_scores = set(range(0, 11))
+        
         for token_logprob in score_logprobs.top_logprobs:
             logprob = token_logprob.logprob
 
             # Filter out low probability tokens
             if logprob < min_logprob:
                 continue
-            # Filter out non-decimal token to prevent errors in later int(token) conversion
-            if not token_logprob.token.isdecimal():
+            
+            token = token_logprob.token.strip()
+            
+            # Filter out non-decimal tokens
+            if not token.isdecimal():
                 continue
 
-            # Calculate the linear probability
+            token_score = int(token)
+            
+            # Skip tokens that are prefixes of multi-digit scores (e.g., "1" when "10" is valid)
+            # Only skip if there's a valid multi-digit score starting with this token
+            # and the token itself is not a valid complete score
+            if token_score in valid_scores:
+                # Check if this token is a prefix of another valid score
+                is_prefix_of_longer = any(
+                    str(other).startswith(token) and len(str(other)) > len(token)
+                    for other in valid_scores if other != token_score
+                )
+                # If it's a prefix of a longer valid score, skip it
+                # (e.g., "1" is a prefix of "10", so we skip "1")
+                if is_prefix_of_longer and token_score < 10:
+                    # Only skip single-digit prefixes of multi-digit scores
+                    if len(token) == 1 and token_score < 10:
+                        continue
+
             linear_prob = math.exp(logprob)
-            token_score = int(token_logprob.token)
             if token_linear_probability.get(token_score):
                 token_linear_probability[token_score] += linear_prob
             else:
