@@ -68,6 +68,7 @@ SCORE = {
 def _no_nace_env(monkeypatch):
     for key in (
         "NACE_API_KEY",
+        "OPENROUTER_API_KEY",
         "NACE_MODEL_NAME",
         "NACE_BASE_URL",
         "NACE_COST_PER_INPUT_TOKEN",
@@ -463,6 +464,45 @@ def test_openrouter_backend(drex, model_id):
     assert picture["image_url"]["url"].startswith("data:image/png;base64,")
     assert request.headers["http-referer"] == "https://nace.ai"
     assert request.headers["x-openrouter-title"] == "Drex for deepeval"
+
+
+@pytest.mark.parametrize(
+    "base_url, env, api_key, sent",
+    [
+        ("https://openrouter.ai/api", {}, None, None),
+        (
+            "https://openrouter.ai/api",
+            {"OPENROUTER_API_KEY": "sk-or-env"},
+            None,
+            "sk-or-env",
+        ),
+        ("https://openrouter.ai/api", {}, "sk-or-arg", "sk-or-arg"),
+        ("https://drex.example.com", {}, None, "nace_sk_env"),
+    ],
+)
+def test_openrouter_never_gets_the_nace_key(
+    monkeypatch, drex, base_url, env, api_key, sent
+):
+    from deepeval.config.settings import reset_settings
+
+    monkeypatch.setenv("NACE_API_KEY", "nace_sk_env")
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+    reset_settings(reload_dotenv=False)
+
+    def build():
+        return NaceModel(
+            base_url=base_url,
+            api_key=api_key,
+            transport=httpx.MockTransport(drex),
+        )
+
+    if sent is None:
+        with pytest.raises(DeepEvalError, match="OPENROUTER_API_KEY"):
+            build()
+    else:
+        build().decide("s", NOUL)
+        assert drex.requests[0].headers["authorization"] == f"Bearer {sent}"
 
 
 def test_openrouter_refuses_images_too_large_to_inline(drex):
