@@ -20,6 +20,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     initialize_system_one_model,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
     parse_questions,
     run_system_one_eval,
@@ -374,7 +375,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         """`system_one` eval mode: the whole conversation as one Jev request,
         each turn carrying its `role`, `content` and `retrieval_context`;
         see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=self._required_test_case_params,

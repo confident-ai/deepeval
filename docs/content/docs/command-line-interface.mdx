@@ -559,7 +559,7 @@ To opt out, run <Term py="deepeval set-mode stable" ts="npx deepeval set-mode st
 
 ### `set-eval-mode`
 
-Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>. This is how you bring [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, into an eval:
+Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>. This is how you bring [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model<Only id="python">, or [Drex](/integrations/models/nace), Nace's (chosen with `set-nace`)</Only>, into an eval:
 
 - `llm` (the default): the LLM runs the whole metric, end to end.
 - `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that one decision instead. A missing `TYPESAFE_API_KEY`<Only id="python"> or SDK</Only> still fails when the metric is created.
@@ -593,7 +593,7 @@ npx deepeval set-eval-mode system_one --save=dotenv
 | `--save`, `-s`  | Persist `DEEPEVAL_EVAL_MODE` to a dotenv file. Usage: `dotenv[:path]`. |
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                      |
 
-Every built-in LLM-as-a-judge metric<Only id="python"> and classifier</Only> follows the eval mode. `GEval`, `ConversationalGEval` and `ArenaGEval` are LLM-as-a-judge by definition and ignore it; use [`JevEval`](/docs/metrics-jev-eval) for a custom metric decided by Jev. The DAG metrics' task nodes need the LLM, so under `system_one` they run as `hybrid`.
+Every built-in LLM-as-a-judge metric<Only id="python"> and classifier</Only> follows the eval mode. `GEval`, `ConversationalGEval` and `ArenaGEval` are LLM-as-a-judge by definition and ignore it; use [`JevEval`](/docs/metrics-jev-eval)<Only id="python"> or [`DrexEval`](/docs/metrics-drex-eval)</Only> for a custom metric decided by a System One model. The DAG metrics' task nodes need the LLM, so under `system_one` they run as `hybrid`.
 
 ### `gate`
 
@@ -904,6 +904,17 @@ deepeval set-stt deepgram --model nova-3
 ```
 
 The model name is optional and defaults to that provider's own default. `unset-tts` and `unset-stt` clear their whole family rather than one provider, since the provider is an argument rather than part of the command name.
+
+System One providers decide under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes). Setting one also sets `DEEPEVAL_DECISION_PROVIDER`, so the last one set is the one metrics use:
+
+| Provider (System One) | Set            | Unset            |
+| --------------------- | -------------- | ---------------- |
+| TypeSafe AI (Jev)     | `set-typesafe` | `unset-typesafe` |
+| Nace (Drex)           | `set-nace`     | `unset-nace`     |
+
+```bash
+deepeval set-nace --model drex-max --prompt-api-key --save=dotenv
+```
 
 </Case>
 

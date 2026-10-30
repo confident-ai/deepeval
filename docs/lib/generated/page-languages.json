@@ -308,6 +308,9 @@
     "python",
     "typescript"
   ],
+  "/docs/metrics-drex-eval": [
+    "python"
+  ],
   "/docs/metrics-exact-match": [
     "python",
     "typescript"
@@ -680,6 +683,9 @@
   "/integrations/models/moonshot": [
     "python",
     "typescript"
+  ],
+  "/integrations/models/nace": [
+    "python"
   ],
   "/integrations/models/ollama": [
     "python",

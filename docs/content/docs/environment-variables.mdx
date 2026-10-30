@@ -245,6 +245,28 @@ npx deepeval test run example.test.ts
 
 Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
 
+<Only id="python">
+
+#### DeepEval decision provider
+
+`DEEPEVAL_DECISION_PROVIDER` picks the System One model `hybrid` and `system_one` decide with: `typesafe` ([Jev](/integrations/models/typesafe-ai), the default) or `nace` ([Drex](/integrations/models/nace)). `deepeval set-typesafe` and `deepeval set-nace` set it. A `system_one_model` passed to a metric overrides it, and unrecognised values mean unset.
+
+| Variable                    | Default                   | Effect                                                            |
+| --------------------------- | ------------------------- | ----------------------------------------------------------------- |
+| `NACE_API_KEY`              | Unset                     | Nace API key (`nace_sk_...`), needed when the provider is `nace`. |
+| `NACE_MODEL_NAME`           | `drex-max-v1.1`           | Drex model. Text-only models refuse image test cases.             |
+| `NACE_BASE_URL`             | `https://console.nace.ai` | API base URL, e.g. `https://openrouter.ai/api` for OpenRouter.    |
+| `NACE_COST_PER_INPUT_TOKEN` | Drex's published prices   | Input token price override for cost reporting.                    |
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export DEEPEVAL_DECISION_PROVIDER=nace
+export NACE_API_KEY=<your-nace-api-key>
+deepeval test run test_llm_app.py
+```
+
+</Only>
+
 ## Logging
 
 | Variable                          | Values                | Effect                                                                           |

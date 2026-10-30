@@ -10,7 +10,11 @@ from deepeval.cli.utils import (
     coerce_blank_to_none,
     handle_save_result as _handle_save_result,
 )
-from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, EvalMode
+from deepeval.config.eval_mode import (
+    EVAL_MODE_ENV_VAR,
+    DecisionProvider,
+    EvalMode,
+)
 from deepeval.config.settings import get_settings
 from deepeval.models.system_one.constants import DEFAULT_TYPESAFE_MODEL
 
@@ -62,6 +66,15 @@ def set_typesafe_model_env(
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
+        # Only rewritten when another provider was chosen, so a plain
+        # TypeSafe setup (the default) gains no new variable.
+        if settings.DEEPEVAL_DECISION_PROVIDER not in (
+            None,
+            DecisionProvider.TYPESAFE.value,
+        ):
+            settings.DEEPEVAL_DECISION_PROVIDER = (
+                DecisionProvider.TYPESAFE.value
+            )
         if api_key is not None:
             settings.TYPESAFE_API_KEY = api_key
         if model is not None:

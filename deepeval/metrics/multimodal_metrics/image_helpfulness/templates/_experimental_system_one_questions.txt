@@ -1,0 +1,13 @@
+[
+{% for k in range(1, image_count + 1) %}  {
+    "type": "score",
+    "question": "How much does [Image {{ k }}] help a reader understand the text around it in `actual_output` (the text just above and below it)?",
+    "levels": [
+      "Not helpful for understanding the text",
+      "Minimally helpful",
+      "Somewhat helpful, but with extraneous or less relevant details",
+      "Highly helpful for understanding the text",
+      "Perfectly enhances and clarifies the text"
+    ]
+  }{% if not loop.last %},{% endif %}
+{% endfor %}]

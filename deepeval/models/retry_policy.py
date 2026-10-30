@@ -1063,6 +1063,39 @@ except Exception:  # TypeSafe optional
     TYPESAFE_ERROR_POLICY = None
 
 
+###############
+# Nace Policy #
+###############
+# Same shape as TypeSafe (the SDK descends from it): errors carry `.status`,
+# 5xx including 529 Overloaded subclass `NaceInternalServerError`. 402 (no
+# funds) and 422 are not listed, so they surface without a retry.
+
+try:
+    module = require_dependency(
+        "nace_sdk",
+        provider_label="retry_policy",
+        install_hint="Install it with `pip install nace-sdk`.",
+    )
+
+    NACE_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(
+            module.NaceAuthenticationError,
+            module.NacePermissionDeniedError,
+        ),
+        rate_limit_excs=(module.NaceRateLimitError,),
+        network_excs=(
+            module.NaceAPIConnectionError,
+            module.NaceAPITimeoutError,
+            module.NaceInternalServerError,
+        ),
+        http_excs=(),
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:  # Nace optional
+    NACE_ERROR_POLICY = None
+
+
 # Map provider slugs to their policy objects.
 # It is OK if some are None, we'll treat that as no Error Policy / Tenacity
 _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
@@ -1080,6 +1113,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
     PS.PORTKEY.value: PORTKEY_ERROR_POLICY,
     PS.TYPESAFE.value: TYPESAFE_ERROR_POLICY,
+    PS.NACE.value: NACE_ERROR_POLICY,
     PS.ASSEMBLYAI.value: SPEECH_ERROR_POLICY,
     PS.CARTESIA.value: SPEECH_ERROR_POLICY,
     PS.DEEPGRAM.value: SPEECH_ERROR_POLICY,
@@ -1108,6 +1142,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
     PS.PORTKEY.value: _opt_pred(PORTKEY_ERROR_POLICY),
     PS.TYPESAFE.value: _opt_pred(TYPESAFE_ERROR_POLICY),
+    PS.NACE.value: _opt_pred(NACE_ERROR_POLICY),
     PS.ASSEMBLYAI.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.CARTESIA.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.DEEPGRAM.value: _opt_pred(SPEECH_ERROR_POLICY),
@@ -1138,4 +1173,5 @@ __all__ = [
     "LOCAL_ERROR_POLICY",
     "SPEECH_ERROR_POLICY",
     "TYPESAFE_ERROR_POLICY",
+    "NACE_ERROR_POLICY",
 ]

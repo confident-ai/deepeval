@@ -5,18 +5,26 @@ import textwrap
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
+from deepeval.metrics.jev_eval.utils import extract_images
 from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
 )
 from deepeval.metrics.utils import (
+    SystemOneEvalSpec,
+    initialize_image_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_reads,
     construct_verbose_logs,
-    check_llm_test_case_params,
+    prepare_measure,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.templates import make_template_class
@@ -31,6 +39,8 @@ TextToImageTemplate = make_template_class("TextToImageMetric")
 
 
 class TextToImageMetric(BaseMetric):
+    _required_params: List[SingleTurnParams] = required_params
+
     def __init__(
         self,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -40,9 +50,23 @@ class TextToImageMetric(BaseMetric):
         verbose_mode: bool = False,
         flaky: bool = False,
         evaluation_template: Type[TextToImageTemplate] = TextToImageTemplate,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
     ):
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        # Under `system_one` the images go to a System One model that reads
+        # them (Drex Max) and the reason is built from its answers.
+        self.eval_mode, self.system_one_model = (
+            initialize_image_system_one_model(system_one_model, eval_mode)
+        )
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
+        self.include_reason = True
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
@@ -56,19 +80,12 @@ class TextToImageMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_llm_test_case_params(
-            test_case,
-            required_params,
-            0,
-            1,
+        prepare_measure(
             self,
-            self.model,
-            test_case.multimodal,
+            test_case,
+            input_image_count=0,
+            actual_output_image_count=1,
         )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -82,6 +99,8 @@ class TextToImageMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
                 input = convert_to_multi_modal_array(test_case.input)
                 actual_output = convert_to_multi_modal_array(
                     test_case.actual_output
@@ -124,25 +143,20 @@ class TextToImageMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_llm_test_case_params(
-            test_case,
-            required_params,
-            0,
-            1,
+        prepare_measure(
             self,
-            self.model,
-            test_case.multimodal,
+            test_case,
+            input_image_count=0,
+            actual_output_image_count=1,
         )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
             input = convert_to_multi_modal_array(test_case.input)
             actual_output = convert_to_multi_modal_array(
                 test_case.actual_output
@@ -295,6 +309,31 @@ class TextToImageMetric(BaseMetric):
             Reason for Semantic Consistency score: {self.SC_reasoning}
             Reason for Perceptual Quality score: {self.PQ_reasoning}
         """
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the generated image in `actual_output` judged against the prompt in `input`, for naturalness and for artifacts, in one request to a System One model
+        that reads images (Drex Max)."""
+        if not system_one_reads(self, test_case):
+            return None
+        _, input_images = extract_images(test_case.input)
+        _, output_images = extract_images(test_case.actual_output)
+        if (len(input_images), len(output_images)) != (0, 1):
+            raise ValueError(
+                f"{self.__name__} judges test cases with 0 input "
+                f"images and 1 actual_output image; found "
+                f"{len(input_images)} and {len(output_images)}."
+            )
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                SingleTurnParams.INPUT,
+                SingleTurnParams.ACTUAL_OUTPUT,
+            ],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
         )
 
     @property

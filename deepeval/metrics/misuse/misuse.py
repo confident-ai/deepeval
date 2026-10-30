@@ -14,6 +14,7 @@ from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
     initialize_system_one_model,
     parse_questions,
@@ -261,7 +262,7 @@ class MisuseMetric(BaseMetric):
         `input` and `actual_output`, with the chatbot's `domain` written
         into the questions; higher probabilities mean less misuse. See
         EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=self._required_params,

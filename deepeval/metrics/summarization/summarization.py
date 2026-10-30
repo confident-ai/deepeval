@@ -19,6 +19,7 @@ from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
     initialize_system_one_model,
     parse_questions,
@@ -497,7 +498,7 @@ class SummarizationMetric(BaseMetric):
         the original text (`input`) and the summary (`actual_output`):
         alignment and coverage questions, plus one Noul per user-supplied
         assessment question. See EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=self._required_params,

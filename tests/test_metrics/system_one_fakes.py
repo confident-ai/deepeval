@@ -1,9 +1,16 @@
-"""Test doubles for System One (Jev) and the evaluation LLM.
+"""Test doubles for System One (Jev, Drex) and the evaluation LLM.
 
-Shared by the JevEval tests and the eval-mode tests so no test needs a
-network, an API key or the ``typesafe-sdk``."""
+Shared by the JevEval / DrexEval tests and the eval-mode tests so no test
+needs a network or an API key. ``FakeDrex`` stands in for the Drex API at the
+HTTP layer, under the real ``nace-sdk`` client."""
 
+import base64
+import json
+import struct
+import zlib
 from typing import Any, Dict, List, Optional, Tuple
+
+import httpx
 
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.models.system_one.schema import (
@@ -12,6 +19,7 @@ from deepeval.models.system_one.schema import (
     ScoreAnswer,
     SystemOneAnswers,
 )
+from deepeval.test_case import MLLMImage
 
 
 class FakeSystemOneModel(DeepEvalBaseSystemOneModel):
@@ -206,3 +214,112 @@ class ExplodingLLM(DeepEvalBaseLLM):
 
     async def a_generate(self, *args, **kwargs):
         raise AssertionError("LLM must not be called")
+
+
+###############################################
+# Drex at the HTTP layer
+###############################################
+
+
+def solid_png(rgb, size=8) -> bytes:
+    raw = b"".join(b"\x00" + bytes(rgb) * size for _ in range(size))
+
+    def chunk(tag, data):
+        crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+        return (
+            struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+        )
+
+    header = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", header)
+        + chunk(b"IDAT", zlib.compress(raw))
+        + chunk(b"IEND", b"")
+    )
+
+
+RED, BLUE = solid_png((255, 0, 0)), solid_png((0, 0, 255))
+
+
+def image(data: bytes) -> MLLMImage:
+    return MLLMImage(
+        dataBase64=base64.b64encode(data).decode(), mimeType="image/png"
+    )
+
+
+def _answer(question: Dict[str, Any]) -> Dict[str, Any]:
+    if question["type"] == "noul":
+        return {"type": "noul", "noul": 0.9}
+    if question["type"] == "choice":
+        labels = list(question["criteria"])
+        rest = 0.2 / max(len(labels) - 1, 1)
+        return {
+            "type": "choice",
+            "choice": labels[0],
+            "confidence": 0.75,
+            "probabilities": {
+                label: 0.8 if i == 0 else rest for i, label in enumerate(labels)
+            },
+        }
+    levels = question["criteria"]
+    top = len(levels) - 1
+    return {
+        "type": "score",
+        "score": float(top),
+        "confidence": 0.7,
+        "legend": levels,
+        "probabilities": {str(i): float(i == top) for i in range(top + 1)},
+    }
+
+
+class FakeDrex:
+    """Answers each question by type, like Drex; ``replies`` are returned
+    first, one per request (``None`` means answer normally)."""
+
+    def __init__(self, replies: Optional[List[Any]] = None):
+        self.replies = list(replies or [])
+        self.requests: List[httpx.Request] = []
+
+    @property
+    def bodies(self) -> List[Dict[str, Any]]:
+        return [json.loads(r.content) for r in self.requests]
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.requests.append(request)
+        if self.replies:
+            reply = self.replies.pop(0)
+            if reply is not None:
+                return reply
+        body = json.loads(request.content)
+        images = len(body.get("images") or [])
+        return httpx.Response(
+            200,
+            headers={"x-request-id": "req_test"},
+            json={
+                "model": body["model"],
+                "answers": {
+                    key: _answer(q) for key, q in body["questions"].items()
+                },
+                "usage": {
+                    "input_tokens": 1000,
+                    "image_tokens": 64 * images or None,
+                    "output_tokens": 10,
+                },
+                "evaluation_time_ms": 12.0,
+                "request_id": "req_test",
+            },
+        )
+
+
+def drex_error(
+    status: int, message: str, headers=None, **fields
+) -> httpx.Response:
+    return httpx.Response(
+        status,
+        headers=headers or {},
+        json={
+            "error": {"type": "error", "message": message, **fields},
+            "request_id": "req_err",
+        },
+    )

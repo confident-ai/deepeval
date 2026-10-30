@@ -16,6 +16,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
     parse_questions,
     run_system_one_eval,
@@ -351,7 +352,7 @@ class ContextualRecallMetric(BaseMetric):
     ) -> Optional[SystemOneEvalSpec]:
         """`system_one` eval mode: the whole metric as one Jev request over
         `expected_output` and `retrieval_context`; see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=[

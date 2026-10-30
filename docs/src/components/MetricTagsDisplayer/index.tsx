@@ -9,6 +9,9 @@ interface MetricTagsDisplayerProps {
   // the LLM under the `hybrid` / `system_one` eval modes, in which case both
   // judge pills show.
   jev?: boolean;
+  // Drex (Nace's decision models) is the judge: DrexEval. Drex Max reads
+  // images, so unlike Jev it leaves the metric multimodal.
+  drex?: boolean;
   singleTurn?: boolean;
   multiTurn?: boolean;
   referenceless?: boolean;
@@ -26,6 +29,7 @@ interface MetricTagsDisplayerProps {
 const MetricTagsDisplayer = ({
   usesLLMs = true,
   jev = false,
+  drex = false,
   singleTurn = false,
   multiTurn = false,
   referenceless = false,
@@ -39,8 +43,9 @@ const MetricTagsDisplayer = ({
   multimodal = true,
   community = false,
 }: MetricTagsDisplayerProps) => {
-  // Jev is text-only, so a metric with no LLM judge cannot be multimodal.
-  if (!usesLLMs) multimodal = false;
+  // Jev is text-only, so a metric with no LLM judge cannot be multimodal,
+  // unless Drex (Drex Max reads images) is the judge.
+  if (!usesLLMs && !drex) multimodal = false;
 
   return (
     <div className={styles.metricTagsDisplayer}>
@@ -55,6 +60,9 @@ const MetricTagsDisplayer = ({
       )}
       {jev && (
         <div className={`${styles.pill} ${styles.jev}`}>Jev-as-a-judge</div>
+      )}
+      {drex && (
+        <div className={`${styles.pill} ${styles.drex}`}>Drex-as-a-judge</div>
       )}
       {custom && (
         <div className={`${styles.pill} ${styles.custom}`}>Custom</div>
