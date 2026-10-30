@@ -101,11 +101,11 @@ def resolve_label(
     if candidate.upper() == NONE_LABEL:
         return NONE_LABEL if allow_none else None
     for label in labels:
-        if label.name == candidate:
+        if label.name.strip() == candidate:
             return label.name
     lowered = candidate.lower()
     for label in labels:
-        if label.name.lower() == lowered:
+        if label.name.strip().lower() == lowered:
             return label.name
     return None
 
