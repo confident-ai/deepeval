@@ -87,6 +87,11 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
             str(base_url).rstrip("/") if base_url is not None else None
         )
 
+        self._temperature_configured = (
+            temperature is not None or settings.TEMPERATURE is not None
+        )
+        # Set once LiteLLM rejects the default temperature for this model.
+        self._omit_temperature = False
         if temperature is not None:
             temperature = float(temperature)
         elif settings.TEMPERATURE is not None:
@@ -127,12 +132,18 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         schema: Optional[BaseModel] = None,
         audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        from litellm import completion
+        import litellm
 
         params = self._completion_params(to_openai_content(prompt, audio))
         if schema:
             params["response_format"] = schema
-        response = completion(**params)
+        try:
+            response = litellm.completion(**params)
+        except getattr(litellm, "UnsupportedParamsError", ()) as e:
+            if not self._should_drop_temperature(e, params):
+                raise
+            params.pop("temperature")
+            response = litellm.completion(**params)
         return self._parse_response(response, schema)
 
     async def _a_generate(
@@ -141,13 +152,35 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         schema: Optional[BaseModel] = None,
         audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        from litellm import acompletion
+        import litellm
 
         params = self._completion_params(to_openai_content(prompt, audio))
         if schema:
             params["response_format"] = schema
-        response = await acompletion(**params)
+        try:
+            response = await litellm.acompletion(**params)
+        except getattr(litellm, "UnsupportedParamsError", ()) as e:
+            if not self._should_drop_temperature(e, params):
+                raise
+            params.pop("temperature")
+            response = await litellm.acompletion(**params)
         return self._parse_response(response, schema)
+
+    def _should_drop_temperature(self, error: Exception, params: Dict) -> bool:
+        """Whether LiteLLM rejected a temperature the user never set.
+
+        Reasoning models (o-series, recent Claude) only accept their default
+        temperature, so the 0.0 fallback is dropped for the rest of this
+        model's life. An explicitly configured temperature is never dropped.
+        """
+        if (
+            self._temperature_configured
+            or "temperature" not in params
+            or "temperature" not in str(error).lower()
+        ):
+            return False
+        self._omit_temperature = True
+        return True
 
     ###############################################
     # Raw response + samples
@@ -231,8 +264,9 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         params: Dict[str, Any] = {
             "model": self.name,
             "messages": [{"role": "user", "content": content}],
-            "temperature": self.temperature,
         }
+        if not self._omit_temperature:
+            params["temperature"] = self.temperature
         if self.api_key:
             params["api_key"] = require_secret_api_key(
                 self.api_key,
