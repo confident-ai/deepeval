@@ -286,14 +286,15 @@ class TestRun(BaseModel):
 
             metric_dict = metrics_dict[metric_name]
 
-            if score is None or success is None:
+            if score is None:
                 metric_dict["errors"] += 1
             else:
                 valid_scores += 1
                 metric_dict["scores"].append(score)
+                # A score-only metric has no verdict, so it counts as neither
                 if success:
                     metric_dict["passes"] += 1
-                else:
+                elif success is False:
                     metric_dict["fails"] += 1
 
         def process_span_metric_data(
@@ -326,13 +327,14 @@ class TestRun(BaseModel):
 
             metric_dict = trace_metrics_dict[span_type][span_name][metric_name]
 
-            if score is None or success is None:
+            if score is None:
                 metric_dict["errors"] += 1
             else:
                 metric_dict["scores"].append(score)
+                # A score-only metric has no verdict, so it counts as neither
                 if success:
                     metric_dict["passes"] += 1
-                else:
+                elif success is False:
                     metric_dict["fails"] += 1
 
         def process_spans(spans, span_type: span_api_type_literals):
