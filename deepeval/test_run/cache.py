@@ -103,7 +103,7 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class CachedTestRun(BaseModel):
-    test_cases_lookup_map: Optional[Dict[str, CachedTestCase]] = Field(
+    test_cases_lookup_map: Dict[str, CachedTestCase] = Field(
         default_factory=lambda: {}
     )
 
