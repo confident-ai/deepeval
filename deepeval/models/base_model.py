@@ -163,16 +163,20 @@ class DeepEvalBaseLLM(ABC):
         if schema is not None:
             try:
                 return self.generate(*args, schema=schema, **kwargs)
-            except TypeError:
-                pass  # this means provider doesn't accept schema kwarg
+            except TypeError as exc:
+                # Only fall back when the provider doesn't accept the schema kwarg;
+                # a TypeError raised inside the provider's own code must propagate.
+                if "schema" not in str(exc).lower() and "unexpected keyword" not in str(exc).lower():
+                    raise
         return self.generate(*args, **kwargs)
 
     async def a_generate_with_schema(self, *args, schema=None, **kwargs):
         if schema is not None:
             try:
                 return await self.a_generate(*args, schema=schema, **kwargs)
-            except TypeError:
-                pass
+            except TypeError as exc:
+                if "schema" not in str(exc).lower() and "unexpected keyword" not in str(exc).lower():
+                    raise
         return await self.a_generate(*args, **kwargs)
 
 
