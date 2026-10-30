@@ -8,7 +8,8 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.llms.multimodal import reject_audio, to_openai_content
+from deepeval.models.llms.multimodal import reject_audio, to_openai_content, check_if_multimodal, convert_to_multi_modal_array
+from deepeval.test_case import MLLMImage
 from deepeval.test_case import Audio
 from deepeval.models.utils import (
     require_costs,
@@ -194,10 +195,32 @@ class GrokModel(DeepEvalBaseLLM):
 
     def _prompt_content(
         self, prompt: str, audio: Optional[List[Audio]] = None
-    ) -> List[Dict]:
+    ) -> Union[str, List]:
         # xAI's chat API takes text and images, with no audio input.
+        # For text-only, pass string directly. For multimodal, use xai_sdk Content objects.
         reject_audio(audio, "GrokModel")
-        return to_openai_content(prompt)
+        
+        # Check if prompt has images
+        if check_if_multimodal(prompt):
+            parts = convert_to_multi_modal_array(input=prompt)
+            from xai_sdk.chat import text, image
+            content = []
+            for element in parts:
+                if isinstance(element, str):
+                    content.append(text(element))
+                elif isinstance(element, MLLMImage):
+                    # Use URL or base64 data for image
+                    if element.url and not element.local:
+                        content.append(image(element.url))
+                    else:
+                        element.ensure_images_loaded()
+                        b64_data = element.dataBase64
+                        mime = element.mimeType or "image/jpeg"
+                        content.append(image(f"data:{mime};base64,{b64_data}"))
+            return content
+        else:
+            # Text-only: return string directly for xai_sdk
+            return prompt
 
     ###############################################
     # Utilities
