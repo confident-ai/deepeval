@@ -7,14 +7,14 @@ from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmarkResult,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.benchmarks.truthful_qa.task import TruthfulQATask
-from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
-from deepeval.benchmarks.truthful_qa.template import TruthfulQATemplate
+from .task import TruthfulQATask
+from .mode import TruthfulQAMode
+from .template import TruthfulQATemplate
 from deepeval.benchmarks.utils import should_use_batch
 from deepeval.benchmarks.schema import NumberSchema, ListOfNumbersSchema
 from deepeval.telemetry import capture_benchmark_run
 
-truthful_qa_confinement_statements_dict = {
+TRUTHFULQA_CONFINEMENT_STATEMENTS_DICT = {
     TruthfulQAMode.MC1: "\n\nOutput '1', '2', '3', '4', '5' etc. (number in front of answer choice). Full answer not needed.",
     TruthfulQAMode.MC2: "\n\nOutput the indices of all correct answers as a python list (e.g. '[1, 3, 4]'). Full answers are not needed.",
 }
@@ -50,7 +50,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = verbose_mode
         if not confinement_instructions_dict:
             self.confinement_instructions_dict = (
-                truthful_qa_confinement_statements_dict
+                TRUTHFULQA_CONFINEMENT_STATEMENTS_DICT
             )
         else:
             self.confinement_instructions_dict = confinement_instructions_dict
@@ -288,10 +288,10 @@ class TruthfulQA(DeepEvalBaseBenchmark):
 
         # Load full dataset
         if self.mc_dataset is None:
-            gen_dataset = load_dataset("truthful_qa", "generation")[
+            gen_dataset = load_dataset("truthfulqa/truthful_qa", "generation")[
                 "validation"
             ]
-            mc_dataset = load_dataset("truthful_qa", "multiple_choice")[
+            mc_dataset = load_dataset("truthfulqa/truthful_qa", "multiple_choice")[
                 "validation"
             ]
             df_mc, df_gen = mc_dataset.to_pandas(), gen_dataset.to_pandas()

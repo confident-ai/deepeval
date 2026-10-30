@@ -277,7 +277,7 @@ class ElevenLabsConnector(BaseWebSocketConnector):
         }
         try:
             encoded = json.dumps(message)
-        except TypeError:
+        except (TypeError, ValueError):
             # Better to hand the agent a stringified result than to leave it
             # waiting for a message that can never be encoded.
             message["result"] = repr(result)
