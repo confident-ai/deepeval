@@ -22,6 +22,7 @@ from deepeval.models.system_one.constants import (
     DEFAULT_NACE_MODEL,
     NACE_BASE_URL,
 )
+from deepeval.models.system_one.nace_model import is_openrouter
 
 
 @app.command(name="set-nace")
@@ -38,7 +39,8 @@ def set_nace_model_env(
         "-k",
         "--prompt-api-key",
         help=(
-            "Prompt for NACE_API_KEY (input hidden). Not suitable for CI. "
+            "Prompt for NACE_API_KEY, or OPENROUTER_API_KEY when the base "
+            "URL is OpenRouter (input hidden). Not suitable for CI. "
             "If --save (or DEEPEVAL_DEFAULT_SAVE) is used, the key is written to dotenv in plaintext."
         ),
     ),
@@ -69,19 +71,28 @@ def set_nace_model_env(
         help="Suppress printing to the terminal (useful for CI).",
     ),
 ):
-    api_key = None
-    if prompt_api_key:
-        api_key = coerce_blank_to_none(
-            typer.prompt("Nace API key", hide_input=True)
-        )
-
     model = coerce_blank_to_none(model)
     base_url = coerce_blank_to_none(base_url)
 
     settings = get_settings()
+    openrouter = is_openrouter(
+        str(base_url or settings.NACE_BASE_URL or NACE_BASE_URL)
+    )
+
+    api_key = None
+    if prompt_api_key:
+        api_key = coerce_blank_to_none(
+            typer.prompt(
+                "OpenRouter API key" if openrouter else "Nace API key",
+                hide_input=True,
+            )
+        )
+
     with settings.edit(save=save) as edit_ctx:
         settings.DEEPEVAL_DECISION_PROVIDER = DecisionProvider.NACE.value
-        if api_key is not None:
+        if api_key is not None and openrouter:
+            settings.OPENROUTER_API_KEY = api_key
+        elif api_key is not None:
             settings.NACE_API_KEY = api_key
         if model is not None:
             settings.NACE_MODEL_NAME = model

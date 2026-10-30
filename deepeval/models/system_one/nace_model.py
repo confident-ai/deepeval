@@ -56,6 +56,11 @@ NACE_BILLING_URL = "https://console.nace.ai/dashboard/billing"
 _BODY_MARGIN_BYTES = 64 * 1024
 
 
+def is_openrouter(base_url: str) -> bool:
+    host = urlparse(base_url).hostname or ""
+    return host == "openrouter.ai" or host.endswith(".openrouter.ai")
+
+
 @contextmanager
 def _drex_errors(state: Any):
     """Turn Drex refusals into errors that say what to change: a token or
@@ -123,8 +128,15 @@ class NaceModel(DeepEvalBaseSystemOneModel):
     ):
         settings = get_settings()
 
+        base_url = base_url or settings.NACE_BASE_URL
+        self.base_url = str(base_url or NACE_BASE_URL).rstrip("/")
+        self.openrouter = is_openrouter(self.base_url)
+
+        # The Nace key never goes to OpenRouter.
         if api_key is not None:
             self.api_key: Optional[SecretStr] = SecretStr(api_key)
+        elif self.openrouter:
+            self.api_key = settings.OPENROUTER_API_KEY
         else:
             self.api_key = settings.NACE_API_KEY
 
@@ -132,13 +144,6 @@ class NaceModel(DeepEvalBaseSystemOneModel):
         # OpenRouter's `nace-ai/` ids name the same models; `_body` adds the
         # prefix back for OpenRouter.
         model = model.removeprefix(OPENROUTER_NACE_PREFIX)
-
-        base_url = base_url or settings.NACE_BASE_URL
-        self.base_url = str(base_url or NACE_BASE_URL).rstrip("/")
-        host = urlparse(self.base_url).hostname or ""
-        self.openrouter = host == "openrouter.ai" or host.endswith(
-            ".openrouter.ai"
-        )
 
         cost_per_input_token = (
             cost_per_input_token
@@ -475,8 +480,10 @@ class NaceModel(DeepEvalBaseSystemOneModel):
     def _build_client(self, module, cls):
         api_key = require_secret_api_key(
             self.api_key,
-            provider_label="Nace",
-            env_var_name="NACE_API_KEY",
+            provider_label="OpenRouter" if self.openrouter else "Nace",
+            env_var_name=(
+                "OPENROUTER_API_KEY" if self.openrouter else "NACE_API_KEY"
+            ),
             param_hint="`api_key` to NaceModel(...)",
         )
         kw = dict(

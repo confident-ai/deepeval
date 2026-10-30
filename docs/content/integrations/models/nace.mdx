@@ -145,7 +145,7 @@ Under `hybrid`, each extracted item (a claim, a statement, an opinion, ...) is o
 
 `base_url` (or `NACE_BASE_URL`) points the same code at another host:
 
-- **OpenRouter**: `https://openrouter.ai/api`, with an OpenRouter key as `api_key`. `deepeval` sends the `nace-ai/` model ids and the request shape OpenRouter expects. Images must fit inline.
+- **OpenRouter**: `https://openrouter.ai/api`, with an OpenRouter key as `api_key` or `OPENROUTER_API_KEY` (`NACE_API_KEY` is never sent to OpenRouter). `deepeval` sends the `nace-ai/` model ids and the request shape OpenRouter expects. Images must fit inline.
 - **Vercel AI Gateway**, or any TypeSafe-compatible host serving `/v1/systemone`.
 
 ### Available Drex Models
