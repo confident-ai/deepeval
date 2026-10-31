@@ -351,12 +351,25 @@ class ConversationalGEval(BaseConversationalMetric):
         self, raw_score: int, raw_response: ChatCompletion
     ) -> Union[int, float]:
         generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the token that we care for logprobs, i.e., the token matching the score
+        # First, locate the token at the score position. Some tokenizers
+        # split multi-digit scores into single-digit tokens (e.g. "10" -> "1", "0"),
+        # so we accumulate consecutive decimal tokens that form the score.
         score_logprobs = None
-        for token_logprobs in generated_logprobs:
+        score_token_start = None
+        for i, token_logprobs in enumerate(generated_logprobs):
             if token_logprobs.token == str(raw_score):
                 score_logprobs = token_logprobs
+                score_token_start = i
                 break
+        # If no exact match (e.g. tokenizer split the score into digits),
+        # look for the first decimal token at a position where a score
+        # could begin, then combine consecutive digits.
+        if score_logprobs is None:
+            for i, token_logprobs in enumerate(generated_logprobs):
+                if token_logprobs.token.isdecimal():
+                    score_logprobs = token_logprobs
+                    score_token_start = i
+                    break
         # Then, calculate the score based on the logprobs
         token_linear_probability: Dict[int, float] = {}
         sum_linear_probability = 0
@@ -380,6 +393,40 @@ class ConversationalGEval(BaseConversationalMetric):
             else:
                 token_linear_probability[token_score] = linear_prob
             sum_linear_probability += linear_prob
+
+        # If we found a split-digit score (e.g. "1" followed by "0" for score 10),
+        # combine consecutive digits into multi-digit scores.
+        if score_token_start is not None and score_logprobs is not None:
+            combined_score_tokens = []
+            j = score_token_start
+            while j < len(generated_logprobs):
+                tok = generated_logprobs[j].token
+                if not tok.isdecimal():
+                    break
+                combined_score_tokens.append(tok)
+                j += 1
+            if len(combined_score_tokens) > 1:
+                combined_score = int("".join(combined_score_tokens))
+                # Recalculate probabilities treating consecutive digits as one score
+                combined_probs: Dict[int, float] = {}
+                combined_sum = 0.0
+                for token_logprob in score_logprobs.top_logprobs:
+                    logprob = token_logprob.logprob
+                    if logprob < min_logprob:
+                        continue
+                    if not token_logprob.token.isdecimal():
+                        continue
+                    linear_prob = math.exp(logprob)
+                    token_digit = int(token_logprob.token)
+                    # Only include the digit if it matches the first digit of the combined score
+                    if str(token_digit) == combined_score_tokens[0]:
+                        if combined_score not in combined_probs:
+                            combined_probs[combined_score] = 0.0
+                        combined_probs[combined_score] += linear_prob
+                        combined_sum += linear_prob
+                if combined_sum > 0:
+                    token_linear_probability = combined_probs
+                    sum_linear_probability = combined_sum
 
         sum_of_weighted_scores = 0.0
         for score, prob in token_linear_probability.items():
