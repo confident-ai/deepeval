@@ -92,7 +92,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         elif settings.TEMPERATURE is not None:
             temperature = settings.TEMPERATURE
         else:
-            temperature = 0.0
+            temperature = None
 
         model = require_param(
             model,
@@ -231,8 +231,9 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         params: Dict[str, Any] = {
             "model": self.name,
             "messages": [{"role": "user", "content": content}],
-            "temperature": self.temperature,
         }
+        if self.temperature is not None:
+            params["temperature"] = self.temperature
         if self.api_key:
             params["api_key"] = require_secret_api_key(
                 self.api_key,
