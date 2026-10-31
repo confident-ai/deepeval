@@ -115,6 +115,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     self._generate_verdict(window, test_case.multimodal)
                     for window in turns_windows
                 ]
+                self._expected_count = len(turns_windows)
 
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -159,6 +160,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     for window in turns_windows
                 ]
             )
+            self._expected_count = len(turns_windows)
 
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
@@ -305,7 +307,12 @@ class TurnRelevancyMetric(BaseConversationalMetric):
     def _calculate_score(self) -> float:
         # None verdicts (failed generation / out-of-vocabulary replies) are
         # dropped by score_qag_verdicts.
-        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.YES,))
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES,),
+            expected_count=getattr(self, "_expected_count", None),
+        )
 
     @property
     def __name__(self):
