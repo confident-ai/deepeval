@@ -132,28 +132,77 @@ const MIN_LOG_PROB = Math.log(0.01);
  * considered, weighted by their probabilities — the G-Eval paper's scoring, and
  * a port of Python's `calculate_weighted_summed_score`.
  *
+ * Tokenizer-aware (#3517): the score's full token span is located from the
+ * end (the reasoning may repeat digits first), so a judge that splits numbers
+ * into single digits — Qwen emits 10 as "1","0" — is weighted over that span.
+ * A candidate that is a strict prefix of another valid score, like "1" under
+ * a 0–10 rubric, cannot be resolved from this response (only the branch the
+ * model took is recorded), so it is dropped rather than guessed at.
+ *
  * Returns `rawScore` unchanged when the log-probs can't support a better
- * answer: no matching token, or every candidate filtered out.
+ * answer: no matching span, or every candidate filtered out.
  */
 export function calculateWeightedSummedScore(
   rawScore: number,
   logProbs: ContentTokenLogProbs[] | undefined,
+  scoreMax = 10,
 ): number {
-  const scoreToken = logProbs?.find(
-    (entry) => entry.token === String(rawScore),
-  );
-  if (!scoreToken) return rawScore;
+  if (!logProbs?.length) return rawScore;
+
+  const scoreStr = String(rawScore);
+  // Scan from the end: the reasoning may spell the score earlier than the
+  // model's final answer.
+  let spanStart = -1;
+  let spanLen = 0;
+  for (let i = logProbs.length - 1; i >= 0 && spanStart < 0; i--) {
+    for (let k = scoreStr.length; k >= 1; k--) {
+      if (i + k > logProbs.length) continue;
+      const joined = logProbs
+        .slice(i, i + k)
+        .map((entry) => entry.token)
+        .join("");
+      if (joined === scoreStr) {
+        spanStart = i;
+        spanLen = k;
+        break;
+      }
+    }
+  }
+  if (spanStart < 0) return rawScore;
+  const first = logProbs[spanStart];
+
+  const isAmbiguousPrefix = (token: string): boolean => {
+    const value = parseInt(token, 10);
+    for (let s = value + 1; s <= scoreMax; s++) {
+      if (String(s).startsWith(token)) return true;
+    }
+    return false;
+  };
 
   const linearProbByScore = new Map<number, number>();
   let sumLinearProb = 0;
 
-  for (const candidate of scoreToken.topLogProbs) {
+  for (const candidate of first.topLogProbs) {
     if (candidate.logprob < MIN_LOG_PROB) continue;
     // Anything non-decimal isn't a score, and would parse to NaN.
     if (!/^\d+$/.test(candidate.token)) continue;
 
-    const linearProb = Math.exp(candidate.logprob);
-    const tokenScore = parseInt(candidate.token, 10);
+    let tokenScore = parseInt(candidate.token, 10);
+    // A candidate outside the rubric is not a score.
+    if (tokenScore > scoreMax) continue;
+
+    let linearProb = Math.exp(candidate.logprob);
+    if (candidate.token === first.token) {
+      // The branch the model actually took: it spells the raw score over one
+      // token or the whole span, and each later emitted token's own logprob
+      // is the conditional that branch needs.
+      for (let j = 1; j < spanLen; j++) {
+        linearProb *= Math.exp(logProbs[spanStart + j].logprob);
+      }
+      tokenScore = rawScore;
+    } else if (isAmbiguousPrefix(candidate.token)) {
+      continue;
+    }
     linearProbByScore.set(
       tokenScore,
       (linearProbByScore.get(tokenScore) ?? 0) + linearProb,

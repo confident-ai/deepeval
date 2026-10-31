@@ -337,24 +337,60 @@ def construct_test_case_string(
     return text
 
 
+def _score_is_ambiguous_prefix(token: str, score_max: int) -> bool:
+    """Whether ``token``, read alone, cannot name one score in ``0..score_max``.
+
+    A tokenizer that splits numbers into single digits emits ``10`` as ``"1"``
+    then ``"0"``, so a candidate ``"1"`` at the score position may have been
+    the start of ``10`` (or of any larger score it prefixes), not the score
+    ``1``. Its true continuation distribution is unknowable from this response
+    — only the branch the model actually took is recorded — so such candidates
+    are dropped instead of guessed at (#3517).
+    """
+    value = int(token)
+    return any(
+        str(score).startswith(token)
+        for score in range(value + 1, score_max + 1)
+    )
+
+
 def calculate_weighted_summed_score(
-    raw_score: int, raw_response: ChatCompletion
+    raw_score: int,
+    raw_response: ChatCompletion,
+    score_max: int = 10,
 ) -> Union[int, float]:
     try:
         generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the final token matching the score. The reasoning may
-        # contain the same token before the model emits its final score.
-        score_logprobs = None
-        for token_logprobs in reversed(generated_logprobs):
-            if token_logprobs.token == str(raw_score):
-                score_logprobs = token_logprobs
+        # First, locate the final token span spelling the score. The reasoning
+        # may contain the same digits before the model emits its final score,
+        # and a digit-splitting tokenizer (Qwen and friends) emits a
+        # multi-digit score as several tokens, each carrying only its own
+        # conditional logprob (#3517).
+        score_str = str(raw_score)
+        span_start: Optional[int] = None
+        span_len = 0
+        for i in reversed(range(len(generated_logprobs))):
+            for k in range(len(score_str), 0, -1):
+                if i + k > len(generated_logprobs):
+                    continue
+                joined = "".join(t.token for t in generated_logprobs[i : i + k])
+                if joined == score_str:
+                    span_start, span_len = i, k
+                    break
+            if span_start is not None:
                 break
+        if span_start is None:
+            # The response never spells the score (a raw 10 that arrived as
+            # "1","0" used to crash here and surface as the plain score via
+            # the caller's fallback). Nothing to weight.
+            return raw_score
+        first = generated_logprobs[span_start]
         # Then, calculate the score based on the logprobs
         token_linear_probability: Dict[int, float] = {}
         sum_linear_probability = 0
         # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
         min_logprob = math.log(0.01)
-        for token_logprob in score_logprobs.top_logprobs:
+        for token_logprob in first.top_logprobs:
             logprob = token_logprob.logprob
 
             # Filter out low probability tokens
@@ -363,10 +399,30 @@ def calculate_weighted_summed_score(
             # Filter out non-decimal token to prevent errors in later int(token) conversion
             if not token_logprob.token.isdecimal():
                 continue
+            token_score = int(token_logprob.token)
+            # A candidate outside the rubric is not a score.
+            if token_score > score_max:
+                continue
 
             # Calculate the linear probability
             linear_prob = math.exp(logprob)
-            token_score = int(token_logprob.token)
+            if token_logprob.token == first.token:
+                # The branch the model actually took: it spells the raw score,
+                # over one token or the whole span. Along a multi-token span
+                # each emitted token's own logprob is the conditional the
+                # branch needs, so their product is P(this span).
+                taken_prob = linear_prob
+                for j in range(1, span_len):
+                    taken_prob *= math.exp(
+                        generated_logprobs[span_start + j].logprob
+                    )
+                token_score = raw_score
+                linear_prob = taken_prob
+            elif _score_is_ambiguous_prefix(token_logprob.token, score_max):
+                # May be the start of a larger score this tokenizer would
+                # split; its continuation is not in this response. Dropping
+                # it beats guessing which score it was (#3517).
+                continue
             if token_linear_probability.get(token_score):
                 token_linear_probability[token_score] += linear_prob
             else:

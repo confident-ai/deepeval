@@ -107,7 +107,18 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            # mcp>=2 stores structured output on the snake_case field; the
+            # camelCase constructor alias is no longer an attribute, and
+            # reading it crashed every metric before scoring (#3531).
+            structured = getattr(tool.result, "structured_content", None)
+            if structured is None:
+                structured = getattr(tool.result, "structuredContent", None)
+            if structured is None:
+                raise AttributeError(
+                    "MCPToolCall.result carries no structured content; "
+                    "turn_mcp_interaction_text scores its 'result' field"
+                )
+            result = structured["result"]
         else:
             args = tool.input_parameters
             result = tool.output
