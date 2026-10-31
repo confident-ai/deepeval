@@ -1,3 +1,4 @@
+import sys
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -346,7 +347,33 @@ def evaluate(
 
         if not metrics and not has_expectations:
             # Classifier-only run: classifications are local-only for now, so
-            # there is no test run to finalize or upload.
+            # there is no test run to finalize or upload. The local store
+            # still gets the results: the TestResults carry the
+            # classifications, which never join an uploadable TestRun (#3538).
+            from deepeval.evaluate.local_store import (
+                resolve_target_dir,
+                write_classifier_results,
+            )
+
+            classifier_target_dir = resolve_target_dir(
+                results_folder=display_config.results_folder,
+                results_subfolder=display_config.results_subfolder,
+            )
+            if classifier_target_dir is not None:
+                try:
+                    saved_classifier_path = write_classifier_results(
+                        classifier_target_dir, test_results
+                    )
+                    print(
+                        "✓ Classifier results saved to",
+                        saved_classifier_path,
+                    )
+                except Exception as e:
+                    print(
+                        f"Warning: failed to save classifier results to "
+                        f"{classifier_target_dir}: {e}",
+                        file=sys.stderr,
+                    )
             return EvaluationResult(
                 test_results=test_results,
                 confident_link=None,

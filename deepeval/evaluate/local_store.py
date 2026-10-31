@@ -176,3 +176,82 @@ def _dump(test_run: TestRun, path: Path) -> None:
         json.dump(body, f, cls=TestRunEncoder)
         f.flush()
         os.fsync(f.fileno())
+
+
+def _resolve_timestamped_path(target_dir: Path, prefix: str) -> Path:
+    """`<prefix>_<YYYYMMDD_HHMMSS>.json` in `target_dir`, suffixed `_2`, `_3`,
+    … on a same-second collision (same rule as `resolve_test_run_path`)."""
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    candidate = target_dir / f"{prefix}_{ts}.json"
+    if not candidate.exists():
+        return candidate
+
+    n = 2
+    while True:
+        candidate = target_dir / f"{prefix}_{ts}_{n}.json"
+        if not candidate.exists():
+            return candidate
+        n += 1
+
+
+def write_classifier_results(
+    target_dir: Path,
+    test_results: list,
+) -> Path:
+    """Write a classifier-only run's `TestResult`s to `target_dir` as
+    `classifier_run_<YYYYMMDD_HHMMSS>.json`.
+
+    Classifications are local-only by design (see `Classification` in
+    `test_run/api.py`): they live on `TestResult` and never join the
+    uploadable `TestRun`, and `update_test_run` skips cases with no metric
+    data and no trace, so a classifier-only `evaluate()` has no TestRun to
+    save — this file is its local result instead. Same lock and naming
+    conventions as `write_test_run`.
+
+    Returns the path written. Raises on filesystem errors; callers should
+    wrap this in `try/except` so local-save failures never break the eval.
+    """
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    body = []
+    for result in test_results:
+        body.append(
+            {
+                "name": result.name,
+                "success": result.success,
+                "conversational": result.conversational,
+                "index": result.index,
+                "input": result.input,
+                "actualOutput": result.actual_output,
+                "expectedOutput": result.expected_output,
+                "metadata": result.metadata,
+                "classifications": [
+                    classification.model_dump(by_alias=True, exclude_none=True)
+                    for classification in result.classifications or []
+                ],
+            }
+        )
+
+    def _write(path: Path) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "classifierRun": body,
+                    "savedAt": datetime.datetime.now().isoformat(),
+                },
+                f,
+                cls=TestRunEncoder,
+            )
+            f.flush()
+            os.fsync(f.fileno())
+
+    if portalocker is not None:
+        lock_path = target_dir / _LOCK_FILENAME
+        with portalocker.Lock(str(lock_path), mode="w"):
+            path = _resolve_timestamped_path(target_dir, "classifier_run")
+            _write(path)
+    else:  # pragma: no cover - portalocker is pinned in requirements
+        path = _resolve_timestamped_path(target_dir, "classifier_run")
+        _write(path)
+
+    return path
