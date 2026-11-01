@@ -70,6 +70,24 @@ async def test_livekit_ends_the_call_when_the_room_disconnects():
     assert connector.call_ended
 
 
+def test_livekit_dispatches_the_agent_with_its_metadata():
+    from livekit import api
+
+    connector = LiveKitConnector(
+        url="wss://livekit.test",
+        api_key="key",
+        api_secret="secret",
+        room_name="room",
+        agent_name="agent",
+        dispatch_metadata='{"case": "1"}',
+    )
+    claims = api.TokenVerifier("key", "secret").verify(connector._build_token())
+
+    [dispatch] = claims.room_config.agents
+    assert dispatch.agent_name == "agent"
+    assert dispatch.metadata == '{"case": "1"}'
+
+
 @pytest.mark.asyncio
 async def test_taking_pending_agent_audio_keeps_the_call_ended_marker():
     connector = _livekit()

@@ -69,7 +69,7 @@ voice_config = VoiceConfig(
 No argument is mandatory on its own, but the connector needs some way to reach the room — either the three connection values, or a `token`, or a connected `room`:
 :::
 
-There are **ZERO** mandatory and **ELEVEN** optional parameters when creating a `LiveKitConnector`.
+There are **ZERO** mandatory and **TWELVE** optional parameters when creating a `LiveKitConnector`.
 
 - [Optional] `url`: A string LiveKit server URL. Defaults to `LIVEKIT_URL`, and is required unless `room` is already connected.
 - [Optional] `api_key`: A string LiveKit API key. Defaults to `LIVEKIT_API_KEY`, and is required to mint a token.
@@ -79,6 +79,7 @@ There are **ZERO** mandatory and **ELEVEN** optional parameters when creating a 
 - [Optional] `room_name`: A string naming the room to join. Defaulted to `None`, which creates a room for the session.
 - [Optional] `identity`: A string participant identity for the simulator. Defaulted to `"deepeval-test"`.
 - [Optional] `agent_name`: A string naming the agent to [dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) into the room. Defaulted to `None`, which leaves your existing routing to place the agent there.
+- [Optional] `dispatch_metadata`: A string your agent reads as [`ctx.job.metadata`](https://docs.livekit.io/agents/server/agent-dispatch/#job-metadata). Only sent when `agent_name` is set, since LiveKit attaches metadata to an explicit dispatch. Defaulted to `None`.
 - [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"balanced"`.
 - [Optional] `connect_timeout_s`: A float number of seconds to wait when establishing the room connection. Defaulted to `15.0`.
 - [Optional] `transcript_grace_s`: A float number of seconds to wait after your agent stops speaking for its transcript to arrive. Defaulted to `1.5`.

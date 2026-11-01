@@ -48,7 +48,7 @@ instead — every session runs through a connector.
 | Interruption reporting | Not covered | [Agent state](https://docs.livekit.io/frontends/build/agent-state/) |
 | Agent state (`lk.agent.state`) | Not covered | [Agent state](https://docs.livekit.io/frontends/build/agent-state/) |
 | Interim (non-final) transcripts | Not covered | [Text and transcriptions](https://docs.livekit.io/agents/multimodality/text/) |
-| Dispatch `metadata` | Not covered | [Agent dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) |
+| Dispatch `metadata` | Covered | [Agent dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) |
 | Dispatch `deployment` | Not covered | [Agent dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) |
 | `AgentDispatchService.CreateDispatch` | Not covered | [Dispatch service API](https://docs.livekit.io/reference/agents/agent-dispatch-service-api.md) |
 | Sending text to the agent (`lk.chat`) | Not covered | [Text and transcriptions](https://docs.livekit.io/agents/multimodality/text/) |
@@ -87,12 +87,11 @@ the `VoiceConfig` docstring says to do. Overriding `clone()` here to reject a
 caller-owned room, and to vary `identity` per clone, would make the safe thing
 automatic rather than documented.
 
-**Dispatch metadata and deployment.** `_build_token` sets `RoomAgentDispatch`
-with only `agent_name`. LiveKit also accepts `metadata`, which is how job
-context such as a caller id reaches the agent, and `deployment`, which targets
-a staging build instead of production. Both are documented on
-[agent dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) and both
-would map to per-golden simulation inputs.
+**Dispatch deployment.** `_build_token` sets `RoomAgentDispatch` with
+`agent_name` and `dispatch_metadata`. LiveKit also accepts `deployment`, which
+targets a staging build instead of production. It is documented on
+[agent dispatch](https://docs.livekit.io/agents/server/agent-dispatch/) and
+would map to a per-golden simulation input.
 
 **Dispatch into an existing room.** Token-based dispatch is ignored when the
 room already exists in memory, which is exactly the case when the caller passes

@@ -60,6 +60,7 @@ class LiveKitConnector(BaseVoiceConnector):
         room_name: Optional[str] = None,
         identity: str = "deepeval-test",
         agent_name: Optional[str] = None,
+        dispatch_metadata: Optional[str] = None,
         agent_identity: Optional[str] = None,
         turn_detection: TurnDetection = "balanced",
         silence_threshold_rms: float = audio_utils.DEFAULT_SILENCE_RMS,
@@ -92,6 +93,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self.room_name = room_name
         self.identity = identity
         self.agent_name = agent_name
+        self.dispatch_metadata = dispatch_metadata
         self.agent_identity = agent_identity
         self.turn_detection = turn_detection
         timing = turn_detection_timing(turn_detection)
@@ -277,7 +279,12 @@ class LiveKitConnector(BaseVoiceConnector):
         if self.agent_name:
             builder = builder.with_room_config(
                 api.RoomConfiguration(
-                    agents=[api.RoomAgentDispatch(agent_name=self.agent_name)]
+                    agents=[
+                        api.RoomAgentDispatch(
+                            agent_name=self.agent_name,
+                            metadata=self.dispatch_metadata or "",
+                        )
+                    ]
                 )
             )
         return builder.to_jwt()
