@@ -6,21 +6,26 @@ authors: [penguine]
 category: comparisons
 ---
 
-A voice agent passes every text test you wrote for it. The prompts are tight,
-the tools are wired up, and the transcripts read perfectly. Then it goes live
-on a phone line, and callers hang up because it takes two seconds to answer,
-talks over them when they pause to think, and mishears "fifteen" as "fifty".
+Voice agents fail in ways text agents can't. In human conversation, the gap
+between one person finishing and the next starting is
+[typically 200 milliseconds or less](https://www.pnas.org/doi/10.1073/pnas.0903616106),
+so an agent that takes two seconds to reply feels broken even when every word
+it eventually says is right. Talk over a caller who paused to think, or hear
+"fifteen" as "fifty", and the call is lost before the LLM gets a chance to be
+smart.
 
-None of those failures show up in a transcript. A transcript tells you what was
-said, but not how it sounded, when each side spoke, or whether the agent heard
-the caller correctly in the first place. That is why voice AI needs its own
-evaluation tooling, and why a text-only eval suite gives voice teams false
-confidence.
+None of those failures live in the transcript. The delay, the overlap, the
+garbled audio, and the mishearing all happen before or between the words, which
+is exactly what transcript-based evals throw away when they turn a call into
+text and grade it. Open-source tooling has caught up fast in 2026: voice agent
+frameworks now ship their own test suites, eval frameworks have added
+audio-native metrics, and research teams have published full voice benchmarks.
+They measure very different things, though, and picking the wrong one leaves
+your biggest failure modes untested.
 
-This guide compares the best open-source voice AI evaluation tools in 2026
-based on what matters when you are actually shipping voice agents: audio-native
-scoring, timing, transcription, realistic simulated callers, and a workflow
-your engineers will run on every change.
+This guide compares the five best open-source voice AI evaluation tools in 2026
+by what they actually score, from the audio and the timing to what the agent
+heard, and where each one fits in your workflow.
 
 ## What is a voice AI evaluation tool?
 
