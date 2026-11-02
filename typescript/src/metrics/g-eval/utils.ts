@@ -128,87 +128,77 @@ export function validateAndSortRubrics(
 const MIN_LOG_PROB = Math.log(0.01);
 
 /**
- * Refine a discrete score into the expectation over the score tokens the model
- * considered, weighted by their probabilities — the G-Eval paper's scoring, and
- * a port of Python's `calculate_weighted_summed_score`.
- *
- * A score split across tokens ("10" as "1", "0") is weighted over its whole
- * span, and a candidate that may only start a larger score is dropped.
- *
- * Returns `rawScore` unchanged when the log-probs can't support a better
- * answer: no matching span, or every candidate filtered out.
+ * Start and length of the last run of tokens spelling `rawScore`. The reason
+ * may repeat its digits, and some tokenizers split "10" into "1", "0".
+ */
+function findScoreSpan(
+  logProbs: ContentTokenLogProbs[],
+  rawScore: number,
+): [number, number] | undefined {
+  const scoreStr = String(rawScore);
+  for (let start = logProbs.length - 1; start >= 0; start--) {
+    for (let length = scoreStr.length; length >= 1; length--) {
+      const span = logProbs.slice(start, start + length);
+      const spelled = span.map((entry) => entry.token).join("");
+      if (span.length === length && spelled === scoreStr) {
+        return [start, length];
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Whether `token` could be the first digit of a larger score, like "1" of 10. */
+function isPrefixOfLargerScore(token: string, scoreMax: number): boolean {
+  for (let score = parseInt(token, 10) + 1; score <= scoreMax; score++) {
+    if (String(score).startsWith(token)) return true;
+  }
+  return false;
+}
+
+/**
+ * Average the scores the judge considered, weighted by their probability — the
+ * G-Eval paper's scoring, and a port of Python's `calculate_weighted_summed_score`.
+ * Falls back to `rawScore` when there is nothing to weight.
  */
 export function calculateWeightedSummedScore(
   rawScore: number,
   logProbs: ContentTokenLogProbs[] | undefined,
   scoreMax = 10,
 ): number {
-  if (!logProbs?.length) return rawScore;
+  const span = logProbs && findScoreSpan(logProbs, rawScore);
+  if (!logProbs || !span) return rawScore;
+  const [start, length] = span;
+  const scoreToken = logProbs[start];
 
-  const scoreStr = String(rawScore);
-  // Scan from the end: the reason may repeat the score's digits.
-  let spanStart = -1;
-  let spanLen = 0;
-  for (let i = logProbs.length - 1; i >= 0 && spanStart < 0; i--) {
-    for (let k = scoreStr.length; k >= 1; k--) {
-      if (i + k > logProbs.length) continue;
-      const joined = logProbs
-        .slice(i, i + k)
-        .map((entry) => entry.token)
-        .join("");
-      if (joined === scoreStr) {
-        spanStart = i;
-        spanLen = k;
-        break;
-      }
-    }
-  }
-  if (spanStart < 0) return rawScore;
-  const first = logProbs[spanStart];
-
-  const isAmbiguousPrefix = (token: string): boolean => {
-    const value = parseInt(token, 10);
-    for (let s = value + 1; s <= scoreMax; s++) {
-      if (String(s).startsWith(token)) return true;
-    }
-    return false;
-  };
-
-  const linearProbByScore = new Map<number, number>();
-  let sumLinearProb = 0;
-
-  for (const candidate of first.topLogProbs) {
-    if (candidate.logprob < MIN_LOG_PROB) continue;
-    // Anything non-decimal isn't a score, and would parse to NaN.
-    if (!/^\d+$/.test(candidate.token)) continue;
-
-    let tokenScore = parseInt(candidate.token, 10);
-    if (tokenScore > scoreMax) continue;
-
-    let linearProb = Math.exp(candidate.logprob);
-    if (candidate.token === first.token) {
-      // The emitted score: chain the probabilities across its span.
-      for (let j = 1; j < spanLen; j++) {
-        linearProb *= Math.exp(logProbs[spanStart + j].logprob);
-      }
-      tokenScore = rawScore;
-    } else if (isAmbiguousPrefix(candidate.token)) {
+  let weightedSum = 0;
+  let totalProb = 0;
+  for (const candidate of scoreToken.topLogProbs) {
+    if (candidate.logprob < MIN_LOG_PROB || !/^\d+$/.test(candidate.token)) {
       continue;
     }
-    linearProbByScore.set(
-      tokenScore,
-      (linearProbByScore.get(tokenScore) ?? 0) + linearProb,
-    );
-    sumLinearProb += linearProb;
+    if (parseInt(candidate.token, 10) > scoreMax) continue;
+
+    let score: number;
+    let logprob = candidate.logprob;
+    if (candidate.token === scoreToken.token) {
+      // The emitted score, including the rest of its span.
+      score = rawScore;
+      for (const rest of logProbs.slice(start + 1, start + length)) {
+        logprob += rest.logprob;
+      }
+    } else if (isPrefixOfLargerScore(candidate.token, scoreMax)) {
+      continue;
+    } else {
+      score = parseInt(candidate.token, 10);
+    }
+
+    const prob = Math.exp(logprob);
+    weightedSum += score * prob;
+    totalProb += prob;
   }
 
-  if (sumLinearProb === 0) return rawScore;
-
-  let sumWeightedScores = 0;
-  for (const [score, prob] of linearProbByScore) {
-    sumWeightedScores += score * prob;
-  }
-  return sumWeightedScores / sumLinearProb;
+  return totalProb > 0 ? weightedSum / totalProb : rawScore;
 }
 
 /**
