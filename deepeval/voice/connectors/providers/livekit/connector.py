@@ -157,6 +157,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._transcript_ready = asyncio.Event()
         self._provider_transcript_ready = asyncio.Event()
         self._provider_transcript_parts = []
+        self._transcript_tasks = set()
         self._uplink = UplinkStream()
         self._call_ended = False
         self._room = (
