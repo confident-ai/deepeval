@@ -115,7 +115,7 @@ within one criterion, the table shows the lowest applicable rating.
 | **Dataset generation**    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> documents, contexts, goldens, or scratch     | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation      | <span className="comparison-status comparison-status--strong">✓ Strong:</span> synthetic RAG test sets                         | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation    | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native dataset generation    |
 | **Multi-turn simulation** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> scenario-driven multi-turn users             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native multi-turn simulation   | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native multi-turn simulation     | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native multi-turn simulation | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native multi-turn simulation |
 | **Integrations**          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 30+ frameworks, providers, and databases     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> broad model and provider support              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native integration catalog       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> OpenTelemetry and OpenInference             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native integration catalog   |
-| **Path to production**    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Confident AI                                 | <span className="comparison-status comparison-status--strong">✓ Strong:</span> enterprise reports and hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> hosted workflows vary                         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Arize AX                                    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Snowflake AI Observability                  |
+| **Path to production**    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> connects to Confident AI                     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> enterprise reports and hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> hosted workflows vary                         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Arize AX                                    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Snowflake AI Observability                  |
 
 </div>
 
@@ -190,7 +190,6 @@ case and metric, and run a passing eval locally.
 | Product      | Price                           | Includes                                                                                  |
 | ------------ | ------------------------------- | ----------------------------------------------------------------------------------------- |
 | DeepEval     | Free and open source            | Local metrics, datasets, tracing, synthetic data, simulations, and CI/CD                  |
-| Confident AI | Self-serve and enterprise plans | AI monitoring: evals on production traces, failing traces turned into goldens             |
 
 **DeepEval is for you if...**
 
@@ -200,8 +199,8 @@ case and metric, and run a passing eval locally.
 - You do not have enough test data and need synthetic generation or simulated
   conversations
 - You are using Cursor, Claude Code, or Codex to build your LLM application
-- You want to start locally and add an enterprise platform later without
-  rewriting your evals
+- You want a natural path to production: when you go live, DeepEval connects to
+  Confident AI without rewriting your evals
 
 **DeepEval is not for you if...**
 
@@ -210,6 +209,11 @@ case and metric, and run a passing eval locally.
 - You only need a production trace viewer and do not plan to build a repeatable
   offline evaluation suite
 - Your evaluation stack cannot use Python
+- You need a hosted platform for production monitoring or evals on production
+  traces. Pair DeepEval with
+  [Confident AI](https://www.confident-ai.com/products/llm-observability), a
+  separate product it connects to natively, so failing production traces become
+  goldens for your next DeepEval run
 
 ## 2. Promptfoo
 
