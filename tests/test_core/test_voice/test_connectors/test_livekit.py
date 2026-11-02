@@ -46,3 +46,19 @@ async def test_hanging_up_one_call_leaves_another_calls_transcripts(
     await second.disconnect()
     await asyncio.sleep(0)
     assert second_task.cancelled()
+
+
+def test_a_connector_that_creates_its_own_rooms_supports_parallel_calls():
+    assert _connector().supports_parallel_calls
+
+
+@pytest.mark.parametrize(
+    "fixed",
+    [
+        {"room_name": "support-line"},
+        {"token": "caller-token"},
+        {"room": SimpleNamespace()},
+    ],
+)
+def test_a_connector_tied_to_one_room_does_not_support_parallel_calls(fixed):
+    assert not _connector(**fixed).supports_parallel_calls

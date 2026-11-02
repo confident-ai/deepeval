@@ -551,6 +551,14 @@ class LiveKitConnector(BaseVoiceConnector):
     def supports_duplex(self) -> bool:
         return True
 
+    @property
+    def supports_parallel_calls(self) -> bool:
+        return (
+            self._room_arg is None
+            and self._token_arg is None
+            and self._room_name_arg is None
+        )
+
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
         if self._out_frames is None:
             raise DeepEvalError(
