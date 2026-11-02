@@ -17,7 +17,7 @@ Most score [test cases](/docs/evaluation-test-cases) representing atomic interac
 
 All of `deepeval`'s metrics output a **score between 0-1** based on its corresponding equation, as well as score **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
 
-<Tabs items={["Custom metrics", "AI Agents", "Chatbots (multi-turn)", "RAG", "Safety", "Image", "Others"]}>
+<Tabs items={["Custom metrics", "AI Agents", "Voice Agents", "Chatbots (multi-turn)", "RAG", "Safety", "Image", "Others"]}>
 <Tab value="Custom metrics">
 
 Custom metrics allow you to define your **custom criteria** using SOTA implementations of LLM-as-a-Judge (and Jev-as-a-Judge) metrics in everyday language:
@@ -48,6 +48,18 @@ Agentic metrics evaluate AI agents at two different scopes:
 - Argument Correctness — whether it supplied the correct arguments to those tools.
 
 Use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for overall execution quality and [component-level evaluation](/docs/evaluation-component-level-llm-evals) to diagnose individual actions.
+
+</Tab>
+<Tab value="Voice Agents">
+
+Voice metrics evaluate a spoken conversation on the same `ConversationalTestCase`, using the audio attached to each turn ([Python only](/docs/evaluation-voice)):
+
+- Voice Naturalness, Speech Intelligibility, Voice Consistency, Audio Integrity, and Audio Glitch — how the agent sounded.
+- Turn-Taking Naturalness and Agent Responsiveness — when it spoke, including latency and interruptions.
+- Transcription Accuracy — whether the agent's speech-to-text heard the caller correctly.
+- Voice Reliability — an optional summary of responsiveness and audio integrity.
+
+What was said is still judged by multi-turn metrics such as Turn Relevancy on the call transcript.
 
 </Tab>
 <Tab value="Chatbots (multi-turn)">

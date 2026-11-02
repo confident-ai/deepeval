@@ -27,8 +27,8 @@ const ROWS = [
     deepeval: "Developer-mediated annotation",
   },
   {
-    confident: "Red teaming in the same system",
-    deepeval: "Red teaming set up separately",
+    confident: "Voice agents monitored call by call in production",
+    deepeval: "Voice agents evaluated before release",
   },
   {
     confident: "Enterprise controls",
