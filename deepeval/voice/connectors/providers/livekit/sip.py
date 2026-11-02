@@ -9,7 +9,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.utils import require_dependency
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors.transports.silence import SilenceTimeoutMixin
-from deepeval.voice.connectors.utils import DialPacer
+from deepeval.voice.connectors.utils import DialPacer, is_phone_number
 from deepeval.voice.connectors.providers.livekit.connector import (
     _INSTALL_HINT,
     LiveKitConnector,
@@ -24,7 +24,6 @@ DEFAULT_DIAL_INTERVAL_S = 1.0
 DEFAULT_SIP_CALLER_ID = "deepeval"
 OUTBOUND_TRUNK_ENV = "LIVEKIT_SIP_OUTBOUND_TRUNK_ID"
 
-E164_PHONE_NUMBER = re.compile(r"^\+[1-9]\d{1,14}$")
 SIP_URI = re.compile(
     r"^(sips?):([^\s@:;]+)@([A-Za-z0-9.-]+)(?::(\d{1,5}))?"
     r"(?:;transport=(udp|tcp|tls))?$",
@@ -89,10 +88,6 @@ def parse_sip_uri(value: Optional[str]) -> Optional[SipUri]:
         transport=SipTransport(transport.lower()) if transport else None,
         secure=scheme.lower() == "sips",
     )
-
-
-def is_phone_number(value: Optional[str]) -> bool:
-    return bool(value) and E164_PHONE_NUMBER.match(value) is not None
 
 
 def sip_trunk_for(
