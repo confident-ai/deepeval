@@ -63,8 +63,8 @@ Across an organization, AI apps are built by different teams, on different
 stacks — each measuring quality its own way, if at all. These are the criteria
 worth checking before committing to a platform:
 
-1. **Use case coverage** – does it evaluate RAG, AI agents, chatbots,
-   single-turn, multi-turn, and safety — or just one of these?
+1. **Use case coverage** – does it evaluate AI agents, voice agents, chatbots,
+   RAG, single-turn, multi-turn, and safety — or just one of these?
 2. **Metric depth and trust** – are metrics research-backed and explainable,
    with every score carrying reasoning your team can inspect and defend?
 3. **Collaboration workflows** – can PMs, QA, and domain experts run
@@ -104,7 +104,7 @@ means the capability is unavailable as a native workflow.
 
 | Capability                         | Confident AI                                                                                                                                     | LangSmith                                                                                                                       | Langfuse                                                                                                                      | Braintrust                                                                                                                 | Arize AI                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Use case coverage**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> AI agents, chatbots, RAG, multi-turn, and safety                  | <span className="comparison-status comparison-status--partial">~ Partial:</span> LangChain-centric, no multi-turn or safety     | <span className="comparison-status comparison-status--partial">~ Partial:</span> tracing-first with lightweight evals         | <span className="comparison-status comparison-status--partial">~ Partial:</span> prompt-centric evaluation                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> monitoring-first with custom evaluators      |
+| **Use case coverage**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> AI agents, voice, chatbots, RAG, multi-turn, and safety           | <span className="comparison-status comparison-status--partial">~ Partial:</span> LangChain-centric, no multi-turn or safety     | <span className="comparison-status comparison-status--partial">~ Partial:</span> tracing-first with lightweight evals         | <span className="comparison-status comparison-status--partial">~ Partial:</span> prompt-centric evaluation                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> monitoring-first with custom evaluators      |
 | **Metric depth and trust**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 50+ research-backed metrics, aligned with human annotations       | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom judge prompts, openevals templates      | <span className="comparison-status comparison-status--partial">~ Partial:</span> prebuilt judge evaluators, custom scores     | <span className="comparison-status comparison-status--partial">~ Partial:</span> custom scorers and judge templates        | <span className="comparison-status comparison-status--partial">~ Partial:</span> judge templates with alignment tooling       |
 | **Collaboration workflows**        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> failing traces routed to the right annotators, no-code evals      | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues with rubrics                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> annotation queues, engineer-led setup        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> no-code playground and dataset editor       | <span className="comparison-status comparison-status--partial">~ Partial:</span> labeling queues and annotations              |
 | **CI/CD integration**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> governance as release gates, GitHub and GitLab integrations       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> SDK-driven CI evaluation                         | <span className="comparison-status comparison-status--partial">~ Partial:</span> manual, assembled by the team                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> CI gates on prompt changes                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> experiment workflows in CI                     |
@@ -148,7 +148,7 @@ which turn went wrong.
 - **Live signals** for user sentiment, behavior, and use cases across traces
 - **Goldens from failing traces:** failing traces route to the right
   annotators and become the dataset for your next eval
-- **50+ research-backed metrics** for AI agents, multi-turn, and RAG
+- **50+ research-backed metrics** for AI agents, voice, multi-turn, and RAG
 - **Postman for AI evals:** run evals on the API endpoints that host your
   agents instead of recreating them directly on the platform
 - **Prompt management and multi-turn simulation**
@@ -335,7 +335,8 @@ end-to-end over HTTP the way it runs in production.
 **Braintrust is not for you if...**
 
 - You need to test your application end-to-end the way it runs in production
-- You're evaluating agents, multi-turn chatbots, or safety — not just prompts
+- You're evaluating AI agents, voice agents, multi-turn chatbots, or safety —
+  not just prompts
 - You're cost-sensitive on tracing or need a mid-tier between $0 and
   $249/month
 
@@ -390,7 +391,7 @@ rather than a deep built-in metric library.
 
 ### Step 1: Identify what you are evaluating
 
-- **Multiple use cases (agents + chatbots + RAG + safety):** Confident AI is
+- **Multiple use cases (AI agents + voice + chatbots + RAG + safety):** Confident AI is
   the only platform in this comparison that covers all of them natively.
 - **LangChain applications:** LangSmith offers the tightest native
   integration, with the trade-off that depth outside that ecosystem is
@@ -442,7 +443,7 @@ dashboard.
 | **Confident AI** | No (self-hostable) | UI + HTTP + SDK       | Turning failing production traces into evals     | DeepEval for code-first evals before launch                 |
 | **LangSmith**    | No                 | UI + SDK              | LangChain-native tracing with basic evals        | Deeper metrics and simulation for non-LangChain components  |
 | **Langfuse**     | MIT                | UI + SDK + self-host  | Self-hosted observability with lightweight evals | Deeper metrics and simulation beyond judge templates        |
-| **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Broader tooling for agents, multi-turn, and safety          |
+| **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Broader tooling for AI agents, voice, multi-turn, and safety |
 | **Arize AI**     | Phoenix (OSS)      | UI + OTel + Phoenix   | Monitoring-led enterprises adding LLM evaluation | Research-backed metrics and simulation                      |
 
 ### Recommendations by team type
