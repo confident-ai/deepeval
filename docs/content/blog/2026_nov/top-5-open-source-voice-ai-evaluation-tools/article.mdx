@@ -109,7 +109,7 @@ means the capability is unavailable as a native workflow.
 | **Stack coverage**               | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Vapi, ElevenLabs, LiveKit, Pipecat, WebSocket  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> LiveKit agents only                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> Pipecat agents only              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> seven platforms and realtime APIs            | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> Pipecat-based harness           |
 | **Conversation-level metrics**   | <span className="comparison-status comparison-status--strong">✓ Strong:</span> full multi-turn metric library                 | <span className="comparison-status comparison-status--strong">✓ Strong:</span> eight built-in judges                          | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-scenario judge criteria                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-scenario judge criteria                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> task completion, faithfulness, progression   |
 | **Developer workflow**           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Python, pytest, CLI, CI, Agent Skill           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> pytest, Vitest, and CLI                        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> YAML scenarios, CLI, local judge              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> pytest and Vitest                            | <span className="comparison-status comparison-status--partial">~ Partial:</span> benchmark CLI, not a test suite            |
-| **Path to production**           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Confident AI                                   | <span className="comparison-status comparison-status--partial">~ Partial:</span> LiveKit Cloud                                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> hands off to third parties       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> LangWatch platform                          | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> research benchmark               |
+| **Path to production**           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> connects to Confident AI                       | <span className="comparison-status comparison-status--partial">~ Partial:</span> LiveKit Cloud                                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> hands off to third parties       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> LangWatch platform                          | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> research benchmark               |
 
 </div>
 
@@ -218,15 +218,18 @@ voice evals to your repo.
   or you may switch stacks later
 - You want simulated callers with realistic voices, noise, and interruptions
 - You want voice, text, and multi-turn evals in one framework and one CI job
+- You want a natural path to production: when you go live, DeepEval connects to
+  Confident AI without rewriting your evals
 
 **DeepEval is not for you if...**
 
 - Your evaluation stack cannot use Python
 - You only need quick in-framework unit tests for a single LiveKit or Pipecat
   agent
-- You want a hosted platform for voice-native monitoring or evals on production
-  calls. That's [Confident AI](https://www.confident-ai.com/products/voice-ai), a
-  separate product, not part of DeepEval
+- You need voice-native monitoring or evals on production calls. Pair DeepEval
+  with [Confident AI](https://www.confident-ai.com/products/voice-ai), a separate
+  product it connects to natively, so failing production calls become goldens
+  for your next DeepEval run
 
 ## 2. LiveKit Agents
 
