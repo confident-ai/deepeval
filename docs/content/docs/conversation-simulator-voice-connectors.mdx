@@ -234,3 +234,18 @@ The preset matters more everywhere else, because silence is the only evidence th
 ::::note
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
 ::::
+
+## Hanging Up Silent Calls
+
+A call where nobody speaks (an agent that crashed, a line that went dead) otherwise runs until the turn ceiling gives up, again and again. Mix `SilenceTimeoutMixin` into any connector to hang up once neither side has spoken for `silence_timeout_s` seconds:
+
+```python
+from deepeval.voice import LiveKitConnector, SilenceTimeoutMixin
+
+class MyConnector(SilenceTimeoutMixin, LiveKitConnector):
+    pass
+
+connector = MyConnector(agent_name="support-agent", silence_timeout_s=30)
+```
+
+The mixin goes first in the class bases so it wraps the connector's own methods. Agent audio counts as speech only when it's louder than the connector's `silence_threshold_rms`, so line noise doesn't keep a dead call open. Once the call is hung up, the simulator ends that conversation the same way it does when your agent hangs up. Leave `silence_timeout_s` unset to never hang up for silence.
