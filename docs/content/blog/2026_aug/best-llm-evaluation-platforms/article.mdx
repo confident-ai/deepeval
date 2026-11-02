@@ -76,9 +76,8 @@ worth checking before committing to a platform:
    dashboards?
 6. **Simulation and data generation** – can you generate test data dynamically,
    including multi-turn conversations and adversarial inputs?
-7. **Red teaming and safety** – is security testing a first-class part of the
-   quality standard, so gates can block on vulnerabilities — not just
-   accuracy?
+7. **Voice monitoring** – can it monitor voice agents in production, scoring
+   each call on how it sounded and when it spoke — not just the transcript?
 8. **AI governance** – can you define the standard once and enforce it
    automatically across every team and use case — before launch and
    continuously in production?
@@ -111,7 +110,7 @@ means the capability is unavailable as a native workflow.
 | **CI/CD integration**              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> governance as release gates, GitHub and GitLab integrations       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> SDK-driven CI evaluation                         | <span className="comparison-status comparison-status--partial">~ Partial:</span> manual, assembled by the team                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> CI gates on prompt changes                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> experiment workflows in CI                     |
 | **Production evaluation**          | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evals on every trace, failure-mode clusters, alerting             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> evaluation scoring on traces                     | <span className="comparison-status comparison-status--strong">✓ Strong:</span> online evals and monitors (alerts cloud-only)  | <span className="comparison-status comparison-status--partial">~ Partial:</span> online scoring on logs, no quality alerts | <span className="comparison-status comparison-status--strong">✓ Strong:</span> real-time dashboards and monitoring            |
 | **Simulation and data generation** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> simulated conversations, synthetic dataset generation             | <span className="comparison-status comparison-status--partial">~ Partial:</span> simulation via openevals, in code only         | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation | <span className="comparison-status comparison-status--partial">~ Partial:</span> Loop generates test cases, no simulation  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native simulation or generation |
-| **Red teaming and safety**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> 120+ vulnerabilities, OWASP, NIST AI RMF, MITRE ATLAS             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no native red teaming              |
+| **Voice monitoring** | <span className="comparison-status comparison-status--strong">✓ Strong:</span> voice-native: every production call scored, classified, and routed | <span className="comparison-status comparison-status--partial">~ Partial:</span> voice traces with call audio, transcript-based evals | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> audio attachments only, no voice metrics | <span className="comparison-status comparison-status--partial">~ Partial:</span> audio attachments and custom scorers | <span className="comparison-status comparison-status--partial">~ Partial:</span> audio spans for OpenAI Realtime and Pipecat |
 | **AI governance**                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> org-wide release gates, enforced pre-launch and live              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no governance layer                |
 | **Deployment and cost**            | <span className="comparison-status comparison-status--partial">~ Partial:</span> $1/GB traces, enterprise self-hosting                           | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-seat pricing, Enterprise-only self-hosting | <span className="comparison-status comparison-status--strong">✓ Strong:</span> MIT-licensed, free self-hosting                | <span className="comparison-status comparison-status--partial">~ Partial:</span> $3/GB traces, steep tier jump             | <span className="comparison-status comparison-status--strong">✓ Strong:</span> free open-source Phoenix, managed AX path      |
 
@@ -153,12 +152,11 @@ which turn went wrong.
 - **Postman for AI evals:** run evals on the API endpoints that host your
   agents instead of recreating them directly on the platform
 - **Prompt management and multi-turn simulation**
-- **Native red teaming:** 120+ vulnerabilities such as PII leakage and tool
-  misuse, 20+ attack vectors such as linear jailbreaking, scanned on agentic
-  traces — with shareable risk assessments aligned to OWASP Top 10, NIST AI
-  RMF, and MITRE ATLAS
+- **Voice-native monitoring:** every production call scored and classified by
+  ear, grouped into failure modes, and routed to the right reviewers — see
+  [voice AI on Confident AI](https://www.confident-ai.com/products/voice-ai)
 - **AI governance as release gates:** define the standard once and an
-  automatic gate blocks releases that fail their evals or red-team checks —
+  automatic gate blocks releases that fail their evals —
   enforced before launch and live in production
 - **Enterprise-ready:** self-hosting, SOC 2 Type II, GDPR, SSO, RBAC, and
   audit logs
@@ -245,7 +243,7 @@ standardizing on the stack too.
 - You need research-backed metrics out of the box rather than custom evaluators
 - Your application isn't built on LangChain — or you don't want an org-wide
   standard to force every team onto one stack
-- You need multi-turn simulation, red teaming, or safety evaluation
+- You need multi-turn simulation, voice-native monitoring, or safety evaluation
 - Non-engineers need to run evaluation cycles independently
 - You want self-hosting without an Enterprise contract
 
@@ -291,7 +289,7 @@ bringing an external evaluation library.
 **Langfuse is not for you if...**
 
 - You want research-backed metrics out of the box
-- You need multi-turn evaluation, simulation, or red teaming
+- You need multi-turn evaluation, simulation, or voice-native monitoring
 - You need quality alerting on a self-hosted deployment (monitors are
   cloud-only)
 - Non-engineers need to own evaluation workflows
@@ -385,7 +383,7 @@ rather than a deep built-in metric library.
 **Arize AI is not for you if...**
 
 - You want deep built-in LLM metrics rather than custom evaluators
-- You need multi-turn simulation, red teaming, or safety evaluation
+- You need multi-turn simulation, voice-native monitoring, or safety evaluation
 - Non-engineers need to run evaluation cycles, not just label data
 
 ## Which LLM evaluation platform should you choose?
@@ -545,7 +543,7 @@ dashboard.
           </a>{" "}
           and fails the build on regressions. For enterprise teams, Confident
           AI's AI governance adds release gates that block anything failing its
-          evals or red-team checks. LangSmith, Braintrust, and Arize support CI-driven
+          evals. LangSmith, Braintrust, and Arize support CI-driven
           evaluation through their SDKs; Langfuse requires assembling the
           pipeline yourself.
         </>
