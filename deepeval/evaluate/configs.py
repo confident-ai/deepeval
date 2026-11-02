@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import List, Literal, Optional, Union
 from dataclasses import dataclass
 
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -33,6 +33,15 @@ class DisplayConfig:
     # saves the full TestRun as a structured JSON readable by AI tools.
     file_type: Literal["html", "md"] = None
     file_output_dir: Optional[str] = None
+    # Optional grouping for the aggregate metrics table.  Pass a tag string to
+    # slice by that tag (cases that carry the tag belong to the group), or a
+    # metadata key to slice by the value stored under that key.  The overall
+    # pooled row is always printed first; per-group rows follow.
+    # Examples:
+    #   group_by="short-answer"          (a tag)
+    #   group_by="difficulty"            (a metadata key)
+    #   group_by=["short-answer", "multi-hop"]  (several tags, one row each)
+    group_by: Optional[Union[str, List[str]]] = None
 
 
 @dataclass

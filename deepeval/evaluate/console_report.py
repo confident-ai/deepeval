@@ -2,7 +2,7 @@ import io
 import os
 
 import time
-from typing import List
+from typing import Dict, List, Optional, Union
 from rich.console import Console, Group
 from rich.table import Table
 from rich.panel import Panel
@@ -131,6 +131,64 @@ def _format_pass_rate(agg: dict) -> str:
     return f"{rate} | {passed} | {failed}"
 
 
+def _build_metric_agg_row(test_results: List[TestResult]) -> dict:
+    """Build a raw aggregate dict keyed by metric name from *test_results*."""
+    agg: dict = {}
+    for case in test_results:
+        for m in case.metrics_data or []:
+            if m.name not in agg:
+                agg[m.name] = {
+                    "total": 0,
+                    "passes": 0,
+                    "fails": 0,
+                    "flaky_passes": 0,
+                    "flaky_fails": 0,
+                    "score_sum": 0,
+                    "score_count": 0,
+                }
+            a = agg[m.name]
+            a["total"] += 1
+            if m.success is not None:
+                if m.success:
+                    a["passes"] += 1
+                    if m.flaky:
+                        a["flaky_passes"] += 1
+                else:
+                    a["fails"] += 1
+                    if m.flaky:
+                        a["flaky_fails"] += 1
+            if m.score is not None:
+                a["score_sum"] += m.score
+                a["score_count"] += 1
+    return agg
+
+
+def _cases_for_group(
+    test_results: List[TestResult], group_key: str
+) -> List[TestResult]:
+    """Return the subset of *test_results* that belong to *group_key*.
+
+    A case belongs when *group_key* appears in ``case.tags``, **or** when
+    ``case.metadata`` contains *group_key* as a key (any value).
+    """
+    matched = []
+    for case in test_results:
+        in_tags = case.tags and group_key in case.tags
+        in_metadata = case.metadata and group_key in case.metadata
+        if in_tags or in_metadata:
+            matched.append(case)
+    return matched
+
+
+def _normalize_group_by(group_by: Optional[Union[str, List[str]]]) -> List[str]:
+    """Return a flat list of group keys from the *group_by* parameter."""
+    if group_by is None:
+        return []
+    if isinstance(group_by, str):
+        return [group_by]
+    return list(group_by)
+
+
 class EvaluationConsoleReport:
     def __init__(self, test_results: List[TestResult]):
         self.test_results = sorted(
@@ -157,6 +215,7 @@ class EvaluationConsoleReport:
         self,
         truncate: bool = True,
         display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+        group_by: Optional[Union[str, List[str]]] = None,
     ) -> Group:
 
         renderables = [
@@ -327,40 +386,13 @@ class EvaluationConsoleReport:
                 )
 
         # Calculate aggregate metrics
-        metric_aggregates = {}
-        for case in self.test_results:
-            for m in case.metrics_data or []:
-                if m.name not in metric_aggregates:
-                    metric_aggregates[m.name] = {
-                        "total": 0,
-                        "passes": 0,
-                        "fails": 0,
-                        "flaky_passes": 0,
-                        "flaky_fails": 0,
-                        "score_sum": 0,
-                        "score_count": 0,
-                    }
+        metric_aggregates = _build_metric_agg_row(self.test_results)
 
-                agg = metric_aggregates[m.name]
-                agg["total"] += 1
-                # Metrics without a verdict (success=None, e.g. no threshold)
-                # don't count towards the pass rate. Flaky metrics count
-                # towards their verdict, tracked in a flaky sub-count.
-                if m.success is not None:
-                    if m.success:
-                        agg["passes"] += 1
-                        if m.flaky:
-                            agg["flaky_passes"] += 1
-                    else:
-                        agg["fails"] += 1
-                        if m.flaky:
-                            agg["flaky_fails"] += 1
-                if m.score is not None:
-                    agg["score_sum"] += m.score
-                    agg["score_count"] += 1
+        group_keys = _normalize_group_by(group_by)
 
         if metric_aggregates:
             # Adding some padding below header
+            has_groups = bool(group_keys)
             agg_table = Table(
                 title="[bold]Aggregate Metrics[/bold]\n",
                 title_justify="left",
@@ -372,6 +404,8 @@ class EvaluationConsoleReport:
             agg_table.add_column("Average Score")
             agg_table.add_column("Pass Rate")
             agg_table.add_column("Total")
+            if has_groups:
+                agg_table.add_column("Group")
 
             for metric_name, agg in metric_aggregates.items():
                 avg_score = (
@@ -380,9 +414,34 @@ class EvaluationConsoleReport:
                     else "N/A"
                 )
                 pass_rate = _format_pass_rate(agg)
-                agg_table.add_row(
-                    metric_name, avg_score, pass_rate, str(agg["total"])
-                )
+                if has_groups:
+                    agg_table.add_row(
+                        metric_name,
+                        avg_score,
+                        pass_rate,
+                        str(agg["total"]),
+                        "(all)",
+                    )
+                else:
+                    agg_table.add_row(
+                        metric_name, avg_score, pass_rate, str(agg["total"])
+                    )
+
+            for gk in group_keys:
+                group_cases = _cases_for_group(self.test_results, gk)
+                if not group_cases:
+                    continue
+                group_agg = _build_metric_agg_row(group_cases)
+                for metric_name, agg in group_agg.items():
+                    avg_score = (
+                        f"{agg['score_sum'] / agg['score_count']:.2f}"
+                        if agg["score_count"] > 0
+                        else "N/A"
+                    )
+                    pass_rate = _format_pass_rate(agg)
+                    agg_table.add_row(
+                        metric_name, avg_score, pass_rate, str(agg["total"]), gk
+                    )
 
             renderables.append(
                 Panel(agg_table, border_style=DEEPEVAL_PURPLE, expand=True)
@@ -422,12 +481,14 @@ class EvaluationConsoleReport:
         self,
         truncate_passing_cases: bool = True,
         display_option: TestRunResultDisplay = TestRunResultDisplay.ALL,
+        group_by: Optional[Union[str, List[str]]] = None,
     ):
         self.console.print()
         self.console.print(
             self._build_display_elements(
                 truncate=truncate_passing_cases,
                 display_option=display_option,
+                group_by=group_by,
             )
         )
         self.console.print()
@@ -437,6 +498,7 @@ class EvaluationConsoleReport:
         output_dir: str,
         evaluation_name: str = "evaluation",
         theme_mode: str = "dark",
+        group_by: Optional[Union[str, List[str]]] = None,
     ):
         os.makedirs(output_dir, exist_ok=True)
 
@@ -452,7 +514,9 @@ class EvaluationConsoleReport:
         html_console = Console(
             record=True, file=dummy_file, force_terminal=True
         )
-        html_console.print(self._build_display_elements(truncate=False))
+        html_console.print(
+            self._build_display_elements(truncate=False, group_by=group_by)
+        )
 
         html_console.save_html(filepath, theme=LIGHT_THEME)
 
@@ -468,7 +532,10 @@ class EvaluationConsoleReport:
         print(f"✅ HTML Dashboard saved to: {filepath}")
 
     def export_to_markdown(
-        self, output_dir: str, evaluation_name: str = "evaluation"
+        self,
+        output_dir: str,
+        evaluation_name: str = "evaluation",
+        group_by: Optional[Union[str, List[str]]] = None,
     ):
         os.makedirs(output_dir, exist_ok=True)
 
@@ -554,42 +621,20 @@ class EvaluationConsoleReport:
             md.append("\n---\n")
 
         # Calculate aggregate metrics
-        metric_aggregates = {}
-        for case in self.test_results:
-            for m in case.metrics_data or []:
-                if m.name not in metric_aggregates:
-                    metric_aggregates[m.name] = {
-                        "total": 0,
-                        "passes": 0,
-                        "fails": 0,
-                        "flaky_passes": 0,
-                        "flaky_fails": 0,
-                        "score_sum": 0,
-                        "score_count": 0,
-                    }
-
-                agg = metric_aggregates[m.name]
-                agg["total"] += 1
-                # Metrics without a verdict (success=None, e.g. no threshold)
-                # don't count towards the pass rate. Flaky metrics count
-                # towards their verdict, tracked in a flaky sub-count.
-                if m.success is not None:
-                    if m.success:
-                        agg["passes"] += 1
-                        if m.flaky:
-                            agg["flaky_passes"] += 1
-                    else:
-                        agg["fails"] += 1
-                        if m.flaky:
-                            agg["flaky_fails"] += 1
-                if m.score is not None:
-                    agg["score_sum"] += m.score
-                    agg["score_count"] += 1
+        metric_aggregates = _build_metric_agg_row(self.test_results)
+        group_keys = _normalize_group_by(group_by)
 
         if metric_aggregates:
             md.append("## Aggregate Metrics\n")
-            md.append("| Metric | Average Score | Pass Rate | Total |")
-            md.append("|:---|:---:|:---:|:---:|")
+            has_groups = bool(group_keys)
+            if has_groups:
+                md.append(
+                    "| Metric | Average Score | Pass Rate | Total | Group |"
+                )
+                md.append("|:---|:---:|:---:|:---:|:---|")
+            else:
+                md.append("| Metric | Average Score | Pass Rate | Total |")
+                md.append("|:---|:---:|:---:|:---:|")
 
             for metric_name, agg in metric_aggregates.items():
                 avg_score = (
@@ -598,9 +643,30 @@ class EvaluationConsoleReport:
                     else "N/A"
                 )
                 pass_rate = _format_pass_rate(agg)
-                md.append(
-                    f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
-                )
+                if has_groups:
+                    md.append(
+                        f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} | (all) |"
+                    )
+                else:
+                    md.append(
+                        f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
+                    )
+
+            for gk in group_keys:
+                group_cases = _cases_for_group(self.test_results, gk)
+                if not group_cases:
+                    continue
+                group_agg = _build_metric_agg_row(group_cases)
+                for metric_name, agg in group_agg.items():
+                    avg_score = (
+                        f"{agg['score_sum'] / agg['score_count']:.2f}"
+                        if agg["score_count"] > 0
+                        else "N/A"
+                    )
+                    pass_rate = _format_pass_rate(agg)
+                    md.append(
+                        f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} | {gk} |"
+                    )
 
             md.append("\n---\n")
 

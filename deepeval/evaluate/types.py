@@ -24,6 +24,7 @@ class TestResult:
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
     turns: Optional[List[TurnApi]] = None
+    tags: Optional[List[str]] = None
     metadata: Optional[Dict] = None
     classifications: Optional[List[Classification]] = None
     expectations: Optional[Expectations] = None

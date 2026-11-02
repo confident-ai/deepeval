@@ -305,6 +305,7 @@ def evaluate(
             console_report.render_to_terminal(
                 truncate_passing_cases=display_config.truncate_passing_cases,
                 display_option=display_config.display_option,
+                group_by=display_config.group_by,
             )
 
             # Handle full, un-truncated file exports
@@ -314,11 +315,13 @@ def evaluate(
                         output_dir=display_config.file_output_dir,
                         evaluation_name=identifier,
                         theme_mode="dark",
+                        group_by=display_config.group_by,
                     )
                 elif display_config.file_type == "md":
                     console_report.export_to_markdown(
                         output_dir=display_config.file_output_dir,
                         evaluation_name=identifier,
+                        group_by=display_config.group_by,
                     )
                 else:
                     raise ValueError(
