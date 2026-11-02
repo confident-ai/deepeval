@@ -318,7 +318,8 @@ def test_classifier_only_evaluate_writes_results_folder(
         cache_config=CacheConfig(use_cache=False, write_cache=False),
     )
 
-    (path,) = target.glob("test_run_*.json")
+    assert not list(target.glob("test_run_*.json"))
+    (path,) = target.glob("classifier_run_*.json")
     body = json.loads(path.read_text(encoding="utf-8"))
     (classification,) = body["test_results"][0]["classifications"]
     assert classification["label"] == "greeting"

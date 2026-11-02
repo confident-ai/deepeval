@@ -94,10 +94,10 @@ def resolve_target_dir(
     return base
 
 
-def resolve_test_run_path(target_dir: Path) -> Path:
-    """Resolve the exact `test_run_*.json` path inside `target_dir`.
+def resolve_test_run_path(target_dir: Path, prefix: str = "test_run") -> Path:
+    """Resolve the exact `<prefix>_*.json` path inside `target_dir`.
 
-    Base name: `test_run_<YYYYMMDD_HHMMSS>.json` — matches the existing
+    Base name: `<prefix>_<YYYYMMDD_HHMMSS>.json` — matches the existing
     `DEEPEVAL_RESULTS_FOLDER` timestamp format byte-for-byte, just with the
     `.json` extension the original code forgot.
 
@@ -106,13 +106,13 @@ def resolve_test_run_path(target_dir: Path) -> Path:
     `_acquire_lock(target_dir)` when racing writers are possible.
     """
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    candidate = target_dir / f"test_run_{ts}.json"
+    candidate = target_dir / f"{prefix}_{ts}.json"
     if not candidate.exists():
         return candidate
 
     n = 2
     while True:
-        candidate = target_dir / f"test_run_{ts}_{n}.json"
+        candidate = target_dir / f"{prefix}_{ts}_{n}.json"
         if not candidate.exists():
             return candidate
         n += 1
@@ -145,8 +145,9 @@ def write_rolling_test_run(test_run: TestRun) -> Optional[Path]:
 def write_test_run(
     target_dir: Path,
     test_run: BaseModel,
+    prefix: str = "test_run",
 ) -> Path:
-    """Write `test_run` to `target_dir` as `test_run_<YYYYMMDD_HHMMSS>.json`.
+    """Write `test_run` to `target_dir` as `<prefix>_<YYYYMMDD_HHMMSS>.json`.
 
     Uses `TestRunEncoder` (and `model_dump(by_alias=True, exclude_none=True)`)
     so the serialized form matches the `.deepeval/.temp_test_run_data.json`
@@ -160,10 +161,10 @@ def write_test_run(
     if portalocker is not None:
         lock_path = target_dir / _LOCK_FILENAME
         with portalocker.Lock(str(lock_path), mode="w"):
-            path = resolve_test_run_path(target_dir)
+            path = resolve_test_run_path(target_dir, prefix)
             _dump(test_run, path)
     else:  # pragma: no cover - portalocker is pinned in requirements
-        path = resolve_test_run_path(target_dir)
+        path = resolve_test_run_path(target_dir, prefix)
         _dump(test_run, path)
 
     return path
@@ -180,14 +181,14 @@ def save_results_locally(
     if target_dir is None:
         return None
     try:
-        path = write_test_run(target_dir, results)
+        path = write_test_run(target_dir, results, prefix="classifier_run")
     except Exception as e:
         print(
-            f"Warning: failed to save test run to {target_dir}: {e}",
+            f"Warning: failed to save classifier results to {target_dir}: {e}",
             file=sys.stderr,
         )
         return None
-    print(f"Test run saved at {path}")
+    print(f"Classifier results saved at {path}")
     return path
 
 
