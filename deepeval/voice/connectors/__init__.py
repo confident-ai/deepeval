@@ -10,6 +10,10 @@ from deepeval.voice.connectors.transports import (
 from deepeval.voice.connectors.providers import (
     ElevenLabsConnector,
     LiveKitConnector,
+    LiveKitPhoneConnector,
+    LiveKitSIPConnector,
+    SipMediaEncryption,
+    SipTransport,
     PipecatConnector,
     VapiConnector,
 )
@@ -20,6 +24,10 @@ __all__ = [
     "AgentEvent",
     "CallbackVoiceConnector",
     "LiveKitConnector",
+    "LiveKitPhoneConnector",
+    "LiveKitSIPConnector",
+    "SipMediaEncryption",
+    "SipTransport",
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
