@@ -20,7 +20,6 @@ from deepeval.templates import make_template_class
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
-
 AudioGlitchTemplate = make_template_class("AudioGlitchMetric")
 
 DEFAULT_CLEAN_REASON = (

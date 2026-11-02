@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Optional, Dict, List, Literal, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Annotated,
+    Optional,
+    Dict,
+    List,
+    Literal,
+    Tuple,
+)
+
+from pydantic import BeforeValidator
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -50,11 +60,28 @@ class Verdict(str, Enum):
         return self.value
 
 
+def _strip_verdict(v):
+    """Strip whitespace and lowercase incoming verdict strings before pydantic
+    coerces them to ``Verdict`` enum members. LLMs sometimes emit ``"yes "``
+    or ``"NO"`` instead of the exact enum value — the downstream metric code
+    already compares with ``.strip().lower()``, so make the schema tolerant too.
+    """
+    if isinstance(v, str):
+        return v.strip().lower()
+    return v
+
+
 # Field types for pydantic schemas. Pydantic renders these as
 # ``{"enum": ["yes", "no"], "type": "string"}`` and coerces incoming strings to
-# ``Verdict`` members.
-YesNo = Literal[Verdict.YES, Verdict.NO]
-YesNoBorderline = Literal[Verdict.YES, Verdict.NO, Verdict.BORDERLINE]
+# ``Verdict`` members. The ``BeforeValidator`` strips whitespace and lowercases
+# so LLM output like ``"yes "`` or ``" YES"`` still validates cleanly.
+YesNo = Annotated[
+    Literal[Verdict.YES, Verdict.NO], BeforeValidator(_strip_verdict)
+]
+YesNoBorderline = Annotated[
+    Literal[Verdict.YES, Verdict.NO, Verdict.BORDERLINE],
+    BeforeValidator(_strip_verdict),
+]
 
 # Allowed-vocabulary tuples for ``generate_qag_verdicts(..., allowed=...)``.
 YES_NO: Tuple[Verdict, ...] = (Verdict.YES, Verdict.NO)

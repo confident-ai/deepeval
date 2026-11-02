@@ -206,7 +206,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -236,7 +236,7 @@ class ContextualRecallMetric(BaseMetric):
         supportive_reasons = []
         unsupportive_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            if verdict.verdict.strip().lower() == "yes":
                 supportive_reasons.append(verdict.reason)
             else:
                 unsupportive_reasons.append(verdict.reason)
@@ -260,12 +260,17 @@ class ContextualRecallMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        return score_qag_verdicts(
-            self,
-            self.verdicts,
-            passing=(Verdict.YES,),
-            empty_score=0,
-        )
+        number_of_verdicts = len(self.verdicts)
+        if number_of_verdicts == 0:
+            return 0
+
+        justified_sentences = 0
+        for verdict in self.verdicts:
+            if verdict.verdict.strip().lower() == "yes":
+                justified_sentences += 1
+
+        score = justified_sentences / number_of_verdicts
+        return 0 if self.strict_mode and score < self.threshold else score
 
     async def _a_generate_verdicts(
         self,
