@@ -20,7 +20,6 @@ from deepeval.test_case import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
 
-
 InterruptionLevel = Literal["rare", "normal", "frequent"]
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
 

@@ -5,7 +5,6 @@ from deepeval.metrics import (
     TaskCompletionMetric,
 )
 
-
 # Keep metrics in one module so eval files stay focused on app execution.
 # Reuse existing project metrics and thresholds before adding new ones.
 SINGLE_TURN_TRACE_METRICS = [
