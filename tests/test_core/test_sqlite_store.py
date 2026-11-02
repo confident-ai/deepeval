@@ -849,7 +849,10 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        err = capsys.readouterr().err
+        # sqlite may wrap the error with embedded newlines on some builds;
+        # normalise whitespace before checking.
+        assert "disk I/O error" in " ".join(err.split())
         assert mgr.last_saved_path is None
 
 
