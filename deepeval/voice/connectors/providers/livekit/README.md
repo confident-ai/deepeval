@@ -77,15 +77,13 @@ agent state only, not user state, and that an agent configured with
 `allow_interruptions=False` never transitions at all.
 
 **Concurrency.** `VoiceConfig` runs parallel conversations by cloning the
-connector, and `BaseVoiceConnector.clone()` is a shallow copy. Two things here
-do not survive that. A `room=` passed by the caller is one object, so clones
-would publish two microphones into it and read the same agent track; and
-`identity` is a fixed string, so clones minting their own tokens land in a room
-under the same participant identity, which LiveKit treats as a takeover. Both
-are avoided today by passing a factory instead of an instance, which is what
-the `VoiceConfig` docstring says to do. Overriding `clone()` here to reject a
-caller-owned room, and to vary `identity` per clone, would make the safe thing
-automatic rather than documented.
+connector, and `BaseVoiceConnector.clone()` is a shallow copy, so every piece of
+per-call state is rebuilt in `_join_room()`. A caller-owned `room=`, a fixed
+`room_name=` or a `token=` (minted for one room) would put every clone in the
+same room, so `supports_parallel_calls` is False for them and the simulator
+refuses to run more than one call at a time with such a connector, naming the
+factory form as the fix. Varying `identity` per clone is unnecessary: clones
+that mint their own tokens land in rooms of their own.
 
 **Dispatch metadata and deployment.** `_build_token` sets `RoomAgentDispatch`
 with only `agent_name`. LiveKit also accepts `metadata`, which is how job

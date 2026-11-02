@@ -166,7 +166,7 @@ sequenceDiagram
     Connector->>Agent: end the call
 ```
 
-One live call per connector is also why voice simulations run sequentially — concurrent conversations would interleave audio on the same session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback). Connector-specific end-of-turn behavior is covered under [Turn Detection](/docs/conversation-simulator-voice-connectors#turn-detection).
+One live call per connector is also why every simulated conversation gets its own copy of the connector: up to `max_concurrent` calls run at the same time without sharing a session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback). Connector-specific end-of-turn behavior is covered under [Turn Detection](/docs/conversation-simulator-voice-connectors#turn-detection).
 
 ## Voice Data on Test Cases
 
@@ -308,10 +308,12 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
       question: "Can one connector serve multiple conversations concurrently?",
       answer: (
         <>
-          No — a connector holds a single live call, so the simulator connects
-          before each conversation's first turn, disconnects when it ends, and
-          runs conversations sequentially. Concurrent conversations would
-          interleave audio on the same session.
+          A connector holds a single live call, so the simulator gives each
+          conversation its own copy, connects it before the first turn and
+          disconnects it when the conversation ends. Up to{" "}
+          <code>max_concurrent</code> of those calls run at the same time. A
+          connector tied to one room or call can't be copied; pass a function
+          that builds a new connector instead.
         </>
       ),
     },

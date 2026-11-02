@@ -106,7 +106,7 @@ voice_config = VoiceConfig(
 )
 ```
 
-Concurrent conversations each get their own session, cloned from the connector you passed. A connector holding a room you connected yourself can't be cloned, so give `VoiceConfig` a zero-argument callable that builds a fresh connector instead of the connector itself.
+Concurrent conversations each get their own session, cloned from the connector you passed. A connector holding a `room` you connected yourself, a fixed `room_name` or a `token` (which is minted for one room) can't be cloned: every call would join the same room. The simulator stops with an error before any call starts, so give `VoiceConfig` a zero-argument callable that builds a fresh connector instead, or set `max_concurrent=1`.
 
 `deepeval` publishes a microphone track, listens for the agent, and leaves the room as it found it — a room you connected stays connected afterwards, with just the simulated microphone removed. An unconnected room gets connected using the parameters above.
 
