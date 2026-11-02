@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import time
 from enum import Enum
 from typing import Any, Optional, Union
 
@@ -154,3 +156,16 @@ def validate_connector(connector: Any) -> BaseVoiceConnector:
         "`PipecatConnector`, `WebSocketConnector`, `WebRTCConnector`, "
         "`CallbackVoiceConnector`, or your own `BaseVoiceConnector` subclass."
     )
+
+
+class DialPacer:
+
+    def __init__(self):
+        self._next_slot = 0.0
+
+    async def wait(self, interval_s: float) -> None:
+        now = time.monotonic()
+        slot = max(now, self._next_slot)
+        self._next_slot = slot + interval_s
+        if slot > now:
+            await asyncio.sleep(slot - now)
