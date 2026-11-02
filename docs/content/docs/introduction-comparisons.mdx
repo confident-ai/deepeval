@@ -18,6 +18,10 @@ iteration of AI agents and LLM apps.
 - **Agent-first evals** - DeepEval supports traditional output scoring, but is
   especially strong for AI agents, tool calls, traces, spans, MCP systems, and
   multi-step workflows.
+- **Voice-native evals** - Score voice agents on the call audio itself, from
+  voice naturalness to turn-taking, latency, and transcription accuracy, and
+  simulate live calls through connectors like Vapi, LiveKit, and Pipecat instead
+  of only judging transcripts.
 - **Fast local loop** - Run evals locally while changing prompts, tools, models,
   or code, then inspect failures without leaving your development workflow.
 - **Modular primitives** - Build your own eval pipeline from test cases,
@@ -63,8 +67,8 @@ PS. DeepEval also allows you to view traces locally on your machine.
 
 ### vs RAG-Only Evaluation Libraries
 
-- **AI agents beyond RAG** - DeepEval supports RAG, but also evaluates AI agents, multi-turn
-  chatbots, voice agents, MCP systems, tool-use workflows, LLM arenas, and custom applications.
+- **AI agents beyond RAG** - DeepEval supports RAG, but also evaluates AI agents, voice
+  agents, multi-turn chatbots, MCP systems, tool-use workflows, LLM arenas, and custom applications.
 - **Trace and span evals** - Score individual runtime components instead of only
   evaluating final answers or retrieval quality.
 - **Faster debugging loop** - Run a trace locally, inspect which span failed, and

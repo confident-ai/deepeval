@@ -114,6 +114,17 @@ Already using another observability tool? Visit [Comparisons](/docs/introduction
 to understand the pros and cons of using DeepEval for trace-based evals.
 :::
 
+## Voice-Native Evals
+
+A voice agent is a live call, not a text chatbot with a microphone attached, so
+DeepEval evaluates it voice-natively. Metrics read the audio on each turn of a
+conversation to score how your agent sounded and when it spoke, alongside the
+multi-turn metrics that judge what was said. Simulated callers speak to your
+deployed agent through connectors like Vapi, LiveKit, and Pipecat, and the calls
+they produce run through the same pipeline as every other eval: goldens in, test
+cases out, metrics on top. Voice evals are Python-only for now; see
+[voice evaluation](/docs/evaluation-voice) to get started.
+
 ## Pytest-Native
 
 DeepEval has first-class Pytest integration. You can write evals
