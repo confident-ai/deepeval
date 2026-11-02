@@ -335,8 +335,8 @@ end-to-end over HTTP the way it runs in production.
 **Braintrust is not for you if...**
 
 - You need to test your application end-to-end the way it runs in production
-- You're evaluating AI agents, voice agents, multi-turn chatbots, or safety —
-  not just prompts
+- You need voice-specific monitoring that catches audio issues such as slow
+  replies, talking over callers, and garbled speech — not just transcript scores
 - You're cost-sensitive on tracing or need a mid-tier between $0 and
   $249/month
 
@@ -443,7 +443,7 @@ dashboard.
 | **Confident AI** | No (self-hostable) | UI + HTTP + SDK       | Turning failing production traces into evals     | DeepEval for code-first evals before launch                 |
 | **LangSmith**    | No                 | UI + SDK              | LangChain-native tracing with basic evals        | Deeper metrics and simulation for non-LangChain components  |
 | **Langfuse**     | MIT                | UI + SDK + self-host  | Self-hosted observability with lightweight evals | Deeper metrics and simulation beyond judge templates        |
-| **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Broader tooling for AI agents, voice, multi-turn, and safety |
+| **Braintrust**   | No                 | UI + playground + SDK | Prompt optimization and regression gates         | Voice-specific monitoring for audio issues                  |
 | **Arize AI**     | Phoenix (OSS)      | UI + OTel + Phoenix   | Monitoring-led enterprises adding LLM evaluation | Research-backed metrics and simulation                      |
 
 ### Recommendations by team type
