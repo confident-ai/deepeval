@@ -117,34 +117,27 @@ means the capability is unavailable as a native workflow.
 
 ### What is DeepEval and why should voice teams consider it?
 
-[DeepEval](https://github.com/confident-ai/deepeval) is an open-source,
-Python-native evaluation framework for AI agents, voice agents, multi-turn
-chatbots, RAG pipelines, and more. It works like pytest for AI applications,
-and with more than 19,000 GitHub stars it is the most-starred tool in this
-comparison.
+[DeepEval](https://github.com/confident-ai/deepeval) is an open-source
+evaluation framework for AI agents, voice agents, multi-turn chatbots, RAG
+pipelines, and more. It works like pytest for AI applications, and with more
+than 19,000 GitHub stars it is the most-starred tool in this comparison.
 
-Its main advantage for voice teams is that its evals are voice-native. DeepEval
-attaches the audio from each turn of a call to a `ConversationalTestCase`, then
-scores [what was said, how it sounded, and when it
-happened](/docs/evaluation-voice) in the same run. Nine dedicated voice metrics
-cover voice naturalness, speech intelligibility, voice consistency, audio
-integrity, audio glitches, turn-taking naturalness, agent responsiveness,
-transcription accuracy, and an overall voice reliability score. The transcript
-is still judged by DeepEval's existing multi-turn metrics, such as
-[turn relevancy](/docs/metrics-turn-relevancy), goal accuracy, and tool use, so
-one test case answers both "did it solve the caller's problem" and "would a
-caller have stayed on the line".
+Its main advantage for voice teams is voice-native evals: DeepEval scores the
+call itself, not just a transcript of it. In one run, it checks
+[what your agent said, how it sounded, and when it spoke](/docs/evaluation-voice),
+catching the slow replies, talking over callers, garbled audio, and misheard
+words that text-only evals miss, alongside whether the agent actually solved
+the caller's problem. One eval answers both "did it work" and "would a caller
+have stayed on the line".
 
-DeepEval also places the calls for you. Its
-[conversation simulator in voice mode](/docs/conversation-simulator-voice-mode)
-speaks each simulated caller turn through a TTS model, reaches your deployed
-agent through a connector, and transcribes the agent's replies. Native
-[voice agent connectors](/integrations/voice-agent-connectors/vapi) cover Vapi,
-ElevenLabs, LiveKit, and Pipecat, plus any raw-audio WebSocket or in-process
-Python callable. Each caller's voice,
-background noise, and willingness to barge in come from a
-[persona](/docs/conversation-simulator-voice-personas), so you can test the
-impatient caller in a noisy car as easily as the patient one in a quiet room.
+DeepEval also places the calls for you. It
+[simulates realistic callers](/docs/conversation-simulator-voice-mode) who
+phone your deployed agent on
+[Vapi, ElevenLabs, LiveKit, Pipecat](/integrations/voice-agent-connectors/vapi),
+or a custom stack, each with their own
+[persona](/docs/conversation-simulator-voice-personas): voice, background noise,
+and how often they interrupt. You can test the impatient caller in a noisy car
+as easily as the patient one in a quiet room, before any real caller does.
 
 Voice support is currently in beta and Python-only. If you're already in
 production, [Confident AI](https://www.confident-ai.com/products/voice-ai)
@@ -167,7 +160,8 @@ your agent takes real calls.
   in-process callables
 - **Pluggable TTS and STT models**, with integrations for ElevenLabs, Cartesia,
   Deepgram, AssemblyAI, and OpenAI
-- **The full multi-turn metric library** on the same `ConversationalTestCase`
+- **Conversation metrics** such as task completion, role adherence, and tool
+  use, scored on the same call
 - **Pytest integration** through `deepeval test run`, plus an Agent Skill for
   Claude Code, Cursor, and Codex
 - **Call recordings and per-turn audio** saved locally for debugging failures
