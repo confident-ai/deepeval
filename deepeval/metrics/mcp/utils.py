@@ -107,7 +107,7 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            result = getattr(tool.result, "structured_content", getattr(tool.result, "structuredContent", {})).get("result")
         else:
             args = tool.input_parameters
             result = tool.output

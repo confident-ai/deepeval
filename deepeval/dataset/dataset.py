@@ -476,9 +476,9 @@ class EvaluationDataset:
             retrieval_context = reconstruct_retrieval_context(
                 json_obj.get(retrieval_context_key_name)
             )
-            tools_called_data = json_obj.get(tools_called_key_name, [])
+            tools_called_data = json_obj.get(tools_called_key_name) or []
             tools_called = [ToolCall(**tool) for tool in tools_called_data]
-            expected_tools_data = json_obj.get(expected_tools_key_name, [])
+            expected_tools_data = json_obj.get(expected_tools_key_name) or []
             expected_tools = [ToolCall(**tool) for tool in expected_tools_data]
             # additional_metadata = json_obj.get(addtional_metadata_key_name)
 
