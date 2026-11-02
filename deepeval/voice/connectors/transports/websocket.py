@@ -190,11 +190,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._tools_running = 0
         self._tool_spans = []
 
-        self._session = aiohttp.ClientSession()
-        url = await self._open_session()
-        self._ws = await self._session.ws_connect(
-            url, headers=self._connect_headers()
-        )
+        self._ws = await self._open_socket()
 
         for message in self._initial_messages():
             await self._send(message)
@@ -215,6 +211,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                 f"{self.connect_timeout_s}s. Check the agent id / credentials "
                 "and that the provider is reachable."
             )
+
+    async def _open_socket(self):
+        self._session = aiohttp.ClientSession()
+        url = await self._open_session()
+        return await self._session.ws_connect(
+            url, headers=self._connect_headers()
+        )
 
     async def _send(self, message: Union[str, bytes]) -> None:
         if isinstance(message, (bytes, bytearray)):
