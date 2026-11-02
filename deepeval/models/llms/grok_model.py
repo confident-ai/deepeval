@@ -125,7 +125,7 @@ class GrokModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(content))
+        chat.append(user(*content))
 
         if schema and self.supports_structured_outputs() is True:
             response, structured_output = chat.parse(schema)
@@ -170,7 +170,7 @@ class GrokModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             **self.generation_kwargs,
         )
-        chat.append(user(content))
+        chat.append(user(*content))
 
         if schema and self.supports_structured_outputs() is True:
             response, structured_output = await chat.parse(schema)
@@ -194,10 +194,23 @@ class GrokModel(DeepEvalBaseLLM):
 
     def _prompt_content(
         self, prompt: str, audio: Optional[List[Audio]] = None
-    ) -> List[Dict]:
+    ) -> List:
         # xAI's chat API takes text and images, with no audio input.
         reject_audio(audio, "GrokModel")
-        return to_openai_content(prompt)
+        content = to_openai_content(prompt, text_only_as_string=True)
+        if isinstance(content, str):
+            return [content]
+
+        from xai_sdk.chat import image, text
+
+        return [
+            (
+                text(part["text"])
+                if part["type"] == "text"
+                else image(part["image_url"]["url"])
+            )
+            for part in content
+        ]
 
     ###############################################
     # Utilities
