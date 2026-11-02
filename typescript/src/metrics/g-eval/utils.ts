@@ -132,12 +132,8 @@ const MIN_LOG_PROB = Math.log(0.01);
  * considered, weighted by their probabilities — the G-Eval paper's scoring, and
  * a port of Python's `calculate_weighted_summed_score`.
  *
- * Tokenizer-aware (#3517): the score's full token span is located from the
- * end (the reasoning may repeat digits first), so a judge that splits numbers
- * into single digits — Qwen emits 10 as "1","0" — is weighted over that span.
- * A candidate that is a strict prefix of another valid score, like "1" under
- * a 0–10 rubric, cannot be resolved from this response (only the branch the
- * model took is recorded), so it is dropped rather than guessed at.
+ * A score split across tokens ("10" as "1", "0") is weighted over its whole
+ * span, and a candidate that may only start a larger score is dropped.
  *
  * Returns `rawScore` unchanged when the log-probs can't support a better
  * answer: no matching span, or every candidate filtered out.
@@ -150,8 +146,7 @@ export function calculateWeightedSummedScore(
   if (!logProbs?.length) return rawScore;
 
   const scoreStr = String(rawScore);
-  // Scan from the end: the reasoning may spell the score earlier than the
-  // model's final answer.
+  // Scan from the end: the reason may repeat the score's digits.
   let spanStart = -1;
   let spanLen = 0;
   for (let i = logProbs.length - 1; i >= 0 && spanStart < 0; i--) {
@@ -188,14 +183,11 @@ export function calculateWeightedSummedScore(
     if (!/^\d+$/.test(candidate.token)) continue;
 
     let tokenScore = parseInt(candidate.token, 10);
-    // A candidate outside the rubric is not a score.
     if (tokenScore > scoreMax) continue;
 
     let linearProb = Math.exp(candidate.logprob);
     if (candidate.token === first.token) {
-      // The branch the model actually took: it spells the raw score over one
-      // token or the whole span, and each later emitted token's own logprob
-      // is the conditional that branch needs.
+      // The emitted score: chain the probabilities across its span.
       for (let j = 1; j < spanLen; j++) {
         linearProb *= Math.exp(logProbs[spanStart + j].logprob);
       }
@@ -231,7 +223,7 @@ export function calculateWeightedSummedScore(
 export async function evaluateGEvalPrompt(
   metric: BaseMetricCore,
   prompt: string,
-  options: { topLogprobs: number; strictMode: boolean },
+  options: { topLogprobs: number; strictMode: boolean; scoreMax?: number },
 ): Promise<[number, string]> {
   const model = metric.model;
   if (model?.generateRaw && model.supportsLogProbs() !== false) {
@@ -244,7 +236,7 @@ export async function evaluateGEvalPrompt(
       return [
         options.strictMode
           ? score
-          : calculateWeightedSummedScore(score, logProbs),
+          : calculateWeightedSummedScore(score, logProbs, options.scoreMax),
         reason,
       ];
     } catch {

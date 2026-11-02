@@ -1,3 +1,4 @@
+import math
 from types import SimpleNamespace
 
 import pytest
@@ -64,11 +65,7 @@ def create_logprob_token(token, logprob, alternatives):
 
 
 def test_calculate_weighted_summed_score_drops_digit_split_ambiguous_prefix():
-    # Raw 9; the "1" alternative is the first token of a possible 10 under a
-    # digit-splitting tokenizer, not the score 1. It must not drag the
-    # weighted score toward 1 (#3517): 7.69 before, ~8.97 after.
-    import math
-
+    # "1" may be the first digit of 10, so it must not count as a score of 1.
     raw_response = create_raw_response(
         [
             create_logprob_token("score", 0, [("score", 0)]),
@@ -92,11 +89,7 @@ def test_calculate_weighted_summed_score_drops_digit_split_ambiguous_prefix():
 
 
 def test_calculate_weighted_summed_score_weights_multitoken_raw_score():
-    # Raw 10, emitted as "1","0". P(10) = P("1") * P("0" | "1") = 0.7 * 0.95;
-    # the single-token alternative "9" carries 0.3. Expected ~9.69 (#3517);
-    # this case crashed with AttributeError before.
-    import math
-
+    # 10 emitted as "1", "0": P(10) = P("1") * P("0" | "1").
     raw_response = create_raw_response(
         [
             create_logprob_token("score", 0, [("score", 0)]),
@@ -115,19 +108,12 @@ def test_calculate_weighted_summed_score_weights_multitoken_raw_score():
 
 
 def test_calculate_weighted_summed_score_returns_raw_when_span_missing():
-    # The response never spells the score (raw 10, but no "10" and no
-    # "1","0" pair anywhere): nothing to weight, so the raw score stands.
     raw_response = create_raw_response([create_token("7", "7")])
 
     assert calculate_weighted_summed_score(10, raw_response) == 10
 
 
 def test_calculate_weighted_summed_score_keeps_prefix_when_range_is_single_digit():
-    # With an explicit single-digit maximum, "1" can only be the score 1, so
-    # the full distribution weights again (#3517's rescaling workaround,
-    # exact instead of approximate).
-    import math
-
     raw_response = create_raw_response(
         [
             create_logprob_token(
@@ -141,8 +127,6 @@ def test_calculate_weighted_summed_score_keeps_prefix_when_range_is_single_digit
 
 
 def test_calculate_weighted_summed_score_ignores_out_of_range_candidates():
-    import math
-
     raw_response = create_raw_response(
         [
             create_logprob_token(

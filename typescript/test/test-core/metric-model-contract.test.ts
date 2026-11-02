@@ -169,7 +169,6 @@ describe("calculateWeightedSummedScore", () => {
       tokenLogProbs("9", { "9": 0.812, "1": 0.16, "8": 0.028 }),
       tokenLogProbs("}", { "}": 1 }),
     ];
-    // (9*0.812 + 8*0.028) / (0.812 + 0.028) ≈ 8.97, not 7.69.
     expect(calculateWeightedSummedScore(9, logProbs)).toBeCloseTo(
       (9 * 0.812 + 8 * 0.028) / (0.812 + 0.028),
       6,
@@ -177,8 +176,6 @@ describe("calculateWeightedSummedScore", () => {
   });
 
   it("weights a multi-digit raw score split across tokens (#3517)", () => {
-    // Raw 10 as "1","0": P(10) = 0.7*0.95 along the taken branch; the
-    // single-token alternative "9" carries 0.3. ≈ 9.69, not a bare 10.
     const logProbs = [
       tokenLogProbs("score", { score: 1 }),
       tokenLogProbs("1", { "1": 0.7, "9": 0.3 }),
