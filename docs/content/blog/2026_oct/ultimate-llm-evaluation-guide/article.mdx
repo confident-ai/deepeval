@@ -713,7 +713,7 @@ In this final section, we reinforce what makes a simple "toy" LLM evaluation wor
 
 ### 1. Use One System for AI Quality
 
-Everything discussed in this guide - datasets, evaluations, human annotation, experimentation, regression testing, tracing, production monitoring, red teaming, and governance - is ultimately part of the same problem: AI quality.
+Everything discussed in this guide - datasets, evaluations, human annotation, experimentation, regression testing, tracing, production monitoring, voice-native observability, and governance - is ultimately part of the same problem: AI quality.
 
 You're free to build the system yourself, assemble it from open-source tools, or buy a platform. What matters is that these workflows share the same datasets, metrics, quality standards, and failure history across the entire AI lifecycle.
 
@@ -735,11 +735,11 @@ Humans help identify which qualities matter, discover failure modes, and calibra
 
 Automated production signals reveal which use cases are growing, how different user segments behave, and where cost, latency, errors, or quality are trending in the wrong direction. Your production monitoring should segment traces by application, workflow, customer, outcome, and risk, discover issues before you've assigned an eval to them, and keep PMs in the loop on what is failing and why. On Confident AI, those issues are routed to human annotators and turned into new goldens, so production keeps feeding your evaluation datasets.
 
-### 5. Standardize metrics - and red-team what they miss
+### 5. Standardize metrics - across text and voice, in one platform
 
-Enterprises should maintain shared definitions for common metrics so that "Task Completion" or "Faithfulness" does not mean something different in every project. Applications in regulated environments - or any system with access to sensitive data and tools - should also undergo adversarial testing for prompt injection, data leakage, excessive agency, and tool misuse.
+Enterprises should maintain shared definitions for common metrics so that "Task Completion" or "Faithfulness" does not mean something different in every project. Voice agents belong under the same standard rather than in a separate voice tool: score each call on what was said, how it sounded, and when each side spoke, as covered in [voice evaluation](/docs/evaluation-voice). For enterprise teams, [Confident AI's voice-native observability](https://www.confident-ai.com/products/voice-ai) monitors every production call alongside your text agents, so evals, monitoring, annotation, and governance stay in one platform.
 
-The overall principle is simple: humans define quality, automated evaluations scale it, observability keeps it current, governance enforces it, and red teaming challenges its blind spots.
+The overall principle is simple: humans define quality, automated evaluations scale it, observability keeps it current, governance enforces it, and voice-native monitoring holds every channel to the same bar.
 
 ## Conclusion
 
