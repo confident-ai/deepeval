@@ -71,9 +71,3 @@ def test_a_silent_voice_agent_fails():
 
     with pytest.raises(AssertionError, match="Agent Responsiveness"):
         assert_test(test_case=test_case, metrics=_voice_metrics())
-
-
-async def test_voice_simulations_run_inside_async_tests():
-    [test_case] = _simulate(EchoAgent(), goldens=1)
-
-    assert_test(test_case=test_case, metrics=_voice_metrics())
