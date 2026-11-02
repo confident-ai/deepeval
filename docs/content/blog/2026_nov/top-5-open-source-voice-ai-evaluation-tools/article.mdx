@@ -232,29 +232,28 @@ voice evals to your repo.
 [LiveKit Agents](https://github.com/livekit/agents) is an open-source framework
 for building realtime voice AI agents, with about 15,000 GitHub stars and an
 Apache 2.0 license. It ships its own [testing and
-evaluation](https://docs.livekit.io/agents/start/testing/) module, which makes
-it the most natural starting point if your agent already runs on LiveKit.
+evaluation](https://docs.livekit.io/agents/start/testing/) tools, which makes it
+the most natural starting point if your agent already runs on LiveKit.
 
-Unit tests run a single conversation turn in text mode with pytest or Vitest,
-asserting on messages, tool calls, and handoffs. For full conversations,
-`livekit.agents.evals` provides eight built-in LLM judges, including accuracy,
-relevancy, safety, tool use, handoffs, and task completion, which run together
-through a `JudgeGroup`. [Agent
-simulations](https://docs.livekit.io/agents/start/testing/simulations/) add an
-LLM-driven caller that follows a persona and goal from a `scenarios.yaml` file,
-and the CLI can generate scenarios from your agent's source.
+Its value is speed inside the framework you already use. You can write quick
+tests that check your agent says the right thing, calls the right tools, and
+hands off correctly, then grade full conversations with eight built-in judges
+for accuracy, relevancy, safety, tool use, and task completion.
+[Agent simulations](https://docs.livekit.io/agents/start/testing/simulations/)
+add a simulated caller with a persona and goal, and LiveKit can even draft test
+scenarios from your agent's code.
 
-The trade-off is that the open-source pieces grade text. Audio simulations,
-which score turn-taking, interruptions, transcription accuracy, and latency,
-run on LiveKit Cloud and are metered at a higher rate than text runs, and
-`JudgeGroup` and custom judges are Python-only. LiveKit itself recommends text
-simulations on every commit and audio runs nightly or before release.
+The trade-off is that the open-source tools grade text. Hearing how a call
+actually went, including turn-taking, interruptions, transcription, and
+latency, requires audio simulations on LiveKit Cloud, which cost more than text
+runs. LiveKit itself recommends text simulations on every commit and audio runs
+nightly or before release.
 
 ### Key features
 
 - Text-mode unit tests in pytest and Vitest with message, tool call, and
   handoff assertions
-- Eight built-in LLM judges and custom judges through a `Judge` subclass
+- Eight built-in LLM judges, plus your own custom judges
 - Multi-turn simulations with LLM-driven callers from YAML scenarios
 - Scenario generation from agent source code
 - Repeated sampling with a configurable pass rate for non-deterministic runs
@@ -287,28 +286,26 @@ simulations on every commit and audio runs nightly or before release.
 [Pipecat](https://github.com/pipecat-ai/pipecat) is an open-source framework for
 voice and multimodal agents, with about 17,000 GitHub stars and a BSD 2-Clause
 license. [Pipecat Evals](https://docs.pipecat.ai/pipecat/evals/overview) is its
-built-in system for testing agent behavior, and it runs scenarios against the
-same pipeline and services you deploy.
+built-in testing system, and it runs scenarios against the same pipeline and
+services you deploy.
 
-Scenarios live in YAML. Scripted scenarios define the caller's turns and the
-events you expect back, such as text that should appear, a function call with
-specific arguments, or a reply within a latency budget set by `within_ms`.
-Simulated scenarios give an LLM a persona and goal, then judge a success
-criterion and optional scored metrics. Text mode skips STT and TTS for speed,
-while audio mode synthesizes the caller's voice and transcribes the agent's
-reply, and `send_after` lets the harness barge in mid-response to test
-recovery.
+Its value is simple, readable test scenarios that live next to your pipeline.
+You can script exactly what the caller says and what should happen next, such
+as the right answer, the right tool call, or a reply within a latency budget,
+or let a simulated caller with a persona and goal drive the conversation
+instead. Tests can run in fast text mode or in audio mode with a spoken caller,
+and the harness can barge in mid-response to check how your agent recovers.
 
 Pipecat Evals is deliberately local-first: the judge and the simulated caller
-default to a local model through Ollama, so a suite can run without any API
-keys beyond your agent's own. Its scope is development, and Pipecat's own docs
-point teams to third-party platforms for production testing and monitoring.
+run on a local model by default, so a suite costs nothing beyond your agent's
+own services. Its scope is development, and Pipecat's own docs point teams to
+third-party platforms for production testing and monitoring.
 
 ### Key features
 
 - YAML scenarios that mix scripted turns and LLM-simulated callers
 - Assertions on text, function calls and arguments, and latency budgets
-- Barge-in testing through `send_after`
+- Barge-in testing that interrupts the agent mid-response
 - Text and audio modes, with audio-only evaluation for speech-to-speech agents
 - Local judge and persona models through Ollama by default
 - Concurrent suites from a manifest, plus a Python library
@@ -342,18 +339,17 @@ observability and evaluation platform under the Apache 2.0 license. Its
 1,000 GitHub stars, added [voice agent
 testing](https://scenario-docs.langwatch.ai/voice/getting-started) in 2026.
 
-Its strength is breadth of platforms. LangWatch drives a synthesized caller
-through a multi-turn conversation with agents on ElevenLabs, OpenAI Realtime,
-Gemini Live, Vapi, LiveKit, Pipecat, and Twilio, and it can wrap a text-only
-agent in an STT-to-LLM-to-TTS chain. Simulated callers take a voice, a persona,
-and audio effects such as background noise and phone-line quality, and runs
-save a full recording of the call.
+Its value is breadth of platforms. LangWatch can call agents on ElevenLabs,
+OpenAI Realtime, Gemini Live, Vapi, LiveKit, Pipecat, and Twilio, so one test
+suite covers several voice stacks. Its simulated callers can sound like real
+customers, with their own voice, persona, background noise, and phone-line
+quality, and every run keeps a recording of the call.
 
-Scoring comes from a judge agent that checks the conversation against criteria
-you write, with a per-turn verdict. There is no dedicated catalog of audio,
-timing, or transcription metrics, so measuring how the agent sounded or how
-fast it answered is left to the criteria you define. Tests run in pytest or
-Vitest, and results can flow into the wider LangWatch platform.
+The trade-off is that you define what good looks like. A judge checks each
+conversation against criteria you write, but there are no standard metrics for
+how the agent sounded, how fast it answered, or whether it heard the caller
+correctly. Tests run alongside your existing test suite, and results can flow
+into the wider LangWatch platform.
 
 ### Key features
 
@@ -388,23 +384,24 @@ Vitest, and results can flow into the wider LangWatch platform.
 
 ### What is ServiceNow EVA and why should voice teams consider it?
 
-[EVA](https://github.com/ServiceNow/eva) is an MIT-licensed, end-to-end
-framework from ServiceNow for evaluating conversational voice agents, released
-alongside a [research paper](https://arxiv.org/abs/2605.13841) in 2026. It runs
-bot-to-bot: a user simulator and the agent under test speak to each other over
-a live WebSocket connection, with no humans in the loop.
+[EVA](https://github.com/ServiceNow/eva) is an MIT-licensed framework from
+ServiceNow for evaluating conversational voice agents end to end, released
+alongside a [research paper](https://arxiv.org/abs/2605.13841) in 2026. A
+simulated caller and the agent under test talk to each other live, with no
+humans in the loop.
 
-EVA scores two dimensions. Accuracy covers task completion, faithfulness, and
-agent speech fidelity, an audio LLM judge currently in beta. Experience covers
-conciseness, turn-taking, conversation progression, and latency. It ships 213
+Its value is a rigorous, published benchmark. EVA scores every call on accuracy,
+meaning whether the task got done correctly and the agent's speech was
+faithful, and on experience, meaning whether the agent was concise, took turns
+well, kept the conversation moving, and answered quickly. It ships 213
 enterprise scenarios across airline customer service, healthcare HR, and IT
-service management, and supports both cascade (STT, LLM, TTS) and
-speech-to-speech architectures, with published results for 12 systems.
+service management, and has published results for 12 voice systems, including
+both traditional pipelines and speech-to-speech models.
 
-That makes EVA a benchmark first. It is excellent for comparing voice
-architectures and models on a fixed, enterprise-flavored test set, but its
-harness is Pipecat-based and it is not designed as a test suite you add to your
-own agent's repository and run on every pull request.
+That makes EVA a benchmark first. It is excellent for choosing between voice
+architectures and models on a fixed, enterprise-flavored test set, but it is
+built around Pipecat and is not designed as a test suite for your own agent's
+scenarios on every pull request.
 
 ### Key features
 
@@ -552,7 +549,7 @@ their own ecosystems.
         <>
           Use a simulated caller that can barge in over a full-duplex
           connection. DeepEval configures interruptions on the caller's persona,
-          Pipecat Evals uses <code>send_after</code> to cut in mid-response, and
+          Pipecat Evals can cut in mid-response, and
           LangWatch provides interruption recipes. LiveKit covers interruptions
           in its audio simulations on LiveKit Cloud.
         </>
