@@ -44,10 +44,9 @@ A voice AI evaluation tool is not the same thing as:
 - **A voice agent framework**, such as LiveKit Agents or Pipecat, which you use
   to build the agent. Some frameworks ship testing modules, which is why two of
   them appear on this list.
-- **A managed voice testing platform**, such as Coval, Hamming, Cekura,
-  Bluejay, or Roark. These are closed-source products with hosted dashboards
-  and phone-number testing, and they are outside the scope of this
-  open-source comparison.
+- **A managed voice testing platform**, which runs closed-source simulations
+  and dashboards as a hosted service. This comparison only covers tools you can
+  install, inspect, and run yourself.
 - **An LLM evaluation framework** that only scores text. If your agent is
   text-first, see our
   [Top 5 LLM evaluation frameworks](/blog/top-5-llm-evaluation-frameworks)
@@ -574,13 +573,14 @@ their own ecosystems.
       ),
     },
     {
-      question: "What about Coval, Hamming, and other voice testing platforms?",
+      question: "Can I run voice evals in CI/CD?",
       answer: (
         <>
-          Coval, Hamming, Cekura, Bluejay, and Roark are closed-source, managed
-          voice testing platforms. They can be a good fit for teams that want
-          hosted dashboards and phone-number testing, but this comparison only
-          covers tools you can install, inspect, and run yourself.
+          Yes. DeepEval runs voice evals through <code>deepeval test run</code>{" "}
+          and pytest, LiveKit Agents through pytest or Vitest, Pipecat Evals
+          through its CLI, and LangWatch through pytest or Vitest. A common
+          pattern is text-mode runs on every pull request and full audio runs
+          nightly or before each release.
         </>
       ),
     },
