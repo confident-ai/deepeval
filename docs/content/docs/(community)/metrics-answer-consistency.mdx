@@ -1,0 +1,83 @@
+---
+id: metrics-answer-consistency
+title: Answer Consistency
+sidebar_label: Answer Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
+
+The answer consistency metric uses LLM-as-a-judge to measure how consistently your LLM application answers the **same input** across repeated runs. It needs no `expected_output`: it compares runs against each other, so it works on data nobody has labelled. `deepeval`'s answer consistency metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `AnswerConsistencyMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics`; import them explicitly from `deepeval.metrics.community` instead. It requires the [`repeatability-evals`](https://github.com/krishna-gogineni-765/repeatability-evals) package: `pip install "repeatability-evals>=0.3.0"`.
+:::
+
+:::note
+Consistency is not correctness. A system that gives the same wrong answer every time scores `1.0`. Use this metric alongside an accuracy metric, and on its own to check that nothing changed when you upgrade a model, a prompt or a retriever.
+:::
+
+## Required Arguments
+
+To use the `AnswerConsistencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `metadata["runs"]`: a list of **at least two** outputs your application produced for this same `input`. `actual_output` should be one of them.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import AnswerConsistencyMetric
+
+# Call your LLM application several times with the same input.
+runs = [
+    "Gold backups are retained for 30 days.",
+    "Retention for gold policies is 30 days.",
+    "Gold policy backups are kept for 90 days.",
+]
+
+metric = AnswerConsistencyMetric()
+test_case = LLMTestCase(
+    input="How long are gold backups retained?",
+    actual_output=runs[0],
+    metadata={"runs": runs},
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason, metric.score_breakdown)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are eight optional parameters when creating an `AnswerConsistencyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing score, defaulted to `0.8`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `max_comparisons`: the number of run pairs to judge. Defaulted to the number of runs (see below).
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `1` for perfection, `0` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `AnswerConsistencyMetric` score is the mean agreement over the judged pairs of runs:
+
+A judge reads the `input` and two runs and rates how closely they agree on five dimensions, each from 1 (completely different) to 5 (identical):
+
+| Dimension           | Weight | Question                                                                  |
+| ------------------- | ------ | ------------------------------------------------------------------------- |
+| `core_facts`        | 0.40   | Do both make the same central claims or answer?                           |
+| `specifics`         | 0.25   | Do names, numbers, dates and identifiers match?                           |
+| `supporting_detail` | 0.15   | Do explanations, examples and caveats agree?                              |
+| `stance`            | 0.10   | Same direction and confidence (answer vs hedge vs refuse)?                |
+| `format`            | 0.10   | Same structure, length and ordering?                                      |
+
+Each pair's score is the weighted mean of the dimensions, rescaled to `[0, 1]`. The judge is told to compare the runs only, not to decide which is more correct. The per-dimension means are available in `metric.score_breakdown`, so you can see _what_ varies between runs, such as formatting that drifts while the facts stay stable.
+
+Comparing every pair of `N` runs takes `N(N-1)/2` judge calls. By default the metric judges a random cycle of `N` pairs, so every run is compared at least twice. Set `max_comparisons` to a larger value, or to `N * (N - 1) // 2` for all pairs.
