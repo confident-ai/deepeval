@@ -565,6 +565,36 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             input_price=0.10 / 1e6,
             output_price=0.50 / 1e6,
         ),
+        "gpt-6-sol-2026-09-22": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.00 / 1e6,
+            output_price=10.00 / 1e6,
+        ),
+        "gpt-6-luna-2026-09-22": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=0.10 / 1e6,
+            output_price=0.50 / 1e6,
+        ),
+        "gpt-6-astra-2026-09-03": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_audio=False,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=10.00 / 1e6,
+            output_price=50.00 / 1e6,
+        ),
         # Audio models take text and audio (no images) and reject any
         # request without audio in it.
         "gpt-audio": make_model_data(
@@ -875,6 +905,15 @@ ANTHROPIC_MODELS_DATA = ModelDataRegistry(
             supports_temperature=False,
             input_price=4.00 / 1e6,
             output_price=20.00 / 1e6,
+        ),
+        "claude-sonnet-5-5": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=True,
+            supports_structured_outputs=True,
+            supports_json=True,
+            supports_temperature=False,
+            input_price=2.00 / 1e6,
+            output_price=10.00 / 1e6,
         ),
         # Standard rate. Anthropic ran an introductory $2/$10 through
         # 2026-08-31; this table has no notion of time-varying pricing, so it

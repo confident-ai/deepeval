@@ -136,7 +136,7 @@ class ARC(DeepEvalBaseBenchmark):
         dataset_attr = dataset_mapping.get(mode)
         if dataset_attr:
             if not hasattr(self, dataset_attr):
-                dataset = load_dataset("ai2_arc", mode.value)
+                dataset = load_dataset("allenai/ai2_arc", mode.value)
                 setattr(self, dataset_attr, dataset)
             else:
                 dataset = getattr(self, dataset_attr)
