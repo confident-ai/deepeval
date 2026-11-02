@@ -514,10 +514,12 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
       answer: (
         <>
           Yes. Define a metric collection on{" "}
-          <a href="https://confident-ai.com">Confident AI</a> and reference it
-          on your <code>@observe</code> decorators. The platform evaluates
-          exported traces asynchronously, so production agents are scored
-          continuously without added latency.
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          and reference it on your <code>@observe</code> decorators. Evals then
+          run asynchronously on every production trace and flag the failing
+          ones, without adding latency to your agent.
         </>
       ),
     },

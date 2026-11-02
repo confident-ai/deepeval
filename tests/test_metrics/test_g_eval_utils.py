@@ -6,6 +6,7 @@ from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.g_eval.utils import (
     CONVERSATIONAL_G_EVAL_API_PARAMS,
     G_EVAL_API_PARAMS,
+    construct_geval_pull_evaluation_params,
     construct_geval_upload_payload,
     construct_non_turns_test_case_string,
     construct_test_case_string,
@@ -143,6 +144,29 @@ def test_conversational_geval_accepts_metadata_and_tags():
     assert "metadata" not in turn_dict
     assert "tags" not in turn_dict
     assert payload["evaluationParams"] == ["metadata", "tags"]
+
+
+def test_conversational_geval_uploads_and_pulls_audio():
+    evaluation_params = [
+        MultiTurnParams.ROLE,
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.AUDIO,
+    ]
+    payload = construct_geval_upload_payload(
+        name="conversational-audio-test",
+        evaluation_params=evaluation_params,
+        g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
+        criteria="criteria",
+        multi_turn=True,
+    )
+
+    assert payload["evaluationParams"] == ["role", "content", "audio"]
+    assert (
+        construct_geval_pull_evaluation_params(
+            payload["evaluationParams"], multi_turn=True
+        )
+        == evaluation_params
+    )
 
 
 def test_conversational_geval_requires_metadata_when_selected():

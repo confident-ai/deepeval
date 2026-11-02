@@ -65,12 +65,10 @@ def construct_test_cases(model: str, prompt_template: str) : List[LLMTestCase]:
 ```
 
 :::info
-You **should definitely try** logging into Confident AI before continuing to the final step. Confident AI allows you to search, filter for, and view metric evaluation results on the web to pick the best hyperparameter combination for your LLM application.
-
-Simply run `deepeval login`:
+Each `evaluate()` call saves a test run with its hyperparameters attached. Switch to the SQLite [local backend](/docs/evaluation-local-backend-storage) if you want to query scores by model or prompt template across every combination:
 
 ```bash
-deepeval login
+deepeval set-local-store sqlite
 ```
 
 :::
@@ -100,20 +98,14 @@ for model in models:
 ```
 
 :::tip
-Remember, we're just using the `AnswerRelevancyMetric` as an example here and you should choose whichever [LLM evaluation metrics](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) based on whatever custom criteria you want to assess your LLM application on.
+Remember, we're just using the `AnswerRelevancyMetric` as an example here and you should choose whichever [LLM evaluation metrics](/docs/metrics-introduction) based on whatever custom criteria you want to assess your LLM application on.
 :::
 
 ## Keeping Track of Hyperparameters in CI/CD
 
 You can also keep track of hyperparameters used during testing in your CI/CD pipelines. This is helpful since you will be able to pinpoint the hyperparameter combination associated with failing test runs.
 
-To begin, login to Confident AI:
-
-```bash
-deepeval login
-```
-
-Then define your test function and log hyperparameters in your test file:
+Define your test function and log hyperparameters in your test file:
 
 ```python title="test_file.py"
 import pytest

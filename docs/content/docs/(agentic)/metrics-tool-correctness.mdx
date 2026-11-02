@@ -11,7 +11,7 @@ languages: [python, typescript]
   referenceless={true}
 />
 
-The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called and if the selection of the tools made by the LLM agent were the most optimal.
+The tool correctness metric is an agentic LLM metric that assesses your AI agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called and if the selection of the tools made by the AI agent were the most optimal.
 
 :::note
 The `ToolCorrectnessMetric` allows you to define the **strictness** of correctness. By default, it considers matching tool names to be correct, but you can also require input parameters and output to match.
@@ -49,7 +49,7 @@ from deepeval import evaluate
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     actual_output="We offer a 30-day full refund at no extra cost.",
-    # Replace this with the tools that was actually used by your LLM agent
+    # Replace this with the tools that was actually used by your AI agent
     tools_called=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery")],
     expected_tools=[ToolCall(name="WebSearch")],
 )
@@ -74,7 +74,7 @@ import { evaluate } from "deepeval";
 const testCase = new LLMTestCase({
   input: "What if these shoes don't fit?",
   actualOutput: "We offer a 30-day full refund at no extra cost.",
-  // Replace this with the tools that was actually used by your LLM agent
+  // Replace this with the tools that was actually used by your AI agent
   toolsCalled: [new ToolCall({ name: "WebSearch" }), new ToolCall({ name: "ToolQuery" })],
   expectedTools: [new ToolCall({ name: "WebSearch" })],
 });
@@ -173,7 +173,7 @@ There are **NINE** optional parameters when creating a `ToolCorrectnessMetric`:
 
 </Switch>
 
-- [Optional] <Term py="available_tools" ts="availableTools"/>: a list of `ToolCall`s that give context on all the tools that were available to your LLM agent. This list is used to evaluate your agent's tool selection capability.
+- [Optional] <Term py="available_tools" ts="availableTools"/>: a list of `ToolCall`s that give context on all the tools that were available to your AI agent. This list is used to evaluate your agent's tool selection capability.
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to a an empty list.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
@@ -285,10 +285,6 @@ console.log(metric.score, metric.reason);
 
 </Switch>
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
-
 ## How Is It Calculated?
 
 You can change how the `ToolCorrectnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
@@ -308,7 +304,7 @@ The **tool correctness metric** score is calculated using the following steps:
 "
 />
 
-- This metric assesses the accuracy of your agent's tool usage by comparing the <Term py="tools_called" ts="toolsCalled"/> by your LLM agent to the list of <Term py="expected_tools" ts="expectedTools"/>. A score of 1 indicates that every tool utilized by your LLM agent were called correctly according to the list of <Term py="expected_tools" ts="expectedTools"/>, <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>, and <Term py="should_exact_match" ts="shouldExactMatch"/>, while a score of 0 signifies that none of the <Term py="tools_called" ts="toolsCalled"/> were called correctly.
+- This metric assesses the accuracy of your agent's tool usage by comparing the <Term py="tools_called" ts="toolsCalled"/> by your AI agent to the list of <Term py="expected_tools" ts="expectedTools"/>. A score of 1 indicates that every tool utilized by your AI agent were called correctly according to the list of <Term py="expected_tools" ts="expectedTools"/>, <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>, and <Term py="should_exact_match" ts="shouldExactMatch"/>, while a score of 0 signifies that none of the <Term py="tools_called" ts="toolsCalled"/> were called correctly.
 
 :::info
 If <Term py="should_exact_match" ts="shouldExactMatch"/> is not specified and `ToolCallParams.INPUT_PARAMETERS` is included in <Term py="evaluation_params" ts="evaluationParams"/>, correctness may be a percentage score based on the proportion of correct input parameters (assuming the name and output are correct, if applicable).

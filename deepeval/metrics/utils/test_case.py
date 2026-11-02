@@ -32,6 +32,23 @@ def _reject_multimodal_without_llm(metric, model: Optional[DeepEvalBaseLLM]):
         )
 
 
+def _check_audio_model(metric, model: Optional[DeepEvalBaseLLM], audio: bool):
+    # Fail before any request when the judge can't take what the metric sends.
+    if audio:
+        _reject_multimodal_without_llm(metric, model)
+    if not isinstance(model, DeepEvalBaseLLM):
+        return
+    name = getattr(metric, "__name__", type(metric).__name__)
+    if audio and model.supports_audio() is False:
+        error_str = f"The evaluation model {model.name} does not accept audio input, which the '{name}' metric sends. Use a model that supports audio input."
+    elif not audio and model.requires_audio():
+        error_str = f"The evaluation model {model.name} only accepts requests that include audio. Use a model that also takes text-only requests."
+    else:
+        return
+    metric.error = error_str
+    raise ValueError(error_str)
+
+
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
     test_case_params: List[MultiTurnParams],
@@ -40,7 +57,10 @@ def check_conversational_test_case_params(
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
     require_mcp_servers: bool = False,
+    audio: bool = False,
 ):
+    _check_audio_model(metric, model, audio)
+
     if multimodal:
         _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
@@ -114,6 +134,13 @@ def check_conversational_test_case_params(
         turn.provider_transcript is not None for turn in test_case.turns
     ):
         error_str = f"No turn in the conversational test case has a 'provider_transcript', which the '{metric.__name__}' metric needs. Only voice connectors that report the agent's own transcription of the caller populate it, so a phone call or a text conversation will never have one."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if MultiTurnParams.AUDIO in test_case_params and not any(
+        turn.audio is not None for turn in test_case.turns
+    ):
+        error_str = f"No turn in the conversational test case has 'audio', which the '{metric.__name__}' metric needs. Voice simulations attach each turn's clip as `Turn.audio`; for a recorded call, cut the recording into one clip per turn and attach them with `Audio.from_bytes(..., start_time=...)`."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 

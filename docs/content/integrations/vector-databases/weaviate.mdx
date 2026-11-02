@@ -21,7 +21,7 @@ To learn more about leveraging Weaviate as your retrieval engine, [visit this pa
     flexDirection: "column",
   }}
 >
-  <ImageDisplayer src="https://weaviate.io/assets/images/rag-base-00430efd1764c948a95b4d1bbd1e19a9.png" />
+  <ImageDisplayer id="diagrams/external/reference/weaviate-rag-pipeline" />
   <div
     style={{
       fontSize: "13px",
@@ -262,5 +262,5 @@ for vectorizer in ["all-MiniLM-L6-v2", "bge-small-en", "nomic-embed-text-v1"]:
 After tuning your Weaviate retriever, monitor improvements in **Contextual Precision**, **Contextual Recall**, and **Contextual Relevancy** to determine the best hyperparameter combination.
 
 :::tip
-For structured tracking of retrieval performance and hyperparameter comparisons, [Confident AI](https://www.confident-ai.com/) provides real-time evaluation analysis.
+Once the tuned retriever is live, [Confident AI](https://www.confident-ai.com/products/llm-observability) runs evals on every production trace and flags the failing ones, so you know when your Weaviate setup needs another tuning pass.
 :::

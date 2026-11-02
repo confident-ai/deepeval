@@ -5,8 +5,6 @@ sidebar_label: G-Eval
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 <MetricTagsDisplayer singleTurn={true} multiTurn={true} custom={true} />
 
 G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
@@ -278,7 +276,7 @@ This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-ev
 <Only id="python">
 
 :::tip
-You can upload your G-Eval metrics to [Confident AI](https://app.confident-ai.com/) and use them as custom evaluation metrics. To upload a metric simply call the `upload` method of a metric instance:
+You can upload a G-Eval metric to Confident AI as a custom metric by calling the `upload` method of a metric instance:
 
 ```python
 ...
@@ -701,17 +699,13 @@ console.log(professionalismMetric.score, professionalismMetric.reason);
 </Tab>
 </Tabs>
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
-
 ## What is G-Eval?
 
 G-Eval is a framework originally from the [paper](https://arxiv.org/abs/2303.16634) "NLG Evaluation using GPT-4 with Better Human Alignment" that uses LLMs to evaluate LLM outputs (aka. LLM-Evals), and is one the best ways to create task-specific metrics.
 
 The G-Eval algorithm first generates a series of evaluation steps for chain of thoughts (CoTs) prompting before using the generated steps to determine the final score via a "form-filling paradigm" (which is just a fancy way of saying G-Eval requires different test case parameters for evaluation depending on the generated steps).
 
-<ImageDisplayer src={ASSETS.gEvalAlgorithm} alt="G-Eval Algorithm" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-algorithm" />
 
 After generating a series of evaluation steps, G-Eval will:
 
@@ -720,12 +714,12 @@ After generating a series of evaluation steps, G-Eval will:
 3. Take the probabilities of the output tokens from the LLM to normalize the score and take their weighted summation as the final result.
 
 :::info
-We highly recommend everyone to read [this article](https://confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) on LLM evaluation metrics. It's written by the founder of `deepeval` and explains the rationale and algorithms behind the `deepeval` metrics, including G-Eval.
+For more on how LLM judges like G-Eval score outputs, and how to keep them reliable, read the post on [LLM-as-a-judge techniques](/blog/llm-as-a-judge). For worked criteria, see the [G-Eval examples guide](/guides/guides-g-eval-examples).
 :::
 
 Here are the results from the paper, which shows how G-Eval outperforms all traditional, non-LLM evals that were mentioned earlier in this article:
 
-<ImageDisplayer src={ASSETS.gEvalResults} alt="G-Eval Results" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-summeval-correlations" />
 
 :::note
 Although G-Eval is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric`](/docs/metrics-dag) instead.

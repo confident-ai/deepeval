@@ -6,6 +6,7 @@ import { registerGateCommand } from "@/cli/commands/gate";
 import { registerInspectCommand } from "@/cli/commands/inspect";
 import { registerProviderCommands } from "@/cli/commands/providers";
 import { registerSettingsCommands } from "@/cli/commands/settings";
+import { registerSetupCommand } from "@/cli/commands/setup";
 import { registerTestCommands } from "@/cli/commands/test";
 import { registerTypeSafeCommands } from "@/cli/commands/typesafe";
 import { registerViewCommand } from "@/cli/commands/view";
@@ -28,6 +29,7 @@ export function buildProgram(): Command {
   registerProviderCommands(program);
   registerTypeSafeCommands(program);
   registerAuthCommands(program);
+  registerSetupCommand(program);
   registerViewCommand(program);
   registerInspectCommand(program);
 

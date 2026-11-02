@@ -1,7 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Any, Optional, Tuple, Union, Dict, List
 import warnings
-from deepeval.test_case import MLLMImage
 from pydantic import BaseModel, SecretStr
 from openai import (
     OpenAI,
@@ -9,18 +8,24 @@ from openai import (
 )
 
 from deepeval.errors import DeepEvalError
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.tracing.context import update_llm_span, update_current_span
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.multimodal import (
+    ensure_audio,
+    to_openai_content,
+)
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
     require_costs,
     require_secret_api_key,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    prompt_audio_tokens,
+    token_cost,
 )
 from deepeval.models.retry_policy import (
     create_retry_decorator,
@@ -148,15 +153,14 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     @retry_openai
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -175,6 +179,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -192,6 +197,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -204,7 +210,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -215,15 +223,14 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     @retry_openai
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
 
         messages = [{"role": "user", "content": content}]
 
@@ -242,6 +249,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return structured_output, cost
@@ -259,6 +267,7 @@ class OpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 self._update_llm_span_from_completion(completion, messages)
                 return schema.model_validate(json_output), cost
@@ -271,7 +280,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         self._update_llm_span_from_completion(completion, messages)
         if schema:
@@ -296,9 +307,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
-        is_multimodal = check_if_multimodal(prompt)
 
         if self.supports_log_probs() is False:
             raise DeepEvalError(
@@ -309,11 +320,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
-        if is_multimodal:
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = client.chat.completions.create(
             model=self.name,
@@ -325,7 +332,11 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
@@ -335,9 +346,9 @@ class OpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         model_name = self.name
-        is_multimodal = check_if_multimodal(prompt)
 
         if self.supports_log_probs() is False:
             raise DeepEvalError(
@@ -348,11 +359,7 @@ class OpenAIModel(DeepEvalBaseLLM):
 
         top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
-        if is_multimodal:
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         completion = await client.chat.completions.create(
             model=self.name,
@@ -364,21 +371,25 @@ class OpenAIModel(DeepEvalBaseLLM):
         )
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
         self._update_llm_span_from_completion(completion, messages)
 
         return completion, cost
 
     @retry_openai
     def generate_samples(
-        self, prompt: str, n: int, temperature: float
+        self,
+        prompt: str,
+        n: int,
+        temperature: float,
+        audio: Optional[List[Audio]] = None,
     ) -> list[str]:
         client = self.load_model(async_mode=False)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
         messages = [{"role": "user", "content": content}]
         response = client.chat.completions.create(
             model=self.name,
@@ -402,17 +413,11 @@ class OpenAIModel(DeepEvalBaseLLM):
         return {"temperature": self.temperature}
 
     def calculate_cost(
-        self, input_tokens: int, output_tokens: int
-    ) -> Optional[float]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            # Carry token counts alongside the cost so metric runs can surface
-            # input/output token usage (EvaluationCost subclasses float, so every
-            # existing `output, cost = generate(...)` caller is unaffected).
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
+    ) -> Optional[EvaluationCost]:
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     #########################
     # Capabilities          #
@@ -426,6 +431,12 @@ class OpenAIModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
+
+    def requires_audio(self) -> Union[bool, None]:
+        return self.model_data.requires_audio
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         """
@@ -444,34 +455,12 @@ class OpenAIModel(DeepEvalBaseLLM):
     # Model #
     #########
 
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    data_uri = (
-                        f"data:{element.mimeType};base64,{element.dataBase64}"
-                    )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
-        return content
+    def _prompt_content(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        if self.requires_audio():
+            ensure_audio(audio, self.name)
+        return to_openai_content(prompt, audio)
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:

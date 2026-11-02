@@ -1,0 +1,61 @@
+{
+  "name": "deepeval-setup",
+  "version": "0.1.0",
+  "description": "Interactive DeepEval evaluation setup wizard",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/confident-ai/deepeval.git",
+    "directory": "setup-wizard"
+  },
+  "type": "module",
+  "bin": {
+    "deepeval-setup": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rolldown -c",
+    "build:sea": "node scripts/build-sea.mjs",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "wizard:sandbox": "node dist/cli.js --project-dir examples/agent-sandbox"
+  },
+  "keywords": [
+    "confident-ai",
+    "deepeval",
+    "evaluation",
+    "cli"
+  ],
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@clack/prompts": "latest",
+    "clipboardy": "latest",
+    "open": "latest",
+    "picocolors": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@types/node": "latest",
+    "eslint": "latest",
+    "postject": "latest",
+    "prettier": "latest",
+    "rolldown": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest",
+    "vitest": "latest"
+  }
+}

@@ -1,0 +1,14 @@
+The transcription accuracy score is {{ score }}, which is the proportion of recorded turns whose transcript accounts for what was actually said on the call, judged for both the caller and the voice agent.
+
+These are the turns whose transcript did not account for what was heard: {{ mistranscriptions }}
+
+Explain why the score is {{ score }} by naming each failed turn, saying whether it was the caller or the agent, quoting the words where they are given, and keeping the time in seconds where one is given so the moment can be found in the recording. Say plainly that these are transcription failures — the caller being treated as silent, or sounds the agent did not mean to make — rather than mistakes in the agent's reasoning. If the list is empty, say the transcript accounted for everything heard on the call.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key. No words or explanation is needed.
+**
+
+Example JSON:
+{
+  "reason": "The score is <transcription_accuracy_score> because <your_reason>."
+}

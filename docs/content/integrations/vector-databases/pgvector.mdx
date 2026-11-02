@@ -5,8 +5,6 @@ sidebar_label: PGVector
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 ## Quick Summary
 
 PGVector is an open-source PostgreSQL extension that enables **semantic search** and similarity-based retrieval directly within PostgreSQL, making it a scalable, SQL-native solution for LLM applications and RAG pipelines. Learn more about PGVector [here](https://github.com/pgvector/pgvector).
@@ -85,25 +83,7 @@ for chunk in document_chunks:
 conn.commit()
 ```
 
-PGVector functions as the **retrieval engine** in your RAG pipeline, efficiently fetching relevant document chunks to provide your LLM generator with grounded context. The diagram below illustrates how PGVector integrates into your RAG pipeline.
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "column",
-  }}
->
-  <ImageDisplayer src={ASSETS.pgvector} />
-  <div
-    style={{
-      fontSize: "13px",
-    }}
-  >
-    Source: HexaCluster
-  </div>
-</div>
+PGVector functions as the **retrieval engine** in your RAG pipeline, efficiently fetching relevant document chunks to provide your LLM generator with grounded context.
 
 ## Evaluating PGVector Retrieval
 
@@ -222,5 +202,5 @@ Since **precision** measures how well the retrieved contexts align with the quer
 After refining your retrieval strategy—whether by adjusting embedding models or tuning retrieval parameters—it's crucial to generate new test cases and reassess performance. Focus on **Contextual Precision**, as improvements here indicate a more accurate and relevant retrieval process.
 
 :::info
-For systematic retrieval evaluation and embedding model comparisons, use [Confident AI](https://www.confident-ai.com/).
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) catches the failing production traces from your pgvector pipeline and turns them into a dataset to rerun these metrics against.
 :::
