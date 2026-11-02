@@ -30,7 +30,6 @@ from deepeval.tracing import (
 )
 from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
