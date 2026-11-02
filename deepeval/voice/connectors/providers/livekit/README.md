@@ -54,7 +54,7 @@ instead — every session runs through a connector.
 | Sending text to the agent (`lk.chat`) | Not covered | [Text and transcriptions](https://docs.livekit.io/agents/multimodality/text/) |
 | RPC to the agent | Not covered | [RPC](https://docs.livekit.io/home/client/data/rpc/) |
 | In-process `AgentSession` | Not covered | [Sessions](https://docs.livekit.io/agents/logic/sessions/) |
-| SIP participants | Out of scope | [SIP](https://docs.livekit.io/sip/) |
+| Outbound SIP calls (phone numbers and SIP addresses) | Covered | [Outbound calls](https://docs.livekit.io/telephony/making-calls/outbound-calls) |
 | `session.run()` behavioral tests | Out of scope | [Test framework](https://docs.livekit.io/agents/start/testing/test-framework/) |
 
 LiveKit's own test helpers are text-only by design and never connect to a room,

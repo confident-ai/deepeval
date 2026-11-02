@@ -235,6 +235,15 @@ The preset matters more everywhere else, because silence is the only evidence th
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
 ::::
 
+## Phone Calls
+
+When your agent answers a phone number or a SIP address, `deepeval` can call it the way a real caller would, through your own telephony account:
+
+- [`LiveKitPhoneConnector`](/integrations/voice-agent-connectors/livekit#calling-a-phone-number) calls a phone number through an outbound SIP trunk on your LiveKit project.
+- [`LiveKitSIPConnector`](/integrations/voice-agent-connectors/livekit#calling-a-sip-address) calls a SIP address directly.
+
+Each simulated conversation places its own call, so phone simulations run in parallel like any other.
+
 ## Hanging Up Silent Calls
 
 A call where nobody speaks (an agent that crashed, a line that went dead) otherwise runs until the turn ceiling gives up, again and again. Mix `SilenceTimeoutMixin` into any connector to hang up once neither side has spoken for `silence_timeout_s` seconds:

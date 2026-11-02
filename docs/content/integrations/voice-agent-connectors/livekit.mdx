@@ -115,3 +115,66 @@ Concurrent conversations each get their own session, cloned from the connector y
 :::
 
 For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).
+
+### Calling a Phone Number
+
+When your agent answers a phone line, `deepeval` can call it like a real caller would. `LiveKitPhoneConnector` places the call through an [outbound SIP trunk](https://docs.livekit.io/telephony/making-calls/outbound-trunk) on your LiveKit project, waits for your agent to pick up, and hangs up when the conversation ends:
+
+```python
+from deepeval.voice import LiveKitPhoneConnector, VoiceConfig
+
+voice_config = VoiceConfig(
+    connector=LiveKitPhoneConnector(
+        "+14155550100",
+        trunk_id="ST_xxxxxxxxxxxx",
+        caller_id="+14155550199",
+    ),
+    ...,
+)
+```
+
+There is **ONE** mandatory and **ELEVEN** optional parameters when creating a `LiveKitPhoneConnector`, on top of the `LiveKitConnector` parameters above:
+
+- `phone_number`: A string phone number in E.164 format, with the country code, such as `"+14155550100"`.
+- [Optional] `trunk_id`: A string id of the outbound trunk to call through. Defaults to `LIVEKIT_SIP_OUTBOUND_TRUNK_ID`, and is required unless `trunk_uri` is set.
+- [Optional] `trunk_uri`: A string SIP address of a trunk to call through without configuring it on LiveKit first, such as `"sip:outbound@trunk.example.com"`. Defaulted to `None`.
+- [Optional] `trunk_username` and `trunk_password`: Strings the `trunk_uri` trunk authenticates with. Defaulted to `None`.
+- [Optional] `caller_id`: A string number your agent sees calling. Defaulted to `None`, which uses the trunk's own number.
+- [Optional] `headers`: A dictionary of SIP headers sent with the call, such as `{"X-Test-Case": "refund-1"}`. Defaulted to `{}`.
+- [Optional] `media_encryption`: A `SipMediaEncryption` (`DISABLED`, `ALLOWED` or `REQUIRED`) deciding whether the call audio is encrypted (SRTP). Defaulted to `SipMediaEncryption.DISABLED`.
+- [Optional] `ring_timeout_s`: An integer number of seconds to let the phone ring before giving up. Defaulted to `45`.
+- [Optional] `max_call_duration_s`: An integer number of seconds after which LiveKit ends the call. Defaulted to `1800`.
+- [Optional] `dial_interval_s`: A float number of seconds to keep between dials. Defaulted to `1.0`.
+- [Optional] `silence_timeout_s`: A float number of seconds without speech after which the call is [hung up](/docs/conversation-simulator-voice-connectors#hanging-up-silent-calls). Defaulted to `None`.
+
+Phone audio carries no transcript and phone agents pause longer than web ones, so the connector listens on the `"patient"` [turn detection](/docs/conversation-simulator-voice-connectors#turn-detection) preset and transcribes every reply with your speech-to-text model.
+
+If the call can't be placed, the run stops with the reason, such as a busy line, no answer, or a number that can't be reached.
+
+### Calling a SIP Address
+
+An agent reachable at a SIP address (for example a Vapi, Retell or self-hosted SIP endpoint) needs no phone number or trunk. `LiveKitSIPConnector` calls the address directly:
+
+```python
+from deepeval.voice import LiveKitSIPConnector, VoiceConfig
+
+voice_config = VoiceConfig(
+    connector=LiveKitSIPConnector(
+        "sip:support@sip.example.com",
+        username="deepeval",
+        password="your-sip-password",
+    ),
+    ...,
+)
+```
+
+`LiveKitSIPConnector` takes the same optional parameters as `LiveKitPhoneConnector` except the trunk ones, plus:
+
+- `sip_uri`: A string SIP address such as `"sip:support@sip.example.com"`. Add a port (`sip:support@sip.example.com:5060`) or a transport (`;transport=tcp`) when your endpoint needs them, or use `sips:` for TLS.
+- [Optional] `username` and `password`: Strings for SIP digest authentication, when your endpoint asks for it. Defaulted to `None`.
+- [Optional] `transport`: A `SipTransport` (`UDP`, `TCP` or `TLS`) used when the address doesn't name one. Defaulted to `SipTransport.UDP`.
+- [Optional] `caller_id`: A string your agent sees as the caller. Defaulted to `"deepeval"`, because LiveKit won't place a SIP call without one.
+
+### Parallel Phone Calls
+
+Every simulated conversation dials its own call into a room of its own, so up to `max_concurrent` calls run at once. Dials are spaced `dial_interval_s` apart across all phone and SIP connectors in the process, because carriers reject calls placed too quickly (Twilio allows one new call per second by default). Make sure your trunk allows as many concurrent calls as you run.
