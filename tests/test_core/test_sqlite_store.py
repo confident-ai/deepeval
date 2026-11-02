@@ -849,7 +849,11 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        # Normalise whitespace before checking: some environments inject
+        # line-breaks between tokens of the formatted warning so a literal
+        # `disk I/O error` substring match is brittle.
+        err = " ".join(capsys.readouterr().err.split())
+        assert "disk I/O error" in err
         assert mgr.last_saved_path is None
 
 

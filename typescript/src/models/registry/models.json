@@ -8,6 +8,7 @@
     "gpt-3.5-turbo": {
       "supportsLogProbs": true,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 5e-07,
@@ -16,6 +17,7 @@
     "gpt-3.5-turbo-0125": {
       "supportsLogProbs": true,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 5e-07,
@@ -24,6 +26,7 @@
     "gpt-3.5-turbo-1106": {
       "supportsLogProbs": true,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-06,
@@ -32,6 +35,7 @@
     "gpt-4-0125-preview": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -40,6 +44,7 @@
     "gpt-4-1106-preview": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -48,6 +53,7 @@
     "gpt-4-turbo": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -56,6 +62,7 @@
     "gpt-4-turbo-2024-04-09": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -64,6 +71,7 @@
     "gpt-4-turbo-preview": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -72,6 +80,7 @@
     "gpt-4o": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-06,
@@ -80,6 +89,7 @@
     "gpt-4": {
       "supportsLogProbs": true,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-05,
@@ -88,6 +98,7 @@
     "gpt-4o-2024-05-13": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-06,
@@ -96,6 +107,7 @@
     "gpt-4o-2024-08-06": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-06,
@@ -104,6 +116,7 @@
     "gpt-4o-2024-11-20": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-06,
@@ -112,6 +125,7 @@
     "gpt-4o-mini": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.5e-07,
@@ -120,6 +134,7 @@
     "gpt-4o-mini-2024-07-18": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.5e-07,
@@ -128,6 +143,7 @@
     "gpt-4-32k": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": true,
       "inputPrice": 6e-05,
@@ -136,6 +152,7 @@
     "gpt-4-32k-0613": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "inputPrice": 6e-05,
@@ -144,6 +161,7 @@
     "gpt-4.1": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2e-06,
@@ -152,6 +170,7 @@
     "gpt-4.1-mini": {
       "supportsLogProbs": true,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 4.0000000000000003e-07,
@@ -160,6 +179,7 @@
     "gpt-4.1-nano": {
       "supportsLogProbs": true,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.0000000000000001e-07,
@@ -168,6 +188,7 @@
     "gpt-4.5-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "inputPrice": 7.5e-05,
@@ -176,6 +197,7 @@
     "gpt-4.5-preview-2025-02-27": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 7.5e-05,
@@ -184,6 +206,7 @@
     "o1": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.5e-05,
@@ -193,6 +216,7 @@
     "o1-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.5e-05,
@@ -201,6 +225,7 @@
     "o1-2024-12-17": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.5e-05,
@@ -210,6 +235,7 @@
     "o1-preview-2024-09-12": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "inputPrice": 1.5e-05,
@@ -218,6 +244,7 @@
     "o1-mini": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "supportsTemperature": false
@@ -225,6 +252,7 @@
     "o1-mini-2024-09-12": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "supportsTemperature": false
@@ -232,6 +260,7 @@
     "o3-mini": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.1e-06,
@@ -241,6 +270,7 @@
     "o3-mini-2025-01-31": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.1e-06,
@@ -250,6 +280,7 @@
     "o4-mini": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.1e-06,
@@ -259,6 +290,7 @@
     "o4-mini-2025-04-16": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.1e-06,
@@ -268,6 +300,7 @@
     "gpt-5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.25e-06,
@@ -277,6 +310,7 @@
     "gpt-5-2025-08-07": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.25e-06,
@@ -286,6 +320,7 @@
     "gpt-5-mini": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-07,
@@ -295,6 +330,7 @@
     "gpt-5-mini-2025-08-07": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 2.5e-07,
@@ -304,6 +340,7 @@
     "gpt-5-nano": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 5.0000000000000004e-08,
@@ -313,6 +350,7 @@
     "gpt-5-nano-2025-08-07": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 5.0000000000000004e-08,
@@ -322,6 +360,7 @@
     "gpt-5-chat-latest": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": false,
       "supportsJson": false,
       "inputPrice": 1.25e-06,
@@ -330,6 +369,7 @@
     "gpt-5.1": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.25e-06,
@@ -339,6 +379,7 @@
     "gpt-5.2": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 1.75e-06,
@@ -349,6 +390,7 @@
       "supportsLogProbs": true,
       "maxLogProbs": 5,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2.5e-06,
@@ -359,6 +401,7 @@
       "supportsLogProbs": true,
       "maxLogProbs": 5,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2.5e-06,
@@ -368,6 +411,7 @@
     "gpt-5.4-mini": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false,
       "inputPrice": 7.5e-07,
@@ -377,6 +421,7 @@
     "gpt-5.5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
@@ -386,6 +431,7 @@
     "gpt-5.5-2026-04-23": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-06,
@@ -395,6 +441,7 @@
     "gpt-5.6-sol": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 4e-06,
@@ -404,6 +451,7 @@
     "gpt-5.6-terra": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
@@ -413,6 +461,7 @@
     "gpt-5.6-luna": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2.0000000000000002e-07,
@@ -422,6 +471,7 @@
     "gpt-6-astra": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1e-05,
@@ -431,6 +481,7 @@
     "gpt-6-sol": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
@@ -440,11 +491,60 @@
     "gpt-6-luna": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.0000000000000001e-07,
       "outputPrice": 5e-07,
       "supportsTemperature": false
+    },
+    "gpt-audio": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 2.5e-06,
+      "audioInputPrice": 3.2e-05,
+      "outputPrice": 1e-05
+    },
+    "gpt-audio-2025-08-28": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 2.5e-06,
+      "audioInputPrice": 3.2e-05,
+      "outputPrice": 1e-05
+    },
+    "gpt-audio-1.5": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 2.5e-06,
+      "audioInputPrice": 3.2e-05,
+      "outputPrice": 1e-05
+    },
+    "gpt-audio-mini": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 6e-07,
+      "audioInputPrice": 1e-05,
+      "outputPrice": 2.4e-06
+    },
+    "gpt-audio-mini-2025-10-06": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 6e-07,
+      "audioInputPrice": 1e-05,
+      "outputPrice": 2.4e-06
+    },
+    "gpt-audio-mini-2025-12-15": {
+      "supportsMultimodal": false,
+      "supportsAudio": true,
+      "requiresAudio": true,
+      "inputPrice": 6e-07,
+      "audioInputPrice": 1e-05,
+      "outputPrice": 2.4e-06
     }
   },
   "anthropic": {
@@ -785,6 +885,7 @@
     "gemini-1.5-pro": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.25e-06,
@@ -793,6 +894,7 @@
     "gemini-1.5-pro-002": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.25e-06,
@@ -801,6 +903,7 @@
     "gemini-1.5-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-08,
@@ -809,6 +912,7 @@
     "gemini-1.5-flash-002": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-08,
@@ -817,6 +921,7 @@
     "gemini-1.5-flash-8b": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3.75e-08,
@@ -825,6 +930,7 @@
     "gemini-2.0-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-07,
@@ -833,6 +939,7 @@
     "gemini-2.0-flash-lite": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-08,
@@ -841,30 +948,37 @@
     "gemini-2.5-pro": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.25e-06,
+      "audioInputPrice": 1.25e-06,
       "outputPrice": 1e-05
     },
     "gemini-2.5-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-07,
+      "audioInputPrice": 1e-06,
       "outputPrice": 2.5e-06
     },
     "gemini-2.5-flash-lite": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.0000000000000001e-07,
+      "audioInputPrice": 3e-07,
       "outputPrice": 4.0000000000000003e-07
     },
     "gemini-3-pro": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
@@ -874,6 +988,7 @@
     "gemini-3-pro-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
@@ -883,24 +998,29 @@
     "gemini-3.1-pro-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2e-06,
+      "audioInputPrice": 2e-06,
       "outputPrice": 1.2e-05,
       "supportsTemperature": false
     },
     "gemini-3.6-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-07,
+      "audioInputPrice": 7.5e-07,
       "outputPrice": 3.75e-06,
       "supportsTemperature": false
     },
     "gemini-3.7-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-07,
@@ -910,15 +1030,18 @@
     "gemini-3.8-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 7.5e-07,
+      "audioInputPrice": 7.5e-07,
       "outputPrice": 3.75e-06,
       "supportsTemperature": false
     },
     "gemini-3.5-flash": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 1.5e-06,
@@ -928,33 +1051,40 @@
     "gemini-3.5-flash-lite": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 3e-07,
+      "audioInputPrice": 3e-07,
       "outputPrice": 2.5e-06,
       "supportsTemperature": false
     },
     "gemini-3-flash-preview": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-07,
+      "audioInputPrice": 1e-06,
       "outputPrice": 3e-06,
       "supportsTemperature": false
     },
     "gemini-3.1-flash-lite": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": true,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 2.5e-07,
+      "audioInputPrice": 5e-07,
       "outputPrice": 1.5e-06,
       "supportsTemperature": false
     },
     "gemini-pro": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-07,
@@ -963,6 +1093,7 @@
     "gemini-pro-vision": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": true,
       "inputPrice": 5e-07,
@@ -1859,144 +1990,168 @@
     "anthropic.claude-3-opus-20240229-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-3-sonnet-20240229-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-opus-4-20250514-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-opus-4-1-20250805-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-sonnet-4-20250514-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-sonnet-4-5-20250929-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "anthropic.claude-haiku-4-5-20251001-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.titan-text-express-v1": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.titan-text-premier-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.nova-micro-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.nova-lite-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.nova-pro-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "amazon.nova-premier-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "meta.llama4-maverick-17b-instruct-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "meta.llama4-maverick-17b-instruct-128k-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "meta.llama4-scout-17b-instruct-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "meta.llama4-scout-17b-instruct-128k-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "mistral.mistral-large-2407-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "mistral.mistral-large-2411-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "mistral.pixtral-large-2411-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "mistral.pixtral-large-2502-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "mistral.pixtral-large-2511-v1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "openai.gpt-oss-20b-1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     },
     "openai.gpt-oss-120b-1:0": {
       "supportsLogProbs": false,
       "supportsMultimodal": false,
+      "supportsAudio": false,
       "supportsStructuredOutputs": true,
       "supportsJson": false
     }

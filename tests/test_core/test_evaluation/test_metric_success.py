@@ -17,7 +17,6 @@ from deepeval.metrics import (
     TurnRelevancyMetric,
 )
 
-
 INHERITED_METRICS = [
     DAGMetric,
     ExactMatchMetric,

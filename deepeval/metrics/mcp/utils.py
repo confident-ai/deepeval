@@ -107,7 +107,17 @@ def turn_mcp_interaction_text(turn) -> str:
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            sc = getattr(tool.result, "structuredContent", None)
+            if sc is not None and "result" in sc:
+                result = sc["result"]
+            else:
+                # Fallback: extract text from content (MCP SDK API varies)
+                content = getattr(tool.result, "content", None)
+                if content and len(content) > 0:
+                    first = content[0]
+                    result = getattr(first, "text", str(first))
+                else:
+                    result = str(tool.result)
         else:
             args = tool.input_parameters
             result = tool.output

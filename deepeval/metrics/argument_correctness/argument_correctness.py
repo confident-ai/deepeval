@@ -34,7 +34,6 @@ from deepeval.metrics.argument_correctness.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 ArgumentCorrectnessTemplate = make_template_class("ArgumentCorrectnessMetric")
 
 

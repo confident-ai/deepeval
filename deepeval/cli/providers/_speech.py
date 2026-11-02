@@ -14,7 +14,6 @@ from deepeval.cli.utils import (
 from deepeval.config.settings import get_settings
 from deepeval.key_handler import SpeechKeyValues
 
-
 # provider -> (display name, API key setting)
 _SPEECH_PROVIDER_INFO = {
     "openai": ("OpenAI", "OPENAI_API_KEY"),
