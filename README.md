@@ -209,7 +209,7 @@ DeepEval plugs into any LLM framework — OpenAI Agents, LangChain, CrewAI, and 
 
 - Failing traces surface before anyone has written an eval for them, clustered into failure modes, with user sentiment and behavior across traces.
 - Failing traces route to the right annotators and become goldens, so production issues turn into your next eval.
-- For enterprise teams, one system for AI quality: evals, monitoring, human annotation, and voice observability, with governance as release gates.
+- For enterprise teams, one system for AI quality: evals, monitoring, human annotation, and voice-native observability, with governance as release gates.
 - Prefer to stay in your editor? Inspect failing traces and pull the datasets built from them in Claude Code or Cursor through Confident AI's [MCP server](https://github.com/confident-ai/confident-mcp-server).
 
 <p align="center">

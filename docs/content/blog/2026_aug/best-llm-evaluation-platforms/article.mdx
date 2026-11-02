@@ -137,7 +137,7 @@ observability. Platform teams define what "good" means once, and
 it as release gates across every AI project, whatever stack each team is on —
 blocking anything that fails its evals before it ships, and holding that bar
 every day the app is live. Voice agents sit inside the same standard:
-[voice observability](https://www.confident-ai.com/products/voice-ai) scores every production call and shows
+[voice-native observability](https://www.confident-ai.com/products/voice-ai) scores every production call and shows
 which turn went wrong.
 
 ### Key features
@@ -429,8 +429,9 @@ dashboard.
 - **Need one standard enforced across many teams?** Only Confident AI has an
   AI governance layer — release gates that block anything failing its evals,
   before launch and continuously in production.
-- **Running voice agents in production?** Confident AI monitors live calls
-  turn by turn, alongside your text agents, without a separate voice vendor.
+- **Running voice agents in production?** Confident AI has voice-native
+  monitoring: live calls scored turn by turn, alongside your text agents,
+  without a separate voice vendor.
 - **Must self-host on day one?** Langfuse is the only MIT-licensed, fully
   self-hostable option here.
 - **Evaluating at scale?** Compare trace costs: Confident AI is $1/GB-month
@@ -551,10 +552,10 @@ dashboard.
       ),
     },
     {
-      question: "Do I need a separate tool for voice agent monitoring?",
+      question: "Do I need a separate tool to monitor voice agents?",
       answer: (
         <>
-          On most platforms, yes. Confident AI has native voice observability:
+          On most platforms, yes. Confident AI has voice-native observability:
           it scores every production call, classifies calls into failure modes,
           and shows which turn went wrong, in the same place as your text
           agents.

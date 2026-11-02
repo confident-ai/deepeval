@@ -27,7 +27,7 @@ const ROWS = [
     deepeval: "Developer-mediated annotation",
   },
   {
-    confident: "Voice agents monitored call by call in production",
+    confident: "Voice-native monitoring of every production call",
     deepeval: "Voice agents evaluated before release",
   },
   {
