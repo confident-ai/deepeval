@@ -6,7 +6,7 @@ import type { ModelNamespace } from "@/models/registry";
 
 export type GrokModelOptions = OpenAICompatibleModelOptions;
 
-const DEFAULT_GROK_MODEL = "grok-3";
+const DEFAULT_GROK_MODEL = "grok-4.3";
 const GROK_BASE_URL = "https://api.x.ai/v1";
 
 /**

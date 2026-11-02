@@ -7,7 +7,7 @@ from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmarkResult,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
+from .template import GSM8KTemplate
 from deepeval.benchmarks.schema import NumberSchema
 from deepeval.telemetry import capture_benchmark_run
 
@@ -157,7 +157,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("gsm8k", "main")
+            dataset = load_dataset("openai/gsm8k", "main")
             self.dataset = dataset
 
         # Construct example dataset for n_shot inference
