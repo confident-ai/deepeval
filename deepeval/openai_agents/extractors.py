@@ -98,6 +98,8 @@ def update_span_properties_from_response_span_data(
         return
     # Extract usage tokens
     usage = response.usage
+    input_tokens = None
+    output_tokens = None
     cached_input_tokens = None
     ouptut_reasoning_tokens = None
     if usage:
