@@ -15,6 +15,7 @@ from deepeval.voice.connectors.providers import (
     SipMediaEncryption,
     SipTransport,
     PipecatConnector,
+    TwilioConnector,
     VapiConnector,
 )
 
@@ -34,5 +35,6 @@ __all__ = [
     "WebRTCConnector",
     "SilenceTimeoutMixin",
     "PipecatConnector",
+    "TwilioConnector",
     "VapiConnector",
 ]
