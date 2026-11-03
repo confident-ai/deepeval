@@ -17,7 +17,7 @@ class TheGridModel(DeepEvalOpenAICompatibleModel):
     accounting all come from ``DeepEvalOpenAICompatibleModel``; this class only
     resolves configuration.
 
-    Model names are *capability tiers* rather than a specific lab's model name —
+    Model names are *capability tiers* rather than a specific lab's model name:
     ``text-standard``, ``code-prime`` and ``agent-max`` each route to a current
     model for that tier. ``GET https://api.thegrid.ai/v1/models`` lists them.
 
