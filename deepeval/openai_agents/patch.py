@@ -10,7 +10,6 @@ from typing import Any, Callable, Dict, List, Optional
 from opentelemetry import trace as otel_trace
 
 from deepeval.metrics import BaseMetric
-from deepeval.prompt import Prompt
 from deepeval.tracing.context import (
     staged_next_span,
     update_agent_span,
@@ -48,7 +47,6 @@ def _resolve_agent_from_run_step_args(args: Any, kwargs: Any) -> Any:
 def _with_tool_metrics(
     func: Callable[..., Any],
     metrics: Optional[List[BaseMetric]] = None,
-    metric_collection: Optional[str] = None,
 ) -> Callable[..., Any]:
     """``func``, setting the metrics of the tool span it runs in."""
     if getattr(func, "_is_deepeval_observed", False):
@@ -58,18 +56,14 @@ def _with_tool_metrics(
 
         @wraps(func)
         async def observed(*args: Any, **kwargs: Any) -> Any:
-            update_current_span(
-                metrics=metrics, metric_collection=metric_collection
-            )
+            update_current_span(metrics=metrics)
             return await func(*args, **kwargs)
 
     else:
 
         @wraps(func)
         def observed(*args: Any, **kwargs: Any) -> Any:
-            update_current_span(
-                metrics=metrics, metric_collection=metric_collection
-            )
+            update_current_span(metrics=metrics)
             return func(*args, **kwargs)
 
     setattr(observed, "_is_deepeval_observed", True)
@@ -84,7 +78,9 @@ def function_tool(
     func: Optional[Callable[..., Any]] = None, /, *args: Any, **kwargs: Any
 ) -> Any:
     metrics = kwargs.pop("metrics", None)
-    metric_collection = kwargs.pop("metric_collection", None)
+    # Deprecated, ignored: a Confident AI platform setting. Popped so the
+    # Agents SDK never sees it; don't build on it.
+    kwargs.pop("metric_collection", None)
 
     if _agents_function_tool is None:
         raise RuntimeError(
@@ -92,19 +88,11 @@ def function_tool(
         )
 
     if callable(func):
-        wrapped = _with_tool_metrics(
-            func,
-            metrics=metrics,
-            metric_collection=metric_collection,
-        )
+        wrapped = _with_tool_metrics(func, metrics=metrics)
         return _agents_function_tool(wrapped, *args, **kwargs)
 
     def decorator(real_func: Callable[..., Any]) -> Any:
-        wrapped = _with_tool_metrics(
-            real_func,
-            metrics=metrics,
-            metric_collection=metric_collection,
-        )
+        wrapped = _with_tool_metrics(real_func, metrics=metrics)
         return _agents_function_tool(wrapped, *args, **kwargs)
 
     return decorator
@@ -116,16 +104,10 @@ class _ObservedModel(Model):
     def __init__(
         self,
         inner: Model,
-        llm_metric_collection: Optional[str] = None,
         llm_metrics: Optional[List[BaseMetric]] = None,
-        confident_prompt: Optional[Prompt] = None,
     ) -> None:
         self._inner = inner
-        self._span_fields = {
-            "metrics": llm_metrics,
-            "metric_collection": llm_metric_collection,
-            "prompt": confident_prompt,
-        }
+        self._span_fields = {"metrics": llm_metrics}
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
@@ -207,9 +189,7 @@ def patch_default_agent_runner_get_model():
 
         return _ObservedModel(
             inner=model,
-            llm_metric_collection=getattr(agent, "llm_metric_collection", None),
             llm_metrics=getattr(agent, "llm_metrics", None),
-            confident_prompt=getattr(agent, "confident_prompt", None),
         )
 
     patched_get_model.__name__ = original_get_model.__name__
@@ -225,10 +205,7 @@ def _configure_agent_span(agent_span: Any, agent: Any) -> None:
     if otel_span is None:
         return
     with otel_trace.use_span(otel_span, end_on_exit=False):
-        update_current_span(
-            metrics=getattr(agent, "agent_metrics", None),
-            metric_collection=getattr(agent, "agent_metric_collection", None),
-        )
+        update_current_span(metrics=getattr(agent, "agent_metrics", None))
         update_agent_span(
             available_tools=agent_span.span_data.tools,
             agent_handoffs=agent_span.span_data.handoffs,

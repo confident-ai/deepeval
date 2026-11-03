@@ -202,12 +202,6 @@ function recordedTraceFields(attributes: Attributes): Partial<Trace> {
     metadata: attrJsonObject(attributes, ConfidentAttr.TRACE_METADATA),
     threadId: attrString(attributes, ConfidentAttr.TRACE_THREAD_ID),
     userId: attrString(attributes, ConfidentAttr.TRACE_USER_ID),
-    testCaseId: attrString(attributes, ConfidentAttr.TRACE_TEST_CASE_ID),
-    turnId: attrString(attributes, ConfidentAttr.TRACE_TURN_ID),
-    metricCollection: attrString(
-      attributes,
-      ConfidentAttr.TRACE_METRIC_COLLECTION,
-    ),
     retrievalContext: attrJsonStringList(
       attributes,
       ConfidentAttr.TRACE_RETRIEVAL_CONTEXT,
@@ -266,10 +260,6 @@ function commonFields(
     name:
       attrString(attributes, ConfidentAttr.SPAN_NAME) ?? typedName ?? span.name,
     metadata: attrJsonObject(attributes, ConfidentAttr.SPAN_METADATA),
-    metricCollection: attrString(
-      attributes,
-      ConfidentAttr.SPAN_METRIC_COLLECTION,
-    ),
     retrievalContext: attrJsonStringList(
       attributes,
       ConfidentAttr.SPAN_RETRIEVAL_CONTEXT,
@@ -328,16 +318,6 @@ function llmSpan(span: ReadableSpan): LlmSpan {
   fields.costPerOutputToken = attrNumber(
     attributes,
     ConfidentAttr.LLM_COST_PER_OUTPUT_TOKEN,
-  );
-  fields.promptAlias = attrString(attributes, ConfidentAttr.SPAN_PROMPT_ALIAS);
-  fields.promptVersion = attrString(
-    attributes,
-    ConfidentAttr.SPAN_PROMPT_VERSION,
-  );
-  fields.promptLabel = attrString(attributes, ConfidentAttr.SPAN_PROMPT_LABEL);
-  fields.promptCommitHash = attrString(
-    attributes,
-    ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
   );
   fields.toolsCalled ??= messageToolCalls(
     structuredValue(attributes[GenAIAttr.OUTPUT_MESSAGES]),

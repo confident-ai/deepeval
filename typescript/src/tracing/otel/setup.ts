@@ -23,7 +23,6 @@ import { type ExportResult, ExportResultCode } from "@opentelemetry/core";
 
 import { getSettings } from "@/config/settings";
 import type { LLMTestCase } from "@/test-case";
-import type { Prompt } from "@/prompt";
 import { ConfidentAttr } from "@/tracing/attributes";
 import { type StagedValues, withStaged } from "@/tracing/pending-context";
 import { type BaseSpan, traceManager } from "@/tracing/tracing";
@@ -120,7 +119,6 @@ const scopeDefaults: {
   integration?: string;
   scope?: string;
   attributes: Record<string, string | string[]>;
-  forSpan?: (span: Span) => Record<string, string>;
 }[] = [];
 
 /**
@@ -133,7 +131,6 @@ export function setTraceDefaults(
   match: { integration?: string; scope?: string },
   values: Record<string, unknown>,
   attributes: Record<string, string> = {},
-  forSpan?: (span: Span) => Record<string, string>,
 ): void {
   const index = scopeDefaults.findIndex(
     (entry) =>
@@ -143,7 +140,6 @@ export function setTraceDefaults(
   scopeDefaults.push({
     ...match,
     attributes: { ...traceFieldAttributes(values), ...attributes },
-    forSpan,
   });
 }
 
@@ -236,8 +232,7 @@ class ScopeDefaults implements SpanProcessor {
         ? entry.integration === integration
         : entry.scope !== undefined && scope.startsWith(entry.scope);
       if (!matches) continue;
-      const attributes = { ...entry.attributes, ...entry.forSpan?.(span) };
-      for (const [key, value] of Object.entries(attributes)) {
+      for (const [key, value] of Object.entries(entry.attributes)) {
         const current = span.attributes[key];
         // confident-trace names an integration's root after the span itself,
         // which a configured name replaces.
@@ -262,7 +257,6 @@ const CONTENT_FIELDS = [
   "expectedOutput",
   "toolsCalled",
   "expectedTools",
-  "metricCollection",
 ];
 const EXPORTED_SPAN_FIELDS = [
   ...CONTENT_FIELDS,
@@ -273,14 +267,7 @@ const EXPORTED_SPAN_FIELDS = [
   "costPerInputToken",
   "costPerOutputToken",
 ];
-const EXPORTED_TRACE_FIELDS = [
-  ...CONTENT_FIELDS,
-  "tags",
-  "userId",
-  "threadId",
-  "turnId",
-  "testCaseId",
-];
+const EXPORTED_TRACE_FIELDS = [...CONTENT_FIELDS, "tags", "userId", "threadId"];
 const TOOL_FIELDS = ["toolsCalled", "expectedTools"];
 const COUNT_FIELDS = ["inputTokenCount", "outputTokenCount"];
 
@@ -294,12 +281,6 @@ const PLATFORM_SPAN_ATTRIBUTES: Record<string, string> = {
   topK: ConfidentAttr.RETRIEVER_TOP_K,
   chunkSize: ConfidentAttr.RETRIEVER_CHUNK_SIZE,
   integration: ConfidentAttr.SPAN_INTEGRATION,
-};
-const PROMPT_ATTRIBUTES: Record<string, string> = {
-  _alias: ConfidentAttr.SPAN_PROMPT_ALIAS,
-  version: ConfidentAttr.SPAN_PROMPT_VERSION,
-  label: ConfidentAttr.SPAN_PROMPT_LABEL,
-  hash: ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
 };
 
 /** `values` as confident-trace takes them, limited to `accepted`. */
@@ -345,22 +326,7 @@ function platformSpanAttributes(
     else if (typeof value === "string" || Number.isFinite(value))
       attributes[attribute] = value;
   }
-  const prompt = values.prompt as Prompt | undefined;
-  for (const [key, attribute] of Object.entries(PROMPT_ATTRIBUTES)) {
-    const value = prompt?.[key as keyof Prompt];
-    if (typeof value === "string") attributes[attribute] = value;
-  }
   return attributes;
-}
-
-// The Confident AI key a trace exports under, when it isn't the default.
-const MAX_ROUTED_TRACES = 10_000;
-const traceKeys = new Map<string, string>();
-
-function routeTrace(span: OtelSpan, apiKey: string): void {
-  traceKeys.set(span.spanContext().traceId, apiKey);
-  if (traceKeys.size > MAX_ROUTED_TRACES)
-    traceKeys.delete(traceKeys.keys().next().value!);
 }
 
 /** Pass an update to confident-trace for the exported span or trace. */
@@ -383,14 +349,7 @@ function sendExported(
   } catch {
     // confident-trace rejects values it can't carry; user code goes on.
   }
-  if (scope === "span") {
-    span.setAttributes(platformSpanAttributes(values));
-    return;
-  }
-  if (typeof values.testRunId === "string")
-    span.setAttribute(ConfidentAttr.TRACE_TEST_RUN_ID, values.testRunId);
-  if (typeof values.confidentApiKey === "string")
-    routeTrace(span, values.confidentApiKey);
+  if (scope === "span") span.setAttributes(platformSpanAttributes(values));
 }
 
 /** Wait up to `timeoutMillis` for confident-trace to export its spans. */
@@ -406,9 +365,8 @@ export async function shutdownConfidentTrace(): Promise<void> {
 /**
  * OTLP export to Confident AI under the API key resolved at export time.
  *
- * Resolving per export lets a key set after start-up take effect, and a trace
- * may carry its own. Nothing is sent while tracing is off or for a trace with
- * no key.
+ * Resolving per export lets a key set after start-up take effect. Nothing is
+ * sent while tracing is off or without a key.
  */
 export class ConfidentOtlpExporter implements SpanExporter {
   private readonly exporters = new Map<string, SpanExporter>();
@@ -419,22 +377,9 @@ export class ConfidentOtlpExporter implements SpanExporter {
   ): void {
     if (!tracingEnabled() || !traceManager.exportEnabled)
       return resultCallback({ code: ExportResultCode.SUCCESS });
-    const defaultKey = traceManager.exportApiKey;
-    const byKey = new Map<string, ReadableSpan[]>();
-    for (const span of spans) {
-      const apiKey = traceKeys.get(span.spanContext().traceId) ?? defaultKey;
-      if (apiKey) byKey.set(apiKey, [...(byKey.get(apiKey) ?? []), span]);
-    }
-    if (byKey.size === 0)
-      return resultCallback({ code: ExportResultCode.SUCCESS });
-    let pending = byKey.size;
-    let failed: ExportResult | undefined;
-    for (const [apiKey, keyed] of byKey)
-      this.exporterFor(apiKey).export(keyed, (result) => {
-        if (result.code !== ExportResultCode.SUCCESS) failed ??= result;
-        if (--pending === 0)
-          resultCallback(failed ?? { code: ExportResultCode.SUCCESS });
-      });
+    const apiKey = traceManager.exportApiKey;
+    if (!apiKey) return resultCallback({ code: ExportResultCode.SUCCESS });
+    this.exporterFor(apiKey).export(spans, resultCallback);
   }
 
   async forceFlush(): Promise<void> {

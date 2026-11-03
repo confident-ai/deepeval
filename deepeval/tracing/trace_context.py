@@ -14,8 +14,10 @@ from deepeval.tracing.utils import is_async_context
 
 @dataclass
 class LlmSpanContext:
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None
     metrics: Optional[List[BaseMetric]] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None
     expected_output: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
@@ -26,6 +28,7 @@ class LlmSpanContext:
 @dataclass
 class AgentSpanContext:
     metrics: Optional[List[BaseMetric]] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None
     expected_output: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
@@ -59,6 +62,7 @@ def trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     metrics: Optional[List[BaseMetric]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
 ):
     if is_async_context():
@@ -77,9 +81,6 @@ def trace(
 
     if metrics:
         current_trace.metrics = metrics
-
-    if metric_collection:
-        current_trace.metric_collection = metric_collection
 
     trace_ctx_token = current_trace_context.set(current_trace)
 
@@ -118,7 +119,6 @@ def trace(
             expected_output=expected_output,
             tools_called=tools_called,
             expected_tools=expected_tools,
-            metric_collection=metric_collection,
         ):
             yield current_trace
     finally:

@@ -3,9 +3,8 @@
  *
  * `DeepEvalCallbackHandler` is confident-trace's LangChain handler, so it
  * traces every run it is passed to. It adds what only deepeval knows: the
- * trace's settings and metrics, and the metrics, metric collection and prompt
- * that a model's `metadata` names. The run you invoke is an agent span, which
- * `nextAgentSpan(...)` lands on.
+ * trace's settings and metrics, and the metrics a model's `metadata` names. The
+ * run you invoke is an agent span, which `nextAgentSpan(...)` lands on.
  */
 
 import type { BaseMetric } from "@/metrics/base-metrics";
@@ -32,9 +31,12 @@ export interface DeepEvalCallbackHandlerOptions {
   metadata?: Record<string, any>;
   threadId?: string;
   userId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   turnId?: string;
   metrics?: BaseMetric[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
 }
 
@@ -46,11 +48,7 @@ function field(metadata: unknown, key: string): any {
 
 /** What a model's `metadata` stages for its LLM span. */
 function llmFields(metadata: unknown): PendingPayload {
-  return {
-    metrics: field(metadata, "metrics"),
-    metricCollection: field(metadata, "metricCollection"),
-    prompt: field(metadata, "prompt"),
-  };
+  return { metrics: field(metadata, "metrics") };
 }
 
 export class DeepEvalCallbackHandler extends ConfidentLangChainCallbackHandler {
@@ -58,7 +56,12 @@ export class DeepEvalCallbackHandler extends ConfidentLangChainCallbackHandler {
     ensureConfidentTrace();
     super({ rootSpanType: "agent" });
     recordTracingIntegration(Integration.LANGCHAIN);
-    const trace: PendingPayload = { ...options };
+    const {
+      testCaseId: _testCaseId,
+      turnId: _turnId,
+      metricCollection: _metricCollection,
+      ...trace
+    }: PendingPayload = options;
     // confident-trace opens each run's span synchronously in its handler, so
     // what is staged around the call reaches that span.
     const staged = <A extends unknown[]>(
@@ -83,10 +86,7 @@ export class DeepEvalCallbackHandler extends ConfidentLangChainCallbackHandler {
       spanKind: "llm",
     }));
     this.handleRetrieverStart = staged(this.handleRetrieverStart, (args) => ({
-      span: {
-        embedder: field(args[5], "ls_embedding_provider"),
-        metricCollection: field(args[5], "metricCollection"),
-      },
+      span: { embedder: field(args[5], "ls_embedding_provider") },
       spanKind: "retriever",
     }));
   }

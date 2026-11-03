@@ -1,4 +1,3 @@
-import { Prompt } from "@/prompt";
 import { ToolCallType } from "@/test-case";
 
 export enum SpanApiType {
@@ -64,11 +63,6 @@ export interface BaseApiSpan {
   outputTokenCount?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
-  prompt?: Prompt;
-  promptCommitHash?: string;
-  promptAlias?: string;
-  promptLabel?: string;
-  promptVersion?: string;
 
   // evals
   llmTestCase?: LLMTestCase;
@@ -77,7 +71,6 @@ export interface BaseApiSpan {
 
   // metadata
   metadata?: Record<string, any>;
-  metricCollection?: string;
 
   // additional test case params
   expectedOutput?: string;
@@ -102,9 +95,6 @@ export interface TraceApi {
   tags?: string[];
   threadId?: string;
   userId?: string;
-  testCaseId?: string;
-  testRunId?: string;
-  turnId?: string;
   input?: any;
   output?: any;
   name?: string;
@@ -115,9 +105,5 @@ export interface TraceApi {
   context?: string[];
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
-  metricCollection?: string;
   metricsData?: unknown[];
-
-  // Don't serialize this
-  confidentApiKey?: string;
 }

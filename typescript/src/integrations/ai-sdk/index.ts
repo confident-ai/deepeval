@@ -13,7 +13,6 @@ import type { Tracer } from "@opentelemetry/api";
 
 import { recordTracingIntegration } from "@/telemetry";
 import { Integration } from "@/tracing/integrations";
-import { traceManager } from "@/tracing/tracing";
 import {
   confidentTraceModule,
   ensureConfidentTrace,
@@ -27,12 +26,12 @@ type VercelAdapter = typeof import("confident-trace/vercel-ai");
 const INTEGRATION = "Vercel AI SDK";
 
 export interface AiSdkInstrumentationOptions {
-  /** The Confident AI key to send traces with, over `CONFIDENT_API_KEY`. */
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   apiKey?: string;
   /** The name of every trace. */
   name?: string;
   environment?: string;
-  /** The metric collection the platform evaluates every trace with. */
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   traceMetricCollection?: string;
   /** @deprecated Set `CONFIDENT_OTEL_URL` instead. */
   otelEndpoint?: string;
@@ -49,19 +48,13 @@ export function configureAiSdkTracing(
   options: AiSdkInstrumentationOptions = {},
 ): Tracer {
   currentOptions = options;
-  if (options.apiKey)
-    traceManager.configure({ confidentApiKey: options.apiKey });
   if (options.otelEndpoint)
     process.env.CONFIDENT_OTEL_URL ??= options.otelEndpoint;
   ensureConfidentTrace();
   recordTracingIntegration(Integration.AI_SDK);
   setTraceDefaults(
     { integration: INTEGRATION },
-    {
-      name: options.name,
-      environment: options.environment,
-      metricCollection: options.traceMetricCollection,
-    },
+    { name: options.name, environment: options.environment },
   );
   return confidentTraceModule<VercelAdapter>(
     "vercel-ai",

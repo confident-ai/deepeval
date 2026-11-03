@@ -64,9 +64,8 @@ def _expose_public_api() -> None:
 
         Accepts the same trace-level kwargs as
         ``deepeval.integrations.openinference.instrument_openinference``:
-        ``api_key``, ``name``, ``thread_id``, ``user_id``, ``metadata``,
-        ``tags``, ``environment``, ``metric_collection``, ``test_case_id``,
-        ``turn_id``. Span-level config goes on ``with next_*_span(...)``
+        ``name``, ``thread_id``, ``user_id``, ``metadata``, ``tags``,
+        ``environment``. Span-level config goes on ``with next_*_span(...)``
         / ``update_current_span(...)``.
         """
         from deepeval.integrations.openinference import (

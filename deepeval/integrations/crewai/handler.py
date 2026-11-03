@@ -42,10 +42,13 @@ def is_crewai_installed():
         )
 
 
-def instrument_crewai(api_key: Optional[str] = None):
+def instrument_crewai(
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
+    api_key: Optional[str] = None,
+):
     is_crewai_installed()
     with capture_tracing_integration(Integration.CREW_AI):
-        ensure_confident_trace(INSTRUMENTATIONS, api_key=api_key)
+        ensure_confident_trace(INSTRUMENTATIONS)
         _trace_knowledge_retrieval()
         _trace_kickoff_for_each()
 

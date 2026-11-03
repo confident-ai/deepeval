@@ -131,6 +131,7 @@ def update_current_span(
     integration: Optional[str] = None,
     provider: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ):
@@ -169,8 +170,6 @@ def update_current_span(
         current_span.integration = integration
     if provider is not None and hasattr(current_span, "provider"):
         current_span.provider = provider
-    if metric_collection:
-        current_span.metric_collection = metric_collection
     if metrics:
         current_span.metrics = metrics
 
@@ -189,6 +188,9 @@ def update_current_trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: confident_api_key, test_case_id, test_run_id,
+    # turn_id and metric_collection are Confident AI platform settings.
+    # Don't build on them.
     confident_api_key: Optional[str] = None,
     test_case_id: Optional[str] = None,
     test_run_id: Optional[str] = None,
@@ -232,16 +234,6 @@ def update_current_trace(
         current_trace.tools_called = tools_called
     if expected_tools:
         current_trace.expected_tools = expected_tools
-    if confident_api_key:
-        current_trace.confident_api_key = confident_api_key
-    if test_case_id:
-        current_trace.test_case_id = test_case_id
-    if test_run_id:
-        current_trace.test_run_id = test_run_id
-    if turn_id:
-        current_trace.turn_id = turn_id
-    if metric_collection:
-        current_trace.metric_collection = metric_collection
     if metrics:
         current_trace.metrics = metrics
 
@@ -253,6 +245,7 @@ def update_llm_span(
     cost_per_input_token: Optional[float] = None,
     cost_per_output_token: Optional[float] = None,
     token_intervals: Optional[Dict[float, str]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None,
 ):
     _update_exported("span", dict(locals()))
@@ -275,13 +268,6 @@ def update_llm_span(
         current_span.cost_per_output_token = cost_per_output_token
     if token_intervals:
         current_span.token_intervals = token_intervals
-    if prompt:
-        current_span.prompt = prompt
-        # Updating on span as well
-        current_span.prompt_alias = prompt.alias
-        current_span.prompt_commit_hash = prompt.hash
-        current_span.prompt_label = prompt.label
-        current_span.prompt_version = prompt.version
 
 
 def update_agent_span(
@@ -292,7 +278,7 @@ def update_agent_span(
 
     Type-specific counterpart to ``update_current_span(...)``: only
     handles fields unique to ``AgentSpan``. Generic fields (name,
-    metadata, metric_collection, input/output, ...) still go through
+    metadata, input/output, ...) still go through
     ``update_current_span(...)``. No-op if the current span isn't an
     ``AgentSpan``.
     """
@@ -432,6 +418,7 @@ def next_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -454,7 +441,6 @@ def next_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -483,6 +469,7 @@ def next_agent_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -503,7 +490,6 @@ def next_agent_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -525,6 +511,7 @@ def next_llm_span(
     cost_per_input_token: Optional[float] = None,
     cost_per_output_token: Optional[float] = None,
     token_intervals: Optional[Dict[float, str]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None,
     # base fields
     input: Optional[Any] = None,
@@ -537,11 +524,12 @@ def next_llm_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
     """Set defaults for the next ``LlmSpan``. One-stop: accepts
-    LLM-specific fields (``model``, token counts, ``prompt``, ...) AND
+    LLM-specific fields (``model``, token counts, ...) AND
     the same base fields ``update_current_span(...)`` takes."""
     payload = _drop_none(
         {
@@ -551,7 +539,6 @@ def next_llm_span(
             "cost_per_input_token": cost_per_input_token,
             "cost_per_output_token": cost_per_output_token,
             "token_intervals": token_intervals,
-            "prompt": prompt,
             "input": input,
             "output": output,
             "retrieval_context": retrieval_context,
@@ -562,7 +549,6 @@ def next_llm_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -590,6 +576,7 @@ def next_tool_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -609,7 +596,6 @@ def next_tool_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -639,6 +625,7 @@ def next_retriever_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -660,7 +647,6 @@ def next_retriever_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )

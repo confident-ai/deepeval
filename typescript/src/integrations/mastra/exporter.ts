@@ -14,14 +14,7 @@ import type { Prompt } from "@/prompt";
 import { recordTracingIntegration } from "@/telemetry";
 import { ConfidentAttr } from "@/tracing/attributes";
 import { Integration } from "@/tracing/integrations";
-import {
-  type BaseSpan,
-  type LlmSpan,
-  SpanType,
-  type Trace,
-  type TraceManagerConfig,
-  traceManager,
-} from "@/tracing/tracing";
+import { type Trace, traceManager } from "@/tracing/tracing";
 import type { Environment } from "@/tracing/utils";
 import {
   attrJsonObject,
@@ -44,6 +37,7 @@ const { ConfidentMastraExporter } =
   confidentTraceModule<MastraAdapter>("mastra");
 
 export interface DeepEvalExporterConfig {
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   apiKey?: string;
   environment?: string;
   name?: string;
@@ -51,13 +45,21 @@ export interface DeepEvalExporterConfig {
   metadata?: Record<string, any>;
   threadId?: string;
   userId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   turnId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   traceMetricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   llmMetricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   agentMetricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   toolMetricCollectionMap?: Record<string, string>;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
   /** @deprecated No longer used. */
   debug?: boolean;
@@ -67,7 +69,8 @@ export interface DeepEvalExporterConfig {
 // Traces still waiting for their root span, at most.
 const MAX_PENDING_TRACES = 1024;
 
-// Per-request `tracingOptions.metadata` keys read as trace fields.
+// Per-request `tracingOptions.metadata` keys read as trace fields. `testCaseId`
+// and `turnId` are deprecated platform settings: dropped, not kept as metadata.
 const RESERVED_TRACE_META_KEYS = new Set<string>([
   "userId",
   "threadId",
@@ -94,8 +97,6 @@ function perRequestFields(root: ReadableSpan): Partial<Trace> {
   const tags = attrStringList(attributes, ConfidentAttr.TRACE_TAGS);
   if (tags && tags.length > 0) fields.tags = tags;
   if (meta.traceName) fields.name = String(meta.traceName);
-  if (meta.testCaseId) fields.testCaseId = String(meta.testCaseId);
-  if (meta.turnId) fields.turnId = String(meta.turnId);
 
   const custom: Record<string, any> = {};
   for (const [key, value] of Object.entries(meta)) {
@@ -117,11 +118,10 @@ export class DeepEvalExporter extends ConfidentMastraExporter {
     ensureConfidentTrace();
     super({ exporter: new FinishedTraces(config) });
     this.config = config;
-    const managed: TraceManagerConfig = {};
-    if (config.apiKey) managed.confidentApiKey = config.apiKey;
     if (config.environment)
-      managed.environment = config.environment as Environment;
-    if (Object.keys(managed).length > 0) traceManager.configure(managed);
+      traceManager.configure({
+        environment: config.environment as Environment,
+      });
     if (config.traceCaptureSink)
       traceManager.addTraceCaptureSink(config.traceCaptureSink);
     // Mastra delivers spans on its own bus, after `await agent.generate(...)`
@@ -191,9 +191,6 @@ class FinishedTraces implements SpanExporter {
       tags: config.tags,
       threadId: config.threadId,
       userId: config.userId,
-      testCaseId: config.testCaseId,
-      turnId: config.turnId,
-      metricCollection: config.traceMetricCollection ?? config.metricCollection,
       ...request,
       metadata:
         config.metadata || request.metadata
@@ -205,72 +202,23 @@ class FinishedTraces implements SpanExporter {
     return fields;
   }
 
-  private metricCollectionFor(
-    type: string | undefined,
-    name: string | undefined,
-  ): string | undefined {
-    const { config } = this;
-    if (type === SpanType.LLM) return config.llmMetricCollection;
-    if (type === SpanType.AGENT) return config.agentMetricCollection;
-    if (type === SpanType.TOOL && name)
-      return config.toolMetricCollectionMap?.[name];
-    return undefined;
-  }
-
   private collect(spans: ReadableSpan[], fields: Partial<Trace>): void {
-    collectFinishedTrace(spans, fields, (span: BaseSpan) => {
-      span.metricCollection ??= this.metricCollectionFor(span.type, span.name);
-      const prompt = this.config.prompt;
-      if (span.type === SpanType.LLM && prompt) {
-        const llm = span as LlmSpan;
-        llm.prompt = prompt;
-        llm.promptAlias = prompt._alias ?? undefined;
-        llm.promptCommitHash = prompt.hash ?? undefined;
-        llm.promptVersion = prompt.version ?? undefined;
-        llm.promptLabel = prompt.label ?? undefined;
-      }
-    });
+    collectFinishedTrace(spans, fields);
   }
 
   /**
-   * `span` with this exporter's settings as the attributes that carry them:
-   * span settings fill what the span leaves unset, and trace settings, the
-   * run's own included, replace what Mastra recorded for the trace.
+   * `span` with this exporter's trace settings, the run's own included, as the
+   * attributes that carry them, replacing what Mastra recorded for the trace.
    */
   private withSettings(
     span: ReadableSpan,
     fields: Partial<Trace>,
   ): ReadableSpan {
-    const attributes: Record<string, unknown> = {};
-    const trace =
-      !span.parentSpanContext || span.parentSpanContext.isRemote
-        ? traceFieldAttributes(fields)
-        : {};
-    const type = span.attributes[ConfidentAttr.SPAN_TYPE];
-    const toolName = span.attributes[GenAIAttr.TOOL_NAME];
-    const collection = this.metricCollectionFor(
-      typeof type === "string" ? type : undefined,
-      typeof toolName === "string" ? toolName : span.name,
-    );
-    if (collection)
-      attributes[ConfidentAttr.SPAN_METRIC_COLLECTION] = collection;
-    const prompt = this.config.prompt;
-    if (type === SpanType.LLM && prompt) {
-      if (prompt._alias)
-        attributes[ConfidentAttr.SPAN_PROMPT_ALIAS] = prompt._alias;
-      if (prompt.hash)
-        attributes[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH] = prompt.hash;
-      if (prompt.label)
-        attributes[ConfidentAttr.SPAN_PROMPT_LABEL] = prompt.label;
-      if (prompt.version)
-        attributes[ConfidentAttr.SPAN_PROMPT_VERSION] = prompt.version;
-    }
-    for (const key of Object.keys(attributes))
-      if (span.attributes[key] !== undefined) delete attributes[key];
-    if (Object.keys(attributes).length + Object.keys(trace).length === 0)
-      return span;
+    if (span.parentSpanContext && !span.parentSpanContext.isRemote) return span;
+    const trace = traceFieldAttributes(fields);
+    if (Object.keys(trace).length === 0) return span;
     return Object.create(span, {
-      attributes: { value: { ...attributes, ...span.attributes, ...trace } },
+      attributes: { value: { ...span.attributes, ...trace } },
     }) as ReadableSpan;
   }
 }

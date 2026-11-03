@@ -56,7 +56,6 @@ from deepeval.evaluate.execute._common import (
     _execute_metric,
     _skip_metrics_for_error,
     _trace_error,
-    log_prompt,
 )
 
 
@@ -189,7 +188,6 @@ def _assert_test_from_current_trace(
             trace_api.agent_spans.append(api_span)
         elif isinstance(span, LlmSpan):
             trace_api.llm_spans.append(api_span)
-            log_prompt(span, test_run_manager)
         elif isinstance(span, RetrieverSpan):
             trace_api.retriever_spans.append(api_span)
         elif isinstance(span, ToolSpan):

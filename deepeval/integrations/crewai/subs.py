@@ -35,15 +35,15 @@ def create_deepeval_class(
     open, of ``span_type``."""
 
     class DeepEvalClass(base_class):
-        _metric_collection: Optional[str] = PrivateAttr(default=None)
         _metrics: Optional[List[BaseMetric]] = PrivateAttr(default=None)
 
         def __init__(self, *args, **kwargs):
             is_crewai_installed()
-            metric_collection = kwargs.pop("metric_collection", None)
+            # Deprecated, ignored: a Confident AI platform setting. Popped
+            # so CrewAI never sees it; don't build on it.
+            kwargs.pop("metric_collection", None)
             metrics = kwargs.pop("metrics", None)
             super().__init__(*args, **kwargs)
-            self._metric_collection = metric_collection
             self._metrics = metrics
 
     for method in methods:
@@ -63,11 +63,12 @@ def create_deepeval_llm(base_factory: Callable) -> Callable:
 
     def factory_wrapper(*args, **kwargs):
         is_crewai_installed()
-        metric_collection = kwargs.pop("metric_collection", None)
+        # Deprecated, ignored: a Confident AI platform setting. Popped so
+        # CrewAI never sees it; don't build on it.
+        kwargs.pop("metric_collection", None)
         metrics = kwargs.pop("metrics", None)
         instance = base_factory(*args, **kwargs)
         try:
-            instance._metric_collection = metric_collection
             instance._metrics = metrics
         except Exception:
             return instance
@@ -96,10 +97,7 @@ def with_staged_metrics(
     method = resolve()
 
     def fields(instance: Any) -> dict:
-        return {
-            "metrics": getattr(instance, "_metrics", None),
-            "metric_collection": getattr(instance, "_metric_collection", None),
-        }
+        return {"metrics": getattr(instance, "_metrics", None)}
 
     if inspect.iscoroutinefunction(method):
 

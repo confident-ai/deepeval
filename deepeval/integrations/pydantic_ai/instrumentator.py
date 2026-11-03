@@ -36,10 +36,10 @@ def is_dependency_installed() -> bool:
     return True
 
 
-def instrument(api_key: Optional[str] = None) -> None:
+def instrument() -> None:
     is_dependency_installed()
     with capture_tracing_integration(Integration.PYDANTIC_AI):
-        ensure_confident_trace(INSTRUMENTATIONS, api_key=api_key)
+        ensure_confident_trace(INSTRUMENTATIONS)
 
 
 class DeepEvalInstrumentationSettings(InstrumentationSettings):
@@ -51,23 +51,24 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
     The trace kwargs are defaults for every trace the agent produces;
     ``update_current_trace(...)`` overrides them at runtime. Span fields are
     set at the call site with ``update_current_span(...)`` or
-    ``next_*_span(...)``. ``api_key`` is only needed to send traces to
-    Confident AI under a key other than ``CONFIDENT_API_KEY``.
+    ``next_*_span(...)``.
     """
 
     def __init__(
         self,
+        # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
         api_key: Optional[str] = None,
         name: Optional[str] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
         metadata: Optional[dict] = None,
         tags: Optional[List[str]] = None,
+        # Deprecated, ignored: Confident AI platform settings. Don't build on them.
         metric_collection: Optional[str] = None,
         test_case_id: Optional[str] = None,
         turn_id: Optional[str] = None,
     ):
-        instrument(api_key)
+        instrument()
         super().__init__(tracer_provider=tracer_provider())
         self.tracer = _TraceDefaultsTracer(
             self.tracer,
@@ -78,9 +79,6 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
                     "user_id": user_id,
                     "metadata": metadata,
                     "tags": tags,
-                    "metric_collection": metric_collection,
-                    "test_case_id": test_case_id,
-                    "turn_id": turn_id,
                 }
             ),
         )
@@ -93,8 +91,7 @@ class ConfidentInstrumentationSettings(DeepEvalInstrumentationSettings):
         warnings.warn(
             "ConfidentInstrumentationSettings is deprecated and will be "
             "removed in a future version. Use "
-            "DeepEvalInstrumentationSettings instead — same constructor, "
-            "and a Confident AI api_key is now optional.",
+            "DeepEvalInstrumentationSettings instead — same constructor.",
             DeprecationWarning,
             stacklevel=2,
         )

@@ -6,11 +6,16 @@ from crewai.tools import tool as crewai_tool
 from deepeval.tracing.context import update_current_span
 
 
-def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
+def tool(
+    *args,
+    metric=None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
+    metric_collection=None,
+    **kwargs,
+) -> Callable:
     """
     Simple wrapper around crewai.tools.tool that:
-      - sets metric and metric_collection on the span the tool runs in
-      - accepts additional parameters: metric and metric_collection
+      - sets ``metric`` (the metrics) on the span the tool runs in
       - remains backward compatible with CrewAI's decorator usage patterns
     """
     crewai_kwargs = kwargs
@@ -18,9 +23,7 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
     def build(tool_name: str, f: Callable):
         @functools.wraps(f)
         def wrapped(*f_args, **f_kwargs):
-            update_current_span(
-                metrics=metric, metric_collection=metric_collection
-            )
+            update_current_span(metrics=metric)
             return f(*f_args, **f_kwargs)
 
         return crewai_tool(tool_name, **crewai_kwargs)(wrapped)

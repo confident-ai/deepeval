@@ -483,9 +483,6 @@ _STAMPED_TRACE_STRINGS = {
     "name": ConfidentAttr.TRACE_NAME,
     "thread_id": ConfidentAttr.TRACE_THREAD_ID,
     "user_id": ConfidentAttr.TRACE_USER_ID,
-    "test_case_id": ConfidentAttr.TRACE_TEST_CASE_ID,
-    "turn_id": ConfidentAttr.TRACE_TURN_ID,
-    "metric_collection": ConfidentAttr.TRACE_METRIC_COLLECTION,
     "environment": ConfidentAttr.TRACE_ENVIRONMENT,
 }
 
