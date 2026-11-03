@@ -1,6 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 import asyncio
+from functools import partial
 from rich.console import Console
 from typing import Dict, Optional, List, Tuple, Union, Type
 from deepeval.errors import MissingTestCaseParamsError
@@ -355,7 +356,10 @@ class GEval(BaseMetric):
             schema_cls=gschema.ReasonScore,
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
-            weighted_score_fn=calculate_weighted_summed_score,
+            weighted_score_fn=partial(
+                calculate_weighted_summed_score,
+                score_max=self.score_range[1],
+            ),
         )
 
     def _evaluate(
@@ -373,7 +377,10 @@ class GEval(BaseMetric):
             schema_cls=gschema.ReasonScore,
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
-            weighted_score_fn=calculate_weighted_summed_score,
+            weighted_score_fn=partial(
+                calculate_weighted_summed_score,
+                score_max=self.score_range[1],
+            ),
         )
 
     def upload(self):
