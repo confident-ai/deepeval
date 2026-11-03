@@ -359,7 +359,7 @@ When `async_mode=True`, conversations may complete in any order. Use `index` to 
 
 ### Designing Effective Scenarios
 
-The quality of your simulations depends heavily on how well you design your [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation). You can manage and version golden datasets on [Confident AI](/docs/evaluation-datasets) or define them in code. Here are patterns that produce realistic, useful conversations:
+The quality of your simulations depends heavily on how well you design your [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation). Define them in code or load them from an [evaluation dataset](/docs/evaluation-datasets); once you're in production, failing threads caught by [Confident AI](https://www.confident-ai.com/products/llm-observability) are a good source of new ones. Here are patterns that produce realistic, useful conversations:
 
 **Cover the full spectrum of user behavior:**
 

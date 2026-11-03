@@ -5,6 +5,7 @@ import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import MascotRail from "@site/src/components/MascotRail";
 import { CAST } from "@site/src/components/Mascot/_cast";
 import { DYNAMIC_LOGOS } from "./CompanyLogos";
+import BuildWithAgents from "./BuildWithAgents";
 import styles from "./HomeSection.module.scss";
 
 type Brand = {
@@ -71,6 +72,8 @@ const HomeHeroSection: React.FC = () => {
             Explore Guides
           </SecondaryButton>
         </div>
+
+        <BuildWithAgents />
       </div>
       <div className={styles.bannerWalkway}>
         <MascotRail walkers={WALKERS} edge="top" />

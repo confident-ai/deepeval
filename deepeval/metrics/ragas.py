@@ -1,18 +1,18 @@
 """An implementation of the Ragas metric"""
 
-from typing import Optional, Union, List
-
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
 from deepeval.models import OpenAIModel
+from deepeval.models.llms.constants import DEFAULT_GPT_MODEL
 from deepeval.telemetry import record_metric
+from deepeval.test_case import LLMTestCase
 
 # check langchain availability
 try:
     import langchain_core  # noqa: F401
-    from langchain_core.language_models import BaseChatModel
     from langchain_core.embeddings import Embeddings
+    from langchain_core.language_models import BaseChatModel
 
     langchain_available = True
 except ImportError:
@@ -41,7 +41,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         _track: bool = True,
     ):
         _check_langchain_available()
@@ -118,7 +118,7 @@ class RAGASContextualRecallMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -189,7 +189,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -337,7 +337,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         embeddings: Optional["Embeddings"] = None,
         _track: bool = True,
     ):
@@ -415,7 +415,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         _track: bool = True,
     ):
         self.threshold = threshold
@@ -487,7 +487,7 @@ class RagasMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.3,
-        model: Optional[Union[str, "BaseChatModel"]] = "gpt-3.5-turbo",
+        model: Optional[Union[str, "BaseChatModel"]] = DEFAULT_GPT_MODEL,
         embeddings: Optional["Embeddings"] = None,
     ):
         self.threshold = threshold

@@ -10,9 +10,26 @@ from deepeval.cli.auth.api import (
 )
 from deepeval.cli.auth.command import (
     _complete_browser_cli_login,
+    _get_pasted_api_key_error,
     _get_pasted_api_key_warnings,
     _prompt_dynamic_questionnaire,
 )
+
+
+@pytest.mark.parametrize("api_key", ["n", "y", "short-key", "confident key"])
+def test_pasted_api_key_rejects_obviously_invalid_keys(api_key: str) -> None:
+    assert _get_pasted_api_key_error(api_key) is not None
+
+
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        "confident_us_proj_c2VjcmV0c2VjcmV0",
+        "dGhpc2lzYWxlZ2FjeWFwaWtleQ==",
+    ],
+)
+def test_pasted_api_key_accepts_plausible_keys(api_key: str) -> None:
+    assert _get_pasted_api_key_error(api_key) is None
 
 
 @pytest.mark.parametrize(

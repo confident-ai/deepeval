@@ -1,0 +1,35 @@
+{
+  "images": [
+    {
+      "file": "iteration-loop.svg",
+      "title": "Red-teaming iteration loop before deployment",
+      "alt": "Development loop of fine-tuning or prompting, adding filters and guardrails, and scanning, which then feeds deployment and monitoring",
+      "width": 1190,
+      "height": 303,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/red_teaming_iteration.svg"
+        ]
+      }
+    },
+    {
+      "file": "red-teamer-workflow.svg",
+      "title": "Red-teaming workflow in DeepEval",
+      "alt": "Red-teaming flow: define a target LLM, initialize the RedTeamer, scan and interpret results, then iterate with fine-tuning or prompting",
+      "width": 1179,
+      "height": 280,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/red_teaming_deepeval.svg"
+        ]
+      }
+    },
+    {
+      "file": "tool-result-injection.webp",
+      "title": "A shopping assistant following a prompt injection from a tool result",
+      "alt": "A user asks Shopping Assistant to summarize the top review on a product page. It summarizes the review correctly but also sends the user’s saved address to an outside site because the page told it to, which fails the check.",
+      "width": 2136,
+      "height": 900
+    }
+  ]
+}

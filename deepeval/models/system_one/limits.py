@@ -9,7 +9,7 @@ clear "too large for Jev" error instead of an opaque 400/422.
 import json
 from typing import Any, Dict, Optional
 
-from deepeval.errors import DeepEvalError
+from deepeval.errors import ContextWindowExceededError
 from deepeval.models.system_one.constants import (
     JEV_MAX_REQUEST_TOKENS,
     JEV_MAX_STATE_TOKENS,
@@ -21,11 +21,14 @@ from deepeval.models.system_one.constants import (
 _CHARS_PER_TOKEN = 3
 
 
-class SystemOneContextLimitError(DeepEvalError):
-    """The state and questions would not fit in the model's context window."""
+class SystemOneContextLimitError(ContextWindowExceededError):
 
     def __init__(
-        self, message: str, *, estimated_tokens: int, limit_tokens: int
+        self,
+        message: str,
+        *,
+        estimated_tokens: int,
+        limit_tokens: Optional[int],
     ):
         super().__init__(message)
         self.estimated_tokens = estimated_tokens

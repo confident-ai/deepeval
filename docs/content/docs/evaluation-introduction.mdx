@@ -9,13 +9,13 @@ languages: [python, typescript]
 
 Evaluation refers to the process of testing your LLM application outputs. At the top level, there are **TWO** types of LLM apps:
 
-- **Single-turn**: Each interaction is one input and one output, such as a RAG QA app or a one-shot agent.
-- **Multi-turn**: Each interaction is a back-and-forth conversation, such as a chatbot or a customer support agent.
+- **Single-turn**: Each interaction is one input and one output, such as a single-step AI agent or a RAG QA app.
+- **Multi-turn**: Each interaction is a back-and-forth conversation, such as a customer support AI agent, chatbot, or voice agent.
 
 Either type can also vary in:
 
 - **Modality**: Inputs and outputs can be text, images, voice, or video.
-- **Data access**: Your LLM app can pull in external data through tool calls, RAG, or MCP.
+- **Data access**: Your LLM app can pull in external data through tool calls, MCP, or RAG.
 
 Here's what an ideal evaluation workflow looks like using `deepeval`, and the components it requires, for each type. Multi-turn LLM apps have an extra simulation step that generates conversations for you to evaluate:
 
@@ -170,7 +170,7 @@ You'll need to create a test case to run `deepeval`'s evals.
 
 ## Test Run
 
-Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports) on the cloud.
+Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged in to Confident AI, the test run also appears there.
 
 ### Test Cases
 
@@ -653,7 +653,7 @@ There are **TWO** mandatory and **SIX** optional parameters when calling the `ev
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
-- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
+- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run, and it's attached to the run on Confident AI if you're logged in.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
 - [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
@@ -856,20 +856,16 @@ Here are a few examples available for your selected SDK:
     },
     {
       question:
-        "Can my team keep `deepeval` results on the cloud and review them in a shared UI?",
+        "Can I find what to evaluate next from production?",
       answer: (
         <>
-          Every test run is local-first, but when you're logged into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          built by the <code>deepeval</code> team) the same run produces a
-          sharable{" "}
-          <a href="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports">
-            testing report
+          Yes. Once your app is live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
           </a>{" "}
-          on the cloud. That gives a team a shared UI to compare runs, track
-          regressions over time, and inspect failing cases — without changing
-          any of your evaluation code. It's optional; local runs work exactly
-          the same with or without it.
+          surfaces failing production traces before anyone has written an eval
+          for them and turns them into goldens for your next test run. It's
+          optional; local runs work exactly the same with or without it.
         </>
       ),
     },

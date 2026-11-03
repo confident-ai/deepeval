@@ -1,0 +1,7 @@
+{
+  "main": "dist/sea.cjs",
+  "output": "dist/deepeval-setup.blob",
+  "disableExperimentalSEAWarning": true,
+  "useSnapshot": false,
+  "useCodeCache": false
+}

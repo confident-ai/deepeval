@@ -939,7 +939,7 @@ Attributes set on a baked-in handler — <Term py="thread_id" ts="threadId"/>, <
 | <Term py="thread_id" ts="threadId"/> | <Term py="str" ts="string"/> | Groups related runs into a single trace thread. |
 | <Term py="user_id" ts="userId"/> | <Term py="str" ts="string"/> | Actor identifier for the trace. |
 | `metrics` | <Term py="list" ts="array"/> | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
-| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on live traffic. |
+| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on production traces. |
 | <Term py="test_case_id" ts="testCaseId"/> | <Term py="str" ts="string"/> | Optional test case identifier. |
 | <Term py="turn_id" ts="turnId"/> | <Term py="str" ts="string"/> | Optional turn identifier for conversational traces. |
 
@@ -987,17 +987,6 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
       ),
     },
     {
-      question: "Where do my LangGraph traces show up beyond the console?",
-      answer: (
-        <>
-          Run <Term py="deepeval login" ts="npx deepeval login" /> and{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
-          full graph trace — every node, model call, and tool call as nested
-          spans — with their scores in a shared cloud UI. It's optional.
-        </>
-      ),
-    },
-    {
       question: "How do I trace a LangGraph server deployment?",
       answer: (
         <>
@@ -1018,12 +1007,10 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
       answer: (
         <>
           Yes. Keep passing the callback handler in production and group runs
-          with <Term py="thread_id" ts="threadId" />; logged into Confident AI
-          those live traces power{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic.
+          with <Term py="thread_id" ts="threadId" />.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> surfaces failing graph traces,
+          clusters them into failure modes, and turns them into goldens for a
+          new eval, which then runs on every production trace from then on.
         </>
       ),
     },

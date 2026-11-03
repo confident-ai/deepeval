@@ -11,7 +11,7 @@ from deepeval.config.eval_mode import (
     EvalMode,
     resolve_eval_mode,
 )
-from deepeval.errors import DeepEvalError
+from deepeval.errors import ContextWindowExceededError, DeepEvalError
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.base_metric import YES_NO, Verdict
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -343,6 +343,24 @@ def test_hybrid_falls_back_on_context_limit():
     )
 
 
+def test_hybrid_falls_back_when_jev_rejects_as_too_large():
+    jev = ExplodingSystemOneModel(
+        SystemOneContextLimitError(
+            "too big", estimated_tokens=28_000, limit_tokens=None
+        )
+    )
+    metric = ToyMetric(
+        model=CannedLLM(LLM_VERDICTS),
+        system_one_model=jev,
+        eval_mode="hybrid",
+    )
+    metric.measure(TEST_CASE)
+    assert metric.score == 0.5
+    assert (
+        "context limit (rejected by Jev)" in metric.system_one_fallback_reason
+    )
+
+
 def test_hybrid_permanent_error_keeps_measure_on_llm():
     jev = ExplodingSystemOneModel(
         DeepEvalError("TypeSafe AI API key is missing")
@@ -486,7 +504,9 @@ def test_system_one_context_limit_says_switch_to_llm():
         )
     )
     metric = ToyMetric(system_one_model=jev, eval_mode="system_one")
-    with pytest.raises(DeepEvalError, match='eval_mode="llm"') as info:
+    with pytest.raises(
+        ContextWindowExceededError, match='eval_mode="llm"'
+    ) as info:
         metric.measure(TEST_CASE)
     assert isinstance(info.value.__cause__, SystemOneContextLimitError)
 

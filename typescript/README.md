@@ -25,7 +25,7 @@
 await expect(testCase).toPass([correctnessMetric]);
 ```
 
-Whether you're building agents, RAG pipelines, or chatbots with LangChain, Mastra, the AI SDK, or OpenAI, you can evaluate your app **end-to-end** as a black box, over **complete agent trajectories**, or at **individual steps** like LLM calls, tool use, and retrieval.
+Whether you're building AI agents, multi-turn chatbots, or RAG pipelines with LangChain, Mastra, the AI SDK, or OpenAI, you can evaluate your app **end-to-end** as a black box, over **complete agent trajectories**, or at **individual steps** like LLM calls, tool use, and retrieval.
 
 This package is the TypeScript SDK. Python remains DeepEval's most complete implementation — see [Python vs TypeScript](#python-vs-typescript) for the gaps.
 

@@ -4,12 +4,13 @@
 
 import { parseBool } from "@/config/utils";
 
-export const PROD = "https://app.confident-ai.com";
+export const PROD = "https://cloud.confident-ai.com";
 export const WWW = "https://www.confident-ai.com";
 
 const TAGGED_HOSTS = new Set([
   "confident-ai.com",
   "www.confident-ai.com",
+  "cloud.confident-ai.com",
   "app.confident-ai.com",
 ]);
 
