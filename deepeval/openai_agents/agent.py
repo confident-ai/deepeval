@@ -25,10 +25,13 @@ class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     A subclass of agents.Agent.
     """
 
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     llm_metric_collection: str = None
     llm_metrics: List[BaseMetric] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     confident_prompt: Prompt = None
     agent_metrics: List[BaseMetric] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     agent_metric_collection: str = None
 
     def __post_init__(self):

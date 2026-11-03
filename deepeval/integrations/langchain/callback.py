@@ -2,8 +2,8 @@
 
 confident-trace traces every LangChain run once deepeval starts it with the
 ``langchain`` and ``langgraph`` instrumentations. ``CallbackHandler`` adds what
-only deepeval knows: the trace's settings and metrics, and the metrics, metric
-collection and prompt that a model's or retriever's ``metadata`` names.
+only deepeval knows: the trace's settings and metrics, and the metrics a
+model's ``metadata`` names.
 """
 
 from typing import Any, Dict, List, Optional
@@ -32,7 +32,7 @@ except ImportError:
 
 INSTRUMENTATIONS = ("langchain", "langgraph")
 # Keys in a model's ``metadata`` that configure its LLM span.
-_LLM_METADATA_KEYS = ("metrics", "metric_collection", "prompt")
+_LLM_METADATA_KEYS = ("metrics",)
 
 
 def is_langchain_installed():
@@ -60,6 +60,7 @@ class CallbackHandler(BaseCallbackHandler):
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
+        # Deprecated, ignored: Confident AI platform settings. Don't build on them.
         metric_collection: Optional[str] = None,
         test_case_id: Optional[str] = None,
         turn_id: Optional[str] = None,
@@ -74,9 +75,6 @@ class CallbackHandler(BaseCallbackHandler):
             "thread_id": thread_id,
             "user_id": user_id,
             "metrics": metrics,
-            "metric_collection": metric_collection,
-            "test_case_id": test_case_id,
-            "turn_id": turn_id,
         }
         self._staged: Dict[UUID, List[Staged]] = {}
 
@@ -113,10 +111,7 @@ class CallbackHandler(BaseCallbackHandler):
             run_id,
             parent_run_id,
             "retriever",
-            {
-                "embedder": metadata.get("ls_embedding_provider"),
-                "metric_collection": metadata.get("metric_collection"),
-            },
+            {"embedder": metadata.get("ls_embedding_provider")},
         )
 
     def on_chain_end(self, outputs, *, run_id, **kwargs):

@@ -167,7 +167,6 @@ class TraceManager:
         )
 
         # trace manager attributes
-        self.confident_api_key = None
         self.custom_mask_fn: Optional[Callable] = None
         self.environment = (
             settings.CONFIDENT_TRACE_ENVIRONMENT
@@ -214,6 +213,8 @@ class TraceManager:
         mask: Optional[Callable] = None,
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
+        # Deprecated, ignored: a Confident AI platform setting. Traces export
+        # under CONFIDENT_API_KEY or the `deepeval login` key.
         confident_api_key: Optional[str] = None,
         anthropic_client: Optional["Anthropic"] = None,
         openai_client: Optional[OpenAI] = None,
@@ -227,8 +228,6 @@ class TraceManager:
         if sampling_rate is not None:
             validate_sampling_rate(sampling_rate)
             self.sampling_rate = sampling_rate
-        if confident_api_key is not None:
-            self.confident_api_key = confident_api_key
         if openai_client is not None:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
@@ -238,11 +237,7 @@ class TraceManager:
         if tracing_enabled is not None:
             self.tracing_enabled = tracing_enabled
 
-    def start_new_trace(
-        self,
-        metric_collection: Optional[str] = None,
-        trace_uuid: Optional[str] = None,
-    ) -> Trace:
+    def start_new_trace(self, trace_uuid: Optional[str] = None) -> Trace:
         """Start a new trace and set it as the current trace."""
         if trace_uuid is None:
             trace_uuid = str(uuid.uuid4())
@@ -252,8 +247,6 @@ class TraceManager:
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=perf_counter(),
             end_time=None,
-            metric_collection=metric_collection,
-            confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -509,7 +502,6 @@ class TraceManager:
             "status",
             "llm_test_case",
             "metrics_data",
-            "metric_collection",
             "metadata",
         ):
             trace_dict.pop(key, None)
@@ -613,7 +605,6 @@ class TraceManager:
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
-            metricCollection=trace.metric_collection,
             retrievalContext=(
                 [
                     rc.context if hasattr(rc, "context") else rc
@@ -626,10 +617,6 @@ class TraceManager:
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
-            testCaseId=trace.test_case_id,
-            testRunId=trace.test_run_id,
-            turnId=trace.turn_id,
-            confident_api_key=trace.confident_api_key,
             environment=(
                 self.environment if not trace.environment else trace.environment
             ),
@@ -689,7 +676,6 @@ class TraceManager:
             metadata=span.metadata,
             error=span.error,
             integration=span.integration,
-            metricCollection=span.metric_collection,
             metricsData=(
                 [create_metric_data(metric) for metric in span.metrics]
                 if span.metrics
@@ -722,24 +708,10 @@ class TraceManager:
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
             api_span.provider = span.provider
-            # api_span.prompt = PromptApi(alias=alias, version=version, hash=hash) # Legacy won't be using anymore
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
             api_span.input_token_count = span.input_token_count
             api_span.output_token_count = span.output_token_count
-            if span.prompt:
-                api_span.prompt_alias = span.prompt.alias
-                api_span.prompt_commit_hash = span.prompt.hash
-                api_span.prompt_label = span.prompt.label
-                api_span.prompt_version = span.prompt.version
-            if span.prompt_alias:
-                api_span.prompt_alias = span.prompt_alias
-            if span.prompt_commit_hash:
-                api_span.prompt_commit_hash = span.prompt_commit_hash
-            if span.prompt_label:
-                api_span.prompt_label = span.prompt_label
-            if span.prompt_version:
-                api_span.prompt_version = span.prompt_version
 
             processed_token_intervals = {}
             if span.token_intervals:
@@ -883,7 +855,6 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
-        metric_collection: Optional[str] = None,
         _progress: Optional[Progress] = None,
         _pbar_callback_id: Optional[int] = None,
         **kwargs,
@@ -899,9 +870,7 @@ class Observer:
         self.result = None
 
         self.name: str = self.observe_kwargs.get("name", func_name)
-        self.prompt = self.observe_kwargs.get("prompt", None)
         self.metrics = metrics
-        self.metric_collection = metric_collection
         self.span_type: Optional[SpanType] = span_type
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
@@ -1034,8 +1003,6 @@ class Observer:
                 span.input = function_input
             if span.output is None:
                 span.output = function_output
-            if isinstance(span, LlmSpan) and self.prompt and not span.prompt:
-                span.prompt = self.prompt
         # What the call didn't set, the function's arguments and result give.
         setup.export_on(
             otel_span,
@@ -1049,7 +1016,6 @@ class Observer:
                 if setup.exports(otel_span, ConfidentAttr.SPAN_OUTPUT)
                 else function_output
             ),
-            prompt=self.prompt,
         )
         is_root = (
             span.parent_uuid is None
@@ -1108,7 +1074,6 @@ class Observer:
             for key, default in _OBSERVE_FIELDS.get(self.span_type, {}).items()
         }
         values["metrics"] = self.metrics
-        values["metric_collection"] = self.metric_collection
         return values
 
     def _drop_started_trace(self) -> None:
@@ -1142,6 +1107,7 @@ def observe(
     _func: Optional[Callable] = None,
     *,
     metrics: Optional[List[BaseMetric]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
@@ -1158,6 +1124,9 @@ def observe(
         _drop_if_root: If True, skip observation when there is no active parent span.
         _internal: If True, only observe when CONFIDENT_TRACE_INTERNAL is enabled.
         **observe_kwargs: Additional arguments to pass to the Observer.
+
+    ``metric_collection`` and a ``prompt`` keyword are deprecated Confident AI
+    platform settings: they are accepted and ignored. Don't build on them.
     """
 
     def decorator(func):
@@ -1195,7 +1164,6 @@ def observe(
                 observer = Observer(
                     type,
                     metrics=metrics,
-                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 )
@@ -1231,7 +1199,6 @@ def observe(
                 observer = Observer(
                     type,
                     metrics=metrics,
-                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 )
@@ -1314,7 +1281,6 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
-                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:
@@ -1352,7 +1318,6 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
-                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:

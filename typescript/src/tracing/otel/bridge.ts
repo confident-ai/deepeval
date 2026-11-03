@@ -481,9 +481,6 @@ const STAMPED_TRACE_STRINGS: Record<string, string> = {
   name: ConfidentAttr.TRACE_NAME,
   threadId: ConfidentAttr.TRACE_THREAD_ID,
   userId: ConfidentAttr.TRACE_USER_ID,
-  testCaseId: ConfidentAttr.TRACE_TEST_CASE_ID,
-  turnId: ConfidentAttr.TRACE_TURN_ID,
-  metricCollection: ConfidentAttr.TRACE_METRIC_COLLECTION,
   environment: ConfidentAttr.TRACE_ENVIRONMENT,
 };
 

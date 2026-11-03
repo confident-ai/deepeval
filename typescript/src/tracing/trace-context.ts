@@ -14,9 +14,12 @@ import type { BaseMetric } from "@/metrics/base-metrics";
 import { _setAmbientPayloadReader } from "@/tracing/pending-context";
 
 export type LlmSpanContext = {
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
   metrics?: BaseMetric[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   toolsMetricCollection?: string;
   toolsMetrics?: BaseMetric[];
   expectedOutput?: string;
@@ -27,6 +30,7 @@ export type LlmSpanContext = {
 
 export type AgentSpanContext = {
   metrics?: BaseMetric[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   expectedOutput?: string;
   expectedTools?: ToolCall[];
@@ -64,8 +68,6 @@ _setAmbientPayloadReader((kind) => {
     if (!ctx) return undefined;
     return drop({
       metrics: ctx.metrics,
-      metricCollection: ctx.metricCollection,
-      prompt: ctx.prompt,
       expectedOutput: ctx.expectedOutput,
       expectedTools: ctx.expectedTools,
       context: ctx.context,
@@ -74,14 +76,11 @@ _setAmbientPayloadReader((kind) => {
   }
 
   if (kind === "tool") {
-    // `toolsMetricCollection`/`toolsMetrics` are declared on the LLM context but
-    // target the tool spans in scope.
+    // `toolsMetrics` is declared on the LLM context but targets the tool spans
+    // in scope.
     const ctx = getLlmContext();
     if (!ctx) return undefined;
-    return drop({
-      metrics: ctx.toolsMetrics,
-      metricCollection: ctx.toolsMetricCollection,
-    });
+    return drop({ metrics: ctx.toolsMetrics });
   }
 
   if (kind === "agent") {
@@ -89,7 +88,6 @@ _setAmbientPayloadReader((kind) => {
     if (!ctx) return undefined;
     return drop({
       metrics: ctx.metrics,
-      metricCollection: ctx.metricCollection,
       expectedOutput: ctx.expectedOutput,
       expectedTools: ctx.expectedTools,
       context: ctx.context,
@@ -100,11 +98,26 @@ _setAmbientPayloadReader((kind) => {
   return undefined;
 });
 
+/** Confident AI platform settings `setTracingContext` accepts and ignores. */
+type DeprecatedTraceSettings = {
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  testCaseId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  testRunId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  turnId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  metricCollection?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  confidentApiKey?: string;
+};
+
 export async function setTracingContext<T>(
-  opts: Partial<Trace> & {
-    llmSpanContext?: LlmSpanContext;
-    agentSpanContext?: AgentSpanContext;
-  },
+  opts: Partial<Trace> &
+    DeprecatedTraceSettings & {
+      llmSpanContext?: LlmSpanContext;
+      agentSpanContext?: AgentSpanContext;
+    },
   fn: () => Promise<T> | T,
 ): Promise<T> {
   let currentTrace = getCurrentTrace();
@@ -116,9 +129,6 @@ export async function setTracingContext<T>(
   if (opts.metrics) {
     currentTrace.metrics = opts.metrics;
   }
-  if (opts.metricCollection) {
-    currentTrace.metricCollection = opts.metricCollection;
-  }
 
   setCurrentTrace(currentTrace);
   updateCurrentTrace({
@@ -127,8 +137,6 @@ export async function setTracingContext<T>(
     metadata: opts.metadata,
     threadId: opts.threadId,
     userId: opts.userId,
-    testCaseId: opts.testCaseId,
-    turnId: opts.turnId,
     input: opts.input,
     output: opts.output,
     retrievalContext: opts.retrievalContext,
@@ -137,7 +145,6 @@ export async function setTracingContext<T>(
     toolsCalled: opts.toolsCalled,
     expectedTools: opts.expectedTools,
     metrics: opts.metrics,
-    metricCollection: opts.metricCollection,
   });
 
   if (opts.llmSpanContext) {
@@ -157,8 +164,6 @@ export async function setTracingContext<T>(
       metadata: opts.metadata,
       threadId: opts.threadId,
       userId: opts.userId,
-      testCaseId: opts.testCaseId,
-      turnId: opts.turnId,
       input: opts.input,
       output: opts.output,
       retrievalContext: opts.retrievalContext,
@@ -166,7 +171,6 @@ export async function setTracingContext<T>(
       expectedOutput: opts.expectedOutput,
       toolsCalled: opts.toolsCalled,
       expectedTools: opts.expectedTools,
-      metricCollection: opts.metricCollection,
     },
     async () => await fn(),
   );

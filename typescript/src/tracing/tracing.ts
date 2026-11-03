@@ -73,7 +73,6 @@ export class BaseSpan {
   input?: any;
   output?: any;
   error?: string;
-  metricCollection?: string;
   metrics?: BaseMetric[];
   /** Metric results computed locally by the trace-eval executor (for posting). */
   metricsData?: MetricData[];
@@ -96,7 +95,6 @@ export class BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metrics?: BaseMetric[];
     metadata?: Record<string, any>;
     retrievalContext?: string[];
@@ -115,7 +113,6 @@ export class BaseSpan {
     this.input = params.input;
     this.output = params.output;
     this.error = params.error;
-    this.metricCollection = params.metricCollection;
     this.metrics = params.metrics;
     this.metadata = params.metadata;
     this.retrievalContext = params.retrievalContext;
@@ -145,7 +142,6 @@ export class AgentSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -163,11 +159,6 @@ export class AgentSpan extends BaseSpan {
 // LlmSpan
 export class LlmSpan extends BaseSpan {
   model: string;
-  prompt?: Prompt;
-  promptCommitHash?: string;
-  promptAlias?: string;
-  promptLabel?: string;
-  promptVersion?: string;
   costPerInputToken?: number;
   costPerOutputToken?: number;
   inputTokenCount?: number;
@@ -190,7 +181,6 @@ export class LlmSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -227,7 +217,6 @@ export class RetrieverSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -259,7 +248,6 @@ export class ToolSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -283,9 +271,6 @@ export interface Trace {
   tags?: string[];
   threadId?: string;
   userId?: string;
-  testCaseId?: string;
-  testRunId?: string;
-  turnId?: string;
   input?: any;
   output?: any;
   name?: string;
@@ -294,10 +279,8 @@ export interface Trace {
   context?: string[];
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
-  metricCollection?: string;
   metrics?: BaseMetric[];
   metricsData?: MetricData[];
-  confidentApiKey?: string;
   drop?: boolean;
 }
 
@@ -383,6 +366,7 @@ export interface TraceManagerConfig {
   environment?: Environment;
   samplingRate?: number;
   mask?: MaskFunction;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   confidentApiKey?: string;
   tracingEnabled?: boolean;
 }
@@ -399,7 +383,6 @@ export class TraceManager {
   private evaluatingDepth: number = 0;
   private traceCaptureSinks = new Set<(trace: Trace) => void>();
   private settleHooks = new Set<() => Promise<void>>();
-  private confidentApiKey: string = "";
   private tracingEnabled: boolean = true;
 
   public addTraceCaptureSink(sink: (trace: Trace) => void): () => void {
@@ -479,7 +462,7 @@ export class TraceManager {
    * Serialize a span subtree into a nested dict for trace-based metrics
    * (mirrors Python's `create_nested_spans_dict`). Keeps the eval-relevant
    * fields + recurses children; drops bookkeeping (uuids, times, status,
-   * metrics, metricCollection, metadata) and null values.
+   * metrics, metadata) and null values.
    */
   public createNestedSpansDict(span: BaseSpan): Record<string, unknown> {
     const dict: Record<string, unknown> = {};
@@ -519,9 +502,6 @@ export class TraceManager {
     }
     if (config.mask !== undefined) {
       this.customMaskFn = config.mask;
-    }
-    if (config.confidentApiKey !== undefined) {
-      this.confidentApiKey = config.confidentApiKey;
     }
     if (config.tracingEnabled !== undefined) {
       this.tracingEnabled = config.tracingEnabled;
@@ -564,7 +544,7 @@ export class TraceManager {
 
   /** The Confident AI key traces are sent with, if any. */
   public get exportApiKey(): string | undefined {
-    return this.confidentApiKey || getConfidentApiKey() || undefined;
+    return getConfidentApiKey() || undefined;
   }
 
   /** The share of traces exported to Confident AI. */
@@ -713,15 +693,10 @@ export class TraceManager {
       tags: trace.tags,
       threadId: trace.threadId,
       userId: trace.userId,
-      testCaseId: trace.testCaseId,
-      testRunId: trace.testRunId,
-      turnId: trace.turnId,
       input: trace.input,
       output: trace.output,
       toolsCalled: trace.toolsCalled,
-      metricCollection: trace.metricCollection,
       metricsData: trace.metricsData && withoutExpectations(trace.metricsData),
-      confidentApiKey: trace.confidentApiKey,
       status:
         trace.status === TraceSpanStatus.SUCCESS
           ? TraceSpanApiStatus.SUCCESS
@@ -765,7 +740,6 @@ export class TraceManager {
       input: span.input,
       output: span.output,
       error: span.error,
-      metricCollection: span.metricCollection,
       metricsData: span.metricsData,
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
@@ -786,11 +760,6 @@ export class TraceManager {
       apiSpan.costPerOutputToken = llmSpan.costPerOutputToken;
       apiSpan.inputTokenCount = llmSpan.inputTokenCount;
       apiSpan.outputTokenCount = llmSpan.outputTokenCount;
-      apiSpan.promptAlias = llmSpan.prompt?._alias || llmSpan.promptAlias;
-      apiSpan.promptCommitHash =
-        llmSpan.prompt?.hash || llmSpan.promptCommitHash;
-      apiSpan.promptLabel = llmSpan.prompt?.label || llmSpan.promptLabel;
-      apiSpan.promptVersion = llmSpan.prompt?.version || llmSpan.promptVersion;
     } else if (span.type === SpanType.RETRIEVER) {
       const retrieverSpan = span as RetrieverSpan;
       apiSpan.embedder = retrieverSpan.embedder || "default-embedder";
@@ -818,10 +787,6 @@ export class TraceManager {
     }
     if (span.expectedTools) {
       apiSpan.expectedTools = span.expectedTools;
-    }
-    // Add metric collection if available
-    if (span.metricCollection) {
-      apiSpan.metricCollection = span.metricCollection;
     }
     // Add metadata if available
     if (span.metadata) {
@@ -877,7 +842,6 @@ function errorMessage(error: unknown): string {
 export class Tracer {
   private readonly spanType: string;
   private readonly name: string;
-  private readonly metricCollection?: string;
   private readonly metrics?: BaseMetric[];
   private readonly observeKwargs: Record<string, any>;
   private readonly functionKwargs: Record<string, any>;
@@ -885,7 +849,6 @@ export class Tracer {
   constructor(
     spanType: SpanType | string | null,
     funcName: string,
-    metricCollection?: string,
     kwargs: Record<string, any> = {},
     metrics?: BaseMetric[],
   ) {
@@ -894,7 +857,6 @@ export class Tracer {
 
     // Initialize name from options or function name
     this.name = this.observeKwargs.name || funcName;
-    this.metricCollection = metricCollection;
     this.metrics = metrics;
 
     // Initialize span type from parameter or name
@@ -1020,10 +982,7 @@ export class Tracer {
 
   /** The span fields `observe` was given for this span. */
   private observeValues(): PendingPayload {
-    const values: PendingPayload = {
-      metrics: this.metrics,
-      metricCollection: this.metricCollection,
-    };
+    const values: PendingPayload = { metrics: this.metrics };
     for (const key of OBSERVE_FIELDS[this.spanType] ?? [])
       values[key] = this.observeKwargs[key];
     return values;
@@ -1034,7 +993,6 @@ interface AgentOptions<Args extends any[], T> {
   availableTools?: string[] | undefined;
   name?: string | undefined;
   agentHandoffs?: string[] | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1044,7 +1002,6 @@ interface LLMOptions<Args extends any[], T> {
   costPerInputToken?: number | undefined;
   costPerOutputToken?: number | undefined;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1052,7 +1009,6 @@ interface LLMOptions<Args extends any[], T> {
 interface RetrieverOptions<Args extends any[], T> {
   embedder?: string;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1060,7 +1016,6 @@ interface RetrieverOptions<Args extends any[], T> {
 interface ToolOptions<Args extends any[], T> {
   description?: string | undefined;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1068,7 +1023,6 @@ interface ToolOptions<Args extends any[], T> {
 interface CustomOptions<Args extends any[], T> {
   type: string;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1081,7 +1035,6 @@ function ObserveAgent<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.AGENT,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: defaultName,
@@ -1109,7 +1062,6 @@ function ObserveLLM<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.LLM,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1137,7 +1089,6 @@ function ObserveRetriever<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.RETRIEVER,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1163,7 +1114,6 @@ function ObserveTool<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.TOOL,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: defaultName,
@@ -1189,7 +1139,6 @@ function ObserveCustom<Args extends any[], T>(
     const tracer = new Tracer(
       options.type,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1209,6 +1158,7 @@ function ObserveCustom<Args extends any[], T>(
 export function observe<Args extends any[], T>(options: {
   type?: SpanType | string;
   name?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
   model?: string;
@@ -1224,7 +1174,14 @@ export function observe<Args extends any[], T>(options: {
   _internal?: boolean;
   fn: (...args: Args) => T | Promise<T>;
 }): (...args: Args) => Promise<T> {
-  const { type, fn, _dropIfRoot, _internal, ...rest } = options;
+  const {
+    type,
+    fn,
+    _dropIfRoot,
+    _internal,
+    metricCollection: _metricCollection,
+    ...rest
+  } = options;
 
   const observed = routeObserve<Args, T>(type, fn, rest);
   if (!_dropIfRoot && !_internal) return observed;
@@ -1242,7 +1199,6 @@ function routeObserve<Args extends any[], T>(
   fn: (...args: Args) => T | Promise<T>,
   rest: {
     name?: string;
-    metricCollection?: string;
     metrics?: BaseMetric[];
     model?: string;
     costPerInputToken?: number;
@@ -1258,7 +1214,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveAgent({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       availableTools: rest.availableTools,
       agentHandoffs: rest.agentHandoffs,
@@ -1267,7 +1222,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveLLM({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       model: rest.model,
       costPerInputToken: rest.costPerInputToken,
@@ -1277,7 +1231,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveRetriever({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       embedder: rest.embedder,
     });
@@ -1285,7 +1238,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveTool({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       description: rest.description,
     });
@@ -1294,7 +1246,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveCustom({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       type: "base",
     });
@@ -1316,6 +1267,7 @@ export interface UpdateCurrentSpanParams {
   expectedTools?: ToolCall[];
   expectedOutput?: string;
   context?: string[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
 }
@@ -1331,7 +1283,6 @@ export const updateCurrentSpan = ({
   expectedTools,
   expectedOutput,
   context,
-  metricCollection,
   metrics,
 }: UpdateCurrentSpanParams) => {
   // Confident AI gets the update too when confident-trace exports the span.
@@ -1346,7 +1297,6 @@ export const updateCurrentSpan = ({
     expectedTools,
     expectedOutput,
     context,
-    metricCollection,
   });
   const currentSpan = activeSpan();
   if (!currentSpan) return;
@@ -1389,9 +1339,6 @@ export const updateCurrentSpan = ({
   if (context) {
     currentSpan.context = context;
   }
-  if (metricCollection) {
-    currentSpan.metricCollection = metricCollection;
-  }
   if (metrics) {
     currentSpan.metrics = metrics;
   }
@@ -1402,8 +1349,11 @@ export interface UpdateCurrentTraceParams {
   metadata?: Record<string, any>;
   threadId?: string;
   userId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testRunId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   turnId?: string;
   input?: any;
   output?: any;
@@ -1414,8 +1364,10 @@ export interface UpdateCurrentTraceParams {
   expectedTools?: ToolCall[];
   expectedOutput?: string;
   context?: string[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   confidentApiKey?: string;
   drop?: boolean;
 }
@@ -1425,9 +1377,6 @@ export const updateCurrentTrace = ({
   metadata,
   threadId,
   userId,
-  testCaseId,
-  testRunId,
-  turnId,
   input,
   output,
   name,
@@ -1437,9 +1386,7 @@ export const updateCurrentTrace = ({
   expectedTools,
   expectedOutput,
   context,
-  metricCollection,
   metrics,
-  confidentApiKey,
   drop,
 }: UpdateCurrentTraceParams) => {
   // Confident AI gets the update too when confident-trace exports the trace.
@@ -1448,9 +1395,6 @@ export const updateCurrentTrace = ({
     metadata,
     threadId,
     userId,
-    testCaseId,
-    testRunId,
-    turnId,
     input,
     output,
     name,
@@ -1460,8 +1404,6 @@ export const updateCurrentTrace = ({
     expectedTools,
     expectedOutput,
     context,
-    metricCollection,
-    confidentApiKey,
   });
   if (drop) otelHooks.drop?.(true);
   const currentTrace = activeTrace();
@@ -1490,15 +1432,6 @@ export const updateCurrentTrace = ({
   if (userId !== undefined) {
     currentTrace.userId = userId;
   }
-  if (testCaseId !== undefined) {
-    currentTrace.testCaseId = testCaseId;
-  }
-  if (testRunId !== undefined) {
-    currentTrace.testRunId = testRunId;
-  }
-  if (turnId !== undefined) {
-    currentTrace.turnId = turnId;
-  }
   if (input !== undefined) {
     currentTrace.input = input;
   }
@@ -1523,14 +1456,8 @@ export const updateCurrentTrace = ({
   if (context !== undefined) {
     currentTrace.context = context;
   }
-  if (metricCollection !== undefined) {
-    currentTrace.metricCollection = metricCollection;
-  }
   if (metrics !== undefined) {
     currentTrace.metrics = metrics;
-  }
-  if (confidentApiKey !== undefined) {
-    currentTrace.confidentApiKey = confidentApiKey;
   }
   if (drop !== undefined) {
     currentTrace.drop = drop;
@@ -1544,6 +1471,7 @@ interface UpdateLLMSpanParams {
   inputTokenCount?: number;
   outputTokenCount?: number;
   tokenIntervals?: number;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
 }
 
@@ -1554,7 +1482,6 @@ export const updateLlmSpan = ({
   inputTokenCount,
   outputTokenCount,
   tokenIntervals,
-  prompt,
 }: UpdateLLMSpanParams) => {
   otelHooks.updateExported?.("span", {
     model,
@@ -1562,7 +1489,6 @@ export const updateLlmSpan = ({
     costPerOutputToken,
     inputTokenCount,
     outputTokenCount,
-    prompt,
   });
   const currentSpan = activeSpan();
   if (!currentSpan) {
@@ -1589,13 +1515,6 @@ export const updateLlmSpan = ({
   }
   if (tokenIntervals !== undefined) {
     llmSpan.tokenInterval = tokenIntervals;
-  }
-  if (prompt !== undefined) {
-    llmSpan.prompt = prompt;
-    llmSpan.promptAlias = prompt._alias!;
-    llmSpan.promptCommitHash = prompt.hash!;
-    llmSpan.promptVersion = prompt.version!;
-    llmSpan.promptLabel = prompt.label!;
   }
 };
 

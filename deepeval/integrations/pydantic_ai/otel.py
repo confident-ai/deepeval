@@ -5,7 +5,10 @@ from deepeval.cli.utils import WWW, with_utm
 from deepeval.integrations.pydantic_ai.instrumentator import instrument
 
 
-def instrument_pydantic_ai(api_key: Optional[str] = None):
+def instrument_pydantic_ai(
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
+    api_key: Optional[str] = None,
+):
     docs_url = with_utm(
         f"{WWW}/docs/integrations/third-party/pydantic-ai",
         medium="python_sdk",
@@ -17,4 +20,4 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
         DeprecationWarning,
         stacklevel=2,
     )
-    instrument(api_key)
+    instrument()

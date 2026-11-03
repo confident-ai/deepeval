@@ -1,5 +1,4 @@
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateThreadRequestBody
 
 
@@ -9,11 +8,7 @@ def evaluate_thread(
     overwrite_metrics: bool = False,
     chatbot_role: str = None,
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_thread_request_body = EvaluateThreadRequestBody(
         metricCollection=metric_collection,
@@ -45,11 +40,7 @@ async def a_evaluate_thread(
     overwrite_metrics: bool = False,
     chatbot_role: str = None,
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_thread_request_body = EvaluateThreadRequestBody(
         metricCollection=metric_collection,

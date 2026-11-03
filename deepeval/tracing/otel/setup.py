@@ -7,7 +7,6 @@ to Confident AI over OTLP under deepeval's API key.
 
 import logging
 import threading
-from collections import OrderedDict
 from contextlib import nullcontext
 from typing import (
     Any,
@@ -16,7 +15,6 @@ from typing import (
     Dict,
     FrozenSet,
     Iterable,
-    List,
     Optional,
     Sequence,
     Set,
@@ -74,19 +72,15 @@ _scope_defaults: Dict[str, Dict[str, Any]] = {}
 def ensure_confident_trace(
     instrumentations: Iterable[str] = (),
     *,
-    api_key: Optional[str] = None,
     exporter: Optional[SpanExporter] = None,
     tracer_provider: Optional[TracerProvider] = None,
 ) -> bool:
     """Start confident-trace once, then enable any ``instrumentations`` not on.
 
-    ``api_key``, when given, is the Confident AI key traces export under.
     ``exporter`` and ``tracer_provider`` replace the Confident AI exporter and
     the global provider, and only apply to the call that starts
     confident-trace. Returns whether confident-trace is running.
     """
-    if api_key:
-        trace_manager.configure(confident_api_key=api_key)
     try:
         import confident_trace
         from confident_trace.integrations import registry
@@ -276,12 +270,6 @@ def update_exported_trace(**values: Any) -> None:
     import confident_trace
 
     _send(confident_trace.update_trace, values, _EXPORTED_TRACE_FIELDS)
-    if isinstance(values.get("test_run_id"), str):
-        span.set_attribute(
-            ConfidentAttr.TRACE_TEST_RUN_ID, values["test_run_id"]
-        )
-    if isinstance(values.get("confident_api_key"), str):
-        _route_trace(span, values["confident_api_key"])
 
 
 def suppress_confident_trace() -> ContextManager:
@@ -309,7 +297,6 @@ _CONTENT_FIELDS = (
     "expected_output",
     "tools_called",
     "expected_tools",
-    "metric_collection",
 )
 _EXPORTED_SPAN_FIELDS = frozenset(
     (
@@ -330,8 +317,6 @@ _EXPORTED_TRACE_FIELDS = frozenset(
         "tags",
         "thread_id",
         "user_id",
-        "test_case_id",
-        "turn_id",
     )
 )
 _TOOL_FIELDS = ("tools_called", "expected_tools")
@@ -349,12 +334,6 @@ _PLATFORM_SPAN_ATTRIBUTES = {
     "chunk_size": ConfidentAttr.RETRIEVER_CHUNK_SIZE,
     "integration": ConfidentAttr.SPAN_INTEGRATION,
 }
-_PROMPT_ATTRIBUTES = {
-    "alias": ConfidentAttr.SPAN_PROMPT_ALIAS,
-    "version": ConfidentAttr.SPAN_PROMPT_VERSION,
-    "label": ConfidentAttr.SPAN_PROMPT_LABEL,
-    "hash": ConfidentAttr.SPAN_PROMPT_COMMIT_HASH,
-}
 
 
 def _platform_span_attributes(values: Dict[str, Any]) -> Dict[str, Any]:
@@ -365,31 +344,7 @@ def _platform_span_attributes(values: Dict[str, Any]) -> Dict[str, Any]:
             attributes[attribute] = [str(item) for item in value]
         elif isinstance(value, (str, int)) and not isinstance(value, bool):
             attributes[attribute] = value
-    prompt = values.get("prompt")
-    for key, attribute in _PROMPT_ATTRIBUTES.items():
-        value = getattr(prompt, key, None) if prompt is not None else None
-        if isinstance(value, str):
-            attributes[attribute] = value
     return attributes
-
-
-# The Confident AI key a trace exports under, when it isn't the default.
-_MAX_ROUTED_TRACES = 10_000
-_trace_keys: "OrderedDict[int, str]" = OrderedDict()
-_trace_keys_lock = threading.Lock()
-
-
-def _route_trace(span: OtelSpan, api_key: str) -> None:
-    trace_id = span.get_span_context().trace_id
-    with _trace_keys_lock:
-        _trace_keys[trace_id] = api_key
-        while len(_trace_keys) > _MAX_ROUTED_TRACES:
-            _trace_keys.popitem(last=False)
-
-
-def _trace_key(trace_id: int) -> Optional[str]:
-    with _trace_keys_lock:
-        return _trace_keys.get(trace_id)
 
 
 def _exportable(
@@ -459,9 +414,9 @@ class _ScopeDefaults(SpanProcessor):
 class ConfidentOtlpExporter(SpanExporter):
     """OTLP export to Confident AI under the API key resolved at export time.
 
-    Resolving per export lets a key set after start-up take effect, and a
-    trace may carry its own. Nothing is sent while tracing is off or for a
-    trace with no key.
+    Resolving per export lets a key set after start-up, such as by
+    ``deepeval login``, take effect. Nothing is sent while tracing is off or
+    without a key.
     """
 
     def __init__(self):
@@ -471,20 +426,10 @@ class ConfidentOtlpExporter(SpanExporter):
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         if not tracing_enabled() or not trace_manager.tracing_enabled:
             return SpanExportResult.SUCCESS
-        default_key = trace_manager.confident_api_key or get_confident_api_key()
-        by_key: Dict[str, List[ReadableSpan]] = {}
-        for span in spans:
-            api_key = _trace_key(span.context.trace_id) or default_key
-            if api_key:
-                by_key.setdefault(api_key, []).append(span)
-        result = SpanExportResult.SUCCESS
-        for api_key, keyed in by_key.items():
-            if (
-                self._exporter_for(api_key).export(keyed)
-                != SpanExportResult.SUCCESS
-            ):
-                result = SpanExportResult.FAILURE
-        return result
+        api_key = get_confident_api_key()
+        if not api_key:
+            return SpanExportResult.SUCCESS
+        return self._exporter_for(api_key).export(spans)
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True

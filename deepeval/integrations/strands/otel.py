@@ -16,6 +16,7 @@ from deepeval.tracing.otel.setup import (
 
 
 def instrument_strands(
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     api_key: Optional[str] = None,
     name: Optional[str] = None,
     thread_id: Optional[str] = None,
@@ -23,6 +24,7 @@ def instrument_strands(
     metadata: Optional[dict] = None,
     tags: Optional[List[str]] = None,
     environment: Optional[str] = None,
+    # Deprecated, ignored: Confident AI platform settings. Don't build on them.
     metric_collection: Optional[str] = None,
     test_case_id: Optional[str] = None,
     turn_id: Optional[str] = None,
@@ -31,10 +33,8 @@ def instrument_strands(
 
     The kwargs are defaults for every trace; ``update_current_trace(...)``
     overrides them at runtime. Span fields are set at the call site with
-    ``update_current_span(...)`` or ``next_*_span(...)``. ``api_key`` is only
-    needed to send traces to Confident AI under a key other than
-    ``CONFIDENT_API_KEY``.
+    ``update_current_span(...)`` or ``next_*_span(...)``.
     """
     with capture_tracing_integration(Integration.STRANDS):
-        ensure_confident_trace(("strands",), api_key=api_key)
+        ensure_confident_trace(("strands",))
         set_trace_defaults(SCOPE, dict(locals()))

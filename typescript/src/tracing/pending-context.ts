@@ -17,6 +17,7 @@ export interface PendingSpanParams {
   metadata?: Record<string, any>;
   name?: string;
   testCase?: LLMTestCase;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
 }
@@ -32,6 +33,7 @@ export interface PendingLlmSpanParams extends PendingSpanParams {
   outputTokenCount?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
 }
 
@@ -232,7 +234,6 @@ const BASE_FIELD_ATTRS: Record<string, AttributeEncoding> = {
   expectedTools: [ConfidentAttr.SPAN_EXPECTED_TOOLS, asJson],
   metadata: [ConfidentAttr.SPAN_METADATA, asJson],
   name: [ConfidentAttr.SPAN_NAME, String],
-  metricCollection: [ConfidentAttr.SPAN_METRIC_COLLECTION, String],
 };
 
 const TYPED_FIELD_ATTRS: Record<SlotKind, Record<string, AttributeEncoding>> = {
@@ -257,9 +258,7 @@ const TYPED_FIELD_ATTRS: Record<SlotKind, Record<string, AttributeEncoding>> = {
   },
 };
 
-// `metrics` and `prompt` hold objects and so have no attribute of their own:
-// metric instances only ever reach the REST route, and a `Prompt` is flattened
-// into the four `confident.span.prompt_*` scalars instead.
+// `metrics` holds metric objects, which have no attribute of their own.
 const BASE_FIELDS: readonly string[] = [
   ...Object.keys(BASE_FIELD_ATTRS),
   "metrics",
@@ -268,7 +267,7 @@ const BASE_FIELDS: readonly string[] = [
 // Guards against cross-type leakage (e.g. `embedder` landing on an LLM span).
 const TYPED_FIELDS: Record<SlotKind, readonly string[]> = {
   agent: Object.keys(TYPED_FIELD_ATTRS.agent),
-  llm: [...Object.keys(TYPED_FIELD_ATTRS.llm), "prompt"],
+  llm: Object.keys(TYPED_FIELD_ATTRS.llm),
   tool: Object.keys(TYPED_FIELD_ATTRS.tool),
   retriever: Object.keys(TYPED_FIELD_ATTRS.retriever),
 };
@@ -330,10 +329,7 @@ export function applyPendingToSpan(
  *
  * The OTLP counterpart to {@link applyPendingToSpan}: on that route no local
  * span object is ever built, so the attributes are the only carrier for
- * anything staged with `next*Span(...)`. A `Prompt` in particular cannot ride
- * in OTel attributes (primitives only), so it is flattened into the four
- * `confident.span.prompt_*` scalars the backend reads back to link the span to
- * its prompt version.
+ * anything staged with `next*Span(...)`.
  *
  * `popPendingFor` drains the slot whether or not this can encode what it
  * finds, so every encodable field has to be handled here: a gap loses the
@@ -364,18 +360,6 @@ export function pendingToOtelAttributes(
     } catch {
       // Unencodable value (circular metadata, say). Skipping keeps the rest of
       // the payload intact rather than throwing out of `onStart`.
-    }
-  }
-
-  if (kind === "llm") {
-    const prompt = resolved.prompt as Prompt | undefined;
-    if (prompt) {
-      if (prompt._alias) attrs[ConfidentAttr.SPAN_PROMPT_ALIAS] = prompt._alias;
-      if (prompt.hash)
-        attrs[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH] = prompt.hash;
-      if (prompt.label) attrs[ConfidentAttr.SPAN_PROMPT_LABEL] = prompt.label;
-      if (prompt.version)
-        attrs[ConfidentAttr.SPAN_PROMPT_VERSION] = prompt.version;
     }
   }
 

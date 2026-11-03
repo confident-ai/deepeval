@@ -233,14 +233,6 @@ def _trace_fields(span: ReadableSpan) -> Dict[str, Any]:
         "expected_output": attr_json_string(
             attributes, ConfidentAttr.TRACE_EXPECTED_OUTPUT
         ),
-        "test_case_id": attr_string(
-            attributes, ConfidentAttr.TRACE_TEST_CASE_ID
-        ),
-        "test_run_id": attr_string(attributes, ConfidentAttr.TRACE_TEST_RUN_ID),
-        "turn_id": attr_string(attributes, ConfidentAttr.TRACE_TURN_ID),
-        "metric_collection": attr_string(
-            attributes, ConfidentAttr.TRACE_METRIC_COLLECTION
-        ),
     }
     fields = {key: value for key, value in fields.items() if value is not None}
     # An explicit null counts: it clears input/output that another span set.
@@ -418,9 +410,6 @@ def _common_fields(
             make_json_serializable_for_metadata(metadata) if metadata else None
         ),
         "integration": attr_string(attributes, ConfidentAttr.SPAN_INTEGRATION),
-        "metric_collection": attr_string(
-            attributes, ConfidentAttr.SPAN_METRIC_COLLECTION
-        ),
         "retrieval_context": attr_json_string_list(
             attributes, ConfidentAttr.SPAN_RETRIEVAL_CONTEXT
         ),

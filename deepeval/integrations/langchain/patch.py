@@ -8,6 +8,7 @@ from langchain_core.tools import tool as original_tool, BaseTool
 def tool(
     *args,
     metrics: Optional[List[BaseMetric]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     **kwargs
 ):
@@ -17,7 +18,7 @@ def tool(
 
     # original_tool returns a decorator function, so we need to return a decorator
     def decorator(func: Callable) -> BaseTool:
-        func = _patch_tool_decorator(func, metrics, metric_collection)
+        func = _patch_tool_decorator(func, metrics)
         tool_instance = original_tool(*args, **kwargs)(func)
         return tool_instance
 
@@ -27,16 +28,13 @@ def tool(
 def _patch_tool_decorator(
     func: Callable,
     metrics: Optional[List[BaseMetric]] = None,
-    metric_collection: Optional[str] = None,
 ):
     original_func = func
 
     @functools.wraps(original_func)
     def wrapper(*args, **kwargs):
         # The tool body runs inside its confident-trace tool span.
-        update_current_span(
-            metrics=metrics, metric_collection=metric_collection
-        )
+        update_current_span(metrics=metrics)
         res = original_func(*args, **kwargs)
         return res
 

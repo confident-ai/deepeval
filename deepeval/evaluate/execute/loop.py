@@ -94,7 +94,6 @@ from deepeval.evaluate.execute._common import (
     _snapshot_tasks,
     _trace_error,
     filter_duplicate_results,
-    log_prompt,
 )
 from deepeval.evaluate.execute.agentic import (
     _a_execute_agentic_test_case,
@@ -251,7 +250,6 @@ def execute_agentic_test_cases_from_loop(
                     trace_api.agent_spans.append(api_span)
                 elif isinstance(span, LlmSpan):
                     trace_api.llm_spans.append(api_span)
-                    log_prompt(span, test_run_manager)
                 elif isinstance(span, RetrieverSpan):
                     trace_api.retriever_spans.append(api_span)
                 elif isinstance(span, ToolSpan):
