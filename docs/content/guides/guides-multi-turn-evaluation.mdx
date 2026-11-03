@@ -103,7 +103,7 @@ flowchart TD
         D -->|Iterate| A
     end
     subgraph Production["Production"]
-        E["Production Threads\n(Confident AI)"] --> F["Async Evaluations\n(Metric Collections)"]
+        E["Production Threads\n(Confident AI)"] --> F["Async Evaluations"]
         F --> G["Failing Threads\n(Failure Modes)"]
         G -->|"Turn into goldens"| A
     end
@@ -312,7 +312,7 @@ Production evaluation needs to:
 - **Scale automatically** — handle thousands of concurrent conversations
 - **Feed the next eval** — turn every failing conversation into a scenario your dataset was missing
 
-[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and routes them to the right annotators so they become goldens for your next simulation run. The steps below also set up evals that run on every thread and flag the failing ones.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and routes them to the right annotators so they become goldens for your next simulation run.
 
 ### Setting Up Production Monitoring
 
@@ -330,24 +330,10 @@ flowchart LR
 
 <Steps>
 <Step>
-### Create a metric collection
-
-
-Log in to Confident AI and create a metric collection containing the conversational metrics you want to run in production:
-
-<VideoDisplayer
-  src={ASSETS.metricsCreateCollection}
-  confidentUrl="/docs/llm-tracing/evaluations"
-  label="Create a metric collection on Confident AI"
-  description="Choose the conversational metrics that run on every production thread."
-/>
-
-</Step>
-<Step>
 ### Log conversations as threads
 
 
-Confident AI groups multi-turn conversations into **threads**—the production equivalent of `ConversationalTestCase`s. Each thread captures the full conversation history and can be evaluated against your metric collection.
+Confident AI groups multi-turn conversations into **threads**—the production equivalent of `ConversationalTestCase`s. Each thread captures the full conversation history.
 
 <VideoDisplayer
   src={ASSETS.tracingThreads}
@@ -455,10 +441,9 @@ With proper evaluation in place, you can catch quality regressions before users 
           <a href="https://www.confident-ai.com/products/llm-observability">
             Confident AI
           </a>
-          , then attach a multi-turn <code>metric_collection</code>. Failing
-          threads surface asynchronously, you can replay them turn-by-turn to
-          see where the conversation drifted, and they become goldens for your
-          next simulation run.
+          . Failing threads surface asynchronously, you can replay them
+          turn-by-turn to see where the conversation drifted, and they become
+          goldens for your next simulation run.
         </>
       ),
     },

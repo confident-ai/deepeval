@@ -448,7 +448,7 @@ await setTracingContext(
 
 </Switch>
 
-`LlmSpanContext` accepts `metrics`, <Term py="expected_output" ts="expectedOutput"/>, <Term py="expected_tools" ts="expectedTools"/>, `context`, <Term py="retrieval_context" ts="retrievalContext"/>, and `prompt`. Each one is read by the OpenAI patch when the next LLM span is created.
+`LlmSpanContext` accepts `metrics`, <Term py="expected_output" ts="expectedOutput"/>, <Term py="expected_tools" ts="expectedTools"/>, `context`, and <Term py="retrieval_context" ts="retrievalContext"/>. Each one is read by the OpenAI patch when the next LLM span is created.
 
 <Only id="typescript">
 
@@ -798,7 +798,6 @@ await setTracingContext(
 | Field | Type | Description |
 | --- | --- | --- |
 | `metrics` | <Term py="list" ts="array"/> | Metrics applied to the LLM span. |
-| `prompt` | `Prompt` | Confident AI prompt object; captured on the LLM span for prompt-version analytics. |
 | <Term py="expected_output" ts="expectedOutput"/> | <Term py="str" ts="string"/> | Reference output for metrics that compare against ground truth. |
 | <Term py="expected_tools" ts="expectedTools"/> | <Term py="list" ts="array"/> | Reference tool calls for tool-aware metrics. |
 | `context` | <Term py="list[str]" ts="string[]"/> | Ideal context the model should use when answering. |

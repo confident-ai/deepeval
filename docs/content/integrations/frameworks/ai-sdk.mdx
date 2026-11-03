@@ -331,7 +331,6 @@ Configure-level defaults:
 const tracer = configureAiSdkTracing({
   name: "weather-app",
   environment: "development",
-  traceMetricCollection: "online_weather_v1",
 });
 ```
 
@@ -357,7 +356,7 @@ await setTracingContext(
 );
 ```
 
-`toolsMetrics` and `toolsMetricCollection` are declared on `llmSpanContext` but target the tool spans in scope.
+`toolsMetrics` is declared on `llmSpanContext` but targets the tool spans in scope.
 
 ### Streaming
 
@@ -384,10 +383,8 @@ for await (const chunk of textStream) {
 
 | Field                   | Type      | Description                                                                 |
 | ----------------------- | --------- | --------------------------------------------------------------------------- |
-| `apiKey`                | `string`  | Confident AI API key. Defaults to `CONFIDENT_API_KEY`.                        |
 | `name`                  | `string`  | Default trace name.                                                         |
 | `environment`           | `string`  | Trace environment, e.g. `"development"` or `"production"`.                    |
-| `traceMetricCollection` | `string`  | Trace-level metric collection, for online evals on production traces.              |
 
 Also exported:
 
@@ -455,10 +452,9 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
           Yes. Keep <code>configureAiSdkTracing(...)</code> registered, pass
           <code>telemetry</code> on each call, and set <code>threadId</code> /{" "}
           <code>userId</code> with <code>updateCurrentTrace(...)</code> from a
-          tool.
-          With a <code>traceMetricCollection</code> set,{" "}
-          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> runs evals on every production
-          trace and flags the failing ones.
+          tool.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> flags the failing production
+          traces.
         </>
       ),
     },
