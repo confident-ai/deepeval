@@ -112,8 +112,7 @@
         "Python is a high-level programming language known for its simplicity.",
         "Python supports multiple programming paradigms including procedural and OOP."
       ],
-      "embedder": "",
-      "metricCollection": "retriever_quality"
+      "embedder": ""
     }
   ],
   "toolSpans": [],

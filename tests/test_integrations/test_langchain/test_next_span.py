@@ -143,15 +143,15 @@ class TestNextLlmSpanWiring:
     plumbing for both ``on_llm_start`` (string-prompt LLMs like
     ``FakeListLLM``) and ``on_chat_model_start`` (chat models)."""
 
-    def test_metric_collection_lands_on_llm_span(self):
+    def test_staged_field_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
 
-        with next_llm_span(metric_collection="llm_quality_v1"):
+        with next_llm_span(expected_output="llm_quality_v1"):
             llm.invoke("ping", config={"callbacks": [callback]})
 
         assert len(callback.llm_spans) == 1
-        assert callback.llm_spans[0].metric_collection == "llm_quality_v1"
+        assert callback.llm_spans[0].expected_output == "llm_quality_v1"
 
     def test_metrics_list_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
@@ -182,13 +182,13 @@ class TestNextLlmSpanWiring:
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong-1", "pong-2"])
 
-        with next_llm_span(metric_collection="only-first"):
+        with next_llm_span(expected_output="only-first"):
             llm.invoke("ping-1", config={"callbacks": [callback]})
             llm.invoke("ping-2", config={"callbacks": [callback]})
 
         assert len(callback.llm_spans) == 2
-        assert callback.llm_spans[0].metric_collection == "only-first"
-        assert callback.llm_spans[1].metric_collection is None
+        assert callback.llm_spans[0].expected_output == "only-first"
+        assert callback.llm_spans[1].expected_output is None
 
     def test_unconsumed_payload_does_not_leak_to_next_with(self):
         """Token-based reset on scope exit: a payload that nobody
@@ -196,17 +196,17 @@ class TestNextLlmSpanWiring:
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
 
-        with next_llm_span(metric_collection="leaked"):
+        with next_llm_span(expected_output="leaked"):
             pass  # no LLM call → nothing pops
 
-        with next_llm_span(metric_collection="fresh"):
+        with next_llm_span(expected_output="fresh"):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        assert callback.llm_spans[0].metric_collection == "fresh"
+        assert callback.llm_spans[0].expected_output == "fresh"
 
     def test_outside_with_block_no_staging(self):
         """Sanity floor: an LLM call outside any ``next_llm_span(...)``
-        leaves ``metric_collection`` / ``metrics`` / ``metadata`` at
+        leaves ``expected_output`` / ``metrics`` / ``metadata`` at
         their natural defaults (None, since no metadata baseline is
         provided either)."""
         callback = _RecordingCallbackHandler()
@@ -215,28 +215,29 @@ class TestNextLlmSpanWiring:
         llm.invoke("ping", config={"callbacks": [callback]})
 
         span = callback.llm_spans[0]
-        assert span.metric_collection is None
+        assert span.expected_output is None
         assert span.metrics is None
         # metadata is left untouched (no metadata baseline → None).
         assert span.metadata is None
 
-    def test_overrides_with_config_metadata_metric_collection(self):
+    def test_overrides_with_config_metadata_metrics(self):
         """``apply_pending_to_span(...)`` runs AFTER the metadata
         baseline is read in ``on_llm_start`` (see comment in
         ``callback.py``: "more specific wins"). So a staged
-        ``next_llm_span(metric_collection=...)`` MUST override
-        ``with_config(metadata={"metric_collection": ...})``."""
+        ``next_llm_span(metrics=...)`` MUST override
+        ``with_config(metadata={"metrics": ...})``."""
         callback = _RecordingCallbackHandler()
+        from_metadata, from_next_span = _fake_metric(), _fake_metric()
         llm = FakeListLLM(responses=["pong"]).with_config(
-            metadata={"metric_collection": "from_metadata"}
+            metadata={"metrics": [from_metadata]}
         )
 
-        with next_llm_span(metric_collection="from_next_span"):
+        with next_llm_span(metrics=[from_next_span]):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        assert callback.llm_spans[0].metric_collection == "from_next_span"
+        assert callback.llm_spans[0].metrics == [from_next_span]
 
-    def test_does_not_override_metadata_when_only_metric_collection_staged(
+    def test_does_not_override_metadata_when_only_another_field_staged(
         self,
     ):
         """Negative guard for the override path: only fields PRESENT in
@@ -244,20 +245,17 @@ class TestNextLlmSpanWiring:
         alone when the staging block doesn't pass it."""
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"]).with_config(
-            metadata={
-                "metric_collection": "from_metadata",
-                "extra_key": "preserved",
-            }
+            metadata={"extra_key": "preserved"}
         )
 
-        with next_llm_span(metric_collection="staged"):
+        with next_llm_span(expected_output="staged"):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        # metric_collection got overridden, but the metadata-driven
+        # expected_output got staged, but the metadata-driven
         # baseline (which the handler does NOT copy onto span.metadata
         # in on_llm_start) is unaffected — span.metadata stays None
         # because the staging block didn't pass metadata either.
-        assert callback.llm_spans[0].metric_collection == "staged"
+        assert callback.llm_spans[0].expected_output == "staged"
         assert callback.llm_spans[0].metadata is None
 
 
@@ -267,15 +265,15 @@ class TestNextLlmSpanWiring:
 
 
 class TestNextToolSpanWiring:
-    def test_metric_collection_lands_on_tool_span(self):
+    def test_staged_field_lands_on_tool_span(self):
         callback = _RecordingCallbackHandler()
         tool = _EchoTool()
 
-        with next_tool_span(metric_collection="tool_quality_v1"):
+        with next_tool_span(expected_output="tool_quality_v1"):
             tool.invoke({"text": "hi"}, config={"callbacks": [callback]})
 
         assert len(callback.tool_spans) == 1
-        assert callback.tool_spans[0].metric_collection == "tool_quality_v1"
+        assert callback.tool_spans[0].expected_output == "tool_quality_v1"
 
     def test_metadata_lands_on_tool_span(self):
         callback = _RecordingCallbackHandler()
@@ -290,13 +288,13 @@ class TestNextToolSpanWiring:
         callback = _RecordingCallbackHandler()
         tool = _EchoTool()
 
-        with next_tool_span(metric_collection="only-first-tool"):
+        with next_tool_span(expected_output="only-first-tool"):
             tool.invoke({"text": "hi-1"}, config={"callbacks": [callback]})
             tool.invoke({"text": "hi-2"}, config={"callbacks": [callback]})
 
         assert len(callback.tool_spans) == 2
-        assert callback.tool_spans[0].metric_collection == "only-first-tool"
-        assert callback.tool_spans[1].metric_collection is None
+        assert callback.tool_spans[0].expected_output == "only-first-tool"
+        assert callback.tool_spans[1].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -305,16 +303,16 @@ class TestNextToolSpanWiring:
 
 
 class TestNextRetrieverSpanWiring:
-    def test_metric_collection_lands_on_retriever_span(self):
+    def test_staged_field_lands_on_retriever_span(self):
         callback = _RecordingCallbackHandler()
         retriever = _StaticRetriever()
 
-        with next_retriever_span(metric_collection="retriever_quality_v1"):
+        with next_retriever_span(expected_output="retriever_quality_v1"):
             retriever.invoke("query", config={"callbacks": [callback]})
 
         assert len(callback.retriever_spans) == 1
         assert (
-            callback.retriever_spans[0].metric_collection
+            callback.retriever_spans[0].expected_output
             == "retriever_quality_v1"
         )
 
@@ -348,19 +346,19 @@ class TestCrossTypeIsolation:
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
 
-        with next_tool_span(metric_collection="tool-only"):
+        with next_tool_span(expected_output="tool-only"):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        assert callback.llm_spans[0].metric_collection is None
+        assert callback.llm_spans[0].expected_output is None
 
     def test_next_llm_span_does_not_leak_to_tool_span(self):
         callback = _RecordingCallbackHandler()
         tool = _EchoTool()
 
-        with next_llm_span(metric_collection="llm-only"):
+        with next_llm_span(expected_output="llm-only"):
             tool.invoke({"text": "hi"}, config={"callbacks": [callback]})
 
-        assert callback.tool_spans[0].metric_collection is None
+        assert callback.tool_spans[0].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -378,10 +376,10 @@ class TestNextSpanBaseSlotWiring:
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
 
-        with next_span(metric_collection="from_base"):
+        with next_span(expected_output="from_base"):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        assert callback.llm_spans[0].metric_collection == "from_base"
+        assert callback.llm_spans[0].expected_output == "from_base"
 
     def test_typed_slot_overrides_base_slot_on_overlap(self):
         """When both ``next_span`` and ``next_llm_span`` set the same
@@ -389,12 +387,12 @@ class TestNextSpanBaseSlotWiring:
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
 
-        with next_span(metric_collection="from_base"), next_llm_span(
-            metric_collection="from_typed"
+        with next_span(expected_output="from_base"), next_llm_span(
+            expected_output="from_typed"
         ):
             llm.invoke("ping", config={"callbacks": [callback]})
 
-        assert callback.llm_spans[0].metric_collection == "from_typed"
+        assert callback.llm_spans[0].expected_output == "from_typed"
 
 
 # ---------------------------------------------------------------------------
@@ -414,11 +412,11 @@ async def test_next_llm_span_lands_on_async_llm_call():
     callback = _RecordingCallbackHandler()
     llm = FakeListLLM(responses=["pong"])
 
-    with next_llm_span(metric_collection="async_v1"):
+    with next_llm_span(expected_output="async_v1"):
         await llm.ainvoke("ping", config={"callbacks": [callback]})
 
     assert len(callback.llm_spans) == 1
-    assert callback.llm_spans[0].metric_collection == "async_v1"
+    assert callback.llm_spans[0].expected_output == "async_v1"
 
 
 @pytest.mark.asyncio
@@ -435,9 +433,9 @@ async def test_next_llm_span_lands_inside_runnable_lambda_async():
     async def call_llm(_input, config=None):
         return await llm.ainvoke("ping", config=config)
 
-    with next_llm_span(metric_collection="lambda_async_v1"):
+    with next_llm_span(expected_output="lambda_async_v1"):
         await RunnableLambda(call_llm).ainvoke(
             "unused", config={"callbacks": [callback]}
         )
 
-    assert callback.llm_spans[0].metric_collection == "lambda_async_v1"
+    assert callback.llm_spans[0].expected_output == "lambda_async_v1"

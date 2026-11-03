@@ -117,7 +117,6 @@
         "special_tool"
       ],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1",
       "metricsData": [
         {
           "name": "Answer Relevancy",
@@ -225,8 +224,7 @@
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 136.0,
-      "outputTokenCount": 15.0,
-      "metricCollection": "llm_metrics_async_v1"
+      "outputTokenCount": 15.0
     }
   ],
   "retrieverSpans": [],
@@ -244,8 +242,7 @@
       },
       "output": "Processed: Async Data",
       "integration": "Strands",
-      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
-      "metricCollection": "special_tool_v1"
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path)."
     }
   ],
   "startTime": "2026-10-21T17:48:02.795Z",
@@ -276,6 +273,5 @@
         "query": "Async Data"
       }
     }
-  ],
-  "metricCollection": "trace_metrics_override_async_v1"
+  ]
 }

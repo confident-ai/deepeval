@@ -111,14 +111,14 @@ def test_staged_fields_reach_their_spans(provider, exporter, async_evaluation):
     instrument_strands()
 
     with next_agent_span(metrics=[agent_metric]):
-        with next_tool_span(metric_collection="tools"):
+        with next_tool_span(expected_output="tools"):
             run_agent(provider)
 
     (collected,) = async_evaluation.traces_to_evaluate
     (agent,) = collected.root_spans
     assert agent.metrics == [agent_metric]
     (tool,) = spans_of(collected, ToolSpan)
-    assert tool.metric_collection == "tools"
+    assert tool.expected_output == "tools"
 
 
 @pytest.mark.parametrize(

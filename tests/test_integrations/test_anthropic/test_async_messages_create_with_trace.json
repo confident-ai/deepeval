@@ -25,11 +25,7 @@
       "model": "claude-sonnet-4-5",
       "provider": "Anthropic",
       "inputTokenCount": 25.0,
-      "outputTokenCount": 43.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptCommitHash": "0000000"
+      "outputTokenCount": 43.0
     }
   ],
   "retrieverSpans": [],

@@ -17,8 +17,7 @@
       "output": "Farewell, until next.",
       "integration": "PydanticAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_stacked_v1"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
@@ -49,8 +48,7 @@
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 28.0,
-      "outputTokenCount": 7.0,
-      "metricCollection": "llm_stacked_v1"
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],

@@ -398,8 +398,7 @@
         "city": "Paris"
       },
       "output": "Weather in Paris: Cloudy, 65\u00b0F",
-      "integration": "CrewAI",
-      "metricCollection": "weather_tool_metrics"
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-10-21T17:48:33.947Z",

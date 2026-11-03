@@ -21,10 +21,10 @@ class TestNextSpanPureContextAPI:
 
     def test_next_agent_span_one_shot_consumption(self):
         """First pop drains; second pop returns empty for the same scope."""
-        with next_agent_span(metric_collection="A", available_tools=["x"]):
+        with next_agent_span(name="A", available_tools=["x"]):
             first = pop_pending_for("agent")
             assert first == {
-                "metric_collection": "A",
+                "name": "A",
                 "available_tools": ["x"],
             }
 
@@ -34,7 +34,7 @@ class TestNextSpanPureContextAPI:
     def test_scope_exit_restores_prior_value(self):
         """Token-based reset: leaving the ``with`` block puts the slot
         back to ``None`` (not just empty-dict)."""
-        with next_agent_span(metric_collection="A"):
+        with next_agent_span(name="A"):
             pass
 
         # After exit, popping yields nothing — slot is back to None.
@@ -43,11 +43,11 @@ class TestNextSpanPureContextAPI:
     def test_stacked_typed_slots_are_independent(self):
         """``with next_agent_span(...), next_llm_span(...):`` keeps each
         slot separate; popping one does not drain the other."""
-        with next_agent_span(metric_collection="A"), next_llm_span(
+        with next_agent_span(name="A"), next_llm_span(
             model="gpt-4"
         ):
             agent_payload = pop_pending_for("agent")
-            assert agent_payload == {"metric_collection": "A"}
+            assert agent_payload == {"name": "A"}
 
             llm_payload = pop_pending_for("llm")
             assert llm_payload == {"model": "gpt-4"}
@@ -65,42 +65,42 @@ class TestNextSpanPureContextAPI:
     def test_typed_overrides_base_on_key_overlap(self):
         """When base + typed both set the same key, the typed slot wins
         (more specific wins)."""
-        with next_span(metric_collection="base"), next_agent_span(
-            metric_collection="typed"
+        with next_span(name="base"), next_agent_span(
+            name="typed"
         ):
             payload = pop_pending_for("agent")
-            assert payload["metric_collection"] == "typed"
+            assert payload["name"] == "typed"
 
     def test_pop_for_mismatched_type_drains_only_base(self):
         """``next_agent_span(...)`` is NOT consumed by
         ``pop_pending_for('llm')``. Base slot still goes (it's
         any-type)."""
         with next_span(metadata={"k": "v"}), next_agent_span(
-            metric_collection="A"
+            name="A"
         ):
             llm_payload = pop_pending_for("llm")
             # Base flowed through, agent slot untouched.
             assert llm_payload == {"metadata": {"k": "v"}}
 
             agent_payload = pop_pending_for("agent")
-            assert agent_payload == {"metric_collection": "A"}
+            assert agent_payload == {"name": "A"}
 
     def test_nested_same_type_innermost_wins(self):
         """Nested ``with next_agent_span(...)`` blocks: inner overrides
         for its scope; on exit, outer is restored."""
-        with next_agent_span(metric_collection="outer"):
-            with next_agent_span(metric_collection="inner"):
+        with next_agent_span(name="outer"):
+            with next_agent_span(name="inner"):
                 assert pop_pending_for("agent") == {
-                    "metric_collection": "inner"
+                    "name": "inner"
                 }
 
             # Outer scope's value is back, ready to be consumed once.
-            assert pop_pending_for("agent") == {"metric_collection": "outer"}
+            assert pop_pending_for("agent") == {"name": "outer"}
 
     def test_drops_none_kwargs(self):
         """Slots store only kwargs the user actually passed; ``None``
         kwargs are stripped so consumers don't have to re-check."""
-        with next_agent_span(metric_collection="A"):
+        with next_agent_span(input="A"):
             payload = pop_pending_for("agent")
             assert "available_tools" not in payload
             assert "name" not in payload
@@ -109,12 +109,12 @@ class TestNextSpanPureContextAPI:
     def test_unconsumed_payload_does_not_leak_across_scopes(self):
         """If no consumer pops inside the ``with``, the payload is
         discarded on exit — it never leaks to a sibling scope."""
-        with next_agent_span(metric_collection="leaked"):
+        with next_agent_span(name="leaked"):
             pass  # nobody popped
 
         # Sibling scope: starts clean.
-        with next_agent_span(metric_collection="fresh"):
-            assert pop_pending_for("agent") == {"metric_collection": "fresh"}
+        with next_agent_span(name="fresh"):
+            assert pop_pending_for("agent") == {"name": "fresh"}
 
     def test_drain_visible_across_asyncio_sub_context(self):
         """Regression: ``Agent.run_sync(...)`` calls ``asyncio.run(...)``
@@ -129,7 +129,7 @@ class TestNextSpanPureContextAPI:
         """
         import asyncio
 
-        with next_agent_span(metric_collection="only-once"):
+        with next_agent_span(name="only-once"):
 
             async def _consume():
                 return pop_pending_for("agent")
@@ -137,7 +137,7 @@ class TestNextSpanPureContextAPI:
             # First consumer runs inside asyncio.run — same trick
             # ``Agent.run_sync`` plays internally.
             first = asyncio.run(_consume())
-            assert first == {"metric_collection": "only-once"}
+            assert first == {"name": "only-once"}
 
             # Second consumer in the outer ``with`` context. Must see
             # an empty dict because the asyncio sub-context's drain
@@ -184,16 +184,16 @@ class TestApplyPendingToSpan:
         span = _make_placeholder()
         apply_pending_to_span(span, {})
         # Nothing changed — sanity.
-        assert span.metric_collection is None
+        assert span.name is None
         assert span.metadata is None
 
     def test_base_field_setattr(self):
         span = _make_placeholder()
         apply_pending_to_span(
             span,
-            {"metric_collection": "mc", "metadata": {"k": "v"}, "name": "n"},
+            {"input": "i", "metadata": {"k": "v"}, "name": "n"},
         )
-        assert span.metric_collection == "mc"
+        assert span.input == "i"
         assert span.metadata == {"k": "v"}
         assert span.name == "n"
 
@@ -216,11 +216,11 @@ class TestApplyPendingToSpan:
                 "model": "gpt-4",  # llm-only
                 "embedder": "ada",  # retriever-only
                 "available_tools": ["x"],  # agent-only
-                "metric_collection": "shared",  # base — should land
+                "name": "shared",  # base — should land
             },
         )
         # Only the shared base field landed.
-        assert base.metric_collection == "shared"
+        assert base.name == "shared"
         # Cross-type keys did not raise and did not phantom-attribute.
         assert not hasattr(base, "model")
         assert not hasattr(base, "embedder")
@@ -251,3 +251,11 @@ class TestApplyPendingToSpan:
         assert span.input == "individual-input"
         assert span.output == "individual-output"
         assert span.expected_output == "tc-expected"
+
+
+def test_platform_settings_are_accepted_and_not_staged():
+    """Deprecated Confident AI platform settings reach no span."""
+    with next_span(metric_collection="mc"), next_llm_span(
+        metric_collection="mc", prompt=object()
+    ):
+        assert pop_pending_for("llm") == {}

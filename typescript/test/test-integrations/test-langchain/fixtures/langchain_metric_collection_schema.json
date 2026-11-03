@@ -118,7 +118,6 @@
           }
         }
       ],
-      "metricCollection": "llm-span-evals",
       "toolsCalled": [
         {
           "name": "calculate",
@@ -129,11 +128,7 @@
       ],
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 56,
-      "outputTokenCount": 16,
-      "promptAlias": "langchain-metric-collection-test",
-      "promptCommitHash": "bab04ec",
-      "promptLabel": "production",
-      "promptVersion": "01.00.00"
+      "outputTokenCount": 16
     },
     {
       "uuid": "3357cd7a206f35b4",
@@ -174,14 +169,9 @@
         }
       ],
       "output": "The result of \\( 125 \\times 5 \\) is 625.",
-      "metricCollection": "llm-span-evals",
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 162,
-      "outputTokenCount": 17,
-      "promptAlias": "langchain-metric-collection-test",
-      "promptCommitHash": "bab04ec",
-      "promptLabel": "production",
-      "promptVersion": "01.00.00"
+      "outputTokenCount": 17
     }
   ],
   "retrieverSpans": [],
@@ -285,6 +275,5 @@
       }
     }
   ],
-  "metricCollection": "root-trace-evals",
   "status": "SUCCESS"
 }

@@ -148,8 +148,11 @@ describe("Mastra Integration Tests", () => {
     expect(trace.threadId).toBe("thread-123");
     expect(trace.userId).toBe("user-xyz");
     expect(trace.tags).toEqual(["req-tag"]);
-    expect(trace.testCaseId).toBe("tc-1");
-    expect(trace.turnId).toBe("turn-1");
+    // Deprecated platform settings: dropped, and not kept as metadata.
+    expect(trace).not.toHaveProperty("testCaseId");
+    expect(trace).not.toHaveProperty("turnId");
+    expect(trace.metadata).not.toHaveProperty("testCaseId");
+    expect(trace.metadata).not.toHaveProperty("turnId");
     expect(trace.metadata?.team).toBe("growth");
   }, 60000);
 });

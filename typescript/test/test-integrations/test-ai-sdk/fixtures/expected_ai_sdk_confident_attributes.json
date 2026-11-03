@@ -45,14 +45,9 @@
         }
       ],
       "output": "The capital of France is Paris.",
-      "metricCollection": "llm-specific-metrics",
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 14,
-      "outputTokenCount": 8,
-      "promptAlias": "ai-sdk-test-prompt",
-      "promptCommitHash": "abcdef123",
-      "promptLabel": "testing",
-      "promptVersion": "01.00.00"
+      "outputTokenCount": 8
     }
   ],
   "retrieverSpans": [],
@@ -72,6 +67,5 @@
   "userId": "test_user_id",
   "input": "What is the capital of France?",
   "output": "The capital of France is Paris.",
-  "metricCollection": "global-trace-metrics",
   "status": "SUCCESS"
 }

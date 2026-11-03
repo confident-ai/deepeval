@@ -174,8 +174,7 @@
       },
       "output": 40,
       "integration": "Google ADK",
-      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result.",
-      "metricCollection": "calculator-metrics"
+      "description": "Perform basic arithmetic operations.\n\nArgs:\n    operation: One of ``add``, ``subtract``, ``multiply``, ``divide``.\n    a: The first operand.\n    b: The second operand.\n\nReturns:\n    A dict with a ``result`` key holding the numeric result."
     }
   ],
   "startTime": "2026-10-21T16:42:43.441Z",

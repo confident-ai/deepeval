@@ -283,6 +283,5 @@
         "city": "Tokyo"
       }
     }
-  ],
-  "metricCollection": "llama_async_index_metric_collection"
+  ]
 }

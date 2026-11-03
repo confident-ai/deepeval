@@ -93,7 +93,6 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "calculator-metrics",
       "integration": "AgentCore"
     }
   ],

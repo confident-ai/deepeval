@@ -7,8 +7,7 @@
       "status": "SUCCESS",
       "type": "base",
       "startTime": "2026-10-21T17:48:04.177Z",
-      "endTime": "2026-10-21T17:48:05.531Z",
-      "metricCollection": "metric_collection_1"
+      "endTime": "2026-10-21T17:48:05.531Z"
     },
     {
       "uuid": "d0c83c0f4ceaeb9e",
@@ -506,8 +505,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "metricCollection": "metric_collection_1"
+      "provider": "OpenAI"
     },
     {
       "uuid": "503e9250a8c7b1e2",
@@ -529,8 +527,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "metricCollection": "metric_collection_1"
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

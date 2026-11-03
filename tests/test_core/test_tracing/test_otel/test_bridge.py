@@ -155,7 +155,8 @@ def test_span_defaults_staged_in_deepeval(exporter, ended):
     # ``next_*_span`` is more specific than the trace's span context.
     assert generate.metrics == [staged]
     assert generate.expected_output == "x"
-    assert generate.metric_collection == "collection"
+    # A deprecated platform setting: accepted, and ignored.
+    assert not hasattr(generate, "metric_collection")
 
 
 ################ Tree building ################

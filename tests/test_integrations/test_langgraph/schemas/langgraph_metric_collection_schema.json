@@ -402,12 +402,7 @@
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 187.0,
-      "outputTokenCount": 9.0,
-      "metricCollection": "llm_accuracy",
-      "promptAlias": "langgraph-metric-collection-prompt",
-      "promptVersion": "02.00.00",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "outputTokenCount": 9.0
     },
     {
       "uuid": "665187b0bf998243",
@@ -449,12 +444,7 @@
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 148.0,
-      "outputTokenCount": 18.0,
-      "metricCollection": "llm_accuracy",
-      "promptAlias": "langgraph-metric-collection-prompt",
-      "promptVersion": "02.00.00",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "outputTokenCount": 18.0
     }
   ],
   "retrieverSpans": [],
@@ -471,8 +461,7 @@
         "celsius": 25
       },
       "output": "25.0\u00b0C = 77.0\u00b0F",
-      "integration": "LangGraph",
-      "metricCollection": "tool_performance"
+      "integration": "LangGraph"
     }
   ],
   "startTime": "2026-10-23T08:41:51.256Z",
@@ -558,6 +547,5 @@
         "celsius": 25
       }
     }
-  ],
-  "metricCollection": "trace_quality"
+  ]
 }

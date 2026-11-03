@@ -248,8 +248,7 @@
       },
       "output": "40.0",
       "integration": "Strands",
-      "description": "Perform basic arithmetic operations.",
-      "metricCollection": "calculator-metrics"
+      "description": "Perform basic arithmetic operations."
     }
   ],
   "startTime": "2026-10-21T17:50:06.466Z",

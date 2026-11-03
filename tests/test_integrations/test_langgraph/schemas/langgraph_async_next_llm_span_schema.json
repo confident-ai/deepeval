@@ -448,8 +448,7 @@
       "model": "gpt-5.4-mini",
       "provider": "OpenAI",
       "inputTokenCount": 141.0,
-      "outputTokenCount": 16.0,
-      "metricCollection": "llm_quality_async_v1"
+      "outputTokenCount": 16.0
     }
   ],
   "retrieverSpans": [],

@@ -38,7 +38,6 @@
       "output": "The 'Sync Data' query has been processed successfully.\n",
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1",
       "integration": "AgentCore"
     }
   ],
@@ -72,7 +71,6 @@
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 493.0,
       "outputTokenCount": 38.0,
-      "metricCollection": "llm_metrics_v1",
       "integration": "AgentCore",
       "provider": null
     }
@@ -95,7 +93,6 @@
           "inputParameters": {}
         }
       ],
-      "metricCollection": "special_tool_v1",
       "integration": "AgentCore"
     }
   ],
@@ -116,6 +113,5 @@
   "userId": "user-sync-001",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
   "output": "The 'Sync Data' query has been processed successfully.\n",
-  "status": "SUCCESS",
-  "metricCollection": "trace_metrics_override_v1"
+  "status": "SUCCESS"
 }

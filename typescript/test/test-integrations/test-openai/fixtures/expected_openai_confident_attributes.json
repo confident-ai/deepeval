@@ -19,14 +19,9 @@
         }
       ],
       "output": "A fun fact about space is that a day on Venus is longer than a year on Venus! It takes about 243 Earth days to rotate once on its axis, but only about 225 Earth days to orbit the Sun.",
-      "metricCollection": "llm-openai-metrics",
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 18,
-      "outputTokenCount": 45,
-      "promptAlias": "openai-test-prompt",
-      "promptCommitHash": "bab04ec",
-      "promptLabel": "test-label",
-      "promptVersion": "00.00.01"
+      "outputTokenCount": 45
     }
   ],
   "retrieverSpans": [],
@@ -46,6 +41,5 @@
   "userId": "user-beta-888",
   "input": "Tell me a fun fact about space. Be brief.",
   "output": "A fun fact about space is that a day on Venus is longer than a year on Venus! It takes about 243 Earth days to rotate once on its axis, but only about 225 Earth days to orbit the Sun.",
-  "metricCollection": "global-openai-metrics",
   "status": "SUCCESS"
 }

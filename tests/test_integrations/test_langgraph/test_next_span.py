@@ -133,18 +133,18 @@ def _build_two_llm_graph(llm: FakeListLLM):
     "ignore:The 'config' parameter should be typed as 'RunnableConfig' or 'RunnableConfig \\| None'"
 )
 class TestNextLlmSpanInStateGraph:
-    async def test_metric_collection_lands_on_llm_span(self):
+    async def test_staged_field_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
         graph = _build_single_llm_graph(llm)
 
-        with next_llm_span(metric_collection="graph_llm_v1"):
+        with next_llm_span(expected_output="graph_llm_v1"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
         assert len(callback.llm_spans) == 1
-        assert callback.llm_spans[0].metric_collection == "graph_llm_v1"
+        assert callback.llm_spans[0].expected_output == "graph_llm_v1"
 
     async def test_metrics_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
@@ -181,14 +181,14 @@ class TestNextLlmSpanInStateGraph:
         llm = FakeListLLM(responses=["pong-1", "pong-2"])
         graph = _build_two_llm_graph(llm)
 
-        with next_llm_span(metric_collection="only-first-node"):
+        with next_llm_span(expected_output="only-first-node"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
         assert len(callback.llm_spans) == 2
-        assert callback.llm_spans[0].metric_collection == "only-first-node"
-        assert callback.llm_spans[1].metric_collection is None
+        assert callback.llm_spans[0].expected_output == "only-first-node"
+        assert callback.llm_spans[1].expected_output is None
 
     async def test_unconsumed_payload_does_not_leak_across_invocations(
         self,
@@ -200,15 +200,15 @@ class TestNextLlmSpanInStateGraph:
         llm = FakeListLLM(responses=["pong"])
         graph = _build_single_llm_graph(llm)
 
-        with next_llm_span(metric_collection="leaked"):
+        with next_llm_span(expected_output="leaked"):
             pass  # no ainvoke → nothing pops
 
-        with next_llm_span(metric_collection="fresh"):
+        with next_llm_span(expected_output="fresh"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
-        assert callback.llm_spans[0].metric_collection == "fresh"
+        assert callback.llm_spans[0].expected_output == "fresh"
 
 
 # ---------------------------------------------------------------------------
@@ -228,12 +228,12 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)
 
-    with next_tool_span(metric_collection="tool-only"):
+    with next_tool_span(expected_output="tool-only"):
         await graph.ainvoke(
             {"prompt": "ping"}, config={"callbacks": [callback]}
         )
 
-    assert callback.llm_spans[0].metric_collection is None
+    assert callback.llm_spans[0].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -256,14 +256,14 @@ async def test_base_next_span_lands_on_root_agent_span_in_graph():
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)
 
-    with next_span(metric_collection="from_base_in_graph"):
+    with next_span(expected_output="from_base_in_graph"):
         await graph.ainvoke(
             {"prompt": "ping"}, config={"callbacks": [callback]}
         )
 
     assert callback.root_span is not None
-    assert callback.root_span.metric_collection == "from_base_in_graph"
-    assert callback.llm_spans[0].metric_collection is None
+    assert callback.root_span.expected_output == "from_base_in_graph"
+    assert callback.llm_spans[0].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -290,8 +290,8 @@ def test_next_llm_span_in_sync_state_graph():
     builder.add_edge("llm", END)
     graph = builder.compile()
 
-    with next_llm_span(metric_collection="sync_graph_v1"):
+    with next_llm_span(expected_output="sync_graph_v1"):
         graph.invoke({"prompt": "ping"}, config={"callbacks": [callback]})
 
     assert len(callback.llm_spans) == 1
-    assert callback.llm_spans[0].metric_collection == "sync_graph_v1"
+    assert callback.llm_spans[0].expected_output == "sync_graph_v1"

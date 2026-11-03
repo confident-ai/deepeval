@@ -76,7 +76,9 @@ def test_handler_settings_reach_a_local_trace(langchain, async_evaluation):
     assert collected.metrics == [trace_metric]
     assert collected.output == "Paris"
     (llm,) = spans_of(collected, LlmSpan)
-    assert (llm.metrics, llm.metric_collection) == ([llm_metric], "answers")
+    assert llm.metrics == [llm_metric]
+    # A deprecated platform setting: accepted, and ignored.
+    assert not hasattr(llm, "metric_collection")
 
 
 def test_the_invoked_run_is_the_agent(langchain, async_evaluation):

@@ -324,12 +324,7 @@
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 92.0,
-      "outputTokenCount": 10.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "outputTokenCount": 10.0
     },
     {
       "uuid": "108a61f62f947678",
@@ -377,12 +372,7 @@
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
       "inputTokenCount": 67.0,
-      "outputTokenCount": 17.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "outputTokenCount": 17.0
     }
   ],
   "retrieverSpans": [],
@@ -400,8 +390,7 @@
         "b": 6
       },
       "output": "48",
-      "integration": "LangGraph",
-      "metricCollection": "test_collection_1"
+      "integration": "LangGraph"
     }
   ],
   "startTime": "2026-10-23T08:40:30.924Z",
@@ -482,6 +471,5 @@
         "b": 6
       }
     }
-  ],
-  "metricCollection": "task_completion"
+  ]
 }

@@ -12,8 +12,7 @@
         "input": "Testing Alias"
       },
       "output": "Hello, Testing Alias! How can I assist you today?",
-      "integration": "CrewAI",
-      "metricCollection": "metric_collection_1"
+      "integration": "CrewAI"
     },
     {
       "uuid": "32c568600d2e9f13",
@@ -237,8 +236,7 @@
       "output": "Hello, Testing Alias! How can I assist you today?",
       "integration": "CrewAI",
       "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "metric_collection_1"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
@@ -262,8 +260,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "metricCollection": "metric_collection_1"
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],

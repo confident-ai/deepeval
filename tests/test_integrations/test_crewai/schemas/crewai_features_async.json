@@ -12,8 +12,7 @@
         "input": "Async Data"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "integration": "CrewAI",
-      "metricCollection": "crew_metrics_v1"
+      "integration": "CrewAI"
     },
     {
       "uuid": "41e8d08e95dc682d",
@@ -317,8 +316,7 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
@@ -365,11 +363,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "provider": "OpenAI"
     },
     {
       "uuid": "e130868c0153c12f",
@@ -391,11 +385,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -412,8 +402,7 @@
         "query": "deterministic_test_input"
       },
       "output": "Calculated metrics for: deterministic_test_input",
-      "integration": "CrewAI",
-      "metricCollection": "tool_metrics_v1"
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-10-21T17:48:06.975Z",
@@ -445,6 +434,5 @@
         "query": "deterministic_test_input"
       }
     }
-  ],
-  "metricCollection": "trace_metrics_async_v1"
+  ]
 }

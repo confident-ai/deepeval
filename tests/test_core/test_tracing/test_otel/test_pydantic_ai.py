@@ -61,7 +61,7 @@ def test_staged_fields_reach_their_spans(exporter, async_evaluation):
     agent = weather_agent(DeepEvalInstrumentationSettings())
 
     with next_agent_span(metrics=[agent_metric]):
-        with next_llm_span(metric_collection="answers"):
+        with next_llm_span(expected_output="sunny"):
             agent.run_sync("Weather in Paris?")
 
     (collected,) = async_evaluation.traces_to_evaluate
@@ -69,10 +69,7 @@ def test_staged_fields_reach_their_spans(exporter, async_evaluation):
     assert isinstance(root, AgentSpan)
     assert root.metrics == [agent_metric]
     first, second = spans_of(collected, LlmSpan)
-    assert (first.metric_collection, second.metric_collection) == (
-        "answers",
-        None,
-    )
+    assert (first.expected_output, second.expected_output) == ("sunny", None)
     (tool,) = spans_of(collected, ToolSpan)
     assert tool.metadata == {"source": "station"}
 
@@ -120,12 +117,15 @@ def test_settings_reach_an_exported_trace(exporter, ended):
     assert ended == []
 
 
-def test_api_key_is_the_export_key(exporter, monkeypatch):
-    monkeypatch.setattr(trace_manager, "confident_api_key", None)
+def test_platform_settings_are_accepted_and_ignored(exporter):
+    DeepEvalInstrumentationSettings(
+        api_key="key",
+        metric_collection="collection",
+        test_case_id="case",
+        turn_id="turn",
+    )
 
-    DeepEvalInstrumentationSettings(api_key="key")
-
-    assert trace_manager.confident_api_key == "key"
+    assert not hasattr(trace_manager, "confident_api_key")
 
 
 @pytest.mark.parametrize(

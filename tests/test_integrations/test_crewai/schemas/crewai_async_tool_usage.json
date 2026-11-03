@@ -398,8 +398,7 @@
         "city": "Tokyo"
       },
       "output": "Weather in Tokyo: Clear, 70\u00b0F",
-      "integration": "CrewAI",
-      "metricCollection": "weather_tool_metrics"
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-10-21T17:48:02.107Z",

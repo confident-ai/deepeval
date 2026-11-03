@@ -329,7 +329,6 @@
       "endTime": "2026-10-21T20:45:32.281Z",
       "input": "Use the get_weather tool to get the weather in London.",
       "output": "The current weather in London is rainy, with a temperature of 55°F.",
-      "metricCollection": "agent-evals",
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -378,7 +377,6 @@
           }
         }
       ],
-      "metricCollection": "llm-evals",
       "toolsCalled": [
         {
           "name": "get_weather",
@@ -419,7 +417,6 @@
         }
       ],
       "output": "The current weather in London is rainy, with a temperature of 55°F.",
-      "metricCollection": "llm-evals",
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 101,
       "outputTokenCount": 18
@@ -441,8 +438,7 @@
       },
       "output": {
         "weather": "Rainy, 55F"
-      },
-      "metricCollection": "weather-tool-evals"
+      }
     }
   ],
   "startTime": "2026-10-21T20:45:29.778Z",
@@ -474,6 +470,5 @@
       }
     }
   ],
-  "metricCollection": "root-trace-evals",
   "status": "SUCCESS"
 }

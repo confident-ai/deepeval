@@ -58,7 +58,6 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "agent_metrics_async_v1",
       "metricsData": [
         {
           "name": "Answer Relevancy",
@@ -159,8 +158,7 @@
       "model": "gemini-2.5-flash",
       "provider": "Gemini",
       "inputTokenCount": 191.0,
-      "outputTokenCount": 53.0,
-      "metricCollection": "llm_metrics_async_v1"
+      "outputTokenCount": 53.0
     }
   ],
   "retrieverSpans": [],
@@ -180,8 +178,7 @@
         "processed": "Processed: Async Data"
       },
       "integration": "Google ADK",
-      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result.",
-      "metricCollection": "special_tool_v1"
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).\n\nArgs:\n    query: The query string to process.\n\nReturns:\n    A dict with a ``processed`` key holding the formatted result."
     }
   ],
   "startTime": "2026-10-21T16:52:23.603Z",
@@ -214,6 +211,5 @@
         "query": "Async Data"
       }
     }
-  ],
-  "metricCollection": "trace_metrics_override_async_v1"
+  ]
 }

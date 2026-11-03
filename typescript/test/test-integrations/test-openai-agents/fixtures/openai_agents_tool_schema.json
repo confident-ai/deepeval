@@ -170,8 +170,7 @@
       "input": {
         "city": "London"
       },
-      "output": "Rainy, 55°F",
-      "metricCollection": "tool-level-collection"
+      "output": "Rainy, 55°F"
     }
   ],
   "startTime": "2026-10-21T20:44:46.477Z",

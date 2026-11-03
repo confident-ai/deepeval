@@ -185,9 +185,6 @@ def test_trace_fields_come_from_the_entry_span(ct, export):
         "thread_id": "thread",
         "user_id": "user",
         "environment": "staging",
-        "test_case_id": "case",
-        "turn_id": "turn",
-        "metric_collection": "collection",
         "input": "hi",
         "output": {"answer": 1},
     }

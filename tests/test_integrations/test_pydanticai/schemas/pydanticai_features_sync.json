@@ -23,8 +23,7 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "agent_metrics_v1"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
@@ -160,6 +159,5 @@
         "query": "Sync Data"
       }
     }
-  ],
-  "metricCollection": "trace_metrics_override_v1"
+  ]
 }

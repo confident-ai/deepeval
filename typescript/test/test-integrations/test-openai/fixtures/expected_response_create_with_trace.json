@@ -23,14 +23,9 @@
         }
       ],
       "output": "Hello! I'm just a program, but I'm here and ready to help you. How can I assist you today?",
-      "metricCollection": "test_collection_1",
       "model": "gpt-4o-mini-2024-07-18",
       "inputTokenCount": 29,
-      "outputTokenCount": 24,
-      "promptAlias": "asd",
-      "promptCommitHash": "bab04ec",
-      "promptLabel": "test-label",
-      "promptVersion": "00.00.01"
+      "outputTokenCount": 24
     }
   ],
   "retrieverSpans": [],

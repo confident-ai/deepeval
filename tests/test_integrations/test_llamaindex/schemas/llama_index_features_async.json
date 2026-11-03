@@ -167,7 +167,6 @@
       ],
       "availableTools": [],
       "agentHandoffs": [],
-      "metricCollection": "production_agent_metrics",
       "metricsData": [
         {
           "name": "Answer Relevancy",
@@ -227,7 +226,6 @@
       "expectedOutput": "exp output llm level async",
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "metricCollection": "production_llm_metrics",
       "metricsData": [
         {
           "name": "Answer Relevancy",
@@ -237,11 +235,7 @@
           "flaky": false,
           "evaluationModel": "gpt-4.1-mini"
         }
-      ],
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      ]
     },
     {
       "uuid": "ba5951a6c9768d17",
@@ -292,7 +286,6 @@
       ],
       "model": "gpt-4o-mini",
       "provider": "OpenAI",
-      "metricCollection": "production_llm_metrics",
       "metricsData": [
         {
           "name": "Answer Relevancy",
@@ -302,11 +295,7 @@
           "flaky": false,
           "evaluationModel": "gpt-4.1-mini"
         }
-      ],
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      ]
     }
   ],
   "retrieverSpans": [],
@@ -354,6 +343,5 @@
         "b": 6
       }
     }
-  ],
-  "metricCollection": "llama_async_index_metric_collection"
+  ]
 }

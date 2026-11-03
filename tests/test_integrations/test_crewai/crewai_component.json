@@ -12,8 +12,7 @@
         "city": "London"
       },
       "output": "The current weather in London is as follows:\n\n- **Temperature:** 60\u00b0F\n- **Conditions:** Rainy\n- **Humidity:** 80%\n\nMake sure to carry an umbrella if you're heading out!",
-      "integration": "CrewAI",
-      "metricCollection": "test_collection_1"
+      "integration": "CrewAI"
     },
     {
       "uuid": "09142db2824cc1fa",
@@ -317,8 +316,7 @@
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [],
-      "metricCollection": "test_collection_1"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
@@ -361,8 +359,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "metricCollection": "test_collection_1"
+      "provider": "OpenAI"
     },
     {
       "uuid": "069e59fc316afd19",
@@ -384,8 +381,7 @@
       ],
       "integration": "OpenAI",
       "model": "gpt-4o-mini",
-      "provider": "OpenAI",
-      "metricCollection": "test_collection_1"
+      "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
@@ -402,8 +398,7 @@
         "city": "London"
       },
       "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
-      "integration": "CrewAI",
-      "metricCollection": "test_collection_1"
+      "integration": "CrewAI"
     }
   ],
   "startTime": "2026-10-21T17:48:22.450Z",
@@ -433,6 +428,5 @@
         "city": "London"
       }
     }
-  ],
-  "metricCollection": "test_collection_1"
+  ]
 }

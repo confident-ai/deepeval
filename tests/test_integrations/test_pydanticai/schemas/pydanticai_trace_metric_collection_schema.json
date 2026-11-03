@@ -60,6 +60,5 @@
   "userId": "test-user",
   "input": "Say hello in exactly two words.",
   "output": "Hello there!",
-  "status": "SUCCESS",
-  "metricCollection": "test-trace-metrics"
+  "status": "SUCCESS"
 }
