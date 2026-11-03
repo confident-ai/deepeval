@@ -62,15 +62,30 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
     )
 
     try:
-        evaluation_module.evaluate(
-            [LLMTestCase(input="question", actual_output="answer")],
-            metrics=[_PassingMetric()],
-            hyperparameters={"model": "first", "temperature": 0.4},
-            async_config=AsyncConfig(run_async=run_async),
-            display_config=DisplayConfig(
-                show_indicator=False, print_results=False
-            ),
-        )
-        assert observed == [{"model": "first", "temperature": "0.4"}]
+        # An accumulated test run should use the configuration for each
+        # invocation, not the previous call's values during cache lookup.
+        # Omitting hyperparameters should retain the accumulated run's last
+        # explicit configuration (the existing _skip_reset behavior).
+        for hyperparameters in (
+            {"model": "first", "temperature": 0.4},
+            {"model": "second", "temperature": 0.9},
+            None,
+        ):
+            evaluation_module.evaluate(
+                [LLMTestCase(input="question", actual_output="answer")],
+                metrics=[_PassingMetric()],
+                hyperparameters=hyperparameters,
+                _skip_reset=True,
+                async_config=AsyncConfig(run_async=run_async),
+                display_config=DisplayConfig(
+                    show_indicator=False, print_results=False
+                ),
+            )
+
+        assert observed == [
+            {"model": "first", "temperature": "0.4"},
+            {"model": "second", "temperature": "0.9"},
+            {"model": "second", "temperature": "0.9"},
+        ]
     finally:
         global_test_run_manager.reset()
