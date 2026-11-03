@@ -50,18 +50,6 @@
   resolved "https://registry.yarnpkg.com/@chevrotain/utils/-/utils-12.0.0.tgz#9aab2055df43d0bb55919eaca76a9cda45e52b89"
   integrity sha512-lB59uJoaGIfOOL9knQqQRfhl9g7x8/wqFkp13zTdkRu1huG9kg6IJs1O8hqj9rs6h7orGxHJUKb+mX3rPbWGhA==
 
-"@dagrejs/dagre@^3.1.1":
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/@dagrejs/dagre/-/dagre-3.1.1.tgz#06de3070d584886b8820aaceeefc45a553cf2b97"
-  integrity sha512-zroZB1dFOFiGgv4Xcrn1DckB1o4aOikPqD2NDQPV0WM//CXGcS6xiD0rNkqHmw6FEg4tabt4nxPLwgCWT+Vb2A==
-  dependencies:
-    "@dagrejs/graphlib" "4.0.5"
-
-"@dagrejs/graphlib@4.0.5":
-  version "4.0.5"
-  resolved "https://registry.yarnpkg.com/@dagrejs/graphlib/-/graphlib-4.0.5.tgz#1ae7a93a4640a9e50117439d23327e27d6b698d3"
-  integrity sha512-7xrBTqIts3o+PMUZX97wSc+7TUbW+/rULzGNCTP6yooNVDXbzw4Wutg/H/xOutTB/c/k0YqOAavgPh4/Zk9PFA==
-
 "@emnapi/core@^1.8.1":
   version "1.10.0"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.10.0.tgz#380ccc8f2412ea22d1d972df7f8ee23a3b9c7467"
@@ -3764,11 +3752,6 @@ shiki@^4.0.2:
     "@shikijs/types" "4.0.2"
     "@shikijs/vscode-textmate" "^10.0.2"
     "@types/hast" "^3.0.4"
-
-simple-icons@16.35.0:
-  version "16.35.0"
-  resolved "https://registry.yarnpkg.com/simple-icons/-/simple-icons-16.35.0.tgz#78db83dd7f5ae0212b68d05c2ae7797e5d864921"
-  integrity sha512-TCfl/2+GTrx0nCo4pEWGvxhOb8c6NsqOU1OpwjtF4lwJAthB8IYVD0fuIMjLMg6JFuG1YBO0t1iETQqJLqkoJA==
 
 "source-map-js@>=0.6.2 <2.0.0", source-map-js@^1.0.2, source-map-js@^1.2.1:
   version "1.2.1"

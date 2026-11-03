@@ -1,3 +1,4 @@
+import math
 from types import SimpleNamespace
 
 import pytest
@@ -51,6 +52,92 @@ def create_token(token, top_token):
         token=token,
         top_logprobs=[SimpleNamespace(token=top_token, logprob=0)],
     )
+
+
+def create_logprob_token(token, logprob, alternatives):
+    return SimpleNamespace(
+        token=token,
+        logprob=logprob,
+        top_logprobs=[
+            SimpleNamespace(token=t, logprob=p) for t, p in alternatives
+        ],
+    )
+
+
+def test_calculate_weighted_summed_score_drops_digit_split_ambiguous_prefix():
+    # "1" may be the first digit of 10, so it must not count as a score of 1.
+    raw_response = create_raw_response(
+        [
+            create_logprob_token("score", 0, [("score", 0)]),
+            create_logprob_token(
+                "9",
+                math.log(0.812),
+                [
+                    ("9", math.log(0.812)),
+                    ("1", math.log(0.16)),
+                    ("8", math.log(0.028)),
+                ],
+            ),
+            create_logprob_token("}", 0, [("}", 0)]),
+        ]
+    )
+
+    weighted = calculate_weighted_summed_score(9, raw_response)
+    assert weighted == pytest.approx(
+        (9 * 0.812 + 8 * 0.028) / (0.812 + 0.028), abs=0.01
+    )
+
+
+def test_calculate_weighted_summed_score_weights_multitoken_raw_score():
+    # 10 emitted as "1", "0": P(10) = P("1") * P("0" | "1").
+    raw_response = create_raw_response(
+        [
+            create_logprob_token("score", 0, [("score", 0)]),
+            create_logprob_token(
+                "1", math.log(0.7), [("1", math.log(0.7)), ("9", math.log(0.3))]
+            ),
+            create_logprob_token("0", math.log(0.95), [("0", math.log(0.95))]),
+            create_logprob_token("}", 0, [("}", 0)]),
+        ]
+    )
+
+    weighted = calculate_weighted_summed_score(10, raw_response)
+    assert weighted == pytest.approx(
+        (10 * 0.7 * 0.95 + 9 * 0.3) / (0.7 * 0.95 + 0.3), abs=0.01
+    )
+
+
+def test_calculate_weighted_summed_score_returns_raw_when_span_missing():
+    raw_response = create_raw_response([create_token("7", "7")])
+
+    assert calculate_weighted_summed_score(10, raw_response) == 10
+
+
+def test_calculate_weighted_summed_score_keeps_prefix_when_range_is_single_digit():
+    raw_response = create_raw_response(
+        [
+            create_logprob_token(
+                "2", math.log(0.6), [("2", math.log(0.6)), ("1", math.log(0.4))]
+            ),
+        ]
+    )
+
+    weighted = calculate_weighted_summed_score(2, raw_response, score_max=9)
+    assert weighted == pytest.approx((2 * 0.6 + 1 * 0.4) / 1.0, abs=0.01)
+
+
+def test_calculate_weighted_summed_score_ignores_out_of_range_candidates():
+    raw_response = create_raw_response(
+        [
+            create_logprob_token(
+                "9",
+                math.log(0.5),
+                [("9", math.log(0.5)), ("11", math.log(0.5))],
+            ),
+        ]
+    )
+
+    assert calculate_weighted_summed_score(9, raw_response) == 9
 
 
 def test_calculate_weighted_summed_score_uses_final_score_token():

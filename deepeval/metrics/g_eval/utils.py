@@ -337,55 +337,74 @@ def construct_test_case_string(
     return text
 
 
+# Candidates under 1% probability are ignored.
+_MIN_LOGPROB = math.log(0.01)
+
+
+def _find_score_span(tokens, raw_score: int) -> Optional[Tuple[int, int]]:
+    """Start and length of the last run of tokens spelling ``raw_score``. The
+    reason may repeat its digits, and some tokenizers split "10" into "1", "0".
+    """
+    score_str = str(raw_score)
+    for start in reversed(range(len(tokens))):
+        for length in range(len(score_str), 0, -1):
+            span = tokens[start : start + length]
+            spelled = "".join(t.token for t in span)
+            if len(span) == length and spelled == score_str:
+                return start, length
+    return None
+
+
+def _is_prefix_of_larger_score(token: str, score_max: int) -> bool:
+    """Whether ``token`` could be the first digit of a larger score, like "1"
+    of 10."""
+    return any(
+        str(score).startswith(token)
+        for score in range(int(token) + 1, score_max + 1)
+    )
+
+
 def calculate_weighted_summed_score(
-    raw_score: int, raw_response: ChatCompletion
+    raw_score: int,
+    raw_response: ChatCompletion,
+    score_max: int = 10,
 ) -> Union[int, float]:
-    try:
-        generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the final token matching the score. The reasoning may
-        # contain the same token before the model emits its final score.
-        score_logprobs = None
-        for token_logprobs in reversed(generated_logprobs):
-            if token_logprobs.token == str(raw_score):
-                score_logprobs = token_logprobs
-                break
-        # Then, calculate the score based on the logprobs
-        token_linear_probability: Dict[int, float] = {}
-        sum_linear_probability = 0
-        # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
-        min_logprob = math.log(0.01)
-        for token_logprob in score_logprobs.top_logprobs:
-            logprob = token_logprob.logprob
+    """Average the scores the judge considered, weighted by their probability.
+    Falls back to ``raw_score`` when there is nothing to weight."""
+    tokens = raw_response.choices[0].logprobs.content
+    span = _find_score_span(tokens, raw_score)
+    if span is None:
+        return raw_score
+    start, length = span
+    score_token = tokens[start]
 
-            # Filter out low probability tokens
-            if logprob < min_logprob:
-                continue
-            # Filter out non-decimal token to prevent errors in later int(token) conversion
-            if not token_logprob.token.isdecimal():
-                continue
+    weighted_sum = 0.0
+    total_prob = 0.0
+    for candidate in score_token.top_logprobs:
+        if candidate.logprob < _MIN_LOGPROB or not candidate.token.isdecimal():
+            continue
+        if int(candidate.token) > score_max:
+            continue
 
-            # Calculate the linear probability
-            linear_prob = math.exp(logprob)
-            token_score = int(token_logprob.token)
-            if token_linear_probability.get(token_score):
-                token_linear_probability[token_score] += linear_prob
-            else:
-                token_linear_probability[token_score] = linear_prob
-            sum_linear_probability += linear_prob
+        if candidate.token == score_token.token:
+            # The emitted score, including the rest of its span.
+            score = raw_score
+            logprob = candidate.logprob + sum(
+                t.logprob for t in tokens[start + 1 : start + length]
+            )
+        elif _is_prefix_of_larger_score(candidate.token, score_max):
+            continue
+        else:
+            score = int(candidate.token)
+            logprob = candidate.logprob
 
-        sum_of_weighted_scores = 0.0
-        for score, prob in token_linear_probability.items():
-            sum_of_weighted_scores += score * prob
+        prob = math.exp(logprob)
+        weighted_sum += score * prob
+        total_prob += prob
 
-        # If all tokens were filtered out, fall back to the raw score
-        if sum_linear_probability == 0:
-            return raw_score
-
-        # Scale the sum of linear probability to 1
-        weighted_summed_score = sum_of_weighted_scores / sum_linear_probability
-        return weighted_summed_score
-    except Exception:
-        raise
+    if total_prob == 0:
+        return raw_score
+    return weighted_sum / total_prob
 
 
 def number_evaluation_steps(evaluation_steps: List[str]) -> str:

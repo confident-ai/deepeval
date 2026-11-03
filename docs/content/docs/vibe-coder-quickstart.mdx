@@ -92,8 +92,9 @@ my AI app. Then re-run to confirm.
 - 5-min Quickstart: https://www.deepeval.com/docs/getting-started
 - Vibe Coding (the loop): https://www.deepeval.com/docs/vibe-coding
 - Agents Quickstart: https://www.deepeval.com/docs/getting-started-agents
-- RAG Quickstart: https://www.deepeval.com/docs/getting-started-rag
+- Voice Agents: https://www.deepeval.com/docs/evaluation-voice
 - Chatbot Quickstart: https://www.deepeval.com/docs/getting-started-chatbots
+- RAG Quickstart: https://www.deepeval.com/docs/getting-started-rag
 - Metrics catalog: https://www.deepeval.com/docs/metrics-introduction
 - CLI reference: https://www.deepeval.com/docs/command-line-interface
 - LLM-friendly docs: https://www.deepeval.com/llms.txt
@@ -108,6 +109,7 @@ my AI app. Then re-run to confirm.
 - LlamaIndex: https://www.deepeval.com/integrations/frameworks/llamaindex
 - CrewAI: https://www.deepeval.com/integrations/frameworks/crewai
 - PydanticAI: https://www.deepeval.com/integrations/frameworks/pydanticai
+- Voice agent connectors (Vapi, ElevenLabs, LiveKit, Pipecat): https://www.deepeval.com/integrations#voice-agent-connectors
 - Google ADK: https://www.deepeval.com/integrations/frameworks/google-adk
 - AWS AgentCore: https://www.deepeval.com/integrations/frameworks/agentcore
 - HuggingFace: https://www.deepeval.com/integrations/frameworks/huggingface
@@ -184,7 +186,7 @@ Repeat for the requested number of rounds (default 5).
 1. Detect the framework (see "Framework Integrations First" above) and tell
    me which integration you'll use, OR confirm there's no match and you'll
    fall back to manual `@observe`.
-2. Ask me what I'm building (agent / RAG / chatbot / plain LLM), what
+2. Ask me what I'm building (agent / voice agent / chatbot / RAG / plain LLM), what
    dataset I have (or whether to generate one with `deepeval generate`),
    and whether I want results pushed to Confident AI.
 3. Set up a committed pytest eval suite under `tests/evals/`, do one round

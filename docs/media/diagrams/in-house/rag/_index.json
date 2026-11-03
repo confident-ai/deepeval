@@ -59,6 +59,13 @@
           "https://d2lsxfc3p6r9rv.cloudfront.net/rag-triad.svg"
         ]
       }
+    },
+    {
+      "file": "rag-qa-evaluation.webp",
+      "title": "A RAG pipeline with metrics on the retriever and the generator",
+      "alt": "An employee question goes through an embedding model to a vector index of internal docs, which returns the top-K chunks; the retriever is scored with contextual metrics. The chunks and the question fill a prompt for the LLM, which writes the grounded answer; the generator is scored with faithfulness.",
+      "width": 2136,
+      "height": 2634
     }
   ]
 }
