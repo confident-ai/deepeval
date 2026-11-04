@@ -210,12 +210,6 @@ You can always start with end-to-end and add component-level tracing later as ne
 
 No. `deepeval`'s tracing is **non-intrusive**. The `@observe` decorator only collects data and runs metrics when explicitly invoked during evaluation (inside `evaluate()` or `assert_test()`). In normal production execution, it has no effect on your application's behavior or latency.
 
-To suppress any console logs from tracing outside of evaluation, set:
-
-```bash
-CONFIDENT_TRACE_VERBOSE=0
-```
-
 ---
 
 ## Evaluation Workflow

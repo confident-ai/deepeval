@@ -747,16 +747,6 @@ If you don't want to use the dataset's `expected_output`, pass your own string i
 
 ---
 
-## Environment Variables
-
-If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
-
-```bash
-CONFIDENT_TRACE_VERBOSE=0
-```
-
----
-
 ## Flushing Traces Before Shutdown
 
 Traces are exported to Confident AI in batches from a background thread, so a process that tears down immediately after its last traced call can exit before those traces are sent. Call `flush_traces()` to wait for them:
@@ -879,8 +869,7 @@ Now that you have your traces, you can evaluate the observable result end-to-end
         <>
           By default, no. When you run your <code>@observe</code>-decorated app
           outside of <code>evaluate()</code> or <code>assert_test()</code>,
-          metrics don't run. You can silence local trace logs with{" "}
-          <code>CONFIDENT_TRACE_VERBOSE=0</code>.
+          metrics don't run.
         </>
       ),
     },
