@@ -1,14 +1,14 @@
 {
-  "uuid": "1ba1961973cc74a0b723f94423ac69fa",
+  "uuid": "f98287b681b14b0dc2b283fa2620b3ff",
   "baseSpans": [
     {
-      "uuid": "93ce04f1b6779d9c",
+      "uuid": "f28f649eb866f25d",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7b9e8c0323608b7b",
-      "startTime": "2026-10-23T08:41:05.730Z",
-      "endTime": "2026-10-23T08:41:06.633Z",
+      "parentUuid": "1b99337806784656",
+      "startTime": "2026-11-04T06:52:45.127Z",
+      "endTime": "2026-11-04T06:52:46.192Z",
       "input": {
         "messages": [
           {
@@ -33,7 +33,7 @@
                 "arguments": {
                   "n": 7
                 },
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
               }
             ]
           },
@@ -43,76 +43,50 @@
               {
                 "type": "tool_call_response",
                 "response": "49",
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
               }
             ]
           }
         ]
       },
-      "output": {
-        "messages": [
-          {
-            "role": "assistant",
-            "parts": [
+      "output": [
+        {
+          "type": "command",
+          "update": {
+            "messages": [
               {
-                "type": "text",
-                "content": "49"
+                "role": "assistant",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": "49"
+                  }
+                ]
               }
             ]
           }
-        ]
-      },
+        }
+      ],
       "integration": "LangGraph"
     },
     {
-      "uuid": "a451552920523c4a",
+      "uuid": "91e84f7e8874851f",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7b9e8c0323608b7b",
-      "startTime": "2026-10-23T08:41:05.723Z",
-      "endTime": "2026-10-23T08:41:05.729Z",
-      "input": {
-        "__type": "tool_call_with_context",
-        "tool_call": {
+      "parentUuid": "1b99337806784656",
+      "startTime": "2026-11-04T06:52:45.126Z",
+      "endTime": "2026-11-04T06:52:45.127Z",
+      "input": [
+        {
           "name": "square",
           "args": {
             "n": 7
           },
-          "id": "call_muLJPOYyalq8xZRXgy5BGlOL",
+          "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7",
           "type": "tool_call"
-        },
-        "state": {
-          "messages": [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 7 squared? Call the tool and reply with just the number."
-                }
-              ]
-            },
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "square",
-                  "arguments": {
-                    "n": 7
-                  },
-                  "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
-                }
-              ]
-            }
-          ]
         }
-      },
+      ],
       "output": {
         "messages": [
           {
@@ -121,7 +95,7 @@
               {
                 "type": "tool_call_response",
                 "response": "49",
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
               }
             ]
           }
@@ -140,13 +114,13 @@
       ]
     },
     {
-      "uuid": "b795368839604eb1",
+      "uuid": "898962148d800173",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "7b9e8c0323608b7b",
-      "startTime": "2026-10-23T08:41:04.798Z",
-      "endTime": "2026-10-23T08:41:05.721Z",
+      "parentUuid": "1b99337806784656",
+      "startTime": "2026-11-04T06:52:44.128Z",
+      "endTime": "2026-11-04T06:52:45.125Z",
       "input": {
         "messages": [
           {
@@ -160,38 +134,43 @@
           }
         ]
       },
-      "output": {
-        "messages": [
-          {
-            "role": "assistant",
-            "parts": [
+      "output": [
+        {
+          "type": "command",
+          "update": {
+            "messages": [
               {
-                "type": "text",
-                "content": ""
-              },
-              {
-                "type": "tool_call",
-                "name": "square",
-                "arguments": {
-                  "n": 7
-                },
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "role": "assistant",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": ""
+                  },
+                  {
+                    "type": "tool_call",
+                    "name": "square",
+                    "arguments": {
+                      "n": 7
+                    },
+                    "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
+                  }
+                ]
               }
             ]
           }
-        ]
-      },
+        }
+      ],
       "integration": "LangGraph"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "7b9e8c0323608b7b",
+      "uuid": "1b99337806784656",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-23T08:41:04.797Z",
-      "endTime": "2026-10-23T08:41:06.633Z",
+      "startTime": "2026-11-04T06:52:44.127Z",
+      "endTime": "2026-11-04T06:52:46.194Z",
       "input": {
         "messages": [
           {
@@ -229,7 +208,7 @@
                 "arguments": {
                   "n": 7
                 },
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
               }
             ]
           },
@@ -239,7 +218,7 @@
               {
                 "type": "tool_call_response",
                 "response": "49",
-                "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+                "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
               }
             ]
           },
@@ -271,13 +250,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "a5fea1384058be2c",
+      "uuid": "b504cd6a8f70bbea",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "93ce04f1b6779d9c",
-      "startTime": "2026-10-23T08:41:05.733Z",
-      "endTime": "2026-10-23T08:41:06.632Z",
+      "parentUuid": "f28f649eb866f25d",
+      "startTime": "2026-11-04T06:52:45.128Z",
+      "endTime": "2026-11-04T06:52:46.191Z",
       "input": [
         {
           "role": "system",
@@ -299,7 +278,7 @@
             "arguments": {
               "n": 7
             },
-            "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+            "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
           }
         },
         {
@@ -307,7 +286,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "49",
-            "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+            "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
           }
         }
       ],
@@ -319,13 +298,13 @@
       "outputTokenCount": 4.0
     },
     {
-      "uuid": "16b8e8e480bdccc4",
+      "uuid": "54851b7f352c9200",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "b795368839604eb1",
-      "startTime": "2026-10-23T08:41:04.799Z",
-      "endTime": "2026-10-23T08:41:05.720Z",
+      "parentUuid": "898962148d800173",
+      "startTime": "2026-11-04T06:52:44.129Z",
+      "endTime": "2026-11-04T06:52:45.124Z",
       "metadata": {
         "prompt_variant": "B",
         "purpose": "next_llm_only"
@@ -349,7 +328,7 @@
             "arguments": {
               "n": 7
             },
-            "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+            "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
           }
         }
       ],
@@ -372,13 +351,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "a20e926249da573f",
+      "uuid": "7fa7e45a3ad42bce",
       "name": "square",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "a451552920523c4a",
-      "startTime": "2026-10-23T08:41:05.725Z",
-      "endTime": "2026-10-23T08:41:05.727Z",
+      "parentUuid": "91e84f7e8874851f",
+      "startTime": "2026-11-04T06:52:45.126Z",
+      "endTime": "2026-11-04T06:52:45.127Z",
       "input": {
         "n": 7
       },
@@ -386,8 +365,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-23T08:41:04.797Z",
-  "endTime": "2026-10-23T08:41:06.633Z",
+  "startTime": "2026-11-04T06:52:44.127Z",
+  "endTime": "2026-11-04T06:52:46.194Z",
   "name": "langchain-next-llm-span",
   "metadata": {
     "test_type": "next_llm_span"
@@ -435,7 +414,7 @@
             "arguments": {
               "n": 7
             },
-            "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+            "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
           }
         ]
       },
@@ -445,7 +424,7 @@
           {
             "type": "tool_call_response",
             "response": "49",
-            "id": "call_muLJPOYyalq8xZRXgy5BGlOL"
+            "id": "call_SXm2wwuwDvLjxrSQH3dwBiK7"
           }
         ]
       },

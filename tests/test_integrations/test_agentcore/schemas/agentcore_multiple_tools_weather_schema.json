@@ -1,103 +1,191 @@
 {
-  "uuid": "1a9cf6591171cbe5d78241ed7d498e92",
+  "uuid": "efc2ab1d54cdd6893cbd0b75e5769675",
   "baseSpans": [
     {
-      "uuid": "08a5be94a8833ab7",
+      "uuid": "86bb53ecd1096e67",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "236b3eef3f9574c4",
-      "startTime": "2026-05-05T18:12:13.305Z",
-      "endTime": "2026-05-05T18:12:14.644Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "8da042c6560f3c9e",
+      "startTime": "2026-11-04T06:53:00.696Z",
+      "endTime": "2026-11-04T06:53:01.511Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo."
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for the weather in Tokyo. To retrieve this information, I will use the get_weather tool.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_q9KD61BgG4M0aO4i4uCQZH",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Sunny, 72F"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands"
     },
     {
-      "uuid": "8b867db6bc3ccd2a",
+      "uuid": "5cf1437bd1b73fe8",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "236b3eef3f9574c4",
-      "startTime": "2026-05-05T18:12:11.144Z",
-      "endTime": "2026-05-05T18:12:13.304Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "8da042c6560f3c9e",
+      "startTime": "2026-11-04T06:52:59.461Z",
+      "endTime": "2026-11-04T06:53:00.696Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo."
+        }
+      ],
+      "output": "<thinking>The User has asked for the weather in Tokyo. To retrieve this information, I will use the get_weather tool.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "description": "Get the current weather for a city.",
+          "output": "Sunny, 72F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "236b3eef3f9574c4",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "8da042c6560f3c9e",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:11.144Z",
-      "endTime": "2026-05-05T18:12:14.644Z",
+      "startTime": "2026-11-04T06:52:59.460Z",
+      "endTime": "2026-11-04T06:53:01.512Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "AgentCore"
+      "output": "<thinking>The get_weather tool has provided the result that the weather in Tokyo is Sunny, 72F. I will share this information with the User.</thinking>\n\nThe weather in Tokyo is Sunny, 72F.\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "description": "Get the current weather for a city.",
+          "output": "Sunny, 72F",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
+      "availableTools": [
+        "get_weather",
+        "get_time"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "68c9b845d58e0ccd",
+      "uuid": "b5b8827b16bd1a5b",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "08a5be94a8833ab7",
-      "startTime": "2026-05-05T18:12:13.306Z",
-      "endTime": "2026-05-05T18:12:14.642Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.",
+      "parentUuid": "86bb53ecd1096e67",
+      "startTime": "2026-11-04T06:53:00.697Z",
+      "endTime": "2026-11-04T06:53:01.510Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo."
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for the weather in Tokyo. To retrieve this information, I will use the get_weather tool.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_q9KD61BgG4M0aO4i4uCQZH",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Sunny, 72F"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "<thinking>The get_weather tool has provided the result that the weather in Tokyo is Sunny, 72F. I will share this information with the User.</thinking>\n\nThe weather in Tokyo is Sunny, 72F.",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
-      "inputTokenCount": 569.0,
-      "outputTokenCount": 37.0,
-      "integration": "AgentCore",
-      "provider": null
+      "inputTokenCount": 570.0,
+      "outputTokenCount": 49.0
     },
     {
-      "uuid": "0e05a972848c58ff",
+      "uuid": "358ef1e00037e8c7",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8b867db6bc3ccd2a",
-      "startTime": "2026-05-05T18:12:11.144Z",
-      "endTime": "2026-05-05T18:12:13.300Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-      "output": "<thinking>The User has requested the current weather in Tokyo. I will use the get_weather tool to retrieve this information.</thinking>\n",
+      "parentUuid": "5cf1437bd1b73fe8",
+      "startTime": "2026-11-04T06:52:59.461Z",
+      "endTime": "2026-11-04T06:53:00.692Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo."
+        }
+      ],
+      "output": "<thinking>The User has asked for the weather in Tokyo. To retrieve this information, I will use the get_weather tool.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "Tokyo"
+          }
+        }
+      ],
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 492.0,
-      "outputTokenCount": 44.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 45.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "2a5d5333b5685c7b",
-      "name": "execute_tool get_weather",
+      "uuid": "c906f714f608582a",
+      "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "8b867db6bc3ccd2a",
-      "startTime": "2026-05-05T18:12:13.302Z",
-      "endTime": "2026-05-05T18:12:13.303Z",
+      "parentUuid": "5cf1437bd1b73fe8",
+      "startTime": "2026-11-04T06:53:00.694Z",
+      "endTime": "2026-11-04T06:53:00.695Z",
+      "input": {
+        "city": "Tokyo"
+      },
       "output": "Sunny, 72F",
-      "toolsCalled": [
-        {
-          "name": "get_weather",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "AgentCore"
+      "integration": "Strands",
+      "description": "Get the current weather for a city."
     }
   ],
-  "startTime": "2026-05-05T18:12:11.144Z",
-  "endTime": "2026-05-05T18:12:14.644Z",
+  "startTime": "2026-11-04T06:52:59.460Z",
+  "endTime": "2026-11-04T06:53:01.512Z",
   "name": "agentcore-multiple-tools-weather",
   "metadata": {
     "test_type": "multiple_tools_weather"
@@ -110,6 +198,17 @@
   "environment": "development",
   "threadId": "multiple-tools-weather-123",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_weather tool exactly once to get the weather in Tokyo.",
-  "output": "<thinking>I have retrieved the weather for Tokyo. I will now provide this information to the User.</thinking>\n\nThe current weather in Tokyo is Sunny, 72F.\n",
-  "status": "SUCCESS"
+  "output": "<thinking>The get_weather tool has provided the result that the weather in Tokyo is Sunny, 72F. I will share this information with the User.</thinking>\n\nThe weather in Tokyo is Sunny, 72F.\n",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "description": "Get the current weather for a city.",
+      "output": "Sunny, 72F",
+      "inputParameters": {
+        "city": "Tokyo"
+      }
+    }
+  ]
 }

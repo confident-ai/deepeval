@@ -1,14 +1,14 @@
 {
-  "uuid": "c7d2cbd8395d45af109cc659638ed984",
+  "uuid": "eedd528180a0225bfbe4282e5bb2cd2b",
   "baseSpans": [
     {
-      "uuid": "81f3a8be6c6b0e45",
+      "uuid": "2bd3e0d189ef8cff",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e8be165256dbe895",
-      "startTime": "2026-10-23T08:40:32.242Z",
-      "endTime": "2026-10-23T08:40:33.601Z",
+      "parentUuid": "dab2e8406d5c2961",
+      "startTime": "2026-11-04T06:52:41.462Z",
+      "endTime": "2026-11-04T06:52:42.160Z",
       "input": {
         "messages": [
           {
@@ -34,7 +34,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
               }
             ]
           },
@@ -44,78 +44,51 @@
               {
                 "type": "tool_call_response",
                 "response": "48",
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
               }
             ]
           }
         ]
       },
-      "output": {
-        "messages": [
-          {
-            "role": "assistant",
-            "parts": [
+      "output": [
+        {
+          "type": "command",
+          "update": {
+            "messages": [
               {
-                "type": "text",
-                "content": "8 multiplied by 6 is 48."
+                "role": "assistant",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": "8 multiplied by 6 is 48."
+                  }
+                ]
               }
             ]
           }
-        ]
-      },
+        }
+      ],
       "integration": "LangGraph"
     },
     {
-      "uuid": "ecd79bb9b4e717de",
+      "uuid": "967db394be05e689",
       "name": "tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e8be165256dbe895",
-      "startTime": "2026-10-23T08:40:32.241Z",
-      "endTime": "2026-10-23T08:40:32.242Z",
-      "input": {
-        "__type": "tool_call_with_context",
-        "tool_call": {
+      "parentUuid": "dab2e8406d5c2961",
+      "startTime": "2026-11-04T06:52:41.458Z",
+      "endTime": "2026-11-04T06:52:41.461Z",
+      "input": [
+        {
           "name": "multiply",
           "args": {
             "a": 8,
             "b": 6
           },
-          "id": "call_4H3dIAWqpXkARayswDCLUqfa",
+          "id": "call_oVfDwEIhXQNXaaGWCseudvZt",
           "type": "tool_call"
-        },
-        "state": {
-          "messages": [
-            {
-              "role": "user",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": "What is 8 multiplied by 6?"
-                }
-              ]
-            },
-            {
-              "role": "assistant",
-              "parts": [
-                {
-                  "type": "text",
-                  "content": ""
-                },
-                {
-                  "type": "tool_call",
-                  "name": "multiply",
-                  "arguments": {
-                    "a": 8,
-                    "b": 6
-                  },
-                  "id": "call_4H3dIAWqpXkARayswDCLUqfa"
-                }
-              ]
-            }
-          ]
         }
-      },
+      ],
       "output": {
         "messages": [
           {
@@ -124,7 +97,7 @@
               {
                 "type": "tool_call_response",
                 "response": "48",
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
               }
             ]
           }
@@ -144,13 +117,13 @@
       ]
     },
     {
-      "uuid": "e901c04854975fa6",
+      "uuid": "83fe244d05a87164",
       "name": "model",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "e8be165256dbe895",
-      "startTime": "2026-10-23T08:40:30.925Z",
-      "endTime": "2026-10-23T08:40:32.240Z",
+      "parentUuid": "dab2e8406d5c2961",
+      "startTime": "2026-11-04T06:52:40.388Z",
+      "endTime": "2026-11-04T06:52:41.457Z",
       "input": {
         "messages": [
           {
@@ -164,39 +137,44 @@
           }
         ]
       },
-      "output": {
-        "messages": [
-          {
-            "role": "assistant",
-            "parts": [
+      "output": [
+        {
+          "type": "command",
+          "update": {
+            "messages": [
               {
-                "type": "text",
-                "content": ""
-              },
-              {
-                "type": "tool_call",
-                "name": "multiply",
-                "arguments": {
-                  "a": 8,
-                  "b": 6
-                },
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "role": "assistant",
+                "parts": [
+                  {
+                    "type": "text",
+                    "content": ""
+                  },
+                  {
+                    "type": "tool_call",
+                    "name": "multiply",
+                    "arguments": {
+                      "a": 8,
+                      "b": 6
+                    },
+                    "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
+                  }
+                ]
               }
             ]
           }
-        ]
-      },
+        }
+      ],
       "integration": "LangGraph"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "e8be165256dbe895",
+      "uuid": "dab2e8406d5c2961",
       "name": "LangGraph",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-10-23T08:40:30.924Z",
-      "endTime": "2026-10-23T08:40:33.602Z",
+      "startTime": "2026-11-04T06:52:40.386Z",
+      "endTime": "2026-11-04T06:52:42.161Z",
       "input": {
         "messages": [
           {
@@ -235,7 +213,7 @@
                   "a": 8,
                   "b": 6
                 },
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
               }
             ]
           },
@@ -245,7 +223,7 @@
               {
                 "type": "tool_call_response",
                 "response": "48",
-                "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+                "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
               }
             ]
           },
@@ -278,13 +256,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "40b4f48f68c0417f",
+      "uuid": "4ddc14b8956881bb",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "81f3a8be6c6b0e45",
-      "startTime": "2026-10-23T08:40:32.243Z",
-      "endTime": "2026-10-23T08:40:33.601Z",
+      "parentUuid": "2bd3e0d189ef8cff",
+      "startTime": "2026-11-04T06:52:41.463Z",
+      "endTime": "2026-11-04T06:52:42.159Z",
       "input": [
         {
           "role": "system",
@@ -307,7 +285,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+            "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
           }
         },
         {
@@ -315,7 +293,7 @@
           "content": {
             "type": "tool_call_response",
             "response": "48",
-            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+            "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
           }
         }
       ],
@@ -327,13 +305,13 @@
       "outputTokenCount": 10.0
     },
     {
-      "uuid": "108a61f62f947678",
+      "uuid": "0b689a6821389ce8",
       "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "e901c04854975fa6",
-      "startTime": "2026-10-23T08:40:30.927Z",
-      "endTime": "2026-10-23T08:40:32.239Z",
+      "parentUuid": "83fe244d05a87164",
+      "startTime": "2026-11-04T06:52:40.389Z",
+      "endTime": "2026-11-04T06:52:41.455Z",
       "input": [
         {
           "role": "system",
@@ -354,7 +332,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+            "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
           }
         }
       ],
@@ -378,13 +356,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "1e2c1cd8085378c4",
+      "uuid": "d346e084e11d7dc3",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "ecd79bb9b4e717de",
-      "startTime": "2026-10-23T08:40:32.241Z",
-      "endTime": "2026-10-23T08:40:32.241Z",
+      "parentUuid": "967db394be05e689",
+      "startTime": "2026-11-04T06:52:41.460Z",
+      "endTime": "2026-11-04T06:52:41.460Z",
       "input": {
         "a": 8,
         "b": 6
@@ -393,8 +371,8 @@
       "integration": "LangGraph"
     }
   ],
-  "startTime": "2026-10-23T08:40:30.924Z",
-  "endTime": "2026-10-23T08:40:33.602Z",
+  "startTime": "2026-11-04T06:52:40.386Z",
+  "endTime": "2026-11-04T06:52:42.161Z",
   "name": "LangGraph",
   "environment": "development",
   "input": {
@@ -435,7 +413,7 @@
               "a": 8,
               "b": 6
             },
-            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+            "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
           }
         ]
       },
@@ -445,7 +423,7 @@
           {
             "type": "tool_call_response",
             "response": "48",
-            "id": "call_4H3dIAWqpXkARayswDCLUqfa"
+            "id": "call_oVfDwEIhXQNXaaGWCseudvZt"
           }
         ]
       },

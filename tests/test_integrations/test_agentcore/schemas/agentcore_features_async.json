@@ -1,103 +1,200 @@
 {
-  "uuid": "e9aa4f07a778b81d2336ab903c1f811c",
+  "uuid": "865de72954ae01d474cdebf2bf0ef28a",
   "baseSpans": [
     {
-      "uuid": "76dc903e56883a62",
+      "uuid": "d894bb35b3ba65d5",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4c291477c9d15c0d",
-      "startTime": "2026-05-05T18:12:38.093Z",
-      "endTime": "2026-05-05T18:12:39.308Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "b9e713492ce69a6a",
+      "startTime": "2026-11-04T06:52:57.869Z",
+      "endTime": "2026-11-04T06:52:58.549Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>I need to use the special_tool with the query 'Async Data' to process the request.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_8jjvBxwosfBzedGTsl4iAd",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Async Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands"
     },
     {
-      "uuid": "9512a0881ddead1f",
+      "uuid": "60e28481fc770aeb",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "4c291477c9d15c0d",
-      "startTime": "2026-05-05T18:12:35.685Z",
-      "endTime": "2026-05-05T18:12:38.093Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "b9e713492ce69a6a",
+      "startTime": "2026-11-04T06:52:56.669Z",
+      "endTime": "2026-11-04T06:52:57.868Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": "<thinking>I need to use the special_tool with the query 'Async Data' to process the request.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "4c291477c9d15c0d",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "b9e713492ce69a6a",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:35.685Z",
-      "endTime": "2026-05-05T18:12:39.309Z",
+      "startTime": "2026-11-04T06:52:56.669Z",
+      "endTime": "2026-11-04T06:52:58.549Z",
       "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "The 'Async Data' has been successfully processed using the 'special_tool'.\n",
-      "availableTools": [],
+      "output": "The special_tool has processed 'Async Data'. If you need any further assistance, feel free to ask.\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+          "output": "Processed: Async Data",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
+      "availableTools": [
+        "special_tool"
+      ],
       "agentHandoffs": [],
-      "integration": "AgentCore"
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": false,
+          "strictMode": false,
+          "flaky": false,
+          "evaluationModel": "gpt-4.1-mini"
+        }
+      ]
     }
   ],
   "llmSpans": [
     {
-      "uuid": "799ca3d992eec57b",
+      "uuid": "ff597462ec0764fd",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "76dc903e56883a62",
-      "startTime": "2026-05-05T18:12:38.093Z",
-      "endTime": "2026-05-05T18:12:39.308Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "The 'Async Data' has been successfully processed using the 'special_tool'.",
+      "parentUuid": "d894bb35b3ba65d5",
+      "startTime": "2026-11-04T06:52:57.869Z",
+      "endTime": "2026-11-04T06:52:58.549Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>I need to use the special_tool with the query 'Async Data' to process the request.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_8jjvBxwosfBzedGTsl4iAd",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "Processed: Async Data"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "The special_tool has processed 'Async Data'. If you need any further assistance, feel free to ask.",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
-      "inputTokenCount": 585.0,
-      "outputTokenCount": 18.0,
-      "integration": "AgentCore",
-      "provider": null
+      "inputTokenCount": 567.0,
+      "outputTokenCount": 24.0
     },
     {
-      "uuid": "f6b543b5b6e58e82",
+      "uuid": "eb1bf58360592487",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "9512a0881ddead1f",
-      "startTime": "2026-05-05T18:12:35.685Z",
-      "endTime": "2026-05-05T18:12:38.090Z",
-      "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-      "output": "<thinking>I need to process the given 'Async Data' using the 'special_tool'. This tool requires a 'query' parameter, so I will use the provided data as the query.</thinking>\n",
+      "parentUuid": "60e28481fc770aeb",
+      "startTime": "2026-11-04T06:52:56.670Z",
+      "endTime": "2026-11-04T06:52:57.867Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'"
+        }
+      ],
+      "output": "<thinking>I need to use the special_tool with the query 'Async Data' to process the request.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "special_tool",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "query": "Async Data"
+          }
+        }
+      ],
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 493.0,
-      "outputTokenCount": 60.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 42.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "6f84ceede50cc0da",
-      "name": "execute_tool special_tool",
+      "uuid": "1a2fcd5c45e5daa9",
+      "name": "special_tool",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "9512a0881ddead1f",
-      "startTime": "2026-05-05T18:12:38.091Z",
-      "endTime": "2026-05-05T18:12:38.092Z",
+      "parentUuid": "60e28481fc770aeb",
+      "startTime": "2026-11-04T06:52:57.868Z",
+      "endTime": "2026-11-04T06:52:57.868Z",
+      "input": {
+        "query": "Async Data"
+      },
       "output": "Processed: Async Data",
-      "toolsCalled": [
-        {
-          "name": "special_tool",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "AgentCore"
+      "integration": "Strands",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path)."
     }
   ],
-  "startTime": "2026-05-05T18:12:35.685Z",
-  "endTime": "2026-05-05T18:12:39.309Z",
+  "startTime": "2026-11-04T06:52:56.669Z",
+  "endTime": "2026-11-04T06:52:58.549Z",
   "name": "agentcore-full-features-async",
   "metadata": {
     "env": "testing_async",
@@ -111,6 +208,17 @@
   "environment": "development",
   "threadId": "thread-async-features-002",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
-  "output": "The 'Async Data' has been successfully processed using the 'special_tool'.\n",
-  "status": "SUCCESS"
+  "output": "The special_tool has processed 'Async Data'. If you need any further assistance, feel free to ask.\n",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "special_tool",
+      "type": "FUNCTION",
+      "description": "A tool used by feature tests.\n\nMutates its own span via ``update_current_span(...)`` so the\nplaceholder push/pop pattern is exercised end-to-end. With the\nPOC migration this lands on ``confident.span.metric_collection``\nof THIS tool span (no longer a no-op as it was under the old\n``is_test_mode`` path).",
+      "output": "Processed: Async Data",
+      "inputParameters": {
+        "query": "Async Data"
+      }
+    }
+  ]
 }

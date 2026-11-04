@@ -1,103 +1,191 @@
 {
-  "uuid": "a0a35aeea690517d0dfec1a212e023f2",
+  "uuid": "c2f425e47122aabb4c49761eb2b56a5c",
   "baseSpans": [
     {
-      "uuid": "a5641e83d0df37c1",
+      "uuid": "4ab5f501b87bbf28",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "97c97c4372eb042b",
-      "startTime": "2026-05-05T18:12:16.878Z",
-      "endTime": "2026-05-05T18:12:18.075Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "55244f5f74d7115f",
+      "startTime": "2026-11-04T06:53:01.472Z",
+      "endTime": "2026-11-04T06:53:02.309Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London."
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for the current time in London. I will use the 'get_time' tool to get the current time.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_tvtPisFzZ3d5M95LoZW5zf",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "7:00 AM GMT"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands"
     },
     {
-      "uuid": "6886956b85828432",
+      "uuid": "edfb12bf0628fb70",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "97c97c4372eb042b",
-      "startTime": "2026-05-05T18:12:14.709Z",
-      "endTime": "2026-05-05T18:12:16.877Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "55244f5f74d7115f",
+      "startTime": "2026-11-04T06:53:00.174Z",
+      "endTime": "2026-11-04T06:53:01.472Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London."
+        }
+      ],
+      "output": "<thinking>The User has asked for the current time in London. I will use the 'get_time' tool to get the current time.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "description": "Get the current time for a city.",
+          "output": "7:00 AM GMT",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "97c97c4372eb042b",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "55244f5f74d7115f",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:14.709Z",
-      "endTime": "2026-05-05T18:12:18.076Z",
+      "startTime": "2026-11-04T06:53:00.173Z",
+      "endTime": "2026-11-04T06:53:02.309Z",
       "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "The current time in London is 7:00 AM GMT.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "AgentCore"
+      "output": "<thinking>The 'get_time' tool has returned the current time in London, which is 7:00 AM GMT.</thinking>\n\n<reply>The current time in London is 7:00 AM GMT.</reply>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "description": "Get the current time for a city.",
+          "output": "7:00 AM GMT",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
+      "availableTools": [
+        "get_weather",
+        "get_time"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "7c94ae094583792d",
+      "uuid": "8fa70927d4f574a4",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a5641e83d0df37c1",
-      "startTime": "2026-05-05T18:12:16.878Z",
-      "endTime": "2026-05-05T18:12:18.066Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "The current time in London is 7:00 AM GMT.",
+      "parentUuid": "4ab5f501b87bbf28",
+      "startTime": "2026-11-04T06:53:01.473Z",
+      "endTime": "2026-11-04T06:53:02.309Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London."
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for the current time in London. I will use the 'get_time' tool to get the current time.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_tvtPisFzZ3d5M95LoZW5zf",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "7:00 AM GMT"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "<thinking>The 'get_time' tool has returned the current time in London, which is 7:00 AM GMT.</thinking>\n\n<reply>The current time in London is 7:00 AM GMT.</reply>",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
-      "inputTokenCount": 578.0,
-      "outputTokenCount": 15.0,
-      "integration": "AgentCore",
-      "provider": null
+      "inputTokenCount": 574.0,
+      "outputTokenCount": 50.0
     },
     {
-      "uuid": "3d613342030dfab7",
+      "uuid": "6e705c3c2133743d",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "6886956b85828432",
-      "startTime": "2026-05-05T18:12:14.709Z",
-      "endTime": "2026-05-05T18:12:16.873Z",
-      "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-      "output": "<thinking> I need to get the current time in London using the get_time tool. This is a straightforward request, so I will use the tool directly. </thinking>\n",
+      "parentUuid": "edfb12bf0628fb70",
+      "startTime": "2026-11-04T06:53:00.174Z",
+      "endTime": "2026-11-04T06:53:01.467Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London."
+        }
+      ],
+      "output": "<thinking>The User has asked for the current time in London. I will use the 'get_time' tool to get the current time.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "get_time",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ],
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 493.0,
-      "outputTokenCount": 52.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 48.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "96a5a8e3078b3a7f",
-      "name": "execute_tool get_time",
+      "uuid": "5cd8317a08764c40",
+      "name": "get_time",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "6886956b85828432",
-      "startTime": "2026-05-05T18:12:16.874Z",
-      "endTime": "2026-05-05T18:12:16.876Z",
+      "parentUuid": "edfb12bf0628fb70",
+      "startTime": "2026-11-04T06:53:01.470Z",
+      "endTime": "2026-11-04T06:53:01.471Z",
+      "input": {
+        "city": "London"
+      },
       "output": "7:00 AM GMT",
-      "toolsCalled": [
-        {
-          "name": "get_time",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "AgentCore"
+      "integration": "Strands",
+      "description": "Get the current time for a city."
     }
   ],
-  "startTime": "2026-05-05T18:12:14.709Z",
-  "endTime": "2026-05-05T18:12:18.076Z",
+  "startTime": "2026-11-04T06:53:00.173Z",
+  "endTime": "2026-11-04T06:53:02.309Z",
   "name": "agentcore-multiple-tools-time",
   "metadata": {
     "test_type": "multiple_tools_time"
@@ -110,6 +198,17 @@
   "environment": "development",
   "threadId": "multiple-tools-time-123",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use the get_time tool exactly once to get the current time in London.",
-  "output": "The current time in London is 7:00 AM GMT.\n",
-  "status": "SUCCESS"
+  "output": "<thinking>The 'get_time' tool has returned the current time in London, which is 7:00 AM GMT.</thinking>\n\n<reply>The current time in London is 7:00 AM GMT.</reply>\n",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_time",
+      "type": "FUNCTION",
+      "description": "Get the current time for a city.",
+      "output": "7:00 AM GMT",
+      "inputParameters": {
+        "city": "London"
+      }
+    }
+  ]
 }

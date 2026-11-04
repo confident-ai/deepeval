@@ -1,103 +1,198 @@
 {
-  "uuid": "45bb57126357982f5c312f4e15f6685f",
+  "uuid": "cee07b72b288c48ae2ff27f624405165",
   "baseSpans": [
     {
-      "uuid": "52bf64e5ff612617",
+      "uuid": "b07a2017be945548",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2ccd184430cd38c5",
-      "startTime": "2026-05-05T18:12:09.546Z",
-      "endTime": "2026-05-05T18:12:10.883Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "41b4293893c6c0d7",
+      "startTime": "2026-11-04T06:53:00.994Z",
+      "endTime": "2026-11-04T06:53:01.704Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for a simple addition operation, which falls under the capabilities of the provided 'calculate' tool.</thinking>\n\n<thinking>I will now use the 'calculate' tool to perform the addition operation.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_VywY142GeIwHRLXD4SZuOC",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "40.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands"
     },
     {
-      "uuid": "db123810231ec937",
+      "uuid": "cd93a68c94c2ac48",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "2ccd184430cd38c5",
-      "startTime": "2026-05-05T18:12:07.228Z",
-      "endTime": "2026-05-05T18:12:09.546Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "41b4293893c6c0d7",
+      "startTime": "2026-11-04T06:52:59.613Z",
+      "endTime": "2026-11-04T06:53:00.994Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        }
+      ],
+      "output": "<thinking>The User has asked for a simple addition operation, which falls under the capabilities of the provided 'calculate' tool.</thinking>\n\n<thinking>I will now use the 'calculate' tool to perform the addition operation.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "40.0",
+          "inputParameters": {
+            "a": 15,
+            "b": 25,
+            "operation": "add"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "2ccd184430cd38c5",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "41b4293893c6c0d7",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:07.228Z",
-      "endTime": "2026-05-05T18:12:10.884Z",
+      "startTime": "2026-11-04T06:52:59.612Z",
+      "endTime": "2026-11-04T06:53:01.705Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>The 'calculate' tool has returned the result of the addition operation.</thinking> The result of 15 plus 25 is 40.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "AgentCore"
+      "output": "<thinking>The 'calculate' tool has successfully performed the addition operation, and the result is 40.0.</thinking>\n\nThe sum of 15 and 25 is 40.\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "40.0",
+          "inputParameters": {
+            "a": 15,
+            "b": 25,
+            "operation": "add"
+          }
+        }
+      ],
+      "availableTools": [
+        "calculate"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "061e0f975cdde743",
+      "uuid": "63c34cd0a3d151dc",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "52bf64e5ff612617",
-      "startTime": "2026-05-05T18:12:09.546Z",
-      "endTime": "2026-05-05T18:12:10.882Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>The 'calculate' tool has returned the result of the addition operation.</thinking> The result of 15 plus 25 is 40.",
+      "parentUuid": "b07a2017be945548",
+      "startTime": "2026-11-04T06:53:00.995Z",
+      "endTime": "2026-11-04T06:53:01.704Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User has asked for a simple addition operation, which falls under the capabilities of the provided 'calculate' tool.</thinking>\n\n<thinking>I will now use the 'calculate' tool to perform the addition operation.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_VywY142GeIwHRLXD4SZuOC",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "40.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "<thinking>The 'calculate' tool has successfully performed the addition operation, and the result is 40.0.</thinking>\n\nThe sum of 15 and 25 is 40.",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
-      "inputTokenCount": 532.0,
-      "outputTokenCount": 35.0,
-      "integration": "AgentCore",
-      "provider": null
+      "inputTokenCount": 561.0,
+      "outputTokenCount": 43.0
     },
     {
-      "uuid": "550f37dc8c5803bf",
+      "uuid": "6a171efc83baea58",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "db123810231ec937",
-      "startTime": "2026-05-05T18:12:07.228Z",
-      "endTime": "2026-05-05T18:12:09.541Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-      "output": "<thinking>I need to perform an addition operation using the 'calculate' tool.</thinking>\n",
+      "parentUuid": "cd93a68c94c2ac48",
+      "startTime": "2026-11-04T06:52:59.613Z",
+      "endTime": "2026-11-04T06:53:00.987Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?"
+        }
+      ],
+      "output": "<thinking>The User has asked for a simple addition operation, which falls under the capabilities of the provided 'calculate' tool.</thinking>\n\n<thinking>I will now use the 'calculate' tool to perform the addition operation.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "a": 15,
+            "b": 25,
+            "operation": "add"
+          }
+        }
+      ],
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 459.0,
-      "outputTokenCount": 44.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 80.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "c0b46ef449706901",
-      "name": "execute_tool calculate",
+      "uuid": "710bee066f5ed0d4",
+      "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "db123810231ec937",
-      "startTime": "2026-05-05T18:12:09.543Z",
-      "endTime": "2026-05-05T18:12:09.545Z",
+      "parentUuid": "cd93a68c94c2ac48",
+      "startTime": "2026-11-04T06:53:00.991Z",
+      "endTime": "2026-11-04T06:53:00.992Z",
+      "input": {
+        "a": 15,
+        "b": 25,
+        "operation": "add"
+      },
       "output": "40.0",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "AgentCore"
+      "integration": "Strands",
+      "description": "Perform basic arithmetic operations."
     }
   ],
-  "startTime": "2026-05-05T18:12:07.228Z",
-  "endTime": "2026-05-05T18:12:10.884Z",
+  "startTime": "2026-11-04T06:52:59.612Z",
+  "endTime": "2026-11-04T06:53:01.705Z",
   "name": "agentcore-tool-metric-test",
   "metadata": {
     "test_type": "tool_metric_collection"
@@ -110,6 +205,19 @@
   "environment": "development",
   "threadId": "tool-metric-123",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
-  "output": "<thinking>The 'calculate' tool has returned the result of the addition operation.</thinking> The result of 15 plus 25 is 40.\n",
-  "status": "SUCCESS"
+  "output": "<thinking>The 'calculate' tool has successfully performed the addition operation, and the result is 40.0.</thinking>\n\nThe sum of 15 and 25 is 40.\n",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.",
+      "output": "40.0",
+      "inputParameters": {
+        "a": 15,
+        "b": 25,
+        "operation": "add"
+      }
+    }
+  ]
 }
