@@ -129,7 +129,12 @@ def test_evaluation_console_report_aggregate_metrics():
     # columns[0] is Metric, columns[1] is Average Score, columns[2] is Pass Rate, columns[3] is Total
     assert list(table.columns[0].cells)[0] == "Answer Relevancy"
     assert list(table.columns[1].cells)[0] == "0.50"
-    assert list(table.columns[2].cells)[0] == "50.00% | passed=1 | failed=1"
+    # The rate carries its 95% interval: 1 of 2 is "50%", but two test cases
+    # only pin the true rate somewhere between 9.5% and 90.5%.
+    assert (
+        list(table.columns[2].cells)[0]
+        == "50.00% (95% CI 9.5-90.5%) | passed=1 | failed=1"
+    )
     assert list(table.columns[3].cells)[0] == "2"
 
 
