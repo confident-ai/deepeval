@@ -14,7 +14,6 @@ fields are documented separately in `span-attributes.md`.
 | `confident.trace.name` | string | Human-readable trace name. |
 | `confident.trace.input` | string | Trace input. Passthrough; JSON-encode if not already a string. |
 | `confident.trace.output` | string | Trace output. Passthrough; JSON-encode if not already a string. |
-| `confident.trace.user_id` | string | End user / customer identifier. |
 | `confident.trace.thread_id` | string | Conversation or session thread identifier. |
 | `confident.trace.tags` | list of strings | Grouping labels. Native OTLP string array, or a JSON array string. |
 | `confident.trace.metadata` | JSON string | Arbitrary key-value context. Must be a JSON-encoded object string (OTLP has no map type). |

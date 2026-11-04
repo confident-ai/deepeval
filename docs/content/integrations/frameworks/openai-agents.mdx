@@ -663,7 +663,7 @@ The integration captures inputs, outputs, model names, and tool calls automatica
 
 <Case id="python">
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`).
 - Use `Agent`/`function_tool` kwargs (`agent_metrics`, `llm_metrics`, `metrics=`) for component-level defaults.
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 
@@ -683,7 +683,7 @@ def get_weather(city: str) -> str:
 
 <Case id="typescript">
 
-- Use `setTracingContext(...)` for trace-level fields (`name`, `tags`, `metadata`, `threadId`, `userId`) and scope-wide span defaults.
+- Use `setTracingContext(...)` for trace-level fields (`name`, `tags`, `metadata`, `threadId`) and scope-wide span defaults.
 - Use `nextAgentSpan(...)` / `nextLlmSpan(...)` / `nextToolSpan(...)` to stage component-level fields onto the next span the processor opens.
 - Use `updateCurrentSpan(...)` / `updateCurrentTrace(...)` from inside a tool body to mutate fields the framework can't see.
 
@@ -696,7 +696,6 @@ await setTracingContext(
     name: "weather-ask",
     tags: ["openai-agents", "weather"],
     threadId: "thread-123",
-    userId: "user-xyz",
   },
   () => ask("What's the weather in Paris?"),
 );
