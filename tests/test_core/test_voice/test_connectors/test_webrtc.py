@@ -304,12 +304,22 @@ async def test_connect_posts_the_offer_and_waits_for_the_agent(fake_stack):
     assert pc.closed and session.closed
 
 
-async def test_agent_audio_and_text_arrive_as_events(fake_stack):
+async def test_agent_audio_and_text_arrive_as_events(fake_stack, monkeypatch):
+    transcript_sent = asyncio.Event()
+    recv = FakeTrack.recv
+
+    async def recv_after_transcript(track):
+        # Keep the fake audio stream open until the text has been delivered.
+        await transcript_sent.wait()
+        return await recv(track)
+
+    monkeypatch.setattr(FakeTrack, "recv", recv_after_transcript)
     FakePeerConnection.agent_frames = [agent_frame(b"\x02\x00" * 480)]
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+    transcript_sent.set()
 
     events = []
     async for event in connector.iter_agent_events():
