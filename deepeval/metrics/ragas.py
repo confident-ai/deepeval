@@ -553,12 +553,19 @@ class RagasMetric(BaseMetric):
 
 def import_ragas():
     import ragas
+    from packaging.version import InvalidVersion, Version
 
     required_version = "0.2.1"
     if not hasattr(ragas, "__version__"):
         raise ImportError("Version information is not available for ragas.")
     installed_version = ragas.__version__
-    if installed_version < required_version:
+    try:
+        outdated = Version(installed_version) < Version(required_version)
+    except InvalidVersion:
+        # A version string that doesn't follow PEP 440 cannot be ordered
+        # reliably, so don't reject the installed ragas over it.
+        outdated = False
+    if outdated:
         raise ImportError(
             f"ragas version {required_version} or higher is required, but {installed_version} is installed."
         )
