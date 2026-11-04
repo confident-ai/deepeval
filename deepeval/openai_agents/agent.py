@@ -33,4 +33,5 @@ class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     agent_metric_collection: str = None
 
     def __post_init__(self):
+        super().__post_init__()
         patch_default_agent_runner_get_model()
