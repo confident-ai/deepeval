@@ -99,7 +99,7 @@ const organizationJsonLd = {
   sameAs: [
     'https://github.com/confident-ai/deepeval',
     'https://x.com/deepeval',
-    'https://discord.gg/a3K9c8GRGt',
+    'https://discord.gg/3SEyvpgu2f',
     'https://www.reddit.com/r/deepeval/',
   ],
 };
