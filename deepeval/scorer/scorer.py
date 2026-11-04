@@ -1,4 +1,4 @@
-from typing import Union, List, Optional, Any
+from typing import Union, List, Optional, Any, Iterable
 import textwrap
 
 from deepeval.metrics.utils import trimAndLoadJson
@@ -122,6 +122,57 @@ class Scorer:
         if not prediction:
             return 0
         return 1 if normalize_text(prediction) in normalized_targets else 0
+
+    @classmethod
+    def best_choice_from_logprobs(
+        cls,
+        top_logprobs: Iterable[Any],
+        choices: List[str],
+    ) -> Optional[str]:
+        """Return the candidate in ``choices`` with the highest log probability.
+
+        This is the canonical way multiple-choice benchmarks (MMLU, HellaSwag,
+        TruthfulQA, ...) are scored: rather than parsing a generated answer, the
+        option the model assigned the most probability mass is selected.
+
+        ``top_logprobs`` is the set of alternative tokens for a single generated
+        position (e.g. OpenAI's ``top_logprobs``). Each item may be a
+        ``(token, logprob)`` pair, a ``{"token", "logprob"}`` mapping, or any
+        object exposing ``token``/``logprob`` attributes. Matching is
+        case-insensitive and ignores surrounding whitespace, so a token like
+        ``" B"`` matches choice ``"B"``. Returns ``None`` when none of the
+        candidates appear among the provided log probs.
+        """
+
+        def _token_logprob(item):
+            if isinstance(item, dict):
+                return item.get("token"), item.get("logprob")
+            if isinstance(item, (tuple, list)):
+                return (item[0], item[1]) if len(item) >= 2 else (None, None)
+            return getattr(item, "token", None), getattr(item, "logprob", None)
+
+        # Highest logprob seen per normalized token.
+        best_by_token = {}
+        for item in top_logprobs or []:
+            token, logprob = _token_logprob(item)
+            if token is None or logprob is None:
+                continue
+            key = str(token).strip().upper()
+            if key and (
+                key not in best_by_token or logprob > best_by_token[key]
+            ):
+                best_by_token[key] = logprob
+
+        best_choice = None
+        best_logprob = None
+        for choice in choices:
+            logprob = best_by_token.get(str(choice).strip().upper())
+            if logprob is not None and (
+                best_logprob is None or logprob > best_logprob
+            ):
+                best_choice = choice
+                best_logprob = logprob
+        return best_choice
 
     # Todo: More mode based metrics to be added
 
