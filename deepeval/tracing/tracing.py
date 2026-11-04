@@ -388,7 +388,12 @@ class TraceManager:
                         )
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
-                    self.environment = Environment.TESTING
+                    # Scope the testing label to this trace. Writing
+                    # ``self.environment`` here would leak TESTING into every
+                    # later trace and into integrations that read the shared
+                    # ``trace_manager``, and it is never restored.
+                    if trace.environment is None:
+                        trace.environment = Environment.TESTING.value
                     if (
                         trace.root_spans
                         and len(trace.root_spans) > 0
