@@ -11,7 +11,6 @@ from deepeval.voice.connectors.providers import (
     ElevenLabsConnector,
     LiveKitConnector,
     PipecatConnector,
-    TwilioConnector,
     VapiConnector,
 )
 from deepeval.voice.connectors.phone import (
@@ -40,7 +39,6 @@ __all__ = [
     "WebRTCConnector",
     "SilenceTimeoutMixin",
     "PipecatConnector",
-    "TwilioConnector",
     "TwilioProvider",
     "VapiConnector",
 ]

@@ -13,8 +13,8 @@ import aiohttp
 from aiohttp import web
 
 from deepeval.errors import DeepEvalError
-from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.connectors import audio_utils
+from deepeval.voice.connectors.phone import PhoneConnector, TwilioProvider
 from deepeval.voice.connectors.types import AgentEvent
 from deepeval.voice.connectors.transports.silence import SilenceTimeoutMixin
 from deepeval.voice.connectors.transports.websocket import (
@@ -31,8 +31,6 @@ AUTH_TOKEN_ENV = "TWILIO_AUTH_TOKEN"
 STREAM_PATH = "/deepeval/twilio/stream"
 CALL_KEY_PARAMETER = "deepeval_call"
 TWILIO_SAMPLE_RATE = 8000
-DEFAULT_HOST = "0.0.0.0"
-DEFAULT_PORT = 8765
 DEFAULT_RING_TIMEOUT_S = 45
 DEFAULT_MAX_CALL_DURATION_S = 30 * 60
 DEFAULT_DIAL_INTERVAL_S = 1.0
@@ -89,7 +87,7 @@ class _MediaStreamServer:
         except OSError as error:
             await runner.cleanup()
             raise DeepEvalError(
-                f"TwilioConnector could not listen on {self.host}:"
+                f"deepeval could not listen on {self.host}:"
                 f"{self.port}: {error}"
             ) from error
         return runner
@@ -148,15 +146,17 @@ def stream_url_for(public_url: str) -> str:
     if parsed.scheme not in ("https", "wss") or not parsed.netloc:
         raise DeepEvalError(
             f"'{public_url}' is not a public https:// or wss:// URL. Twilio "
-            "streams call audio to it, so expose TwilioConnector's port "
+            "streams call audio to it, so expose TwilioProvider's port "
             "with a tunnel such as ngrok and pass that URL."
         )
     return f"wss://{parsed.netloc}{parsed.path.rstrip('/')}{STREAM_PATH}"
 
 
-class TwilioConnector(SilenceTimeoutMixin, BaseWebSocketConnector):
+class TwilioConnector(
+    PhoneConnector, SilenceTimeoutMixin, BaseWebSocketConnector
+):
 
-    protocol: ClassVar[VoiceProtocol] = VoiceProtocol.SIP
+    provider_type: ClassVar[type] = TwilioProvider
     _dial_pacer: ClassVar[DialPacer] = DialPacer()
     _servers: ClassVar[Dict[Tuple[str, int], _MediaStreamServer]] = {}
 
@@ -164,12 +164,8 @@ class TwilioConnector(SilenceTimeoutMixin, BaseWebSocketConnector):
         self,
         phone_number: str,
         *,
-        from_number: str,
-        public_url: str,
-        account_sid: Optional[str] = None,
-        auth_token: Optional[str] = None,
-        host: str = DEFAULT_HOST,
-        port: int = DEFAULT_PORT,
+        provider: TwilioProvider,
+        caller_id: Optional[str] = None,
         ring_timeout_s: int = DEFAULT_RING_TIMEOUT_S,
         max_call_duration_s: int = DEFAULT_MAX_CALL_DURATION_S,
         dial_interval_s: float = DEFAULT_DIAL_INTERVAL_S,
@@ -180,16 +176,16 @@ class TwilioConnector(SilenceTimeoutMixin, BaseWebSocketConnector):
                 f"'{phone_number}' is not an E.164 phone number. Enter it "
                 "with the country code, e.g. +14155550100."
             )
-        if not from_number:
+        if not caller_id:
             raise DeepEvalError(
-                "TwilioConnector needs `from_number`: a number on your Twilio "
-                "account to call from."
+                "PhoneConnector needs `caller_id` with TwilioProvider: a "
+                "number on your Twilio account to call from."
             )
-        account_sid = account_sid or os.getenv(ACCOUNT_SID_ENV)
-        auth_token = auth_token or os.getenv(AUTH_TOKEN_ENV)
+        account_sid = provider.account_sid or os.getenv(ACCOUNT_SID_ENV)
+        auth_token = provider.auth_token or os.getenv(AUTH_TOKEN_ENV)
         if not (account_sid and auth_token):
             raise DeepEvalError(
-                "TwilioConnector needs a Twilio account SID and auth token "
+                "TwilioProvider needs a Twilio account SID and auth token "
                 f"(pass account_sid/auth_token or set {ACCOUNT_SID_ENV}, "
                 f"{AUTH_TOKEN_ENV})."
             )
@@ -197,12 +193,12 @@ class TwilioConnector(SilenceTimeoutMixin, BaseWebSocketConnector):
         base_kwargs.setdefault("connect_timeout_s", float(ring_timeout_s + 15))
         super().__init__(sample_rate=TWILIO_SAMPLE_RATE, **base_kwargs)
         self.phone_number = phone_number
-        self.from_number = from_number
-        self.stream_url = stream_url_for(public_url)
+        self.caller_id = caller_id
+        self.stream_url = stream_url_for(provider.public_url)
         self.account_sid = account_sid
         self.auth_token = auth_token
-        self.host = host
-        self.port = port
+        self.host = provider.host
+        self.port = provider.port
         self.ring_timeout_s = ring_timeout_s
         self.max_call_duration_s = max_call_duration_s
         self.dial_interval_s = dial_interval_s
@@ -262,7 +258,7 @@ class TwilioConnector(SilenceTimeoutMixin, BaseWebSocketConnector):
                 "/Calls.json",
                 {
                     "To": self.phone_number,
-                    "From": self.from_number,
+                    "From": self.caller_id,
                     "Twiml": self._twiml(),
                     "Timeout": str(self.ring_timeout_s),
                     "TimeLimit": str(self.max_call_duration_s),

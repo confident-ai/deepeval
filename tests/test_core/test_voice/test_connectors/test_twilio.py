@@ -10,7 +10,7 @@ import pytest
 from aiohttp import web
 
 from deepeval.errors import DeepEvalError
-from deepeval.voice import TwilioConnector
+from deepeval.voice import PhoneConnector, TwilioProvider
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.providers.twilio import (
     connector as twilio_module,
@@ -152,21 +152,25 @@ async def twilio(monkeypatch):
     await fake.stop()
 
 
-def _connector(port: int, **kwargs) -> TwilioConnector:
+def _connector(
+    port: int, public_url: str = "https://deepeval-test.ngrok.app", **kwargs
+) -> PhoneConnector:
     kwargs.setdefault("dial_interval_s", 0.0)
-    kwargs.setdefault("public_url", "https://deepeval-test.ngrok.app")
-    return TwilioConnector(
+    kwargs.setdefault("caller_id", "+14155550199")
+    return PhoneConnector(
         "+14155550100",
-        from_number="+14155550199",
-        account_sid="AC_test",
-        auth_token="token",
-        host="127.0.0.1",
-        port=port,
+        provider=TwilioProvider(
+            public_url=public_url,
+            account_sid="AC_test",
+            auth_token="token",
+            host="127.0.0.1",
+            port=port,
+        ),
         **kwargs,
     )
 
 
-async def _first_agent_audio(connector: TwilioConnector) -> bytes:
+async def _first_agent_audio(connector: PhoneConnector) -> bytes:
     async for event in connector.iter_agent_events():
         if event.audio:
             return event.audio
@@ -174,18 +178,28 @@ async def _first_agent_audio(connector: TwilioConnector) -> bytes:
 
 
 def test_twilio_calls_are_telephony():
-    assert TwilioConnector.protocol is VoiceProtocol.SIP
+    connector = _connector(_free_port())
+
+    assert isinstance(connector, twilio_module.TwilioConnector)
+    assert connector.protocol is VoiceProtocol.SIP
 
 
 def test_a_phone_number_must_be_e164():
     with pytest.raises(DeepEvalError, match="E.164"):
-        TwilioConnector(
+        PhoneConnector(
             "4155550100",
-            from_number="+14155550199",
-            public_url="https://deepeval-test.ngrok.app",
-            account_sid="AC_test",
-            auth_token="token",
+            provider=TwilioProvider(
+                public_url="https://deepeval-test.ngrok.app",
+                account_sid="AC_test",
+                auth_token="token",
+            ),
+            caller_id="+14155550199",
         )
+
+
+def test_twilio_needs_a_number_to_call_from():
+    with pytest.raises(DeepEvalError, match="caller_id"):
+        _connector(_free_port(), caller_id=None)
 
 
 def test_twilio_credentials_are_required(monkeypatch):
@@ -193,10 +207,12 @@ def test_twilio_credentials_are_required(monkeypatch):
     monkeypatch.delenv("TWILIO_AUTH_TOKEN", raising=False)
 
     with pytest.raises(DeepEvalError, match="TWILIO_ACCOUNT_SID"):
-        TwilioConnector(
+        PhoneConnector(
             "+14155550100",
-            from_number="+14155550199",
-            public_url="https://deepeval-test.ngrok.app",
+            provider=TwilioProvider(
+                public_url="https://deepeval-test.ngrok.app"
+            ),
+            caller_id="+14155550199",
         )
 
 
@@ -204,10 +220,10 @@ def test_twilio_credentials_can_come_from_the_environment(monkeypatch):
     monkeypatch.setenv("TWILIO_ACCOUNT_SID", "AC_env")
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "env-token")
 
-    connector = TwilioConnector(
+    connector = PhoneConnector(
         "+14155550100",
-        from_number="+14155550199",
-        public_url="https://deepeval-test.ngrok.app",
+        provider=TwilioProvider(public_url="https://deepeval-test.ngrok.app"),
+        caller_id="+14155550199",
     )
 
     assert connector.account_sid == "AC_env"
