@@ -1,0 +1,125 @@
+---
+id: metrics-retrieval-ranking
+title: Retrieval Ranking
+sidebar_label: Retrieval Ranking
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={false} rag={true} />
+
+The Retrieval Ranking metric measures classic information-retrieval ranking quality: did the retriever rank the relevant chunks near the top? It matches the ranked `retrieval_context` list against the known relevant `context` chunks. Use it as a deterministic CI gate for retriever changes.
+
+:::note
+The `RetrievalRankingMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost. One run reports `recall@k`, `precision@k`, `mrr`, `ndcg`, and `hit_rate` in `score_breakdown`, so a single metric can feed all five dashboards.
+:::
+
+## Required Arguments
+
+To use the `RetrievalRankingMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `retrieval_context` (the ranked list, in retrieval order)
+- `context` (the known relevant chunks)
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import RetrievalRankingMetric
+from deepeval.test_case import LLMTestCase
+
+metric = RetrievalRankingMetric(k=5, metric="recall", threshold=0.5)
+
+test_case = LLMTestCase(
+    input="What is the Eiffel Tower?",
+    actual_output="The Eiffel Tower is 330 metres tall.",
+    retrieval_context=[
+        "The Eiffel Tower is 330 metres tall.",
+        "Paris is the capital of France.",
+        "Unrelated passage.",
+    ],
+    context=["The Eiffel Tower is 330 metres tall."],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.score_breakdown, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating a `RetrievalRankingMetric`:
+
+- [Optional] `k`: an integer for the top-k cutoff. Defaults to `None` (score the full retrieval list).
+- [Optional] `metric`: which measure becomes `score`. One of `recall`, `precision`, `mrr`, `ndcg`, `hit_rate`. Defaulted to `recall`. Every measure is always available in `score_breakdown`.
+- [Optional] `match_mode`: how a relevant chunk matches a retrieved passage. `contains` (default) matches on normalized substring in either direction; `exact` requires normalized equality.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with how many relevant chunks were found and the first relevant rank. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `RetrievalRankingMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.score_breakdown, metric.reason)
+```
+
+## How Is It Calculated?
+
+Each retrieved passage is labeled relevant when it matches any `context` chunk under `match_mode` (text is lowercased with collapsed whitespace before comparing). With the top-k labels:
+
+<Equation
+  formula="\text{Recall@k} = \frac{\text{Relevant chunks found in top-k}}{\text{Total relevant chunks}}, \quad \text{Precision@k} = \frac{\text{Relevant passages in top-k}}{k}, \quad \text{Hit Rate@k} = \begin{cases} 1 & \text{if any relevant chunk is in top-k} \\ 0 & \text{otherwise} \end{cases}"
+/>
+
+<Equation
+  formula="\text{MRR} = \frac{1}{\text{Rank of first relevant chunk}}, \quad \text{nDCG@k} = \frac{\sum_{i} \frac{rel_i}{\log_2(i+2)}}{\sum_{i < \min(R, k)} \frac{1}{\log_2(i+2)}}"
+/>
+
+`rel_i` is 1 when the i-th retrieved passage is relevant, else 0, and `R` is the number of relevant chunks. Ranks count from 1. When no relevant chunk is in the top-k, MRR, nDCG, and hit rate are 0.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Retrieval Ranking metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It compares normalized text locally — no model, no API key,
+          zero token cost, and the same result every run.
+        </>
+      ),
+    },
+    {
+      question: "When should I use contains vs exact matching?",
+      answer: (
+        <>
+          Use the default <code>contains</code> when retrieved passages are
+          longer than the relevant spans (a relevant sentence inside a
+          larger chunk still counts). Use <code>exact</code> when both
+          lists hold identically chunked text and you want strict equality.
+        </>
+      ),
+    },
+    {
+      question: "Which measure should be the score?",
+      answer: (
+        <>
+          Use <code>recall</code> to catch missing evidence,{" "}
+          <code>precision</code> to catch wasted context, <code>mrr</code>{" "}
+          or <code>ndcg</code> when rank order matters, and{" "}
+          <code>hit_rate</code> as a lenient “anything useful retrieved”
+          gate. All five are in <code>score_breakdown</code> regardless.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1,0 +1,109 @@
+---
+id: metrics-chunk-utilization
+title: Chunk Utilization
+sidebar_label: Chunk Utilization
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={true} />
+
+The Chunk Utilization metric measures what share of retrieved chunks the answer actually used: distinct cited passages divided by retrieved passages. Low utilization means you pay for context the answer ignores — retrieve less or cite more.
+
+:::note
+The `ChunkUtilizationMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost. It checks citation *coverage* only; pair it with `CitationFaithfulnessMetric` for whether cited passages support their claims.
+:::
+
+## Required Arguments
+
+To use the `ChunkUtilizationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ChunkUtilizationMetric
+from deepeval.test_case import LLMTestCase
+
+metric = ChunkUtilizationMetric(threshold=0.5)
+
+test_case = LLMTestCase(
+    input="Tell me about the Eiffel Tower.",
+    actual_output="The tower is 330 metres tall [1].",
+    retrieval_context=[
+        "The Eiffel Tower is 330 metres tall.",
+        "The Eiffel Tower was completed in 1889.",
+    ],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `ChunkUtilizationMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with cited/total counts. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### Citation Format
+
+Citations work exactly like `CitationIntegrityMetric`: `[N]` refers to the N-th passage (1-based), any other reference must match a `RetrievedContextData` source, and markdown links are ignored. References that match no passage are reported as broken and never counted as used.
+
+### As a Standalone
+
+You can also run the `ChunkUtilizationMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `ChunkUtilizationMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Chunk Utilization} = \frac{\text{Distinct Cited Passages}}{\text{Retrieved Passages}}"
+/>
+
+Duplicate citations to the same passage count once. An answer with no valid citations scores `0`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Citation Integrity?",
+      answer: (
+        <>
+          Citation Integrity asks whether every sentence is cited.
+          Chunk Utilization asks whether every retrieved passage earned
+          its place. Run both: uncited sentences and unused passages are
+          different RAG failures.
+        </>
+      ),
+    },
+    {
+      question: "Does the Chunk Utilization metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It parses citation markers locally — no model, no API
+          key, zero token cost.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+id: metrics-retrieval-redundancy
+title: Retrieval Redundancy
+sidebar_label: Retrieval Redundancy
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={true} />
+
+The Retrieval Redundancy metric catches near-duplicate retrieved chunks that waste context space and money. It scores pairwise n-gram overlap between `retrieval_context` passages: `1.0` means every passage adds distinct content.
+
+:::note
+The `RetrievalRedundancyMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `RetrievalRedundancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `retrieval_context`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import RetrievalRedundancyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = RetrievalRedundancyMetric(similarity_threshold=0.8)
+
+test_case = LLMTestCase(
+    input="Tell me about cats.",
+    actual_output="Cats are great.",
+    retrieval_context=[
+        "The cat sat on the mat.",
+        "Quantum mechanics explains particles.",
+    ],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `RetrievalRedundancyMetric`:
+
+- [Optional] `similarity_threshold`: n-gram Jaccard overlap at or above which a pair counts as redundant. Defaulted to `0.8`.
+- [Optional] `ngram_n`: the n-gram order for overlap. Defaulted to `2` (bigrams).
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.8`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with redundant/total pair counts. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `RetrievalRedundancyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `RetrievalRedundancyMetric` score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Diversity} = 1 - \frac{\text{Redundant Pairs}}{\text{Total Pairs}}"
+/>
+
+A pair is redundant when its n-gram Jaccard overlap reaches `similarity_threshold`. With fewer than two passages nothing can be redundant, so the score is `1.0`. `score_breakdown` also reports `overlap_ratio`, `redundant_pairs`, and `total_pairs`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Retrieval Redundancy metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It compares n-gram sets locally — no model, no API key,
+          zero token cost.
+        </>
+      ),
+    },
+    {
+      question: "My score is low but the passages look different. Why?",
+      answer: (
+        <>
+          Boilerplate shared across chunks (headers, disclaimers)
+          inflates overlap. Raise <code>similarity_threshold</code> or
+          strip boilerplate at chunking time.
+        </>
+      ),
+    },
+  ]}
+/>

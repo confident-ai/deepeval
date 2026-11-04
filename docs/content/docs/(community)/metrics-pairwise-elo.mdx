@@ -1,0 +1,73 @@
+---
+id: metrics-pairwise-elo
+title: Pairwise Elo and Win Rate
+sidebar_label: Pairwise Elo
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={false} usesLLMs={false} referenceless={true} rag={false} />
+
+`PairwiseElo` ranks model versions against each other from pairwise comparisons — for example the winners reported by `ArenaGEval`. Unlike per-test-case metrics, Elo is a **run-level** aggregate: record one result per comparison, then read ratings, win rates, or the leaderboard.
+
+:::note
+`PairwiseElo` is deterministic, needs no API key, and costs nothing. It lives in `deepeval.metrics.community` alongside the metrics because it consumes their arena outputs.
+:::
+
+## Usage
+
+```python
+from deepeval.metrics.community import PairwiseElo
+
+elo = PairwiseElo(k_factor=32.0)
+
+# After each pairwise comparison (e.g. each ArenaGEval verdict):
+elo.record("gpt-4.1", "gpt-4o-mini", winner="gpt-4.1")
+elo.record("gpt-4.1", "gpt-4o-mini", winner=None)  # draw
+elo.record_win("gpt-4o-mini", "gpt-4.1")
+
+print(elo.ratings)      # {"gpt-4.1": ..., "gpt-4o-mini": ...}
+print(elo.win_rate("gpt-4.1"))
+print(elo.leaderboard())  # ranked rows: model, elo, games, win_rate
+```
+
+There are **TWO** optional parameters when creating a `PairwiseElo`:
+
+- [Optional] `k_factor`: how fast ratings move after each game. Defaulted to `32.0`.
+- [Optional] `initial_rating`: the rating of an unseen model. Defaulted to `1500.0`.
+
+## How Is It Calculated?
+
+Standard Elo with base-10 expectations:
+
+<Equation
+  formula="E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}, \quad R_A' = R_A + K(S_A - E_A)"
+/>
+
+Wins score `1`, draws `0.5`, losses `0`. `win_rate` is the plain share of (non-draw-adjusted) points over games played — `0.0` for models with no games.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why isn't this a per-test-case metric?",
+      answer: (
+        <>
+          Elo only means something across many comparisons: a single
+          win moves a rating by a few points. Aggregate arena verdicts
+          here instead of scoring test cases one by one.
+        </>
+      ),
+    },
+    {
+      question: "What k-factor should I use?",
+      answer: (
+        <>
+          <code>32</code> is the standard for fast-moving leaderboards.
+          Use <code>16</code> once ratings stabilize and you want less
+          swing per upset.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1,0 +1,114 @@
+---
+id: metrics-streaming-latency
+title: Streaming Latency
+sidebar_label: Streaming Latency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Streaming Latency metric measures how fast a response starts and how fast it streams: time to first token (TTFT), mean time between tokens (TBT), and tokens per second. Users notice streaming stalls more than total latency, so gate each budget separately. It reads token timestamps from the trace's LLM span (`token_intervals`).
+
+:::note
+The `StreamingLatencyMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `StreamingLatencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+The metric additionally needs token timestamps: either a traced run with `token_intervals` on its LLM span, or `token_times` passed directly to `measure`. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import StreamingLatencyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = StreamingLatencyMetric(max_ttft=0.5, min_tokens_per_sec=20.0)
+
+test_case = LLMTestCase(
+    input="Stream me a poem.",
+    actual_output="Roses are red...",
+)
+
+# With a traced run, token timings come from the LLM span automatically.
+# Without a trace, pass them explicitly (seconds, with request start):
+# metric.measure(test_case, token_times=[0.2, 0.3, 0.4], start_time=0.0)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating a `StreamingLatencyMetric`:
+
+- [Optional] `max_ttft`: max allowed seconds to the first token. Defaulted to `None` (not checked).
+- [Optional] `max_tbt_mean`: max allowed mean seconds between tokens. Defaulted to `None` (not checked).
+- [Optional] `min_tokens_per_sec`: minimum allowed generation throughput. Defaulted to `None` (not checked). At least one budget is required.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with the observed timings. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `StreamingLatencyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case, token_times=[0.2, 0.3, 0.4], start_time=0.0)
+print(metric.score, metric.score_breakdown, metric.reason)
+```
+
+## How Is It Calculated?
+
+Each configured budget produces a sub-score (`1.0` inside the budget, degrading proportionally outside it), and the metric score is the worst sub-score:
+
+<Equation
+  formula="\text{Score} = \min(\text{TTFT score}, \text{TBT score}, \text{Throughput score}), \quad \text{Tokens/sec} = \frac{n - 1}{t_n - t_1}"
+/>
+
+`score_breakdown` always reports `ttft_s`, `tbt_mean_s`, `tokens_per_sec`, and `n_tokens`, so one run feeds TTFT, gap, and throughput dashboards at once. Time to first token needs the span's start time; when it is unavailable (nested trace dicts strip span timings), pass `token_times` and `start_time` explicitly — a configured TTFT budget with no measurable start scores `0` and says so.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Does the Streaming Latency metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It subtracts timestamps locally — no model, no API key,
+          zero token cost.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from the Latency Budget metric?",
+      answer: (
+        <>
+          <code>LatencyBudgetMetric</code> gates total{" "}
+          <code>completion_time</code>. Streaming Latency gates how the
+          response arrives token by token, which is what users feel in
+          chat and voice interfaces.
+        </>
+      ),
+    },
+    {
+      question: "Why is my TTFT score 0 with a real trace?",
+      answer: (
+        <>
+          Nested trace dicts strip span start times, so TTFT has no
+          reference point. Pass <code>token_times</code> and{" "}
+          <code>start_time</code> to <code>measure</code> explicitly, or
+          gate only TBT and throughput from traces.
+        </>
+      ),
+    },
+  ]}
+/>

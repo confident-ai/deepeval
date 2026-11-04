@@ -1,0 +1,95 @@
+---
+id: metrics-context-sufficiency
+title: Context Sufficiency
+sidebar_label: Context Sufficiency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={true} referenceless={true} rag={true} />
+
+The Context Sufficiency metric asks an LLM judge whether your `retrieval_context` contains enough information to answer the `input`. Unlike Contextual Recall, it needs no `expected_output`, so it works on unlabelled production traces: low scores mean the retriever — not the generator — is the problem.
+
+## Required Arguments
+
+To use the `ContextSufficiencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `retrieval_context`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ContextSufficiencyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = ContextSufficiencyMetric(threshold=0.5)
+
+test_case = LLMTestCase(
+    input="How tall is the Eiffel Tower?",
+    actual_output="It is 330 metres tall.",
+    retrieval_context=["The Eiffel Tower is 330 metres tall."],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `ContextSufficiencyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any custom LLM model of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution within the `measure()` method. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `ContextSufficiencyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The judge reads the question against the numbered passages and returns a score from `0.0` (nothing relevant retrieved) to `1.0` (fully answerable), clamped to that range, with a one-sentence reason. Use it alongside answer-side metrics: low sufficiency with high faithfulness means the answer is loyal to thin context — fix retrieval, not generation.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Contextual Recall?",
+      answer: (
+        <>
+          Contextual Recall checks whether the context covers the{" "}
+          <code>expected_output</code>. Context Sufficiency checks
+          whether the context covers the <code>input</code> question, so
+          it needs no labels and runs on production traces.
+        </>
+      ),
+    },
+    {
+      question: "My score is low but the answer looks right. What now?",
+      answer: (
+        <>
+          The answer may come from the model's parametric knowledge
+          rather than retrieval. That works until the facts change —
+          treat low sufficiency as retrieval debt and add the missing
+          passages.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+id: metrics-output-length-budget
+title: Output Length Budget
+sidebar_label: Output Length Budget
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Output Length Budget metric keeps responses within an allowed length range, so verbose answers don't drive up cost — and empty ones don't slip through. It passes when the word (or character) count of `actual_output` sits between `min_length` and `max_length`.
+
+:::note
+The `OutputLengthBudgetMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `OutputLengthBudgetMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import OutputLengthBudgetMetric
+from deepeval.test_case import LLMTestCase
+
+metric = OutputLengthBudgetMetric(min_length=10, max_length=200)
+
+test_case = LLMTestCase(
+    input="Summarize in a sentence.",
+    actual_output="The tower is 330 metres tall and iconic.",
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating a `OutputLengthBudgetMetric`:
+
+- [Optional] `min_length`: minimum allowed length (inclusive). Defaulted to `None` (no minimum).
+- [Optional] `max_length`: maximum allowed length (inclusive). Defaulted to `None` (no maximum). At least one bound is required.
+- [Optional] `unit`: `"words"` (whitespace-separated) or `"chars"`. Defaulted to `"words"`.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with the observed length. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `OutputLengthBudgetMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+Inside the range the score is `1.0`; outside it degrades proportionally to the distance:
+
+<Equation
+  formula="\text{Score} =
+ \begin{cases}
+ \frac{\text{length}}{\text{min}} & \text{if length} < \text{min}, \\
+ 1 & \text{if min} \leq \text{length} \leq \text{max}, \\
+ \frac{\text{max}}{\text{length}} & \text{if length} > \text{max}
+ \end{cases}"
+/>
+
+With the default `threshold=1.0`, any out-of-range answer fails the gate.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Words or chars — which unit should I use?",
+      answer: (
+        <>
+          Words for user-facing prose budgets, chars when an API or UI
+          field truncates at a character limit.
+        </>
+      ),
+    },
+    {
+      question: "Does the Output Length Budget metric call an LLM or cost money?",
+      answer: (
+        <>
+          No. It counts locally — no model, no API key, zero token cost.
+        </>
+      ),
+    },
+  ]}
+/>
