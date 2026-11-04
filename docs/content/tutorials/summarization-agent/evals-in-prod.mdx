@@ -89,7 +89,7 @@ class MeetingSummarizer:
             try:
                 action_items = json.loads(action_items)
                 update_current_span(
-                    input=transcript, actual_output=str(action_items)
+                    input=transcript, output=str(action_items)
                 )
                 return action_items
             except json.JSONDecodeError:
