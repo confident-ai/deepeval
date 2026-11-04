@@ -26,6 +26,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         import pandas as pd
 
         assert n_shots <= 15, "GSM8K only supports n_shots <= 15"
+        assert n_problems <= 1319, "GSM8K only supports n_problems <= 1319"
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.shots_dataset: List[Dict] = None
@@ -49,11 +50,11 @@ class GSM8K(DeepEvalBaseBenchmark):
 
         with capture_benchmark_run("GSM8K", len(self.tasks)):
             overall_correct_predictions = 0
-            overall_total_predictions = self.n_problems
             predictions_row = []
 
             # Solving each problem
             goldens = self.load_benchmark_dataset()[: self.n_problems]
+            overall_total_predictions = len(goldens)
             for idx, golden in enumerate(
                 tqdm(goldens, desc=f"Processing {self.n_problems} problems")
             ):
