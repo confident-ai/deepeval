@@ -2,12 +2,17 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, ClassVar, Dict, Optional
 
 from deepeval.errors import DeepEvalError
 from deepeval.utils import require_dependency
-from deepeval.voice.protocol import VoiceProtocol
+from deepeval.voice.connectors.phone import (
+    LiveKitProvider,
+    PhoneConnector,
+    SIPConnector,
+    SipMediaEncryption,
+    SipTransport,
+)
 from deepeval.voice.connectors.transports.silence import SilenceTimeoutMixin
 from deepeval.voice.connectors.utils import DialPacer, is_phone_number
 from deepeval.voice.connectors.providers.livekit.connector import (
@@ -41,18 +46,6 @@ SIP_STATUS_MESSAGES = {
     486: BUSY_MESSAGE,
     603: BUSY_MESSAGE,
 }
-
-
-class SipTransport(Enum):
-    UDP = "udp"
-    TCP = "tcp"
-    TLS = "tls"
-
-
-class SipMediaEncryption(Enum):
-    DISABLED = "disabled"
-    ALLOWED = "allowed"
-    REQUIRED = "required"
 
 
 @dataclass(frozen=True)
@@ -126,7 +119,6 @@ def describe_dial_error(error: Exception, address: str) -> str:
 
 class _LiveKitDialConnector(SilenceTimeoutMixin, LiveKitConnector):
 
-    protocol: ClassVar[VoiceProtocol] = VoiceProtocol.SIP
     _dial_pacer: ClassVar[DialPacer] = DialPacer()
 
     def __init__(
@@ -238,16 +230,15 @@ class _LiveKitDialConnector(SilenceTimeoutMixin, LiveKitConnector):
             await client.aclose()
 
 
-class LiveKitPhoneConnector(_LiveKitDialConnector):
+class LiveKitPhoneConnector(PhoneConnector, _LiveKitDialConnector):
+
+    provider_type: ClassVar[type] = LiveKitProvider
 
     def __init__(
         self,
         phone_number: str,
         *,
-        trunk_id: Optional[str] = None,
-        trunk_uri: Optional[str] = None,
-        trunk_username: Optional[str] = None,
-        trunk_password: Optional[str] = None,
+        provider: LiveKitProvider,
         caller_id: Optional[str] = None,
         **kwargs: Any,
     ):
@@ -257,24 +248,27 @@ class LiveKitPhoneConnector(_LiveKitDialConnector):
                 "with the country code, e.g. +14155550100."
             )
         trunk = None
-        if trunk_uri is not None:
-            uri = parse_sip_uri(trunk_uri)
+        trunk_id = ""
+        if provider.trunk_uri is not None:
+            uri = parse_sip_uri(provider.trunk_uri)
             if uri is None:
                 raise DeepEvalError(
-                    f"'{trunk_uri}' is not a SIP address. Enter your trunk's "
-                    "address, e.g. sip:outbound@trunk.example.com."
+                    f"'{provider.trunk_uri}' is not a SIP address. Enter your "
+                    "trunk's address, e.g. sip:outbound@trunk.example.com."
                 )
             trunk = sip_trunk_for(
-                uri, SipTransport.UDP, trunk_username, trunk_password
+                uri,
+                SipTransport.UDP,
+                provider.trunk_username,
+                provider.trunk_password,
             )
-            trunk_id = ""
         else:
-            trunk_id = trunk_id or os.getenv(OUTBOUND_TRUNK_ENV)
+            trunk_id = provider.trunk_id or os.getenv(OUTBOUND_TRUNK_ENV)
             if not trunk_id:
                 raise DeepEvalError(
-                    "LiveKitPhoneConnector needs an outbound SIP trunk to "
-                    f"call a phone number: pass trunk_id, set "
-                    f"{OUTBOUND_TRUNK_ENV}, or pass trunk_uri."
+                    "LiveKitProvider needs an outbound SIP trunk to call a "
+                    f"phone number: pass trunk_id, set {OUTBOUND_TRUNK_ENV}, "
+                    "or pass trunk_uri."
                 )
         super().__init__(
             address=phone_number,
@@ -282,16 +276,24 @@ class LiveKitPhoneConnector(_LiveKitDialConnector):
             trunk_id=trunk_id,
             trunk=trunk,
             caller_id=caller_id,
+            headers=provider.headers,
+            media_encryption=provider.media_encryption,
+            url=provider.url,
+            api_key=provider.api_key,
+            api_secret=provider.api_secret,
             **kwargs,
         )
 
 
-class LiveKitSIPConnector(_LiveKitDialConnector):
+class LiveKitSIPConnector(SIPConnector, _LiveKitDialConnector):
+
+    provider_type: ClassVar[type] = LiveKitProvider
 
     def __init__(
         self,
         sip_uri: str,
         *,
+        provider: LiveKitProvider,
         username: Optional[str] = None,
         password: Optional[str] = None,
         transport: SipTransport = SipTransport.UDP,
@@ -304,6 +306,12 @@ class LiveKitSIPConnector(_LiveKitDialConnector):
                 f"'{sip_uri}' is not a SIP address. Enter it as "
                 "sip:agent@example.com."
             )
+        if provider.trunk_id or provider.trunk_uri:
+            raise DeepEvalError(
+                "SIPConnector calls the SIP address directly, so "
+                "LiveKitProvider's trunk settings do not apply. Remove "
+                "trunk_id and trunk_uri."
+            )
         super().__init__(
             address=sip_uri,
             call_to=uri.user,
@@ -311,5 +319,10 @@ class LiveKitSIPConnector(_LiveKitDialConnector):
                 uri, SipTransport(transport), username, password
             ),
             caller_id=caller_id,
+            headers=provider.headers,
+            media_encryption=provider.media_encryption,
+            url=provider.url,
+            api_key=provider.api_key,
+            api_secret=provider.api_secret,
             **kwargs,
         )

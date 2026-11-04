@@ -2,11 +2,13 @@ import pytest
 
 from deepeval.errors import DeepEvalError
 from deepeval.voice import (
+    LiveKitProvider,
+    PhoneConnector,
     SilenceTimeoutMixin,
-    LiveKitPhoneConnector,
-    LiveKitSIPConnector,
+    SIPConnector,
     SipMediaEncryption,
     SipTransport,
+    TwilioProvider,
 )
 from deepeval.voice.connectors.providers.livekit import (
     connector as livekit_module,
@@ -34,15 +36,22 @@ def livekit(monkeypatch):
     return install
 
 
-def _phone(**kwargs) -> LiveKitPhoneConnector:
-    kwargs.setdefault("trunk_id", "ST_trunk")
-    kwargs.setdefault("dial_interval_s", 0.0)
-    return LiveKitPhoneConnector("+14155550100", **CREDENTIALS, **kwargs)
+def _provider(**fields) -> LiveKitProvider:
+    return LiveKitProvider(**CREDENTIALS, **fields)
 
 
-def _sip(uri="sip:agent@sip.example.com", **kwargs) -> LiveKitSIPConnector:
+def _phone(provider=None, **kwargs) -> PhoneConnector:
     kwargs.setdefault("dial_interval_s", 0.0)
-    return LiveKitSIPConnector(uri, **CREDENTIALS, **kwargs)
+    return PhoneConnector(
+        "+14155550100",
+        provider=provider or _provider(trunk_id="ST_trunk"),
+        **kwargs,
+    )
+
+
+def _sip(uri="sip:agent@sip.example.com", provider=None, **kwargs):
+    kwargs.setdefault("dial_interval_s", 0.0)
+    return SIPConnector(uri, provider=provider or _provider(), **kwargs)
 
 
 async def _dial(connector):
@@ -55,29 +64,55 @@ def _requests(calls, kind):
 
 
 def test_dial_connectors_speak_sip():
-    assert LiveKitPhoneConnector.protocol is VoiceProtocol.SIP
-    assert LiveKitSIPConnector.protocol is VoiceProtocol.SIP
+    assert _phone().protocol is VoiceProtocol.SIP
+    assert _sip().protocol is VoiceProtocol.SIP
+
+
+def test_the_provider_picks_the_connector_behind_each_call():
+    phone, sip = _phone(), _sip()
+
+    assert isinstance(phone, PhoneConnector)
+    assert isinstance(phone, sip_module.LiveKitPhoneConnector)
+    assert isinstance(sip, SIPConnector)
+    assert isinstance(sip, sip_module.LiveKitSIPConnector)
+    assert type(phone.clone()) is type(phone)
+
+
+def test_a_phone_connector_needs_a_provider():
+    with pytest.raises(DeepEvalError, match="LiveKitProvider or"):
+        PhoneConnector("+14155550100")
+
+
+def test_a_sip_connector_only_calls_through_livekit():
+    with pytest.raises(DeepEvalError, match="LiveKitProvider, got Twilio"):
+        SIPConnector(
+            "sip:agent@sip.example.com",
+            provider=TwilioProvider(public_url="https://x.ngrok.app"),
+        )
+
+
+def test_a_sip_call_has_no_trunk_to_go_through():
+    with pytest.raises(DeepEvalError, match="trunk settings do not apply"):
+        _sip(provider=_provider(trunk_id="ST_trunk"))
 
 
 @pytest.mark.parametrize("number", ["4155550100", "+0123", "+1 415 555 0100"])
 def test_a_phone_number_must_be_e164(number):
     with pytest.raises(DeepEvalError, match="E.164"):
-        LiveKitPhoneConnector(number, trunk_id="ST_trunk", **CREDENTIALS)
+        PhoneConnector(number, provider=_provider(trunk_id="ST_trunk"))
 
 
 def test_a_phone_number_needs_an_outbound_trunk(monkeypatch):
     monkeypatch.delenv("LIVEKIT_SIP_OUTBOUND_TRUNK_ID", raising=False)
 
     with pytest.raises(DeepEvalError, match="outbound SIP trunk"):
-        LiveKitPhoneConnector("+14155550100", **CREDENTIALS)
+        _phone(provider=_provider())
 
 
 def test_the_outbound_trunk_can_come_from_the_environment(monkeypatch):
     monkeypatch.setenv("LIVEKIT_SIP_OUTBOUND_TRUNK_ID", "ST_env")
 
-    assert LiveKitPhoneConnector("+14155550100", **CREDENTIALS).trunk_id == (
-        "ST_env"
-    )
+    assert _phone(provider=_provider()).trunk_id == "ST_env"
 
 
 def test_a_dial_connector_listens_to_the_callee_on_phone_timing():
@@ -93,10 +128,13 @@ def test_a_dial_connector_listens_to_the_callee_on_phone_timing():
 async def test_a_phone_call_dials_through_the_trunk(livekit):
     _, calls = livekit()
     connector = _phone(
+        provider=_provider(
+            trunk_id="ST_trunk",
+            media_encryption=SipMediaEncryption.REQUIRED,
+            headers={"X-Test-Case": "refund-1"},
+        ),
         caller_id="+14155550199",
-        media_encryption=SipMediaEncryption.REQUIRED,
         ring_timeout_s=20,
-        headers={"X-Test-Case": "refund-1"},
     )
 
     await _dial(connector)
@@ -119,10 +157,11 @@ async def test_a_phone_call_dials_through_the_trunk(livekit):
 async def test_a_phone_call_can_dial_through_an_inline_trunk(livekit):
     _, calls = livekit()
     connector = _phone(
-        trunk_id=None,
-        trunk_uri="sip:outbound@trunk.example.com:5061",
-        trunk_username="user",
-        trunk_password="pass",
+        provider=_provider(
+            trunk_uri="sip:outbound@trunk.example.com:5061",
+            trunk_username="user",
+            trunk_password="pass",
+        )
     )
 
     await _dial(connector)
@@ -137,7 +176,7 @@ async def test_a_phone_call_can_dial_through_an_inline_trunk(livekit):
 
 def test_an_inline_trunk_must_be_a_sip_address():
     with pytest.raises(DeepEvalError, match="SIP address"):
-        _phone(trunk_uri="trunk.example.com")
+        _phone(provider=_provider(trunk_uri="trunk.example.com"))
 
 
 @pytest.mark.parametrize("uri", ["agent@example.com", "sip:example.com"])

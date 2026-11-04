@@ -3,8 +3,6 @@ from deepeval.voice.connectors.providers.livekit import (
     LiveKitConnector,
     LiveKitPhoneConnector,
     LiveKitSIPConnector,
-    SipMediaEncryption,
-    SipTransport,
 )
 from deepeval.voice.connectors.providers.pipecat import PipecatConnector
 from deepeval.voice.connectors.providers.twilio import TwilioConnector
@@ -15,8 +13,6 @@ __all__ = [
     "LiveKitConnector",
     "LiveKitPhoneConnector",
     "LiveKitSIPConnector",
-    "SipMediaEncryption",
-    "SipTransport",
     "PipecatConnector",
     "TwilioConnector",
     "VapiConnector",
