@@ -1,10 +1,16 @@
 """Tests for GrokModel settings + secret handling (GROK_* + TEMPERATURE)."""
 
+import asyncio
+import sys
+import types
+from types import SimpleNamespace
+
 import deepeval.models.llms.grok_model as grok_mod
 
 from pydantic import SecretStr
 
 from deepeval.models.llms.grok_model import GrokModel
+from deepeval.test_case import MLLMImage
 from tests.test_core.stubs import _RecordingClient
 
 
@@ -136,3 +142,81 @@ def test_grok_calculate_cost_with_zero_tokens(monkeypatch, settings):
     model = GrokModel(model="grok-3")
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+######################################
+# generate / a_generate message shape
+######################################
+
+
+def _install_fake_xai_sdk(monkeypatch):
+    captured = {}
+
+    def user(*args):
+        captured["args"] = args
+
+    chat_mod = types.ModuleType("xai_sdk.chat")
+    chat_mod.user = user
+    chat_mod.text = lambda content: ("text", content)
+    chat_mod.image = lambda url: ("image", url)
+    monkeypatch.setitem(sys.modules, "xai_sdk", types.ModuleType("xai_sdk"))
+    monkeypatch.setitem(sys.modules, "xai_sdk.chat", chat_mod)
+    return captured
+
+
+def _grok_with_fake_client(monkeypatch, settings, is_async=False):
+    with settings.edit(persist=False):
+        settings.GROK_COST_PER_INPUT_TOKEN = 1e-6
+        settings.GROK_COST_PER_OUTPUT_TOKEN = 1e-6
+
+    response = SimpleNamespace(
+        content="4",
+        usage=SimpleNamespace(prompt_tokens=10, completion_tokens=5),
+    )
+
+    async def a_sample():
+        return response
+
+    chat = SimpleNamespace(
+        append=lambda message: None,
+        sample=a_sample if is_async else lambda: response,
+    )
+    client = SimpleNamespace(chat=SimpleNamespace(create=lambda **kw: chat))
+
+    _stub_load_model(monkeypatch)
+    model = GrokModel(model="grok-3", api_key="test-key")
+    monkeypatch.setattr(model, "load_model", lambda async_mode=False: client)
+    return model
+
+
+def test_generate_passes_text_prompt_to_user(monkeypatch, settings):
+    captured = _install_fake_xai_sdk(monkeypatch)
+    model = _grok_with_fake_client(monkeypatch, settings)
+
+    result, _ = model.generate("What is 2+2?")
+
+    assert result == "4"
+    assert captured["args"] == ("What is 2+2?",)
+
+
+def test_a_generate_passes_text_prompt_to_user(monkeypatch, settings):
+    captured = _install_fake_xai_sdk(monkeypatch)
+    model = _grok_with_fake_client(monkeypatch, settings, is_async=True)
+
+    result, _ = asyncio.run(model.a_generate("What is 2+2?"))
+
+    assert result == "4"
+    assert captured["args"] == ("What is 2+2?",)
+
+
+def test_generate_passes_images_as_xai_content(monkeypatch, settings):
+    captured = _install_fake_xai_sdk(monkeypatch)
+    model = _grok_with_fake_client(monkeypatch, settings)
+    image = MLLMImage(url="https://example.com/cat.png")
+
+    model.generate(f"Describe {image}")
+
+    assert captured["args"] == (
+        ("text", "Describe "),
+        ("image", "https://example.com/cat.png"),
+    )

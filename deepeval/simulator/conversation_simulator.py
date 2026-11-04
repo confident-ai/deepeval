@@ -21,6 +21,7 @@ import time
 import uuid
 import warnings
 
+from deepeval.errors import DeepEvalError
 from deepeval.utils import (
     get_or_create_event_loop,
     update_pbar,
@@ -284,6 +285,7 @@ class ConversationSimulator:
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
         )
+        self.max_concurrent = max_concurrent
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
         self.language = language
@@ -326,6 +328,27 @@ class ConversationSimulator:
         if self._voice is None or callable(self._voice.config.connector):
             return None
         return self._voice.config.connector
+
+    def _check_parallel_calls(self, num_goldens: int) -> None:
+        from deepeval.voice.connectors.transports.base import (
+            BaseVoiceConnector,
+        )
+
+        if self._voice is None:
+            return
+        connector = self._voice.config.connector
+        if not isinstance(connector, BaseVoiceConnector):
+            return
+        if connector.supports_parallel_calls:
+            return
+        parallel_calls = min(self.max_concurrent, num_goldens)
+        if parallel_calls > 1:
+            raise DeepEvalError(
+                f"{type(connector).__name__} is tied to one room, so "
+                f"{parallel_calls} parallel calls would all join it. Pass a "
+                "function that builds a new connector to "
+                "`VoiceConfig(connector=...)`, or set `max_concurrent=1`."
+            )
 
     def simulate(
         self,
@@ -433,6 +456,7 @@ class ConversationSimulator:
                         f"The evaluation model {self.simulator_model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
                     )
 
+        self._check_parallel_calls(len(conversational_goldens))
         self.simulation_cost = 0 if self.using_native_model else None
 
         async def simulate_conversations(

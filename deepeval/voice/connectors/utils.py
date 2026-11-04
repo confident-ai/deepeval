@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+import re
+import time
 from enum import Enum
 from typing import Any, Optional, Union
 
 from deepeval.errors import DeepEvalError
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+
+E164_PHONE_NUMBER = re.compile(r"^\+[1-9]\d{1,14}$")
 
 
 class ElevenLabsIdentity(Enum):
@@ -154,3 +159,20 @@ def validate_connector(connector: Any) -> BaseVoiceConnector:
         "`PipecatConnector`, `WebSocketConnector`, `WebRTCConnector`, "
         "`CallbackVoiceConnector`, or your own `BaseVoiceConnector` subclass."
     )
+
+
+class DialPacer:
+
+    def __init__(self):
+        self._next_slot = 0.0
+
+    async def wait(self, interval_s: float) -> None:
+        now = time.monotonic()
+        slot = max(now, self._next_slot)
+        self._next_slot = slot + interval_s
+        if slot > now:
+            await asyncio.sleep(slot - now)
+
+
+def is_phone_number(value: Optional[str]) -> bool:
+    return bool(value) and E164_PHONE_NUMBER.match(value) is not None
