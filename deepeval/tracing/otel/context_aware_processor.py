@@ -97,8 +97,7 @@ class ContextAwareSpanProcessor(_SpanProcessor):
         if not _OTEL_AVAILABLE:
             raise ImportError(
                 "opentelemetry SDK is not installed. Install with "
-                "`pip install opentelemetry-sdk "
-                "opentelemetry-exporter-otlp-proto-http`."
+                '`pip install "deepeval[otel]"`.'
             )
 
         self._api_key = api_key

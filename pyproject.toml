@@ -35,9 +35,6 @@ setuptools = "*"
 wheel = "*"
 nest_asyncio = "*"
 tenacity = ">=8.0.0,<=10.0.0"
-opentelemetry-api = "^1.24.0"
-opentelemetry-sdk = "^1.24.0"
-grpcio = "^1.67.1"
 
 posthog = [
     { version = ">=5.4.0, <7.0.0", python = "<3.10" },
@@ -52,10 +49,18 @@ jinja2 = "*"
 
 textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
+opentelemetry-api = { version = "^1.24.0", optional = true }
+opentelemetry-sdk = { version = "^1.24.0", optional = true }
+opentelemetry-exporter-otlp-proto-http = { version = "^1.24.0", optional = true }
 questionary = ">=2.0.0,<3.0.0"
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
+otel = [
+    "opentelemetry-api",
+    "opentelemetry-sdk",
+    "opentelemetry-exporter-otlp-proto-http",
+]
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
