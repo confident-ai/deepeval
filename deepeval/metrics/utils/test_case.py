@@ -262,6 +262,14 @@ def prepare_measure(
     metric.evaluation_cost = 0 if native else None
     metric.input_tokens = 0 if native else None
     metric.output_tokens = 0 if native else None
+    # A reused metric instance must not inherit the previous measure's
+    # outcome: is_successful() short-circuits to False on a stale error.
+    # The evaluate() executors already reset both between test cases (see
+    # deepeval/evaluate/execute); direct measure()/a_measure() calls get the
+    # same reset here, after validation has had its chance to record a new
+    # error and raise.
+    metric.error = None
+    metric.skipped = False
 
 
 def check_arena_test_case_params(
