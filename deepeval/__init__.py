@@ -18,24 +18,38 @@ def _expose_public_api() -> None:
     global __version__, evaluate, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
     global instrument, flush_traces, a_flush_traces
+    global compare_test_runs, judge
 
-    from ._version import __version__ as _version
     import deepeval.evaluate as _evaluate_module
+    import deepeval.telemetry as _telemetry
     from deepeval.evaluate import (
-        evaluate as _evaluate,
         assert_test as _assert_test,
     )
+    from deepeval.evaluate import (
+        evaluate as _evaluate,
+    )
     from deepeval.evaluate.compare import compare as _compare
+    from deepeval.evaluate.judge import (
+        compare_test_runs as _compare_test_runs,
+    )
+    from deepeval.evaluate.judge import (
+        judge as _judge,
+    )
     from deepeval.test_run import (
-        on_test_run_end as _on_end,
         log_hyperparameters as _log_hparams,
     )
-    from deepeval.utils import login as _login
+    from deepeval.test_run import (
+        on_test_run_end as _on_end,
+    )
     from deepeval.tracing.tracing import (
-        flush_traces as _flush_traces,
         a_flush_traces as _a_flush_traces,
     )
-    import deepeval.telemetry as _telemetry
+    from deepeval.tracing.tracing import (
+        flush_traces as _flush_traces,
+    )
+    from deepeval.utils import login as _login
+
+    from ._version import __version__ as _version
 
     __version__ = _version
     evaluate = _evaluate
@@ -47,6 +61,8 @@ def _expose_public_api() -> None:
     evaluate.configs = _evaluate_module.configs
     assert_test = _assert_test
     compare = _compare
+    compare_test_runs = _compare_test_runs
+    judge = _judge
     on_test_run_end = _on_end
     log_hyperparameters = _log_hparams
     login = _login
@@ -93,15 +109,17 @@ if not settings.DEEPEVAL_GRPC_LOGGING:
 
 
 __all__ = [
-    "login",
-    "log_hyperparameters",
-    "evaluate",
-    "assert_test",
-    "on_test_run_end",
-    "compare",
-    "instrument",
-    "flush_traces",
     "a_flush_traces",
+    "assert_test",
+    "compare",
+    "compare_test_runs",
+    "evaluate",
+    "flush_traces",
+    "instrument",
+    "judge",
+    "log_hyperparameters",
+    "login",
+    "on_test_run_end",
 ]
 
 

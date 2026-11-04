@@ -1,0 +1,145 @@
+---
+id: evaluation-comparing-test-runs
+title: Comparing Historical Test Runs
+sidebar_label: Comparing Test Runs
+languages: [python]
+---
+
+DeepEval allows you to compare two historical test runs side-by-side using an LLM judge (inspired by JudgeLM). This helps you determine which model version, prompt template, or hyperparameter configuration performed better across the same evaluation dataset.
+
+## Why Compare Historical Test Runs?
+
+When iterating on LLM applications, raw metric scores (such as faithfulness or answer relevancy) only provide numeric values in isolation. An LLM judge provides:
+
+- **Head-to-head pairwise comparison**: Identifies subtle qualitative differences between two outputs for the same input.
+- **Explainable outcomes**: Produces granular per-test-case reasoning and an overall justification for why one run won.
+- **Model / Prompt ablation decisions**: Conclusively proves whether a candidate prompt or model configuration is an improvement over the baseline.
+
+## Quick Example
+
+You can compare test runs directly in memory using `TestRun` objects, or load them from local JSON files saved via [local backend storage](/docs/evaluation-local-backend-storage):
+
+```python
+from deepeval import compare_test_runs
+
+# Compare baseline and candidate runs
+result = compare_test_runs(
+    baseline_run="results/test_run_baseline.json",
+    candidate_run="results/test_run_candidate.json",
+    judge_model="gpt-4o",  # Any DeepEvalBaseLLM or provider string
+    criteria="Select the candidate with higher accuracy and concise explanations.",
+)
+
+# Inspect the aggregated outcome
+print("Winner:", result.winner)          # 'candidate', 'baseline', or 'tie'
+print("Reason:", result.reason)
+print(f"Scores: Candidate {result.candidate_wins} vs Baseline {result.baseline_wins} ({result.ties} ties)")
+
+# Inspect per-case comparisons
+for comp in result.comparisons:
+    print(f"[{comp.winner.upper()}] Case '{comp.name}': {comp.reason}")
+```
+
+:::tip
+You can also import `judge` as an alias:
+```python
+from deepeval import judge
+
+result = judge(baseline_run, candidate_run, judge_model="gpt-4o")
+```
+:::
+
+## Compatibility Requirements
+
+To ensure a fair and valid comparison, both test runs must meet the following criteria:
+
+1. **At least one test case**: Neither run can be empty.
+2. **Equal test case count**: Both runs must have been evaluated on the same number of test cases.
+3. **Identical inputs**: The test inputs (questions or prompts) must match between corresponding test cases.
+
+If any of these conditions are violated, DeepEval raises an `IncompatibleTestRunsError`.
+
+## Configuring the Judge Model
+
+`compare_test_runs` supports DeepEval's universal model abstraction:
+
+### 1. Built-in Model Names
+Pass any supported provider or model name:
+```python
+result = compare_test_runs(
+    baseline_run=baseline,
+    candidate_run=candidate,
+    judge_model="claude-3-5-sonnet-20241022",
+)
+```
+
+### 2. Custom Judge Model
+Pass any subclass of `DeepEvalBaseLLM`:
+```python
+from deepeval.models import DeepEvalBaseLLM
+
+class MyCustomJudge(DeepEvalBaseLLM):
+    def load_model(self):
+        return None
+
+    def generate(self, prompt: str, schema=None, **kwargs) -> str:
+        # Custom inference logic
+        ...
+
+    async def a_generate(self, prompt: str, schema=None, **kwargs) -> str:
+        ...
+
+result = compare_test_runs(
+    baseline_run=baseline,
+    candidate_run=candidate,
+    judge_model=MyCustomJudge(),
+)
+```
+
+### 3. Custom Evaluation Criteria
+Guide the judge's pairwise evaluation with specific rubrics:
+```python
+result = compare_test_runs(
+    baseline_run=baseline,
+    candidate_run=candidate,
+    criteria="Prioritize adherence to formatting constraints, factual precision, and safety guidelines.",
+)
+```
+
+## Result Structure
+
+`compare_test_runs()` returns a `TestRunComparisonResult` Pydantic model:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `winner` | `str` | Overall winner: `'candidate'`, `'baseline'`, or `'tie'`. |
+| `reason` | `str` | High-level summary reasoning for the overall result. |
+| `baseline_wins` | `int` | Number of test cases won by the baseline run. |
+| `candidate_wins` | `int` | Number of test cases won by the candidate run. |
+| `ties` | `int` | Number of tied test cases. |
+| `baseline_run` | `TestRun` | The original baseline `TestRun` object. |
+| `candidate_run` | `TestRun` | The original candidate `TestRun` object. |
+| `comparisons` | `List[TestCaseComparison]` | List of individual test case comparison results. |
+
+Each `TestCaseComparison` in `result.comparisons` contains:
+- `name`: Test case identifier or name.
+- `input`: The original prompt or input text.
+- `baseline_output`: Output from the baseline run.
+- `candidate_output`: Output from the candidate run.
+- `expected_output`: Reference target, if provided.
+- `winner`: Winner for this specific test case (`'candidate'`, `'baseline'`, or `'tie'`).
+- `reason`: The judge's explanation for this specific test case.
+
+## Error Handling
+
+| Exception | Raised When |
+| --- | --- |
+| `IncompatibleTestRunsError` | Runs have differing numbers of test cases, empty runs, or mismatched test case inputs. |
+| `JudgeEvaluationError` | The judge model fails to respond or returns unparseable outputs after retry. |
+| `FileNotFoundError` | A provided file path string does not exist on disk. |
+
+## Limitations of LLM-as-a-Judge
+
+- **Position and Length Bias**: LLMs may exhibit biases towards longer outputs or specific answer orderings. DeepEval's prompts instruct the judge on objective criteria to minimize these effects.
+- **Judge Capability**: A judge model should generally be at least as capable as the models generating the candidate and baseline responses.
+- **Stochasticity**: While prompts use low temperature and strict JSON schemas, small variations can occur across runs unless deterministic temperature and seeds are specified.
