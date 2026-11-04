@@ -456,7 +456,6 @@
     "full-attributes"
   ],
   "threadId": "thread-xyz-789",
-  "userId": "user-alpha-123",
   "input": "Use the get_weather tool to get the weather in London.",
   "output": "The current weather in London is rainy, with a temperature of 55°F.",
   "toolsCalled": [

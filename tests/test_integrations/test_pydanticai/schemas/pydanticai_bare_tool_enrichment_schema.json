@@ -149,7 +149,6 @@
   ],
   "environment": "development",
   "threadId": "bare-enrichment-123",
-  "userId": "test-user",
   "input": "Use the lookup tool with key 'foobar' and report the result.",
   "output": "The result for the key 'foobar' is: **resolved-value-for-foobar**.",
   "status": "SUCCESS",

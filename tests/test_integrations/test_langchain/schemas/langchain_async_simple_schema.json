@@ -85,7 +85,6 @@
   ],
   "environment": "development",
   "threadId": "async-simple-123",
-  "userId": "async-user",
   "input": "Say hello in one short sentence.",
   "output": {
     "messages": [

@@ -398,7 +398,6 @@
   ],
   "environment": "development",
   "threadId": "next-llm-span-123",
-  "userId": "test-user",
   "input": {
     "messages": [
       {

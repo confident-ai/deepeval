@@ -263,7 +263,6 @@
   ],
   "environment": "development",
   "threadId": "tool-123",
-  "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
   "output": "7 multiplied by 8 is 56.\n",
   "status": "SUCCESS",

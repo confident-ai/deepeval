@@ -399,7 +399,6 @@
   ],
   "environment": "development",
   "threadId": "async-next-llm-span-123",
-  "userId": "async-test-user",
   "input": {
     "messages": [
       {

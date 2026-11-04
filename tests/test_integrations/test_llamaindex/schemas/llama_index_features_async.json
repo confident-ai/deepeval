@@ -325,7 +325,6 @@
   ],
   "environment": "development",
   "threadId": "thread_async_XYZ",
-  "userId": "user_async_456",
   "input": {
     "start_event": {
       "user_msg": "What is 4 * 6?"

@@ -195,7 +195,6 @@
   ],
   "environment": "development",
   "threadId": "thread-async-features-002",
-  "userId": "user-async-002",
   "input": "Use the special_tool to process 'Async Data'",
   "output": "The `special_tool` has processed 'Async Data'.",
   "status": "SUCCESS",

@@ -183,7 +183,6 @@ def test_trace_fields_come_from_the_entry_span(ct, export):
         "tags": ["a"],
         "metadata": {"release": "v2"},
         "thread_id": "thread",
-        "user_id": "user",
         "environment": "staging",
         "input": "hi",
         "output": {"answer": 1},
@@ -758,7 +757,7 @@ def test_openinference_model_calls():
     ]
     assert (llm.integration, converted.trace_fields) == (
         "OpenInference",
-        {"thread_id": "session", "user_id": "user", "tags": ["weather"]},
+        {"thread_id": "session", "tags": ["weather"]},
     )
 
 

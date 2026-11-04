@@ -184,7 +184,6 @@
   ],
   "environment": "development",
   "threadId": "multiple-tools-time-123",
-  "userId": "test-user",
   "input": "Use the get_time tool exactly once to get the current time in London.",
   "output": "The current time in London is 7:00 AM GMT.",
   "status": "SUCCESS",

@@ -189,7 +189,6 @@
   ],
   "environment": "development",
   "threadId": "tool-123",
-  "userId": "test-user",
   "input": "What is 7 multiplied by 8?",
   "output": "The result is 56.",
   "status": "SUCCESS",

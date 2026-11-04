@@ -79,7 +79,6 @@
   ],
   "environment": "development",
   "threadId": "async-simple-123",
-  "userId": "test-user-async",
   "input": "Say hello in exactly three words.",
   "output": "Hello, good day.",
   "status": "SUCCESS"

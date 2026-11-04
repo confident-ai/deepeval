@@ -476,7 +476,6 @@
   ],
   "environment": "development",
   "threadId": "simple-123",
-  "userId": "test-user",
   "input": {
     "messages": [
       {

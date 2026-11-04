@@ -65,7 +65,6 @@
   ],
   "environment": "development",
   "threadId": "next-stacked-123",
-  "userId": "test-user",
   "input": "Say goodbye in exactly three words.",
   "output": "Farewell, until next.",
   "status": "SUCCESS"

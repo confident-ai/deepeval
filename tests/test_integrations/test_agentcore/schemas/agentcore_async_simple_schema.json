@@ -61,7 +61,6 @@
   ],
   "environment": "development",
   "threadId": "async-simple-123",
-  "userId": "test-user-async",
   "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
   "output": "Hello, how are you?\n",
   "status": "SUCCESS"

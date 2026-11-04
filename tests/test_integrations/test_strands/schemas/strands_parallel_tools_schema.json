@@ -346,7 +346,6 @@
   ],
   "environment": "development",
   "threadId": "parallel-tools-123",
-  "userId": "test-user",
   "input": "You have access to weather and time tools. When asked about weather, use get_weather. When asked about time, use get_time. Be concise. Use both the get_weather tool AND the get_time tool for Paris. Call both tools exactly once each.",
   "output": "The weather in Paris is cloudy with a temperature of 62\u00b0F. The current time is 8:00 AM CET.\n",
   "status": "SUCCESS",

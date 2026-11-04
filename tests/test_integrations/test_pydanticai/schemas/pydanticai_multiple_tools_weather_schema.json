@@ -145,7 +145,6 @@
   ],
   "environment": "development",
   "threadId": "multiple-tools-weather-123",
-  "userId": "test-user",
   "input": "Use the get_weather tool exactly once to get the weather in Tokyo.",
   "output": "The weather in Tokyo is sunny with a temperature of 72\u00b0F.",
   "status": "SUCCESS",

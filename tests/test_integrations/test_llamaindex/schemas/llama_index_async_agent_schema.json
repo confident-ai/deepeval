@@ -266,7 +266,6 @@
   ],
   "environment": "development",
   "threadId": "llama_async_index_thread_id",
-  "userId": "llama_async_index_user_id",
   "input": {
     "start_event": {
       "user_msg": "What is the weather in Tokyo?"

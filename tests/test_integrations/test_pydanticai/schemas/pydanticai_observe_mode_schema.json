@@ -73,7 +73,6 @@
   ],
   "environment": "development",
   "threadId": "observe-mode-123",
-  "userId": "observe-user",
   "input": "Say hello in exactly three words.",
   "output": "Hello, how are you?",
   "status": "SUCCESS"

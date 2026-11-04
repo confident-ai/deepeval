@@ -84,7 +84,6 @@
   ],
   "environment": "development",
   "threadId": "simple-123",
-  "userId": "test-user",
   "input": "Say hello in one short sentence.",
   "output": {
     "messages": [

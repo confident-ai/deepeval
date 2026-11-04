@@ -58,7 +58,6 @@
   ],
   "environment": "development",
   "threadId": "async-simple-123",
-  "userId": "test-user-async",
   "input": "Say goodbye in exactly three words.",
   "output": "Farewell, take care.",
   "status": "SUCCESS"

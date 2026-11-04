@@ -264,7 +264,6 @@
   ],
   "environment": "development",
   "threadId": "async-tool-123",
-  "userId": "test-user-async",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 9 multiplied by 6?",
   "output": "9 multiplied by 6 is 54.\n",
   "status": "SUCCESS",

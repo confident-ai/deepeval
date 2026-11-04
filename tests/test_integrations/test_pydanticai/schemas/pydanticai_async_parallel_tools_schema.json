@@ -201,7 +201,6 @@
   ],
   "environment": "development",
   "threadId": "async-parallel-tools-123",
-  "userId": "test-user-async",
   "input": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
   "output": "The current weather in Tokyo is sunny, with a temperature of 72\u00b0F. The time is 3:00 PM JST.",
   "status": "SUCCESS",

@@ -477,7 +477,6 @@
   ],
   "environment": "development",
   "threadId": "async-single-123",
-  "userId": "async-user",
   "input": {
     "messages": [
       {

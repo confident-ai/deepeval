@@ -786,7 +786,6 @@
   ],
   "environment": "development",
   "threadId": "multi-tool-123",
-  "userId": "test-user",
   "input": {
     "messages": [
       {

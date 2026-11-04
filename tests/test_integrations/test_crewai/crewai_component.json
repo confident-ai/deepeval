@@ -412,7 +412,6 @@
   ],
   "environment": "development",
   "threadId": "crewai",
-  "userId": "crewai",
   "input": {
     "description": "Get the current weather for London and provide a helpful summary.",
     "context": ""

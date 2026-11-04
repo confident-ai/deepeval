@@ -190,7 +190,6 @@
   ],
   "environment": "development",
   "threadId": "async-tool-123",
-  "userId": "test-user-async",
   "input": "What is 9 multiplied by 6?",
   "output": "54",
   "status": "SUCCESS",

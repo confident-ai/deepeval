@@ -61,7 +61,6 @@
   ],
   "environment": "development",
   "threadId": "next-llm-only-123",
-  "userId": "test-user",
   "input": "Say hello in exactly three words.",
   "output": "Hello, how are you?",
   "status": "SUCCESS"

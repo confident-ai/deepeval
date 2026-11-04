@@ -264,7 +264,6 @@
   ],
   "environment": "development",
   "threadId": "tool-metric-123",
-  "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 15 plus 25?",
   "output": "15 plus 25 is 40.\n",
   "status": "SUCCESS",

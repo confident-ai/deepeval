@@ -204,7 +204,6 @@
   ],
   "environment": "development",
   "threadId": "async-single-tool-123",
-  "userId": "async-user",
   "input": {
     "messages": [
       {

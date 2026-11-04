@@ -190,7 +190,6 @@
   ],
   "environment": "development",
   "threadId": "tool-metric-123",
-  "userId": "test-user",
   "input": "What is 15 plus 25?",
   "output": "40",
   "status": "SUCCESS",

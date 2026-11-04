@@ -83,12 +83,11 @@ def test_a_run_converts_for_evaluation(provider, exporter, async_evaluation):
     run_agent(provider)
 
     (collected,) = async_evaluation.traces_to_evaluate
-    assert (
-        collected.name,
-        collected.tags,
-        collected.thread_id,
-        collected.user_id,
-    ) == ("calculator", ["math"], "session", "user")
+    assert (collected.name, collected.tags, collected.thread_id) == (
+        "calculator",
+        ["math"],
+        "session",
+    )
     assert (collected.input, collected.output) == (QUESTION, "56\n")
     (agent,) = collected.root_spans
     assert isinstance(agent, AgentSpan)

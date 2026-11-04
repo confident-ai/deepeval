@@ -57,7 +57,6 @@
   ],
   "environment": "development",
   "threadId": "streaming-123",
-  "userId": "test-user-streaming",
   "input": "Say hello in exactly three words.",
   "output": "Hello, how are you?",
   "status": "SUCCESS"

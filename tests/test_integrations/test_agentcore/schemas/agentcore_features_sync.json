@@ -110,7 +110,6 @@
   ],
   "environment": "development",
   "threadId": "thread-sync-features-001",
-  "userId": "user-sync-001",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Sync Data'",
   "output": "The 'Sync Data' query has been processed successfully.\n",
   "status": "SUCCESS"

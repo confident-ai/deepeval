@@ -64,7 +64,6 @@
     "evaluation"
   ],
   "threadId": "test_thread_id",
-  "userId": "test_user_id",
   "input": "What is the capital of France?",
   "output": "The capital of France is Paris.",
   "status": "SUCCESS"

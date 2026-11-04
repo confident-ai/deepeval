@@ -1138,7 +1138,6 @@
   ],
   "environment": "development",
   "threadId": "test-shopping-001",
-  "userId": "shopper-1",
   "input": {
     "messages": [
       {

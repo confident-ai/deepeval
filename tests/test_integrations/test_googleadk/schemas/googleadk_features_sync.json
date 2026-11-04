@@ -195,7 +195,6 @@
   ],
   "environment": "development",
   "threadId": "thread-sync-features-001",
-  "userId": "user-sync-001",
   "input": "Use the special_tool to process 'Sync Data'",
   "output": "The special_tool processed 'Sync Data' and returned: {\"processed\": \"Processed: Sync Data\"}.",
   "status": "SUCCESS",

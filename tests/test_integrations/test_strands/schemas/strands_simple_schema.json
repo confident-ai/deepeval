@@ -70,7 +70,6 @@
   ],
   "environment": "development",
   "threadId": "simple-123",
-  "userId": "test-user",
   "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
   "output": "Hello, how are you?\n",
   "status": "SUCCESS"

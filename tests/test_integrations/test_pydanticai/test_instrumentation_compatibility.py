@@ -48,7 +48,7 @@ def agent(traces):
 
     @agent.tool_plain
     def weather(city: str) -> str:
-        update_current_trace(user_id="compatibility-user")
+        update_current_trace(thread_id="compatibility-thread")
         return "sunny"
 
     return agent
@@ -81,9 +81,9 @@ def test_real_agent_runs(agent, traces, mode):
     assert current_span_context.get() is original_span
 
     (collected,) = traces
-    assert (collected.name, collected.user_id) == (
+    assert (collected.name, collected.thread_id) == (
         "compatibility",
-        "compatibility-user",
+        "compatibility-thread",
     )
     (root,) = collected.root_spans
     assert isinstance(root, AgentSpan)

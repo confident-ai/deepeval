@@ -260,7 +260,9 @@ def test_trace_fields_merge_depth_first_with_later_spans_winning(
             pass
 
     (collected,) = async_evaluation.traces_to_evaluate
-    assert (collected.name, collected.user_id) == ("child", "user")
+    assert collected.name == "child"
+    # A deprecated platform setting: ignored.
+    assert not hasattr(collected, "user_id")
 
 
 def test_an_errored_root_errors_the_trace(exporter, async_evaluation):

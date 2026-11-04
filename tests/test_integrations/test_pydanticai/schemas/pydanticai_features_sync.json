@@ -146,7 +146,6 @@
   ],
   "environment": "development",
   "threadId": "thread-sync-features-001",
-  "userId": "user-sync-001",
   "input": "Use the special_tool to process 'Sync Data'",
   "output": "The query \"Sync Data\" has been processed.",
   "status": "SUCCESS",

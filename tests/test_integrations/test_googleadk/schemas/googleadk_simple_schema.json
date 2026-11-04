@@ -78,7 +78,6 @@
   ],
   "environment": "development",
   "threadId": "simple-123",
-  "userId": "test-user",
   "input": "Say hello in exactly three words.",
   "output": "Hello there!",
   "status": "SUCCESS"

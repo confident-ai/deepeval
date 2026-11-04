@@ -418,7 +418,6 @@
   ],
   "environment": "development",
   "threadId": "trace_thred_id",
-  "userId": "user_async_002",
   "input": {
     "description": "STRICT INSTRUCTIONS:\n1. You MUST call special_metric_tool exactly once.\n2. Use the input string exactly as provided.\n3. Your FINAL ANSWER must be EXACTLY the tool's raw output.\n4. Do not add any commentary.\n5. Do not explain anything.\n",
     "context": ""

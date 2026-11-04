@@ -296,7 +296,6 @@
   ],
   "environment": "development",
   "threadId": "async-parallel-tools-123",
-  "userId": "test-user-async",
   "input": "Use both the get_weather tool AND the get_time tool for Tokyo. Call both tools exactly once each.",
   "output": "It is Sunny, 72F in Tokyo. The time in Tokyo is 3:00 PM JST.",
   "status": "SUCCESS",

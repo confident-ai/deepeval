@@ -88,7 +88,6 @@
   ],
   "environment": "development",
   "threadId": "llama_index_thread_id",
-  "userId": "llama_index_user_id",
   "input": "Some choices are given below. It is provided in a numbered list (1 to 2), where each item in the list corresponds to a summary.\n---------------------\n(1) Useful for questions about Python or LlamaIndex programming.\n\n(2) Useful for questions about math or calculations.\n---------------------\nUsing only the choices above and not prior knowledge, return the choice that is most relevant to the question: 'Calculate 21 + 21'\n\n\nThe output should be ONLY JSON formatted as a JSON instance.\n\nHere is an example:\n[\n    {{\n        choice: 1,\n        reason: \"<insert reason for choice>\"\n    }},\n    ...\n]\n",
   "output": "```json\n[\n    {\n        \"choice\": 2,\n        \"reason\": \"The question 'Calculate 21 + 21' is related to math or calculations, which aligns with choice 2.\"\n    }\n]\n```",
   "status": "SUCCESS"

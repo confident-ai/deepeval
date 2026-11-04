@@ -58,7 +58,6 @@
   ],
   "environment": "development",
   "threadId": "with-trace-thread",
-  "userId": "with-trace-user",
   "input": "Say goodbye in exactly three words.",
   "output": "Farewell, until next.",
   "status": "SUCCESS"

@@ -37,7 +37,6 @@
   ],
   "environment": "development",
   "threadId": "test_thread_id_1",
-  "userId": "test_user_id_1",
   "input": "Hello, how are you?",
   "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here to help you. How can I assist you today?",
   "status": "SUCCESS"

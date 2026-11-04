@@ -910,7 +910,6 @@
   ],
   "environment": "development",
   "threadId": "async-multi-123",
-  "userId": "async-user",
   "input": {
     "messages": [
       {

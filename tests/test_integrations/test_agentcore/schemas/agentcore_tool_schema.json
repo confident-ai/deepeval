@@ -108,7 +108,6 @@
   ],
   "environment": "development",
   "threadId": "tool-123",
-  "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
   "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
   "status": "SUCCESS"

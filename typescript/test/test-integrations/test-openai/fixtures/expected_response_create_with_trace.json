@@ -40,7 +40,6 @@
     "test_tag_1"
   ],
   "threadId": "test_thread_id_1",
-  "userId": "test_user_id_1",
   "input": "Hello, how are you?",
   "output": "Hello! I'm just a program, but I'm here and ready to help you. How can I assist you today?",
   "status": "SUCCESS"

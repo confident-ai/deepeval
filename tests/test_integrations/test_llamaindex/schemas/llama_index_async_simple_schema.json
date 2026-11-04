@@ -468,7 +468,6 @@
   ],
   "environment": "development",
   "threadId": "llama_async_index_thread_id",
-  "userId": "llama_async_index_user_id",
   "input": "Context information is below.\n---------------------\nLlamaIndex is a data framework for LLM applications.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is LlamaIndex?\nAnswer: ",
   "output": "LlamaIndex is a data framework designed for LLM (Large Language Model) applications.",
   "status": "SUCCESS"

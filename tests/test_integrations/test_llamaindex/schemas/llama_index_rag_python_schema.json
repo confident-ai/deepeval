@@ -193,7 +193,6 @@
   ],
   "environment": "development",
   "threadId": "llama_index_thread_id",
-  "userId": "llama_index_user_id",
   "input": "Context information is below.\n---------------------\nPython is a high-level, interpreted programming language known for its simplicity.\n---------------------\nGiven the context information and not prior knowledge, answer the query.\nQuery: What is Python?\nAnswer: ",
   "output": "Python is a high-level, interpreted programming language known for its simplicity.",
   "status": "SUCCESS"

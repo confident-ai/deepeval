@@ -259,7 +259,6 @@
   ],
   "environment": "development",
   "threadId": "thread-async-features-002",
-  "userId": "user-async-002",
   "input": "You are a helpful assistant. Be concise. Use the special_tool to process 'Async Data'",
   "output": "Processed: Async Data\n",
   "status": "SUCCESS",

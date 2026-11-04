@@ -146,9 +146,10 @@ describe("Mastra Integration Tests", () => {
     const trace = traceManager.getAllTraces()[0];
     expect(trace).toBeDefined();
     expect(trace.threadId).toBe("thread-123");
-    expect(trace.userId).toBe("user-xyz");
     expect(trace.tags).toEqual(["req-tag"]);
     // Deprecated platform settings: dropped, and not kept as metadata.
+    expect(trace).not.toHaveProperty("userId");
+    expect(trace.metadata).not.toHaveProperty("userId");
     expect(trace).not.toHaveProperty("testCaseId");
     expect(trace).not.toHaveProperty("turnId");
     expect(trace.metadata).not.toHaveProperty("testCaseId");
