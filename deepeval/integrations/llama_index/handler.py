@@ -396,12 +396,22 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             return None
 
         base_span.end_time = perf_counter()
-        base_span.status = TraceSpanStatus.SUCCESS
+        if err is not None:
+            base_span.status = TraceSpanStatus.ERRORED
+            base_span.error = str(err)
+        else:
+            base_span.status = TraceSpanStatus.SUCCESS
 
         if base_span.parent_uuid is None:
+            if err is not None:
+                trace = trace_manager.get_trace_by_uuid(base_span.trace_uuid)
+                if trace is not None:
+                    trace.status = TraceSpanStatus.ERRORED
             trace_manager.end_trace(base_span.trace_uuid)
             if base_span.uuid in self.root_span_trace_id_map:
                 self.root_span_trace_id_map.pop(base_span.uuid)
+
+        trace_manager.remove_span(base_span.uuid)
 
         return base_span
 
