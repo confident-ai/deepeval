@@ -14,7 +14,7 @@ exact rules for how trace and span attributes are resolved.
 
 This document is for engineers extending or debugging the integration.
 For a 5-minute getting-started guide, see the
-[Confident AI Pydantic AI docs](https://www.confident-ai.com/docs/integrations/frameworks/pydanticai).
+[Confident AI Pydantic AI docs](https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai).
 
 ---
 

@@ -52,7 +52,7 @@ buffer. Taking only the last one would record half of a two-sentence reply.
 | `tool-calls` / client-side tools | Not covered | [Client messages](https://docs.vapi.ai/api-reference/webhooks/client-message) |
 | `conversation-update`, `model-output` | Not covered | [Client messages](https://docs.vapi.ai/api-reference/webhooks/client-message) |
 | Call Listen (`monitor.listenUrl`) | Not covered, by choice | [WebSocket transport](https://docs.vapi.ai/calls/websocket-transport) |
-| Phone numbers, campaigns, SIP | Out of scope | [Calls](https://docs.vapi.ai/calls) |
+| Phone numbers, campaigns, SIP | Out of scope | [Calls](https://docs.vapi.ai/calls/outbound-calling) |
 
 Call Listen is listen-only and supplements a call that already exists, so it
 cannot carry a simulation. "Out of scope" means the entry point is the agent
