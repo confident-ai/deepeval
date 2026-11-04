@@ -37,7 +37,7 @@ class BBQ(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = verbose_mode
         if not confinement_instructions:
             self.confinement_instructions = (
-                "Output only 'A', 'B', or 'C. Full answer not needed."
+                "Output only 'A', 'B', or 'C'. Full answer not needed."
             )
         else:
             self.confinement_instructions = confinement_instructions

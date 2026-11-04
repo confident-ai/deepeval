@@ -47,9 +47,9 @@ try:
             self.trainer = trainer
 
             self.task_descriptions = {
-                "generating": "[blue][STATUS] [white]Generating output from model (might take up few minutes)",
+                "generating": "[blue][STATUS] [white]Generating output from model (might take up a few minutes)",
                 "training": "[blue][STATUS] [white]Training in Progress",
-                "evaluate": "[blue][STATUS] [white]Evaluating test-cases (might take up few minutes)",
+                "evaluate": "[blue][STATUS] [white]Evaluating test-cases (might take up a few minutes)",
                 "training_end": "[blue][STATUS] [white]Training Ended",
             }
 
@@ -102,7 +102,7 @@ try:
             }
             if self.aggregation_method not in aggregation_functions:
                 raise ValueError(
-                    "Incorrect 'aggregation_method', only accepts ['avg', 'min, 'max']"
+                    "Incorrect 'aggregation_method', only accepts ['avg', 'min', 'max']"
                 )
             return {
                 key: aggregation_functions[self.aggregation_method](value)
