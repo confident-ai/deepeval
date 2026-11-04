@@ -165,8 +165,8 @@ def extract_output_parameters_from_response(
     response: Response, input_parameters: InputParameters
 ) -> OutputParameters:
     output = response.output_text
-    prompt_tokens = response.usage.input_tokens
-    completion_tokens = response.usage.output_tokens
+    prompt_tokens = response.usage.input_tokens if response.usage else None
+    completion_tokens = response.usage.output_tokens if response.usage else None
 
     # Extract Tool Calls
     tools_called = None
