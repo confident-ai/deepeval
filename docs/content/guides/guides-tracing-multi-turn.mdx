@@ -74,7 +74,7 @@ flowchart LR
 When these traces are exported, Confident AI automatically groups all traces sharing `"session-123"` into a single **Thread**. This allows you to evaluate the quality of the entire sequence rather than just evaluating Trace C in isolation.
 
 :::note
-The `thread_id` is a user-defined string. You can use a database primary key, a UUID, or a combination of `user_id` and a timestamp—as long as it remains consistent across all turns of the same conversation.
+The `thread_id` is a user-defined string. You can use a database primary key, a UUID, or a combination of a user ID and a timestamp—as long as it remains consistent across all turns of the same conversation.
 :::
 
 ## Instrumenting Conversation Turns
@@ -98,11 +98,8 @@ async def generate_reply(history: list, user_message: str) -> str:
     return response.choices[0].message.content
 
 @observe
-async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
-    update_current_trace(
-        thread_id=thread_id,
-        user_id=user_id,  # Links the thread to a specific user on Confident AI
-    )
+async def handle_turn(user_message: str, thread_id: str) -> str:
+    update_current_trace(thread_id=thread_id)
     history = conversations.get(thread_id, [])
     response = await generate_reply(history, user_message)
     conversations[thread_id] = history + [
@@ -144,10 +141,9 @@ In production, you will accumulate thousands of conversational threads. To effic
 
 ```python title="chatbot.py"
 @observe
-async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
+async def handle_turn(user_message: str, thread_id: str) -> str:
     update_current_trace(
         thread_id=thread_id,
-        user_id=user_id,
         tags=["customer-support", "billing"],
         metadata={
             "turn_number": len(conversations.get(thread_id, [])) + 1,

@@ -380,7 +380,6 @@ const exporter = new DeepEvalExporter({
   environment: "development",
   tags: ["mastra", "weather"],
   metadata: { team: "support" },
-  userId: "user-123",
 });
 ```
 
@@ -389,13 +388,13 @@ Per-request context, read off the root span's `metadata` and `tags`:
 ```typescript title="mastra-agent.ts" showLineNumbers
 await mastra.getAgent("weatherAgent").generate("What's the weather in Tokyo?", {
   tracingOptions: {
-    metadata: { threadId: "thread-123", userId: "user-xyz", team: "growth" },
+    metadata: { threadId: "thread-123", team: "growth" },
     tags: ["production"],
   },
 });
 ```
 
-`threadId`, `userId` and `traceName` are read as trace fields; `sessionId` and `resourceId` are accepted as aliases for the first two. Every other key falls through to the trace's `metadata`, merged onto whatever the exporter's config already set.
+`threadId` and `traceName` are read as trace fields; `sessionId` is accepted as an alias for `threadId`. Every other key falls through to the trace's `metadata`, merged onto whatever the exporter's config already set.
 
 ## Advanced patterns
 
@@ -438,7 +437,6 @@ So instead of wrapping the run, put your own logic in a Mastra tool or workflow 
 | `tags`                    | `string[]`               | Tags applied to traces produced by this exporter.                                            |
 | `metadata`                | `Record<string, any>`    | Trace metadata applied when the exporter starts a trace.                                     |
 | `threadId`                | `string`                 | Groups related runs into a single trace thread.                                              |
-| `userId`                  | `string`                 | Actor identifier for the trace.                                                              |
 | `debug`                   | `boolean`                | Log exporter errors instead of swallowing them.                                              |
 
 The exporter never sets trace-level `metrics` — those come from `evalsIterator({ metrics })` or `toPass([...])` in an eval.
@@ -496,7 +494,7 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
         <>
           Yes. Keep the exporter registered and pass{" "}
           <code>tracingOptions.metadata</code> with a{" "}
-          <code>threadId</code> / <code>userId</code> per request.{" "}
+          <code>threadId</code> per request.{" "}
           <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> flags the failing Mastra
           traces, ready to become goldens for your next{" "}
           <code>evalsIterator()</code> run.

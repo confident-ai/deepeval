@@ -625,7 +625,7 @@ For deterministic tool calls, use tool spans for traceability, inputs, outputs, 
 
 LangGraph is instrumented per-call through LangChain callbacks, so customization happens at the callback or span-staging boundary.
 
-- Use <Term py="CallbackHandler" ts="DeepEvalCallbackHandler"/> kwargs for trace-level defaults like `name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, and <Term py="user_id" ts="userId"/>.
+- Use <Term py="CallbackHandler" ts="DeepEvalCallbackHandler"/> kwargs for trace-level defaults like `name`, `tags`, `metadata`, and <Term py="thread_id" ts="threadId"/>.
 - Use <Term py="next_agent_span" ts="nextAgentSpan"/> / <Term py="next_llm_span" ts="nextLlmSpan"/> / <Term py="next_retriever_span" ts="nextRetrieverSpan"/> / <Term py="next_tool_span" ts="nextToolSpan"/> to stage component-level fields onto the next span the callback opens.
 - Use tool spans for deterministic traceability, inputs, outputs, and metadata.
 
@@ -638,7 +638,6 @@ callback = CallbackHandler(
     name="weather-graph",
     tags=["langgraph", "weather"],
     metadata={"team": "support"},
-    user_id="user-123",
 )
 
 graph.invoke(
@@ -656,7 +655,6 @@ const handler = new DeepEvalCallbackHandler({
   name: "weather-graph",
   tags: ["langgraph", "weather"],
   metadata: { team: "support" },
-  userId: "user-123",
 });
 
 await graph.invoke(
@@ -924,7 +922,7 @@ If you build agents with <Term py="create_agent" ts="createAgent"/> (which repla
 :::
 
 :::caution[Baked-in trace attributes are per-handler, not per-request]
-Attributes set on a baked-in handler — <Term py="thread_id" ts="threadId"/>, <Term py="user_id" ts="userId"/>, etc. — are the same for every request the server serves, because the handler is constructed once. For per-request values, attach the callback per call instead of baking it into the graph.
+Attributes set on a baked-in handler — <Term py="thread_id" ts="threadId"/>, `tags`, etc. — are the same for every request the server serves, because the handler is constructed once. For per-request values, attach the callback per call instead of baking it into the graph.
 :::
 
 ## API reference
@@ -937,7 +935,6 @@ Attributes set on a baked-in handler — <Term py="thread_id" ts="threadId"/>, <
 | `tags` | <Term py="list[str]" ts="string[]"/> | Tags applied to traces produced by this callback. |
 | `metadata` | <Term py="dict" ts="object"/> | Trace metadata applied when the callback starts a trace. |
 | <Term py="thread_id" ts="threadId"/> | <Term py="str" ts="string"/> | Groups related runs into a single trace thread. |
-| <Term py="user_id" ts="userId"/> | <Term py="str" ts="string"/> | Actor identifier for the trace. |
 | `metrics` | <Term py="list" ts="array"/> | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
 
 For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="update_current_trace" ts="updateCurrentTrace"/>, <Term py="update_current_span" ts="updateCurrentSpan"/>) see the [tracing reference](/docs/evaluation-llm-tracing).
