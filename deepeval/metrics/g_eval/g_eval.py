@@ -38,6 +38,7 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
     get_score_range,
+    validate_score_in_range,
     construct_geval_upload_payload,
     construct_geval_pull_evaluation_params,
     ensure_required_params,
@@ -143,7 +144,10 @@ class GEval(BaseMetric):
                     multimodal=multimodal,
                 )
                 self.score = (
-                    (float(g_score) - self.score_range[0])
+                    (
+                        validate_score_in_range(g_score, self.score_range)
+                        - self.score_range[0]
+                    )
                     / self.score_range_span
                     if not self.strict_mode
                     else int(g_score)
@@ -192,7 +196,11 @@ class GEval(BaseMetric):
                 multimodal=multimodal,
             )
             self.score = (
-                (float(g_score) - self.score_range[0]) / self.score_range_span
+                (
+                    validate_score_in_range(g_score, self.score_range)
+                    - self.score_range[0]
+                )
+                / self.score_range_span
                 if not self.strict_mode
                 else int(g_score)
             )
