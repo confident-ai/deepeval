@@ -18,3 +18,5 @@ class OutputParameters(BaseModel):
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     tools_called: Optional[List[ToolCall]] = None
+    cache_creation_input_tokens: Optional[int] = None
+    cache_read_input_tokens: Optional[int] = None
