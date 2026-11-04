@@ -22,6 +22,7 @@ export interface OpenInferenceInstrumentationOptions {
   apiKey?: string;
   name?: string;
   threadId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   userId?: string;
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
@@ -66,7 +67,6 @@ export function instrumentOpenInference(
     {
       name: options.name,
       threadId: options.threadId,
-      userId: options.userId,
       metadata: options.metadata,
       tags: options.tags,
       environment: options.environment,

@@ -267,7 +267,7 @@ const EXPORTED_SPAN_FIELDS = [
   "costPerInputToken",
   "costPerOutputToken",
 ];
-const EXPORTED_TRACE_FIELDS = [...CONTENT_FIELDS, "tags", "userId", "threadId"];
+const EXPORTED_TRACE_FIELDS = [...CONTENT_FIELDS, "tags", "threadId"];
 const TOOL_FIELDS = ["toolsCalled", "expectedTools"];
 const COUNT_FIELDS = ["inputTokenCount", "outputTokenCount"];
 

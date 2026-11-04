@@ -44,6 +44,7 @@ export interface DeepEvalExporterConfig {
   tags?: string[];
   metadata?: Record<string, any>;
   threadId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   userId?: string;
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
@@ -69,8 +70,9 @@ export interface DeepEvalExporterConfig {
 // Traces still waiting for their root span, at most.
 const MAX_PENDING_TRACES = 1024;
 
-// Per-request `tracingOptions.metadata` keys read as trace fields. `testCaseId`
-// and `turnId` are deprecated platform settings: dropped, not kept as metadata.
+// Per-request `tracingOptions.metadata` keys read as trace fields. `userId`,
+// `resourceId`, `testCaseId` and `turnId` are deprecated platform settings:
+// dropped, not kept as metadata.
 const RESERVED_TRACE_META_KEYS = new Set<string>([
   "userId",
   "threadId",
@@ -90,9 +92,6 @@ function perRequestFields(root: ReadableSpan): Partial<Trace> {
   const threadId =
     meta.threadId ?? meta.sessionId ?? attributes[GenAIAttr.CONVERSATION_ID];
   if (threadId) fields.threadId = String(threadId);
-
-  const userId = meta.userId ?? meta.resourceId;
-  if (userId) fields.userId = String(userId);
 
   const tags = attrStringList(attributes, ConfidentAttr.TRACE_TAGS);
   if (tags && tags.length > 0) fields.tags = tags;
@@ -190,7 +189,6 @@ class FinishedTraces implements SpanExporter {
       name: config.name,
       tags: config.tags,
       threadId: config.threadId,
-      userId: config.userId,
       ...request,
       metadata:
         config.metadata || request.metadata

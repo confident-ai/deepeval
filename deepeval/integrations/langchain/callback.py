@@ -58,6 +58,7 @@ class CallbackHandler(BaseCallbackHandler):
         tags: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         thread_id: Optional[str] = None,
+        # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
         user_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         # Deprecated, ignored: Confident AI platform settings. Don't build on them.
@@ -73,7 +74,6 @@ class CallbackHandler(BaseCallbackHandler):
             "tags": tags,
             "metadata": metadata,
             "thread_id": thread_id,
-            "user_id": user_id,
             "metrics": metrics,
         }
         self._staged: Dict[UUID, List[Staged]] = {}

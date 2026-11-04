@@ -179,6 +179,7 @@ def update_current_trace(
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
@@ -218,8 +219,6 @@ def update_current_trace(
         current_trace.metadata = metadata
     if thread_id:
         current_trace.thread_id = thread_id
-    if user_id:
-        current_trace.user_id = user_id
     if input:
         current_trace.input = input
     if output:

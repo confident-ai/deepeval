@@ -270,7 +270,6 @@ export interface Trace {
   metadata?: Record<string, any>;
   tags?: string[];
   threadId?: string;
-  userId?: string;
   input?: any;
   output?: any;
   name?: string;
@@ -692,7 +691,6 @@ export class TraceManager {
       metadata: trace.metadata,
       tags: trace.tags,
       threadId: trace.threadId,
-      userId: trace.userId,
       input: trace.input,
       output: trace.output,
       toolsCalled: trace.toolsCalled,
@@ -1348,6 +1346,7 @@ export interface UpdateCurrentTraceParams {
   tags?: string[];
   metadata?: Record<string, any>;
   threadId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   userId?: string;
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
@@ -1376,7 +1375,6 @@ export const updateCurrentTrace = ({
   tags,
   metadata,
   threadId,
-  userId,
   input,
   output,
   name,
@@ -1394,7 +1392,6 @@ export const updateCurrentTrace = ({
     tags,
     metadata,
     threadId,
-    userId,
     input,
     output,
     name,
@@ -1428,9 +1425,6 @@ export const updateCurrentTrace = ({
   }
   if (threadId !== undefined) {
     currentTrace.threadId = threadId;
-  }
-  if (userId !== undefined) {
-    currentTrace.userId = userId;
   }
   if (input !== undefined) {
     currentTrace.input = input;

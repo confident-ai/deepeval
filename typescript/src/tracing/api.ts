@@ -94,7 +94,6 @@ export interface TraceApi {
   metadata?: Record<string, any>;
   tags?: string[];
   threadId?: string;
-  userId?: string;
   input?: any;
   output?: any;
   name?: string;

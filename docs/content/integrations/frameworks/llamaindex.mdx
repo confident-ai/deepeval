@@ -408,7 +408,6 @@ async def run_rag(prompt: str):
 | `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
 | `context`           | `list[str]` | Ideal context the model should use when answering.                                       |
 | `retrieval_context` | `list[str]` | Retrieved context the model actually used (LLM-only; Faithfulness, Contextual Relevancy).|
-| `prompt`            | `Prompt`    | Confident AI prompt object; LLM-only.                                                    |
 
 `with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`) — see the [tracing reference](/docs/evaluation-llm-tracing).
 

@@ -388,7 +388,6 @@ async def respond_to_user(prompt: str) -> str:
 | `metadata`         | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
 | `tags`             | `list[str]` | Default tags applied to every trace produced by this agent.                |
 | `environment`      | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
-| `metric_collection`| `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
 

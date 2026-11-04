@@ -101,6 +101,8 @@ _setAmbientPayloadReader((kind) => {
 /** Confident AI platform settings `setTracingContext` accepts and ignores. */
 type DeprecatedTraceSettings = {
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
+  userId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testRunId?: string;
@@ -136,7 +138,6 @@ export async function setTracingContext<T>(
     tags: opts.tags,
     metadata: opts.metadata,
     threadId: opts.threadId,
-    userId: opts.userId,
     input: opts.input,
     output: opts.output,
     retrievalContext: opts.retrievalContext,
@@ -163,7 +164,6 @@ export async function setTracingContext<T>(
       tags: opts.tags,
       metadata: opts.metadata,
       threadId: opts.threadId,
-      userId: opts.userId,
       input: opts.input,
       output: opts.output,
       retrievalContext: opts.retrievalContext,

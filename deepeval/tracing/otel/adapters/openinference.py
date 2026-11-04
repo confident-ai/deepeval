@@ -96,7 +96,6 @@ class OpenInferenceAdapter(Adapter):
         attributes = span.attributes or {}
         return {
             "thread_id": attr_string(attributes, "session.id"),
-            "user_id": attr_string(attributes, "user.id"),
             "tags": attr_string_list(attributes, "tag.tags"),
         }
 

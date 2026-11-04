@@ -177,7 +177,6 @@ class Trace(BaseModel):
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
-    user_id: Optional[str] = None
     input: Optional[Any] = None
     output: Optional[Any] = None
     metrics: Optional[List[BaseMetric]] = None
@@ -207,7 +206,6 @@ class TraceAttributes(BaseModel):
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
-    user_id: Optional[str] = None
 
 
 @dataclass

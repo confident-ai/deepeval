@@ -214,7 +214,7 @@ with trace(
     )
 ```
 
-`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, and `prompt`. Each one is read by the Anthropic patch when the next LLM span is created.
+`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, and `retrieval_context`. Each one is read by the Anthropic patch when the next LLM span is created.
 
 ## Customizing trace and span data
 
@@ -363,7 +363,6 @@ with trace(
 | Kwarg               | Type        | Description                                                                              |
 | ------------------- | ----------- | ---------------------------------------------------------------------------------------- |
 | `metrics`           | `list`      | Metrics applied to the next LLM span.                                                    |
-| `prompt`            | `Prompt`    | Confident AI prompt object; captured on the LLM span for prompt-version analytics.       |
 | `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                          |
 | `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
 | `context`           | `list[str]` | Ideal context the model should use when answering.                                       |

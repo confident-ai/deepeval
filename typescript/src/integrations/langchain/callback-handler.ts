@@ -30,6 +30,7 @@ export interface DeepEvalCallbackHandlerOptions {
   tags?: string[];
   metadata?: Record<string, any>;
   threadId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   userId?: string;
   /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
@@ -57,6 +58,7 @@ export class DeepEvalCallbackHandler extends ConfidentLangChainCallbackHandler {
     super({ rootSpanType: "agent" });
     recordTracingIntegration(Integration.LANGCHAIN);
     const {
+      userId: _userId,
       testCaseId: _testCaseId,
       turnId: _turnId,
       metricCollection: _metricCollection,

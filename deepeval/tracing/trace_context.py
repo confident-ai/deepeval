@@ -53,6 +53,7 @@ def trace(
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
@@ -89,7 +90,6 @@ def trace(
         tags=tags,
         metadata=metadata,
         thread_id=thread_id,
-        user_id=user_id,
         input=input,
         output=output,
         retrieval_context=retrieval_context,
@@ -111,7 +111,6 @@ def trace(
             tags=tags,
             metadata=metadata,
             thread_id=thread_id,
-            user_id=user_id,
             input=input,
             output=output,
             retrieval_context=retrieval_context,
