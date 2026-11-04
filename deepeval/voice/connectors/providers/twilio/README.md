@@ -7,7 +7,8 @@ here. Each row links to the page that owns the answer.
 
 ## One connector
 
-`TwilioConnector` (`connector.py`) places an outbound call over Twilio's REST
+`TwilioConnector` (`connector.py`) is what `PhoneConnector` builds for a
+`TwilioProvider`. It places an outbound call over Twilio's REST
 API with inline TwiML that `<Connect>`s the answered call to a bidirectional
 [Media Stream](https://www.twilio.com/docs/voice/media-streams). Twilio dials
 back into a small aiohttp server deepeval runs, so the caller has to expose that
