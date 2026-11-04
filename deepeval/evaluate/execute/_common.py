@@ -26,6 +26,7 @@ from deepeval.utils import (
 from deepeval.metrics import (
     BaseMetric,
 )
+from deepeval.metrics.indicator import _call_metric_measure
 from deepeval.classifiers.base_classifier import BaseClassifier
 from deepeval.models.retry_policy import (
     set_outer_deadline,
@@ -249,7 +250,8 @@ def _execute_metric(
     error_config: ErrorConfig,
 ) -> Optional[str]:
     try:
-        metric.measure(
+        _call_metric_measure(
+            metric.measure,
             test_case,
             _show_indicator=show_metric_indicator,
             _in_component=in_component,
@@ -261,27 +263,6 @@ def _execute_metric(
             metric.success = None
             return "skip"
         else:
-            if error_config.ignore_errors:
-                metric.error = format_error_text(e)
-                metric.success = False
-            else:
-                raise
-    except TypeError:
-        try:
-            metric.measure(test_case)
-        except MissingTestCaseParamsError as e:
-            if error_config.skip_on_missing_params:
-                metric.skipped = True
-                metric.error = None
-                metric.success = None
-                return "skip"
-            else:
-                if error_config.ignore_errors:
-                    metric.error = format_error_text(e)
-                    metric.success = False
-                else:
-                    raise
-        except Exception as e:
             if error_config.ignore_errors:
                 metric.error = format_error_text(e)
                 metric.success = False
