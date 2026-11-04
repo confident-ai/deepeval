@@ -130,7 +130,7 @@ export class SummarizationMetric extends BaseMetric {
         this.generateAlignmentVerdicts(),
       ]);
 
-      const alignmentScore = this.calculateAlignmentScore();
+      const alignmentScore = this.calculateAlignmentScore(this.claims.length);
       const coverageScore = this.calculateCoverageScore();
       this.scoreBreakdown = {
         Alignment: alignmentScore,
@@ -327,8 +327,10 @@ export class SummarizationMetric extends BaseMetric {
 
   // --- scoring (alignment penalizes idk; coverage = answerable-by-both / answerable-by-original) ---
 
-  private calculateAlignmentScore(): number {
-    const total = this.alignmentVerdicts.length;
+  private calculateAlignmentScore(expectedCount: number): number {
+    // Judge every claim that was up for judgment: a truncated or empty
+    // verdict list must count against the score, not shrink the denominator.
+    const total = Math.max(this.alignmentVerdicts.length, expectedCount);
     if (total === 0) return 0;
     const faithful = this.alignmentVerdicts.filter(
       (v) => v.verdict.trim().toLowerCase() === "yes",
