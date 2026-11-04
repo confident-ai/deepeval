@@ -202,7 +202,7 @@ class Prompt:
 
         file_name = os.path.basename(file_path).split(".")[0]
         self.alias = file_name
-        with open(file_path, "r") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         try:
             data = json.loads(content)
