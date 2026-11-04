@@ -192,19 +192,17 @@ class TurnContextualRecallMetric(BaseConversationalMetric):
                     unit_interactions, self.window_size
                 )
             ]
-            scores = []
-            tasks = []
-
-            async def get_individual_scores(window):
-                scores.extend(
-                    await self._a_get_contextual_recall_scores(
+            # gather() returns results in input order, even when windows finish
+            # in a different order. Do not append from individual coroutines.
+            window_scores = await asyncio.gather(
+                *(
+                    self._a_get_contextual_recall_scores(
                         window, test_case.expected_outcome, multimodal
                     )
+                    for window in turns_windows
                 )
-
-            for window in turns_windows:
-                tasks.append(get_individual_scores(window))
-            await asyncio.gather(*tasks)
+            )
+            scores = list(itertools.chain.from_iterable(window_scores))
             self.score = self._calculate_score(scores)
             self.success = self.is_successful()
             self.reason = await self._a_generate_reason(scores)
