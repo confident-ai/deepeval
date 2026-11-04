@@ -480,7 +480,6 @@ export function collectFinishedTrace(
 const STAMPED_TRACE_STRINGS: Record<string, string> = {
   name: ConfidentAttr.TRACE_NAME,
   threadId: ConfidentAttr.TRACE_THREAD_ID,
-  userId: ConfidentAttr.TRACE_USER_ID,
   environment: ConfidentAttr.TRACE_ENVIRONMENT,
 };
 

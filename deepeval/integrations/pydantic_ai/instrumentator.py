@@ -60,6 +60,7 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
         api_key: Optional[str] = None,
         name: Optional[str] = None,
         thread_id: Optional[str] = None,
+        # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
         user_id: Optional[str] = None,
         metadata: Optional[dict] = None,
         tags: Optional[List[str]] = None,
@@ -76,7 +77,6 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
                 {
                     "name": name,
                     "thread_id": thread_id,
-                    "user_id": user_id,
                     "metadata": metadata,
                     "tags": tags,
                 }

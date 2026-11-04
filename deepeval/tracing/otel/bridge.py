@@ -482,7 +482,6 @@ def _deepeval_scope() -> Optional[Tuple[str, Optional[str]]]:
 _STAMPED_TRACE_STRINGS = {
     "name": ConfidentAttr.TRACE_NAME,
     "thread_id": ConfidentAttr.TRACE_THREAD_ID,
-    "user_id": ConfidentAttr.TRACE_USER_ID,
     "environment": ConfidentAttr.TRACE_ENVIRONMENT,
 }
 

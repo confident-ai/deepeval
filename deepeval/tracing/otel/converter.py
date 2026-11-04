@@ -216,7 +216,6 @@ def _trace_fields(span: ReadableSpan) -> Dict[str, Any]:
             make_json_serializable_for_metadata(metadata) if metadata else None
         ),
         "thread_id": attr_string(attributes, ConfidentAttr.TRACE_THREAD_ID),
-        "user_id": attr_string(attributes, ConfidentAttr.TRACE_USER_ID),
         "environment": _environment(span),
         "retrieval_context": attr_json_string_list(
             attributes, ConfidentAttr.TRACE_RETRIEVAL_CONTEXT

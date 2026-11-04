@@ -316,7 +316,6 @@ _EXPORTED_TRACE_FIELDS = frozenset(
         "name",
         "tags",
         "thread_id",
-        "user_id",
     )
 )
 _TOOL_FIELDS = ("tools_called", "expected_tools")

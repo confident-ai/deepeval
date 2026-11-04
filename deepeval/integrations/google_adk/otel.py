@@ -20,6 +20,7 @@ def instrument_google_adk(
     api_key: Optional[str] = None,
     name: Optional[str] = None,
     thread_id: Optional[str] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     user_id: Optional[str] = None,
     metadata: Optional[dict] = None,
     tags: Optional[List[str]] = None,

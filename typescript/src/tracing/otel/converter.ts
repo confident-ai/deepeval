@@ -201,7 +201,6 @@ function recordedTraceFields(attributes: Attributes): Partial<Trace> {
     ),
     metadata: attrJsonObject(attributes, ConfidentAttr.TRACE_METADATA),
     threadId: attrString(attributes, ConfidentAttr.TRACE_THREAD_ID),
-    userId: attrString(attributes, ConfidentAttr.TRACE_USER_ID),
     retrievalContext: attrJsonStringList(
       attributes,
       ConfidentAttr.TRACE_RETRIEVAL_CONTEXT,

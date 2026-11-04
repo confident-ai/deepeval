@@ -602,7 +602,6 @@ class TraceManager:
             name=trace.name,
             tags=trace.tags,
             threadId=trace.thread_id,
-            userId=trace.user_id,
             input=trace.input,
             output=trace.output,
             retrievalContext=(

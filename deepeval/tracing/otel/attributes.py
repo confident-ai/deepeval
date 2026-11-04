@@ -74,7 +74,6 @@ class ConfidentAttr:
     TRACE_TAGS = "confident.trace.tags"
     TRACE_THREAD_ID = "confident.trace.thread_id"
     TRACE_TOOLS_CALLED = "confident.trace.tools_called"
-    TRACE_USER_ID = "confident.trace.user_id"
 
 
 class GenAIAttr:

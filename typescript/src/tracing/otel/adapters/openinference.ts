@@ -80,7 +80,6 @@ export const openInferenceAdapter: Adapter = {
     const attributes = span.attributes;
     return {
       threadId: attrString(attributes, "session.id"),
-      userId: attrString(attributes, "user.id"),
       tags: attrStringList(attributes, "tag.tags"),
     };
   },
