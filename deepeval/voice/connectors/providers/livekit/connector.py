@@ -157,6 +157,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._transcript_ready = asyncio.Event()
         self._provider_transcript_ready = asyncio.Event()
         self._provider_transcript_parts = []
+        self._transcript_tasks = set()
         self._uplink = UplinkStream()
         self._call_ended = False
         self._room = (
@@ -549,6 +550,14 @@ class LiveKitConnector(BaseVoiceConnector):
     @property
     def supports_duplex(self) -> bool:
         return True
+
+    @property
+    def supports_parallel_calls(self) -> bool:
+        return (
+            self._room_arg is None
+            and self._token_arg is None
+            and self._room_name_arg is None
+        )
 
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
         if self._out_frames is None:
