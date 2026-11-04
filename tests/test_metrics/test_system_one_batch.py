@@ -159,10 +159,8 @@ async def test_request_over_budget_is_split(is_async, monkeypatch):
                 "too big", estimated_tokens=2, limit_tokens=1
             )
 
-    monkeypatch.setattr(
-        system_one_batch, "check_context_budget", at_most_three_questions
-    )
     model = jev()
+    monkeypatch.setattr(model, "check_request", at_most_three_questions)
     metrics = [relevancy(model), faithfulness(model)]
 
     await run(metrics, make_case(), is_async)

@@ -48,7 +48,7 @@ EMPTY_SCORE = 1.0
 def initialize_jev_model(
     model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
 ) -> DeepEvalBaseSystemOneModel:
-    """JevEval needs Jev in every mode; there is no LLM to fall back to."""
+    """JevEval needs a decision provider in every mode; no LLM fallback."""
     if isinstance(model, DeepEvalBaseSystemOneModel):
         return model
     if model is not None and not isinstance(model, str):
@@ -56,15 +56,16 @@ def initialize_jev_model(
             f"Unsupported type for system_one_model: {type(model)}. Expected "
             "None, str, or DeepEvalBaseSystemOneModel."
         )
-    from deepeval.models.system_one.typesafe_model import TypeSafeModel
+    from deepeval.models.system_one.provider import create_system_one_model
 
     try:
-        return TypeSafeModel(model=model)
+        return create_system_one_model(model)
     except DeepEvalError as e:
         raise DeepEvalError(
-            f"JevEval needs Jev to score, but it is not usable: {e} "
-            "Pass a configured `TypeSafeModel` as `system_one_model`, or "
-            "install `typesafe-sdk` and set TYPESAFE_API_KEY."
+            f"JevEval needs a System One provider to score, but it is not usable: {e} "
+            "Pass a configured `DeepEvalBaseSystemOneModel` as `system_one_model`, "
+            "or configure DEEPEVAL_SYSTEM_ONE_PROVIDER. The TypeSafe default "
+            "requires typesafe-sdk and TYPESAFE_API_KEY."
         ) from e
 
 
