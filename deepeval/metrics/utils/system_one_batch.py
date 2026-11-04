@@ -38,6 +38,7 @@ from deepeval.models.system_one.schema import (
     SystemOneAnswers,
     SystemOneQuestion,
 )
+from deepeval.models.system_one.typesafe_model import TypeSafeModel
 from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.test_run.cache import Cache, CachedTestCase
@@ -58,6 +59,20 @@ class _Entry:
     spec: SystemOneEvalSpec
     state: Dict[str, Any]
     questions: Dict[str, SystemOneQuestion]
+
+
+def _same_model(first: Any, second: Any) -> bool:
+    if first is second:
+        return True
+    # A display name does not identify a custom model's endpoint or behaviour.
+    if type(first) is not TypeSafeModel or type(second) is not TypeSafeModel:
+        return False
+    return (
+        first.name == second.name
+        and first.api_key == second.api_key
+        and first.kwargs == second.kwargs
+        and first.model_data == second.model_data
+    )
 
 
 @dataclass
@@ -83,8 +98,7 @@ class _Request:
     def admit(self, entry: _Entry) -> bool:
         """Add `entry` when it asks the same Jev model, its state merges
         without conflict and the merged request still fits Jev's budget."""
-        model_name = entry.metric.system_one_model.get_model_name()
-        if model_name != self.model.get_model_name():
+        if not _same_model(self.model, entry.metric.system_one_model):
             return False
         state = _merge_states(self.state, entry.state)
         if state is None:

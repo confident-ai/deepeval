@@ -23,6 +23,7 @@ from deepeval.metrics.utils.system_one_batch import (
     measure_system_one_batch,
 )
 from deepeval.models.system_one.limits import SystemOneContextLimitError
+from deepeval.models.system_one.typesafe_model import TypeSafeModel
 from deepeval.models.utils import EvaluationCost
 from deepeval.test_case import ConversationalTestCase, LLMTestCase, Turn
 from tests.test_metrics.system_one_fakes import (
@@ -143,6 +144,113 @@ async def test_eval_mode_override_is_honoured(is_async):
 @pytest.mark.asyncio
 async def test_each_jev_model_gets_its_own_request(is_async):
     first, second = jev("jev-a"), jev("jev-b")
+
+    await run([relevancy(first), faithfulness(second)], make_case(), is_async)
+
+    assert len(first.calls) == 1
+    assert len(second.calls) == 1
+
+
+@sync_and_async
+@pytest.mark.asyncio
+async def test_custom_models_with_same_name_keep_their_own_requests(is_async):
+    first = FakeSystemOneModel(
+        answer_fn=answer_everything(probability=0.9), cost=0.1, name="shared"
+    )
+    second = FakeSystemOneModel(
+        answer_fn=answer_everything(probability=0.1), cost=0.7, name="shared"
+    )
+    metrics = [relevancy(first), faithfulness(second)]
+
+    await run(metrics, make_case(), is_async)
+
+    assert len(first.calls) == 1
+    assert len(second.calls) == 1
+    assert [m.evaluation_cost for m in metrics] == pytest.approx([0.1, 0.7])
+    alone = faithfulness(
+        FakeSystemOneModel(answer_fn=answer_everything(probability=0.1))
+    )
+    alone.measure(make_case())
+    assert metrics[1].score == alone.score
+
+
+@pytest.fixture
+def typesafe_model_factory(monkeypatch):
+    monkeypatch.setattr(TypeSafeModel, "load_model", lambda self: None)
+
+    def decide(self, state, questions):
+        self.calls.append((state, questions))
+        return answer_everything()(questions), 0.0
+
+    async def a_decide(self, state, questions):
+        return decide(self, state, questions)
+
+    monkeypatch.setattr(TypeSafeModel, "decide", decide)
+    monkeypatch.setattr(TypeSafeModel, "a_decide", a_decide)
+
+    def make(cls=TypeSafeModel, **overrides):
+        config = dict(
+            model="jev-latest",
+            api_key="test-key",
+            cost_per_input_token=0.1,
+            base_url="https://first.example",
+        )
+        config.update(overrides)
+        model = cls(**config)
+        model.calls = []
+        return model
+
+    return make
+
+
+@sync_and_async
+@pytest.mark.asyncio
+async def test_equivalent_typesafe_models_can_share_a_request(
+    is_async, typesafe_model_factory
+):
+    first, second = typesafe_model_factory(), typesafe_model_factory()
+
+    await run([relevancy(first), faithfulness(second)], make_case(), is_async)
+
+    assert len(first.calls) == 1
+    assert second.calls == []
+    assert {key.split(".")[0] for key in first.calls[0][1]} == {"m0", "m1"}
+
+
+@sync_and_async
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"api_key": "different-test-key"},
+        {"base_url": "https://second.example"},
+        {"cost_per_input_token": 0.2},
+        {"default_headers": {"X-Tenant": "second"}},
+    ],
+    ids=["credentials", "endpoint", "pricing", "client-options"],
+)
+@pytest.mark.asyncio
+async def test_typesafe_models_with_different_configurations_are_separate(
+    is_async, overrides, typesafe_model_factory
+):
+    first = typesafe_model_factory()
+    second = typesafe_model_factory(**overrides)
+
+    await run([relevancy(first), faithfulness(second)], make_case(), is_async)
+
+    assert len(first.calls) == 1
+    assert len(second.calls) == 1
+
+
+@sync_and_async
+@pytest.mark.asyncio
+async def test_typesafe_subclasses_with_same_config_are_separate(
+    is_async, typesafe_model_factory
+):
+    class CustomTypeSafeModel(TypeSafeModel):
+        pass
+
+    first = typesafe_model_factory(cls=CustomTypeSafeModel)
+    second = typesafe_model_factory(cls=CustomTypeSafeModel)
 
     await run([relevancy(first), faithfulness(second)], make_case(), is_async)
 
