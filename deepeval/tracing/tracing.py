@@ -127,6 +127,23 @@ class _ObservedAsyncGenIter:
             self._finish_err(e)
             raise
 
+    async def asend(self, value):
+        if not self._entered:
+            if value is not None:
+                # Let the generator reject an initial non-None value without
+                # starting a span; the caller can still retry with None.
+                return await self._agen_iter.asend(value)
+            self._observer.__enter__()
+            self._entered = True
+        try:
+            return await self._agen_iter.asend(value)
+        except StopAsyncIteration:
+            self._finish()
+            raise
+        except (Exception, asyncio.CancelledError) as e:
+            self._finish_err(e)
+            raise
+
     def _finish(self):
         if self._entered and not self._done:
             self._done = True
