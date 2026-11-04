@@ -32,7 +32,6 @@ from deepeval.metrics.goal_accuracy.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 GoalAccuracyTemplate = make_template_class("GoalAccuracyMetric")
 
 GOAL_ACCURACY_LEVELS = [
@@ -218,13 +217,17 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 else:
                     break
             new_goal_steps = GoalSteps(user_goal=user_messages, steps_taken=[])
-            assistant_messages = "Assistant messages: \n"
             for turn in unit_interaction[1:]:
                 if turn.role == "assistant":
-                    assistant_messages += f"{turn.content} \n"
+                    # Each step is one assistant turn (plus its tool calls).
+                    # Accumulating a running transcript here used to duplicate
+                    # every earlier message n times over in the joined judge
+                    # prompt (O(n^2) growth) and bias the goal/plan scores
+                    # with repeated evidence.
+                    step = f"Assistant messages: \n{turn.content} \n"
                     if turn.tools_called:
-                        assistant_messages += f"Tools called: \n{print_tools_called(turn.tools_called)} \n"
-                    new_goal_steps.steps_taken.append(assistant_messages)
+                        step += f"Tools called: \n{print_tools_called(turn.tools_called)} \n"
+                    new_goal_steps.steps_taken.append(step)
             goal_and_steps_taken.append(new_goal_steps)
         return goal_and_steps_taken
 
