@@ -35,6 +35,7 @@ def convert_turn_to_dict(
             MultiTurnParams.EXPECTED_OUTCOME,
             MultiTurnParams.METADATA,
             MultiTurnParams.TAGS,
+            MultiTurnParams.AUDIO,
         ):
             continue
 

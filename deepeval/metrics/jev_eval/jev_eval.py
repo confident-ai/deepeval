@@ -6,16 +6,21 @@ questions. DeepEval sends them to Jev in one ``decide()`` call, maps each
 answer onto ``[0, 1]`` and takes a weighted mean. No LLM is involved at any
 point: the reason is deterministic text built from Jev's answers and their
 confidence.
+
+Without ``evaluation_params`` the state is the agent's trace instead of test
+case fields, so the questions can ask about the whole trajectory.
 """
 
 import asyncio
 from typing import Any, Dict, List, Optional, Sequence, Union
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     accrue_token_usage,
     check_llm_test_case_params,
+    compact_trace,
     construct_verbose_logs,
     format_system_one_reason,
 )
@@ -56,13 +61,16 @@ class JevEval(BaseMetric):
         flaky: bool = False,
         _include_jev_eval_suffix: bool = True,
     ):
-        if not evaluation_params:
+        if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError(
-                "evaluation_params cannot be empty; list the test case fields "
-                "your questions refer to."
+                "evaluation_params cannot be an empty list; list the test case "
+                "fields your questions refer to, or omit it to evaluate the "
+                "trace."
             )
         self.name = name
-        self.evaluation_params = list(evaluation_params)
+        self.evaluation_params = (
+            list(evaluation_params) if evaluation_params is not None else None
+        )
         self.questions = validate_questions(questions)
         self.system_one_model = initialize_jev_model(system_one_model)
         self.include_reason = include_reason
@@ -80,6 +88,10 @@ class JevEval(BaseMetric):
     # Measure
     ###############################################
 
+    @property
+    def requires_trace(self) -> bool:
+        return not self.evaluation_params
+
     def _check_params(self, test_case: LLMTestCase) -> None:
         if test_case.multimodal:
             raise ValueError(
@@ -88,13 +100,27 @@ class JevEval(BaseMetric):
             )
         check_llm_test_case_params(
             test_case,
-            self.evaluation_params,
+            self.evaluation_params or [],
             None,
             None,
             self,
             None,
             False,
         )
+        if self.requires_trace and not isinstance(test_case._trace_dict, Dict):
+            error_str = (
+                f"The '{self.__name__}' metric has no evaluation_params, so it "
+                "evaluates the trace, but this test case has none. Run it on a "
+                "traced component (`@observe` or `evals_iterator`), or pass "
+                "evaluation_params to evaluate a plain LLMTestCase."
+            )
+            self.error = error_str
+            raise MissingTestCaseParamsError(error_str)
+
+    def _state(self, test_case: LLMTestCase) -> Dict[str, Any]:
+        if self.requires_trace:
+            return {"trace": compact_trace(test_case._trace_dict)}
+        return construct_single_turn_state(self.evaluation_params, test_case)
 
     def measure(
         self,
@@ -126,10 +152,7 @@ class JevEval(BaseMetric):
                     )
                 )
             else:
-                state = construct_single_turn_state(
-                    self.evaluation_params, test_case
-                )
-                outcomes = self._decide(state)
+                outcomes = self._decide(self._state(test_case))
                 self._finalize(outcomes)
             return self.score
 
@@ -148,10 +171,7 @@ class JevEval(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            state = construct_single_turn_state(
-                self.evaluation_params, test_case
-            )
-            outcomes = await self._a_decide(state)
+            outcomes = await self._a_decide(self._state(test_case))
             self._finalize(outcomes)
             return self.score
 

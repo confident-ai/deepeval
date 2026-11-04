@@ -1,3 +1,4 @@
+from deepeval.evaluate.expectations import with_expectation_evaluators
 import logging
 
 from rich.progress import (
@@ -209,6 +210,7 @@ def execute_agentic_test_cases_from_loop(
             # Format golden as test case to create llm api test case
             test_case = LLMTestCase(
                 input=golden.input,
+                expectations=golden.expectations,
                 actual_output=(
                     str(current_trace.output)
                     if current_trace.output is not None
@@ -222,9 +224,10 @@ def execute_agentic_test_cases_from_loop(
                 expected_tools=current_trace.expected_tools,
                 comments=golden.comments,
                 name=golden.name,
-                _dataset_alias=golden._dataset_alias,
-                _dataset_id=golden._dataset_id,
             )
+            test_case._dataset_alias = golden._dataset_alias
+            test_case._dataset_id = golden._dataset_id
+            test_case._dataset_version = golden._dataset_version
             api_test_case = create_api_test_case(
                 test_case=test_case,
                 trace=trace_api,
@@ -348,6 +351,10 @@ def execute_agentic_test_cases_from_loop(
             if trace_metrics:
                 current_trace.metrics = trace_metrics
 
+            current_trace.metrics = with_expectation_evaluators(
+                current_trace.metrics, [test_case]
+            )
+
             trace_level_metrics_count = (
                 len(current_trace.metrics) if current_trace.metrics else 0
             )
@@ -385,6 +392,7 @@ def execute_agentic_test_cases_from_loop(
                 # user never calls ``update_current_trace(input=...)``.
                 llm_test_case = LLMTestCase(
                     input=golden.input,
+                    expectations=golden.expectations,
                     actual_output=(
                         str(current_trace.output)
                         if current_trace.output is not None
@@ -459,7 +467,9 @@ def execute_agentic_test_cases_from_loop(
         # Post-iteration guard: refuse a run that ran with no metric source
         # at any level. Must happen AFTER the for-loop since span-level
         # @observe metrics only become visible after user code has run.
-        if not _has_any_evaluable_metrics(
+        if not any(
+            golden.expectations for golden in goldens
+        ) and not _has_any_evaluable_metrics(
             trace_metrics=trace_metrics,
             traces=processed_traces,
             test_case_metrics=trace_manager.eval_session.test_case_metrics,
@@ -853,7 +863,9 @@ def a_execute_agentic_test_cases_from_loop(
         # on @observe-decorated functions only become visible after user
         # code has actually run.
         session = trace_manager.eval_session
-        if not _has_any_evaluable_metrics(
+        if not any(
+            golden.expectations for golden in goldens
+        ) and not _has_any_evaluable_metrics(
             trace_metrics=trace_metrics,
             traces=session.traces_to_evaluate,
             test_case_metrics=session.test_case_metrics,

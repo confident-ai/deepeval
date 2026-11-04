@@ -1,3 +1,8 @@
+import {
+  buildExpectationsData,
+  withExpectations,
+  validateExpectationCoverage,
+} from "@/evaluate/expectations";
 import { MultiBar, type SingleBar, Presets } from "cli-progress";
 import {
   BaseMetric,
@@ -85,7 +90,7 @@ export function metricMatchesCase(
  */
 export async function evaluate(
   testCases: AnyTestCase[],
-  metrics: AnyMetric[],
+  metrics: AnyMetric[] = [],
   options: EvaluateOptions = {},
 ): Promise<EvaluationResult> {
   return captureEvaluationRun(Entrypoint.EVALUATE, () =>
@@ -98,7 +103,9 @@ async function runEvaluation(
   metrics: AnyMetric[],
   options: EvaluateOptions,
 ): Promise<EvaluationResult> {
-  checkAtLeastOneMetricHasThreshold(metrics);
+  if (!metrics.length) validateExpectationCoverage(testCases);
+  if (!testCases.some((c) => c.expectations?.hasConditions))
+    checkAtLeastOneMetricHasThreshold(metrics);
 
   const display: Required<DisplayConfig> = {
     ...DEFAULT_DISPLAY_CONFIG,
@@ -122,7 +129,10 @@ async function runEvaluation(
   const work = testCases.map((testCase, index) => ({
     index,
     testCase,
-    metrics: metrics.filter((m) => metricMatchesCase(m, testCase)),
+    metrics: withExpectations(
+      metrics.filter((m) => metricMatchesCase(m, testCase)),
+      testCase,
+    ),
   }));
   const total = work.reduce((sum, w) => sum + w.metrics.length, 0);
 
@@ -252,6 +262,7 @@ async function runEvaluation(
       .reduce((sum, m) => sum + (m.evaluationCost ?? 0), 0);
     const passed = testResults.filter((t) => t.success).length;
     printCompletionSummary({
+      showLoginPrompt: !testCases.some((c) => c.expectations != null),
       runDuration,
       tokenCost,
       passed,
@@ -366,7 +377,7 @@ export function resolveCacheConfig(): Required<CacheConfig> {
 }
 
 function buildMetricData(metric: BaseMetricCore): MetricData {
-  return {
+  const metricData: MetricData = {
     name: metric.name,
     threshold: metric.threshold,
     // Score-only leaves `success` undefined; that absence is the verdict.
@@ -381,6 +392,8 @@ function buildMetricData(metric: BaseMetricCore): MetricData {
     error: metric.error,
     skipped: metric.skipped,
   };
+  const expectationsData = buildExpectationsData(metric, metricData);
+  return expectationsData ? { ...metricData, expectationsData } : metricData;
 }
 
 export function buildTestResult(
@@ -392,6 +405,7 @@ export function buildTestResult(
 
   if (testCase instanceof ConversationalTestCase) {
     return {
+      expectations: testCase.expectations,
       name: testCase.name ?? `test_case_${index}`,
       success,
       metricsData,
@@ -402,6 +416,7 @@ export function buildTestResult(
   }
 
   return {
+    expectations: testCase.expectations,
     name: testCase.name ?? `test_case_${index}`,
     success,
     metricsData,

@@ -140,7 +140,7 @@ async def retrieve_context(user_message: str) -> list:
 
 In production, you will accumulate thousands of conversational threads. To efficiently identify failing sessions or compare specific cohorts of users, you should attach `tags` and `metadata` to each trace.
 
-`tags` appear as filterable labels in Confident AI's Thread Explorer. `metadata` is a free-form dictionary useful for versioning, A/B test flags, or any dimension you want to slice by later.
+`tags` become filterable labels on threads in Confident AI. `metadata` is a free-form dictionary useful for versioning, A/B test flags, or any dimension you want to slice by later.
 
 ```python title="chatbot.py"
 @observe
@@ -159,7 +159,7 @@ async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
 ```
 
 :::tip
-Use `tags` for broad categorization (product area, agent type) and `metadata` for precise, queryable values (model version, A/B variant, session tier). Both are available in raw trace dictionaries locally and are searchable in Confident AI's Thread Explorer in production.
+Use `tags` for broad categorization (product area, agent type) and `metadata` for precise, queryable values (model version, A/B variant, session tier). Both are available in raw trace dictionaries locally, and in production they let you narrow failing threads down to a cohort.
 :::
 
 ## Framework Integrations
@@ -311,11 +311,11 @@ asyncio.run(run("What's my name?"))
 The integrations shown here focus on thread stitching. For full options — including attaching multi-turn metric collections, adding tags and metadata, and monitoring threads in Confident AI — see the dedicated integration docs for [LangGraph](/integrations/langgraph), [Pydantic AI](/integrations/pydanticai), [CrewAI](/integrations/crewai), and [LlamaIndex](/integrations/llamaindex).
 :::
 
-## Multi-Turn Observability In Production
+## Catching Failing Threads In Production
 
-In production, running multi-turn LLM judges locally will block your application's response stream and degrade the user experience. You must offload conversational evaluation to an asynchronous system.
+In production, running multi-turn LLM judges locally will block your application's response stream and degrade the user experience, so conversational evaluation has to run asynchronously. More importantly, real users will hold conversations your simulated scenarios never covered, and those failing threads are what your next eval should be built from.
 
-Confident AI natively handles multi-turn observability through its Thread Explorer, allowing you to reconstruct, visualize, and evaluate entire conversational sessions without adding latency to your live application.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and turns them into `ConversationalGolden`s for your next simulation run. The steps below also set up evals that run on every thread and flag the failing ones, without adding latency to your live application.
 
 <Steps>
 <Step>
@@ -328,7 +328,7 @@ Log in to Confident AI and create a metric collection containing your desired mu
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Create a multi-turn metric collection on Confident AI"
-  description="Group conversational metrics to run on your production threads."
+  description="Choose the conversational metrics that run on every production thread."
 />
 
 </Step>
@@ -348,20 +348,20 @@ async def handle_turn(user_message: str, thread_id: str) -> str:
     # ... rest of logic
 ```
 
-When the trace is sent to Confident AI, the platform automatically identifies the `thread_id` and evaluates the entire thread against your specified metrics.
+Because every turn carries the same `thread_id`, the evaluation always sees the whole conversation up to that point rather than the latest turn alone.
 
 </Step>
 <Step>
-### Monitor conversational drift
+### Turn failing threads into goldens
 
 
-Use the Thread Explorer on Confident AI to review the aggregated multi-turn scores. You can replay entire user sessions turn-by-turn to pinpoint exactly where the model drifted off-topic or forgot user constraints.
+Replay a failing thread turn-by-turn to pinpoint exactly where the model drifted off-topic or forgot user constraints. Then turn it into a `ConversationalGolden` so the next simulation run tests the conversation that broke.
 
 <VideoDisplayer
   src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Track and replay conversational threads on Confident AI"
-  description="Inspect every turn of a conversation exactly as your users saw it."
+  label="Failing threads on Confident AI"
+  description="Replay every turn of a failing conversation exactly as your users saw it."
 />
 
 </Step>
@@ -394,8 +394,8 @@ In this guide, you learned how to stitch individual traces together to monitor t
 
 :::info[Development vs Production]
 
-- **Development** — Focus on ensuring your application properly propagates the `thread_id` and custom context across turns. Verify that traces are grouping correctly in the dashboard.
-- **Production** — Export threads to Confident AI and rely on asynchronous `metric_collection`s to continuously evaluate conversational quality without blocking your application.
+- **Development** — Focus on ensuring your application properly propagates the `thread_id` and custom context across turns. Verify that traces are grouping correctly in the raw trace dictionaries.
+- **Production** — Export threads to Confident AI, catch the failing conversations, and turn them into goldens for your next simulation run. Asynchronous `metric_collection`s evaluate every thread without blocking your application.
 
 :::
 
@@ -424,9 +424,13 @@ In this guide, you learned how to stitch individual traces together to monitor t
       answer: (
         <>
           Tag each per-turn trace with the same <code>thread_id</code> using{" "}
-          <code>update_current_trace(thread_id=...)</code>. DeepEval and{" "}
-          <a href="https://confident-ai.com">Confident AI</a> use this ID to
-          reconstruct the full conversation from isolated traces.
+          <code>update_current_trace(thread_id=...)</code>. DeepEval uses this
+          ID to reconstruct the full conversation from isolated traces, and so
+          does{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          once traces are exported.
         </>
       ),
     },
@@ -450,8 +454,7 @@ In this guide, you learned how to stitch individual traces together to monitor t
       answer: (
         <>
           Call <code>evaluate_thread(thread_id=..., metric_collection=...)</code>{" "}
-          after the conversation ends.{" "}
-          <a href="https://confident-ai.com">Confident AI</a> reconstructs the
+          after the conversation ends. Confident AI reconstructs the
           full thread from all traces sharing that ID and runs the metric
           collection asynchronously—useful for support or sales workflows that
           have a clear end state.
@@ -463,10 +466,13 @@ In this guide, you learned how to stitch individual traces together to monitor t
       answer: (
         <>
           Yes. Attach a multi-turn <code>metric_collection</code> via{" "}
-          <code>update_current_trace</code> and{" "}
-          <a href="https://confident-ai.com">Confident AI</a> evaluates every
-          thread asynchronously. Use the Thread Explorer to replay sessions
-          turn-by-turn and pinpoint where drift or memory failures occurred.
+          <code>update_current_trace</code> and every thread is evaluated
+          asynchronously on{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>
+          . Replay the failing ones turn-by-turn to pinpoint where drift or
+          memory failures occurred, then turn them into goldens.
         </>
       ),
     },

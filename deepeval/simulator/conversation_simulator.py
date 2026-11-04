@@ -21,6 +21,7 @@ import time
 import uuid
 import warnings
 
+from deepeval.errors import DeepEvalError
 from deepeval.utils import (
     get_or_create_event_loop,
     update_pbar,
@@ -71,6 +72,7 @@ _MISSING = object()
 # Length of the silent uplink used to hear the agent out without speaking.
 _SILENCE_PROBE_SECONDS = 1.0
 _GREETING_TIMEOUT_S = 15.0
+_AGENT_BACKLOG_MIN_SPEECH_S = 0.3
 
 
 @dataclass
@@ -283,6 +285,7 @@ class ConversationSimulator:
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
         )
+        self.max_concurrent = max_concurrent
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
         self.language = language
@@ -325,6 +328,27 @@ class ConversationSimulator:
         if self._voice is None or callable(self._voice.config.connector):
             return None
         return self._voice.config.connector
+
+    def _check_parallel_calls(self, num_goldens: int) -> None:
+        from deepeval.voice.connectors.transports.base import (
+            BaseVoiceConnector,
+        )
+
+        if self._voice is None:
+            return
+        connector = self._voice.config.connector
+        if not isinstance(connector, BaseVoiceConnector):
+            return
+        if connector.supports_parallel_calls:
+            return
+        parallel_calls = min(self.max_concurrent, num_goldens)
+        if parallel_calls > 1:
+            raise DeepEvalError(
+                f"{type(connector).__name__} is tied to one room, so "
+                f"{parallel_calls} parallel calls would all join it. Pass a "
+                "function that builds a new connector to "
+                "`VoiceConfig(connector=...)`, or set `max_concurrent=1`."
+            )
 
     def simulate(
         self,
@@ -432,6 +456,7 @@ class ConversationSimulator:
                         f"The evaluation model {self.simulator_model.name} does not support multimodal inputs, please use one of the following evaluation models: {', '.join([cls.__name__ for cls in MULTIMODAL_SUPPORTED_MODELS])}"
                     )
 
+        self._check_parallel_calls(len(conversational_goldens))
         self.simulation_cost = 0 if self.using_native_model else None
 
         async def simulate_conversations(
@@ -575,6 +600,7 @@ class ConversationSimulator:
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
+            expectations=golden.expectations,
             user_description=golden.user_description,
             context=golden.context,
             name=golden.name,
@@ -583,10 +609,11 @@ class ConversationSimulator:
                 **additional_metadata,
             },
             comments=golden.comments,
-            _dataset_rank=golden._dataset_rank,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        conversational_test_case._dataset_rank = golden._dataset_rank
+        conversational_test_case._dataset_alias = golden._dataset_alias
+        conversational_test_case._dataset_id = golden._dataset_id
+        conversational_test_case._dataset_version = golden._dataset_version
         if on_simulation_complete:
             on_simulation_complete(conversational_test_case, index)
         return conversational_test_case
@@ -660,6 +687,13 @@ class ConversationSimulator:
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
 
+            def _call_ended() -> bool:
+                if not (voice_mode and session.connector.call_ended):
+                    return False
+                logger.info("The agent ended the call")
+                additional_metadata["Stop reason"] = "The agent ended the call"
+                return True
+
             if voice_mode and persona is not None and not persona.speaks_first:
                 logger.debug("Persona waits to speak; listening for greeting")
                 if session.is_duplex:
@@ -678,6 +712,10 @@ class ConversationSimulator:
                 )
                 if simulation_counter >= max_user_simulations:
                     logger.debug("Maximum user simulations reached")
+                    update_pbar(progress, pbar_max_user_simluations_id)
+                    break
+
+                if _call_ended():
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
 
@@ -816,6 +854,9 @@ class ConversationSimulator:
 
                 await _dispatch_on_turn(on_turn, turns, index)
 
+                if _call_ended():
+                    break
+
                 exchange_seconds = time.perf_counter() - assistant_started
                 logger.debug(
                     "Assistant voice exchange finished after %.2fs: transcript=%r latency_ms=%s",
@@ -866,6 +907,7 @@ class ConversationSimulator:
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
+            expectations=golden.expectations,
             user_description=golden.user_description,
             context=golden.context,
             name=golden.name,
@@ -874,10 +916,11 @@ class ConversationSimulator:
                 **additional_metadata,
             },
             comments=golden.comments,
-            _dataset_rank=golden._dataset_rank,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        conversational_test_case._dataset_rank = golden._dataset_rank
+        conversational_test_case._dataset_alias = golden._dataset_alias
+        conversational_test_case._dataset_id = golden._dataset_id
+        conversational_test_case._dataset_version = golden._dataset_version
         conversational_test_case.call_recording_path = call_recording_path
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
@@ -1339,6 +1382,7 @@ class ConversationSimulator:
             content=agent_text,
             audio=conn_turn.audio if replied else None,
             latency_ms=conn_turn.latency_ms if replied else None,
+            provider_transcript=conn_turn.provider_transcript,
         )
 
     async def _voice_duplex_exchange(
@@ -1354,6 +1398,7 @@ class ConversationSimulator:
         Returns the last assistant turn for simulation-graph routing.
         """
         call_started_at = session.started_at or time.perf_counter()
+        await self._take_agent_backlog(session, turns, call_started_at)
         user_audio, uplink_started_at = await self._send_user_utterance(
             session, input, golden.persona, trailing_silence=True
         )
@@ -1369,12 +1414,62 @@ class ConversationSimulator:
         assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:
             return assistant_turn
+        if session.connector.call_ended:
+            return Turn(role="assistant", content="")
         logger.warning(
             "Duplex exchange produced no assistant turn; inserting empty reply."
         )
         empty = Turn(role="assistant", content="")
         turns.append(empty)
         return empty
+
+    async def _take_agent_backlog(
+        self,
+        session: _VoiceSession,
+        turns: List[Turn],
+        call_started_at: float,
+    ) -> None:
+        from deepeval.voice.connectors import audio_utils
+        from deepeval.voice.duplex import _pcm_to_audio
+
+        connector = session.connector
+        pcm = bytearray()
+        speech_len = 0
+        voiced_bytes = 0
+        voiced_at: Optional[float] = None
+        for event in connector.take_pending_agent_events():
+            if not event.audio:
+                continue
+            silent = audio_utils.is_silent(
+                event.audio, connector.silence_threshold_rms
+            )
+            if voiced_at is None:
+                if silent:
+                    continue
+                voiced_at = event.received_at or time.perf_counter()
+            pcm.extend(event.audio)
+            if not silent:
+                speech_len = len(pcm)
+                voiced_bytes += len(event.audio)
+        rate = connector.recv_sample_rate
+        if voiced_at is None or voiced_bytes / 2 / rate < (
+            _AGENT_BACKLOG_MIN_SPEECH_S
+        ):
+            return
+        audio = _pcm_to_audio(bytes(pcm[:speech_len]), rate)
+        audio.start_time = max(0.0, voiced_at - call_started_at)
+        voice = self._voice
+        text, stt_cost = await voice.stt_model.a_transcribe(
+            audio, **self._stt_kwargs(session)
+        )
+        if stt_cost is not None:
+            voice.stt_cost += stt_cost
+        index = len(turns)
+        if turns and turns[-1].role == "user":
+            index -= 1
+        turns.insert(
+            index, Turn(role="assistant", content=text or "", audio=audio)
+        )
 
     async def _run_duplex(
         self,

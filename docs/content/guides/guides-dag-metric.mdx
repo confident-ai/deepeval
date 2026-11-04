@@ -5,8 +5,6 @@ sidebar_label: Building a DAG Metric
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 A single LLM judge is convenient, but it can be unpredictable when your rubric contains several conditional rules. A **DAG metric** makes those rules explicit: each node performs one small task or decision, and each path ends at a score you chose. You build the graph top-down, so its code follows the same order as its evaluation flow.
 
 This guide walks through building both kinds of DAG metrics:
@@ -123,7 +121,7 @@ The team aligned on next steps: engineering finalizing fixes, marketing preparin
 
 Start by sketching a directed, acyclic decision graph for your rubric:
 
-<ImageDisplayer src={ASSETS.dagSummarization} alt="DAG Summarization" />
+<ImageDisplayer id="diagrams/in-house/metrics/dag-decision-tree-summary-headings" />
 
 The `actual_output` is first processed to extract its headings. The graph then checks whether every required heading is present. A missing heading ends the path with a score of 0; otherwise, evaluation continues to classify how accurately the headings are ordered.
 
@@ -270,7 +268,7 @@ Just by eyeballing the conversation, we can tell that the user's request was sat
 
 Here's the decision tree we are going to build:
 
-<ImageDisplayer src={ASSETS.dagConversational} alt="DAG Image for Multi-Turn" />
+<ImageDisplayer id="diagrams/in-house/metrics/conversational-dag" />
 
 ### Construct the graph
 

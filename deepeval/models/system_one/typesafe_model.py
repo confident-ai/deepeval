@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Any, Dict, Optional, Tuple
 
 from pydantic import SecretStr
@@ -14,7 +15,11 @@ from deepeval.models.system_one.constants import (
     DEFAULT_TYPESAFE_MODEL,
     TYPESAFE_MODELS_DATA,
 )
-from deepeval.models.system_one.limits import check_context_budget
+from deepeval.models.system_one.limits import (
+    SystemOneContextLimitError,
+    check_context_budget,
+    estimate_tokens,
+)
 from deepeval.models.system_one.schema import (
     ChoiceAnswer,
     ChoiceQuestion,
@@ -29,6 +34,26 @@ from deepeval.models.utils import EvaluationCost, require_secret_api_key
 from deepeval.utils import require_dependency
 
 retry_typesafe = create_retry_decorator(PS.TYPESAFE)
+
+
+@contextmanager
+def _jev_max_tokens_as_context_limit(state: Any):
+    try:
+        yield
+    except Exception as error:
+        body = getattr(error, "body", None)
+        detail = body.get("detail") if isinstance(body, dict) else None
+        if (
+            isinstance(detail, dict)
+            and detail.get("error_type") == "max_tokens_exceeded"
+        ):
+            raise SystemOneContextLimitError(
+                "Jev rejected the request as too large for its context "
+                "window. Send less state or use an LLM instead.",
+                estimated_tokens=estimate_tokens(state),
+                limit_tokens=None,
+            ) from error
+        raise
 
 
 class TypeSafeModel(DeepEvalBaseSystemOneModel):
@@ -78,7 +103,8 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
         sdk_questions = self._to_sdk_questions(questions)
         check_context_budget(state, sdk_questions)
         client = self.load_model()
-        response = client.system_one(state, sdk_questions, model=self.name)
+        with _jev_max_tokens_as_context_limit(state):
+            response = client.system_one(state, sdk_questions, model=self.name)
         return self._from_sdk_response(response)
 
     @retry_typesafe
@@ -90,9 +116,10 @@ class TypeSafeModel(DeepEvalBaseSystemOneModel):
         sdk_questions = self._to_sdk_questions(questions)
         check_context_budget(state, sdk_questions)
         client = self.load_model(async_mode=True)
-        response = await client.system_one(
-            state, sdk_questions, model=self.name
-        )
+        with _jev_max_tokens_as_context_limit(state):
+            response = await client.system_one(
+                state, sdk_questions, model=self.name
+            )
         return self._from_sdk_response(response)
 
     ###############################################

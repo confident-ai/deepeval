@@ -175,10 +175,6 @@ console.log(metric.winner, metric.reason);
 
 </Switch>
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, computation) the `compare()` function offers.
-:::
-
 ## How Is It Calculated?
 
 The `ArenaGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ArenaGEval` metric is a two-step algorithm that first generates a series of <Term py="evaluation_steps" ts="evaluationSteps"/> using chain of thoughts (CoTs) based on the given `criteria`, before using the generated <Term py="evaluation_steps" ts="evaluationSteps"/> to determine the winner based on the <Term py="evaluation_params" ts="evaluationParams"/> presented in each `LLMTestCase`.

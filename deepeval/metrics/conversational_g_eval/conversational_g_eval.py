@@ -1,13 +1,12 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, List, Tuple, Union, Dict, Type
+from typing import Optional, List, Tuple, Union, Type
 from rich.console import Console
-import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
     Rubric,
+    calculate_weighted_summed_score,
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
@@ -19,6 +18,7 @@ from deepeval.metrics.g_eval.utils import (
     ensure_required_params,
 )
 from deepeval.test_case import (
+    Audio,
     MultiTurnParams,
     ConversationalTestCase,
 )
@@ -62,6 +62,7 @@ class ConversationalGEval(BaseConversationalMetric):
         evaluation_template: Type[
             ConversationalGEvalTemplate
         ] = ConversationalGEvalTemplate,
+        _audio_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
             raise ValueError("evaluation_params cannot be an empty list.")
@@ -86,6 +87,28 @@ class ConversationalGEval(BaseConversationalMetric):
             if evaluation_steps and len(evaluation_steps) > 0
             else None
         )
+        if (
+            self.evaluation_steps is None
+            and isinstance(self.model, DeepEvalBaseLLM)
+            and self.model.requires_audio()
+        ):
+            raise ValueError(
+                f"{self.evaluation_model} can't turn `criteria` into "
+                "evaluation steps: it only accepts requests that include "
+                "audio, generating the steps from `criteria` is a text-only request. "
+                "Pass `evaluation_steps` instead of `criteria`, or use a "
+                "model that also accepts text-only requests."
+            )
+        if _audio_model is None:
+            self._audio_model = self.model
+            self._using_native_audio_model = self.using_native_model
+        else:
+            self._audio_model, self._using_native_audio_model = (
+                initialize_model(_audio_model)
+            )
+            self.evaluation_model += (
+                f" (audio: {self._audio_model.get_model_name()})"
+            )
         self.threshold = 1 if strict_mode else threshold
         self.top_logprobs = top_logprobs
         self.strict_mode = strict_mode
@@ -110,13 +133,14 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params,
             self,
             False,
-            self.model,
+            self._scoring_model,
             multimodal,
+            audio=self._sends_audio,
         )
 
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        self.evaluation_cost = 0 if self._native_models else None
+        self.input_tokens = 0 if self._native_models else None
+        self.output_tokens = 0 if self._native_models else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -169,13 +193,14 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params,
             self,
             False,
-            self.model,
+            self._scoring_model,
             multimodal,
+            audio=self._sends_audio,
         )
 
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        self.evaluation_cost = 0 if self._native_models else None
+        self.input_tokens = 0 if self._native_models else None
+        self.output_tokens = 0 if self._native_models else None
         with metric_progress_indicator(
             self,
             async_mode=True,
@@ -246,9 +271,23 @@ class ConversationalGEval(BaseConversationalMetric):
             extract_json=lambda data: data["steps"],
         )
 
-    async def _a_evaluate(
+    @property
+    def _sends_audio(self) -> bool:
+        return MultiTurnParams.AUDIO in (self.evaluation_params or [])
+
+    @property
+    def _scoring_model(self) -> DeepEvalBaseLLM:
+        return self._audio_model if self._sends_audio else self.model
+
+    @property
+    def _native_models(self) -> bool:
+        return self.using_native_model and (
+            not self._sends_audio or self._using_native_audio_model
+        )
+
+    def _evaluation_prompt(
         self, test_case: ConversationalTestCase
-    ) -> Tuple[Union[int, float], str]:
+    ) -> Tuple[str, List[Audio]]:
         test_case_content = construct_non_turns_test_case_string(
             self.evaluation_params, test_case
         )
@@ -256,10 +295,17 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_params
         )
         rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        turns = [
-            convert_turn_to_dict(turn, self.evaluation_params)
-            for turn in test_case.turns
-        ]
+        turns, audio = [], []
+        for turn in test_case.turns:
+            turn_dict = convert_turn_to_dict(turn, self.evaluation_params)
+            if self._sends_audio and turn.audio is not None:
+                # Clips go after the prompt in turn order; the label tells the
+                # judge which clip is this turn's audio.
+                audio.append(turn.audio)
+                turn_dict["audio"] = (
+                    f"audio clip {len(audio)} (attached after this prompt)"
+                )
+            turns.append(turn_dict)
         prompt = self._get_prompt(
             "generate_evaluation_results",
             evaluation_steps=self.number_evaluation_steps(),
@@ -268,87 +314,37 @@ class ConversationalGEval(BaseConversationalMetric):
             parameters=g_eval_params_str,
             rubric=rubric_str,
         )
+        return prompt, audio
+
+    async def _a_evaluate(
+        self, test_case: ConversationalTestCase
+    ) -> Tuple[Union[int, float], str]:
+        prompt, audio = self._evaluation_prompt(test_case)
         return await a_generate_rubric_score(
             metric=self,
             prompt=prompt,
             schema_cls=cgschema.ReasonScore,
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
-            weighted_score_fn=self.generate_weighted_summed_score,
+            weighted_score_fn=calculate_weighted_summed_score,
+            audio=audio,
+            model=self._scoring_model,
         )
 
     def evaluate(
         self, test_case: ConversationalTestCase
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_non_turns_test_case_string(
-            self.evaluation_params, test_case
-        )
-        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
-            self.evaluation_params
-        )
-        rubric_str = format_rubrics(self.rubric) if self.rubric else None
-        turns = [
-            convert_turn_to_dict(turn, self.evaluation_params)
-            for turn in test_case.turns
-        ]
-        prompt = self._get_prompt(
-            "generate_evaluation_results",
-            evaluation_steps=self.number_evaluation_steps(),
-            test_case_content=test_case_content,
-            turns=turns,
-            parameters=g_eval_params_str,
-            rubric=rubric_str,
-        )
+        prompt, audio = self._evaluation_prompt(test_case)
         return generate_rubric_score(
             metric=self,
             prompt=prompt,
             schema_cls=cgschema.ReasonScore,
             strict_mode=self.strict_mode,
             top_logprobs=self.top_logprobs,
-            weighted_score_fn=self.generate_weighted_summed_score,
+            weighted_score_fn=calculate_weighted_summed_score,
+            audio=audio,
+            model=self._scoring_model,
         )
-
-    def generate_weighted_summed_score(
-        self, raw_score: int, raw_response: ChatCompletion
-    ) -> Union[int, float]:
-        generated_logprobs = raw_response.choices[0].logprobs.content
-        # First, locate the token that we care for logprobs, i.e., the token matching the score
-        score_logprobs = None
-        for token_logprobs in generated_logprobs:
-            if token_logprobs.token == str(raw_score):
-                score_logprobs = token_logprobs
-                break
-        # Then, calculate the score based on the logprobs
-        token_linear_probability: Dict[int, float] = {}
-        sum_linear_probability = 0
-        # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
-        min_logprob = math.log(0.01)
-        for token_logprob in score_logprobs.top_logprobs:
-            logprob = token_logprob.logprob
-
-            # Filter out low probability tokens
-            if logprob < min_logprob:
-                continue
-            # Filter out non-decimal token to prevent errors in later int(token) conversion
-            if not token_logprob.token.isdecimal():
-                continue
-
-            # Calculate the linear probability
-            linear_prob = math.exp(logprob)
-            token_score = int(token_logprob.token)
-            if token_linear_probability.get(token_score):
-                token_linear_probability[token_score] += linear_prob
-            else:
-                token_linear_probability[token_score] = linear_prob
-            sum_linear_probability += linear_prob
-
-        sum_of_weighted_scores = 0.0
-        for score, prob in token_linear_probability.items():
-            sum_of_weighted_scores += score * prob
-
-        # Scale the sum of linear probability to 1
-        weighted_summed_score = sum_of_weighted_scores / sum_linear_probability
-        return weighted_summed_score
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""

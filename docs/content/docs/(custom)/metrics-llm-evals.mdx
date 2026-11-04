@@ -5,8 +5,6 @@ sidebar_label: G-Eval
 languages: [python, typescript]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 <MetricTagsDisplayer singleTurn={true} multiTurn={true} custom={true} />
 
 G-Eval is a framework that uses LLM-as-a-judge with chain-of-thoughts (CoT) to evaluate LLM outputs based on **ANY** custom criteria. The G-Eval metric is the most versatile type of metric `deepeval` has to offer, and is capable of evaluating almost any use case with human-like accuracy.
@@ -141,7 +139,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). Include only the parameters that are relevant for evaluation.
+- <Term py="evaluation_params" ts="evaluationParams"/>: a list of type `SingleTurnParams` (or `MultiTurnParams` for multi-turn). Include only the parameters that are relevant for evaluation. For single-turn G-Eval, omit it to [evaluate the trajectory](#evaluating-the-trajectory) instead.
 - [Optional] <Term py="evaluation_steps" ts="evaluationSteps"/>: a list of strings outlining the exact steps the LLM should take for evaluation. If <Term py="evaluation_steps" ts="evaluationSteps"/> is not provided, G-Eval will generate a series of <Term py="evaluation_steps" ts="evaluationSteps"/> on your behalf based on the provided `criteria`.
 - [Optional] `rubric`: a list of `Rubric`s that allows you to [confine the range](/docs/metrics-llm-evals#rubric) of the final metric score.
 - [Optional] `threshold`: the passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
@@ -278,7 +276,7 @@ This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-ev
 <Only id="python">
 
 :::tip
-You can upload your G-Eval metrics to [Confident AI](https://app.confident-ai.com/) and use them as custom evaluation metrics. To upload a metric simply call the `upload` method of a metric instance:
+You can upload a G-Eval metric to Confident AI as a custom metric by calling the `upload` method of a metric instance:
 
 ```python
 ...
@@ -559,6 +557,83 @@ for await (const golden of dataset.evalsIterator()) {
 
 </Switch>
 
+### Evaluating the trajectory
+
+When you leave out <Term py="evaluation_params" ts="evaluationParams"/>, single-turn `GEval` judges the whole trace, not individual test case fields. That covers every agent, LLM, tool, and retriever span with its inputs and outputs. Use it for criteria about _how_ your app reached its answer, such as tool choice, the arguments passed, or whether retrieved results were used correctly.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import observe
+from deepeval.metrics import GEval
+
+trajectory = GEval(
+    name="Tool Use",
+    criteria="Did the agent call the right tool with the right arguments, and does its final answer match what the tool returned?",
+)
+
+@observe(type="tool")
+def order_lookup(order_id: str):
+    return {"status": "in_transit"}
+
+@observe(type="agent")
+def support_agent(input: str):
+    return f"Your order is {order_lookup('1234')['status']}."
+
+dataset = EvaluationDataset(goldens=[Golden(input="Where is my order #1234?")])
+for golden in dataset.evals_iterator(metrics=[trajectory]):
+    support_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { observe } from "deepeval/tracing";
+import { GEval } from "deepeval/metrics";
+
+const trajectory = new GEval({
+  name: "Tool Use",
+  criteria:
+    "Did the agent call the right tool with the right arguments, and does its final answer match what the tool returned?",
+});
+
+const orderLookup = observe({
+  type: "tool",
+  fn: async (orderId: string) => ({ status: "in_transit" }),
+});
+
+const supportAgent = observe({
+  type: "agent",
+  fn: async (input: string) => {
+    const { status } = await orderLookup("1234");
+    return `Your order is ${status}.`;
+  },
+});
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Where is my order #1234?" })],
+});
+for await (const golden of dataset.evalsIterator({ metrics: [trajectory] })) {
+  await supportAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+Passed to <Term py="evals_iterator" ts="evalsIterator"/>, the metric judges the full trace. Attached to a component's `metrics` [within components](#within-components), it judges only that span and its children.
+
+:::note
+Trajectory mode needs a trace. Running it on a plain `LLMTestCase`, through `evaluate()` or `measure()`, raises a `MissingTestCaseParamsError`. The same applies to a `GEval` inside a `DAGMetric`, where no trace is passed down. A trajectory-mode `GEval` also can't be uploaded to Confident AI yet.
+:::
+
 ### As a standalone
 
 You can also run G-Eval on a single test case as a standalone, one-off execution.
@@ -624,17 +699,13 @@ console.log(professionalismMetric.score, professionalismMetric.reason);
 </Tab>
 </Tabs>
 
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
-
 ## What is G-Eval?
 
 G-Eval is a framework originally from the [paper](https://arxiv.org/abs/2303.16634) "NLG Evaluation using GPT-4 with Better Human Alignment" that uses LLMs to evaluate LLM outputs (aka. LLM-Evals), and is one the best ways to create task-specific metrics.
 
 The G-Eval algorithm first generates a series of evaluation steps for chain of thoughts (CoTs) prompting before using the generated steps to determine the final score via a "form-filling paradigm" (which is just a fancy way of saying G-Eval requires different test case parameters for evaluation depending on the generated steps).
 
-<ImageDisplayer src={ASSETS.gEvalAlgorithm} alt="G-Eval Algorithm" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-algorithm" />
 
 After generating a series of evaluation steps, G-Eval will:
 
@@ -643,12 +714,12 @@ After generating a series of evaluation steps, G-Eval will:
 3. Take the probabilities of the output tokens from the LLM to normalize the score and take their weighted summation as the final result.
 
 :::info
-We highly recommend everyone to read [this article](https://confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) on LLM evaluation metrics. It's written by the founder of `deepeval` and explains the rationale and algorithms behind the `deepeval` metrics, including G-Eval.
+For more on how LLM judges like G-Eval score outputs, and how to keep them reliable, read the post on [LLM-as-a-judge techniques](/blog/llm-as-a-judge). For worked criteria, see the [G-Eval examples guide](/guides/guides-g-eval-examples).
 :::
 
 Here are the results from the paper, which shows how G-Eval outperforms all traditional, non-LLM evals that were mentioned earlier in this article:
 
-<ImageDisplayer src={ASSETS.gEvalResults} alt="G-Eval Results" />
+<ImageDisplayer id="diagrams/external/reference/g-eval-summeval-correlations" />
 
 :::note
 Although G-Eval is great it many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric`](/docs/metrics-dag) instead.

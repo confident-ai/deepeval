@@ -398,26 +398,14 @@ with trace(
       ),
     },
     {
-      question: "Where can my team review these results outside the terminal?",
-      answer: (
-        <>
-          After <code>deepeval login</code>,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> shows every
-          Claude trace and metric score in a shared cloud UI for collaborative
-          review. It's optional — local runs behave the same without it.
-        </>
-      ),
-    },
-    {
       question: "Does this only work offline, or can I monitor Claude in production?",
       answer: (
         <>
-          Both. Beyond offline datasets, a logged-in client streams production
-          traces to Confident AI where you can run{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          continuously on live traffic.
+          Both. Keep the instrumented Anthropic client in your production
+          service and{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> picks out the Claude traces that
+          fail, groups them into failure modes, and routes them to the right
+          annotators so they become goldens for your next offline eval.
         </>
       ),
     },

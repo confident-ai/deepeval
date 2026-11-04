@@ -228,6 +228,7 @@ class NonAdviceMetric(BaseMetric):
             "generate_verdicts",
             multimodal=multimodal,
             advices=self.advices,
+            advice_types_str=", ".join(self.advice_types),
         )
         return await a_generate_qag_verdicts(
             metric=self,
@@ -246,6 +247,7 @@ class NonAdviceMetric(BaseMetric):
             "generate_verdicts",
             multimodal=multimodal,
             advices=self.advices,
+            advice_types_str=", ".join(self.advice_types),
         )
         return generate_qag_verdicts(
             metric=self,

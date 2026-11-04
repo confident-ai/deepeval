@@ -133,9 +133,18 @@ def test_pipeline_text_is_not_mistaken_for_the_agents_reply():
     """A `transcription` frame is the pipeline's STT of deepeval's own audio."""
     connector = _connector()
 
-    assert connector._decode_inbound(_string_frame(3, "book a table")) is None
+    heard = connector._decode_inbound(_string_frame(3, "book a table"))
+
+    assert heard.provider_transcript == "book a table"
+    assert heard.transcript is None
     assert connector._decode_inbound(_string_frame(1, "some text")) is None
     assert connector._current_transcript is None
+
+
+def test_an_empty_transcription_frame_is_not_reported_as_heard():
+    connector = _connector()
+
+    assert connector._decode_inbound(_string_frame(3, "   ")) is None
 
 
 def test_the_rate_the_pipeline_speaks_at_wins_over_the_default():

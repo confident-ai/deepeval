@@ -1,0 +1,36 @@
+.peek {
+  position: relative;
+  display: inline-flex;
+}
+
+.hideout {
+  position: absolute;
+  right: 12px;
+  bottom: 100%;
+  z-index: 1;
+  line-height: 0;
+  pointer-events: none;
+  clip-path: inset(-200% -200% 0 -200%);
+}
+
+.mascot {
+  display: block;
+  pointer-events: auto;
+  transform: translateY(100%);
+  transition: transform 0.36s steps(9, end);
+}
+
+.out .mascot {
+  transform: translateY(calc(100% * 7 / 16));
+}
+
+.waving .mascot {
+  transform: translateY(calc(100% * 5 / 16));
+  transition-timing-function: steps(2, end);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot {
+    transition: none;
+  }
+}

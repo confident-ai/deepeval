@@ -140,6 +140,15 @@ class ElevenLabsConnector(BaseWebSocketConnector):
             text = message.get("agent_response_event", {}).get("agent_response")
             return InboundEvent(transcript=text)
 
+        if msg_type == "user_transcript":
+            # ElevenLabs' own STT of the caller, sent back as one finalized
+            # utterance at a time.
+            heard = message.get("user_transcription_event", {}).get(
+                "user_transcript"
+            )
+            heard = (heard or "").strip()
+            return InboundEvent(provider_transcript=heard) if heard else None
+
         if msg_type == "agent_response_complete":
             return InboundEvent(turn_complete=True)
 

@@ -1,0 +1,12 @@
+.cover {
+  margin: 0 0 24px;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    border: 1px solid var(--color-fd-border);
+    background: var(--color-fd-card);
+  }
+}

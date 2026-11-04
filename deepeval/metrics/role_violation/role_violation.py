@@ -223,6 +223,7 @@ class RoleViolationMetric(BaseMetric):
         prompt = self._get_prompt(
             "generate_verdicts",
             role_violations=self.role_violations,
+            expected_role=self.role,
         )
         return await a_generate_qag_verdicts(
             metric=self,
@@ -240,6 +241,7 @@ class RoleViolationMetric(BaseMetric):
         prompt = self._get_prompt(
             "generate_verdicts",
             role_violations=self.role_violations,
+            expected_role=self.role,
         )
         return generate_qag_verdicts(
             metric=self,

@@ -157,3 +157,51 @@ def test_voice_config_rejects_a_factory_that_returns_something_else():
 
     with pytest.raises(DeepEvalError, match="as a connector"):
         config.make_connector()
+
+
+class _SingleRoomConnector(_CountingConnector):
+    @property
+    def supports_parallel_calls(self) -> bool:
+        return False
+
+
+def test_a_single_room_connector_is_rejected_for_parallel_calls():
+    tracker = _Tracker()
+
+    with pytest.raises(DeepEvalError, match="3 parallel calls"):
+        _simulate(_SingleRoomConnector(EchoAgent(), tracker), max_concurrent=3)
+
+    assert tracker.connected_ids == set()
+
+
+def test_a_single_room_connector_still_runs_calls_one_at_a_time():
+    tracker = _Tracker()
+
+    _, cases = _simulate(
+        _SingleRoomConnector(EchoAgent(), tracker), max_concurrent=1
+    )
+
+    assert len(cases) == 3
+    assert tracker.peak == 1
+
+
+def test_a_single_room_connector_runs_a_single_golden_in_parallel_mode():
+    tracker = _Tracker()
+
+    _, cases = _simulate(
+        _SingleRoomConnector(EchoAgent(), tracker),
+        max_concurrent=3,
+        goldens=1,
+    )
+
+    assert len(cases) == 1
+
+
+def test_a_factory_of_single_room_connectors_runs_in_parallel():
+    tracker = _Tracker()
+
+    _simulate(
+        lambda: _SingleRoomConnector(EchoAgent(), tracker), max_concurrent=3
+    )
+
+    assert tracker.peak == 3

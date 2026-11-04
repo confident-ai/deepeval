@@ -763,6 +763,7 @@ class TestPrivateAttributes:
         assert "_dataset_rank" not in model_dict
         assert "_dataset_alias" not in model_dict
         assert "_dataset_id" not in model_dict
+        assert "_dataset_version" not in model_dict
         assert "_identifier" not in model_dict
 
     def test_private_attributes_accessible(self):
@@ -772,17 +773,20 @@ class TestPrivateAttributes:
         assert test_case._dataset_rank is None
         assert test_case._dataset_alias is None
         assert test_case._dataset_id is None
+        assert test_case._dataset_version is None
         assert isinstance(test_case._identifier, str)
 
         test_case._trace_dict = {"key": "value"}
         test_case._dataset_rank = 1
         test_case._dataset_alias = "test_alias"
         test_case._dataset_id = "test_id"
+        test_case._dataset_version = "00.00.01"
 
         assert test_case._trace_dict == {"key": "value"}
         assert test_case._dataset_rank == 1
         assert test_case._dataset_alias == "test_alias"
         assert test_case._dataset_id == "test_id"
+        assert test_case._dataset_version == "00.00.01"
 
     def test_identifier_is_unique(self):
         test_case1 = LLMTestCase(input="test1")

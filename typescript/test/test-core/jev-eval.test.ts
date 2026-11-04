@@ -26,6 +26,7 @@ import {
   Turn,
 } from "@/test-case";
 import { FakeSystemOneModel } from "./system-one-fakes";
+import { MissingTestCaseParamsError } from "@/errors";
 
 // The worked example from the docs: Tool Faithfulness.
 const QUESTIONS = [
@@ -449,9 +450,9 @@ describe("JevEval validation", () => {
     );
   });
 
-  it("rejects missing evaluation params", () => {
+  it("rejects empty evaluation params", () => {
     expect(() => makeMetric(undefined, { evaluationParams: [] })).toThrow(
-      /evaluationParams cannot be empty/,
+      /evaluationParams cannot be an empty list/,
     );
   });
 
@@ -512,6 +513,66 @@ describe("JevEval validation", () => {
         new LLMTestCase({ input: "hi", actualOutput: "there" }),
       ),
     ).rejects.toThrow();
+  });
+});
+
+describe("JevEval trajectory mode", () => {
+  const TRACE = {
+    name: "support_agent",
+    type: "agent",
+    input: { input: "Where is my order #1234?" },
+    output: "Your order is in transit.",
+    inputTokenCount: 40,
+    children: [
+      {
+        name: "order_lookup",
+        type: "tool",
+        input: { order_id: "1234" },
+        output: { status: "in_transit" },
+        children: [],
+      },
+    ],
+  };
+
+  function trajectoryMetric(): JevEval {
+    return new JevEval({
+      name: "Tool Use",
+      questions: [
+        new Noul({
+          statement: "The agent called order_lookup before answering.",
+        }),
+      ],
+      systemOneModel: new FakeSystemOneModel({
+        answers: new SystemOneAnswers({ nouls: { q_0: new NoulAnswer(0.9) } }),
+      }),
+      showIndicator: false,
+    });
+  }
+
+  it("requires a trace only when evaluationParams is omitted", () => {
+    expect(trajectoryMetric().requiresTrace).toBe(true);
+    expect(makeMetric().requiresTrace).toBe(false);
+  });
+
+  it("sends the compact trace as the state", async () => {
+    const metric = trajectoryMetric();
+    const testCase = new LLMTestCase({ input: "q", actualOutput: "a" });
+    testCase._traceDict = TRACE;
+
+    expect(await metric.measure(testCase)).toBeCloseTo(0.9);
+
+    const [{ state }] = fakeOf(metric).calls;
+    expect(Object.keys(state)).toEqual(["trace"]);
+    expect(state.trace.children[0].name).toBe("order_lookup");
+    expect(state.trace.inputTokenCount).toBeUndefined();
+  });
+
+  it("throws when the test case has no trace", async () => {
+    const metric = trajectoryMetric();
+    await expect(
+      metric.measure(new LLMTestCase({ input: "hi", actualOutput: "there" })),
+    ).rejects.toThrow(MissingTestCaseParamsError);
+    expect(fakeOf(metric).calls).toEqual([]);
   });
 });
 

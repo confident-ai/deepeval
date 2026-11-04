@@ -398,12 +398,11 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
       answer: (
         <>
           Yes. Set <code>environment="production"</code> on{" "}
-          <code>instrument_strands(...)</code> and, once logged into Confident
-          AI, live traces stream in for{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>
-          . (If your outer boundary is the AgentCore runtime, use the{" "}
+          <code>instrument_strands(...)</code>.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> clusters failing Strands traces
+          into failure modes and routes them to the right annotators, who turn
+          them into goldens for your next eval. (If your outer boundary is the
+          AgentCore runtime, use the{" "}
           <a href="/integrations/frameworks/agentcore">AgentCore integration</a>{" "}
           instead.)
         </>
@@ -417,17 +416,6 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
           the agent inside a parametrized <code>pytest</code> case, and gate the
           build with <code>assert_test(...)</code> plus{" "}
           <code>deepeval test run</code>.
-        </>
-      ),
-    },
-    {
-      question: "Can I view Strands traces on the cloud?",
-      answer: (
-        <>
-          Yes — optionally. After <code>deepeval login</code>,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> visualizes the
-          same auto-instrumented Strands spans and scores in a shared UI, with
-          no extra instrumentation.
         </>
       ),
     },
