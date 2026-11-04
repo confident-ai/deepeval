@@ -783,6 +783,9 @@ class Synthesizer:
                         target_files_per_context=target_files_per_context,
                     )
                     synthetic_inputs = self._generate_inputs(prompt)
+                    # Limit the length of the synthetic inputs to the maximum
+                    # allowed (the async paths apply the same truncation).
+                    synthetic_inputs = synthetic_inputs[:max_goldens_per_context]
                     update_pbar(progress, pbar_generate_inputs_id, remove=False)
 
                     # Qualify inputs
@@ -2413,6 +2416,10 @@ class Synthesizer:
                         target_files_per_context=target_files_per_context,
                     )
                     synthetic_scenarios = self._generate_scenarios(prompt)
+                    # Limit the length of the synthetic scenarios to the
+                    # maximum allowed (the async paths apply the same
+                    # truncation).
+                    synthetic_scenarios = synthetic_scenarios[:max_goldens_per_context]
                     update_pbar(
                         progress, pbar_generate_scenarios_id, remove=False
                     )
