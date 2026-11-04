@@ -3,7 +3,7 @@ import logging
 import sys
 import json
 import os
-from typing import TYPE_CHECKING, List, Optional, Dict, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -55,6 +55,7 @@ class MetricConfiguration(BaseModel):
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
+    expected_schema: Optional[Dict[str, Any]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -380,6 +381,7 @@ class Cache:
             "evaluation_params",
             "assessment_questions",
             "evaluation_steps",
+            "expected_schema",
         ]
 
         for field in config_fields:
@@ -405,6 +407,9 @@ class Cache:
                     except Exception:
                         # For non-GEval
                         continue
+
+            if field == "expected_schema":
+                metric_value = Cache._serialize_expected_schema(metric_value)
 
             if field == "embeddings" and metric_value is not None:
                 metric_value = metric_value.__class__.__name__
@@ -450,6 +455,22 @@ class Cache:
         )
 
     @staticmethod
+    def _serialize_expected_schema(
+        expected_schema: Any,
+    ) -> Optional[Dict[str, Any]]:
+        if expected_schema is None:
+            return None
+        if hasattr(expected_schema, "model_json_schema"):
+            return expected_schema.model_json_schema()
+        if hasattr(expected_schema, "schema") and callable(
+            expected_schema.schema
+        ):
+            return expected_schema.schema()
+        if isinstance(expected_schema, dict):
+            return expected_schema
+        return None
+
+    @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
         config_kwargs = {}
         config_fields = [
@@ -465,11 +486,14 @@ class Cache:
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
+            "expected_schema",  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
+            if field == "expected_schema":
+                value = Cache._serialize_expected_schema(value)
             config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)
