@@ -1,5 +1,5 @@
 from anthropic.types.message import Message
-from anthropic.types import ToolUseBlock
+from anthropic.types import TextBlock, ToolUseBlock
 from typing import Any, Dict
 
 from deepeval.anthropic.utils import (
@@ -65,7 +65,11 @@ def extract_messages_api_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    output = str(message_response.content[0].text)
+    output = "".join(
+        block.text
+        for block in message_response.content
+        if isinstance(block, TextBlock)
+    )
     prompt_tokens = message_response.usage.input_tokens
     completion_tokens = message_response.usage.output_tokens
 
@@ -86,6 +90,9 @@ def extract_messages_api_output_parameters(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+    if not output and tools_called:
+        output = tools_called
+
     return OutputParameters(
         output=output,
         prompt_tokens=prompt_tokens,
