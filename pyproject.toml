@@ -56,6 +56,11 @@ questionary = ">=2.0.0,<3.0.0"
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
+# Legacy classifier backends for Scorer.neural_toxic_score /
+# Scorer.neural_bias_score (dated packages, opt-in only).
+# See https://github.com/confident-ai/deepeval/issues/382
+bias = ["Dbias"]
+toxicity = ["detoxify", "torch"]
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
