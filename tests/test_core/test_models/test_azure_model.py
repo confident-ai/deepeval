@@ -149,6 +149,33 @@ class TestAzureOpenAIModelGenerationKwargs:
         )
         assert output == "test response"
 
+    @patch("deepeval.models.llms.azure_model.AzureOpenAIModel.load_model")
+    def test_raw_response_caps_top_logprobs_to_azure_limit(
+        self, mock_load_model
+    ):
+        """Azure rejects top_logprobs > 5, so GEval's default 20 is capped."""
+        mock_client = Mock()
+        mock_load_model.return_value = mock_client
+        mock_completion = Mock()
+        mock_completion.choices = [Mock(message=Mock(content="test response"))]
+        mock_completion.usage.prompt_tokens = 10
+        mock_completion.usage.completion_tokens = 20
+        mock_client.chat.completions.create.return_value = mock_completion
+
+        model = AzureOpenAIModel(
+            deployment_name="test-deployment",
+            model="gpt-4.1",
+            api_key="test-key",
+            base_url="test-endpoint",
+            api_version="2024-02-15-preview",
+        )
+
+        model.generate_raw_response("test prompt", top_logprobs=20)
+
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert call_kwargs["logprobs"] is True
+        assert call_kwargs["top_logprobs"] == 5
+
     @patch("deepeval.models.llms.azure_model.AzureOpenAI")
     def test_load_model_passes_kwargs_to_client(self, mock_azure_openai):
         """Test that client kwargs are passed, and SDK retries are disabled"""
