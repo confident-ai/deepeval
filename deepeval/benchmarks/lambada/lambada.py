@@ -9,6 +9,7 @@ from deepeval.benchmarks.base_benchmark import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.lambada.template import LAMBADATemplate
 from deepeval.benchmarks.schema import StringSchema
+from deepeval.benchmarks.utils import validate_n_problems, validate_n_shots
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -24,8 +25,8 @@ class LAMBADA(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 5, "LAMBADA only supports n_shots <= 5"
-        assert n_problems <= 5153, "LAMBADA only supports n_problems <= 5153"
+        n_shots = validate_n_shots(n_shots, 5, "LAMBADA")
+        n_problems = validate_n_problems(n_problems, 5153, "LAMBADA")
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_shots: int = n_shots
