@@ -698,7 +698,7 @@ class DuplexExchange:
                     )
                     if (
                         not connector_transcript_seen
-                        and (stt_task is None or stt_task.done())
+                        and stt_task is None
                         and len(utterance.pcm) - utterance.last_stt_pcm_len
                         > (0 if quiet else stt_stride_bytes)
                     ):
