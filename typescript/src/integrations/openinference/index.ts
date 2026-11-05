@@ -15,6 +15,7 @@ import {
   ensureConfidentTrace,
   flushConfidentTrace,
   setTraceDefaults,
+  useGlobalProvider,
 } from "@/tracing/otel/setup";
 
 export interface OpenInferenceInstrumentationOptions {
@@ -61,6 +62,8 @@ export function instrumentOpenInference(
   if (options.otelEndpoint)
     process.env.CONFIDENT_OTEL_URL ??= options.otelEndpoint;
   ensureConfidentTrace();
+  // OpenInference instrumentors trace on the global provider.
+  useGlobalProvider();
   recordTracingIntegration(Integration.OPEN_INFERENCE);
   setTraceDefaults(
     { scope: SCOPE },
