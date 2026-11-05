@@ -351,6 +351,8 @@ class Cache:
     def get_metric_data(
         metric: BaseMetric, cached_test_case: Optional[CachedTestCase]
     ) -> Optional[CachedMetricData]:
+        if not getattr(metric, "cacheable", True):
+            return None
         if not cached_test_case:
             return None
         for cached_metric_data in cached_test_case.cached_metrics_data:
