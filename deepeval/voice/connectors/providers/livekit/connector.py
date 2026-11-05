@@ -538,6 +538,8 @@ class LiveKitConnector(BaseVoiceConnector):
         or `stop_uplink()` cancels the stream. Trailing silence is off by
         default so barge-in audio does not pad the uplink.
         """
+        if self._call_ended:
+            return
         if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink() called before connect()."
@@ -571,6 +573,11 @@ class LiveKitConnector(BaseVoiceConnector):
         while the rest of the utterance is still being made, which is how a real
         room behaves — a microphone does not wait for a sentence to finish.
         """
+        if self._call_ended:
+            recorder = PcmRecorder()
+            async for chunk in chunks:
+                recorder.add(chunk)
+            return UplinkResult(audio=recorder.to_audio(), first_frame_at=None)
         if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink_chunks() called before connect()."
@@ -847,6 +854,7 @@ class LiveKitConnector(BaseVoiceConnector):
         )
 
     async def disconnect(self) -> None:
+        self._end_call()
         self._cancel_turn_end()
         await self.stop_uplink()
         if self._drain_task is not None:

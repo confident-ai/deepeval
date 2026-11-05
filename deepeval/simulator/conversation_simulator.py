@@ -853,6 +853,9 @@ class ConversationSimulator:
                         "Simulated user generation finished after %.2fs",
                         time.perf_counter() - user_started,
                     )
+                    if _call_ended():
+                        update_pbar(progress, pbar_max_user_simluations_id)
+                        break
                     if (
                         session is not None
                         and session.is_duplex
