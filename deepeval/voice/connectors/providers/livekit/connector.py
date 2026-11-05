@@ -44,6 +44,15 @@ _INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 TRANSCRIPTION_TOPIC = "lk.transcription"
 TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
 
+# Caller speech after at least this much quiet starts a new caller turn. Agent
+# text is gathered per caller turn, so a short breath mid-sentence must not
+# split it.
+_CALLER_TURN_GAP_MS = 500.0
+
+# Stream timestamps come from the agent's clock and caller speech is timed on
+# ours, so speech only counts as stale when it began clearly before the caller.
+_CLOCK_SKEW_MS = 1000.0
+
 
 class LiveKitConnector(BaseVoiceConnector):
 
@@ -125,6 +134,14 @@ class LiveKitConnector(BaseVoiceConnector):
         self._owns_room_connection = False
         self._current_transcript: Optional[str] = None
         self._provider_transcript_parts: List[str] = []
+        # Agents publish one final transcript per thing they say, and a reply
+        # can be several (a greeting, then a disclaimer). These hold the agent's
+        # text since the caller's latest turn began, so events carry the whole
+        # reply rather than only its newest part.
+        self._agent_transcript_parts: List[str] = []
+        self._agent_transcript_turn_ms = 0.0
+        self._caller_turn_started_ms = 0.0
+        self._caller_last_voiced_ms = 0.0
         self._transcript_ready: Optional[asyncio.Event] = None
         self._provider_transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
@@ -157,6 +174,10 @@ class LiveKitConnector(BaseVoiceConnector):
         self._transcript_ready = asyncio.Event()
         self._provider_transcript_ready = asyncio.Event()
         self._provider_transcript_parts = []
+        self._agent_transcript_parts = []
+        self._agent_transcript_turn_ms = 0.0
+        self._caller_turn_started_ms = 0.0
+        self._caller_last_voiced_ms = 0.0
         self._transcript_tasks = set()
         self._uplink = UplinkStream()
         self._call_ended = False
@@ -384,7 +405,12 @@ class LiveKitConnector(BaseVoiceConnector):
         text = (text or "").strip()
         if not text:
             return
+        info = getattr(reader, "info", None)
+        started_ms = getattr(info, "timestamp", None) or _now_ms()
         if heard_us:
+            self._caller_turn_started_ms = max(
+                self._caller_turn_started_ms, float(started_ms)
+            )
             self._provider_transcript_parts.append(text)
             if self._provider_transcript_ready is not None:
                 self._provider_transcript_ready.set()
@@ -396,6 +422,16 @@ class LiveKitConnector(BaseVoiceConnector):
                     )
                 )
             return
+        # Speech that began before the caller's latest turn belongs to a reply
+        # the caller has already answered; counting it here would merge two
+        # replies and make an unfinished one read as complete.
+        if started_ms < self._caller_turn_started_ms - _CLOCK_SKEW_MS:
+            return
+        if self._agent_transcript_turn_ms != self._caller_turn_started_ms:
+            self._agent_transcript_parts = []
+            self._agent_transcript_turn_ms = self._caller_turn_started_ms
+        self._agent_transcript_parts.append(text)
+        text = " ".join(self._agent_transcript_parts)
         self._current_transcript = text
         if self._transcript_ready is not None:
             self._transcript_ready.set()
@@ -403,6 +439,12 @@ class LiveKitConnector(BaseVoiceConnector):
             self._out_frames.put_nowait(
                 AgentEvent(transcript=text, received_at=time.perf_counter())
             )
+
+    def _note_caller_speech(self) -> None:
+        now_ms = _now_ms()
+        if now_ms - self._caller_last_voiced_ms > _CALLER_TURN_GAP_MS:
+            self._caller_turn_started_ms = now_ms
+        self._caller_last_voiced_ms = now_ms
 
     def _on_participant_connected(self, participant) -> None:
         if self._agent_participant is None and self._is_agent_participant(
@@ -477,6 +519,7 @@ class LiveKitConnector(BaseVoiceConnector):
             )
         await self.stop_uplink()
         self._uplink.begin()
+        self._note_caller_speech()
         frames = self._make_input_frames(audio)
 
         async def _stream() -> None:
@@ -519,6 +562,8 @@ class LiveKitConnector(BaseVoiceConnector):
             pcm = recorder.add(chunk)
             if self._uplink.cancelled:
                 continue
+            if not audio_utils.is_silent(pcm, self.silence_threshold_rms):
+                self._note_caller_speech()
             rate = chunk.sampleRate or DEFAULT_STREAM_SAMPLE_RATE
             if rate != self.livekit_sample_rate:
                 if resampler is None:
@@ -582,6 +627,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._provider_transcript_parts = []
         self._transcript_ready.clear()
         self._provider_transcript_ready.clear()
+        self._note_caller_speech()
 
         input_audio_started_at = time.perf_counter()
         for frame in self._make_input_frames(audio):
@@ -769,3 +815,7 @@ class LiveKitConnector(BaseVoiceConnector):
                 "Could not unpublish the simulated microphone track.",
                 exc_info=True,
             )
+
+
+def _now_ms() -> float:
+    return time.time() * 1000.0
