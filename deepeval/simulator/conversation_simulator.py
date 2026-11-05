@@ -10,7 +10,7 @@ from typing import (
     Callable,
 )
 from contextlib import AsyncExitStack
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from rich.progress import Progress
 from pydantic import BaseModel
@@ -62,6 +62,7 @@ if TYPE_CHECKING:
     from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
     from deepeval.voice.config import VoiceConfig
+    from deepeval.voice.connectors.types import AgentEvent
     from deepeval.voice.floor_control import FloorController
     from deepeval.voice.interruption import InterruptionPolicy
 
@@ -73,6 +74,56 @@ _MISSING = object()
 _SILENCE_PROBE_SECONDS = 1.0
 _GREETING_TIMEOUT_S = 15.0
 _AGENT_BACKLOG_MIN_SPEECH_S = 0.3
+_MAX_AGENT_CATCH_UPS = 3
+
+
+@dataclass
+class _AgentBacklog:
+    """Agent speech that arrived while the caller was not listening for it.
+
+    Anything said before the first voiced frame belongs to a turn that has
+    already been recorded, so its transcript and end signal are ignored.
+    """
+
+    sample_rate: int
+    silence_threshold_rms: float
+    pcm: bytearray = field(default_factory=bytearray)
+    speech_len: int = 0
+    voiced_bytes: int = 0
+    voiced_at: Optional[float] = None
+    trailing_silence_s: float = 0.0
+    transcript: Optional[str] = None
+    finished: bool = False
+
+    @property
+    def voiced_s(self) -> float:
+        return self.voiced_bytes / 2 / self.sample_rate
+
+    def add(self, event: "AgentEvent") -> None:
+        if event.audio:
+            self._add_audio(event)
+        if self.voiced_at is None:
+            return
+        if event.transcript:
+            self.transcript = event.transcript
+        if event.turn_complete:
+            self.finished = True
+
+    def _add_audio(self, event: "AgentEvent") -> None:
+        from deepeval.voice.connectors import audio_utils
+
+        silent = audio_utils.is_silent(event.audio, self.silence_threshold_rms)
+        if self.voiced_at is None:
+            if silent:
+                return
+            self.voiced_at = event.received_at or time.perf_counter()
+        self.pcm.extend(event.audio)
+        if silent:
+            self.trailing_silence_s += len(event.audio) / 2 / self.sample_rate
+            return
+        self.speech_len = len(self.pcm)
+        self.voiced_bytes += len(event.audio)
+        self.trailing_silence_s = 0.0
 
 
 @dataclass
@@ -686,6 +737,7 @@ class ConversationSimulator:
             muted = voice_mode and persona is not None and persona.muted
             hold_timeout = persona.hold_timeout if persona is not None else None
             silent_for = 0.0
+            agent_catch_ups = 0
 
             def _call_ended() -> bool:
                 if not (voice_mode and session.connector.call_ended):
@@ -801,11 +853,29 @@ class ConversationSimulator:
                         "Simulated user generation finished after %.2fs",
                         time.perf_counter() - user_started,
                     )
+                    if (
+                        session is not None
+                        and session.is_duplex
+                        and agent_catch_ups < _MAX_AGENT_CATCH_UPS
+                        and await self._take_agent_backlog(
+                            session,
+                            turns,
+                            session.started_at or time.perf_counter(),
+                        )
+                    ):
+                        logger.debug(
+                            "The agent kept talking; regenerating the caller's "
+                            "reply to what it said"
+                        )
+                        agent_catch_ups += 1
+                        await _dispatch_on_turn(on_turn, turns, index)
+                        continue
                     emission_end = emission.end
                     if emission.turn is None:
                         logger.debug("Simulation graph emitted no user turn")
                         update_pbar(progress, pbar_max_user_simluations_id)
                         break
+                    agent_catch_ups = 0
                     turns.append(emission.turn)
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
@@ -1428,48 +1498,73 @@ class ConversationSimulator:
         session: _VoiceSession,
         turns: List[Turn],
         call_started_at: float,
-    ) -> None:
-        from deepeval.voice.connectors import audio_utils
+    ) -> bool:
+        """Record what the agent said while the caller was not listening.
+
+        The agent may still be mid-turn, so the caller waits for it to finish
+        rather than talking over it. True when an agent turn was recorded.
+        """
         from deepeval.voice.duplex import _pcm_to_audio
 
         connector = session.connector
-        pcm = bytearray()
-        speech_len = 0
-        voiced_bytes = 0
-        voiced_at: Optional[float] = None
-        for event in connector.take_pending_agent_events():
-            if not event.audio:
-                continue
-            silent = audio_utils.is_silent(
-                event.audio, connector.silence_threshold_rms
-            )
-            if voiced_at is None:
-                if silent:
-                    continue
-                voiced_at = event.received_at or time.perf_counter()
-            pcm.extend(event.audio)
-            if not silent:
-                speech_len = len(pcm)
-                voiced_bytes += len(event.audio)
         rate = connector.recv_sample_rate
-        if voiced_at is None or voiced_bytes / 2 / rate < (
-            _AGENT_BACKLOG_MIN_SPEECH_S
-        ):
-            return
-        audio = _pcm_to_audio(bytes(pcm[:speech_len]), rate)
-        audio.start_time = max(0.0, voiced_at - call_started_at)
-        voice = self._voice
-        text, stt_cost = await voice.stt_model.a_transcribe(
-            audio, **self._stt_kwargs(session)
+        backlog = _AgentBacklog(
+            sample_rate=rate,
+            silence_threshold_rms=connector.silence_threshold_rms,
         )
-        if stt_cost is not None:
-            voice.stt_cost += stt_cost
+        for event in connector.take_pending_agent_events():
+            backlog.add(event)
+        if backlog.voiced_s < _AGENT_BACKLOG_MIN_SPEECH_S:
+            return False
+        if not backlog.finished:
+            await self._hear_agent_out(connector, backlog)
+        audio = _pcm_to_audio(bytes(backlog.pcm[: backlog.speech_len]), rate)
+        audio.start_time = max(0.0, backlog.voiced_at - call_started_at)
+        text = backlog.transcript
+        if not text:
+            voice = self._voice
+            text, stt_cost = await voice.stt_model.a_transcribe(
+                audio, **self._stt_kwargs(session)
+            )
+            if stt_cost is not None:
+                voice.stt_cost += stt_cost
         index = len(turns)
         if turns and turns[-1].role == "user":
             index -= 1
         turns.insert(
             index, Turn(role="assistant", content=text or "", audio=audio)
         )
+        return True
+
+    @staticmethod
+    async def _hear_agent_out(
+        connector: "BaseVoiceConnector", backlog: _AgentBacklog
+    ) -> None:
+        signals_end = connector.signals_turn_complete
+        silence_s = connector.end_of_turn_silence_ms / 1000.0
+        deadline = time.perf_counter() + connector.max_turn_timeout_s
+        events = connector.iter_agent_events()
+        try:
+            while not backlog.finished:
+                remaining = deadline - time.perf_counter()
+                if remaining <= 0:
+                    return
+                try:
+                    event = await asyncio.wait_for(
+                        events.__anext__(),
+                        timeout=(
+                            remaining
+                            if signals_end
+                            else min(remaining, silence_s)
+                        ),
+                    )
+                except (asyncio.TimeoutError, StopAsyncIteration):
+                    return
+                backlog.add(event)
+                if not signals_end and backlog.trailing_silence_s >= silence_s:
+                    return
+        finally:
+            await events.aclose()
 
     async def _run_duplex(
         self,
