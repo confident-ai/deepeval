@@ -9,6 +9,7 @@
 import {
   context as otelContext,
   createContextKey,
+  ProxyTracerProvider,
   trace as otelTrace,
 } from "@opentelemetry/api";
 import type { Context, Span as OtelSpan } from "@opentelemetry/api";
@@ -22,6 +23,8 @@ import type {
 import { type ExportResult, ExportResultCode } from "@opentelemetry/core";
 
 import { getSettings } from "@/config/settings";
+import { DEEPEVAL_GLOBAL_TRACER_PROVIDER } from "@/constants";
+import { envBool } from "@/env-flags";
 import type { LLMTestCase } from "@/test-case";
 import { ConfidentAttr } from "@/tracing/attributes";
 import { type StagedValues, withStaged } from "@/tracing/pending-context";
@@ -52,6 +55,33 @@ let started:
       bridge: DeepEvalSpanBridge;
     }
   | undefined;
+
+/**
+ * Whether confident-trace registers its provider as the global one, so other
+ * OpenTelemetry spans are traced too. On unless
+ * `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is false.
+ */
+export function sharesGlobalProvider(): boolean {
+  return envBool(DEEPEVAL_GLOBAL_TRACER_PROVIDER) !== false;
+}
+
+/**
+ * Register confident-trace's provider as the global one unless the application
+ * registered its own, for integrations whose spans come from there.
+ */
+export function useGlobalProvider(): void {
+  // The global provider is always a proxy; a registered one is its delegate.
+  const global = otelTrace.getTracerProvider();
+  if (
+    started?.runtime.active &&
+    global instanceof ProxyTracerProvider &&
+    global.getDelegate() === NO_PROVIDER
+  )
+    otelTrace.setGlobalTracerProvider(started.runtime.provider);
+}
+
+// What a proxy delegates to before a provider is registered.
+const NO_PROVIDER = new ProxyTracerProvider().getDelegate();
 
 /** The confident-trace package, which deepeval's integrations need. */
 export function confidentTrace(): ConfidentTraceModule {
@@ -85,6 +115,7 @@ export function ensureConfidentTrace(
   const bridge = new DeepEvalSpanBridge();
   const runtime = module.init({
     instrumentations: [],
+    globalProvider: sharesGlobalProvider(),
     exporter: new RemoteSpanExporter(
       options.exporter ?? new ConfidentOtlpExporter(),
     ),
@@ -95,7 +126,8 @@ export function ensureConfidentTrace(
   if (!runtime.active) {
     console.warn(
       "[DeepEval] confident-trace couldn't start, so integrations won't trace. " +
-        "Another OpenTelemetry tracer provider may already be registered.",
+        "Another OpenTelemetry tracer provider may already be registered; " +
+        `set ${DEEPEVAL_GLOBAL_TRACER_PROVIDER}=false to trace beside it.`,
     );
     return false;
   }
@@ -156,9 +188,11 @@ export function startObservedSpan(
   staged: StagedValues,
 ): { span: OtelSpan; placeholder?: BaseSpan } | undefined {
   if (!ensureConfidentTrace() || !started) return undefined;
-  const bridge = started.bridge;
+  const { bridge, runtime } = started;
+  // On confident-trace's provider, which isn't the global one when
+  // `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is false.
   const span = withStaged(staged, () =>
-    otelTrace
+    runtime.provider
       .getTracer(OBSERVE_SCOPE)
       .startSpan(name, { attributes: { [ConfidentAttr.SPAN_TYPE]: spanType } }),
   );
