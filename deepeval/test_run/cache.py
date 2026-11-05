@@ -3,7 +3,7 @@ import logging
 import sys
 import json
 import os
-from typing import TYPE_CHECKING, List, Optional, Dict, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
@@ -55,6 +55,7 @@ class MetricConfiguration(BaseModel):
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
+    rubric: Optional[List[Dict[str, Any]]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -380,11 +381,14 @@ class Cache:
             "evaluation_params",
             "assessment_questions",
             "evaluation_steps",
+            "rubric",
         ]
 
         for field in config_fields:
             metric_value = getattr(metric, field, None)
             cached_value = getattr(metric_configuration, field, None)
+            if field == "rubric":
+                metric_value = Cache._serialize_rubric(metric_value)
 
             # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
@@ -450,6 +454,15 @@ class Cache:
         )
 
     @staticmethod
+    def _serialize_rubric(rubric: Any) -> Optional[List[Dict[str, Any]]]:
+        # GEval's rubric changes the score the judge gives, so a cached score
+        # is only reused for the same rubric. Stored as JSON-ready dicts so a
+        # rubric read back from the cache file compares equal.
+        if not rubric:
+            return None
+        return [item.model_dump(mode="json") for item in rubric]
+
+    @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
         config_kwargs = {}
         config_fields = [
@@ -465,11 +478,14 @@ class Cache:
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
+            "rubric",  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
+            if field == "rubric":
+                value = Cache._serialize_rubric(value)
             config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)
