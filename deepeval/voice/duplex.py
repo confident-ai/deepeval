@@ -460,6 +460,15 @@ class DuplexExchange:
                     if unfinished:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
+            elif (
+                has_audio
+                and not connector_transcript_seen
+                and utterance.transcribed_pcm_len < utterance.speech_pcm_len
+            ):
+                spoken, stt_cost = await self.stt_model.a_transcribe(audio)
+                if stt_cost is not None:
+                    result.stt_cost += stt_cost
+                text = spoken or text
             latency_ms = (
                 max(0.0, (utterance.first_audio_at - utterance.sent_at))
                 * 1000.0

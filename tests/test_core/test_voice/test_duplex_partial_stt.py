@@ -27,6 +27,14 @@ class _SlowSTT:
         return f"heard {audio.duration:.2f}s.", 1.0
 
 
+class _SlowOnceItHearsEverythingSTT(_SlowSTT):
+    async def a_transcribe(self, audio, **_kwargs):
+        self.calls += 1
+        slow = audio.duration >= SPEECH_S - 0.05
+        await asyncio.sleep(self.delay_s if slow else 0.05)
+        return f"heard {audio.duration:.2f}s.", 1.0
+
+
 class _PhoneLikeConnector:
     recv_sample_rate = RATE
     silence_threshold_rms = 300
@@ -97,3 +105,14 @@ async def test_a_partial_transcript_that_finishes_mid_reply_is_kept():
 
     assert stt.calls >= 3
     assert result.stt_cost >= stt.calls - 1
+
+
+@pytest.mark.asyncio
+async def test_a_reply_is_transcribed_in_full_when_partials_fall_behind():
+    stt = _SlowOnceItHearsEverythingSTT(delay_s=1.5)
+
+    turns, _ = await _run(stt)
+
+    [turn] = turns
+    heard_s = float(turn.content.removeprefix("heard ").removesuffix("s."))
+    assert heard_s >= SPEECH_S
