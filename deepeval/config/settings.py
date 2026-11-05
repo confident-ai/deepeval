@@ -995,8 +995,8 @@ class Settings(BaseSettings):
         description="Trace every installed library confident-trace supports while evals_iterator or deepeval test run runs. Set to false to trace only @observe code and the integrations you set up.",
     )
     DEEPEVAL_GLOBAL_TRACER_PROVIDER: Optional[bool] = Field(
-        True,
-        description="Install deepeval's tracer provider as the global OpenTelemetry provider when none is set. Set to false to leave the global provider to your own OpenTelemetry setup.",
+        False,
+        description="Install deepeval's tracer provider as the global OpenTelemetry provider when none is set, so other OpenTelemetry spans in your app are traced too. Off by default, which leaves the global provider to your own OpenTelemetry setup.",
     )
 
     CONFIDENT_OTEL_URL: Optional[AnyUrl] = Field(
