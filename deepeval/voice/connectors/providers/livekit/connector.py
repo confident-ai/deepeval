@@ -43,6 +43,7 @@ _INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 # https://docs.livekit.io/agents/multimodality/text/
 TRANSCRIPTION_TOPIC = "lk.transcription"
 TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
+BACKGROUND_AUDIO_TRACK = "background_audio"
 
 
 class LiveKitConnector(BaseVoiceConnector):
@@ -320,7 +321,11 @@ class LiveKitConnector(BaseVoiceConnector):
                 continue
             for publication in participant.track_publications.values():
                 track = publication.track
-                if track is not None and track.kind == rtc.TrackKind.KIND_AUDIO:
+                if (
+                    track is not None
+                    and track.kind == rtc.TrackKind.KIND_AUDIO
+                    and publication.name != BACKGROUND_AUDIO_TRACK
+                ):
                     self._attach_agent_track(track, participant)
                     return
 
@@ -329,6 +334,8 @@ class LiveKitConnector(BaseVoiceConnector):
         if self._agent_track is not None:
             return
         if track.kind != rtc.TrackKind.KIND_AUDIO:
+            return
+        if publication.name == BACKGROUND_AUDIO_TRACK:
             return
         if not self._is_agent_participant(participant):
             return

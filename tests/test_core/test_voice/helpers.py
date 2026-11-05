@@ -129,6 +129,7 @@ def fake_livekit(dial_error=None):
         ),
         TrackPublishOptions=lambda **kwargs: SimpleNamespace(**kwargs),
         TrackSource=SimpleNamespace(SOURCE_MICROPHONE=2),
+        TrackKind=SimpleNamespace(KIND_AUDIO=1, KIND_VIDEO=2),
     )
     api = SimpleNamespace(
         VideoGrants=lambda **kwargs: SimpleNamespace(**kwargs),
