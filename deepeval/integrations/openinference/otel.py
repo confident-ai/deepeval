@@ -1,7 +1,8 @@
 """Collect OpenInference instrumentors' spans for deepeval.
 
 Any ``openinference-instrumentation-*`` instrumentor traces on the global
-tracer provider, which confident-trace runs once deepeval starts it.
+tracer provider, which runs confident-trace's provider unless the application
+set its own.
 """
 
 from typing import List, Optional
@@ -13,6 +14,7 @@ from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.otel.setup import (
     ensure_confident_trace,
     set_trace_defaults,
+    use_global_provider,
 )
 
 
@@ -43,6 +45,7 @@ def instrument_openinference(
     """
     with capture_tracing_integration(Integration.OPEN_INFERENCE):
         ensure_confident_trace()
+        use_global_provider()
         label = (
             {ConfidentAttr.SPAN_INTEGRATION: integration} if integration else {}
         )

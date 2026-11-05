@@ -5,6 +5,7 @@ spans of deepeval-owned traces in-process, and confident-trace exports the rest
 to Confident AI over OTLP under deepeval's API key.
 """
 
+import inspect
 import logging
 import threading
 from contextlib import nullcontext
@@ -15,6 +16,7 @@ from typing import (
     Dict,
     FrozenSet,
     Iterable,
+    List,
     Optional,
     Sequence,
     Set,
@@ -64,6 +66,11 @@ _runtime: Any = None
 _bridge: Optional[DeepEvalSpanBridge] = None
 _tracer: Any = None
 _instrumented: Set[str] = set()
+# Libraries traced only while an evaluation runs, and what turns each off.
+_automatic: Dict[str, List[Callable[[], None]]] = {}
+_automatic_users = 0
+# Changes on shutdown, so a stale stop can't end a later evaluation's tracing.
+_automatic_generation = 0
 # The attributes integrations start their spans with, by instrumentation scope
 # or a prefix of its dotted name.
 _scope_defaults: Dict[str, Dict[str, Any]] = {}
@@ -99,6 +106,7 @@ def ensure_confident_trace(
                     exporter or ConfidentOtlpExporter()
                 ),
                 tracer_provider=tracer_provider,
+                global_provider=_shares_global_provider(),
                 instrumentations=(),
                 max_content_bytes=_MAX_CONTENT_BYTES,
             )
@@ -114,18 +122,103 @@ def ensure_confident_trace(
             for name in dict.fromkeys(instrumentations)
             if name not in _instrumented
         ]
-        if names:
+        # An integration keeps a library an evaluation turned on.
+        adopted = [name for name in names if name in _automatic]
+        for name in adopted:
+            _runtime.undo.extend(_automatic.pop(name))
+        fresh = [name for name in names if name not in adopted]
+        if fresh:
             # ``init`` only instruments at start-up; the registry is how an
             # integration joins a confident-trace that is already running.
-            _runtime.undo.extend(registry.instrument(_runtime, names))
-            _instrumented.update(names)
+            _runtime.undo.extend(registry.instrument(_runtime, fresh))
+        _instrumented.update(names)
         return True
+
+
+def _shares_global_provider() -> bool:
+    """Whether confident-trace's provider becomes the global one when none is
+    set, so other OpenTelemetry spans are traced too. On unless
+    ``DEEPEVAL_GLOBAL_TRACER_PROVIDER`` is false."""
+    return get_settings().DEEPEVAL_GLOBAL_TRACER_PROVIDER is not False
+
+
+def use_global_provider() -> None:
+    """Install confident-trace's provider as the global one unless the
+    application set its own, for integrations whose spans come from there."""
+    with _lock:
+        if _runtime is not None and isinstance(
+            otel_trace.get_tracer_provider(), otel_trace.ProxyTracerProvider
+        ):
+            otel_trace.set_tracer_provider(_runtime.provider)
+
+
+def _automatic_instrumentations() -> Tuple[str, ...]:
+    """Every library confident-trace can trace: the documented default of
+    ``confident_trace.init``. Libraries that aren't installed are skipped."""
+    import confident_trace
+
+    parameter = inspect.signature(confident_trace.init).parameters
+    return tuple(parameter["instrumentations"].default)
+
+
+def start_automatic_tracing() -> Callable[[], None]:
+    """Trace every installed library confident-trace supports, such as the
+    OpenAI SDK or LangChain, until the returned function is called.
+
+    Evaluations call this so the user's code is traced without setting up an
+    integration. Libraries an integration turned on stay on, and overlapping
+    evaluations share one set of patches. Off when
+    ``DEEPEVAL_AUTO_TRACING`` is false.
+    """
+    global _automatic_users
+    if get_settings().DEEPEVAL_AUTO_TRACING is False:
+        return lambda: None
+    if not ensure_confident_trace():
+        return lambda: None
+    from confident_trace.integrations import registry
+
+    with _lock:
+        if _runtime is None:
+            return lambda: None
+        generation = _automatic_generation
+        _automatic_users += 1
+        if _automatic_users == 1:
+            for name in _automatic_instrumentations():
+                if name not in _instrumented:
+                    _automatic[name] = registry.instrument(_runtime, [name])
+    stopped = False
+
+    def stop() -> None:
+        nonlocal stopped
+        global _automatic_users
+        with _lock:
+            if stopped or generation != _automatic_generation:
+                return
+            stopped = True
+            _automatic_users -= 1
+            if _automatic_users == 0:
+                _stop_automatic()
+
+    return stop
+
+
+def _stop_automatic() -> None:
+    """Turn off what automatic tracing turned on. Call with ``_lock`` held."""
+    for name in list(_automatic):
+        for undo in reversed(_automatic.pop(name)):
+            try:
+                undo()
+            except Exception:
+                logger.debug("Couldn't stop tracing %s", name, exc_info=True)
 
 
 def shutdown_confident_trace() -> None:
     """Stop confident-trace; ``ensure_confident_trace`` starts it again."""
-    global _runtime, _bridge, _tracer
+    global _runtime, _bridge, _tracer, _automatic_users, _automatic_generation
     with _lock:
+        _stop_automatic()
+        _automatic_users = 0
+        _automatic_generation += 1
         if _bridge is not None:
             _bridge.shutdown()
         if _runtime is not None:
