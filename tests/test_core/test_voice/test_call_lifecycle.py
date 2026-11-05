@@ -168,10 +168,10 @@ def test_simulation_stops_when_the_agent_ends_the_call():
     assert case.metadata["Stop reason"] == "The agent ended the call"
 
 
-def test_simulation_without_a_hang_up_has_no_stop_reason():
+def test_simulation_without_a_hang_up_stops_at_the_turn_limit():
     case = _simulate(_DuplexConnector(EchoAgent()), max_user_simulations=2)
 
-    assert "Stop reason" not in case.metadata
+    assert case.metadata["Stop reason"] == "Reached the limit of 2 user turns"
 
 
 def test_agent_speech_heard_before_the_caller_replies_is_its_own_turn():

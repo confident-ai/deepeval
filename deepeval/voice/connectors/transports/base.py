@@ -203,6 +203,15 @@ class BaseVoiceConnector(ABC):
     def call_ended(self) -> bool:
         return False
 
+    @property
+    def call_end_reason(self) -> Optional[str]:
+        """Why the call ended, when this side hung up rather than the agent.
+
+        A connector that hangs up on its own (a time limit, dead air) says so
+        here; `None` means the agent ended the call.
+        """
+        return None
+
     def take_pending_agent_events(self) -> List[AgentEvent]:
         return []
 

@@ -30,6 +30,9 @@ class SimulationController:
         controller: Callable,
     ):
         self.controller = controller
+        # Why the last check ended the conversation, read by the simulator for
+        # the conversation's stop reason.
+        self.stop_reason: Optional[str] = None
         self.template = SimulatorControllerTemplate
         self.generate_schema = generate_schema
         self.a_generate_schema = a_generate_schema
@@ -213,10 +216,11 @@ class SimulationController:
         progress: Optional[Progress],
         pbar_turns_id: Optional[int],
     ) -> bool:
-        should_end = self._normalize_decision(decision).should_end
-        if should_end:
+        normalized = self._normalize_decision(decision)
+        if normalized.should_end:
+            self.stop_reason = normalized.reason
             update_pbar(progress, pbar_turns_id, advance_to_end=True)
-        return should_end
+        return normalized.should_end
 
     def _generate_schema(self, prompt: str, schema: BaseModel) -> BaseModel:
         return self.generate_schema(prompt, schema)

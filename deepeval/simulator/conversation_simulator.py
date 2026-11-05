@@ -74,6 +74,22 @@ _SILENCE_PROBE_SECONDS = 1.0
 _GREETING_TIMEOUT_S = 15.0
 _AGENT_BACKLOG_MIN_SPEECH_S = 0.3
 
+# Every conversation records why it stopped under this key, so a run can be
+# read without guessing whether it hit the turn limit or finished its goal.
+STOP_REASON_KEY = "Stop reason"
+EXPECTED_OUTCOME_STOP_REASON = "Expected outcome reached"
+CONTROLLER_STOP_REASON = "The stopping controller ended the conversation"
+GRAPH_END_STOP_REASON = "The simulation graph ended the conversation"
+AGENT_ENDED_CALL_STOP_REASON = "The agent ended the call"
+
+
+def max_turns_stop_reason(max_user_simulations: int) -> str:
+    return f"Reached the limit of {max_user_simulations} user turns"
+
+
+def hold_timeout_stop_reason(seconds: float) -> str:
+    return f"No agent speech for {seconds:.0f}s"
+
 
 @dataclass
 class _VoiceSession:
@@ -526,6 +542,9 @@ class ConversationSimulator:
 
         while True:
             if simulation_counter >= max_user_simulations:
+                additional_metadata[STOP_REASON_KEY] = max_turns_stop_reason(
+                    max_user_simulations
+                )
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
 
@@ -541,6 +560,9 @@ class ConversationSimulator:
                 pbar_turns_id=pbar_max_user_simluations_id,
             )
             if should_stop_simulation:
+                additional_metadata[STOP_REASON_KEY] = (
+                    self._controller_stop_reason()
+                )
                 break
 
             # Generate turn from user (via simulation graph)
@@ -559,6 +581,7 @@ class ConversationSimulator:
                 emission_end = emission.end
                 if emission.turn is None:
                     # max_visits exhausted on entry; end without another turn.
+                    additional_metadata[STOP_REASON_KEY] = GRAPH_END_STOP_REASON
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
                 turns.append(emission.turn)
@@ -593,6 +616,7 @@ class ConversationSimulator:
             )
 
             if emission_end:
+                additional_metadata[STOP_REASON_KEY] = GRAPH_END_STOP_REASON
                 break
 
         update_pbar(progress, pbar_id)
@@ -617,6 +641,11 @@ class ConversationSimulator:
         if on_simulation_complete:
             on_simulation_complete(conversational_test_case, index)
         return conversational_test_case
+
+    def _controller_stop_reason(self) -> str:
+        if self.stopping_controller.controller is expected_outcome_controller:
+            return EXPECTED_OUTCOME_STOP_REASON
+        return self.stopping_controller.stop_reason or CONTROLLER_STOP_REASON
 
     async def _a_simulate_single_conversation(
         self,
@@ -690,8 +719,12 @@ class ConversationSimulator:
             def _call_ended() -> bool:
                 if not (voice_mode and session.connector.call_ended):
                     return False
-                logger.info("The agent ended the call")
-                additional_metadata["Stop reason"] = "The agent ended the call"
+                reason = (
+                    session.connector.call_end_reason
+                    or AGENT_ENDED_CALL_STOP_REASON
+                )
+                logger.info(reason)
+                additional_metadata[STOP_REASON_KEY] = reason
                 return True
 
             if voice_mode and persona is not None and not persona.speaks_first:
@@ -712,6 +745,9 @@ class ConversationSimulator:
                 )
                 if simulation_counter >= max_user_simulations:
                     logger.debug("Maximum user simulations reached")
+                    additional_metadata[STOP_REASON_KEY] = (
+                        max_turns_stop_reason(max_user_simulations)
+                    )
                     update_pbar(progress, pbar_max_user_simluations_id)
                     break
 
@@ -767,6 +803,9 @@ class ConversationSimulator:
                     should_stop_simulation,
                 )
                 if should_stop_simulation:
+                    additional_metadata[STOP_REASON_KEY] = (
+                        self._controller_stop_reason()
+                    )
                     await _discard_task(emission_task)
                     break
 
@@ -804,6 +843,9 @@ class ConversationSimulator:
                     emission_end = emission.end
                     if emission.turn is None:
                         logger.debug("Simulation graph emitted no user turn")
+                        additional_metadata[STOP_REASON_KEY] = (
+                            GRAPH_END_STOP_REASON
+                        )
                         update_pbar(progress, pbar_max_user_simluations_id)
                         break
                     turns.append(emission.turn)
@@ -879,6 +921,9 @@ class ConversationSimulator:
                                 silent_for,
                                 hold_timeout,
                             )
+                            additional_metadata[STOP_REASON_KEY] = (
+                                hold_timeout_stop_reason(silent_for)
+                            )
                             break
 
                 # Route to the next graph node based on the assistant reply.
@@ -893,6 +938,7 @@ class ConversationSimulator:
                 )
 
                 if emission_end:
+                    additional_metadata[STOP_REASON_KEY] = GRAPH_END_STOP_REASON
                     break
 
         update_pbar(progress, pbar_id)
