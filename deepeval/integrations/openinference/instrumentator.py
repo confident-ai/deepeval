@@ -350,9 +350,11 @@ def _extract_tool_call_from_tool_span(span) -> Optional[ToolCall]:
     try:
         input_params = (
             json.loads(args_raw) if isinstance(args_raw, str) else args_raw
-        )
+        ) or {}
     except Exception:
         input_params = {}
+    if not isinstance(input_params, dict):
+        input_params = {"input": input_params}
 
     return ToolCall(name=tool_name, input_parameters=input_params)
 
@@ -843,6 +845,12 @@ class OpenInferenceSpanInterceptor(SpanProcessor):
                         ConfidentAttr.SPAN_INPUT,
                         serialize_to_json(tc.input_parameters),
                     )
+
+            # Mirror Strands: surface the tool output on the ToolCall
+            # itself (the exporter rebuilds base_span.tools_called
+            # from it). output_text already covers output.value.
+            if output_text and tc and tc.output is None:
+                tc.output = output_text
 
         elif span_type in (SpanType.AGENT.value, SpanType.LLM.value):
             tools_called = _extract_tool_calls(span)
