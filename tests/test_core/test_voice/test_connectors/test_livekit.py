@@ -122,7 +122,7 @@ async def test_an_agent_already_in_the_room_is_heard_on_its_voice_track(
 async def _state_watching_connector(monkeypatch):
     install_fake_livekit(monkeypatch, livekit_module)
     monkeypatch.setattr(livekit_module, "_TURN_END_SETTLE_S", 0.01)
-    connector = _connector()
+    connector = _connector(transcript_grace_s=0.0)
     await connector._join_room()
     return connector
 
@@ -352,3 +352,35 @@ async def test_a_reply_with_a_tool_call_pause_is_one_assistant_turn(
 
     assert [turn.role for turn in turns] == ["assistant"]
     assert turns[0].content == "Sure, let me check. You're booked for 5pm."
+
+
+@pytest.mark.asyncio
+async def test_the_turn_waits_for_a_transcript_still_in_flight(monkeypatch):
+    connector = await _state_watching_connector(monkeypatch)
+    connector.transcript_grace_s = 1.0
+
+    connector._on_agent_state("speaking")
+    connector._on_agent_state("listening")
+    await asyncio.sleep(0.1)
+    assert _turn_ends(connector) == []
+
+    await connector._read_transcript(_TranscriptReader("Hi, this is Riley."))
+    await asyncio.sleep(0.1)
+
+    events = _drain(connector)
+    assert [
+        "transcript" if event.transcript else "turn_complete"
+        for event in events
+    ] == ["transcript", "turn_complete"]
+
+
+@pytest.mark.asyncio
+async def test_the_turn_ends_without_a_transcript_after_the_grace(monkeypatch):
+    connector = await _state_watching_connector(monkeypatch)
+    connector.transcript_grace_s = 0.05
+
+    connector._on_agent_state("speaking")
+    connector._on_agent_state("listening")
+    await asyncio.sleep(0.2)
+
+    assert len(_turn_ends(connector)) == 1

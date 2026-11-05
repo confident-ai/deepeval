@@ -48,6 +48,7 @@ TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
 BACKGROUND_AUDIO_TRACK = "background_audio"
 AGENT_STATE_ATTRIBUTE = "lk.agent.state"
 _TURN_END_SETTLE_S = 0.3
+_TRANSCRIPT_POLL_S = 0.05
 
 
 class AgentState(str, Enum):
@@ -148,6 +149,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._agent_state: Optional[str] = None
         self._agent_spoke = False
         self._turn_end_timer: Optional[asyncio.TimerHandle] = None
+        self._turn_end_deadline = 0.0
         self._agent_segments: List[str] = []
 
     @property
@@ -613,12 +615,23 @@ class LiveKitConnector(BaseVoiceConnector):
                 self._agent_segments = []
             return
         if self._agent_spoke and self._turn_end_timer is None:
+            self._turn_end_deadline = (
+                self._loop.time() + _TURN_END_SETTLE_S + self.transcript_grace_s
+            )
             self._turn_end_timer = self._loop.call_later(
                 _TURN_END_SETTLE_S, self._end_agent_turn
             )
 
     def _end_agent_turn(self) -> None:
         self._turn_end_timer = None
+        if (
+            not self._agent_segments
+            and self._loop.time() < self._turn_end_deadline
+        ):
+            self._turn_end_timer = self._loop.call_later(
+                _TRANSCRIPT_POLL_S, self._end_agent_turn
+            )
+            return
         self._agent_spoke = False
         if self._out_frames is not None:
             self._out_frames.put_nowait(
