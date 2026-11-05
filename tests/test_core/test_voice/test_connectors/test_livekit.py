@@ -384,3 +384,76 @@ async def test_the_turn_ends_without_a_transcript_after_the_grace(monkeypatch):
     await asyncio.sleep(0.2)
 
     assert len(_turn_ends(connector)) == 1
+
+
+class _HeldTranscriptReader:
+    def __init__(self, text):
+        self.text = text
+        self.release = asyncio.Event()
+        self.info = SimpleNamespace(
+            attributes={"lk.transcription_final": "true"}
+        )
+
+    async def read_all(self):
+        await self.release.wait()
+        return self.text
+
+
+async def _no_chunks():
+    return
+    yield
+
+
+@pytest.mark.asyncio
+async def test_the_turn_end_waits_for_a_transcript_still_open(monkeypatch):
+    connector = await _state_watching_connector(monkeypatch)
+    connector.transcript_grace_s = 1.0
+    connector._on_agent_state("speaking")
+    await connector._read_transcript(_TranscriptReader("Sure, let me check."))
+    still_open = _HeldTranscriptReader("You're booked for 5pm.")
+    connector._on_transcript_stream(still_open, "agent")
+
+    connector._on_agent_state("listening")
+    await asyncio.sleep(0.1)
+    assert _turn_ends(connector) == []
+
+    still_open.release.set()
+    await asyncio.sleep(0.1)
+    assert _transcripts(connector) == [
+        "Sure, let me check. You're booked for 5pm."
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_transcript_finishing_after_its_turn_ended_is_dropped(
+    monkeypatch,
+):
+    connector = await _state_watching_connector(monkeypatch)
+    connector._on_agent_state("speaking")
+    late = _HeldTranscriptReader("What can I help you with?")
+    connector._on_transcript_stream(late, "agent")
+    connector._on_agent_state("listening")
+    await asyncio.sleep(0.05)
+    _drain(connector)
+
+    connector._on_agent_state("speaking")
+    late.release.set()
+    await asyncio.sleep(0.05)
+    await connector._read_transcript(_TranscriptReader("Your order shipped."))
+
+    assert _transcripts(connector) == ["Your order shipped."]
+
+
+@pytest.mark.asyncio
+async def test_without_agent_state_the_caller_speaking_closes_the_agent_turn(
+    monkeypatch,
+):
+    connector = await _state_watching_connector(monkeypatch)
+    late = _HeldTranscriptReader("I'm here to help you with anything.")
+    connector._on_transcript_stream(late, "agent")
+
+    await connector.stream_uplink_chunks(_no_chunks())
+    late.release.set()
+    await asyncio.sleep(0.05)
+
+    assert _transcripts(connector) == []
