@@ -296,9 +296,7 @@ test("an errored check uploads its verdicts and error", () => {
 test.each([false, true])(
   "push, queue and update keep judge config local (conversation=%s)",
   async (conversation) => {
-    const send = jest
-      .spyOn(Api.prototype, "sendRequest")
-      .mockResolvedValue({});
+    const send = jest.spyOn(Api.prototype, "sendRequest").mockResolvedValue({});
     jest.spyOn(console, "log").mockImplementation(() => {});
     const expectations = new Expectations({
       must: ["Cite a source"],
@@ -325,7 +323,11 @@ test.each([false, true])(
 
     const key = conversation ? "conversationalGoldens" : "goldens";
     const bodies = send.mock.calls.map((call) => call[2] as any);
-    for (const goldenBody of [bodies[0][key][0], bodies[1][key][0], bodies[2]]) {
+    for (const goldenBody of [
+      bodies[0][key][0],
+      bodies[1][key][0],
+      bodies[2],
+    ]) {
       expect(goldenBody.expectations).toEqual({
         must: ["Cite a source"],
         mustNot: ["Mention competitors"],
@@ -493,9 +495,9 @@ test("unable to evaluate keeps verdicts and skips the reason pass", async () => 
   await expect(evaluator.measure(testCase)).rejects.toThrow(
     "Unable to evaluate expectations",
   );
-  expect(evaluator.verdicts.map((v: { status: string }) => v.status)).toEqual(
-    ["unable_to_evaluate"],
-  );
+  expect(evaluator.verdicts.map((v: { status: string }) => v.status)).toEqual([
+    "unable_to_evaluate",
+  ]);
   expect(evaluator.reason).toBeUndefined();
   expect(model.reasonPrompts).toHaveLength(0);
 });
