@@ -163,3 +163,20 @@ async def test_the_agents_transcript_of_the_caller_starts_a_caller_turn(
 
     assert _emitted_transcripts(connector) == ["Hello there.", "Of course."]
     await connector.disconnect()
+
+
+@pytest.mark.asyncio
+async def test_a_new_agent_reply_starts_an_empty_transcript(monkeypatch):
+    connector = await _joined(monkeypatch)
+    now = livekit_module._now_ms()
+    await connector._read_transcript(_FinalReader("Welcome to Acme.", now))
+
+    connector.start_agent_reply()
+    await connector._read_transcript(_FinalReader("How can I help?", now + 5))
+
+    assert _emitted_transcripts(connector) == [
+        "Welcome to Acme.",
+        "How can I help?",
+    ]
+    assert not connector.transcript_covers_reply
+    await connector.disconnect()

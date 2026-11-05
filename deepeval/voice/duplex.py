@@ -281,7 +281,7 @@ class DuplexExchange:
             )
 
         def _silence_needed_ms() -> float:
-            if _reads_finished():
+            if self.connector.transcript_covers_reply and _reads_finished():
                 return min(_SEMANTIC_EOT_SILENCE_MS, eot_silence)
             return eot_silence
 
@@ -490,6 +490,7 @@ class DuplexExchange:
                 sent_at=last_uplink_at,
                 awaiting_end_signal=self.connector.signals_turn_complete,
             )
+            self.connector.start_agent_reply()
 
         async def _restart_after_barge() -> None:
             """Record the reply a barge cut off and listen for the next one.

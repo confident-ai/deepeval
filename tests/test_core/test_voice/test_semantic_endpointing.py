@@ -82,6 +82,30 @@ class _QuietAfterSentence(BaseVoiceConnector):
             yield AgentEvent(audio=_QUIET, received_at=time.perf_counter())
 
 
+class _PartTranscripts(_QuietAfterSentence):
+    """Sends a finished-looking transcript of only part of its reply."""
+
+    def __init__(self):
+        self.replies_started = 0
+
+    @property
+    def transcript_covers_reply(self) -> bool:
+        return False
+
+    def start_agent_reply(self) -> None:
+        self.replies_started += 1
+
+    async def iter_agent_events(self):
+        yield AgentEvent(
+            audio=_SPEECH,
+            transcript="Welcome to Acme.",
+            received_at=time.perf_counter(),
+        )
+        while True:
+            await asyncio.sleep(0.02)
+            yield AgentEvent(audio=_QUIET, received_at=time.perf_counter())
+
+
 def _run_exchange(connector, stt_model):
     exchange = DuplexExchange(
         connector=connector,
@@ -159,3 +183,20 @@ def test_duplex_listen_captures_the_greeting():
     assert len(turns) == 1
     assert turns[0].role == "assistant"
     assert turns[0].content == "Hi, this is Riley. How can I help?"
+
+
+def test_a_part_of_a_reply_that_reads_finished_waits_out_the_full_window():
+    connector = _PartTranscripts()
+    connector.end_of_turn_silence_ms = 1200
+    connector.max_turn_timeout_s = 4.0
+    started = time.perf_counter()
+    result = _run_exchange(connector, _SentenceSTT("Welcome to Acme."))
+    assert time.perf_counter() - started > 1.0
+    assert result.turns[0].content == "Welcome to Acme."
+
+
+def test_ending_an_agent_turn_tells_the_connector_a_new_reply_starts():
+    connector = _PartTranscripts()
+    connector.end_of_turn_silence_ms = 300
+    _run_exchange(connector, _SentenceSTT("Welcome to Acme."))
+    assert connector.replies_started == 1

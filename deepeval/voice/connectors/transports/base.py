@@ -217,6 +217,20 @@ class BaseVoiceConnector(ABC):
         """
         return False
 
+    @property
+    def transcript_covers_reply(self) -> bool:
+        """Whether a transcript the transport sends describes the agent's whole reply.
+
+        When it does, a reply that reads as finished can end on a short pause.
+        When a transcript only marks the end of one part of the reply, as
+        LiveKit's per-message finals do, a finished-looking part says nothing
+        about whether the agent is done.
+        """
+        return True
+
+    def start_agent_reply(self) -> None:
+        """The agent's previous turn has ended; text gathered for it is spent."""
+
     async def stop_uplink(self) -> None:
         """Cancel in-flight user PCM from `stream_uplink` (floor-control yield)."""
         raise NotImplementedError(

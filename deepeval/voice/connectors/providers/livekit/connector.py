@@ -440,6 +440,13 @@ class LiveKitConnector(BaseVoiceConnector):
                 AgentEvent(transcript=text, received_at=time.perf_counter())
             )
 
+    @property
+    def transcript_covers_reply(self) -> bool:
+        return False
+
+    def start_agent_reply(self) -> None:
+        self._agent_transcript_parts = []
+
     def _note_caller_speech(self) -> None:
         now_ms = _now_ms()
         if now_ms - self._caller_last_voiced_ms > _CALLER_TURN_GAP_MS:
