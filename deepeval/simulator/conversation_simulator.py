@@ -126,6 +126,43 @@ class _AgentBacklog:
         self.trailing_silence_s = 0.0
 
 
+def _continued_agent_turn(previous: Turn, content: str, audio: "Audio") -> Turn:
+    """The agent's turn with what it went on to say before the caller spoke.
+
+    A pause long enough to end the turn is still the same turn when nobody
+    answered it, so the two halves are joined with the pause kept between them.
+    """
+    from deepeval.voice.connectors import audio_utils
+    from deepeval.voice.duplex import _pcm_to_audio
+
+    joined = " ".join(
+        part for part in (previous.content.strip(), content.strip()) if part
+    )
+    earlier_audio = previous.audio
+    if earlier_audio is None or earlier_audio.start_time is None:
+        return previous.model_copy(update={"content": joined, "audio": audio})
+    try:
+        earlier, rate, channels = audio_utils.wav_bytes_to_pcm16(
+            earlier_audio.get_bytes()
+        )
+        later, later_rate, later_channels = audio_utils.wav_bytes_to_pcm16(
+            audio.get_bytes()
+        )
+    except (TypeError, ValueError):
+        return previous.model_copy(update={"content": joined})
+    earlier = audio_utils.downmix_to_mono(earlier, channels)
+    later = audio_utils.downmix_to_mono(later, later_channels)
+    if later_rate != rate:
+        later = audio_utils.resample_pcm16(later, later_rate, rate)
+    earlier_end = earlier_audio.start_time + len(earlier) / 2 / rate
+    pause_s = max(0.0, (audio.start_time or earlier_end) - earlier_end)
+    merged = _pcm_to_audio(
+        earlier + b"\x00\x00" * int(pause_s * rate) + later, rate
+    )
+    merged.start_time = earlier_audio.start_time
+    return previous.model_copy(update={"content": joined, "audio": merged})
+
+
 @dataclass
 class _VoiceSession:
     """One conversation's live session: its connector, caller, and floor state."""
@@ -1534,6 +1571,11 @@ class ConversationSimulator:
         index = len(turns)
         if turns and turns[-1].role == "user":
             index -= 1
+        if index > 0 and turns[index - 1].role == "assistant":
+            turns[index - 1] = _continued_agent_turn(
+                turns[index - 1], text or "", audio
+            )
+            return True
         turns.insert(
             index, Turn(role="assistant", content=text or "", audio=audio)
         )
