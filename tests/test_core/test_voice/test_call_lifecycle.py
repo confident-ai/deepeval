@@ -6,6 +6,7 @@ from typing import Optional
 import pytest
 
 from deepeval.dataset import ConversationalGolden
+from deepeval.test_case import AudioChunk
 from deepeval.simulator import ConversationSimulator
 from deepeval.simulator.conversation_simulator import _VoiceSession
 from deepeval.voice import CallbackVoiceConnector, LiveKitConnector, VoiceConfig
@@ -283,3 +284,64 @@ async def test_a_stale_end_signal_without_speech_is_dropped():
     assert not took
     assert turns == []
     assert connector._out_frames.empty()
+
+
+@pytest.mark.asyncio
+async def test_hanging_up_wakes_a_reader_waiting_on_the_agent():
+    connector = _livekit()
+    reader = asyncio.create_task(_collect(connector.iter_agent_events()))
+    await asyncio.sleep(0)
+
+    await connector.disconnect()
+
+    assert connector.call_ended
+    assert await asyncio.wait_for(reader, timeout=1) == []
+
+
+@pytest.mark.asyncio
+async def test_a_hung_up_call_takes_no_more_caller_audio():
+    connector = _livekit()
+    await connector.disconnect()
+
+    async def chunks():
+        yield AudioChunk.from_bytes(
+            VOICED * 240, "audio/pcm", sampleRate=24000, encoding="pcm16"
+        )
+
+    result = await connector.stream_uplink_chunks(chunks())
+
+    assert result.first_frame_at is None
+
+
+class _EndableConnector(_DuplexConnector):
+    def __init__(self, agent, line: SimpleNamespace):
+        super().__init__(agent)
+        self.line = line
+
+    @property
+    def call_ended(self) -> bool:
+        return self.line.dead
+
+
+class _HangsUpWhileTheCallerThinks(StaticSimulatorModel):
+    def __init__(self, line: SimpleNamespace):
+        super().__init__()
+        self.line = line
+
+    def generate(self, prompt: str, schema=None):
+        result = super().generate(prompt, schema=schema)
+        if self.user_input_count == 2:
+            self.line.dead = True
+        return result
+
+
+def test_a_line_written_after_the_call_ended_is_never_said():
+    line = SimpleNamespace(dead=False)
+    case = _simulate(
+        _EndableConnector(EchoAgent(), line),
+        max_user_simulations=3,
+        simulator_model=_HangsUpWhileTheCallerThinks(line),
+    )
+
+    assert [turn.role for turn in case.turns] == ["user", "assistant"]
+    assert case.metadata["Stop reason"] == "The agent ended the call"
