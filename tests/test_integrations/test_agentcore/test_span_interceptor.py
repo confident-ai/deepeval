@@ -36,7 +36,9 @@ import pytest
 from deepeval.integrations.agentcore.instrumentator import (
     AgentCoreInstrumentationSettings,
     AgentCoreSpanInterceptor,
+    _extract_tool_call_from_tool_span,
 )
+from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.context import (
     current_span_context,
     current_trace_context,
@@ -745,3 +747,52 @@ def test_settings_no_api_key_does_not_raise(monkeypatch):
     instance = AgentCoreInstrumentationSettings()
     assert instance is not None
     assert instance.api_key is None
+
+
+# ---------------------------------------------------------------------------
+# Tool-span hardening parity with Strands (symmetric fix for #3103).
+# ---------------------------------------------------------------------------
+
+
+class TestToolSpanGenAiParity:
+    @pytest.mark.parametrize(
+        ("args_raw", "expected"),
+        [
+            ("[1, 2, 3]", {"input": [1, 2, 3]}),
+            ('"just a string"', {"input": "just a string"}),
+            ("null", {}),
+        ],
+    )
+    def test_extract_wraps_non_dict_args(self, args_raw, expected):
+        """Non-dict tool args must not raise; mirrors Strands hardening."""
+
+        class _Span:
+            attributes = {
+                "gen_ai.tool.name": "lookup",
+                "gen_ai.tool.call.arguments": args_raw,
+            }
+
+        tc = _extract_tool_call_from_tool_span(_Span())
+        assert tc is not None
+        assert tc.input_parameters == expected
+
+    def test_tool_span_genai_result_key_sets_output(self):
+        """`gen_ai.tool.call.result` must land on SPAN_OUTPUT + tc.output."""
+        interceptor = AgentCoreSpanInterceptor(_make_settings())
+        span = _make_mock_span(
+            operation_name="execute_tool",
+            tool_name="lookup",
+            span_name="execute_tool lookup",
+        )
+        span.attributes["gen_ai.tool.call.arguments"] = '{"q": 1}'
+        span.attributes["gen_ai.tool.call.result"] = '{"status": "ok"}'
+
+        interceptor._serialize_framework_attrs(span)
+
+        assert (
+            span.attributes.get(ConfidentAttr.SPAN_OUTPUT) == '{"status": "ok"}'
+        )
+        raw = span.attributes.get(ConfidentAttr.SPAN_TOOLS_CALLED)
+        assert raw
+        first = json.loads(raw[0])
+        assert first["output"] == '{"status": "ok"}'
