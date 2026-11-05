@@ -4,6 +4,8 @@
     "community-metrics-overview",
     "metrics-citation-faithfulness",
     "metrics-agent-loop-detection",
+    "metrics-answer-consistency",
+    "metrics-retrieval-consistency",
     "metrics-tool-permission"
   ]
 }

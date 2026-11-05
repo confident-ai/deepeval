@@ -259,6 +259,9 @@
   "/docs/metrics-agent-responsiveness": [
     "python"
   ],
+  "/docs/metrics-answer-consistency": [
+    "python"
+  ],
   "/docs/metrics-answer-relevancy": [
     "python",
     "typescript"
@@ -385,6 +388,9 @@
     "typescript"
   ],
   "/docs/metrics-ragas": [
+    "python"
+  ],
+  "/docs/metrics-retrieval-consistency": [
     "python"
   ],
   "/docs/metrics-role-adherence": [

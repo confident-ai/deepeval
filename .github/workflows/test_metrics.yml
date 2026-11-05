@@ -65,7 +65,7 @@ jobs:
       #    Install Pillow for PIL and mcp[cli]
       #----------------------------------------------
       - name: Install metric dependencies
-        run: poetry run pip install Pillow mcp["cli"]
+        run: poetry run pip install Pillow mcp["cli"] "repeatability-evals>=0.3.0"
 
       #----------------------------------------------
       #              run test suite

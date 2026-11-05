@@ -1,0 +1,72 @@
+---
+id: metrics-retrieval-consistency
+title: Retrieval Consistency
+sidebar_label: Retrieval Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceless={true} />
+
+The retrieval consistency metric measures how consistently your retriever returns the same evidence for the **same input** across repeated runs. It needs no relevance labels and no LLM: it compares the sets of chunks returned by different runs, so it is fast, free to run, and deterministic.
+
+:::info
+The `RetrievalConsistencyMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics`; import them explicitly from `deepeval.metrics.community` instead. It requires the [`repeatability-evals`](https://github.com/krishna-gogineni-765/repeatability-evals) package: `pip install "repeatability-evals>=0.3.0"`.
+:::
+
+:::note
+Consistency is not relevance. A retriever that always returns the same irrelevant chunks scores `1.0`. Use it alongside [`ContextualRelevancyMetric`](/docs/metrics-contextual-relevancy) and friends, and to detect retrieval that shifts between runs or after an index or embedding-model change.
+:::
+
+## Required Arguments
+
+To use the `RetrievalConsistencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `metadata["retrieval_runs"]`: a list of **at least two** retrieval results for this same `input`. Each result is the list of chunks that run retrieved: chunk IDs for `mode="id"`, or chunk texts for `mode="ngram"`.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import RetrievalConsistencyMetric
+
+# The chunk IDs your retriever returned on three runs of the same query.
+retrieval_runs = [
+    ["doc-12", "doc-7", "doc-3"],
+    ["doc-7", "doc-12", "doc-3"],
+    ["doc-12", "doc-7", "doc-41"],
+]
+
+metric = RetrievalConsistencyMetric(mode="id")
+test_case = LLMTestCase(
+    input="How long are gold backups retained?",
+    actual_output="30 days.",
+    metadata={"retrieval_runs": retrieval_runs},
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are seven optional parameters when creating a `RetrievalConsistencyMetric`:
+
+- [Optional] `mode`: `"id"` or `"ngram"`. Defaulted to `"ngram"`.
+- [Optional] `ngram_size`: the word n-gram length used in `"ngram"` mode. Defaulted to `3`.
+- [Optional] `threshold`: a float representing the minimum passing score, defaulted to `0.8`.
+- [Optional] `max_comparisons`: the number of run pairs to compare. Defaulted to the number of runs.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `1` for perfection, `0` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The `RetrievalConsistencyMetric` score is the mean similarity over the compared pairs of runs. Order within a run is ignored.
+
+- `mode="id"`: the Jaccard similarity of the two runs' chunk-ID sets (`|A ∩ B| / |A ∪ B|`). Exact and cheap, but any re-chunking or re-indexing changes the IDs.
+- `mode="ngram"`: the Jaccard similarity of the word n-gram sets of each run's pooled chunk text. The same evidence split into different chunks still matches, so it is robust to re-chunking and to IDs that are not stable.
+
+Comparing every pair of `N` runs takes `N(N-1)/2` comparisons. By default the metric compares a random cycle of `N` pairs, so every run is compared at least twice. Set `max_comparisons` to change this.
