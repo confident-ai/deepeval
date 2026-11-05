@@ -4,12 +4,14 @@ import logging
 import time
 import uuid
 from datetime import timedelta
+from enum import Enum
 from typing import (
     Any,
     AsyncIterable,
     AsyncIterator,
     Callable,
     ClassVar,
+    Dict,
     List,
     Optional,
     Set,
@@ -44,6 +46,19 @@ _INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 TRANSCRIPTION_TOPIC = "lk.transcription"
 TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
 BACKGROUND_AUDIO_TRACK = "background_audio"
+AGENT_STATE_ATTRIBUTE = "lk.agent.state"
+_TURN_END_SETTLE_S = 0.3
+
+
+class AgentState(str, Enum):
+    INITIALIZING = "initializing"
+    IDLE = "idle"
+    LISTENING = "listening"
+    THINKING = "thinking"
+    SPEAKING = "speaking"
+
+
+_BUSY_AGENT_STATES = frozenset({AgentState.THINKING, AgentState.SPEAKING})
 
 
 class LiveKitConnector(BaseVoiceConnector):
@@ -130,6 +145,9 @@ class LiveKitConnector(BaseVoiceConnector):
         self._provider_transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
         self._call_ended = False
+        self._agent_state: Optional[str] = None
+        self._agent_spoke = False
+        self._turn_end_timer: Optional[asyncio.TimerHandle] = None
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -143,6 +161,7 @@ class LiveKitConnector(BaseVoiceConnector):
         await self._join_room()
         await self._after_join()
         await self._await_agent_track()
+        self._adopt_agent_state()
 
     async def _join_room(self) -> None:
         self._rtc = require_dependency(
@@ -161,6 +180,8 @@ class LiveKitConnector(BaseVoiceConnector):
         self._transcript_tasks = set()
         self._uplink = UplinkStream()
         self._call_ended = False
+        self._agent_state = None
+        self._agent_spoke = False
         self._room = (
             self._room_arg if self._room_arg is not None else rtc.Room()
         )
@@ -172,6 +193,9 @@ class LiveKitConnector(BaseVoiceConnector):
             "participant_disconnected", self._on_participant_disconnected
         )
         self._room.on("disconnected", self._on_room_disconnected)
+        self._room.on(
+            "participant_attributes_changed", self._on_attributes_changed
+        )
         self._register_transcript_handler()
 
         if not self._is_room_connected():
@@ -559,6 +583,48 @@ class LiveKitConnector(BaseVoiceConnector):
         return True
 
     @property
+    def signals_turn_complete(self) -> bool:
+        return self._agent_state is not None
+
+    def _adopt_agent_state(self) -> None:
+        attributes = getattr(self._agent_participant, "attributes", None)
+        state = (attributes or {}).get(AGENT_STATE_ATTRIBUTE)
+        if state:
+            self._on_agent_state(state)
+
+    def _on_attributes_changed(
+        self, changed: Dict[str, str], participant
+    ) -> None:
+        state = changed.get(AGENT_STATE_ATTRIBUTE)
+        if state and self._is_agent_participant(participant):
+            self._on_agent_state(state)
+
+    def _on_agent_state(self, state: str) -> None:
+        self._agent_state = state
+        if state in _BUSY_AGENT_STATES:
+            self._cancel_turn_end()
+            if state == AgentState.SPEAKING:
+                self._agent_spoke = True
+            return
+        if self._agent_spoke and self._turn_end_timer is None:
+            self._turn_end_timer = self._loop.call_later(
+                _TURN_END_SETTLE_S, self._end_agent_turn
+            )
+
+    def _end_agent_turn(self) -> None:
+        self._turn_end_timer = None
+        self._agent_spoke = False
+        if self._out_frames is not None:
+            self._out_frames.put_nowait(
+                AgentEvent(turn_complete=True, received_at=time.perf_counter())
+            )
+
+    def _cancel_turn_end(self) -> None:
+        if self._turn_end_timer is not None:
+            self._turn_end_timer.cancel()
+            self._turn_end_timer = None
+
+    @property
     def supports_parallel_calls(self) -> bool:
         return (
             self._room_arg is None
@@ -724,6 +790,7 @@ class LiveKitConnector(BaseVoiceConnector):
         )
 
     async def disconnect(self) -> None:
+        self._cancel_turn_end()
         await self.stop_uplink()
         if self._drain_task is not None:
             self._drain_task.cancel()
