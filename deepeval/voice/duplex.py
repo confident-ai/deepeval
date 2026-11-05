@@ -429,10 +429,13 @@ class DuplexExchange:
                 if has_audio
                 else None
             )
-            if audio is not None and utterance.first_audio_at is not None:
-                audio.start_time = max(
-                    0.0, utterance.first_audio_at - self.call_started_at
+            if audio is not None:
+                heard_at = (
+                    utterance.first_audio_at
+                    if utterance.first_audio_at is not None
+                    else utterance.sent_at
                 )
+                audio.start_time = max(0.0, heard_at - self.call_started_at)
             metadata = None
             # The agent never said it had finished, so this turn ended because
             # we stopped listening — its recording can hold less than the
