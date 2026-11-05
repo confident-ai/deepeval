@@ -58,11 +58,12 @@ let started:
 
 /**
  * Whether confident-trace registers its provider as the global one, so other
- * OpenTelemetry spans are traced too. On unless
- * `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is false.
+ * OpenTelemetry spans are traced too. Off unless
+ * `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is true, so the application's own
+ * OpenTelemetry setup is never rejected.
  */
 export function sharesGlobalProvider(): boolean {
-  return envBool(DEEPEVAL_GLOBAL_TRACER_PROVIDER) !== false;
+  return envBool(DEEPEVAL_GLOBAL_TRACER_PROVIDER) === true;
 }
 
 /**
@@ -127,7 +128,7 @@ export function ensureConfidentTrace(
     console.warn(
       "[DeepEval] confident-trace couldn't start, so integrations won't trace. " +
         "Another OpenTelemetry tracer provider may already be registered; " +
-        `set ${DEEPEVAL_GLOBAL_TRACER_PROVIDER}=false to trace beside it.`,
+        `unset ${DEEPEVAL_GLOBAL_TRACER_PROVIDER} to trace beside it.`,
     );
     return false;
   }
@@ -189,8 +190,8 @@ export function startObservedSpan(
 ): { span: OtelSpan; placeholder?: BaseSpan } | undefined {
   if (!ensureConfidentTrace() || !started) return undefined;
   const { bridge, runtime } = started;
-  // On confident-trace's provider, which isn't the global one when
-  // `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is false.
+  // On confident-trace's provider, which isn't the global one unless
+  // `DEEPEVAL_GLOBAL_TRACER_PROVIDER` is true.
   const span = withStaged(staged, () =>
     runtime.provider
       .getTracer(OBSERVE_SCOPE)

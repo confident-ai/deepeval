@@ -137,9 +137,10 @@ def ensure_confident_trace(
 
 def _shares_global_provider() -> bool:
     """Whether confident-trace's provider becomes the global one when none is
-    set, so other OpenTelemetry spans are traced too. On unless
-    ``DEEPEVAL_GLOBAL_TRACER_PROVIDER`` is false."""
-    return get_settings().DEEPEVAL_GLOBAL_TRACER_PROVIDER is not False
+    set, so other OpenTelemetry spans are traced too. Off unless
+    ``DEEPEVAL_GLOBAL_TRACER_PROVIDER`` is true, so the application's own
+    OpenTelemetry setup is never rejected."""
+    return get_settings().DEEPEVAL_GLOBAL_TRACER_PROVIDER is True
 
 
 def use_global_provider() -> None:
