@@ -18,6 +18,7 @@ import {
   MLLM_IMAGE_REGISTRY,
   MLLMImage,
 } from "@/test-case/mllm-image";
+import type { BaseSpan } from "@/tracing/tracing";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -121,6 +122,8 @@ export class LLMTestCase {
   /** A flaky test case reports its failures without failing the run. */
   flaky: boolean = false;
   _traceDict?: Record<string, unknown>;
+  _traceRootSpans?: BaseSpan[];
+  _traceSpan?: BaseSpan;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;

@@ -52,3 +52,23 @@ export function toZodCompatibleISO(
 export function toZodCompatibleIso(dt: Date): string {
   return dt.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
+
+export function prepareToolCallInputParameters(
+  input: any,
+): Record<string, any> {
+  let res = input;
+  if (typeof res === "string") {
+    try {
+      res = JSON.parse(res);
+    } catch {
+      // leave as string; wrapped below
+    }
+  }
+  if (res === null || res === undefined || typeof res !== "object") {
+    return { output: res };
+  }
+  if (Array.isArray(res)) {
+    return { output: res };
+  }
+  return res;
+}

@@ -65,6 +65,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _skip_metrics_for_error,
     _trace_error,
     filter_duplicate_results,
@@ -416,6 +417,7 @@ async def _a_execute_span_test_case(
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+    _attach_span_tree(test_case, current_trace, span)
 
     for metric in metrics:
         metric.skipped = False
@@ -524,6 +526,7 @@ async def _a_execute_trace_test_case(
         test_case._trace_dict = trace_manager.create_nested_spans_dict(
             trace.root_spans[0]
         )
+    _attach_span_tree(test_case, trace, None)
 
     for metric in metrics:
         metric.skipped = False

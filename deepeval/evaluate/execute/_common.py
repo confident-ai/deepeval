@@ -116,6 +116,15 @@ def _skip_metrics_for_error(
     return False
 
 
+def _attach_span_tree(
+    test_case: LLMTestCase, trace: Trace, span: Optional[BaseSpan]
+) -> None:
+    """Let metrics that look past their own span (e.g. ArgumentCorrectness)
+    reach the rest of the trace. `span` is None for a trace-level test case."""
+    test_case._trace_root_spans = trace.root_spans
+    test_case._trace_span = span
+
+
 def _trace_error(current_trace: Trace) -> Optional[str]:
     def _first_err(s: BaseSpan) -> Optional[str]:
         if s.status == TraceSpanStatus.ERRORED and s.error:

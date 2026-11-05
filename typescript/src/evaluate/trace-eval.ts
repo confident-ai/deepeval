@@ -190,6 +190,9 @@ export async function evaluateTrace(
     if (requiresTrace) {
       testCase._traceDict = traceManager.createNestedSpansDict(node);
     }
+    // For metrics that look past their own span (e.g. ArgumentCorrectness).
+    testCase._traceRootSpans = trace.rootSpans;
+    if (!isTrace) testCase._traceSpan = scope as BaseSpan;
 
     const metricsData: MetricData[] = [];
     // Trace scopes count as component evaluation too, matching what Python's

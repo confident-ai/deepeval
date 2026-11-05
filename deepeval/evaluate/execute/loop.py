@@ -85,6 +85,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _await_with_outer_deadline,
     _execute_metric,
     _log_gather_timeout,
@@ -319,6 +320,7 @@ def execute_agentic_test_cases_from_loop(
                                 advance=count_metrics_in_span_subtree(span),
                             )
                         return
+                _attach_span_tree(llm_test_case, current_trace, span)
 
                 # Preparing metric calculation
                 api_span.metrics_data = []
@@ -411,6 +413,7 @@ def execute_agentic_test_cases_from_loop(
                             current_trace.root_spans[0]
                         )
                     )
+                _attach_span_tree(llm_test_case, current_trace, None)
 
                 if not skip_metrics_for_this_golden:
                     for metric in current_trace.metrics:
