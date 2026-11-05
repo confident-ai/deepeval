@@ -4,6 +4,7 @@ import pytest
 
 from tests.test_core.stubs import RecordingPortalockerLock
 import deepeval.prompt.prompt as prompt_mod
+from deepeval.prompt.api import PromptType, PromptInterpolationType
 from tests.test_core.helpers import _make_fake_portalocker
 
 
@@ -61,3 +62,42 @@ def test_write_to_cache_flushes_and_syncs(
         fsync_calls
     ), "Prompt._write_to_cache should call os.fsync(f.fileno())"
     assert fsync_calls[-1] == f.fileno()
+
+
+def test_read_from_cache_branch_round_trip(monkeypatch, tmp_path):
+    """A branch-pinned prompt written to the cache must be readable back.
+
+    _write_to_cache stores branch pulls under the "branch" section only, but
+    _read_from_cache gated the branch lookup on the presence of the unrelated
+    "hash" section, so a valid cached branch prompt was a silent cache miss
+    (and a spurious hard failure in the offline fallback path).
+    """
+    cache_path = tmp_path / "prompt_cache.json"
+    monkeypatch.setattr(
+        prompt_mod, "CACHE_FILE_NAME", str(cache_path), raising=False
+    )
+    monkeypatch.setattr(prompt_mod, "HIDDEN_DIR", str(tmp_path), raising=False)
+
+    dummy_self = types.SimpleNamespace(alias="my-alias")
+
+    # A branch pull writes a "branch" section and no "hash" section.
+    prompt_mod.Prompt._write_to_cache(
+        dummy_self,
+        cache_key=prompt_mod.BRANCH_CACHE_KEY,
+        hash="h1",
+        branch="main",
+        text_template="hello {name}",
+        prompt_id="p1",
+        type=PromptType.TEXT,
+        interpolation_type=PromptInterpolationType.FSTRING,
+    )
+
+    cached = prompt_mod.Prompt._read_from_cache(
+        dummy_self, alias="my-alias", branch="main"
+    )
+
+    assert (
+        cached is not None
+    ), "branch-pinned prompt in cache should be a hit, not a silent miss"
+    assert cached.template == "hello {name}"
+    assert cached.branch == "main"
