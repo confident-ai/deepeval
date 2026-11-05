@@ -8,6 +8,8 @@ Contributor reference for the framework integrations.
 
 Every integration runs on confident-trace. Its entry point calls `ensure_confident_trace(...)` (`deepeval/tracing/otel/setup.py`) with the confident-trace instrumentations it needs. Those instrumentations, or the framework's own OpenTelemetry telemetry that they switch on, produce the spans.
 
+A framework's own telemetry goes to the global tracer provider, which deepeval otherwise leaves to the application. An entry point that relies on it passes `global_provider=True`: confident-trace's provider becomes the global one when none is set, or deepeval's processors join the application's. Only an integration the user sets up does this; automatic tracing never does.
+
 `@observe` runs on confident-trace too: each observed function is a confident-trace span.
 
 `DeepEvalSpanBridge` (`deepeval/tracing/otel/bridge.py`) collects the spans of every trace deepeval consumes: one inside `@observe` / `with trace(...)`, in `evals_iterator` or `evaluate`, or under a trace-shape test. It converts them into deepeval spans (`converter.py`), so metrics, `update_current_span(...)`, `update_current_trace(...)` and `next_*_span(...)` work the same as with `@observe`. confident-trace exports every trace to Confident AI, except one an evaluation or a trace-shape test consumes locally.

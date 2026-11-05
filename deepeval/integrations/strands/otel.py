@@ -37,5 +37,5 @@ def instrument_strands(
     ``update_current_span(...)`` or ``next_*_span(...)``.
     """
     with capture_tracing_integration(Integration.STRANDS):
-        ensure_confident_trace(("strands",))
+        ensure_confident_trace(("strands",), global_provider=True)
         set_trace_defaults(SCOPE, dict(locals()))
