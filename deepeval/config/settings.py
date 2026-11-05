@@ -990,7 +990,7 @@ class Settings(BaseSettings):
         None,
         description="Enable detailed internal tracing of metric and model methods inside @observe spans.",
     )
-    DEEPEVAL_AUTO_TRACING: Optional[bool] = Field(
+    DEEPEVAL_AUTO_TRACE: Optional[bool] = Field(
         True,
         description="Trace every installed library confident-trace supports while evals_iterator or deepeval test run runs. Set to false to trace only @observe code and the integrations you set up.",
     )
@@ -1189,7 +1189,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_DISABLE_TIMEOUTS",
         "DEEPEVAL_VERBOSE_MODE",
         "DEEPEVAL_GRPC_LOGGING",
-        "DEEPEVAL_AUTO_TRACING",
+        "DEEPEVAL_AUTO_TRACE",
         "DEEPEVAL_DISABLE_DOTENV",
         "DEEPEVAL_GLOBAL_TRACER_PROVIDER",
         "DEEPEVAL_TELEMETRY_OPT_OUT",

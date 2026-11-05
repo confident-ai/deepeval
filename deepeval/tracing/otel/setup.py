@@ -168,10 +168,10 @@ def start_automatic_tracing() -> Callable[[], None]:
     Evaluations call this so the user's code is traced without setting up an
     integration. Libraries an integration turned on stay on, and overlapping
     evaluations share one set of patches. Off when
-    ``DEEPEVAL_AUTO_TRACING`` is false.
+    ``DEEPEVAL_AUTO_TRACE`` is false.
     """
     global _automatic_users
-    if get_settings().DEEPEVAL_AUTO_TRACING is False:
+    if get_settings().DEEPEVAL_AUTO_TRACE is False:
         return lambda: None
     if not ensure_confident_trace():
         return lambda: None
