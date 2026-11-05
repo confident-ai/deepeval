@@ -25,7 +25,11 @@ def extract_messages_api_input_parameters(
     tools = kwargs.get("tools")
     messages = kwargs.get("messages")
     tool_descriptions = (
-        {tool["name"]: tool["description"] for tool in tools}
+        {
+            tool["name"]: tool["description"]
+            for tool in tools
+            if tool.get("description") is not None
+        }
         if tools is not None
         else None
     )
