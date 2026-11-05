@@ -11,6 +11,13 @@
           "/img/confident-tracing-observability.png"
         ]
       }
+    },
+    {
+      "file": "voice-call-trace-audio.webp",
+      "title": "Voice call trace with call recording",
+      "alt": "Confident AI trace of a LiveKit voice call: call recording player with audio issues marked, span tree of turns, and audio players on messages",
+      "width": 1920,
+      "height": 1326
     }
   ]
 }
