@@ -161,6 +161,15 @@ class MLLMImage:
 
             img = _MLLM_IMAGE_REGISTRY.get(img_id)
             if img is None:
+                # Placeholder text can come from the output under evaluation,
+                # so an unregistered id is only ever treated as a remote URL
+                # and never resolved against the local filesystem.
+                if not img_id.startswith(("http://", "https://")):
+                    raise ValueError(
+                        f"Unknown multimodal placeholder id: {img_id!r}. Only "
+                        "MLLMImage instances created in this process or "
+                        "http(s) URLs can be resolved."
+                    )
                 img = MLLMImage(url=img_id, _id=img_id)
 
             result.append(img)
