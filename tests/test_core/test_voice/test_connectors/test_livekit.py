@@ -219,3 +219,136 @@ async def test_the_state_an_agent_joined_with_is_adopted(monkeypatch):
 
     assert connector.signals_turn_complete is True
     assert len(_turn_ends(connector)) == 1
+
+
+class _TranscriptReader:
+    def __init__(self, text, final=True):
+        self.text = text
+        self.info = SimpleNamespace(
+            attributes={"lk.transcription_final": str(final).lower()}
+        )
+
+    async def read_all(self):
+        return self.text
+
+
+def _transcripts(connector):
+    return [event.transcript for event in _drain(connector) if event.transcript]
+
+
+@pytest.mark.asyncio
+async def test_every_segment_of_a_reply_stays_in_its_transcript(monkeypatch):
+    connector = await _state_watching_connector(monkeypatch)
+
+    connector._on_agent_state("speaking")
+    await connector._read_transcript(_TranscriptReader("Sure, let me check."))
+    connector._on_agent_state("thinking")
+    connector._on_agent_state("speaking")
+    await connector._read_transcript(
+        _TranscriptReader("You're booked for 5pm.")
+    )
+
+    assert _transcripts(connector) == [
+        "Sure, let me check.",
+        "Sure, let me check. You're booked for 5pm.",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_the_next_reply_starts_a_fresh_transcript(monkeypatch):
+    connector = await _state_watching_connector(monkeypatch)
+
+    connector._on_agent_state("speaking")
+    await connector._read_transcript(_TranscriptReader("Hi, this is Riley."))
+    connector._on_agent_state("listening")
+    await asyncio.sleep(0.05)
+    connector._on_agent_state("thinking")
+    connector._on_agent_state("speaking")
+    await connector._read_transcript(_TranscriptReader("Your order shipped."))
+
+    assert _transcripts(connector) == [
+        "Hi, this is Riley.",
+        "Your order shipped.",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_without_agent_state_each_segment_replaces_the_last(monkeypatch):
+    install_fake_livekit(monkeypatch, livekit_module)
+    connector = _connector()
+    await connector._join_room()
+
+    await connector._read_transcript(_TranscriptReader("Sure, let me check."))
+    await connector._read_transcript(_TranscriptReader("You're booked."))
+
+    assert _transcripts(connector) == ["Sure, let me check.", "You're booked."]
+
+
+class _SilentSTT:
+    truncated_audio_pad_seconds = 0.0
+
+    async def a_transcribe(self, *_args, **_kwargs):
+        return "", 0.0
+
+
+def _audio(connector, seconds, voiced):
+    import math
+    import struct
+    import time
+
+    from deepeval.voice.connectors.types import AgentEvent
+
+    rate = connector.recv_sample_rate
+    amplitude = 8000 if voiced else 0
+    frame = b"".join(
+        struct.pack(
+            "<h", int(amplitude * math.sin(2 * math.pi * 440 * n / rate))
+        )
+        for n in range(rate // 100)
+    )
+    for _ in range(int(seconds * 100)):
+        connector._out_frames.put_nowait(
+            AgentEvent(audio=frame, received_at=time.perf_counter())
+        )
+
+
+@pytest.mark.asyncio
+async def test_a_reply_with_a_tool_call_pause_is_one_assistant_turn(
+    monkeypatch,
+):
+    import time
+
+    from deepeval.dataset import ConversationalGolden
+    from deepeval.voice.duplex import DuplexExchange
+    from deepeval.voice.floor_control import FloorController
+
+    connector = await _state_watching_connector(monkeypatch)
+    connector._on_agent_state("listening")
+    connector._on_agent_state("speaking")
+    _audio(connector, 1.0, voiced=True)
+    await connector._read_transcript(_TranscriptReader("Sure, let me check."))
+    connector._on_agent_state("thinking")
+    _audio(connector, 1.5, voiced=False)
+    connector._on_agent_state("speaking")
+    _audio(connector, 1.0, voiced=True)
+    await connector._read_transcript(
+        _TranscriptReader("You're booked for 5pm.")
+    )
+    _audio(connector, 0.3, voiced=False)
+    connector._on_agent_state("listening")
+
+    turns = []
+    await DuplexExchange(
+        connector=connector,
+        tts_model=None,
+        stt_model=_SilentSTT(),
+        policy=None,
+        floor=FloorController(),
+        golden=ConversationalGolden(scenario="Book an appointment"),
+        language="English",
+        a_generate_schema=None,
+        call_started_at=time.perf_counter(),
+    ).run(turns=turns, sent_at=time.perf_counter(), barges_this_conversation=0)
+
+    assert [turn.role for turn in turns] == ["assistant"]
+    assert turns[0].content == "Sure, let me check. You're booked for 5pm."

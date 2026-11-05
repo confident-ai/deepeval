@@ -148,6 +148,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._agent_state: Optional[str] = None
         self._agent_spoke = False
         self._turn_end_timer: Optional[asyncio.TimerHandle] = None
+        self._agent_segments: List[str] = []
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -182,6 +183,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self._call_ended = False
         self._agent_state = None
         self._agent_spoke = False
+        self._agent_segments = []
         self._room = (
             self._room_arg if self._room_arg is not None else rtc.Room()
         )
@@ -427,6 +429,9 @@ class LiveKitConnector(BaseVoiceConnector):
                     )
                 )
             return
+        if self.signals_turn_complete:
+            self._agent_segments.append(text)
+            text = " ".join(self._agent_segments)
         self._current_transcript = text
         if self._transcript_ready is not None:
             self._transcript_ready.set()
@@ -603,8 +608,9 @@ class LiveKitConnector(BaseVoiceConnector):
         self._agent_state = state
         if state in _BUSY_AGENT_STATES:
             self._cancel_turn_end()
-            if state == AgentState.SPEAKING:
+            if state == AgentState.SPEAKING and not self._agent_spoke:
                 self._agent_spoke = True
+                self._agent_segments = []
             return
         if self._agent_spoke and self._turn_end_timer is None:
             self._turn_end_timer = self._loop.call_later(
