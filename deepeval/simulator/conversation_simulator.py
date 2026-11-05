@@ -1437,14 +1437,10 @@ class ConversationSimulator:
             input_ended_at = (
                 conn_turn.input_audio_ended_at or time.perf_counter()
             )
-            if conn_turn.latency_ms is not None:
-                assistant_audio_started_at = (
-                    input_ended_at + conn_turn.latency_ms / 1000.0
-                )
-        if (
-            assistant_audio_started_at is not None
-            and conn_turn.audio is not None
-        ):
+            assistant_audio_started_at = input_ended_at + (
+                (conn_turn.latency_ms or 0.0) / 1000.0
+            )
+        if conn_turn.audio is not None:
             conn_turn.audio.start_time = max(
                 0.0, assistant_audio_started_at - call_started_at
             )
