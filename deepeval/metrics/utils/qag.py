@@ -55,23 +55,32 @@ from .generation import (
 # ``generate_qag_verdicts`` is *the* QAG entry point.
 
 
+# The leading word of a verdict, after any markdown or quote wrapper a judge
+# may add ("**yes**", "`no`", '"no"') and zero-width characters that
+# ``str.strip`` keeps.
+_LEADING_VERDICT_WORD = re.compile(
+    r"[\s*_`\"'\u201c\u201d\u2018\u2019\[(\u200b-\u200d\ufeff]*([a-z]+)"
+)
+
+
 def normalize_qag_verdict(
     raw: Any, allowed: Tuple[Verdict, ...] = YES_NO
 ) -> Optional[Verdict]:
     """Coerce a judge's verdict into a ``Verdict`` within ``allowed``.
 
     Judges don't always honor a strict instruction — a non-native model may
-    reply "No, it's off-topic". This strips, lowercases and keeps only the
-    leading word, maps legacy aliases (``idk`` -> ``Verdict.BORDERLINE``), and
+    reply "No, it's off-topic" or "**yes**". This strips, lowercases, skips
+    markdown and quote wrappers, keeps only the leading word, maps legacy
+    aliases (``idk`` -> ``Verdict.BORDERLINE``), and
     returns ``None`` for anything still outside ``allowed`` so the caller can
     drop it from scoring rather than miscount it.
     """
     if isinstance(raw, Verdict):
         return raw if raw in allowed else None
-    match = re.match(
-        r"[a-z]+", str(raw if raw is not None else "").strip().lower()
+    match = _LEADING_VERDICT_WORD.match(
+        str(raw if raw is not None else "").strip().lower()
     )
-    leading = match.group(0) if match else ""
+    leading = match.group(1) if match else ""
     verdict = LEGACY_VERDICT_ALIASES.get(leading)
     if verdict is None:
         try:
