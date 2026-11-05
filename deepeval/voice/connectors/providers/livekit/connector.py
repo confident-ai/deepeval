@@ -47,7 +47,7 @@ TRANSCRIPTION_TOPIC = "lk.transcription"
 TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
 BACKGROUND_AUDIO_TRACK = "background_audio"
 AGENT_STATE_ATTRIBUTE = "lk.agent.state"
-_TURN_END_SETTLE_S = 0.3
+_TURN_END_SETTLE_S = 0.5
 _TRANSCRIPT_POLL_S = 0.05
 
 
