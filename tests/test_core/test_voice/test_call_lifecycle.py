@@ -8,7 +8,12 @@ import pytest
 from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import AudioChunk
 from deepeval.simulator import ConversationSimulator
-from deepeval.simulator.conversation_simulator import _VoiceSession
+from deepeval.simulator.conversation_simulator import (
+    _VoiceSession,
+    _continued_agent_turn,
+)
+from deepeval.test_case import Turn
+from deepeval.voice.duplex import _pcm_to_audio
 from deepeval.voice import CallbackVoiceConnector, LiveKitConnector, VoiceConfig
 from deepeval.voice.connectors.transports.base import iter_downlink
 from deepeval.voice.connectors.types import AgentEvent
@@ -193,12 +198,29 @@ def test_the_caller_replies_to_what_the_agent_kept_saying():
     )
 
     roles = [turn.role for turn in case.turns]
-    assert roles == ["user", "assistant", "assistant", "user", "assistant"]
-    backlog, reply = case.turns[2], case.turns[3]
-    assert backlog.content == "Who am I speaking with?"
-    assert backlog.audio is not None
+    assert roles == ["user", "assistant", "user", "assistant"]
+    agent, reply = case.turns[1], case.turns[2]
+    assert agent.content.endswith("Who am I speaking with?")
+    assert agent.content != "Who am I speaking with?"
     assert reply.content == f"simulated user input {model.user_input_count}"
-    assert backlog.audio.start_time <= reply.audio.start_time
+
+
+def test_an_agent_pause_nobody_answered_stays_one_turn():
+    rate = 24000
+    first = _pcm_to_audio(VOICED * rate, rate)
+    first.start_time = 1.0
+    rest = _pcm_to_audio(VOICED * rate, rate)
+    rest.start_time = 2.5
+    opening = Turn(
+        role="assistant", content="Welcome.", audio=first, latency_ms=600.0
+    )
+
+    turn = _continued_agent_turn(opening, "Who am I speaking with?", rest)
+
+    assert turn.content == "Welcome. Who am I speaking with?"
+    assert turn.latency_ms == 600.0
+    assert turn.audio.start_time == 1.0
+    assert turn.audio.duration == pytest.approx(2.5, abs=0.01)
 
 
 def _signalling_livekit() -> LiveKitConnector:
