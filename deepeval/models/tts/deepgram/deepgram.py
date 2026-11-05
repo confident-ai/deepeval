@@ -18,6 +18,7 @@ from deepeval.models.tts.deepgram.schema import (
 )
 from deepeval.models.utils import parse_model_name, require_secret_api_key
 from deepeval.test_case import Audio, AudioChunk
+from deepeval.voice.connectors import audio_utils
 
 retry_deepgram = create_retry_decorator(PS.DEEPGRAM)
 
@@ -146,7 +147,7 @@ class DeepgramTTSModel(DeepEvalBaseTTS):
 
     def _to_audio(self, data: bytes) -> Audio:
         return Audio.from_bytes(
-            data,
+            audio_utils.normalize_wav_bytes(data),
             "audio/wav",
             sampleRate=self.sample_rate,
             encoding="wav",
