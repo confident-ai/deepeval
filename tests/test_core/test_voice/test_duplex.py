@@ -327,6 +327,25 @@ async def test_a_turn_we_stopped_listening_to_says_only_what_was_heard():
     assert audio_duration(turn.audio) == pytest.approx(0.4, abs=0.05)
 
 
+class _NeverSpeaks(_StillTalking):
+    async def iter_agent_events(self):
+        while True:
+            yield AgentEvent(
+                audio=b"\x00\x00" * 2400, received_at=time.perf_counter()
+            )
+            await asyncio.sleep(0.05)
+
+
+@pytest.mark.asyncio
+async def test_silence_we_stopped_listening_to_is_not_an_agent_turn():
+    connector = _NeverSpeaks()
+    exchange = _exchange(connector, stt_model=_StubSTT())
+
+    result = await _run_one_turn(exchange, connector, timeout=5)
+
+    assert result.turns == []
+
+
 class _SlowTTS:
     """A TTS round trip slow enough to see on the recording."""
 

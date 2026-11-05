@@ -821,7 +821,7 @@ class DuplexExchange:
             # timeout mid-reply. Not an interruption — nobody cut the agent
             # off, we stopped listening — which `_finalize_assistant` records
             # as `ended_without_agent_signal`.
-            if utterance.pcm and (
+            if utterance.started and (
                 not result.turns or result.turns[-1].role != "assistant"
             ):
                 await _finalize_assistant(interrupted=False)
