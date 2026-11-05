@@ -133,6 +133,7 @@ def convert_test_cases_to_goldens(
             "output_token_count": test_case.output_token_count,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
+            "expected_labels": test_case.expected_labels,
         }
         goldens.append(Golden(**golden))
     return goldens
@@ -194,6 +195,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "context": test_case.context,
             "additional_metadata": test_case.metadata,
             "expectations": test_case.expectations,
+            "expected_labels": test_case.expected_labels,
         }
         goldens.append(ConversationalGolden(**golden))
     return goldens
