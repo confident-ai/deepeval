@@ -212,6 +212,15 @@ for await (const golden of dataset.evalsIterator()) {
 
 </Switch>
 
+When the span a metric is attached to has no `tools_called` of its own, `deepeval` takes them from the trace. Each tool call belongs to the LLM span that chose its arguments: the tool span's parent if that is an LLM span, otherwise the latest LLM span before it at the same level.
+
+- **On an agent (or any other) span**, it judges the tool calls of every LLM span nested under it against that span's `input`.
+- **On an LLM span**, it judges the tool calls that LLM span made.
+- **On a tool span**, it judges that tool call against the `input` of the LLM span that made it.
+- **On the trace**, it judges the tool calls of every LLM span in the trace.
+
+Taking tool calls from the trace is currently available in Python only.
+
 ### As a standalone
 
 You can also run the `ArgumentCorrectnessMetric` on a single test case as a standalone, one-off execution.
