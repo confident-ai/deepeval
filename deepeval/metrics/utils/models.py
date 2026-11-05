@@ -34,6 +34,7 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
     OpenRouterModel,
+    TheGridModel,
     TypeSafeModel,
 )
 from deepeval.models.base_model import (
@@ -117,6 +118,13 @@ def should_use_litellm():
     if SETTINGS.USE_LITELLM:
         return True
     value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_thegrid():
+    if SETTINGS.USE_THEGRID_MODEL:
+        return True
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_THEGRID_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
@@ -209,6 +217,8 @@ def _build_model(
         return LiteLLMModel(model=model), True
     if should_use_portkey():
         return PortkeyModel(model=model), True
+    if should_use_thegrid():
+        return TheGridModel(model=model), True
     if should_use_ollama_model():
         return OllamaModel(model=model), True
     elif should_use_local_model():
@@ -252,6 +262,7 @@ def is_native_model(
         or isinstance(model, GrokModel)
         or isinstance(model, DeepSeekModel)
         or isinstance(model, OpenRouterModel)
+        or isinstance(model, TheGridModel)
         or isinstance(model, PortkeyModel)
     ):
         return True
