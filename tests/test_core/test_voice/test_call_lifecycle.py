@@ -1,11 +1,13 @@
 import asyncio
 import time
 from types import SimpleNamespace
+from typing import Optional
 
 import pytest
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator import ConversationSimulator
+from deepeval.simulator.conversation_simulator import _VoiceSession
 from deepeval.voice import CallbackVoiceConnector, LiveKitConnector, VoiceConfig
 from deepeval.voice.connectors.transports.base import iter_downlink
 from deepeval.voice.connectors.types import AgentEvent
@@ -133,19 +135,26 @@ class _BacklogConnector(_DuplexConnector):
 
     def take_pending_agent_events(self):
         self.takes += 1
-        if self.takes != 2:
+        if self.takes != 3:
             return []
         return [
+            AgentEvent(turn_complete=True),
             AgentEvent(
                 audio=VOICED * int(RATE * 0.5),
                 received_at=time.perf_counter(),
-            )
+            ),
+            AgentEvent(transcript="Who am I speaking with?"),
+            AgentEvent(turn_complete=True),
         ]
 
 
-def _simulate(connector, max_user_simulations: int):
+def _simulate(
+    connector,
+    max_user_simulations: int,
+    simulator_model: Optional[StaticSimulatorModel] = None,
+):
     return ConversationSimulator(
-        simulator_model=StaticSimulatorModel(),
+        simulator_model=simulator_model or StaticSimulatorModel(),
         voice_config=VoiceConfig(
             connector=connector,
             tts_model=StubTTS(),
@@ -174,11 +183,103 @@ def test_simulation_without_a_hang_up_has_no_stop_reason():
     assert "Stop reason" not in case.metadata
 
 
-def test_agent_speech_heard_before_the_caller_replies_is_its_own_turn():
-    case = _simulate(_BacklogConnector(EchoAgent()), max_user_simulations=2)
+def test_the_caller_replies_to_what_the_agent_kept_saying():
+    model = StaticSimulatorModel()
+    case = _simulate(
+        _BacklogConnector(EchoAgent()),
+        max_user_simulations=2,
+        simulator_model=model,
+    )
 
     roles = [turn.role for turn in case.turns]
     assert roles == ["user", "assistant", "assistant", "user", "assistant"]
     backlog, reply = case.turns[2], case.turns[3]
+    assert backlog.content == "Who am I speaking with?"
     assert backlog.audio is not None
+    assert reply.content == f"simulated user input {model.user_input_count}"
     assert backlog.audio.start_time <= reply.audio.start_time
+
+
+def _signalling_livekit() -> LiveKitConnector:
+    connector = _livekit()
+    connector._agent_state = "speaking"
+    return connector
+
+
+@pytest.mark.asyncio
+async def test_the_caller_waits_for_the_agent_to_finish_its_turn():
+    connector = _signalling_livekit()
+    queue = connector._out_frames
+    queue.put_nowait(AgentEvent(turn_complete=True))
+    queue.put_nowait(AgentEvent(transcript="Welcome to the clinic."))
+    queue.put_nowait(
+        AgentEvent(audio=VOICED * RATE, received_at=time.perf_counter())
+    )
+    loop = asyncio.get_running_loop()
+    loop.call_later(
+        0.1,
+        queue.put_nowait,
+        AgentEvent(audio=VOICED * RATE, received_at=time.perf_counter()),
+    )
+    loop.call_later(
+        0.2,
+        queue.put_nowait,
+        AgentEvent(
+            transcript="Para espanol, oprima 8. Who am I speaking with?"
+        ),
+    )
+    loop.call_later(0.3, queue.put_nowait, AgentEvent(turn_complete=True))
+    simulator = ConversationSimulator(
+        simulator_model=StaticSimulatorModel(),
+        voice_config=VoiceConfig(
+            connector=lambda: connector,
+            tts_model=StubTTS(),
+            stt_model=StubSTT(),
+            output_dir=None,
+            combine_audio_files=False,
+        ),
+    )
+    turns = []
+
+    took = await asyncio.wait_for(
+        simulator._take_agent_backlog(
+            _VoiceSession(connector=connector, persona=None),
+            turns,
+            time.perf_counter(),
+        ),
+        timeout=2,
+    )
+
+    assert took
+    assert [turn.content for turn in turns] == [
+        "Para espanol, oprima 8. Who am I speaking with?"
+    ]
+    assert len(turns[0].audio.get_bytes()) > 2 * len(VOICED * RATE)
+    assert queue.empty()
+
+
+@pytest.mark.asyncio
+async def test_a_stale_end_signal_without_speech_is_dropped():
+    connector = _signalling_livekit()
+    connector._out_frames.put_nowait(AgentEvent(turn_complete=True))
+    simulator = ConversationSimulator(
+        simulator_model=StaticSimulatorModel(),
+        voice_config=VoiceConfig(
+            connector=lambda: connector,
+            tts_model=StubTTS(),
+            stt_model=StubSTT(),
+            output_dir=None,
+            combine_audio_files=False,
+        ),
+    )
+    turns = []
+
+    took = await simulator._take_agent_backlog(
+        _VoiceSession(connector=connector, persona=None),
+        turns,
+        time.perf_counter(),
+    )
+
+    assert not took
+    assert turns == []
+    assert connector._out_frames.empty()
