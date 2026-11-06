@@ -32,6 +32,9 @@ from .transcription_accuracy.transcription_accuracy import (
 from .audio_glitch.audio_glitch import AudioGlitchMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .tool_permission.tool_permission import ToolPermissionMetric
+from .community.filter_correctness.filter_correctness import (
+    FilterCorrectnessMetric,
+)
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
@@ -126,6 +129,7 @@ __all__ = [
     "MisuseMetric",
     "RoleViolationMetric",
     "ToolPermissionMetric",
+    "FilterCorrectnessMetric",
     "RoleAdherenceMetric",
     # Task-specific metrics
     "ToolCorrectnessMetric",
