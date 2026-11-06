@@ -65,7 +65,6 @@ from deepeval.test_run import (
     global_test_run_manager,
 )
 
-from deepeval.tracing import trace_manager
 
 if TYPE_CHECKING:
     from deepeval.evaluate.configs import (
@@ -1337,6 +1336,9 @@ class EvaluationDataset:
                     source_file=golden.source_file,
                     tools_called=golden.tools_called,
                     expected_tools=golden.expected_tools,
+                    token_cost=golden.token_cost,
+                    input_token_count=golden.input_token_count,
+                    output_token_count=golden.output_token_count,
                     additional_metadata=golden.additional_metadata,
                     custom_column_key_values=golden.custom_column_key_values,
                     expectations=golden.expectations,
@@ -1693,11 +1695,6 @@ class EvaluationDataset:
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
     ) -> Iterator[Golden]:
-        from deepeval.evaluate.utils import (
-            aggregate_metric_pass_rates,
-            print_test_result,
-            write_test_result_to_file,
-        )
         from deepeval.evaluate.types import EvaluationResult, TestResult
         from deepeval.evaluate.execute import (
             a_execute_agentic_test_cases_from_loop,
