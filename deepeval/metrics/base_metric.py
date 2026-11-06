@@ -128,6 +128,13 @@ class BaseMetric(PromptMixin):
     skipped = False
     flaky: bool = False
     requires_trace: bool = False
+    # Request native span evidence without building an LLM prompt trace.
+    requires_native_trace: bool = False
+    # Disable caching when evidence/configuration is absent from the cache key.
+    cacheable: bool = True
+    # Deterministic execution diagnostics can opt in to failed runs. Existing
+    # output-quality metrics continue to skip failed traces/components.
+    evaluate_on_error: bool = False
     model: Optional[DeepEvalBaseLLM] = None
     using_native_model: Optional[bool] = None
     # System One (Jev). `eval_mode` picks who decides (see

@@ -44,6 +44,7 @@ from deepeval.evaluate.utils import (
     create_metric_data,
     create_test_result,
     validate_expectation_coverage,
+    iter_span_forest,
 )
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.api import TraceSpanApiStatus
@@ -54,6 +55,8 @@ logger = logging.getLogger(__name__)
 
 from deepeval.evaluate.execute._common import (
     _attach_span_tree,
+    _metrics_for_execution,
+    _span_api_for_evaluation,
     _execute_metric,
     _skip_metrics_for_error,
     _trace_error,
@@ -175,9 +178,11 @@ def _assert_test_from_current_trace(
         index=None,
     )
 
-    def dfs(span: BaseSpan, is_promoted_root: bool = False):
+    def dfs(
+        span: BaseSpan, is_promoted_root: bool = False, inherited_error=False
+    ):
         metrics: List[BaseMetric] = list(span.metrics or [])
-        api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
+        api_span: BaseApiSpan = _span_api_for_evaluation(span)
 
         # Promoted root's parent_uuid still points at the stripped wrapper;
         # null it so the backend treats it as a genuine root.
@@ -199,16 +204,20 @@ def _assert_test_from_current_trace(
         if _skip_metrics_for_error(span=span, trace=current_trace):
             api_span.status = TraceSpanApiStatus.ERRORED
             api_span.error = span.error or _trace_error(current_trace)
-            return
 
-        for child in span.children:
-            dfs(child)
+        failed = inherited_error or _skip_metrics_for_error(
+            span=span, trace=current_trace
+        )
+        metrics = _metrics_for_execution(metrics, failed)
 
         if not metrics:
             return
 
-        requires_trace = any(
+        requires_prompt_trace = any(
             getattr(m, "requires_trace", False) for m in metrics
+        )
+        requires_trace = requires_prompt_trace or any(
+            getattr(m, "requires_native_trace", False) for m in metrics
         )
 
         llm_test_case: Optional[LLMTestCase] = None
@@ -228,9 +237,10 @@ def _assert_test_from_current_trace(
         if requires_trace:
             if llm_test_case is None:
                 llm_test_case = LLMTestCase(input="None")
-            llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(
-                span
-            )
+            if requires_prompt_trace:
+                llm_test_case._trace_dict = (
+                    trace_manager.create_nested_spans_dict(span)
+                )
         elif llm_test_case is None:
             api_span.status = TraceSpanApiStatus.ERRORED
             api_span.error = format_error_text(
@@ -265,17 +275,26 @@ def _assert_test_from_current_trace(
                 metric_data.success, flaky=metric_data.flaky
             )
 
-    if root_for_dfs is not None:
-        dfs(root_for_dfs, is_promoted_root=is_promoted_root)
+    for root in current_trace.root_spans:
+        promoted = root.name == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+        roots = root.children if promoted else [root]
+        promoted_ids = {id(item) for item in roots} if promoted else set()
+        for span, inherited_error in iter_span_forest(roots, postorder=True):
+            dfs(
+                span,
+                is_promoted_root=id(span) in promoted_ids,
+                inherited_error=inherited_error,
+            )
 
     existing_trace_metrics = list(current_trace.metrics or [])
     if metrics:
         existing_trace_metrics = existing_trace_metrics + list(metrics)
     current_trace.metrics = existing_trace_metrics
 
-    if current_trace.metrics and not _skip_metrics_for_error(
-        trace=current_trace
-    ):
+    eligible_trace_metrics = _metrics_for_execution(
+        current_trace.metrics, _skip_metrics_for_error(trace=current_trace)
+    )
+    if eligible_trace_metrics:
         llm_test_case_for_trace = LLMTestCase(
             input=golden.input or "None",
             expectations=golden.expectations,
@@ -296,17 +315,26 @@ def _assert_test_from_current_trace(
         if (
             any(
                 getattr(m, "requires_trace", False)
-                for m in current_trace.metrics
+                for m in eligible_trace_metrics
             )
             and root_for_dfs is not None
         ):
             llm_test_case_for_trace._trace_dict = (
                 trace_manager.create_nested_spans_dict(root_for_dfs)
             )
-        _attach_span_tree(llm_test_case_for_trace, current_trace, None)
+        _attach_span_tree(
+            llm_test_case_for_trace,
+            current_trace,
+            None,
+            capture_boundary_ids=(
+                root.uuid
+                for root in current_trace.root_spans
+                if root.name == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
+            ),
+        )
 
         trace_api.metrics_data = []
-        for metric in current_trace.metrics:
+        for metric in eligible_trace_metrics:
             metric.skipped = False
             metric.error = None
             if display_config.verbose_mode is not None:

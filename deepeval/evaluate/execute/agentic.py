@@ -66,6 +66,8 @@ logger = logging.getLogger(__name__)
 
 from deepeval.evaluate.execute._common import (
     _attach_span_tree,
+    _metrics_for_execution,
+    _span_api_for_evaluation,
     _skip_metrics_for_error,
     _trace_error,
     filter_duplicate_results,
@@ -156,7 +158,7 @@ async def _a_execute_agentic_test_case(
             _use_bar_indicator=_use_bar_indicator,
         )
 
-        async def dfs(trace: Trace, span: BaseSpan):
+        async def dfs(trace: Trace, span: BaseSpan, inherited_error=False):
             await _a_execute_span_test_case(
                 span=span,
                 current_trace=trace,
@@ -170,13 +172,14 @@ async def _a_execute_agentic_test_case(
                 pbar_eval_id=pbar_eval_id,
                 test_run_manager=test_run_manager,
                 _use_bar_indicator=_use_bar_indicator,
+                inherited_error=inherited_error,
             )
 
-            if _skip_metrics_for_error(span=span, trace=trace):
-                return
-
+            failed = inherited_error or _skip_metrics_for_error(
+                span=span, trace=trace
+            )
             child_tasks = [
-                asyncio.create_task(dfs(trace, child))
+                asyncio.create_task(dfs(trace, child, failed))
                 for child in span.children
             ]
             if child_tasks:
@@ -349,8 +352,9 @@ async def _a_execute_span_test_case(
     pbar_eval_id: Optional[int],
     test_run_manager: Optional[TestRunManager],
     _use_bar_indicator: bool,
+    inherited_error: bool = False,
 ):
-    api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
+    api_span: BaseApiSpan = _span_api_for_evaluation(span)
     if isinstance(span, AgentSpan):
         trace_api.agent_spans.append(api_span)
     elif isinstance(span, LlmSpan):
@@ -366,19 +370,25 @@ async def _a_execute_span_test_case(
     if _skip_metrics_for_error(span=span, trace=current_trace):
         api_span.status = TraceSpanApiStatus.ERRORED
         api_span.error = span.error or _trace_error(current_trace)
-        if progress and pbar_eval_id is not None:
-            update_pbar(
-                progress,
-                pbar_eval_id,
-                advance=count_metrics_in_span_subtree(span),
-            )
-        return
 
-    metrics: List[BaseMetric] = list(span.metrics or [])
+    metrics = _metrics_for_execution(
+        span.metrics,
+        inherited_error
+        or _skip_metrics_for_error(span=span, trace=current_trace),
+    )
+    if progress and pbar_eval_id is not None:
+        update_pbar(
+            progress,
+            pbar_eval_id,
+            advance=len(span.metrics or []) - len(metrics),
+        )
     if not metrics:
         return
 
-    requires_trace = any(metric.requires_trace for metric in metrics)
+    requires_prompt_trace = any(metric.requires_trace for metric in metrics)
+    requires_trace = requires_prompt_trace or any(
+        metric.requires_native_trace for metric in metrics
+    )
 
     llm_test_case = None
     if span.input:
@@ -416,7 +426,8 @@ async def _a_execute_span_test_case(
     if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
-        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+        if requires_prompt_trace:
+            test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
     _attach_span_tree(test_case, current_trace, span)
 
     for metric in metrics:
@@ -463,19 +474,23 @@ async def _a_execute_trace_test_case(
 
     if _skip_metrics_for_error(trace=trace):
         trace_api.status = TraceSpanApiStatus.ERRORED
-        if progress and pbar_eval_id is not None:
-            update_pbar(
-                progress,
-                pbar_eval_id,
-                advance=count_total_metrics_for_trace(trace),
-            )
-        return
 
-    metrics: List[BaseMetric] = list(trace.metrics or [])
+    metrics = _metrics_for_execution(
+        trace.metrics, _skip_metrics_for_error(trace=trace)
+    )
+    if progress and pbar_eval_id is not None:
+        update_pbar(
+            progress,
+            pbar_eval_id,
+            advance=len(trace.metrics or []) - len(metrics),
+        )
     if not metrics:
         return
 
-    requires_trace = any(metric.requires_trace for metric in metrics)
+    requires_prompt_trace = any(metric.requires_trace for metric in metrics)
+    requires_trace = requires_prompt_trace or any(
+        metric.requires_native_trace for metric in metrics
+    )
 
     llm_test_case = None
     if trace.input or api_test_case.expectations:
@@ -523,9 +538,10 @@ async def _a_execute_trace_test_case(
     if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
-        test_case._trace_dict = trace_manager.create_nested_spans_dict(
-            trace.root_spans[0]
-        )
+        if requires_prompt_trace and trace.root_spans:
+            test_case._trace_dict = trace_manager.create_nested_spans_dict(
+                trace.root_spans[0]
+            )
     _attach_span_tree(test_case, trace, None)
 
     for metric in metrics:
