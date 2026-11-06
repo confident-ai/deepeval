@@ -146,6 +146,15 @@ async def test_deepgram_prices_by_the_minute_of_audio():
     assert cost == pytest.approx(0.5 * 0.0043)
 
 
+@pytest.mark.asyncio
+async def test_deepgram_prices_a_streamed_wav_by_the_audio_it_holds():
+    model, _ = _with_transport(_deepgram(), json=_deepgram_payload("hi"))
+
+    _, cost = await model.a_transcribe(wav_audio(seconds=30, streamed=True))
+
+    assert cost == pytest.approx(0.5 * 0.0043)
+
+
 #
 # ElevenLabs
 #
