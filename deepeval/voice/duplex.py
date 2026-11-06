@@ -208,7 +208,9 @@ class DuplexExchange:
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
         self.tts_kwargs = (
-            golden.persona.tts_kwargs() if golden.persona is not None else {}
+            golden.persona.tts_kwargs(tts_model)
+            if golden.persona is not None
+            else {}
         )
         self.background_noise = (
             golden.persona.background_noise

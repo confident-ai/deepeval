@@ -36,12 +36,15 @@ persona = Persona(
 )
 ```
 
-There is **ONE** mandatory and **NINE** optional parameters when creating a `Persona`:
+There is **ONE** mandatory and **TWELVE** optional parameters when creating a `Persona`:
 
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
 - [Optional] `metadata`: a dictionary of structured facts about the caller (an account number, a resume, an order) that the simulator can draw on. Defaulted to `None`.
 - [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
+- [Optional] `voice_instructions`: a string describing how the caller should sound, passed as `instructions` to TTS models that take it. Defaulted to `None`.
+- [Optional] `tts_model`: a [`DeepEvalBaseTTS`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) the caller speaks through instead of the one on `VoiceConfig`. Defaulted to `None`.
+- [Optional] `line_quality`: either `"wideband"` or `"phone"`, for whether the caller sounds like they are on a phone line. Defaulted to `"wideband"`.
 - [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
 - [Optional] `muted`: a boolean which when set to `True` makes the caller stay completely silent for the whole call. Defaulted to `False`.
@@ -93,7 +96,57 @@ persona = Persona(
 )
 ```
 
-Rate, pitch, and delivery style are **not** persona fields, because no two TTS providers spell them the same way. Set those on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) and keep the persona portable.
+Rate and pitch are **not** persona fields, because no two TTS providers spell them the same way. Set those on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) and keep the persona portable.
+
+### Voice Instructions
+
+`voice_instructions` describes delivery in plain words — accent, tone, pace, emotion — for TTS models that can be steered that way:
+
+```python
+persona = Persona(
+    characteristics="You are calling about a late delivery.",
+    voice="coral",
+    voice_instructions="Speak with a light Scottish accent, a little out of breath and in a hurry.",
+)
+```
+
+It is passed as `instructions` to `OpenAITTSModel(model="gpt-4o-mini-tts")`, the default. Other TTS models don't take instructions, so they ignore it and `deepeval` warns once.
+
+### Per-Persona TTS Model
+
+`tts_model` gives one caller a different speech model from the rest of the run, for example to mix providers across a set of personas:
+
+```python
+from deepeval.models.tts import ElevenLabsTTSModel
+
+persona = Persona(
+    characteristics="You are an older adult who speaks slowly.",
+    tts_model=ElevenLabsTTSModel(),
+    voice="JBFqnCBsd6RMkjVDRZzb",
+)
+```
+
+It replaces the `tts_model` on [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) for that persona's conversations only, and what it spends is counted in the simulator's `tts_cost` at its own price. `voice` then has to be a voice of that model. The model is not saved when you push or save the dataset.
+
+### Line Quality
+
+Most voice agents are reached over the phone, where the caller is band-limited to 300–3400 Hz and μ-law encoded. A wideband TTS voice is much cleaner than that, so it can hide speech-recognition problems your callers will actually hit. Set `line_quality="phone"` to put the caller's speech through the same narrowband channel:
+
+```python
+persona = Persona(
+    characteristics="You are calling from your car.",
+    line_quality="phone",
+)
+```
+
+The filter works on streamed and whole utterances alike and costs nothing. To apply it outside a simulation, wrap any TTS model in `PhoneLineTTS`:
+
+```python
+from deepeval.models.tts import OpenAITTSModel
+from deepeval.voice.phone_line import PhoneLineTTS
+
+tts_model = PhoneLineTTS(OpenAITTSModel())
+```
 
 ### Background Noise
 
@@ -208,10 +261,11 @@ Barge-in is a whole simulation mode of its own — how the judge decides to inte
       answer: (
         <>
           Because <code>voice</code> is the only synthesis knob every{" "}
-          <code>DeepEvalBaseTTS</code> implementation shares. Rate, pitch, and
-          style are spelled differently by every provider, so they belong on
-          your TTS model rather than on the persona. Accent, in practice, is a
-          property of the voice you pick.
+          <code>DeepEvalBaseTTS</code> implementation shares. Rate and pitch
+          are spelled differently by every provider, so they belong on your TTS
+          model rather than on the persona. Accent is a property of the voice
+          you pick, or of <code>voice_instructions</code> on a TTS model that
+          takes them.
         </>
       ),
     },

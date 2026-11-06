@@ -15,6 +15,8 @@ retry_openai = create_retry_decorator(PS.OPENAI)
 
 DEFAULT_TTS_MODEL = "gpt-4o-mini-tts"
 DEFAULT_VOICE = "alloy"
+# The OpenAI speech models that take `instructions` on delivery and tone.
+VOICE_INSTRUCTION_TTS_MODELS = ("gpt-4o-mini-tts",)
 
 _OPENAI_TTS_SAMPLE_RATE = 24000
 _FORMAT_MIME = {
@@ -174,6 +176,9 @@ class OpenAITTSModel(DeepEvalBaseTTS):
 
     def supports_streaming(self) -> bool:
         return True
+
+    def supports_voice_instructions(self) -> bool:
+        return self.name in VOICE_INSTRUCTION_TTS_MODELS
 
     def get_model_name(self) -> str:
         return self.name

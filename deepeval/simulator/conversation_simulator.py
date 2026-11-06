@@ -169,6 +169,7 @@ class _VoiceSession:
 
     connector: "BaseVoiceConnector"
     persona: Optional["Persona"]
+    tts_model: "DeepEvalBaseTTS"
     policy: Optional["InterruptionPolicy"] = None
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
@@ -222,6 +223,11 @@ class _VoiceRun:
         return _VoiceSession(
             connector=connector,
             persona=persona,
+            tts_model=(
+                persona.caller_tts_model(self.tts_model)
+                if persona is not None
+                else self.tts_model
+            ),
             policy=policy,
             floor=floor or FloorController(),
             recorder=recorder,
@@ -1045,8 +1051,9 @@ class ConversationSimulator:
         return conversational_test_case
 
     @staticmethod
-    def _persona_tts_kwargs(persona) -> dict:
-        return {} if persona is None else persona.tts_kwargs()
+    def _persona_tts_kwargs(session: _VoiceSession) -> dict:
+        persona = session.persona
+        return {} if persona is None else persona.tts_kwargs(session.tts_model)
 
     @staticmethod
     def _stt_kwargs(session: _VoiceSession) -> dict:
@@ -1089,11 +1096,10 @@ class ConversationSimulator:
         from deepeval.voice.background import BackgroundMixer
 
         voice = self._voice
-        tts_kwargs = self._persona_tts_kwargs(persona)
-        if not voice.tts_model.supports_streaming():
-            audio, tts_cost = await voice.tts_model.a_synthesize(
-                text, **tts_kwargs
-            )
+        tts_model = session.tts_model
+        tts_kwargs = self._persona_tts_kwargs(session)
+        if not tts_model.supports_streaming():
+            audio, tts_cost = await tts_model.a_synthesize(text, **tts_kwargs)
             if tts_cost is not None:
                 voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
@@ -1109,7 +1115,7 @@ class ConversationSimulator:
         )
 
         async def _frames():
-            async for chunk in voice.tts_model.a_synthesize_stream(
+            async for chunk in tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
                 yield mixer.mix_chunk(chunk)
@@ -1119,7 +1125,7 @@ class ConversationSimulator:
         result = await session.connector.stream_uplink_chunks(
             _frames(), trailing_silence=trailing_silence
         )
-        tts_cost = voice.tts_model.synthesis_cost(text)
+        tts_cost = tts_model.synthesis_cost(text)
         if tts_cost is not None:
             voice.tts_cost += tts_cost
         logger.debug(
@@ -1393,8 +1399,8 @@ class ConversationSimulator:
         voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
-        user_audio, tts_cost = await voice.tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(session.persona)
+        user_audio, tts_cost = await session.tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(session)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1624,7 +1630,7 @@ class ConversationSimulator:
         voice = self._voice
         exchange = DuplexExchange(
             connector=session.connector,
-            tts_model=voice.tts_model,
+            tts_model=session.tts_model,
             stt_model=voice.stt_model,
             policy=session.policy,
             floor=session.floor,
