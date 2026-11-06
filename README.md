@@ -56,7 +56,7 @@
     <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=ko">한국어</a> | 
     <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=pt">Português</a> | 
     <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=ru">Русский</a> | 
-    <a href="https://www.readme-i18n.com/confident-ai/deepeval?lang=zh">中文</a>
+    <a href="README.zh.md">简体中文</a>
 </p>
 
 **DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which use LLM-as-a-judge and other NLP models that run **locally on your machine**.
