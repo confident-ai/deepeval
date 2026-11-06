@@ -22,7 +22,8 @@ def audio_duration_seconds(audio: "Audio") -> Optional[float]:
         return audio.duration
     try:
         with wave.open(io.BytesIO(audio.get_bytes()), "rb") as wf:
-            frames = wf.getnframes()
+            frame_width = wf.getsampwidth() * wf.getnchannels()
+            frames = len(wf.readframes(wf.getnframes())) // frame_width
             rate = wf.getframerate()
             if rate:
                 return frames / float(rate)

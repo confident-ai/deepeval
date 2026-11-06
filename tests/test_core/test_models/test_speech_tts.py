@@ -13,7 +13,7 @@ from deepeval.models import (
 )
 from deepeval.models.tts._frames import frame_size_bytes
 from deepeval.models.tts.deepgram.deepgram import apply_voice
-from tests.test_core.test_models.speech_stubs import FakeTransport
+from tests.test_core.test_models.speech_stubs import FakeTransport, wav_audio
 
 _RATE = 24000
 _FRAME = frame_size_bytes(_RATE)
@@ -320,3 +320,15 @@ def test_the_sync_path_requests_the_same_thing_as_the_async_one(factory):
     assert jsonlib.dumps(
         sync_transport.last, sort_keys=True, default=str
     ) == jsonlib.dumps(async_transport.last, sort_keys=True, default=str)
+
+
+@pytest.mark.parametrize(
+    "factory", [_elevenlabs, _deepgram, _cartesia], ids=["11labs", "dg", "ct"]
+)
+def test_a_streamed_wav_is_returned_with_its_real_sizes(factory):
+    streamed = wav_audio(streamed=True).get_bytes()
+    model, _ = _with_transport(factory(), content=streamed)
+
+    audio, _ = model.synthesize("Hi")
+
+    assert audio.get_bytes() == wav_audio().get_bytes()

@@ -33,6 +33,14 @@ def pcm16_to_wav_bytes(
     return buffer.getvalue()
 
 
+def normalize_wav_bytes(wav_bytes: bytes) -> bytes:
+    try:
+        pcm, sample_rate, num_channels = wav_bytes_to_pcm16(wav_bytes)
+    except (wave.Error, EOFError, ValueError):
+        return wav_bytes
+    return pcm16_to_wav_bytes(pcm, sample_rate, num_channels)
+
+
 def downmix_to_mono(pcm: bytes, num_channels: int) -> bytes:
     if num_channels <= 1:
         return pcm

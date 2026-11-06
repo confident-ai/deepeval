@@ -38,6 +38,14 @@ from deepeval.templates import make_template_class
 ArgumentCorrectnessTemplate = make_template_class("ArgumentCorrectnessMetric")
 
 
+def _with_tool_calls_from_trace(test_case: LLMTestCase) -> LLMTestCase:
+    from deepeval.metrics.argument_correctness.utils import (
+        with_tool_calls_from_trace,
+    )
+
+    return with_tool_calls_from_trace(test_case)
+
+
 class ArgumentCorrectnessMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
@@ -85,7 +93,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
+        test_case = _with_tool_calls_from_trace(test_case)
         prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -134,7 +142,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
+        test_case = _with_tool_calls_from_trace(test_case)
         prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
