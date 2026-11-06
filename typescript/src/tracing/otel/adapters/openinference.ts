@@ -8,7 +8,6 @@
  */
 
 import type { Attributes } from "@opentelemetry/api";
-import type { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 
 import { SpanType, type Trace } from "@/tracing/tracing";
 import type { Adapter } from "@/tracing/otel/adapters/base";
