@@ -355,7 +355,14 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
     def _calculate_score(self) -> float:
         # "yes" means the assistant forgot something, so "no" is the pass.
-        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.NO,))
+        # One verdict is requested per eligible turn; dropped (None) verdicts
+        # stay in the denominator via expected_count.
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+            expected_count=len(self.verdicts),
+        )
 
     @property
     def __name__(self):

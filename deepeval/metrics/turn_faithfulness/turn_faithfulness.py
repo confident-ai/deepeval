@@ -228,7 +228,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         )
         verdicts = await self._a_generate_verdicts(claims, truths, multimodal)
         score, reason = self._get_interaction_score_and_reason(
-            verdicts, multimodal
+            verdicts, multimodal, expected_count=len(claims)
         )
         interaction_score = InteractionFaithfulnessScore(
             score=score,
@@ -263,7 +263,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         )
         verdicts = self._generate_verdicts(claims, truths, multimodal)
         score, reason = self._get_interaction_score_and_reason(
-            verdicts, multimodal
+            verdicts, multimodal, expected_count=len(claims)
         )
         interaction_score = InteractionFaithfulnessScore(
             score=score,
@@ -431,29 +431,35 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         return (Verdict.YES, Verdict.BORDERLINE)
 
     def _get_interaction_score_and_reason(
-        self, verdicts, multimodal: bool
+        self, verdicts, multimodal: bool, expected_count: int = 0
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
-        if number_of_verdicts == 0:
+        if number_of_verdicts == 0 and expected_count == 0:
             reason = "<no claims to verify>" if self.include_reason else None
             return 1.0, reason
 
         score = score_qag_verdicts(
-            self, verdicts, passing=self._passing_verdicts()
+            self,
+            verdicts,
+            passing=self._passing_verdicts(),
+            expected_count=expected_count,
         )
         reason = self._get_interaction_reason(score, verdicts, multimodal)
         return score, reason
 
     async def _a_get_interaction_score_and_reason(
-        self, verdicts, multimodal: bool
+        self, verdicts, multimodal: bool, expected_count: int = 0
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
-        if number_of_verdicts == 0:
+        if number_of_verdicts == 0 and expected_count == 0:
             reason = "<no claims to verify>" if self.include_reason else None
             return 1.0, reason
 
         score = score_qag_verdicts(
-            self, verdicts, passing=self._passing_verdicts()
+            self,
+            verdicts,
+            passing=self._passing_verdicts(),
+            expected_count=expected_count,
         )
         reason = await self._a_get_interaction_reason(
             score, verdicts, multimodal
