@@ -14,7 +14,6 @@ from deepeval.test_run.api import MetricData, Classification
 from deepeval.utils import (
     delete_file_if_exists,
     is_read_only_env,
-    serialize,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
@@ -102,6 +101,34 @@ class CustomEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def _create_test_case_cache_key(
+    test_case: LLMTestCase, hyperparameters: Union[Dict, None]
+) -> str:
+    cache_dict = {
+        SingleTurnParams.INPUT.value: test_case.input,
+        SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+        SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
+        SingleTurnParams.CONTEXT.value: test_case.context,
+        SingleTurnParams.RETRIEVAL_CONTEXT.value: (
+            [
+                rc.context if hasattr(rc, "context") else rc
+                for rc in test_case.retrieval_context
+            ]
+            if test_case.retrieval_context is not None
+            else None
+        ),
+        "hyperparameters": hyperparameters,
+    }
+    if test_case.expectations:
+        cache_dict["expectations"] = test_case.expectations.model_dump(
+            mode="json"
+        )
+        cache_dict["expectation_evidence"] = expectation_evidence(test_case)
+    # Legacy keys sorted lists, so even a matching key may hold another ranking.
+    # Version the identity to miss those entries while preserving ordered lists.
+    return "v2:" + json.dumps(cache_dict, cls=CustomEncoder, sort_keys=True)
+
+
 class CachedTestRun(BaseModel):
     test_cases_lookup_map: Optional[Dict[str, CachedTestCase]] = Field(
         default_factory=lambda: {}
@@ -143,27 +170,9 @@ class TestRunCacheManager:
             return None
 
         cached_test_run = self.get_cached_test_run()
-        cache_dict = {
-            SingleTurnParams.INPUT.value: test_case.input,
-            SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            SingleTurnParams.CONTEXT.value: test_case.context,
-            SingleTurnParams.RETRIEVAL_CONTEXT.value: (
-                [
-                    rc.context if hasattr(rc, "context") else rc
-                    for rc in test_case.retrieval_context
-                ]
-                if test_case.retrieval_context
-                else None
-            ),
-            "hyperparameters": hyperparameters,
-        }
-        if test_case.expectations:
-            cache_dict["expectations"] = test_case.expectations.model_dump(
-                mode="json"
-            )
-            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
-        test_case_cache_key = serialize(cache_dict)
+        test_case_cache_key = _create_test_case_cache_key(
+            test_case, hyperparameters
+        )
         cached_test_case = cached_test_run.get_cached_api_test_case(
             test_case_cache_key
         )
@@ -178,27 +187,9 @@ class TestRunCacheManager:
     ):
         if self.disable_write_cache or portalocker is None:
             return
-        cache_dict = {
-            SingleTurnParams.INPUT.value: test_case.input,
-            SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
-            SingleTurnParams.EXPECTED_OUTPUT.value: test_case.expected_output,
-            SingleTurnParams.CONTEXT.value: test_case.context,
-            SingleTurnParams.RETRIEVAL_CONTEXT.value: (
-                [
-                    rc.context if hasattr(rc, "context") else rc
-                    for rc in test_case.retrieval_context
-                ]
-                if test_case.retrieval_context
-                else None
-            ),
-            "hyperparameters": hyperparameters,
-        }
-        if test_case.expectations:
-            cache_dict["expectations"] = test_case.expectations.model_dump(
-                mode="json"
-            )
-            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
-        test_case_cache_key = serialize(cache_dict)
+        test_case_cache_key = _create_test_case_cache_key(
+            test_case, hyperparameters
+        )
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (
             new_cache_test_case
