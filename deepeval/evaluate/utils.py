@@ -679,14 +679,42 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     return metric_pass_rates
 
 
-def count_metrics_in_trace(trace: Trace) -> int:
-    def count_metrics_recursive(span: BaseSpan) -> int:
-        count = len(span.metrics) if span.metrics else 0
-        for child in span.children:
-            count += count_metrics_recursive(child)
-        return count
+def iter_span_forest(roots, *, postorder=False):
+    """Walk native trees without recursion and reject repeated membership.
 
-    return sum(count_metrics_recursive(span) for span in trace.root_spans)
+    Each row includes ancestor failure, excluding the span's own status. A
+    shared child is invalid tree evidence just as a cycle is: traversing either
+    twice would duplicate metrics and potentially loop indefinitely.
+    """
+    from deepeval.tracing.types import TraceSpanStatus
+
+    stack = [(span, False, False) for span in reversed(roots)]
+    seen = set()
+    while stack:
+        span, inherited_error, leaving = stack.pop()
+        if leaving:
+            yield span, inherited_error
+            continue
+        if id(span) in seen:
+            raise ValueError(
+                "native span forest contains a cycle or duplicate membership"
+            )
+        seen.add(id(span))
+        if postorder:
+            stack.append((span, inherited_error, True))
+        else:
+            yield span, inherited_error
+        failed = inherited_error or span.status == TraceSpanStatus.ERRORED
+        stack.extend(
+            (child, failed, False) for child in reversed(span.children or [])
+        )
+
+
+def count_metrics_in_trace(trace: Trace) -> int:
+    return sum(
+        len(span.metrics or [])
+        for span, _ in iter_span_forest(trace.root_spans)
+    )
 
 
 def count_total_metrics_for_trace(trace: Trace) -> int:
@@ -695,10 +723,7 @@ def count_total_metrics_for_trace(trace: Trace) -> int:
 
 
 def count_metrics_in_span_subtree(span: BaseSpan) -> int:
-    total = len(span.metrics or [])
-    for c in span.children or []:
-        total += count_metrics_in_span_subtree(c)
-    return total
+    return sum(len(item.metrics or []) for item, _ in iter_span_forest([span]))
 
 
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:

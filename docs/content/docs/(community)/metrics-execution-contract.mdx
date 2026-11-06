@@ -1,0 +1,178 @@
+---
+id: metrics-execution-contract
+title: Execution Contract
+sidebar_label: Execution Contract
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} agent={true} referenceless={true} />
+
+`ExecutionContractMetric` checks an instrumented agent execution against explicit workflow rules. For example, a payment must follow a successful verification of **the same account**, failed operations must be recovered before notification, and observed resource usage must remain within a budget. It uses recorded evidence and deterministic rules; it does not call an LLM judge.
+
+The metric distinguishes **pass**, **fail**, and **unknown**. Unknown means the recorded evidence cannot establish the rule, such as an absent subject field, an unfinished capture, or timestamps with no declared common clock.
+
+## Native evaluation
+
+Import the metric from the community namespace and build a contract:
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.configs import AsyncConfig
+from deepeval.metrics.community import ExecutionContractMetric
+from deepeval.metrics.community.execution_contract import (
+    Contract, Occurrence, Predicate, Prerequisite, Selector,
+)
+from deepeval.tracing import observe
+
+
+@observe(type="tool", name="verify")
+def verify(account: str):
+    return {"valid": True}
+
+
+@observe(type="tool", name="pay")
+def pay(account: str):
+    return {"paid": True}
+
+
+@observe(type="agent", name="checkout")
+def checkout(account: str):
+    verify(account)
+    return pay(account)
+
+
+contract = Contract((
+    Occurrence("payment_required", Selector(name="pay"), minimum=1),
+    Prerequisite(
+        "verified_account",
+        target=Selector(name="pay"),
+        prerequisite=Selector(
+            name="verify", status="success",
+            predicates=(Predicate("/output/valid", "eq", True),),
+        ),
+        bindings=(("/input/account", "/input/account"),),
+        max_age=60,
+    ),
+))
+metric = ExecutionContractMetric(contract, clock_domain="local-perf-counter")
+dataset = EvaluationDataset(goldens=[Golden(input="alice")])
+for golden in dataset.evals_iterator(
+    metrics=[metric], async_config=AsyncConfig(run_async=False),
+):
+    checkout(golden.input)
+
+print(metric.report.to_dict())
+```
+
+`clock_domain` is your assertion that all timestamps in the evaluated scope share a comparable clock. The built-in observer uses the local performance counter. Do not make this assertion for combined imported telemetry unless its clocks have been normalized. Timestamp ordering establishes the recorded interval relationship, not causality.
+
+The runnable example at `examples/community/execution_contract/evaluate.py` covers valid checkout, verification of the wrong account, recovered payment failure, and unrecovered payment failure using only local functions.
+
+## Rules and selectors
+
+| Rule | Meaning |
+| --- | --- |
+| `Occurrence` | Require between `minimum` and `maximum` matches. Use `minimum=0, maximum=0` to prohibit an operation. |
+| `Prerequisite` | Every target must have an earlier completed prerequisite with matching bound fields. Optional `max_age` limits its age; `invalidated_by` selects revocations. |
+| `Recovery` | Every selected failure needs a subsequent completed recovery of the bound operation. Optional `within` limits recovery latency, and `before` selects operations that must wait for recovery. |
+| `Budget` | Sum observed nonnegative values at a JSON pointer and compare them with `maximum`. |
+
+Each rule has a unique `id` and a `required` flag, defaulting to `True`. Optional rules appear in reports but do not affect the metric's score or success.
+
+`Selector` combines optional `name`, `kind`, `status`, and predicates. All specified conditions must hold. Native kinds are `agent`, `llm`, `tool`, `retriever`, and `base`; statuses are `success`, `error`, `in_progress`, and `unknown`. Specify `status="success"` when a successful operation is required: a name-only selector deliberately includes failed operations with that name.
+
+Predicates support `eq`, `ne`, and `exists`. Paths use JSON Pointer syntax: `/input/account`, `/output/valid`, or `/items/0/id`, with `~0` and `~1` escapes for `~` and `/`. An empty pointer selects the complete payload. Missing fields differ from present `null`; booleans, integers, and floats are distinct for subject equality. `Predicate("/input/account", "exists", False)` explicitly selects a missing field. No expression evaluation or regular-expression execution is supported.
+
+Bindings are `(target_pointer, prerequisite_pointer)` pairs. Recovery uses `(failure_pointer, recovery_pointer)` pairs; its `before` selector uses the same right-side schema. Include an operation ID when an account can have several independent operations:
+
+```python
+from deepeval.metrics.community.execution_contract import Recovery
+
+refund_rule = Recovery(
+    "failed_payment_refunded",
+    failure=Selector(name="pay", status="error"),
+    recovery=Selector(name="refund", status="success"),
+    bindings=(
+        ("/input/account", "/input/account"),
+        ("/input/operation_id", "/input/operation_id"),
+    ),
+    within=30,
+    before=Selector(name="notify"),
+)
+```
+
+A prerequisite or recovery may satisfy several targets with the same declared identity; evidence is not consumed. A prerequisite/recovery rule with no targets passes vacuously only when the capture is complete. Use a separate `Occurrence` rule when the workflow must perform an operation. Overlapping verification/revocation intervals remain unknown instead of using span order or IDs as a tie-breaker.
+
+## Scope and completeness
+
+Trace-level metrics inspect all native roots. Component-level metrics attached through `@observe(metrics=[metric])` inspect that component's subtree; sibling operations are outside its scope. An external parent ID records that boundary rather than becoming a missing parent error.
+
+DeepEval supplies native evidence to the metric. A manually constructed `LLMTestCase` without that evidence is not sufficient. For offline data, build a `Snapshot` and call the standalone `evaluate(snapshot, contract)` function instead.
+
+Failed runs remain available to this metric. Existing output-quality metrics retain their default behavior of skipping failed runs. The original application error is preserved even if the execution contract passes—for example, a contract can confirm that a failed operation was correctly refunded.
+
+Completeness describes the declared instrumentation scope. It does **not** prove that all real-world actions were instrumented. Dropped or unfinished spans make absence-dependent conclusions unknown. An observed violation can still fail a partial capture. The internal pytest wrapper is an explicit capture boundary; genuine unfinished user operations remain incomplete.
+
+## Resources
+
+Native LLM spans expose observed values under `/resources`: `input_tokens`, `output_tokens`, `total_tokens`, token prices, and `cost`. A derived total appears only when all of its inputs are present. Missing values are not replaced with zero.
+
+```python
+from deepeval.metrics.community.execution_contract import Budget
+
+token_budget = Budget(
+    "token_limit", Selector(kind="llm"),
+    pointer="/resources/total_tokens", maximum=4000,
+)
+```
+
+Selecting both an ancestor's aggregate counter and its descendants is ambiguous by default. Use `exclusive=True` only when each selected value excludes its descendants' usage. Integer counters are compared exactly; floating-point counters retain the recorded binary values, without decimal-currency rounding.
+
+## Scores and reports
+
+The score is the fraction of required rules that pass. Unknown rules do not receive credit. `threshold` defaults to `1.0`; a lower threshold can tolerate failed rules, but **any required unknown still prevents success**. With `strict_mode=True`, all required rules must pass and any other result scores zero.
+
+Constructor options are `contract`, `threshold`, `strict_mode`, `include_reason`, `async_mode`, `verbose_mode`, `clock_domain`, `evidence_limits`, and `capture_evidence`. The metric does not accept a model and reports zero evaluation cost.
+
+`metric.report` includes each rule's verdict, machine-readable reason, bounded evidence IDs, omitted-detail counts, and fingerprints of both evidence and contract. Default reports omit payload values. Required rules govern the standalone report's success; a metric's relaxed threshold is separate from that report's all-rules contract verdict.
+
+Metric caching is disabled because the standard text test-case cache does not identify both the execution evidence and the complete contract. Reusing an instance clears the previous report and optional evidence capture before each measurement.
+
+## Save and replay
+
+Set `capture_evidence=True` to retain the detached `metric.evidence_snapshot` after evaluation. This is explicit because evidence contains recorded inputs, outputs, metadata, and errors, which may be sensitive. Leave it disabled when only a report is needed.
+
+```python
+from deepeval.metrics.community.execution_contract.artifacts import write_artifact
+
+# After evaluating a metric created with capture_evidence=True:
+write_artifact("contract.json", metric.contract)
+write_artifact("evidence.json", metric.evidence_snapshot)
+write_artifact("report.json", metric.report)
+```
+
+Run the same evaluation in a fresh process:
+
+```bash
+python -m deepeval.metrics.community.execution_contract replay \
+  --contract contract.json --evidence evidence.json --output report.json
+```
+
+The command prints a JSON report. Exit codes are `0` for pass, `1` for failure, `2` for unknown, and `3` for invalid input, exceeded resource limits, or file errors. Output paths cannot alias input paths. Report writes use a private temporary file and atomic replacement.
+
+Artifacts use a versioned JSON envelope with a SHA-256 checksum. The checksum detects corruption; it does not authenticate the producer. Unknown fields, duplicate keys, unsupported versions, malformed evidence, and nonfinite numbers are rejected.
+
+Compare two reports produced under the same contract:
+
+```bash
+python -m deepeval.metrics.community.execution_contract compare \
+  --baseline baseline.report.json --candidate candidate.report.json
+```
+
+Comparison pairs rule IDs, not cross-run span IDs. It distinguishes new failures, resolved failures, lost evidence, and resolved unknowns. A failure becoming unknown is not a resolution. The regression gate exits `1` for a new required failure, `2` for any required candidate unknown, and otherwise `0`; an unchanged existing failure is not a new regression. Different contract fingerprints require a fresh baseline. This comparison makes no statistical claim about population-level agent quality.
+
+## Bounded evaluation
+
+`EvidenceLimits` caps span count, tree depth, JSON nodes, per-span payload bytes, and total payload bytes. `Contract(limits=EvaluationLimits(...))` controls rule count, evaluation work, and retained decision/witness counts. Exceeding an evidence/work limit raises a validation error rather than truncating the input into a passing result. Detail limits truncate only report details, with explicit counts; every decision still contributes to its rule verdict.
+
+`ArtifactLimits` separately caps file bytes and JSON structure. A file cannot raise the reader's trusted evaluation limits through its own configuration. When deliberately using larger limits, pass the same trusted `evidence_limits` or `evaluation_limits` to artifact loading/writing, `evaluate(..., evidence_limits=...)`, or `compare_reports(..., limits=...)` as applicable.

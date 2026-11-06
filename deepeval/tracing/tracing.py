@@ -30,6 +30,7 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import (
     CONFIDENT_TRACE_VERBOSE,
     CONFIDENT_TRACE_FLUSH,
+    PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME,
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
@@ -389,13 +390,15 @@ class TraceManager:
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
                     self.environment = Environment.TESTING
-                    if (
-                        trace.root_spans
-                        and len(trace.root_spans) > 0
-                        and trace.root_spans[0].children
-                        and len(trace.root_spans[0].children) > 0
-                    ):
-                        trace.root_spans = [trace.root_spans[0].children[0]]
+                    # Only the evaluation harness is transparent. Preserve all
+                    # user calls under it and any independent imported roots.
+                    roots = []
+                    for root in trace.root_spans:
+                        if root.name == PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME:
+                            roots.extend(root.children)
+                        else:
+                            roots.append(root)
+                    trace.root_spans = roots
                     for root_span in trace.root_spans:
                         root_span.parent_uuid = None
 
