@@ -108,6 +108,85 @@ def test_quality_metrics_score_assistant_audio():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("async_mode", [False, True])
+@pytest.mark.parametrize(
+    "sample_rate, declared_rate, amplitude",
+    [
+        (8000, None, 6000),
+        (16000, 8000, 6000),
+        (48000, None, 6000),
+        (48000, None, 100),
+    ],
+)
+async def test_voice_consistency_ignores_recording_sample_rate(
+    async_mode, sample_rate, declared_rate, amplitude
+):
+    first = make_tone(sample_rate=8000, amplitude=amplitude)
+    second = make_tone(sample_rate=sample_rate, amplitude=amplitude)
+    # The WAV header is authoritative, even with missing or stale metadata.
+    second.sampleRate = declared_rate
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role="assistant", content="Hello", audio=first),
+            Turn(role="assistant", content="Hello again", audio=second),
+        ]
+    )
+    metric = VoiceConsistencyMetric(threshold=0.95)
+
+    if async_mode:
+        score = await metric.a_measure(test_case, _show_indicator=False)
+    else:
+        score = metric.measure(test_case, _show_indicator=False)
+
+    assert score == pytest.approx(1.0, abs=0.001)
+    assert metric.success is True
+    assert metric.score_breakdown["spectral_consistency"] == pytest.approx(
+        1.0, abs=0.001
+    )
+    records = metric.score_breakdown["turns"]
+    for record, rate in zip(records, (8000, sample_rate)):
+        assert record["zero_crossing_rate"] == pytest.approx(
+            360 / rate, abs=0.0001
+        )
+    if amplitude == 100:
+        assert metric.score_breakdown["pitch_consistency"] is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("async_mode", [False, True])
+@pytest.mark.parametrize("sample_rate", [8000, 16000])
+async def test_voice_consistency_detects_timbre_change_across_sample_rates(
+    async_mode, sample_rate
+):
+    # At 16 kHz, doubling both frequency and sample rate keeps crossings/sample
+    # constant, but the signal has twice as many crossings per second.
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(
+                role="assistant",
+                content="Hello",
+                audio=make_tone(sample_rate=8000, frequency=180),
+            ),
+            Turn(
+                role="assistant",
+                content="Hello again",
+                audio=make_tone(sample_rate=sample_rate, frequency=360),
+            ),
+        ]
+    )
+    metric = VoiceConsistencyMetric()
+
+    if async_mode:
+        await metric.a_measure(test_case, _show_indicator=False)
+    else:
+        metric.measure(test_case, _show_indicator=False)
+
+    assert metric.score_breakdown["spectral_consistency"] == pytest.approx(
+        2 / 3, abs=0.001
+    )
+
+
+@pytest.mark.asyncio
 async def test_voice_metric_sync_async_parity():
     metric = SpeechIntelligibilityMetric()
     test_case = voice_case()
