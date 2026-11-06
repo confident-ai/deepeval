@@ -1,0 +1,1 @@
+Is `claim` supported by the facts in `retrieval_context`? Answer no if it contradicts them.

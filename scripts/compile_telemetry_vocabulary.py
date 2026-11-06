@@ -63,6 +63,7 @@ def build() -> Dict[str, Any]:
         "outcomes": _values(properties.Outcome),
         "turnKinds": _values(properties.TurnKind),
         "flushReasons": _values(properties.FlushReason),
+        "localStores": _values(properties.LocalStore),
         "loginPromptSurfaces": _values(properties.LoginPromptSurface),
         "loginOutcomes": _values(properties.LoginOutcome),
         "loginMethods": _values(properties.LoginMethod),

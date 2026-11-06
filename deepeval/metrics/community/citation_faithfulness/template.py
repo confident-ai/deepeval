@@ -51,3 +51,41 @@ Candidate answer:
 
 JSON:
 """
+
+    @staticmethod
+    def number_passage_list(retrieval_context: List[str]) -> List[str]:
+        return [
+            f"[{index + 1}] {passage}"
+            for index, passage in enumerate(retrieval_context)
+        ]
+
+    @staticmethod
+    def _experimental_system_one_verdict() -> str:
+        return (
+            "Is `actual_output` faithful to `passages`? Answer yes only if "
+            "every factual claim is supported by `passages` AND every [N] "
+            "citation marker is attached to a claim that passage [N] itself "
+            "supports. Answer no if any claim is unsupported or contradicts a "
+            "passage, or if any [N] marker points to a passage that does not "
+            "support its claim, even when another passage would. Judge "
+            "relative to `passages` only, not world knowledge."
+        )
+
+    @staticmethod
+    def _experimental_system_one_questions() -> str:
+        return """[
+  {
+    "type": "noul",
+    "statement": "Every [N] citation marker in `actual_output` is attached to a claim that passage [N] in `passages` supports.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Every factual claim in `actual_output` is supported by `passages`, and none contradicts them."
+  },
+  {
+    "type": "score",
+    "question": "How many of the [N] citation markers in `actual_output` point to a passage in `passages` that supports the claim they are attached to?",
+    "levels": ["None of them", "Less than half", "Most of them", "All of them"]
+  }
+]"""

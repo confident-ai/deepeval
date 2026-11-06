@@ -26,6 +26,32 @@ _POSTHOG_PROJECT_API_KEY = "phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB"
 _POSTHOG_HOST = "https://us.i.posthog.com"
 
 
+# Our PostHog client's SDK log lines go here instead of the SDK's own logger.
+# Only errors pass; the SDK's warnings (e.g. "flush ran out of budget" when a
+# short CLI command exits before the upload finishes) are noise to a user.
+_SDK_LOGGER_NAME = "deepeval.telemetry.posthog"
+
+
+def _quiet_sdk_logging(client: object) -> None:
+    """Route one client's SDK log lines to our own logger.
+
+    The `posthog` SDK logs through a single ``logging.getLogger("posthog")``
+    shared by every client in the process, so muting that logger would also
+    mute a user's own PostHog client running alongside deepeval. Instead,
+    shadow the class-level ``log`` attribute on *our* instance and its lanes,
+    which is all the SDK consults when it logs. Best effort: if the SDK's
+    internals change, the SDK just keeps logging as before.
+    """
+    quiet = logging.getLogger(_SDK_LOGGER_NAME)
+    quiet.setLevel(logging.ERROR)
+    try:
+        setattr(client, "log", quiet)
+        for lane in getattr(client, "_lanes", None) or ():
+            setattr(lane, "log", quiet)
+    except Exception:
+        pass
+
+
 def telemetry_opt_out() -> bool:
     return bool(get_settings().DEEPEVAL_TELEMETRY_OPT_OUT)
 
@@ -69,6 +95,7 @@ class PostHogBackend:
             project_api_key=_POSTHOG_PROJECT_API_KEY,
             host=_POSTHOG_HOST,
         )
+        _quiet_sdk_logging(self._client)
 
     def capture(
         self,

@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "queue-annotator.webp",
+      "title": "Annotation queue reviewing a chatbot trace",
+      "alt": "Confident AI annotation queue showing a rider-safety chat trace with a five-star rating, an explanation and an incorrect tool call label",
+      "width": 2400,
+      "height": 1343,
+      "source": {
+        "urls": [
+          "/img/confident-human-annotation.png"
+        ]
+      }
+    }
+  ]
+}

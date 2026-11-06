@@ -8,16 +8,28 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    score_qag_verdicts,
     construct_verbose_logs,
-    check_conversational_test_case_params,
     get_unit_interactions,
     get_turns_in_sliding_window,
     initialize_model,
+    initialize_system_one_model,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    split_sentences,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.turn_contextual_relevancy.schema import (
     ContextualRelevancyVerdict,
@@ -74,6 +86,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -85,8 +101,16 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         ] = TurnContextualRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -101,20 +125,8 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
+        prepare_measure(self, test_case)
         multimodal = test_case.multimodal
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -128,6 +140,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 unit_interactions = get_unit_interactions(test_case.turns)
                 turns_windows: List[List[Turn]] = [
                     list(itertools.chain(*window))
@@ -163,26 +178,17 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
+        prepare_measure(self, test_case)
         multimodal = test_case.multimodal
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             unit_interactions = get_unit_interactions(test_case.turns)
             turns_windows: List[List[Turn]] = [
                 list(itertools.chain(*window))
@@ -295,12 +301,15 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 **_contextual_relevancy_verdict_kwargs(multimodal),
             )
 
-            result = await a_generate_with_schema_and_extract(
+            result = await a_generate_qag_verdicts(
                 metric=self,
                 prompt=prompt,
-                schema_cls=ContextualRelevancyVerdicts,
-                extract_schema=lambda s: s.verdicts,
-                extract_json=lambda data: data["verdicts"],
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    input, context, multimodal
+                ),
             )
 
             verdicts.extend(result)
@@ -325,17 +334,54 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 **_contextual_relevancy_verdict_kwargs(multimodal),
             )
 
-            result = generate_with_schema_and_extract(
+            result = generate_qag_verdicts(
                 metric=self,
                 prompt=prompt,
-                schema_cls=ContextualRelevancyVerdicts,
-                extract_schema=lambda s: s.verdicts,
-                extract_json=lambda data: data["verdicts"],
+                verdict_cls=ContextualRelevancyVerdict,
+                verdicts_cls=ContextualRelevancyVerdicts,
+                allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    input, context, multimodal
+                ),
             )
 
             verdicts.extend(result)
 
         return verdicts
+
+    def _experimental_system_one_spec(
+        self, input: str, context: str, multimodal: bool
+    ) -> Optional[SystemOneVerdictSpec]:
+        if multimodal:
+            return None
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=split_sentences(context),
+            item_key="statement",
+            state={"user_message": input},
+            build_verdict=lambda statement, verdict, p: (
+                ContextualRelevancyVerdict(
+                    statement=statement,
+                    verdict=verdict,
+                    reason=f"P(yes)={p:.2f}",
+                )
+            ),
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev request,
+        each turn carrying its `role`, `content` and `retrieval_context`;
+        see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+        )
 
     async def _a_get_interaction_score_and_reason(
         self,
@@ -384,17 +430,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
     def _calculate_interaction_score(
         self, verdicts: List[ContextualRelevancyVerdict]
     ) -> float:
-        number_of_verdicts = len(verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        relevant_count = 0
-        for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
-        return score
+        return score_qag_verdicts(self, verdicts, passing=(Verdict.YES,))
 
     async def _a_get_interaction_reason(
         self,
@@ -411,7 +447,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 relevant_statements.append(verdict.statement)
             else:
                 irrelevant_statements.append(
@@ -450,7 +486,7 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         relevant_statements = []
 
         for verdict in verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 relevant_statements.append(verdict.statement)
             else:
                 # Include the reason for irrelevance

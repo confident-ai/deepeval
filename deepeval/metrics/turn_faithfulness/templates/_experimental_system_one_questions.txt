@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every factual claim made in an assistant turn in `turns` is supported by the `retrieval_context` of that turn or of an earlier assistant turn.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No assistant turn in `turns` contradicts the `retrieval_context` available to it."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how much of what the assistant states is grounded in the `retrieval_context` available to it?",
+    "levels": ["Fabricated", "Mostly fabricated", "Mostly grounded", "Fully grounded"]
+  }
+]

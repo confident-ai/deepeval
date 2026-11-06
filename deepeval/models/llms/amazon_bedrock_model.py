@@ -1,4 +1,3 @@
-import base64
 from typing import Optional, Tuple, Union, Dict, List
 from contextlib import asynccontextmanager
 
@@ -13,17 +12,23 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import Audio, MLLMImage
 from deepeval.errors import DeepEvalError
-from deepeval.utils import check_if_multimodal, convert_to_multi_modal_array
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.constants import BEDROCK_MODELS_DATA
+from deepeval.models.llms.multimodal import (
+    audio_format,
+    decode_image,
+    fetch_remote_image,
+    multimodal_parts,
+)
 from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 from deepeval.models.utils import (
     require_costs,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    token_cost,
 )
 
 retry_bedrock = create_retry_decorator(PS.BEDROCK)
@@ -162,19 +167,21 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        return safe_asyncio_run(self.a_generate(prompt, schema))
+        return safe_asyncio_run(self.a_generate(prompt, schema, audio))
 
     @retry_bedrock
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], Optional[float]]:
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            payload = self.generate_payload(prompt)
-        else:
-            payload = self.get_converse_request_body(prompt)
+        payload = self.get_converse_request_body(prompt, audio)
 
         async with self._get_client() as client:
             response = await client.converse(
@@ -195,46 +202,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message)
             return schema.model_validate(json_output), cost
 
-    def generate_payload(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"text": element})
-            elif isinstance(element, MLLMImage):
-                # Bedrock doesn't support external URLs - must convert everything to bytes
-                element.ensure_images_loaded()
-
-                image_format = (
-                    (element.mimeType or "image/jpeg").split("/")[-1].upper()
-                )
-                image_format = "JPEG" if image_format == "JPG" else image_format
-
-                try:
-                    image_raw_bytes = base64.b64decode(element.dataBase64)
-                except Exception:
-                    raise DeepEvalError(
-                        f"Invalid base64 data in MLLMImage: {element._id}"
-                    )
-
-                content.append(
-                    {
-                        "image": {
-                            "format": image_format,
-                            "source": {"bytes": image_raw_bytes},
-                        }
-                    }
-                )
-
-        return {
-            "messages": [{"role": "user", "content": content}],
-            "inferenceConfig": {
-                **self.generation_kwargs,
-            },
-        }
-
     #########################
     # Capabilities          #
     #########################
@@ -247,6 +214,9 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs
@@ -341,10 +311,53 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             f"content keys={keys}, stopReason={stop_reason}"
         )
 
-    def get_converse_request_body(self, prompt: str) -> dict:
+    def get_converse_request_body(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> dict:
+        parts = multimodal_parts(prompt, audio)
+        if parts is None:
+            content = [{"text": prompt}]
+        else:
+            content = []
+            for element in parts:
+                if isinstance(element, str):
+                    content.append({"text": element})
+                elif isinstance(element, MLLMImage):
+                    # Bedrock doesn't support external URLs - must convert everything to bytes
+                    if element.url and not element.local:
+                        image_raw_bytes, mime_type = fetch_remote_image(element)
+                    else:
+                        image_raw_bytes = decode_image(
+                            element, error_cls=DeepEvalError
+                        )
+                        mime_type = element.mimeType or "image/jpeg"
+                    # Converse only accepts lowercase formats (png, jpeg, ...)
+                    image_format = mime_type.split("/")[-1].lower()
+                    image_format = (
+                        "jpeg" if image_format == "jpg" else image_format
+                    )
+                    content.append(
+                        {
+                            "image": {
+                                "format": image_format,
+                                "source": {"bytes": image_raw_bytes},
+                            }
+                        }
+                    )
+                elif isinstance(element, Audio):
+                    # Audio blocks need botocore >= 1.42.1, and only some
+                    # Converse models (e.g. Voxtral) accept them.
+                    content.append(
+                        {
+                            "audio": {
+                                "format": audio_format(element),
+                                "source": {"bytes": element.get_bytes()},
+                            }
+                        }
+                    )
 
         return {
-            "messages": [{"role": "user", "content": [{"text": prompt}]}],
+            "messages": [{"role": "user", "content": content}],
             "inferenceConfig": {
                 **self.generation_kwargs,
             },
@@ -352,14 +365,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def calculate_cost(
         self, input_tokens: int, output_tokens: int
-    ) -> Optional[float]:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
-        return None
+    ) -> Optional[EvaluationCost]:
+        return token_cost(self.model_data, input_tokens, output_tokens)
 
     def load_model(self):
         pass

@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "In every assistant turn in `turns` that has a `retrieval_context`, the documents useful for answering the preceding user message towards `expected_outcome` are listed before the documents that are not useful.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "In every assistant turn in `turns` that has a `retrieval_context`, the first document is useful for answering the preceding user message."
+  },
+  {
+    "type": "score",
+    "question": "Across the assistant turns in `turns`, how well are the `retrieval_context` documents ordered, with the ones useful for answering the preceding user message first?",
+    "levels": ["Useful documents are all at the end", "Useful documents are mixed with irrelevant ones", "Useful documents are mostly first", "Useful documents are all first"]
+  }
+]

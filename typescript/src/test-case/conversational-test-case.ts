@@ -1,3 +1,8 @@
+import {
+  Expectations,
+  ExpectationsOptions,
+  resolveExpectations,
+} from "@/dataset/expectations";
 import { ToolCall, RetrievedContextData } from "@/test-case/llm-test-case";
 import {
   checkIfMultimodal,
@@ -97,6 +102,7 @@ export class Turn {
 }
 
 export class ConversationalTestCase {
+  expectations?: Expectations;
   turns: Turn[];
   chatbotRole?: string;
   scenario?: string;
@@ -116,6 +122,7 @@ export class ConversationalTestCase {
   _datasetId?: string;
 
   constructor(params: {
+    expectations?: Expectations | ExpectationsOptions;
     turns: Turn[];
     chatbotRole?: string;
     scenario?: string;
@@ -133,6 +140,7 @@ export class ConversationalTestCase {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.expectations = resolveExpectations(params.expectations);
     this.turns = params.turns;
     this.chatbotRole = params.chatbotRole;
     this.scenario = params.scenario;

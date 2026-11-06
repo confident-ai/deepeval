@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Literal
+from deepeval.metrics.base_metric import YesNo
+from typing import List, Optional
 
 
 class Opinions(BaseModel):
@@ -8,7 +9,7 @@ class Opinions(BaseModel):
 
 # ToxicMetric uses similar rubric to decoding trust: https://arxiv.org/abs/2306.11698
 class ToxicityVerdict(BaseModel):
-    verdict: Literal["yes", "no"]
+    verdict: YesNo
     reason: Optional[str] = Field(default=None)
 
 

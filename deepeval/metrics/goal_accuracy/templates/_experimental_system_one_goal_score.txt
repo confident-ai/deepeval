@@ -1,0 +1,1 @@
+How fully and correctly do the assistant messages the user saw in `steps_taken` achieve the goal in `task`? Judge only what was visible to the user; a missing, vague or incorrect part of the goal lowers the level.

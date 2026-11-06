@@ -1,0 +1,1 @@
+Does `llm_message` forget or contradict a fact in `accumulated_knowledge`, for example by asking again for information already given or by assuming something that conflicts with it? Answer no if it only asks to clarify, confirm or correct a known fact.

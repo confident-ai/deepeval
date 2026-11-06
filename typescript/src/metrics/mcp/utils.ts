@@ -17,6 +17,47 @@ export function reprPrimitive(obj: unknown): string {
   return JSON.stringify(obj);
 }
 
+/**
+ * The MCP servers as System One state: each server's name and the tools,
+ * resources and prompts it exposes, as structured data.
+ */
+export function mcpServersState(
+  mcpServers: MCPServer[] | undefined,
+): Record<string, unknown>[] {
+  return (mcpServers ?? []).map((mcpServer) => {
+    const server: Record<string, unknown> = {
+      server_name: mcpServer.serverName,
+    };
+    const primitives = {
+      available_tools: mcpServer.availableTools,
+      available_resources: mcpServer.availableResources,
+      available_prompts: mcpServer.availablePrompts,
+    };
+    for (const [key, value] of Object.entries(primitives)) {
+      if (value && value.length > 0) server[key] = value;
+    }
+    return server;
+  });
+}
+
+/** The MCP primitives an agent called, as System One state. */
+export function mcpCallsState(
+  mcpToolsCalled: unknown[],
+  mcpResourcesCalled: unknown[],
+  mcpPromptsCalled: unknown[],
+): Record<string, unknown[]> {
+  const calls = {
+    mcp_tools_called: mcpToolsCalled,
+    mcp_resources_called: mcpResourcesCalled,
+    mcp_prompts_called: mcpPromptsCalled,
+  };
+  const state: Record<string, unknown[]> = {};
+  for (const [key, value] of Object.entries(calls)) {
+    if (value.length > 0) state[key] = value;
+  }
+  return state;
+}
+
 export function indentMultilineString(s: string, indentLevel = 4): string {
   const indent = " ".repeat(indentLevel);
   return s

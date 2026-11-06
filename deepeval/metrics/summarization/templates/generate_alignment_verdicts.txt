@@ -2,8 +2,8 @@ Based on the given summary claims, which is a list of strings, generate a list o
 
 {{ _fragments.multimodal_input_rules }}
 
-The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text. 
-Provide a 'reason' ONLY if the answer is 'no' OR 'idk'. 
+The 'verdict' key should STRICTLY be either 'yes', 'no', or 'borderline', which states whether the given summary claim agrees with the original text. 
+Provide a 'reason' ONLY if the answer is 'no' OR 'borderline'. 
 The provided summary claims is drawn from the summary. Try to provide a correction in the reason using the facts in the original text.
 
 **
@@ -15,11 +15,11 @@ Example:
 {
   "verdicts": [
     {
-      "verdict": "idk",
+      "verdict": "borderline",
       "reason": "The original text does not mention Barack Obama at all, let alone his racial features.
     },
     {
-      "verdict": "idk",
+      "verdict": "borderline",
       "reason": "The original text does not mention Zurich, not does it mention Zurich being in London".
     },
     {
@@ -41,7 +41,7 @@ The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of summary claims.
 You DON'T have to provide a reason if the answer is 'yes'.
 ONLY provide a 'no' answer if the summary DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
-Claims that is not backed up due to a lack of information/is not mentioned in the summary MUST be answered 'idk'.
+Claims that is not backed up due to a lack of information/is not mentioned in the summary MUST be answered 'borderline'.
 **
 
 Original Text:

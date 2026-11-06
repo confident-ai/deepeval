@@ -9,9 +9,19 @@ from deepeval.voice.connectors import (
     AgentEvent,
     CallbackVoiceConnector,
     LiveKitConnector,
+    LiveKitProvider,
+    PhoneConnector,
+    SIPConnector,
+    SipMediaEncryption,
+    SipTransport,
     BaseWebSocketConnector,
     ElevenLabsConnector,
     WebSocketConnector,
+    WebRTCConnector,
+    SilenceTimeoutMixin,
+    PipecatConnector,
+    TwilioProvider,
+    VapiConnector,
 )
 
 __all__ = [
@@ -28,9 +38,19 @@ __all__ = [
     "AgentEvent",
     "CallbackVoiceConnector",
     "LiveKitConnector",
+    "LiveKitProvider",
+    "PhoneConnector",
+    "SIPConnector",
+    "SipMediaEncryption",
+    "SipTransport",
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
+    "WebRTCConnector",
+    "SilenceTimeoutMixin",
+    "PipecatConnector",
+    "TwilioProvider",
+    "VapiConnector",
 ]
 
 # Resolved lazily: these live with `Persona` in `deepeval.dataset`, which

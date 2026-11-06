@@ -1,0 +1,135 @@
+---
+title: Deepgram TTS
+sidebar_label: Deepgram
+languages: [python]
+---
+
+In `deepeval`, you can use Deepgram to convert text into speech when running [voice simulations](/docs/conversation-simulator-voice-mode). Synthesis is what speaks the simulated user's messages to your agent, so its clarity is what your agent's own speech recognition has to work with.
+
+Deepgram is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `DEEPGRAM_API_KEY` in a cell:
+
+```bash
+%env DEEPGRAM_API_KEY=<your-deepgram-api-key>
+```
+
+### Command Line
+
+To speak with Deepgram in every voice simulation, run:
+
+```bash
+deepeval set-tts deepgram --model=aura-2-thalia-en
+```
+
+`--model` is optional and defaults to Deepgram's own default model.
+
+:::info
+The command above sets Deepgram as the default text-to-speech provider, unless overridden in Python code. To use a different one, run `deepeval set-tts` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-tts
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass a `DeepgramTTSModel` to `VoiceConfig` to synthesize with Aura instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import DeepgramTTSModel
+from deepeval.voice import VoiceConfig
+
+tts_model = DeepgramTTSModel(
+    model="aura-2-thalia-en",
+    voice="zeus",
+)
+voice_config = VoiceConfig(
+    tts_model=tts_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `DeepgramTTSModel`:
+
+- [Optional] `model`: A string specifying the name of the speech model to use. Defaulted to `aura-2-thalia-en`.
+- [Optional] `api_key`: A string specifying your Deepgram API key. Defaults to `DEEPGRAM_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the Deepgram API through. Defaulted to `https://api.deepgram.com`.
+- [Optional] `voice`: A string naming the Aura voice to speak in, either bare (`"zeus"`) or as a whole model name (`"aura-2-zeus-en"`). Defaulted to `None`, which leaves the voice named in `model` alone.
+- [Optional] `sample_rate`: An integer sample rate to synthesize at — one of `8000`, `16000`, `24000`, `32000`, or `48000`. Anything else raises immediately. Defaulted to `24000`.
+- [Optional] `cost_per_1m_chars`: A float overriding the per-character price used for cost accounting. Defaults to the built-in price for the model family.
+- [Optional] `generation_kwargs`: A dictionary of additional query parameters forwarded to Deepgram's `/v1/speak` endpoint.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+
+:::tip
+Any Deepgram parameter `deepeval` has no field for can be passed through `generation_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select Deepgram as the speech provider:
+
+```bash
+# .env.local
+DEEPGRAM_API_KEY=<your-deepgram-api-key>
+USE_DEEPGRAM_TTS=1
+DEEPEVAL_TTS_MODEL=aura-2-thalia-en
+```
+
+`deepeval set-tts deepgram --model aura-2-thalia-en` writes those same variables for you. `DEEPEVAL_TTS_MODEL` is optional: leave it out and synthesis runs on `aura-2-thalia-en` anyway, since that is Deepgram's default here.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_TTS_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    tts_model="aura-2-thalia-en",
+    ...,
+)
+```
+
+With `USE_DEEPGRAM_TTS` set, a bare model name is shorthand for `DeepgramTTSModel(model=...)`, and since an Aura name carries its own voice, picking a voice here is just naming a different model. Pass the model object itself to change the sample rate.
+
+</Tab>
+</Tabs>
+
+### Available Deepgram Models
+
+- `aura-2-thalia-en` (default)
+- `aura-2-andromeda-en`
+- `aura-2-apollo-en`
+- `aura-2-arcas-en`
+- `aura-2-zeus-en`
+- `aura-asteria-en`
+
+An Aura name carries the family, the voice, and the language in one identifier — `aura-2-thalia-en` is Thalia from Aura 2 speaking English. Any name Deepgram's `/v1/speak` endpoint accepts will work, so the list above is a starting point rather than the full [Aura voice catalog](https://developers.deepgram.com/docs/tts-models).

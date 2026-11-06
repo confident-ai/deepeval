@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every intention the user expresses in `turns` is satisfied by the assistant turns by the end of the conversation.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No user request in `turns` is ignored, refused without cause or left only partly addressed by the assistant."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how many of the user's intentions does the assistant satisfy?",
+    "levels": ["None satisfied", "Few satisfied", "Most satisfied", "All satisfied"]
+  }
+]

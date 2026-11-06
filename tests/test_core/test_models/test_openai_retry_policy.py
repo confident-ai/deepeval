@@ -1,7 +1,6 @@
 import pytest
 import openai
 import httpx
-from tenacity import RetryError
 from deepeval.models.llms.openai_model import OpenAIModel
 
 
@@ -100,13 +99,10 @@ def test_retry_respects_max_attempts(
 
     gpt, counter = gpt_model_retryable
 
-    with pytest.raises(RetryError) as excinfo:
+    with pytest.raises(openai.RateLimitError):
         gpt.generate("hello world")
 
     assert counter["calls"] == 4  # 1 initial + 3 retries
-    assert isinstance(
-        excinfo.value.last_attempt.exception(), openai.RateLimitError
-    )
 
 
 def test_length_limit_is_non_retryable(gpt_model_length_limit):

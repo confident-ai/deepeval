@@ -1,3 +1,4 @@
+import { expectationEvidence } from "@/evaluate/expectations";
 // Metric result caching, the TS counterpart of Python's
 // `deepeval/test_run/cache.py`. A result is reusable only when both the test
 // case content and the metric's configuration are unchanged.
@@ -16,6 +17,7 @@ const CACHE_VERSION = 1;
 
 /** The metric knobs that change a score. */
 interface MetricConfiguration {
+  evalMode?: string;
   threshold?: number | null;
   evaluationModel?: string;
   strictMode: boolean;
@@ -60,6 +62,11 @@ function readCache(): CacheFile {
 
 /** Identity for a test case: every field a metric can read. */
 export function testCaseCacheKey(testCase: AnyTestCase): string {
+  if (testCase.expectations)
+    return JSON.stringify({
+      expectations: testCase.expectations.toJSON(),
+      evidence: expectationEvidence(testCase),
+    });
   if (testCase instanceof ConversationalTestCase) {
     return JSON.stringify({
       turns: testCase.turns.map((turn) => ({
@@ -84,6 +91,7 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
 
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
   return {
+    evalMode: metric.evalMode,
     threshold: metric.threshold,
     evaluationModel: metric.evaluationModel,
     strictMode: metric.strictMode,
@@ -96,6 +104,7 @@ function sameConfiguration(
   b: MetricConfiguration,
 ): boolean {
   return (
+    a.evalMode === b.evalMode &&
     a.threshold === b.threshold &&
     a.evaluationModel === b.evaluationModel &&
     a.strictMode === b.strictMode &&

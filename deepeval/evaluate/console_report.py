@@ -51,6 +51,73 @@ def _natural_sort_key(s: str):
     ]
 
 
+# Shown when a classifier with `allow_none=True` declined to classify.
+NO_CLASSIFICATION = "none"
+
+
+def _classification_label(c) -> str:
+    if c.label is not None:
+        return str(c.label)
+    if c.error:
+        return "N/A"
+    return NO_CLASSIFICATION
+
+
+def _classification_status(c, rich: bool = True) -> str:
+    if c.error:
+        return "[bold red]ERROR[/bold red]" if rich else "⚠️ ERROR"
+    if c.success is None:
+        # No expected label: the classifier has no pass/fail verdict
+        return "[bold dim]NONE[/bold dim]" if rich else "➖ NONE"
+    if c.success:
+        return "[bold green]PASS[/bold green]" if rich else "✅"
+    return "[bold red]FAIL[/bold red]" if rich else "❌"
+
+
+def _aggregate_classifications(test_results: List[TestResult]) -> dict:
+    """Per classifier: label distribution plus pass/fail over rows that carry
+    a verdict (an expected label was set)."""
+    aggregates: dict = {}
+    for case in test_results:
+        for c in case.classifications or []:
+            agg = aggregates.setdefault(
+                c.name,
+                {
+                    "total": 0,
+                    "passes": 0,
+                    "fails": 0,
+                    "errors": 0,
+                    "labels": {},
+                },
+            )
+            agg["total"] += 1
+            if c.error:
+                agg["errors"] += 1
+            else:
+                label = _classification_label(c)
+                agg["labels"][label] = agg["labels"].get(label, 0) + 1
+            if c.success is True:
+                agg["passes"] += 1
+            elif c.success is False:
+                agg["fails"] += 1
+    return aggregates
+
+
+def _format_label_distribution(labels: dict) -> str:
+    if not labels:
+        return "N/A"
+    ordered = sorted(labels.items(), key=lambda kv: (-kv[1], kv[0]))
+    return ", ".join(f"{label}={count}" for label, count in ordered)
+
+
+def _format_classifier_pass_rate(agg: dict) -> str:
+    verdicts = agg["passes"] + agg["fails"]
+    if verdicts == 0:
+        return "N/A"
+    rate = f"{(agg['passes'] / verdicts) * 100:.2f}%"
+    return f"{rate} | passed={agg['passes']} | failed={agg['fails']}"
+
+
 def _format_pass_rate(agg: dict) -> str:
     """Format pass rate with pass/fail counts, each with its flaky sub-count."""
     verdicts = agg["passes"] + agg["fails"]
@@ -104,11 +171,26 @@ class EvaluationConsoleReport:
             if self._should_skip_case(case, display_option):
                 continue
             displayed_any = True
-            status_color = DEEPEVAL_GREEN if case.success else FAIL_RED
-            status_icon = "✅" if case.success else "❌"
+            metrics_data = case.metrics_data or []
+            classifications = case.classifications or []
+            if case.success is None:
+                # Nothing produced a verdict (e.g. classifiers only, no
+                # expected labels): neither passed nor failed.
+                status_color = "dim"
+                status_icon = "➖"
+            else:
+                status_color = DEEPEVAL_GREEN if case.success else FAIL_RED
+                status_icon = "✅" if case.success else "❌"
 
             if truncate and case.success:
-                summary_text = f"[{status_color} bold]{status_icon} {case.name} (Passed {len(case.metrics_data)} metrics)[/{status_color} bold]"
+                summary_parts = []
+                if metrics_data:
+                    summary_parts.append(f"Passed {len(metrics_data)} metrics")
+                if classifications:
+                    summary_parts.append(
+                        f"{len(classifications)} classifications"
+                    )
+                summary_text = f"[{status_color} bold]{status_icon} {case.name} ({', '.join(summary_parts)})[/{status_color} bold]"
                 renderables.append(
                     Panel(summary_text, border_style=status_color, expand=True)
                 )
@@ -138,44 +220,82 @@ class EvaluationConsoleReport:
                     )
                 content_tree.add(data_table)
 
-            metrics_table = Table(
-                title="Metrics",
-                title_justify="left",
-                show_edge=False,
-                header_style=f"bold {DEEPEVAL_PURPLE}",
-                expand=True,
-            )
-            metrics_table.add_column("Status", justify="center")
-            metrics_table.add_column("Metric")
-            metrics_table.add_column("Score")
-            metrics_table.add_column("Threshold")
-            metrics_table.add_column("Reason")
-
-            for m in case.metrics_data:
-                if m.error:
-                    m_icon = "[bold red]ERROR[/bold red]"
-                elif m.success is None:
-                    # No threshold: the metric has no pass/fail verdict
-                    m_icon = "[bold dim]NONE[/bold dim]"
-                elif m.success:
-                    m_icon = "[bold green]PASS[/bold green]"
-                else:
-                    m_icon = "[bold red]FAIL[/bold red]"
-
-                score_str = f"{m.score:.2f}" if m.score is not None else "N/A"
-                thresh_str = (
-                    f"{m.threshold:.2f}" if m.threshold is not None else "N/A"
+            if metrics_data:
+                metrics_table = Table(
+                    title="Metrics",
+                    title_justify="left",
+                    show_edge=False,
+                    header_style=f"bold {DEEPEVAL_PURPLE}",
+                    expand=True,
                 )
-                reason_str = str(m.reason or m.error or "N/A")
+                metrics_table.add_column("Status", justify="center")
+                metrics_table.add_column("Metric")
+                metrics_table.add_column("Score")
+                metrics_table.add_column("Threshold")
+                metrics_table.add_column("Reason")
 
-                if truncate and m.success and len(reason_str) > 50:
-                    reason_str = reason_str[:47] + "..."
+                for m in metrics_data:
+                    if m.error:
+                        m_icon = "[bold red]ERROR[/bold red]"
+                    elif m.success is None:
+                        # No threshold: the metric has no pass/fail verdict
+                        m_icon = "[bold dim]NONE[/bold dim]"
+                    elif m.success:
+                        m_icon = "[bold green]PASS[/bold green]"
+                    else:
+                        m_icon = "[bold red]FAIL[/bold red]"
 
-                metrics_table.add_row(
-                    m_icon, m.name, score_str, thresh_str, reason_str
+                    score_str = (
+                        f"{m.score:.2f}" if m.score is not None else "N/A"
+                    )
+                    thresh_str = (
+                        f"{m.threshold:.2f}"
+                        if m.threshold is not None
+                        else "N/A"
+                    )
+                    reason_str = str(m.reason or m.error or "N/A")
+
+                    if truncate and m.success and len(reason_str) > 50:
+                        reason_str = reason_str[:47] + "..."
+
+                    metrics_table.add_row(
+                        m_icon, m.name, score_str, thresh_str, reason_str
+                    )
+
+                content_tree.add(metrics_table)
+
+            if classifications:
+                classifiers_table = Table(
+                    title="Classifiers",
+                    title_justify="left",
+                    show_edge=False,
+                    header_style=f"bold {DEEPEVAL_PURPLE}",
+                    expand=True,
                 )
+                classifiers_table.add_column("Status", justify="center")
+                classifiers_table.add_column("Classifier")
+                classifiers_table.add_column("Label")
+                classifiers_table.add_column("Expected")
+                classifiers_table.add_column("Reason")
 
-            content_tree.add(metrics_table)
+                for c in classifications:
+                    reason_str = str(c.reason or c.error or "N/A")
+                    if truncate and c.success and len(reason_str) > 50:
+                        reason_str = reason_str[:47] + "..."
+                    classifiers_table.add_row(
+                        _classification_status(c),
+                        c.name,
+                        _classification_label(c),
+                        (
+                            str(c.expected_label)
+                            if c.expected_label is not None
+                            else "N/A"
+                        ),
+                        reason_str,
+                    )
+
+                content_tree.add(classifiers_table)
+
             renderables.append(
                 Panel(
                     content_tree,
@@ -209,7 +329,7 @@ class EvaluationConsoleReport:
         # Calculate aggregate metrics
         metric_aggregates = {}
         for case in self.test_results:
-            for m in case.metrics_data:
+            for m in case.metrics_data or []:
                 if m.name not in metric_aggregates:
                     metric_aggregates[m.name] = {
                         "total": 0,
@@ -266,6 +386,34 @@ class EvaluationConsoleReport:
 
             renderables.append(
                 Panel(agg_table, border_style=DEEPEVAL_PURPLE, expand=True)
+            )
+
+        classifier_aggregates = _aggregate_classifications(self.test_results)
+        if classifier_aggregates:
+            cls_table = Table(
+                title="[bold]Aggregate Classifiers[/bold]\n",
+                title_justify="left",
+                show_edge=False,
+                header_style=f"bold {DEEPEVAL_PURPLE}",
+                expand=True,
+            )
+            cls_table.add_column("Classifier")
+            cls_table.add_column("Labels")
+            cls_table.add_column("Pass Rate")
+            cls_table.add_column("Errors")
+            cls_table.add_column("Total")
+
+            for name, agg in classifier_aggregates.items():
+                cls_table.add_row(
+                    name,
+                    _format_label_distribution(agg["labels"]),
+                    _format_classifier_pass_rate(agg),
+                    str(agg["errors"]),
+                    str(agg["total"]),
+                )
+
+            renderables.append(
+                Panel(cls_table, border_style=DEEPEVAL_PURPLE, expand=True)
             )
 
         return Group(*renderables)
@@ -335,7 +483,10 @@ class EvaluationConsoleReport:
         md = ["# 🚀 DeepEval Evaluation Results\n"]
 
         for case in self.test_results:
-            status_icon = "✅ PASS" if case.success else "❌ FAIL"
+            if case.success is None:
+                status_icon = "➖ NONE"
+            else:
+                status_icon = "✅ PASS" if case.success else "❌ FAIL"
             md.append(f"## {status_icon} - {case.name}\n")
             md.append(
                 "<details><summary><b>View Test Case Data</b></summary>\n"
@@ -351,36 +502,61 @@ class EvaluationConsoleReport:
                 if case.expected_output and case.expected_output != "N/A":
                     md.append(f"- **Expected Output:** {case.expected_output}")
 
-            md.append("\n</details>\n\n### Metrics\n")
-            md.append("| Status | Metric | Score | Threshold | Reason |")
-            md.append("|:---:|:---|:---:|:---:|:---|")
+            md.append("\n</details>\n")
 
-            for m in case.metrics_data:
-                if m.error:
-                    m_icon = "⚠️ ERROR"
-                elif m.success is None:
-                    m_icon = "➖ NONE"
-                elif m.success:
-                    m_icon = "✅"
-                else:
-                    m_icon = "❌"
-                score_str = f"{m.score:.2f}" if m.score is not None else "N/A"
-                thresh_str = (
-                    f"{m.threshold:.2f}" if m.threshold is not None else "N/A"
-                )
-                reason_str = str(m.reason or m.error or "N/A").replace(
-                    "\n", " <br> "
-                )
-                md.append(
-                    f"| {m_icon} | **{m.name}** | {score_str} | {thresh_str} | {reason_str} |"
-                )
+            if case.metrics_data:
+                md.append("\n### Metrics\n")
+                md.append("| Status | Metric | Score | Threshold | Reason |")
+                md.append("|:---:|:---|:---:|:---:|:---|")
+
+                for m in case.metrics_data:
+                    if m.error:
+                        m_icon = "⚠️ ERROR"
+                    elif m.success is None:
+                        m_icon = "➖ NONE"
+                    elif m.success:
+                        m_icon = "✅"
+                    else:
+                        m_icon = "❌"
+                    score_str = (
+                        f"{m.score:.2f}" if m.score is not None else "N/A"
+                    )
+                    thresh_str = (
+                        f"{m.threshold:.2f}"
+                        if m.threshold is not None
+                        else "N/A"
+                    )
+                    reason_str = str(m.reason or m.error or "N/A").replace(
+                        "\n", " <br> "
+                    )
+                    md.append(
+                        f"| {m_icon} | **{m.name}** | {score_str} | {thresh_str} | {reason_str} |"
+                    )
+
+            if case.classifications:
+                md.append("\n### Classifiers\n")
+                md.append("| Status | Classifier | Label | Expected | Reason |")
+                md.append("|:---:|:---|:---:|:---:|:---|")
+                for c in case.classifications:
+                    reason_str = str(c.reason or c.error or "N/A").replace(
+                        "\n", " <br> "
+                    )
+                    label_str = _classification_label(c)
+                    expected_str = (
+                        str(c.expected_label)
+                        if c.expected_label is not None
+                        else "N/A"
+                    )
+                    md.append(
+                        f"| {_classification_status(c, rich=False)} | **{c.name}** | {label_str} | {expected_str} | {reason_str} |"
+                    )
 
             md.append("\n---\n")
 
         # Calculate aggregate metrics
         metric_aggregates = {}
         for case in self.test_results:
-            for m in case.metrics_data:
+            for m in case.metrics_data or []:
                 if m.name not in metric_aggregates:
                     metric_aggregates[m.name] = {
                         "total": 0,
@@ -426,6 +602,17 @@ class EvaluationConsoleReport:
                     f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
                 )
 
+            md.append("\n---\n")
+
+        classifier_aggregates = _aggregate_classifications(self.test_results)
+        if classifier_aggregates:
+            md.append("## Aggregate Classifiers\n")
+            md.append("| Classifier | Labels | Pass Rate | Errors | Total |")
+            md.append("|:---|:---|:---:|:---:|:---:|")
+            for name, agg in classifier_aggregates.items():
+                md.append(
+                    f"| **{name}** | {_format_label_distribution(agg['labels'])} | {_format_classifier_pass_rate(agg)} | {agg['errors']} | {agg['total']} |"
+                )
             md.append("\n---\n")
 
         with open(filepath, "w", encoding="utf-8") as f:

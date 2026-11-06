@@ -13,7 +13,7 @@ import {
 } from "@/evaluate/console-report";
 import { readHyperparameters } from "@/evaluate/hyperparameters";
 import {
-  exportTestRunJson,
+  exportTestRun,
   saveLatestTestRun,
   summarizeCases,
   type LocalTestRun,
@@ -125,8 +125,14 @@ export async function wrapUpTestRun(
   run.link = posted.link;
   run.testRunId = posted.testRunId;
   saveLatestTestRun(run);
-  const exported = exportTestRunJson(run);
-  if (exported) console.log(`✅ Test run saved to: ${exported}`);
+  const exported = exportTestRun(run);
+  if (exported?.mode === "sqlite") {
+    console.log(
+      `✅ Test run saved to: ${exported.path} (run id ${exported.runId})`,
+    );
+  } else if (exported) {
+    console.log(`✅ Test run saved to: ${exported.path}`);
+  }
 
   return posted;
 }

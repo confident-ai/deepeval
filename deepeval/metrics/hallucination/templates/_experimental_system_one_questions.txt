@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "`actual_output` agrees with every document in `context`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No statement in `actual_output` contradicts a document in `context`."
+  },
+  {
+    "type": "score",
+    "question": "How much of `actual_output` is consistent with the documents in `context`?",
+    "levels": ["Contradicts them", "Mostly contradicts them", "Mostly consistent", "Fully consistent"]
+  }
+]

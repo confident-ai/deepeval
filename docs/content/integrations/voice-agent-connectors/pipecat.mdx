@@ -1,0 +1,66 @@
+---
+title: Pipecat Pipelines
+sidebar_label: Pipecat
+languages: [python]
+---
+
+In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against a Pipecat pipeline. The pipeline is yours and self-hosted, so the connector takes the URL its WebSocket transport is listening on, connects the way any other client would, plays the simulated user's audio into it, and captures the spoken reply along with how long it took to start.
+
+:::info
+Since `deepeval` speaks the [protobuf frames](https://docs.pipecat.ai/server/utilities/serializers/introduction) that Pipecat's WebSocket transports serialize by default, no credentials are involved, and `pipecat-ai` isn't required on the machine running the simulation.
+:::
+
+### In Code
+
+Start your pipeline as you normally would, then pass its URL to a `PipecatConnector`:
+
+```python
+from deepeval.voice import PipecatConnector, VoiceConfig
+
+connector = PipecatConnector(url="ws://localhost:8765")
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
+
+There are **ONE** mandatory and **THREE** optional parameters when creating a `PipecatConnector`, alongside the shared connector settings:
+
+- `url`: A string specifying the WebSocket URL your pipeline is serving on.
+- [Optional] `headers`: A dictionary of HTTP headers sent with the upgrade request, for a pipeline behind auth. Defaulted to `None`.
+- [Optional] `agent_sample_rate`: An integer specifying the rate audio is sent to your pipeline at. Must match the `audio_in_sample_rate` your pipeline runs with, since Pipecat doesn't resample what it's handed. Defaulted to `16000`, which is Pipecat's own default.
+- [Optional] `client_ready`: A boolean which, if `True`, sends an RTVI `client-ready` message once connected. Defaulted to `True`.
+- [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"balanced"`.
+
+The reply's sample rate is read from the frames your pipeline sends, so `audio_out_sample_rate` needs no configuring here.
+
+:::tip
+The URL is wherever your pipeline's transport is listening — the same address a browser client would connect to. A [`WebsocketServerTransport`](https://docs.pipecat.ai/server/services/transport/websocket-server) serves on the `host` and `port` you gave it, so `port=8765` is `ws://localhost:8765`; a [`FastAPIWebsocketTransport`](https://docs.pipecat.ai/server/services/transport/fastapi-websocket) serves on the route you mounted its endpoint on, such as `ws://localhost:8000/ws`.
+:::
+
+### Turn Detection and Transcripts
+
+Pipecat's frame schema carries audio, not turn boundaries — what says a turn is over is an [RTVI](https://docs.pipecat.ai/server/frameworks/rtvi/introduction) `bot-stopped-speaking` message, and only a pipeline running an `RTVIProcessor` sends one:
+
+```python
+from pipecat.processors.frameworks.rtvi import RTVIProcessor
+
+rtvi = RTVIProcessor()
+pipeline = Pipeline([transport.input(), rtvi, ..., transport.output()])
+```
+
+With RTVI in the pipeline, `deepeval` ends each turn on the signal instead of inferring it from silence, and takes your agent's own words from `bot-transcription` — so no transcription runs on turns where one arrives. Without it, turns end on silence and every turn is transcribed. Either way `VoiceConfig` resolves a [speech-to-text model](/integrations/stt/openai) for the turns that need one, so it still needs to be configured, credentials included.
+
+:::note
+`deepeval` doesn't take the signal on trust: it ends turns on silence until it has actually seen a `bot-stopped-speaking`, so a pipeline without RTVI is never left waiting for one.
+:::
+
+Some pipelines hold their greeting — or their audio input — until the client announces itself. `client_ready` sends that announcement on connect, and a pipeline with no `RTVIProcessor` ignores it.
+
+### Pipelines on Other Transports
+
+A Pipecat pipeline served over WebRTC is reached through the connector for that service rather than this one: a pipeline on LiveKit is a LiveKit room, so [`LiveKitConnector`](/integrations/voice-agent-connectors/livekit) joins it.
+
+`PipecatConnector` also expects your transport's default serializer, which puts protobuf frames on the wire. Pipecat's other [serializers](https://docs.pipecat.ai/server/utilities/serializers/introduction) exist to speak the audio dialects of telephony providers like Twilio and Plivo, so a pipeline using one is an agent taking a real phone call — which the simulator can't place. Run that same pipeline behind a plain WebSocket transport to test it.
+
+For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).

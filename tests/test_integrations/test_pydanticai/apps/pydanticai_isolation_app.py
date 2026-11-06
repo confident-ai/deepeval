@@ -27,11 +27,11 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Tuple
 
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
 from deepeval.tracing import update_current_span, update_current_trace
-
 
 # Per-request ContextVar carrying request data the tool body reads back.
 # In each task / worker thread we ``set`` this BEFORE calling agent.run;
@@ -56,7 +56,7 @@ def create_isolation_agent(
             "You are an assistant. When the user asks for data with a "
             "specific key, call the get_data tool with that key. Be concise."
         ),
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="isolation_agent",
     )
 

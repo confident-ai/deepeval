@@ -1,0 +1,1 @@
+Judging only which MCP tools, resources and prompts the agent chose in `steps_taken` (not whether they worked, and not their arguments), how well do they fit the user's `task`, given that `mcp_servers` lists every primitive the agent could have used? Penalise missing a clearly better primitive and unnecessary or irrelevant calls.

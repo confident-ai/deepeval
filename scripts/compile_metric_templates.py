@@ -19,6 +19,7 @@ Usage:
     python scripts/compile_metric_templates.py            # all features
     python scripts/compile_metric_templates.py metrics    # one feature
     python scripts/compile_metric_templates.py simulator
+    python scripts/compile_metric_templates.py classifiers
 """
 
 from __future__ import annotations
@@ -51,6 +52,11 @@ FEATURES: dict[str, FeatureConfig] = {
     "simulator": FeatureConfig(
         name="simulator",
         sources_root=PACKAGE_ROOT / "simulator",
+        fragments_dir=None,
+    ),
+    "classifiers": FeatureConfig(
+        name="classifiers",
+        sources_root=PACKAGE_ROOT / "classifiers",
         fragments_dir=None,
     ),
 }

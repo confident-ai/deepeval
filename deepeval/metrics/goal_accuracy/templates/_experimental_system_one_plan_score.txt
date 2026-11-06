@@ -1,0 +1,1 @@
+How clear, complete and logically ordered is the assistant's plan (stated or implied) in `steps_taken` for achieving `task`, and how closely does its execution follow that plan?

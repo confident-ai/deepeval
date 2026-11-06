@@ -34,7 +34,7 @@ This diagram demonstrates how the Qdrant retriever integrates with an external e
     flexDirection: "column",
   }}
 >
-  <ImageDisplayer src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*d_t9FzfdZyelyzBx_CVUNA.png" />
+  <ImageDisplayer id="diagrams/external/reference/qdrant-rag-sketch" />
   <div
     style={{
       fontSize: "13px",
@@ -249,5 +249,5 @@ Since **precision** evaluates how well the retrieved contexts match the query, a
 Once you've tested alternative embedding models or other altnerate hyperparameters, you'll want to generate new test cases and re-evaluate retrieval quality to measure improvements. Keep an eye on **Contextual Precision**, as an increase indicates more focused and relevant context retrieval.
 
 :::info
-For deeper insights into retrieval performance and to compare embedding model variations, consider tracking your evaluations in [Confident AI](https://www.confident-ai.com/).
+Once your Qdrant retriever is serving users, [Confident AI](https://www.confident-ai.com/products/llm-observability) clusters failing production traces into failure modes and routes them to the right annotators, so the next test cases for comparing embedding models come from what broke in production.
 :::

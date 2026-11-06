@@ -227,14 +227,16 @@ def _extract_tools_called_from_trace(
     return result if result else None
 
 
-def _extract_token_cost(trace_dict: Dict[str, Any]) -> Optional[float]:
-    """Extract total token count from trace."""
+def _extract_token_counts(
+    trace_dict: Dict[str, Any],
+) -> tuple[Optional[int], Optional[int]]:
+    """Extract (input_token_count, output_token_count) from llmSpans sums."""
     llm_spans = trace_dict.get("llmSpans", [])
     if not llm_spans:
-        return None
+        return None, None
 
-    total_tokens = 0
-    has_token_data = False
+    input_total: Optional[int] = None
+    output_total: Optional[int] = None
 
     for span in llm_spans:
         if not isinstance(span, dict):
@@ -244,13 +246,11 @@ def _extract_token_cost(trace_dict: Dict[str, Any]) -> Optional[float]:
         output_tokens = span.get("outputTokenCount")
 
         if input_tokens is not None:
-            total_tokens += input_tokens
-            has_token_data = True
+            input_total = (input_total or 0) + int(input_tokens)
         if output_tokens is not None:
-            total_tokens += output_tokens
-            has_token_data = True
+            output_total = (output_total or 0) + int(output_tokens)
 
-    return float(total_tokens) if has_token_data else None
+    return input_total, output_total
 
 
 def _extract_completion_time(trace_dict: Dict[str, Any]) -> Optional[float]:
@@ -341,7 +341,7 @@ def _add_test_case_to_run(
     input_str = _extract_input_from_trace(trace_dict)
     output_str = _extract_output_from_trace(trace_dict)
     tools_called = _extract_tools_called_from_trace(trace_dict)
-    token_cost = _extract_token_cost(trace_dict)
+    input_token_count, output_token_count = _extract_token_counts(trace_dict)
     completion_time = _extract_completion_time(trace_dict)
     tags = _extract_tags(nodeid, item, trace_dict)
 
@@ -365,7 +365,9 @@ def _add_test_case_to_run(
         retrievalContext=None,
         toolsCalled=tools_called,
         expectedTools=None,
-        tokenCost=token_cost,
+        tokenCost=None,  # No pricing info available from trace
+        inputTokenCount=input_token_count,
+        outputTokenCount=output_token_count,
         completionTime=completion_time,
         tags=tags,
         metadata=additional_metadata,
@@ -390,8 +392,10 @@ def _add_test_case_to_run(
     )
 
     _logger.debug(
-        "[DEBUG] added api_test_case fields: tokenCost=%s completionTime=%s tags=%s",
-        token_cost is not None,
+        "[DEBUG] added api_test_case fields: inputTokenCount=%s "
+        "outputTokenCount=%s completionTime=%s tags=%s",
+        input_token_count is not None,
+        output_token_count is not None,
         completion_time is not None,
         tags is not None,
     )

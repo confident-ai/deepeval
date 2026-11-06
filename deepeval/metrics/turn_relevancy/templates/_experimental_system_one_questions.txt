@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every assistant turn in `turns` is relevant to the conversation so far, given the user turns before it.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No assistant turn in `turns` ignores the user turn it responds to or changes the subject."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how relevant are the assistant turns to the conversation so far?",
+    "levels": ["Mostly irrelevant", "Several irrelevant turns", "Mostly relevant", "All relevant"]
+  }
+]

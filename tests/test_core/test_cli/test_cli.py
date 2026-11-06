@@ -10,7 +10,12 @@ from dataclasses import dataclass
 
 import deepeval.cli.generate.command as generate_cli
 from deepeval.cli.main import app as cli_app
-from deepeval.cli.utils import USE_EMBED_KEYS, USE_LLM_KEYS
+from deepeval.cli.utils import (
+    USE_EMBED_KEYS,
+    USE_LLM_KEYS,
+    USE_STT_KEYS,
+    USE_TTS_KEYS,
+)
 from deepeval.config.settings import Settings, reset_settings  # noqa: E402
 from deepeval.config.utils import parse_bool
 
@@ -638,6 +643,102 @@ def test_set_unset_embedding_provider_roundtrip(
     assert "YES" not in [
         store2.get(k) for k in USE_EMBED_KEYS
     ], "Expected no embedding USE_* key to remain YES after unset"
+
+
+SPEECH_PROVIDER_CASES: List[_ProviderCase] = [
+    _ProviderCase(
+        set_cmd="set-tts",
+        unset_cmd="unset-tts",
+        use_key="USE_DEEPGRAM_TTS",
+        set_flags=("deepgram", "--model", "aura-2-thalia-en"),
+        expected_env={"DEEPEVAL_TTS_MODEL": "aura-2-thalia-en"},
+        expected_store={"DEEPEVAL_TTS_MODEL": "aura-2-thalia-en"},
+    ),
+    _ProviderCase(
+        set_cmd="set-stt",
+        unset_cmd="unset-stt",
+        use_key="USE_ASSEMBLYAI_STT",
+        set_flags=("assemblyai", "--model", "universal-3-5-pro"),
+        expected_env={"DEEPEVAL_STT_MODEL": "universal-3-5-pro"},
+        expected_store={"DEEPEVAL_STT_MODEL": "universal-3-5-pro"},
+    ),
+]
+
+
+@pytest.mark.parametrize("case", SPEECH_PROVIDER_CASES, ids=lambda c: c.set_cmd)
+def test_set_unset_speech_provider_roundtrip(
+    case: _ProviderCase,
+    hidden_store_dir: Path,
+    env_path: Path,
+) -> None:
+    runner = CliRunner()
+    save = f"dotenv:{env_path}"
+    family_keys = (
+        USE_TTS_KEYS if case.use_key.endswith("_TTS") else USE_STT_KEYS
+    )
+
+    result = runner.invoke(
+        cli_app, [case.set_cmd, *case.set_flags, "--save", save]
+    )
+    assert result.exit_code == 0, result.output
+
+    env = _read_dotenv(env_path)
+    _assert_no_dupes(env_path, list(case.expected_env.keys()) + family_keys)
+    for k, v in case.expected_env.items():
+        assert env.get(k) == v
+    _assert_use_flags_exclusive_env(env_path, case.use_key, family_keys)
+
+    store = _read_hidden_store_json(hidden_store_dir)
+    _assert_use_flags_exclusive_store(store, case.use_key, family_keys)
+    for k, v in case.expected_store.items():
+        assert store.get(k) == v
+
+    result2 = runner.invoke(cli_app, [case.unset_cmd, "--save", save])
+    assert result2.exit_code == 0, result2.output
+
+    env2 = _read_dotenv(env_path)
+    for k in case.expected_env.keys():
+        assert k not in env2
+    assert not parse_bool(env2.get(case.use_key))
+
+    store2 = _read_hidden_store_json(hidden_store_dir)
+    for k in case.expected_store.keys():
+        assert k not in store2
+    assert "YES" not in [store2.get(k) for k in family_keys]
+
+
+def test_speech_and_llm_selections_do_not_clear_each_other(
+    hidden_store_dir: Path,
+    env_path: Path,
+) -> None:
+    runner = CliRunner()
+    save = f"dotenv:{env_path}"
+
+    for args in (
+        ["set-stt", "deepgram", "--model", "nova-3", "--save", save],
+        ["set-tts", "elevenlabs", "--save", save],
+        ["set-openai", "--model", "gpt-4o-mini", "--save", save],
+    ):
+        result = runner.invoke(cli_app, args)
+        assert result.exit_code == 0, result.output
+
+    store = _read_hidden_store_json(hidden_store_dir)
+    env = _read_dotenv(env_path)
+
+    # Selecting an LLM provider leaves both speech families alone.
+    for key in ("USE_DEEPGRAM_STT", "USE_ELEVENLABS_TTS", "USE_OPENAI_MODEL"):
+        assert store.get(key) == "YES", store
+        assert parse_bool(env.get(key)), env
+    assert store.get("DEEPEVAL_STT_MODEL") == "nova-3"
+
+    # And unsetting one speech family leaves the other one alone.
+    result = runner.invoke(cli_app, ["unset-stt", "--save", save])
+    assert result.exit_code == 0, result.output
+
+    store2 = _read_hidden_store_json(hidden_store_dir)
+    assert store2.get("USE_DEEPGRAM_STT") is None
+    assert store2.get("USE_ELEVENLABS_TTS") == "YES"
+    assert store2.get("USE_OPENAI_MODEL") == "YES"
 
 
 def test_set_unset_gemini_service_account_file_roundtrip_dotenv_only(

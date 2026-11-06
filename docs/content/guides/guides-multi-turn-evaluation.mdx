@@ -53,7 +53,7 @@ This creates two key challenges:
 
 2. **Quality must be sustained.** An LLM that gives five perfect responses and then one terrible one has still failed. Multi-turn metrics need to evaluate consistency across the entire conversation, not just individual turns.
 
-<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/conversational-test-case" />
 
 In `deepeval`, multi-turn interactions are grouped by **scenarios** defined as [`ConversationalGolden`s](/docs/conversation-simulator#simulate-a-conversation). If two conversations occur under the same scenario (e.g., "Angry user asking for a refund"), we consider those comparable—even if the exact messages differ.
 
@@ -90,9 +90,9 @@ Beyond individual turns, the overall conversation arc can break down:
 Multi-turn evaluation spans two environments that feed into each other:
 
 - **Development** — Define conversational scenarios, simulate user interactions, and benchmark with multi-turn metrics.
-- **Production** — Log real conversations as threads on Confident AI and evaluate them asynchronously.
+- **Production** — Group production traces into threads on Confident AI and catch the conversations that fail.
 
-Failing production conversations get fed back into your development dataset, creating a continuous improvement loop.
+Failing threads become `ConversationalGolden`s in your development dataset, so the next benchmark covers the conversations that broke in production.
 
 ```mermaid
 flowchart TD
@@ -103,9 +103,9 @@ flowchart TD
         D -->|Iterate| A
     end
     subgraph Production["Production"]
-        E["Live Conversations\n(Threads on Confident AI)"] --> F["Async Evaluations\n(Metric Collections)"]
-        F --> G["Monitor Trends\n(Confident AI Dashboard)"]
-        G -->|"Feed back to datasets"| A
+        E["Production Threads\n(Confident AI)"] --> F["Async Evaluations\n(Metric Collections)"]
+        F --> G["Failing Threads\n(Failure Modes)"]
+        G -->|"Turn into goldens"| A
     end
     D --> E
 ```
@@ -280,7 +280,7 @@ After each test run, analyze which scenarios consistently fail and which metrics
 
 ### Using Custom Criteria
 
-The built-in metrics cover common quality dimensions, but your application likely has specific requirements. Use [`ConversationalGEval`](/docs/metrics-conversational-g-eval) to define custom evaluation criteria in plain English:
+The built-in metrics cover common quality dimensions, but your application likely has specific requirements. Use [`ConversationalGEval`](/docs/metrics-llm-evals) to define custom evaluation criteria in plain English:
 
 ```python
 from deepeval.metrics import ConversationalGEval
@@ -304,15 +304,15 @@ evaluate(test_cases=test_cases, metrics=[empathy, policy_compliance])
 
 ## Multi-Turn Evals In Production
 
-In production, the goal shifts from benchmarking to **continuous monitoring**. Real user conversations are unpredictable—they'll surface edge cases your development scenarios never anticipated.
+In production, the goal shifts from benchmarking to **catching the conversations that fail**. Real users are unpredictable, and their conversations will surface edge cases your development scenarios never anticipated.
 
 Production evaluation needs to:
 
 - **Run asynchronously** — never add latency to your application's responses
 - **Scale automatically** — handle thousands of concurrent conversations
-- **Surface actionable insights** — identify quality degradation before users churn
+- **Feed the next eval** — turn every failing conversation into a scenario your dataset was missing
 
-While you could build this infrastructure yourself, [Confident AI](https://confident-ai.com) handles it seamlessly.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and routes them to the right annotators so they become goldens for your next simulation run. The steps below also set up evals that run on every thread and flag the failing ones.
 
 ### Setting Up Production Monitoring
 
@@ -324,7 +324,7 @@ flowchart LR
     subgraph Confident AI
         B -->|"Export threads\n(async, no latency)"| C[Thread Logging]
         C --> D[Async Evaluation]
-        D --> E[Dashboard & Alerts]
+        D --> E[Failing Threads]
     end
 ```
 
@@ -339,7 +339,7 @@ Log in to Confident AI and create a metric collection containing the conversatio
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Create a metric collection on Confident AI"
-  description="Group the metrics you want to run automatically on incoming threads."
+  description="Choose the conversational metrics that run on every production thread."
 />
 
 </Step>
@@ -352,16 +352,16 @@ Confident AI groups multi-turn conversations into **threads**—the production e
 <VideoDisplayer
   src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
-  label="Monitor conversations on Confident AI"
-  description="Replay production threads and evaluate them with your metrics."
+  label="Failing threads on Confident AI"
+  description="Replay failing production threads turn by turn to see where the conversation broke."
 />
 
 </Step>
 <Step>
-### Feed production data back to development
+### Turn failing threads into goldens
 
 
-The most powerful aspect of production monitoring is the feedback loop. When you discover failing conversations in production, you can convert them into `ConversationalGolden`s and add them to your development dataset. This ensures your benchmark evolves with real-world usage patterns.
+Failing threads are only useful once they change what you test. Convert them into `ConversationalGolden`s and add them to your development dataset, so your benchmark grows with every conversation that broke in production.
 
 ```mermaid
 flowchart LR
@@ -391,7 +391,7 @@ To catch multi-turn failures, `deepeval` provides a [rich set of conversational 
 :::info[Development vs Production]
 
 - **Development** — Simulate conversations from scenario-based goldens, benchmark with multi-turn metrics, and iterate
-- **Production** — Export conversation threads to Confident AI and evaluate asynchronously to monitor quality over time
+- **Production** — Export conversation threads to Confident AI, catch the failing ones, and turn them into scenarios for the next benchmark
 
 :::
 
@@ -452,10 +452,13 @@ With proper evaluation in place, you can catch quality regressions before users 
         <>
           Group production traces by <code>thread_id</code> so each
           conversation becomes a thread on{" "}
-          <a href="https://confident-ai.com">Confident AI</a>, then attach a
-          multi-turn <code>metric_collection</code>. Confident AI evaluates
-          threads asynchronously and lets you replay sessions turn-by-turn to
-          debug drift.
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>
+          , then attach a multi-turn <code>metric_collection</code>. Failing
+          threads surface asynchronously, you can replay them turn-by-turn to
+          see where the conversation drifted, and they become goldens for your
+          next simulation run.
         </>
       ),
     },
@@ -464,19 +467,11 @@ With proper evaluation in place, you can catch quality regressions before users 
 
 ## Next Steps And Additional Resources
 
-While `deepeval` handles the metrics and simulation logic, [Confident AI](https://confident-ai.com) is the platform that brings everything together for production multi-turn evaluation:
-
-- **Thread Monitoring** — Visualize full conversations, replay user interactions, and identify failure patterns
-- **Async Production Evals** — Run multi-turn evaluations without blocking your application or consuming production resources
-- **Dataset Management** — Curate and version conversational golden datasets on the cloud, and feed production failures back into your test bench
-- **Performance Tracking** — Monitor conversation quality trends over time and catch degradation early
-- **Shareable Reports** — Generate testing reports with conversation-level detail you can share with your team
-
-Ready to get started? Here's what to do next:
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) catches the production conversations that fail, clusters them into failure modes, and turns them into `ConversationalGolden`s for your next simulation run. Here's what to do next:
 
 1. **Explore the metrics** — Learn how each multi-turn metric works in the [Multi-Turn Evaluation Metrics guide](/guides/guides-multi-turn-evaluation-metrics)
 2. **Set up simulation** — Follow the [Multi-Turn Simulation guide](/guides/guides-multi-turn-simulation) to automate your test bench
-3. **Login to Confident AI** — Run `deepeval login` in your terminal to connect your account
+3. **Connect production threads** — Run `deepeval login` in your terminal to start sending threads to Confident AI
 4. **Read the quickstart** — For a hands-on walkthrough, check out the [Chatbot Evaluation Quickstart](/docs/getting-started-chatbots)
 5. **Reference docs** — [ConversationalTestCase](/docs/evaluation-multiturn-test-cases) · [ConversationSimulator](/docs/conversation-simulator) · [EvaluationDataset](/docs/evaluation-datasets)
 6. **Join the community** — Have questions? Join the [DeepEval Discord](https://discord.com/invite/a3K9c8GRGt)—we're happy to help!

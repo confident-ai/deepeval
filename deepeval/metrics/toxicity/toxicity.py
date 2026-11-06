@@ -6,16 +6,27 @@ from deepeval.test_case import (
     SingleTurnParams,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    score_qag_verdicts,
     warn_score_direction_flipped,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.metrics.toxicity.schema import (
     Opinions,
     ToxicityVerdict,
@@ -39,6 +50,10 @@ class ToxicityMetric(BaseMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -48,8 +63,16 @@ class ToxicityMetric(BaseMetric):
     ):
         warn_score_direction_flipped("ToxicityMetric")
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -64,19 +87,7 @@ class ToxicityMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -90,6 +101,9 @@ class ToxicityMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
@@ -116,25 +130,16 @@ class ToxicityMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.opinions: List[str] = await self._a_generate_opinions(
                 test_case.actual_output
             )
@@ -163,7 +168,7 @@ class ToxicityMetric(BaseMetric):
 
         toxics = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 toxics.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -186,7 +191,7 @@ class ToxicityMetric(BaseMetric):
 
         toxics = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 toxics.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -212,16 +217,13 @@ class ToxicityMetric(BaseMetric):
             opinions=self.opinions,
         )
 
-        verdicts: List[ToxicityVerdict] = (
-            await a_generate_with_schema_and_extract(
-                metric=self,
-                prompt=prompt,
-                schema_cls=Verdicts,
-                extract_schema=lambda s: [item for item in s.verdicts],
-                extract_json=lambda data: [
-                    ToxicityVerdict(**item) for item in data["verdicts"]
-                ],
-            )
+        verdicts: List[ToxicityVerdict] = await a_generate_qag_verdicts(
+            metric=self,
+            prompt=prompt,
+            verdict_cls=ToxicityVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
         return verdicts
 
@@ -234,16 +236,37 @@ class ToxicityMetric(BaseMetric):
             opinions=self.opinions,
         )
 
-        verdicts: List[ToxicityVerdict] = generate_with_schema_and_extract(
+        verdicts: List[ToxicityVerdict] = generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda s: [item for item in s.verdicts],
-            extract_json=lambda data: [
-                ToxicityVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=ToxicityVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(),
         )
         return verdicts
+
+    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.opinions,
+            item_key="opinion",
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `actual_output`; higher probabilities mean less toxicity, matching
+        the metric's 1-is-a-pass direction. See EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+        )
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
         prompt = self._get_prompt(
@@ -274,17 +297,11 @@ class ToxicityMetric(BaseMetric):
         )
 
     def _calculate_score(self) -> float:
-        total = len(self.verdicts)
-        if total == 0:
-            return 1
-
-        non_toxic_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "yes":
-                non_toxic_count += 1
-
-        score = non_toxic_count / total
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.NO,),
+        )
 
     @property
     def __name__(self):

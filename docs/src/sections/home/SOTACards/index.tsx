@@ -6,6 +6,8 @@ type Card = {
   icon: ReactNode;
   heading: string;
   description: string;
+  badge?: string;
+  wide?: boolean;
 };
 
 /* G-Eval glyph — chain-of-thought:
@@ -197,7 +199,70 @@ const QAGGlyph: React.FC = () => {
   );
 };
 
+/* JevEval glyph — calibrated probabilities:
+ * Three question tracks, each filling to a different probability
+ * (a yes/no, a scale position, a chosen option). No text is generated,
+ * the bars just settle on their values.
+ */
+const JevEvalGlyph: React.FC = () => {
+  const rows = [
+    { y: 10, p: 0.3 },
+    { y: 22, p: 0.9 },
+    { y: 34, p: 0.55 },
+  ];
+  const trackX = 10;
+  const trackW = 44;
+  return (
+    <svg
+      viewBox="0 0 64 48"
+      className={styles.glyph}
+      aria-hidden
+      focusable="false"
+    >
+      {rows.map((row, i) => (
+        <g key={`r-${i}`}>
+          {/* question marker */}
+          <circle
+            cx="4"
+            cy={row.y + 2}
+            r="1.75"
+            className={styles.jevMark}
+            style={{ animationDelay: `${i * 0.2}s` } as React.CSSProperties}
+          />
+          {/* empty track */}
+          <rect
+            x={trackX}
+            y={row.y}
+            width={trackW}
+            height="4"
+            rx="2"
+            className={styles.jevTrack}
+          />
+          {/* probability fill */}
+          <rect
+            x={trackX}
+            y={row.y}
+            width={trackW * row.p}
+            height="4"
+            rx="2"
+            className={styles.jevFill}
+            style={{ animationDelay: `${i * 0.2}s` } as React.CSSProperties}
+          />
+        </g>
+      ))}
+    </svg>
+  );
+};
+
 const CARDS: Card[] = [
+  {
+    icon: <JevEvalGlyph />,
+    heading: "JevEval",
+    badge: "New",
+    wide: true,
+    description:
+      "Bounded questions answered by Jev, a System One model, with calibrated probabilities instead of generated text.",
+  },
   {
     icon: <GEvalGlyph />,
     heading: "G-Eval",
@@ -223,9 +288,17 @@ const SOTACards: React.FC = () => {
     <PauseOffscreen>
       <div className={styles.grid}>
         {CARDS.map((card, i) => (
-          <article key={i} className={styles.card}>
+          <article
+            key={i}
+            className={`${styles.card} ${card.wide ? styles.cardWide : ""}`}
+          >
             <div className={styles.iconWrap}>{card.icon}</div>
-            <h3 className={styles.heading}>{card.heading}</h3>
+            <h3 className={styles.heading}>
+              {card.heading}
+              {card.badge ? (
+                <span className={styles.badge}>{card.badge}</span>
+              ) : null}
+            </h3>
             <p className={styles.description}>{card.description}</p>
           </article>
         ))}

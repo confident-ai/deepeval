@@ -1,0 +1,10 @@
+[
+  {
+    "type": "noul",
+    "statement": "In every assistant turn of `turns`, the tools in `tools_called` are the most suitable of `available_tools` for what the user asked: no call is unnecessary, redundant or unrelated to the user's goal, and no better-suited tool in `available_tools` was ignored when one was needed."
+  },
+  {
+    "type": "noul",
+    "statement": "Every tool call in the `tools_called` of the assistant turns in `turns` passes arguments that are correct, specific and complete for what the user asked and for that tool's definition in `available_tools`, with no missing, malformed, generic or unrelated argument."
+  }
+]

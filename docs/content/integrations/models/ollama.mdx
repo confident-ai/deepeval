@@ -81,7 +81,15 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 </Tab>
 <Tab value="ENV">
 
-To use any Ollama model directly in `deepeval`, set the `LOCAL_MODEL_API_KEY` in your `env` and simply pass the name of your desired model in your metric initialization:
+First point `deepeval` at Ollama. `LOCAL_MODEL_API_KEY` must be the literal string `ollama` — that value is what routes a plain model name to your Ollama server instead of a hosted provider:
+
+```bash
+# .env.local
+LOCAL_MODEL_API_KEY=ollama
+LOCAL_MODEL_BASE_URL=http://localhost:11434
+```
+
+Then pass the name of your desired model as a string in your metric initialization:
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
@@ -90,6 +98,8 @@ answer_relevancy = AnswerRelevancyMetric(
     model="deepseek-r1:1.5b",
 )
 ```
+
+Running `deepeval set-ollama --model=deepseek-r1:1.5b --save` writes these same variables for you.
 
 </Tab>
 </Tabs>
@@ -121,31 +131,6 @@ const model = new OllamaModel({
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
 
-</Tab>
-<Tab value="ENV">
-
-`deepeval` autoloads `.env.local` then `.env` at import time, so you can keep your Ollama configuration out of your code entirely:
-
-```bash
-# .env.local
-OLLAMA_MODEL_NAME=deepseek-r1:1.5b
-LOCAL_MODEL_BASE_URL=http://localhost:11434
-```
-
-Then create the model with no arguments and pass it to any metric:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { OllamaModel } from "deepeval/models";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: new OllamaModel(),
-});
-```
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **FIVE** optional parameters when creating an `OllamaModel`:
 
 - [Optional] `model`: A string specifying the name of the Ollama model to use. Defaults to `OLLAMA_MODEL_NAME` if not passed; raises an error at runtime if unset.
@@ -163,6 +148,32 @@ const model = new OllamaModel({
   num_predict: 512,
 });
 ```
+
+</Tab>
+<Tab value="ENV">
+
+First point `deepeval` at Ollama. `LOCAL_MODEL_API_KEY` must be the literal string `ollama` — that value is what routes a plain model name to your Ollama server instead of a hosted provider:
+
+```bash
+# .env.local
+LOCAL_MODEL_API_KEY=ollama
+LOCAL_MODEL_BASE_URL=http://localhost:11434
+```
+
+Then pass the name of your desired model as a string in your metric initialization:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: "deepseek-r1:1.5b",
+});
+```
+
+Running `deepeval set-ollama --model=deepseek-r1:1.5b --save` writes these same variables for you.
+
+</Tab>
+</Tabs>
 
 </Case>
 

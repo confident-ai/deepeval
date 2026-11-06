@@ -1,0 +1,132 @@
+---
+title: Cartesia STT
+sidebar_label: Cartesia
+languages: [python]
+---
+
+In `deepeval`, you can use Cartesia to transcribe speech into text when running [voice simulations](/docs/conversation-simulator-voice-mode). Transcription is what turns your agent's spoken replies into the `Turn.content` your multi-turn metrics judge, so its accuracy directly bounds how faithfully those metrics see the conversation.
+
+:::info
+Cartesia is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+CARTESIA_API_KEY=<your-cartesia-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export CARTESIA_API_KEY=<your-cartesia-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `CARTESIA_API_KEY` in a cell:
+
+```bash
+%env CARTESIA_API_KEY=<your-cartesia-api-key>
+```
+
+### Command Line
+
+To transcribe with Cartesia in every voice simulation, run:
+
+```bash
+deepeval set-stt cartesia --model=ink-whisper
+```
+
+`--model` is optional and defaults to Cartesia's own default model.
+
+:::info
+The command above sets Cartesia as the default speech-to-text provider, unless overridden in Python code. To use a different one, run `deepeval set-stt` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-stt
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass a `CartesiaSTTModel` to `VoiceConfig` to transcribe with Ink instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import CartesiaSTTModel
+from deepeval.voice import VoiceConfig
+
+stt_model = CartesiaSTTModel(
+    model="ink-whisper",
+    language="en",
+)
+voice_config = VoiceConfig(
+    stt_model=stt_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **EIGHT** optional parameters when creating a `CartesiaSTTModel`:
+
+- [Optional] `model`: A string specifying the name of the transcription model to use. Defaulted to `ink-whisper`.
+- [Optional] `api_key`: A string specifying your Cartesia API key. Defaults to `CARTESIA_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the Cartesia API through. Defaulted to `https://api.cartesia.ai`.
+- [Optional] `language`: A string [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) code (e.g. `"en"`) pinning the spoken language. Defaulted to `None`, which Cartesia reads as English.
+- [Optional] `api_version`: A string dating the Cartesia API to call, sent on every request. Defaulted to `2026-08-14`, pinned so a server-side release can't change the response shape underneath a run.
+- [Optional] `cost_per_minute`: A float setting the per-minute price used for cost accounting. Defaulted to `None`.
+- [Optional] `transcription_kwargs`: A dictionary of additional multipart fields forwarded to Cartesia's `/stt` endpoint.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+
+:::tip
+Any Cartesia parameter `deepeval` has no field for can be passed through `transcription_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select Cartesia as the transcription provider:
+
+```bash
+# .env.local
+CARTESIA_API_KEY=<your-cartesia-api-key>
+USE_CARTESIA_STT=1
+DEEPEVAL_STT_MODEL=ink-whisper
+```
+
+`deepeval set-stt cartesia --model ink-whisper` writes those same variables for you. `DEEPEVAL_STT_MODEL` is optional: leave it out and transcription runs on `ink-whisper` anyway, since that is Cartesia's default here.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_STT_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    stt_model="ink-whisper",
+    ...,
+)
+```
+
+With `USE_CARTESIA_STT` set, a bare model name is shorthand for `CartesiaSTTModel(model=...)`. Pass the model object itself to pin a language.
+
+</Tab>
+</Tabs>
+
+### Available Cartesia Models
+
+- `ink-whisper` (default)
+
+Cartesia's batch endpoint only serves the `ink-whisper` family. `ink-2` is realtime-only and will not transcribe here.

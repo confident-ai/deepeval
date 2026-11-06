@@ -1,3 +1,4 @@
+from deepeval.evaluate.expectations import with_expectation_evaluators
 import logging
 
 from typing import (
@@ -42,6 +43,7 @@ from deepeval.evaluate.utils import (
     create_api_trace,
     create_metric_data,
     create_test_result,
+    validate_expectation_coverage,
 )
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.api import TraceSpanApiStatus
@@ -51,6 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _execute_metric,
     _skip_metrics_for_error,
     _trace_error,
@@ -82,6 +85,18 @@ def _assert_test_from_current_trace(
             "pytest test run with `deepeval test run`, and the test body must "
             "invoke at least one `@observe`-decorated function."
         )
+
+    # A golden may use metrics declared on the active trace or its spans,
+    # rather than passed explicitly to assert_test(). Count those too.
+    if not metrics and not current_trace.metrics and not golden.expectations:
+        spans = list(current_trace.root_spans or [])
+        while spans:
+            span = spans.pop()
+            if span.metrics:
+                break
+            spans.extend(span.children or [])
+        else:
+            validate_expectation_coverage([golden])
 
     test_run_manager = global_test_run_manager
 
@@ -134,6 +149,7 @@ def _assert_test_from_current_trace(
 
     test_case = LLMTestCase(
         input=golden.input,
+        expectations=golden.expectations,
         actual_output=(
             str(effective_trace_output)
             if effective_trace_output is not None
@@ -147,10 +163,12 @@ def _assert_test_from_current_trace(
         expected_tools=current_trace.expected_tools,
         comments=golden.comments,
         name=golden.name,
-        _dataset_alias=golden._dataset_alias,
-        _dataset_id=golden._dataset_id,
-        _dataset_rank=golden._dataset_rank,
     )
+    test_case._dataset_alias = golden._dataset_alias
+    test_case._dataset_id = golden._dataset_id
+    test_case._dataset_version = golden._dataset_version
+    test_case._dataset_rank = golden._dataset_rank
+    metrics = with_expectation_evaluators(metrics, [test_case])
     api_test_case = create_api_test_case(
         test_case=test_case,
         trace=trace_api,
@@ -222,6 +240,7 @@ def _assert_test_from_current_trace(
                 )
             )
             return
+        _attach_span_tree(llm_test_case, current_trace, span)
 
         api_span.metrics_data = []
         for metric in metrics:
@@ -259,6 +278,7 @@ def _assert_test_from_current_trace(
     ):
         llm_test_case_for_trace = LLMTestCase(
             input=golden.input or "None",
+            expectations=golden.expectations,
             actual_output=(
                 str(effective_trace_output)
                 if effective_trace_output is not None
@@ -283,6 +303,7 @@ def _assert_test_from_current_trace(
             llm_test_case_for_trace._trace_dict = (
                 trace_manager.create_nested_spans_dict(root_for_dfs)
             )
+        _attach_span_tree(llm_test_case_for_trace, current_trace, None)
 
         trace_api.metrics_data = []
         for metric in current_trace.metrics:

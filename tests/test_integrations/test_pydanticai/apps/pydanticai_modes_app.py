@@ -19,6 +19,7 @@ so a single trace exercises both write targets.
 
 from typing import Dict, List, Optional
 
+from pydantic_ai.capabilities import Instrumentation
 from pydantic_ai import Agent
 
 from deepeval.integrations.pydantic_ai import DeepEvalInstrumentationSettings
@@ -53,7 +54,7 @@ def create_modes_agent(
     return Agent(
         "openai:gpt-4o-mini",
         system_prompt="Be concise, reply with one short sentence only.",
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="modes_agent",
     )
 
@@ -149,7 +150,7 @@ def create_enrichment_agent(
             "You are an assistant. Use the lookup tool whenever the user "
             "mentions a key. Be concise."
         ),
-        instrument=settings,
+        capabilities=[Instrumentation(settings=settings)],
         name="enrichment_agent",
     )
 

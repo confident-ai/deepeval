@@ -899,7 +899,7 @@ class AgentCoreSpanInterceptor(SpanProcessor):
                         span, ConfidentAttr.SPAN_OUTPUT, raw_output
                     )
 
-        if tools_called:
+        if tools_called and ConfidentAttr.SPAN_TOOLS_CALLED not in attrs:
             self._set_attr_post_end(
                 span,
                 ConfidentAttr.SPAN_TOOLS_CALLED,

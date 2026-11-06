@@ -12,7 +12,7 @@ export function checkConversationalTestCaseParams(
   testCase: ConversationalTestCase,
   requiredParams: MultiTurnParams[],
   metric: BaseConversationalMetric,
-  options: { requireChatbotRole?: boolean } = {},
+  options: { requireChatbotRole?: boolean; requireMcpServers?: boolean } = {},
 ): void {
   if (!(testCase instanceof ConversationalTestCase)) {
     const err = `Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '${metric.name}' metric.`;
@@ -60,6 +60,11 @@ export function checkConversationalTestCaseParams(
   if (options.requireChatbotRole && testCase.chatbotRole == null) {
     fail(
       `'chatbot_role' in a conversational test case cannot be empty for the '${metric.name}' metric.`,
+    );
+  }
+  if (options.requireMcpServers && !testCase.mcpServers?.length) {
+    fail(
+      `'mcpServers' in a conversational test case cannot be empty for the '${metric.name}' metric.`,
     );
   }
   if (!testCase.turns || testCase.turns.length === 0) {

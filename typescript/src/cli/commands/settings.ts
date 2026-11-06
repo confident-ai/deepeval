@@ -11,6 +11,23 @@ import {
 } from "@/config/settings";
 import { getFieldMeta } from "@/config/schema";
 import {
+  LOCAL_STORE_JSON,
+  LOCAL_STORE_SQLITE,
+  isSqliteSupported,
+  normalizeLocalStoreMode,
+  sqliteUnsupportedMessage,
+} from "@/sqlite-store/mode";
+import {
+  MODE_EXPERIMENTAL,
+  MODE_STABLE,
+  normalizeDeepEvalMode,
+} from "@/config/mode";
+import {
+  EvalMode,
+  SUPPORTED_EVAL_MODES,
+  normalizeEvalMode,
+} from "@/config/eval-mode";
+import {
   badParameter,
   handleSaveResult,
   printTable,
@@ -184,6 +201,135 @@ export function registerSettingsCommands(program: Command): void {
           `🙌 Congratulations! You're now using the ${REGION_FLAGS[normalized]} ` +
           `${normalized} data region for Confident AI.`,
       });
+    });
+
+  program
+    .command("set-local-store")
+    .description(
+      "Choose the local backend for test runs (sets DEEPEVAL_LOCAL_STORE).",
+    )
+    .argument(
+      "<backend>",
+      `Where finished test runs are saved locally: ${LOCAL_STORE_JSON} (default) or ${LOCAL_STORE_SQLITE}.`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((backend: string, options) => {
+      const mode = normalizeLocalStoreMode(backend);
+      if (mode === undefined) {
+        badParameter(
+          `Backend must be ${LOCAL_STORE_JSON} or ${LOCAL_STORE_SQLITE}.`,
+        );
+      }
+      if (mode === LOCAL_STORE_SQLITE && !isSqliteSupported()) {
+        badParameter(sqliteUnsupportedMessage());
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_LOCAL_STORE = mode;
+        },
+        { save },
+      );
+
+      handleSaveResult({
+        result,
+        save,
+        quiet: options.quiet,
+        successMessage:
+          mode === LOCAL_STORE_SQLITE
+            ? "💾 Test runs will now be saved to deepeval.db (SQLite). " +
+              "Run `npx deepeval inspect --list` to browse them."
+            : "📄 Test runs will now be saved as JSON files (the default).",
+      });
+    });
+
+  program
+    .command("set-mode")
+    .description("Choose the deepeval feature channel (sets DEEPEVAL_MODE).")
+    .argument(
+      "<mode>",
+      `Feature channel: ${MODE_STABLE} (default) or ${MODE_EXPERIMENTAL} (opt into the latest features, which may not be stable yet).`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((mode: string, options) => {
+      const normalized = normalizeDeepEvalMode(mode);
+      if (normalized === undefined) {
+        badParameter(`Mode must be ${MODE_STABLE} or ${MODE_EXPERIMENTAL}.`);
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_MODE = normalized;
+        },
+        { save },
+      );
+
+      handleSaveResult({
+        result,
+        save,
+        quiet: options.quiet,
+        successMessage:
+          normalized === MODE_EXPERIMENTAL
+            ? "🧪 You're now on the experimental channel. Features behind it " +
+              "may change or break between releases; run " +
+              "`npx deepeval set-mode stable` to opt out."
+            : "✅ You're now on the stable channel (the default).",
+      });
+    });
+
+  program
+    .command("set-eval-mode")
+    .description(
+      "Choose who decides in LLM-as-a-judge metrics (sets DEEPEVAL_EVAL_MODE).",
+    )
+    .argument(
+      "<mode>",
+      `Who decides: '${EvalMode.LLM}' (default, the LLM runs the whole chain), ` +
+        `'${EvalMode.HYBRID}' (the LLM extracts, a System One model decides, ` +
+        `the LLM covers any decision whose Jev call fails) or ` +
+        `'${EvalMode.SYSTEM_ONE}' (a System One model runs the whole metric ` +
+        `in one request, with no LLM and no fallback).`,
+    )
+    .option("-s, --save [target]", SAVE_OPTION_HELP)
+    .option("-q, --quiet", QUIET_OPTION_HELP)
+    .action((mode: string, options) => {
+      const normalized = normalizeEvalMode(mode);
+      if (normalized === undefined) {
+        badParameter(
+          `Eval mode must be one of ${SUPPORTED_EVAL_MODES.join(", ")}.`,
+        );
+      }
+
+      const save = normalizeSave(options.save);
+      const result = editSettings(
+        (draft) => {
+          draft.DEEPEVAL_EVAL_MODE = normalized;
+        },
+        { save },
+      );
+
+      const successMessage =
+        normalized === EvalMode.SYSTEM_ONE
+          ? "🧠 Eval mode is now `system_one`: built-in metrics are decided " +
+            "entirely by your System One model (Jev) in one request, with no " +
+            "LLM and no fallback (DAG metrics run as `hybrid`, since their " +
+            "task nodes need the LLM). Make sure TYPESAFE_API_KEY is set " +
+            "(`npx deepeval set-typesafe`); run `npx deepeval set-eval-mode " +
+            "llm` to switch back."
+          : normalized === EvalMode.HYBRID
+            ? "🧪 Eval mode is now `hybrid`: the LLM extracts and explains, " +
+              "your System One model (Jev) takes the decision points, and the " +
+              "LLM covers any decision whose Jev call fails. Make sure " +
+              "TYPESAFE_API_KEY is set (`npx deepeval set-typesafe`); run " +
+              "`npx deepeval set-eval-mode llm` to switch back."
+            : "✅ Eval mode is now `llm` (the default): the LLM runs every " +
+              "metric end to end.";
+
+      handleSaveResult({ result, save, quiet: options.quiet, successMessage });
     });
 
   program

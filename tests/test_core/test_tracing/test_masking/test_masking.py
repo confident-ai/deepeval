@@ -1,6 +1,7 @@
 import re
 import pytest
 from deepeval.tracing import observe, trace_manager
+from deepeval.tracing.utils import make_json_serializable
 from tests.test_core.test_tracing.conftest import trace_test
 
 
@@ -52,6 +53,19 @@ def process_unmasked(data: str) -> str:
     return f"Unmasked: {data}"
 
 
+class ClientWithSecret:
+    def __init__(self):
+        self.api_key = "sk-secret-key"
+
+    @observe()
+    async def a_generate(self, prompt: str) -> str:
+        return f"Generated: {prompt}"
+
+    @observe()
+    def generate(self, prompt: str) -> str:
+        return f"Generated: {prompt}"
+
+
 class TestMasking:
 
     @trace_test("masking/credit_card_masked_schema.json")
@@ -91,6 +105,23 @@ class TestMasking:
         trace_manager.configure(mask=None)
         result = process_unmasked("Card: 1234-5678-9012-3456")
         assert "1234-5678-9012-3456" in result
+
+    @pytest.mark.asyncio
+    async def test_self_is_not_captured_on_async_functions(self):
+        seen = []
+        trace_manager.configure(mask=lambda data: seen.append(data) or data)
+        try:
+            client = ClientWithSecret()
+            assert await client.a_generate("hi") == "Generated: hi"
+            assert client.generate("hi") == "Generated: hi"
+        finally:
+            trace_manager.configure(mask=None)
+
+        assert seen
+        assert all(
+            "sk-secret-key" not in str(make_json_serializable(data))
+            for data in seen
+        )
 
     def test_masking_function_helpers(self):
         assert mask_credit_cards("4111-1111-1111-1111") == "****-****-****-****"

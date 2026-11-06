@@ -4,6 +4,7 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseTTS,
     DeepEvalBaseSTT,
+    DeepEvalBaseSystemOneModel,
 )
 from deepeval.models.llms import (
     OpenAIModel,
@@ -26,8 +27,20 @@ from deepeval.models.embedding_models import (
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
 )
-from deepeval.models.tts_models import OpenAITTSModel
-from deepeval.models.stt_models import OpenAISTTModel
+from deepeval.models.tts import (
+    CartesiaTTSModel,
+    DeepgramTTSModel,
+    ElevenLabsTTSModel,
+    OpenAITTSModel,
+)
+from deepeval.models.stt import (
+    AssemblyAISTTModel,
+    CartesiaSTTModel,
+    DeepgramSTTModel,
+    ElevenLabsSTTModel,
+    OpenAISTTModel,
+)
+from deepeval.models.system_one import TypeSafeModel
 
 __all__ = [
     "DeepEvalBaseModel",
@@ -35,6 +48,8 @@ __all__ = [
     "DeepEvalBaseEmbeddingModel",
     "DeepEvalBaseTTS",
     "DeepEvalBaseSTT",
+    "DeepEvalBaseSystemOneModel",
+    "TypeSafeModel",
     "OpenAIModel",
     "AzureOpenAIModel",
     "LocalModel",
@@ -54,6 +69,13 @@ __all__ = [
     "OpenRouterModel",
     "OpenAITTSModel",
     "OpenAISTTModel",
+    "CartesiaTTSModel",
+    "DeepgramTTSModel",
+    "ElevenLabsTTSModel",
+    "AssemblyAISTTModel",
+    "CartesiaSTTModel",
+    "DeepgramSTTModel",
+    "ElevenLabsSTTModel",
 ]
 
 

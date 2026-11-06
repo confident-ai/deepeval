@@ -1,0 +1,130 @@
+---
+title: ElevenLabs STT
+sidebar_label: ElevenLabs
+languages: [python]
+---
+
+In `deepeval`, you can use ElevenLabs to transcribe speech into text when running [voice simulations](/docs/conversation-simulator-voice-mode). Transcription is what turns your agent's spoken replies into the `Turn.content` your multi-turn metrics judge, so its accuracy directly bounds how faithfully those metrics see the conversation.
+
+:::caution
+This is unrelated to [`ElevenLabsConnector`](/integrations/voice-agent-connectors/elevenlabs), which bridges to a voice agent hosted on ElevenLabs. This page is about the model that transcribes your agent's replies, and it can be pointed at an agent on any platform.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `ELEVENLABS_API_KEY` in a cell:
+
+```bash
+%env ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+```
+
+### Command Line
+
+To transcribe with ElevenLabs in every voice simulation, run:
+
+```bash
+deepeval set-stt elevenlabs --model=scribe_v2
+```
+
+`--model` is optional and defaults to ElevenLabs's own default model.
+
+:::info
+The command above sets ElevenLabs as the default speech-to-text provider, unless overridden in Python code. To use a different one, run `deepeval set-stt` for that provider, or drop back to the OpenAI default:
+
+```bash
+deepeval unset-stt
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+Pass an `ElevenLabsSTTModel` to `VoiceConfig` to transcribe with Scribe instead of the default OpenAI model:
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.models import ElevenLabsSTTModel
+from deepeval.voice import VoiceConfig
+
+stt_model = ElevenLabsSTTModel(
+    model="scribe_v2",
+    language="en",
+)
+voice_config = VoiceConfig(
+    stt_model=stt_model,
+    ...,
+)
+```
+
+There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `ElevenLabsSTTModel`:
+
+- [Optional] `model`: A string specifying the name of the transcription model to use. Defaulted to `scribe_v2`.
+- [Optional] `api_key`: A string specifying your ElevenLabs API key. Defaults to `ELEVENLABS_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the ElevenLabs API through. Defaulted to `https://api.elevenlabs.io`.
+- [Optional] `language`: A string [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) code (e.g. `"en"`) pinning the spoken language. Pass `"auto"` to have Scribe detect it instead. Defaulted to `None`, which also detects.
+- [Optional] `cost_per_hour`: A float overriding the hourly price used for cost accounting. Defaults to the built-in price for the model.
+- [Optional] `transcription_kwargs`: A dictionary of additional multipart fields forwarded to ElevenLabs' `/v1/speech-to-text` endpoint.
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `120.0`.
+
+:::tip
+Any ElevenLabs parameter `deepeval` has no field for — `diarize`, `tag_audio_events`, `num_speakers` — can be passed through `transcription_kwargs` and is sent as-is.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and select ElevenLabs as the transcription provider:
+
+```bash
+# .env.local
+ELEVENLABS_API_KEY=<your-elevenlabs-api-key>
+USE_ELEVENLABS_STT=1
+DEEPEVAL_STT_MODEL=scribe_v2
+```
+
+`deepeval set-stt elevenlabs --model scribe_v2` writes those same variables for you. `DEEPEVAL_STT_MODEL` is optional: leave it out and transcription runs on ElevenLabs' default model.
+
+You can also pass the model name in code, which wins over `DEEPEVAL_STT_MODEL`:
+
+```python
+from deepeval.voice import VoiceConfig
+
+voice_config = VoiceConfig(
+    stt_model="scribe_v2",
+    ...,
+)
+```
+
+With `USE_ELEVENLABS_STT` set, a bare model name is shorthand for `ElevenLabsSTTModel(model=...)`. Pass the model object itself to pin a language.
+
+</Tab>
+</Tabs>
+
+### Available ElevenLabs Models
+
+- `scribe_v2` (default)
+- `scribe_v1` (deprecated in favour of v2)

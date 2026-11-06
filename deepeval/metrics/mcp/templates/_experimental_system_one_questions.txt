@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every task a user message in `turns` asks for is completed by the assistant, as the user sees it in the assistant's replies (tool calls and their results are invisible to the user unless the assistant relays them).",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Everything the assistant tells the user it did or found in `turns` is backed by the MCP calls and results in `turns`; it does not claim results it never obtained."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how completely and correctly, as the user sees it, does the assistant complete the tasks the user asks for?",
+    "levels": ["Not completed", "Partly completed", "Mostly completed", "Fully completed"]
+  }
+]

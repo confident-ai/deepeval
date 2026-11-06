@@ -2,7 +2,12 @@ import { ConversationalTestCase, MultiTurnParams } from "@/test-case";
 import { BaseMetricCore } from "@/metrics/base-metrics";
 
 export abstract class BaseConversationalMetric extends BaseMetricCore {
-  protected requiredParams: Array<MultiTurnParams> = [];
+  /** @internal Read by `prepareMeasure`. */
+  requiredParams: Array<MultiTurnParams> = [];
+  /** @internal Read by `prepareMeasure`. */
+  requiresChatbotRole: boolean = false;
+  /** @internal Read by `prepareMeasure`. */
+  requiresMcpServers: boolean = false;
 
   abstract measure(
     testCase: ConversationalTestCase,

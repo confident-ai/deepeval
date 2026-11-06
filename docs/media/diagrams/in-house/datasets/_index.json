@@ -1,0 +1,133 @@
+{
+  "images": [
+    {
+      "file": "goldens-from-contexts.svg",
+      "title": "Generating goldens from contexts",
+      "alt": "Three color-coded contexts on the left each generate a synthetic golden with an input and an expected output on the right",
+      "width": 733,
+      "height": 137,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-contexts.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-docs.svg",
+      "title": "Generating goldens from documents",
+      "alt": "Documents are split into three contexts, each of which generates a synthetic golden with an input and an expected output",
+      "width": 1012,
+      "height": 151,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-docs.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-goldens.svg",
+      "title": "Generating goldens from existing goldens",
+      "alt": "Existing goldens with input and expected output are reduced to contexts, which then generate new synthetic goldens of the same shape",
+      "width": 877,
+      "height": 136,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/goldens_from_goldens.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-from-scratch.svg",
+      "title": "Generating goldens from scratch",
+      "alt": "Scenario, task and input format boxes feeding an arrow into three synthetic golden inputs, with no documents or contexts involved",
+      "width": 748,
+      "height": 148,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesize-from-scratch.svg"
+        ]
+      }
+    },
+    {
+      "file": "goldens-to-test-cases.webp",
+      "title": "Evaluation dataset of goldens becoming test cases",
+      "alt": "Evals dataset diagram where goldens pass through the LLM app before evaluation and come out as test cases during evaluation",
+      "width": 2184,
+      "height": 858,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png"
+        ]
+      }
+    },
+    {
+      "file": "input-evolution-tree.svg",
+      "title": "Evolution tree for synthetic inputs",
+      "alt": "Tree of input evolutions with sampling weights for in-breadth, comparative and reasoning, highlighting a path from reasoning to in-breadth",
+      "width": 572,
+      "height": 310,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/evolutions.svg"
+        ]
+      }
+    },
+    {
+      "file": "synthesizer-pipeline.webp",
+      "title": "Synthesizer pipeline from documents to dataset",
+      "alt": "Flow from uploaded documents to chunks, contexts and goldens, filtering unqualified ones and evolving queries into a synthetic dataset",
+      "width": 2400,
+      "height": 1889,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/synthesizer.png"
+        ]
+      }
+    },
+    {
+      "file": "synthetic-context-filtering.svg",
+      "title": "Context filtering for golden synthesis",
+      "alt": "Documents split into random chunks, scored by a critic model, filtered by quality and similarity thresholds, then grouped into contexts",
+      "width": 1046,
+      "height": 469,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/filtering_context.svg"
+        ]
+      }
+    },
+    {
+      "file": "synthetic-input-filtering.svg",
+      "title": "Input generation and filtration for goldens",
+      "alt": "Contexts feed an LLM that generates golden inputs; inputs below a 0.5 quality threshold are regenerated up to twice before evolution",
+      "width": 941,
+      "height": 206,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/generation-filtration.svg"
+        ]
+      }
+    },
+    {
+      "file": "golden-before-after-execution.webp",
+      "title": "A golden before execution, and the test case and trace after it",
+      "alt": "Before execution, a golden holds the task, initial state, expected outcome and constraints. Running the app produces runtime evidence: a test case with the golden’s fields plus the actual output, tool calls and scores, and a trace with spans, prompts, retries, timings and errors.",
+      "width": 2136,
+      "height": 1578
+    },
+    {
+      "file": "golden-cards-by-application.webp",
+      "title": "Goldens for an AI agent, a RAG app, a chatbot, and a multimodal app",
+      "alt": "Four goldens. An AI agent: input refund the duplicate charge, expected exactly one refund, expected tools search_orders and issue_refund. A RAG application: input a question about annual leave, expected 20 days per HR Policy 4.2, context the HR handbook. A multi-turn chatbot: scenario reschedule a dentist visit, a user in a hurry on a phone, expected a new slot confirmed. A multimodal app: input a bill of lading PDF, expected the carrier Maersk, metadata scanned, 2 pages.",
+      "width": 2136,
+      "height": 1620
+    },
+    {
+      "file": "golden-feedback-loop.webp",
+      "title": "The golden feedback loop between development and production",
+      "alt": "In development, a golden runs through the application to produce a test case and a trace, which feed regression testing before deployment. In production, traces go through failure discovery, and each failure becomes a new or updated golden.",
+      "width": 2136,
+      "height": 2538
+    }
+  ]
+}

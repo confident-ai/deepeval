@@ -4,7 +4,10 @@ import tempfile
 import json
 import csv
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
-from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
+from deepeval.dataset.utils import (
+    convert_convo_goldens_to_convo_test_cases,
+    convert_goldens_to_test_cases,
+)
 from deepeval.test_case import (
     Turn,
     LLMTestCase,
@@ -692,3 +695,95 @@ class TestSaveAndLoad:
 
             assert reloaded.test_cases[0].context == ["c1", "c2"]
             assert reloaded.test_cases[0].retrieval_context == ["r1", "r2"]
+
+    def test_save_as_json_round_trips_null_tools_via_test_case_loader(self):
+        """save_as writes goldens without tools as "tools_called": null, so the
+        JSON test case loader must treat a null tools value as no tools."""
+        goldens = [
+            Golden(
+                input="What's the weather?",
+                actual_output="Sunny",
+                tools_called=[ToolCall(name="get_weather")],
+            ),
+            Golden(input="Hi", actual_output="Hello"),
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = EvaluationDataset(goldens).save_as(
+                "json", tmpdir, file_name="rt"
+            )
+
+            reloaded = EvaluationDataset()
+            reloaded.add_test_cases_from_json_file(
+                file_path=path,
+                input_key_name="input",
+                actual_output_key_name="actual_output",
+                tools_called_key_name="tools_called",
+                expected_tools_key_name="expected_tools",
+            )
+
+            assert len(reloaded.test_cases) == 2
+            assert reloaded.test_cases[0].tools_called == [
+                ToolCall(name="get_weather")
+            ]
+            assert reloaded.test_cases[0].expected_tools == []
+            assert reloaded.test_cases[1].tools_called == []
+            assert reloaded.test_cases[1].expected_tools == []
+
+
+class TestDatasetVersion:
+    def _pulled_dataset(self) -> EvaluationDataset:
+        dataset = EvaluationDataset()
+        dataset._alias = "my-dataset"
+        dataset._id = "dataset-id"
+        dataset._version = "00.00.03"
+        return dataset
+
+    def test_add_test_case_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        test_case = LLMTestCase(input="What is 2 + 2?")
+
+        dataset.add_test_case(test_case)
+
+        assert test_case._dataset_id == "dataset-id"
+        assert test_case._dataset_version == "00.00.03"
+
+    def test_test_cases_setter_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        test_case = LLMTestCase(input="What is 2 + 2?")
+
+        dataset.test_cases = [test_case]
+
+        assert test_case._dataset_version == "00.00.03"
+
+    def test_goldens_setter_carries_dataset_version(self):
+        dataset = self._pulled_dataset()
+        golden = Golden(input="What is 2 + 2?")
+
+        dataset.goldens = [golden]
+
+        assert golden._dataset_version == "00.00.03"
+
+    def test_converted_test_cases_carry_dataset_version(self):
+        goldens = [Golden(input="What is 2 + 2?")]
+
+        test_cases = convert_goldens_to_test_cases(
+            goldens, "my-dataset", "dataset-id", "00.00.03"
+        )
+
+        assert test_cases[0]._dataset_id == "dataset-id"
+        assert test_cases[0]._dataset_version == "00.00.03"
+
+    def test_converted_convo_test_cases_carry_dataset_version(self):
+        goldens = [
+            ConversationalGolden(
+                scenario="User books a flight",
+                turns=[Turn(role="user", content="Book me a flight")],
+            )
+        ]
+
+        test_cases = convert_convo_goldens_to_convo_test_cases(
+            goldens, "my-dataset", "dataset-id", "00.00.03"
+        )
+
+        assert test_cases[0]._dataset_id == "dataset-id"
+        assert test_cases[0]._dataset_version == "00.00.03"

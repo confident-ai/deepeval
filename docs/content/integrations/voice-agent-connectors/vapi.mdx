@@ -1,0 +1,86 @@
+---
+title: Vapi Assistants
+sidebar_label: Vapi
+languages: [python]
+---
+
+In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against an assistant hosted on Vapi. The connector creates a call on Vapi's WebSocket transport, plays the simulated user's audio into it, and captures the spoken reply along with how long it took to start.
+
+No phone number is involved. Vapi rejects phone parameters on this transport, so the simulator is the only caller and nothing routes through telephony. The connector speaks Vapi's API directly, so no Vapi SDK is required.
+
+### Setting Up Your API Key
+
+Your key mints the call that the WebSocket carries, so it's required. DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+VAPI_API_KEY=<your-vapi-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export VAPI_API_KEY=<your-vapi-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `VAPI_API_KEY` in a cell:
+
+```bash
+%env VAPI_API_KEY=<your-vapi-api-key>
+```
+
+### In Code
+
+Pass a `VapiConnector` to `VoiceConfig`, naming the assistant to call:
+
+```python
+from deepeval.voice import VapiConnector, VoiceConfig
+
+connector = VapiConnector(assistant_id="your-assistant-id")
+voice_config = VoiceConfig(
+    connector=connector,
+    ...,
+)
+```
+
+There are **ONE** mandatory and **THREE** optional parameters when creating a `VapiConnector`, alongside the shared connector settings:
+
+- `assistant_id`: A string identifying the Vapi assistant to call.
+- [Optional] `api_key`: A string specifying your Vapi API key. Defaults to `VAPI_API_KEY` if not passed; raises at connect time if neither is set.
+- [Optional] `assistant_overrides`: A dictionary of [assistant overrides](https://docs.vapi.ai/assistants/dynamic-variables) for this call, such as `variableValues`, `firstMessage`, or `model`. Defaulted to `None`.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the Vapi API through. Defaulted to `https://api.vapi.ai`.
+- [Optional] `turn_detection`: A string preset — `"eager"`, `"balanced"`, or `"patient"` — controlling how long a pause has to last before your assistant is considered finished speaking. Defaulted to `"balanced"`.
+
+:::tip
+Vapi sends a `speech-update` message when your assistant stops speaking, and `deepeval` reads it off the wire, so end-of-turn is known rather than inferred from silence. `turn_detection` only sets the ceiling that stops an assistant which never stops talking from hanging the run.
+:::
+
+### Personalizing a Call
+
+`assistant_overrides` is sent per call, so one assistant can be simulated as many different callers — a different customer, tier, or opening line per golden:
+
+```python
+connector = VapiConnector(
+    assistant_id="your-assistant-id",
+    assistant_overrides={
+        "variableValues": {"customer_name": "Alice", "tier": "enterprise"},
+        "firstMessage": "Hi, thanks for calling. How can I help?",
+    },
+)
+```
+
+:::note
+`deepeval` reads two of Vapi's [client messages](https://docs.vapi.ai/api-reference/webhooks/client-message): `speech-update` to know when a turn ended, and `transcript` for what your assistant said. Both are on by default. If you narrow `clientMessages` in your overrides, the connector adds those two back, since losing them would silently cost end-of-turn detection and make every turn pay for transcription.
+:::
+
+### Transcripts
+
+Your assistant's own final transcripts arrive over the same socket and become the assistant `Turn.content`, so no transcription runs on turns where they land. Vapi sends one final per utterance rather than one per turn, and the connector joins them, so a reply made of several sentences is recorded whole.
+
+Turns without a transcript still fall back to your [speech-to-text model](/integrations/stt/openai), which `VoiceConfig` resolves either way — so it still needs to be configured, credentials included.
+
+For how connectors fit into the simulation loop, and for turn detection in full, see [Voice Connectors](/docs/conversation-simulator-voice-connectors).

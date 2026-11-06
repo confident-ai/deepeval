@@ -26,6 +26,7 @@ from deepeval.utils import (
 from deepeval.metrics import (
     BaseMetric,
 )
+from deepeval.classifiers.base_classifier import BaseClassifier
 from deepeval.models.retry_policy import (
     set_outer_deadline,
     reset_outer_deadline,
@@ -113,6 +114,15 @@ def _skip_metrics_for_error(
     if span is not None and span.status == TraceSpanStatus.ERRORED:
         return True
     return False
+
+
+def _attach_span_tree(
+    test_case: LLMTestCase, trace: Trace, span: Optional[BaseSpan]
+) -> None:
+    """Let metrics that look past their own span (e.g. ArgumentCorrectness)
+    reach the rest of the trace. `span` is None for a trace-level test case."""
+    test_case._trace_root_spans = trace.root_spans
+    test_case._trace_span = span
 
 
 def _trace_error(current_trace: Trace) -> Optional[str]:
@@ -290,6 +300,30 @@ def _execute_metric(
         if error_config.ignore_errors:
             metric.error = format_error_text(e)
             metric.success = False
+        else:
+            raise
+
+
+def _execute_classifier(
+    classifier: BaseClassifier,
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    show_indicator: bool,
+    in_component: bool,
+    error_config: ErrorConfig,
+) -> None:
+    """Sync counterpart of ``_execute_metric`` for classifiers. Classifiers
+    have no required params, so there is no skip path: any failure is either
+    recorded on ``classifier.error`` (``ignore_errors``) or re-raised."""
+    try:
+        classifier.classify(
+            test_case,
+            _show_indicator=show_indicator,
+            _in_component=in_component,
+        )
+    except Exception as e:
+        if error_config.ignore_errors:
+            classifier.error = format_error_text(e)
+            classifier.label = None
         else:
             raise
 

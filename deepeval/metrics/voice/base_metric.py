@@ -1,5 +1,6 @@
+import json
 from abc import abstractmethod
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -7,13 +8,32 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
 )
-from deepeval.test_case import ConversationalTestCase
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
 
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
 
 
+def _rounded(value: Any) -> Any:
+    if isinstance(value, float):
+        return round(value, 3)
+    if isinstance(value, dict):
+        return {key: _rounded(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_rounded(item) for item in value]
+    return value
+
+
+def _format_breakdown(breakdown: Dict) -> str:
+    try:
+        return json.dumps(_rounded(breakdown), indent=2, default=str)
+    except (TypeError, ValueError):
+        return str(breakdown)
+
+
 class BaseVoiceMetric(BaseConversationalMetric):
+    _required_test_case_params: List[MultiTurnParams] = []
+
     def __init__(
         self,
         *,
@@ -75,7 +95,7 @@ class BaseVoiceMetric(BaseConversationalMetric):
         self.verbose_logs = construct_verbose_logs(
             self,
             steps=[
-                f"Breakdown: {breakdown}",
+                f"Breakdown:\n{_format_breakdown(breakdown)}",
                 f"Score: {self.score}\nReason: {self.reason}",
             ],
         )

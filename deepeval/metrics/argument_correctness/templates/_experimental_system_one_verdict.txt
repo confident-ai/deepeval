@@ -1,0 +1,1 @@
+Do the input parameters of `tool_call` relevantly and correctly address `input`? Answer no if there are no input parameters.

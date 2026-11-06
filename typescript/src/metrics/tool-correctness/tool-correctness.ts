@@ -7,23 +7,39 @@ import {
   ToolCall,
 } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   printToolsCalled,
 } from "@/metrics/utils";
+import {
+  formatDecisionReason,
+  systemOneScore,
+  type SystemOneEvalSpec,
+  type SystemOneScoreSpec,
+} from "@/metrics/system-one";
 import {
   ToolSelectionScoreSchema,
   type ToolSelectionScore,
 } from "@/metrics/tool-correctness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ToolCorrectnessMetric";
 
 export type ToolCorrectnessTemplateOverride =
   MetricTemplateOverride<"ToolCorrectnessMetric">;
+
+const TOOL_SELECTION_LEVELS = [
+  "Misaligned",
+  "Poor selection",
+  "Mixed selection",
+  "Mostly appropriate",
+  "Fully appropriate",
+];
 
 /** Order-insensitive deep equality (matches Python `==` on dicts/values). */
 function deepEqual(a: unknown, b: unknown): boolean {
@@ -74,6 +90,10 @@ export interface ToolCorrectnessMetricOptions {
   /** Which `ToolCall` fields to compare (input parameters / output). */
   evaluationParams?: ToolCallParams[];
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -117,18 +137,14 @@ export class ToolCorrectnessMetric extends BaseMetric {
     this.evaluationParams = options.evaluationParams ?? [];
     this.shouldExactMatch = options.shouldExactMatch ?? false;
     this.shouldConsiderOrdering = options.shouldConsiderOrdering ?? false;
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
 
       this.toolsCalled = testCase.toolsCalled ?? [];
       this.expectedTools = testCase.expectedTools ?? [];
@@ -136,7 +152,10 @@ export class ToolCorrectnessMetric extends BaseMetric {
       const toolCallingScore = this.calculateScore();
       const toolSelectionScore: ToolSelectionScore =
         this.availableTools && this.availableTools.length > 0
-          ? await this.getToolSelectionScore(testCase.input)
+          ? await this.getToolSelectionScore(
+              testCase.input,
+              testCase.multimodal,
+            )
           : {
               score: 1,
               reason:
@@ -167,13 +186,46 @@ export class ToolCorrectnessMetric extends BaseMetric {
 
   private async getToolSelectionScore(
     userInput: string,
+    multimodal: boolean,
   ): Promise<ToolSelectionScore> {
+    const value = await systemOneScore(
+      this,
+      this.systemOneToolSelectionSpec(userInput, multimodal),
+    );
+    if (value !== undefined) {
+      return {
+        score: value,
+        reason: formatDecisionReason(this, "tool selection", value),
+      };
+    }
     const prompt = this.getPrompt("get_tool_selection_score", {
       user_input: userInput,
       tools_called: printToolsCalled(this.toolsCalled),
       available_tools: printToolsCalled(this.availableTools ?? []),
     });
     return generateWithSchema(this, prompt, ToolSelectionScoreSchema);
+  }
+
+  private systemOneToolSelectionSpec(
+    userInput: string,
+    multimodal: boolean,
+  ): SystemOneScoreSpec | undefined {
+    if (multimodal) return undefined;
+    return {
+      instructions: this.getPrompt(
+        "_experimental_system_one_tool_selection_score",
+      ),
+      levels: TOOL_SELECTION_LEVELS,
+      state: {
+        input: userInput,
+        tools_called: this.toolsCalled,
+        available_tools: this.availableTools ?? [],
+      },
+    };
+  }
+
+  systemOneEvalSpec(_testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    return undefined;
   }
 
   // --- scoring ---

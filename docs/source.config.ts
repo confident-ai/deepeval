@@ -34,10 +34,17 @@ const languagesField = z
  */
 const betaField = z.literal(true).optional();
 
+/**
+ * `peek: true` hides a mascot behind the page title that peeks over it now
+ * and then. Like `beta`, omit it rather than writing `peek: false`.
+ */
+const peekField = z.literal(true).optional();
+
 const extendedPageSchema = pageSchema.extend({
   sidebar_label: z.string().optional(),
   languages: languagesField.optional(),
   beta: betaField,
+  peek: peekField,
 });
 
 /**
@@ -51,6 +58,9 @@ const strictPageSchema = extendedPageSchema.extend({
   languages: languagesField,
 });
 
+// Only meta.json is sidebar config; other JSON beside a page is page data.
+const META_FILES: string[] = ["**/meta.json"];
+
 const commonOptions = {
   docs: {
     schema: extendedPageSchema,
@@ -60,6 +70,7 @@ const commonOptions = {
   },
   meta: {
     schema: metaSchema,
+    files: META_FILES,
   },
 } as const;
 
@@ -80,7 +91,6 @@ const strictOptions = {
 const blogPageSchema = extendedPageSchema.extend({
   authors: z.array(z.enum(AUTHOR_IDS)).min(1).optional(),
   date: z.coerce.date().optional(),
-  image: z.string().url().optional(),
   // Optional — pins a post to one of the known categories in
   // `lib/blog-categories.ts`. Kept as a single value (not an array)
   // because the sidebar groupings are also single-section.
@@ -96,6 +106,7 @@ const blogOptions = {
   },
   meta: {
     schema: metaSchema,
+    files: META_FILES,
   },
 } as const;
 

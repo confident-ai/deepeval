@@ -180,3 +180,9 @@ voice_simulations/
 # Cursor IDE local config (rules, etc.)
 .cursor/
 
+
+# Local voice QA runs
+voice_qa/
+
+# Local Claude Code instructions
+CLAUDE.md

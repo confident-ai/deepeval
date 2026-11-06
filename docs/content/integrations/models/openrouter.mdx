@@ -62,24 +62,6 @@ model = OpenRouterModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-</Tab>
-<Tab value="ENV">
-
-To use any OpenRouter model directly in `deepeval`, set the `USE_OPENROUTER_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
-
-```python
-from deepeval.metrics import AnswerRelevancyMetric
-
-answer_relevancy = AnswerRelevancyMetric(
-    model="openai/gpt-4.1",
-)
-```
-
-You should also set the other necessary vars like `OPENROUTER_API_KEY` to be able to use the OpenRouter models as shown above.
-
-</Tab>
-</Tabs>
-
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenRouterModel`:
 
 - [Optional] `model`: A string specifying the OpenRouter model to use. Defaults to `OPENROUTER_MODEL_NAME` if set; otherwise falls back to <DefaultLLMModel provider="openrouter" />.
@@ -107,6 +89,24 @@ model = OpenRouterModel(
 ```
 :::
 
+</Tab>
+<Tab value="ENV">
+
+To use any OpenRouter model directly in `deepeval`, set the `USE_OPENROUTER_MODEL=1` in your `env` and simply pass the name of your desired model in your metric initialization:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+answer_relevancy = AnswerRelevancyMetric(
+    model="openai/gpt-4.1",
+)
+```
+
+You should also set the other necessary vars like `OPENROUTER_API_KEY` to be able to use the OpenRouter models as shown above.
+
+</Tab>
+</Tabs>
+
 </Case>
 
 <Case id="typescript">
@@ -132,23 +132,6 @@ const model = new OpenRouterModel({
 
 const answerRelevancy = new AnswerRelevancyMetric({ model });
 ```
-
-</Tab>
-<Tab value="ENV">
-
-To use any OpenRouter model directly in `deepeval`, set `OPENROUTER_MODEL_NAME` and `OPENROUTER_API_KEY` in your `env` and create an `OpenRouterModel` with no arguments:
-
-```typescript
-import { AnswerRelevancyMetric } from "deepeval/metrics";
-import { OpenRouterModel } from "deepeval/models";
-
-const answerRelevancy = new AnswerRelevancyMetric({
-  model: new OpenRouterModel(),
-});
-```
-
-</Tab>
-</Tabs>
 
 There are **ZERO** mandatory and **SEVEN** optional parameters when creating an `OpenRouterModel`:
 
@@ -186,6 +169,23 @@ const model = new OpenRouterModel({
 });
 ```
 :::
+
+</Tab>
+<Tab value="ENV">
+
+To use any OpenRouter model directly in `deepeval`, set `OPENROUTER_MODEL_NAME` and `OPENROUTER_API_KEY` in your `env` and create an `OpenRouterModel` with no arguments:
+
+```typescript
+import { AnswerRelevancyMetric } from "deepeval/metrics";
+import { OpenRouterModel } from "deepeval/models";
+
+const answerRelevancy = new AnswerRelevancyMetric({
+  model: new OpenRouterModel(),
+});
+```
+
+</Tab>
+</Tabs>
 
 </Case>
 

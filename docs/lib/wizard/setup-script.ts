@@ -1,14 +1,16 @@
-// Mirrors confident-landing's `functions/wizard/setup-script.ts`, which serves
-// https://www.confident-ai.com/setup.sh from the same GitHub releases.
-// The only intended difference is the `--from deepeval` entry point below, so
-// keep the rest of the script in sync when either copy changes.
+// Installs and runs DeepEval's own setup wizard, `deepeval-setup`, from this
+// repository's `setup-v*` releases: the same ones `deepeval setup` and
+// `npx deepeval setup` download, so keep the archive names and the choice of
+// release in step with `deepeval/cli/setup/launcher.py` and
+// `typescript/src/cli/setup/launcher.ts`. confident-landing's script installs
+// Confident AI's tracing wizard instead and is no longer a copy of this one.
 export const setupScript = `#!/bin/sh
 set -eu
 
-REPO="confident-ai/confident-setup"
-BINARY="confident-setup"
+REPO="confident-ai/deepeval"
+BINARY="deepeval-setup"
 RELEASES_URL="https://github.com/\${REPO}/releases"
-API_URL="https://api.github.com/repos/\${REPO}/releases/latest"
+API_URL="https://api.github.com/repos/\${REPO}/releases?per_page=100"
 SOURCE="deepeval"
 
 red() {
@@ -33,7 +35,8 @@ note() {
 command -v curl >/dev/null 2>&1 || fail "curl is required"
 command -v tar >/dev/null 2>&1 || fail "tar is required"
 
-# A leading positional argument pins a release. Options belong to the wizard.
+# A leading positional argument pins a release, as setup-v0.1.0 or 0.1.0.
+# Options belong to the wizard.
 tag=""
 if [ "$#" -gt 0 ]; then
   case "$1" in
@@ -41,16 +44,33 @@ if [ "$#" -gt 0 ]; then
     *) tag="$1"; shift ;;
   esac
 fi
+case "$tag" in
+  ""|setup-v*) ;;
+  *) tag="setup-v\${tag}" ;;
+esac
 
+# This repository's "latest" release is the Python SDK, so take the highest
+# published setup-v* release instead, skipping prereleases as the launchers do.
+# Splitting on commas and braces puts one field per line, whether GitHub sends
+# the list compact or indented.
 if [ -z "$tag" ]; then
-  release_json=$(curl -fsSL \\
+  releases_json=$(curl -fsSL \\
     -H "Accept: application/vnd.github+json" \\
     -H "X-GitHub-Api-Version: 2022-11-28" \\
-    "$API_URL") || fail "could not query the latest stable release"
-  tag=$(printf '%s\\n' "$release_json" |
-    sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p' |
-    sed -n '1p')
-  [ -n "$tag" ] || fail "latest release response did not include tag_name"
+    "$API_URL") || fail "could not list releases"
+  version=$(printf '%s\\n' "$releases_json" | tr ',{}' '\\n\\n\\n' | awk '
+    /"tag_name"[[:space:]]*:/ {
+      tag = $0
+      sub(/.*"tag_name"[[:space:]]*:[[:space:]]*"/, "", tag)
+      sub(/".*/, "", tag)
+    }
+    /"prerelease"[[:space:]]*:[[:space:]]*false/ &&
+      tag ~ /^setup-v[0-9]+[.][0-9]+[.][0-9]+$/ {
+      print substr(tag, 8)
+    }
+  ' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)
+  [ -n "$version" ] || fail "no published setup wizard release was found"
+  tag="setup-v\${version}"
 fi
 
 case "$tag" in
@@ -71,7 +91,7 @@ esac
 
 archive="\${BINARY}-\${os}-\${arch}.tar.gz"
 download_url="\${RELEASES_URL}/download/\${tag}"
-tmpdir=$(mktemp -d "\${TMPDIR:-/tmp}/confident-setup.XXXXXX") ||
+tmpdir=$(mktemp -d "\${TMPDIR:-/tmp}/deepeval-setup.XXXXXX") ||
   fail "could not create a temporary directory"
 
 cleanup() {

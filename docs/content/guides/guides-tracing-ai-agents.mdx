@@ -156,7 +156,7 @@ def travel_agent(user_request: str) -> str:
             return decision
 ```
 
-When `travel_agent()` runs, `deepeval` builds the full execution tree: the `agent` span at the root, each `reason_and_plan()` call as an `llm` child span, and each tool call as a `tool` grandchild span. The `metric_collection` on the agent span triggers asynchronous task-completion evaluation in Confident AI after each execution, with zero latency added to the live agent.
+When `travel_agent()` runs, `deepeval` builds the full execution tree: the `agent` span at the root, each `reason_and_plan()` call as an `llm` child span, and each tool call as a `tool` grandchild span. The `metric_collection` on the agent span runs task-completion evaluation asynchronously on Confident AI after each execution, with zero latency added to the live agent.
 
 ## Accessing Raw Agent Traces Locally
 
@@ -219,7 +219,7 @@ def travel_coordinator(user_request: str) -> str:
     return f"Flight: {flight_result}, Hotel: {hotel_result}"
 ```
 
-In Confident AI, `hotel_agent` will appear as a child span of `travel_coordinator`. The platform renders this as a nested graph, showing exactly which sub-agent handled which part of the overarching task.
+`hotel_agent` is recorded as a child span of `travel_coordinator`, so the trace shows exactly which sub-agent handled which part of the overarching task.
 
 :::note
 The `agent_handoffs` parameter is a static declaration of what handoffs are *possible* within your architecture. The actual handoffs that occur during runtime are captured dynamically by the span tree itself.
@@ -296,7 +296,7 @@ for golden in dataset.evals_iterator(metrics=metrics):
 ```
 
 :::note
-The `metrics` parameter runs LLM-as-a-judge evaluations synchronously and will add latency to your agent's execution. Use this exclusively during development and testing. For production, switch to `metric_collection` as shown in the sections below. It requires Confident AI so ensure you ran the `deepeval login` command and have a valid API key configured.
+The `metrics` parameter runs LLM-as-a-judge evaluations synchronously and will add latency to your agent's execution. Use this exclusively during development and testing. For production, switch to `metric_collection` as shown in the sections below. It requires Confident AI, so ensure you ran the `deepeval login` command and have a valid API key configured.
 :::
 
 ### Component-Level (One LLM Span)
@@ -518,11 +518,11 @@ print(result.final_output)
 The integrations shown here are minimal tracing examples. For full options — including attaching evaluation metrics to specific spans, running component-level evals, and setting up production `metric_collection`s — see the dedicated integration docs for [LlamaIndex](/integrations/llamaindex), [LangGraph](/integrations/langgraph), [CrewAI](/integrations/crewai), [Pydantic AI](/integrations/pydanticai), and [OpenAI Agents](/integrations/openai-agents).
 :::
 
-## Agentic Observability In Production
+## Catching Failing Agent Traces In Production
 
-When you deploy autonomous agents to production, relying on standard text logs to debug a failed task or an infinite loop is nearly impossible. You need a visual representation of the execution tree and asynchronous evaluation to catch regressions without degrading the user experience.
+Once autonomous agents are live, real users will send them down trajectories your dataset never covered, and standard text logs won't tell you which ones failed or why. What you need is the failing trace itself: the full execution tree of the run that broke, so it can become a test case for your next development run.
 
-Confident AI renders the complex parent-child span relationships of your agents into an interactive graph, allowing you to trace exactly how an agent reasoned and what tools it called.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing agent traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next eval. The steps below also set up evals that run on every production trace and flag the failing ones.
 
 <Steps>
 <Step>
@@ -535,7 +535,7 @@ Log in to Confident AI and create metric collections tailored to your evaluation
   src={ASSETS.metricsCreateCollection}
   confidentUrl="/docs/llm-tracing/evaluations"
   label="Create agentic metric collections on Confident AI"
-  description="Group agentic metrics to score tool use and task completion automatically."
+  description="Choose the agentic metrics that run on every production trace."
 />
 
 </Step>
@@ -551,20 +551,20 @@ def travel_coordinator(user_request: str):
     ...
 ```
 
-When the trace is sent to Confident AI, the trajectory collection evaluates the complete ordered execution tree asynchronously, ensuring your live agent experiences zero added latency. Attach a separate component collection to `type="llm"` spans when you also need per-step tool or argument checks.
+When the trace is sent to Confident AI, the trajectory collection evaluates the complete ordered execution tree asynchronously, so your live agent experiences zero added latency. Attach a separate component collection to `type="llm"` spans when you also need per-step tool or argument checks.
 
 </Step>
 <Step>
-### Debug with the Agent Trace Graph
+### Turn failing traces into goldens
 
 
-Use Confident AI's trace visualization to inspect runaway loops, silent tool failures, and sub-agent handoffs. You can click into any individual tool span to see the exact arguments passed and the JSON schema returned by your external APIs.
+Open a failing trace to see where the trajectory went wrong, whether that's a runaway loop, a silent tool failure, or a bad sub-agent handoff. Each tool span carries the exact arguments passed and the output returned, which is what you need to turn the trace into a golden and reproduce the failure with `evals_iterator()` in development.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/evaluations"
-  label="Track agent execution paths and metrics on Confident AI"
-  description="Follow each agent run step-by-step with metric scores attached."
+  label="Failing agent traces on Confident AI"
+  description="Follow a failing agent run step by step with its metric scores attached."
 />
 
 </Step>
@@ -585,7 +585,7 @@ In this guide, you learned how to instrument complex AI agents to capture their 
 :::info[Development vs Production]
 
 - **Development** — Attach `metrics=[tool_correctness]` to your LLM span for component checks, and pass trajectory metrics to `evals_iterator()` to score the complete ordered trace. Use `trace_manager.get_all_traces_dict()` to inspect the execution tree without an external dependency.
-- **Production** — Export traces to Confident AI to visually debug execution graphs. Use an asynchronous trajectory metric collection on the root agent and component collections on LLM spans to monitor the complete path and individual tool decisions without blocking execution.
+- **Production** — Export traces to Confident AI, catch the failing trajectories, and turn them into goldens for the next development run. Asynchronous trajectory collections on the root agent and component collections on LLM spans evaluate every trace without blocking execution.
 
 :::
 
@@ -654,10 +654,13 @@ In this guide, you learned how to instrument complex AI agents to capture their 
         <>
           Look for repeated tool calls with identical arguments inside the
           same trace, or an unusually high number of LLM inference spans for a
-          simple task. Tracing surfaces these patterns visually—either by
-          inspecting the raw trace dictionary locally or via{" "}
-          <a href="https://confident-ai.com">Confident AI</a>'s trace
-          explorer.
+          simple task. Locally, inspect the raw trace dictionary; in
+          production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing traces like these so you can turn them into
+          goldens.
         </>
       ),
     },
@@ -666,12 +669,15 @@ In this guide, you learned how to instrument complex AI agents to capture their 
       answer: (
         <>
           Define a metric collection on{" "}
-          <a href="https://confident-ai.com">Confident AI</a> and pass{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          and pass{" "}
           <code>metric_collection</code> to your <code>@observe</code>{" "}
           decorators. Put trajectory metrics in the root agent's collection and
-          tool or argument metrics in an LLM-span collection. Traces are
-          exported asynchronously and evaluated without blocking your live
-          agent.
+          tool or argument metrics in an LLM-span collection. Every trace is
+          evaluated asynchronously without blocking your live agent, and the
+          failing ones are flagged.
         </>
       ),
     },

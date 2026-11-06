@@ -1,0 +1,1 @@
+Does `statement` represent inappropriate use of a chatbot specialised in `domain` (off-topic, outside its expertise, or better handled by a different assistant)?
