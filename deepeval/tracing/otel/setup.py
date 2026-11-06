@@ -74,6 +74,8 @@ _automatic_generation = 0
 # The attributes integrations start their spans with, by instrumentation scope
 # or a prefix of its dotted name.
 _scope_defaults: Dict[str, Dict[str, Any]] = {}
+# deepeval's processors on the application's global provider, once joined.
+_joined: Optional["_Joined"] = None
 
 
 def ensure_confident_trace(
@@ -81,12 +83,15 @@ def ensure_confident_trace(
     *,
     exporter: Optional[SpanExporter] = None,
     tracer_provider: Optional[TracerProvider] = None,
+    global_provider: bool = False,
 ) -> bool:
     """Start confident-trace once, then enable any ``instrumentations`` not on.
 
     ``exporter`` and ``tracer_provider`` replace the Confident AI exporter and
     the global provider, and only apply to the call that starts
-    confident-trace. Returns whether confident-trace is running.
+    confident-trace. ``global_provider`` is for integrations whose framework
+    creates its spans on the global provider: see ``_share_global_provider``.
+    Returns whether confident-trace is running.
     """
     try:
         import confident_trace
@@ -99,6 +104,7 @@ def ensure_confident_trace(
         if _runtime is None or not _runtime.active:
             if _bridge is not None:
                 _bridge.shutdown()
+            _detach()
             _instrumented.clear()
             bridge = DeepEvalSpanBridge()
             runtime = confident_trace.init(
@@ -122,11 +128,21 @@ def ensure_confident_trace(
             for name in dict.fromkeys(instrumentations)
             if name not in _instrumented
         ]
-        # An integration keeps a library an evaluation turned on.
-        adopted = [name for name in names if name in _automatic]
-        for name in adopted:
-            _runtime.undo.extend(_automatic.pop(name))
-        fresh = [name for name in names if name not in adopted]
+        if global_provider:
+            _share_global_provider()
+        fresh = []
+        for name in names:
+            undo = _automatic.pop(name, None)
+            if undo is None:
+                fresh.append(name)
+            elif global_provider:
+                # An evaluation turned it on before the global provider was
+                # shared, which decides whether its telemetry is turned on.
+                _undo(name, undo)
+                fresh.append(name)
+            else:
+                # An integration keeps a library an evaluation turned on.
+                _runtime.undo.extend(undo)
         if fresh:
             # ``init`` only instruments at start-up; the registry is how an
             # integration joins a confident-trace that is already running.
@@ -143,14 +159,39 @@ def _shares_global_provider() -> bool:
     return get_settings().DEEPEVAL_GLOBAL_TRACER_PROVIDER is True
 
 
-def use_global_provider() -> None:
-    """Install confident-trace's provider as the global one unless the
-    application set its own, for integrations whose spans come from there."""
-    with _lock:
-        if _runtime is not None and isinstance(
-            otel_trace.get_tracer_provider(), otel_trace.ProxyTracerProvider
-        ):
-            otel_trace.set_tracer_provider(_runtime.provider)
+def _share_global_provider() -> None:
+    """Send the spans frameworks create on the global provider to deepeval.
+
+    Only integrations the user sets up do this. confident-trace's provider
+    becomes the global one when none is set. Otherwise deepeval's processors
+    join the application's provider: its exporters stay as they are, and
+    deepeval's own spans never reach them. Call with ``_lock`` held.
+    """
+    global _joined
+    current = otel_trace.get_tracer_provider()
+    if current is _runtime.provider or _joined is not None:
+        return
+    if isinstance(current, otel_trace.ProxyTracerProvider):
+        otel_trace.set_tracer_provider(_runtime.provider)
+    elif callable(getattr(current, "add_span_processor", None)):
+        processors = (_runtime.processor, _ScopeDefaults(), _bridge)
+        _joined = _Joined([p for p in processors if p is not None])
+        current.add_span_processor(_joined)
+    else:
+        logger.warning(
+            "deepeval can't trace spans on the global tracer provider, a %s, "
+            "because it doesn't accept span processors.",
+            type(current).__name__,
+        )
+
+
+def _detach() -> None:
+    """Take deepeval's processors off the application's provider, before
+    confident-trace stops or starts again. Call with ``_lock`` held."""
+    global _joined
+    if _joined is not None:
+        _joined.detach()
+        _joined = None
 
 
 def _automatic_instrumentations() -> Tuple[str, ...]:
@@ -206,11 +247,15 @@ def start_automatic_tracing() -> Callable[[], None]:
 def _stop_automatic() -> None:
     """Turn off what automatic tracing turned on. Call with ``_lock`` held."""
     for name in list(_automatic):
-        for undo in reversed(_automatic.pop(name)):
-            try:
-                undo()
-            except Exception:
-                logger.debug("Couldn't stop tracing %s", name, exc_info=True)
+        _undo(name, _automatic.pop(name))
+
+
+def _undo(name: str, undos: List[Callable[[], None]]) -> None:
+    for undo in reversed(undos):
+        try:
+            undo()
+        except Exception:
+            logger.debug("Couldn't stop tracing %s", name, exc_info=True)
 
 
 def shutdown_confident_trace() -> None:
@@ -220,6 +265,7 @@ def shutdown_confident_trace() -> None:
         _stop_automatic()
         _automatic_users = 0
         _automatic_generation += 1
+        _detach()
         if _bridge is not None:
             _bridge.shutdown()
         if _runtime is not None:
@@ -502,6 +548,42 @@ class _ScopeDefaults(SpanProcessor):
                         if key not in present
                     }
                 )
+
+
+class _Joined(SpanProcessor):
+    """deepeval's processors on the application's provider.
+
+    They never fail the application's spans, the application shutting its
+    provider down doesn't stop deepeval's tracing, and deepeval detaches them
+    when it shuts down, since OpenTelemetry can't remove a span processor.
+    """
+
+    def __init__(self, processors: Sequence[SpanProcessor]):
+        self._processors = tuple(processors)
+
+    def on_start(self, span: Span, parent_context=None) -> None:
+        for processor in self._processors:
+            try:
+                processor.on_start(span, parent_context=parent_context)
+            except Exception:
+                logger.debug("Span processor failed", exc_info=True)
+
+    def on_end(self, span: ReadableSpan) -> None:
+        for processor in self._processors:
+            try:
+                processor.on_end(span)
+            except Exception:
+                logger.debug("Span processor failed", exc_info=True)
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        flushed = [p.force_flush(timeout_millis) for p in self._processors]
+        return all(flushed)
+
+    def shutdown(self) -> None:
+        pass
+
+    def detach(self) -> None:
+        self._processors = ()
 
 
 class ConfidentOtlpExporter(SpanExporter):

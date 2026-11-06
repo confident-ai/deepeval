@@ -1,8 +1,10 @@
 """deepeval's Pydantic AI integration, built on confident-trace.
 
 confident-trace reads the telemetry Pydantic AI emits once deepeval starts it
-with the ``pydantic_ai`` instrumentation, which also instruments every agent.
-``DeepEvalInstrumentationSettings`` instruments one agent the same way and
+with the ``pydantic_ai`` instrumentation. ``instrument()`` shares the global
+provider, which turns on every agent's telemetry when deepeval's provider is
+the global one. ``DeepEvalInstrumentationSettings`` instruments one agent on
+deepeval's provider, leaving the global provider to the application, and
 stamps the trace settings it's given on that agent's spans.
 """
 
@@ -36,10 +38,10 @@ def is_dependency_installed() -> bool:
     return True
 
 
-def instrument() -> None:
+def instrument(every_agent: bool = True) -> None:
     is_dependency_installed()
     with capture_tracing_integration(Integration.PYDANTIC_AI):
-        ensure_confident_trace(INSTRUMENTATIONS)
+        ensure_confident_trace(INSTRUMENTATIONS, global_provider=every_agent)
 
 
 class DeepEvalInstrumentationSettings(InstrumentationSettings):
@@ -69,7 +71,7 @@ class DeepEvalInstrumentationSettings(InstrumentationSettings):
         test_case_id: Optional[str] = None,
         turn_id: Optional[str] = None,
     ):
-        instrument()
+        instrument(every_agent=False)
         super().__init__(tracer_provider=tracer_provider())
         self.tracer = _TraceDefaultsTracer(
             self.tracer,

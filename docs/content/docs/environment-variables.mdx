@@ -263,7 +263,9 @@ Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` 
 
 <Case id="python">
 
-By default, integrations whose framework creates its spans on the global provider, such as Google ADK, Strands, Pydantic AI and OpenInference, still install `deepeval`'s provider as the global one when none is set. If you use one of them, set up your own provider first.
+By default, the Strands, AgentCore, Google ADK and OpenInference integrations, and `instrument_pydantic_ai()`, still use the global provider, because those frameworks create their spans there. When none is set, they install `deepeval`'s provider as the global one. When your app set its own first, they add `deepeval`'s span processors to it, so your exporters keep receiving those spans and `deepeval`'s own spans stay out of them. `DeepEvalInstrumentationSettings` traces its agent without the global provider.
+
+Automatic tracing never uses the global provider. It doesn't record these frameworks' own spans unless you set up their integration.
 
 </Case>
 
