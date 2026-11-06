@@ -596,7 +596,7 @@ for await (const golden of dataset.evalsIterator()) {
 
 ### Retriever calls
 
-Wrap the invocation in <Term py="next_retriever_span" ts="nextRetrieverSpan"/> to stage a metric (or a Confident AI <Term py="metric_collection" ts="metricCollection"/>) on the **first retriever span** LangChain opens inside the block.
+Wrap the invocation in <Term py="next_retriever_span" ts="nextRetrieverSpan"/> to stage a metric on the **first retriever span** LangChain opens inside the block.
 
 <Switch>
 
@@ -604,11 +604,12 @@ Wrap the invocation in <Term py="next_retriever_span" ts="nextRetrieverSpan"/> t
 
 ```python title="langchain_agent.py" showLineNumbers
 from deepeval.integrations.langchain import CallbackHandler
+from deepeval.metrics import ContextualRelevancyMetric
 from deepeval.tracing import next_retriever_span
 ...
 
 for golden in dataset.evals_iterator():
-    with next_retriever_span(metric_collection="retriever_v1"):
+    with next_retriever_span(metrics=[ContextualRelevancyMetric()]):
         chain.invoke(
             {"messages": [{"role": "user", "content": golden.input}]},
             config={"callbacks": [CallbackHandler()]},
@@ -620,11 +621,12 @@ for golden in dataset.evals_iterator():
 <Case id="typescript">
 
 ```typescript title="langchain-agent.ts" showLineNumbers
+import { ContextualRelevancyMetric } from "deepeval/metrics";
 import { nextRetrieverSpan } from "deepeval/tracing";
 ...
 
 for await (const golden of dataset.evalsIterator()) {
-  await nextRetrieverSpan({ metricCollection: "retriever_v1" }, () =>
+  await nextRetrieverSpan({ metrics: [new ContextualRelevancyMetric()] }, () =>
     ask((golden as Golden).input),
   );
 }
@@ -642,12 +644,18 @@ For deterministic tool calls, use tool spans for traceability, inputs, outputs, 
 
 <Case id="python">
 
-Use `deepeval`'s patched `tool` decorator when you want to attach a metric collection (or metrics) from the tool definition:
+Use `deepeval`'s patched `tool` decorator when you want to attach metrics from the tool definition:
 
 ```python title="langchain_agent.py" showLineNumbers
 from deepeval.integrations.langchain import tool
+from deepeval.metrics import GEval
+from deepeval.test_case import SingleTurnParams
 
-@tool(metric_collection="tools_v1")
+@tool(metrics=[GEval(
+    name="Correct Product",
+    criteria="The output must be the product of the two input numbers.",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+)])
 def multiply(a: int, b: int) -> int:
     """Multiply two numbers."""
     return a * b
@@ -690,7 +698,7 @@ const multiply = tool(
 
 LangChain is instrumented per-call through callbacks, so customization happens at the callback or span-staging boundary.
 
-- Use <Term py="CallbackHandler" ts="DeepEvalCallbackHandler"/> kwargs for trace-level defaults like `name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, and <Term py="user_id" ts="userId"/>.
+- Use <Term py="CallbackHandler" ts="DeepEvalCallbackHandler"/> kwargs for trace-level defaults like `name`, `tags`, `metadata`, and <Term py="thread_id" ts="threadId"/>.
 - Use <Term py="next_agent_span" ts="nextAgentSpan"/> / <Term py="next_llm_span" ts="nextLlmSpan"/> / <Term py="next_retriever_span" ts="nextRetrieverSpan"/> / <Term py="next_tool_span" ts="nextToolSpan"/> to stage component-level fields onto the next span the callback opens.
 - Use tool bodies (or Python's patched `tool` decorator) for deterministic traceability, inputs, outputs, and metadata.
 
@@ -703,7 +711,6 @@ callback = CallbackHandler(
     name="math-agent",
     tags=["langchain", "math"],
     metadata={"team": "support"},
-    user_id="user-123",
 )
 
 agent.invoke(
@@ -721,7 +728,6 @@ const handler = new DeepEvalCallbackHandler({
   name: "math-agent",
   tags: ["langchain", "math"],
   metadata: { team: "support" },
-  userId: "user-123",
 });
 
 await agent.invoke(
@@ -926,11 +932,7 @@ def respond_to_user(prompt: str) -> str:
 | `tags` | <Term py="list[str]" ts="string[]"/> | Tags applied to traces produced by this callback. |
 | `metadata` | <Term py="dict" ts="object"/> | Trace metadata applied when the callback starts a trace. |
 | <Term py="thread_id" ts="threadId"/> | <Term py="str" ts="string"/> | Groups related runs into a single trace thread. |
-| <Term py="user_id" ts="userId"/> | <Term py="str" ts="string"/> | Actor identifier for the trace. |
 | `metrics` | <Term py="list" ts="array"/> | Trace-level metrics for the run. Prefer <Term py="evals_iterator" ts="evalsIterator"/> in eval scripts. |
-| <Term py="metric_collection" ts="metricCollection"/> | <Term py="str" ts="string"/> | Trace-level metric collection, for online evals on production traces. |
-| <Term py="test_case_id" ts="testCaseId"/> | <Term py="str" ts="string"/> | Optional test case identifier. |
-| <Term py="turn_id" ts="turnId"/> | <Term py="str" ts="string"/> | Optional turn identifier for conversational traces. |
 
 For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="update_current_trace" ts="updateCurrentTrace"/>, <Term py="update_current_span" ts="updateCurrentSpan"/>) see the [tracing reference](/docs/evaluation-llm-tracing).
 
@@ -987,8 +989,7 @@ For native tracing helpers (<Term py="@observe" ts="observe()"/>, <Term py="upda
           Yes. Keep the{" "}
           <Term py="CallbackHandler" ts="DeepEvalCallbackHandler" /> in your
           production calls and set{" "}
-          <Term py="thread_id" ts="threadId" /> /{" "}
-          <Term py="user_id" ts="userId" /> for grouping.{" "}
+          <Term py="thread_id" ts="threadId" /> for grouping.{" "}
           <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> flags failing chain and agent
           traces before any eval covers them, clusters them into failure modes,
           and turns them into a dataset for your next LangChain eval.

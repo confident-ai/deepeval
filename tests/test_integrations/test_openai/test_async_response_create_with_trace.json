@@ -1,18 +1,18 @@
 {
-  "uuid": "151f7bf4-60ec-4a4e-8fb5-53f192fb03ea",
+  "uuid": "a0e718d6-5188-4b03-8452-db8cd5fbb9e4",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "6919d746-b71d-479c-ac92-c32b7fb5bbbc",
-      "name": "llm_generation",
+      "uuid": "88de2befee5bbee8",
+      "name": "chat gpt-4o",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-02-15T05:55:30.082Z",
-      "endTime": "2026-02-15T05:55:31.647Z",
+      "startTime": "2026-10-21T14:05:35.894Z",
+      "endTime": "2026-10-21T14:05:38.710Z",
       "input": [
         {
-          "role": "system",
+          "role": "System Instruction",
           "content": "You are a helpful assistant. Always generate a string response."
         },
         {
@@ -20,23 +20,23 @@
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm doing well, thank you. How can I assist you today?",
+      "output": "Hello! I'm here and ready to help. How can I assist you today?",
+      "integration": "OpenAI",
       "model": "gpt-4o",
+      "provider": "OpenAI",
       "inputTokenCount": 29.0,
       "outputTokenCount": 17.0,
       "metricCollection": "test_collection_1",
       "promptAlias": "asd",
       "promptVersion": "00.00.01",
       "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec",
-      "integration": "OpenAI",
-      "provider": "OpenAI"
+      "promptCommitHash": "bab04ec"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T05:55:30.082Z",
-  "endTime": "2026-02-15T05:55:31.647Z",
+  "startTime": "2026-10-21T14:05:35.894Z",
+  "endTime": "2026-10-21T14:05:38.710Z",
   "name": "test_name_1",
   "metadata": {
     "test_metadata_1": "test_value_1"
@@ -48,6 +48,6 @@
   "threadId": "test_thread_id_1",
   "userId": "test_user_id_1",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm doing well, thank you. How can I assist you today?",
+  "output": "Hello! I'm here and ready to help. How can I assist you today?",
   "status": "SUCCESS"
 }

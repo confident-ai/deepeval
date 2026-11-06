@@ -245,6 +245,38 @@ npx deepeval test run example.test.ts
 
 Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
 
+## Tracing
+
+<Only id="python">
+
+| Variable              | Values            | Effect                                                                                                                                                                                                                       |
+| --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_AUTO_TRACE` | `1` / `0` / unset | While `evals_iterator()` or `deepeval test run` runs, trace every installed library `deepeval` supports, such as the OpenAI SDK or LangChain, without `@observe` or an integration. Defaults to on. Set `0` to trace only your `@observe` code and the integrations you set up. |
+
+</Only>
+
+| Variable                          | Values            | Effect                                                                                                                                                                                                                                            |
+| --------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_GLOBAL_TRACER_PROVIDER` | `1` / `0` / unset | Install `deepeval`'s tracer provider as the global OpenTelemetry provider when none is set, so your app's own OpenTelemetry spans and other instrumentation are traced too. Defaults to off, which leaves the global provider to your own OpenTelemetry setup, including one you configure after `deepeval` starts tracing. |
+
+<Switch>
+
+<Case id="python">
+
+By default, the Strands, AgentCore, Google ADK and OpenInference integrations, and `instrument_pydantic_ai()`, still use the global provider, because those frameworks create their spans there. When none is set, they install `deepeval`'s provider as the global one. When your app set its own first, they add `deepeval`'s span processors to it, so your exporters keep receiving those spans and `deepeval`'s own spans stay out of them. `DeepEvalInstrumentationSettings` traces its agent without the global provider.
+
+Automatic tracing never uses the global provider. It doesn't record these frameworks' own spans unless you set up their integration.
+
+</Case>
+
+<Case id="typescript">
+
+By default, `deepeval` also keeps tracing when your app registered its own provider first; with `1` it can't attach to that provider and turns tracing off. The OpenInference integration still installs `deepeval`'s provider as the global one when none is set, because OpenInference instrumentors create their spans there.
+
+</Case>
+
+</Switch>
+
 ## Logging
 
 | Variable                          | Values                | Effect                                                                           |

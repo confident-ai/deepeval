@@ -84,18 +84,23 @@ def pytest_runtest_protocol(
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item: pytest.Item):
-    """Wrap each test in a deepeval evaluation scope so `@observe` spans get
-    attached to the in-flight test run via `assert_test(golden=..., metrics=...)`.
+    """Wrap each test in a deepeval evaluation scope so `@observe` spans, and
+    calls to any library confident-trace supports, get attached to the
+    in-flight test run via `assert_test(golden=..., metrics=...)`.
     """
     if not get_is_running_deepeval():
         yield
         return
 
+    from deepeval.tracing.otel.setup import start_automatic_tracing
     from deepeval.tracing.tracing import Observer, trace_manager
     from deepeval.tracing.types import EvalMode, EvalSession
 
     prev_session = trace_manager.eval_session
     trace_manager.eval_session = EvalSession(mode=EvalMode.EVALUATE)
+    # Here rather than at session start: the test's fixtures have run, so an
+    # OpenTelemetry setup of the user's own is already in place to reuse.
+    stop_automatic_tracing = start_automatic_tracing()
     observer = Observer("custom", func_name=PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME)
     observer.__enter__()
     try:
@@ -104,6 +109,7 @@ def pytest_runtest_call(item: pytest.Item):
         try:
             observer.__exit__(None, None, None)
         finally:
+            stop_automatic_tracing()
             trace_manager.eval_session = prev_session
 
 
