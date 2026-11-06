@@ -203,7 +203,6 @@ await llmApp("Who founded DeepEval?");
 - [Optional] `metrics`: a list of `BaseMetric`s to attach for [component-level evals](/docs/evaluation-component-level-llm-evals).
 - [Optional] `name`: how this span is displayed in the trace tree (defaults to the function name).
 - [Optional] `type`: classifies the span — see [Classify spans by type](#classify-spans-by-type).
-- [Optional] `metric_collection`: name of a metric collection you stored on Confident AI.
 
 </Tab>
 <Tab value="LangChain">
@@ -748,20 +747,9 @@ If you don't want to use the dataset's `expected_output`, pass your own string i
 
 ---
 
-## Environment Variables
-
-If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
-
-```bash
-CONFIDENT_TRACE_VERBOSE=0
-CONFIDENT_TRACE_FLUSH=0
-```
-
----
-
 ## Flushing Traces Before Shutdown
 
-Traces are posted from a background worker thread, so a process that tears down immediately after its last traced call can exit before those traces reach Confident AI. Call `flush_traces()` to wait for the worker to finish:
+Traces are exported to Confident AI in batches from a background thread, so a process that tears down immediately after its last traced call can exit before those traces are sent. Call `flush_traces()` to wait for them:
 
 ```python title="main.py" showLineNumbers {6}
 import deepeval
@@ -784,9 +772,7 @@ async def main():
     await deepeval.a_flush_traces(timeout=30.0)
 ```
 
-This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. It complements `CONFIDENT_TRACE_FLUSH=1`, which only flushes on interpreter exit and gives you no way to know whether the traces landed.
-
-If you send traces through OpenTelemetry, `ConfidentSpanExporter.force_flush()` and `ContextAwareSpanProcessor.force_flush()` wait on the same queue, so the standard `TracerProvider.force_flush()` call also drains pending traces.
+This is the right tool for short-lived jobs, serverless handlers, and sandboxes that are torn down on demand. Pending traces are also sent when the interpreter exits, but that gives you no way to know whether they landed.
 
 ## Evaluating Production Traces
 
@@ -883,9 +869,7 @@ Now that you have your traces, you can evaluate the observable result end-to-end
         <>
           By default, no. When you run your <code>@observe</code>-decorated app
           outside of <code>evaluate()</code> or <code>assert_test()</code>,
-          metrics don't run. You can silence local trace logs with{" "}
-          <code>CONFIDENT_TRACE_VERBOSE=0</code> and{" "}
-          <code>CONFIDENT_TRACE_FLUSH=0</code>.
+          metrics don't run.
         </>
       ),
     },

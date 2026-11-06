@@ -25,7 +25,8 @@ class TestConfigureMultiple:
 
         assert manager.environment == "production"
         assert manager.sampling_rate == 0.5
-        assert manager.confident_api_key == "my-api-key"
+        # A deprecated platform setting: accepted, and ignored.
+        assert not hasattr(manager, "confident_api_key")
         assert manager.tracing_enabled is False
         assert manager.custom_mask_fn is dummy_mask
 
@@ -55,7 +56,7 @@ class TestConfigureMultiple:
         assert manager.sampling_rate == 0.8
         # New values should be set
         assert manager.tracing_enabled is False
-        assert manager.confident_api_key == "new-key"
+        assert not hasattr(manager, "confident_api_key")
 
     def test_configure_with_invalid_option_fails_atomically(self, monkeypatch):
         """Test that invalid option causes entire configure to fail."""

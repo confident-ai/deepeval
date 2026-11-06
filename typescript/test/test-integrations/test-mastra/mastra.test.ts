@@ -3,7 +3,7 @@ import { expect } from "@jest/globals";
 import { DeepEvalExporter } from "@/integrations/mastra";
 import { traceManager } from "@/tracing/tracing";
 import { Environment } from "@/tracing/utils";
-import { generateTraceJson, assertTraceJson } from "../utils";
+import { asEvaluation, generateTraceJson, assertTraceJson } from "../utils";
 
 import { runSimpleApp } from "./apps/mastra-simple-app";
 import { runToolApp, runToolAppWithTracing } from "./apps/mastra-tool-app";
@@ -125,29 +125,35 @@ describe("Mastra Integration Tests", () => {
       tags: ["config-tag"],
     });
 
-    await runToolAppWithTracing(
-      exporter,
-      "Use the get_weather tool to get the weather in Tokyo.",
-      {
-        metadata: {
-          threadId: "thread-123",
-          userId: "user-xyz",
-          testCaseId: "tc-1",
-          turnId: "turn-1",
-          team: "growth",
+    await asEvaluation(async () => {
+      await runToolAppWithTracing(
+        exporter,
+        "Use the get_weather tool to get the weather in Tokyo.",
+        {
+          metadata: {
+            threadId: "thread-123",
+            userId: "user-xyz",
+            testCaseId: "tc-1",
+            turnId: "turn-1",
+            team: "growth",
+          },
+          tags: ["req-tag"],
         },
-        tags: ["req-tag"],
-      },
-    );
-    await settleTraces();
+      );
+      await settleTraces();
+    });
 
     const trace = traceManager.getAllTraces()[0];
     expect(trace).toBeDefined();
     expect(trace.threadId).toBe("thread-123");
-    expect(trace.userId).toBe("user-xyz");
     expect(trace.tags).toEqual(["req-tag"]);
-    expect(trace.testCaseId).toBe("tc-1");
-    expect(trace.turnId).toBe("turn-1");
+    // Deprecated platform settings: dropped, and not kept as metadata.
+    expect(trace).not.toHaveProperty("userId");
+    expect(trace.metadata).not.toHaveProperty("userId");
+    expect(trace).not.toHaveProperty("testCaseId");
+    expect(trace).not.toHaveProperty("turnId");
+    expect(trace.metadata).not.toHaveProperty("testCaseId");
+    expect(trace.metadata).not.toHaveProperty("turnId");
     expect(trace.metadata?.team).toBe("growth");
   }, 60000);
 });

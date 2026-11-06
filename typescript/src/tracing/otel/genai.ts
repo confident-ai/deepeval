@@ -1,0 +1,20 @@
+/** GenAI semantic convention 1.37.0 attribute keys that deepeval reads. */
+export const GenAIAttr = {
+  OPERATION_NAME: "gen_ai.operation.name",
+  PROVIDER_NAME: "gen_ai.provider.name",
+  REQUEST_MODEL: "gen_ai.request.model",
+  RESPONSE_MODEL: "gen_ai.response.model",
+  INPUT_MESSAGES: "gen_ai.input.messages",
+  OUTPUT_MESSAGES: "gen_ai.output.messages",
+  SYSTEM_INSTRUCTIONS: "gen_ai.system_instructions",
+  USAGE_INPUT_TOKENS: "gen_ai.usage.input_tokens",
+  USAGE_OUTPUT_TOKENS: "gen_ai.usage.output_tokens",
+  AGENT_NAME: "gen_ai.agent.name",
+  TOOL_NAME: "gen_ai.tool.name",
+  TOOL_DESCRIPTION: "gen_ai.tool.description",
+  TOOL_CALL_ARGUMENTS: "gen_ai.tool.call.arguments",
+  TOOL_CALL_RESULT: "gen_ai.tool.call.result",
+  CONVERSATION_ID: "gen_ai.conversation.id",
+  RETRIEVAL_QUERY_TEXT: "gen_ai.retrieval.query.text",
+  RETRIEVAL_DOCUMENTS: "gen_ai.retrieval.documents",
+} as const;

@@ -31,7 +31,6 @@
   },
   "environment": "testing",
   "threadId": "conv_123",
-  "userId": "user_001",
   "input": {
     "query": "AI search"
   },

@@ -181,6 +181,7 @@
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/core": "^2.2.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.207.0",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.211.0",
     "@opentelemetry/resources": "^2.2.0",
@@ -190,11 +191,12 @@
     "axios": "^1.6.0",
     "cli-progress": "^3.12.0",
     "commander": "^14.0.3",
+    "confident-trace": "^0.1.0-alpha.15",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "nunjucks": "^3.2.4",
     "open": "^9.1.0",
-    "openai": "^6.7.0",
+    "openai": "^6.8.1",
     "ora": "^6.3.0",
     "papaparse": "^5.5.3",
     "posthog-node": "^5.10.3",
@@ -202,19 +204,19 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@ai-sdk/openai": "^3.0.30",
+    "@ai-sdk/openai": "^4.0.60",
+    "@ai-sdk/otel": "^1.0.93",
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
     "@babel/preset-typescript": "^7.29.7",
     "@eslint/js": "^9.38.0",
     "@google/genai": "^2.8.0",
     "@jest/globals": "^29.5.0",
-    "@langchain/core": "1.1.31",
+    "@langchain/core": "^1.2.9",
     "@langchain/openai": "^1.2.9",
-    "@mastra/core": "^1.51.0",
-    "@mastra/observability": "^1.16.1",
-    "@openai/agents": "^0.5.4",
-    "@opentelemetry/core": "^2.6.0",
+    "@mastra/core": "^1.64.0",
+    "@mastra/observability": "^1.17.5",
+    "@openai/agents": "^0.17.0",
     "@types/cli-progress": "^3.11.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.17.30",
@@ -222,7 +224,7 @@
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19.2.18",
     "@types/uuid": "^9.0.0",
-    "ai": "^6.0.97",
+    "ai": "^7.0.93",
     "babel-jest": "^29.7.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
@@ -247,12 +249,12 @@
     "@anthropic-ai/sdk": ">=0.30.0",
     "@aws-sdk/client-bedrock-runtime": ">=3.0.0",
     "@google/genai": ">=1.0.0",
-    "@langchain/core": "1.1.31",
-    "@mastra/core": ">=1.16.0-0 <2.0.0-0",
-    "@mastra/observability": ">=1.16.0-0 <2.0.0-0",
-    "@openai/agents": "^0.5.4",
+    "@langchain/core": ">=1.2.9 <2",
+    "@mastra/core": ">=1.64.0 <2.0.0-0",
+    "@mastra/observability": ">=1.17.5 <2.0.0-0",
+    "@openai/agents": ">=0.17.0 <0.18.0",
     "@typesafe-ai/sdk": ">=0.6.0",
-    "ai": ">=5.0.0",
+    "ai": ">=7.0.93 <8",
     "ollama": ">=0.5.0",
     "vitest": ">=1.0.0"
   },
@@ -294,5 +296,8 @@
   "optionalDependencies": {
     "ink": "^7.1.1",
     "react": "^19.2.8"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

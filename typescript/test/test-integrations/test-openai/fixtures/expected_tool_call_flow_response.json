@@ -1,14 +1,14 @@
 {
-  "uuid": "b0323e83-220a-452c-b23b-b54ff50eeb55",
+  "uuid": "60163368-6205-44cf-bcdb-70071ae55344",
   "baseSpans": [
     {
-      "uuid": "002a0946-3edf-49c3-9bfd-c5ffea386549",
+      "uuid": "3c783a4e-2287-4419-bdcf-956b0f0b77cf",
       "name": "run_main_response",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "b0323e83-220a-452c-b23b-b54ff50eeb55",
-      "startTime": "2026-05-18T06:25:41.625Z",
-      "endTime": "2026-05-18T06:26:00.565Z",
+      "traceUuid": "60163368-6205-44cf-bcdb-70071ae55344",
+      "startTime": "2026-10-21T20:45:02.840Z",
+      "endTime": "2026-10-21T20:45:05.544Z",
       "input": {
         "args": []
       }
@@ -17,262 +17,84 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "b547fbfc-278e-4725-a128-46e6f0291e0b",
-      "name": "create",
+      "uuid": "15a8080d3404d128",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "b0323e83-220a-452c-b23b-b54ff50eeb55",
-      "parentUuid": "002a0946-3edf-49c3-9bfd-c5ffea386549",
-      "startTime": "2026-05-18T06:25:41.625Z",
-      "endTime": "2026-05-18T06:25:43.541Z",
-      "input": {
-        "args": [
-          {
-            "model": "gpt-4o-mini",
-            "instructions": "You are a helpful assistant. Use tools when they are needed to get accurate data.",
-            "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
-            "tools": [
-              {
-                "type": "function",
-                "name": "get_weather",
-                "description": "Get the current weather for a city.",
-                "parameters": {
-                  "type": "object",
-                  "properties": {
-                    "location": {
-                      "type": "string",
-                      "description": "City name, e.g. 'San Francisco'"
-                    },
-                    "unit": {
-                      "type": "string",
-                      "enum": [
-                        "c",
-                        "f"
-                      ],
-                      "description": "Temperature unit"
-                    }
-                  },
-                  "required": [
-                    "location"
-                  ],
-                  "additionalProperties": false
-                }
-              }
-            ],
-            "temperature": 0
-          }
-        ]
-      },
-      "output": {
-        "id": "resp_08498d760ba23540006a0ab0e6c520819f8fefaeb69132d196",
-        "object": "response",
-        "created_at": 1779085542,
-        "status": "completed",
-        "background": false,
-        "billing": {
-          "payer": "developer"
+      "traceUuid": "60163368-6205-44cf-bcdb-70071ae55344",
+      "parentUuid": "3c783a4e-2287-4419-bdcf-956b0f0b77cf",
+      "startTime": "2026-10-21T20:45:02.845Z",
+      "endTime": "2026-10-21T20:45:04.010Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Use tools when they are needed to get accurate data."
         },
-        "completed_at": 1779085543,
-        "error": null,
-        "frequency_penalty": 0,
-        "incomplete_details": null,
-        "instructions": "You are a helpful assistant. Use tools when they are needed to get accurate data.",
-        "max_output_tokens": null,
-        "max_tool_calls": null,
-        "model": "gpt-4o-mini-2024-07-18",
-        "moderation": null,
-        "output": [
-          {
-            "id": "fc_08498d760ba23540006a0ab0e7383c819fa558202f66a278cf",
-            "type": "function_call",
-            "status": "completed",
-            "arguments": "{\"location\":\"San Francisco\",\"unit\":\"c\"}",
-            "call_id": "call_2wDNngSZnGBnCs9uM1wHPa2K",
-            "name": "get_weather"
-          }
-        ],
-        "parallel_tool_calls": true,
-        "presence_penalty": 0,
-        "previous_response_id": null,
-        "prompt_cache_key": null,
-        "prompt_cache_retention": "in_memory",
-        "reasoning": {
-          "effort": null,
-          "summary": null
-        },
-        "safety_identifier": null,
-        "service_tier": "default",
-        "store": true,
-        "temperature": 0,
-        "text": {
-          "format": {
-            "type": "text"
-          },
-          "verbosity": "medium"
-        },
-        "tool_choice": "auto",
-        "tools": [
-          {
-            "type": "function",
-            "description": "Get the current weather for a city.",
+        {
+          "role": "user",
+          "content": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather."
+        }
+      ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "parameters": {
-              "type": "object",
-              "properties": {
-                "location": {
-                  "type": "string",
-                  "description": "City name, e.g. 'San Francisco'"
-                },
-                "unit": {
-                  "type": "string",
-                  "enum": [
-                    "c",
-                    "f"
-                  ],
-                  "description": "Temperature unit"
-                }
-              },
-              "required": [
-                "location",
-                "unit"
-              ],
-              "additionalProperties": false
-            },
-            "strict": true
+            "id": "call_5fw6gknAWxkmLAwGKsSQIgtn",
+            "arguments": "{\"location\":\"San Francisco\",\"unit\":\"c\"}"
           }
-        ],
-        "top_logprobs": 0,
-        "top_p": 1,
-        "truncation": "disabled",
-        "usage": {
-          "input_tokens": 106,
-          "input_tokens_details": {
-            "cached_tokens": 0
-          },
-          "output_tokens": 20,
-          "output_tokens_details": {
-            "reasoning_tokens": 0
-          },
-          "total_tokens": 126
-        },
-        "user": null,
-        "metadata": {},
-        "output_text": ""
-      },
-      "model": "gpt-4o-mini"
+        }
+      ],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 106,
+      "outputTokenCount": 20
     },
     {
-      "uuid": "735db39d-a67a-41fb-8ccc-875fc8193b19",
-      "name": "create",
+      "uuid": "4167b5dda6feb633",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "b0323e83-220a-452c-b23b-b54ff50eeb55",
-      "parentUuid": "002a0946-3edf-49c3-9bfd-c5ffea386549",
-      "startTime": "2026-05-18T06:25:43.541Z",
-      "endTime": "2026-05-18T06:26:00.565Z",
-      "input": {
-        "args": [
-          {
-            "model": "gpt-4o-mini",
-            "previous_response_id": "resp_08498d760ba23540006a0ab0e6c520819f8fefaeb69132d196",
-            "input": [
-              {
-                "type": "function_call_output",
-                "call_id": "call_2wDNngSZnGBnCs9uM1wHPa2K",
-                "output": "{\"location\":\"San Francisco\",\"temperature\":18,\"unit\":\"C\",\"condition\":\"partly cloudy\"}"
-              }
-            ],
-            "temperature": 0
+      "traceUuid": "60163368-6205-44cf-bcdb-70071ae55344",
+      "parentUuid": "3c783a4e-2287-4419-bdcf-956b0f0b77cf",
+      "startTime": "2026-10-21T20:45:04.012Z",
+      "endTime": "2026-10-21T20:45:05.543Z",
+      "input": [
+        {
+          "role": "tool",
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_5fw6gknAWxkmLAwGKsSQIgtn",
+            "response": "{\"location\":\"San Francisco\",\"temperature\":18,\"unit\":\"C\",\"condition\":\"partly cloudy\"}"
           }
-        ]
-      },
-      "output": {
-        "id": "resp_08498d760ba23540006a0ab0e7e938819fa4c7a218640d4c75",
-        "object": "response",
-        "created_at": 1779085543,
-        "status": "completed",
-        "background": false,
-        "billing": {
-          "payer": "developer"
-        },
-        "completed_at": 1779085560,
-        "error": null,
-        "frequency_penalty": 0,
-        "incomplete_details": null,
-        "instructions": null,
-        "max_output_tokens": null,
-        "max_tool_calls": null,
-        "model": "gpt-4o-mini-2024-07-18",
-        "moderation": null,
-        "output": [
-          {
-            "id": "msg_08498d760ba23540006a0ab0f7d27c819fbda81f21662016fe",
-            "type": "message",
-            "status": "completed",
-            "content": [
-              {
-                "type": "output_text",
-                "annotations": [],
-                "logprobs": [],
-                "text": "The weather in San Francisco is currently 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!"
-              }
-            ],
-            "role": "assistant"
-          }
-        ],
-        "parallel_tool_calls": true,
-        "presence_penalty": 0,
-        "previous_response_id": "resp_08498d760ba23540006a0ab0e6c520819f8fefaeb69132d196",
-        "prompt_cache_key": null,
-        "prompt_cache_retention": "in_memory",
-        "reasoning": {
-          "effort": null,
-          "summary": null
-        },
-        "safety_identifier": null,
-        "service_tier": "default",
-        "store": true,
-        "temperature": 0,
-        "text": {
-          "format": {
-            "type": "text"
-          },
-          "verbosity": "medium"
-        },
-        "tool_choice": "auto",
-        "tools": [],
-        "top_logprobs": 0,
-        "top_p": 1,
-        "truncation": "disabled",
-        "usage": {
-          "input_tokens": 78,
-          "input_tokens_details": {
-            "cached_tokens": 0
-          },
-          "output_tokens": 35,
-          "output_tokens_details": {
-            "reasoning_tokens": 0
-          },
-          "total_tokens": 113
-        },
-        "user": null,
-        "metadata": {},
-        "output_text": "The weather in San Francisco is currently 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!"
-      },
-      "model": "gpt-4o-mini"
+        }
+      ],
+      "output": "The weather in San Francisco is currently 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
+      "model": "gpt-4o-mini-2024-07-18",
+      "inputTokenCount": 78,
+      "outputTokenCount": 35
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "1757cfb9-89b2-4aa5-8007-65f621794c7d",
+      "uuid": "08222981-6a36-412e-b84e-98d03231802d",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "b0323e83-220a-452c-b23b-b54ff50eeb55",
-      "parentUuid": "002a0946-3edf-49c3-9bfd-c5ffea386549",
-      "startTime": "2026-05-18T06:25:43.541Z",
-      "endTime": "2026-05-18T06:25:43.541Z",
+      "traceUuid": "60163368-6205-44cf-bcdb-70071ae55344",
+      "parentUuid": "3c783a4e-2287-4419-bdcf-956b0f0b77cf",
+      "startTime": "2026-10-21T20:45:04.012Z",
+      "endTime": "2026-10-21T20:45:04.012Z",
       "input": {
         "args": [
           "San Francisco",
@@ -287,8 +109,10 @@
       }
     }
   ],
-  "startTime": "2026-05-18T06:25:41.625Z",
-  "endTime": "2026-05-18T06:26:00.565Z",
+  "startTime": "2026-10-21T20:45:02.841Z",
+  "endTime": "2026-10-21T20:45:05.544Z",
   "environment": "testing",
+  "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
+  "output": "The weather in San Francisco is currently 18°C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
   "status": "SUCCESS"
 }

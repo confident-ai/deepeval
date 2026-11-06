@@ -757,48 +757,7 @@ Get an [API key from Confident AI](https://cloud.confident-ai.com) and set it in
 CONFIDENT_API_KEY="confident_us..."
 ```
 
-Then add a "metric collection" to your trace:
-
-<Switch>
-
-<Case id="python">
-
-```python
-from deepeval.tracing import observe, update_current_trace
-
-@observe()
-def ai_agent(input: str) -> str:
-    output = "Your AI agent output"
-    update_current_trace(metric_collection="My Online Evals",)
-    return output
-```
-
-</Case>
-
-<Case id="typescript">
-
-```typescript
-import { observe, updateCurrentTrace } from "deepeval/tracing";
-
-const aiAgent = observe({
-  type: "agent",
-  fn: async (input: string): Promise<string> => {
-    const output = "Your AI agent output";
-    updateCurrentTrace({ metricCollection: "My Online Evals" });
-    return output;
-  },
-});
-```
-
-</Case>
-
-</Switch>
-
-✅ Done. Every trace your AI agent produces will now be evaluated, and failing traces will show up on Confident AI.
-
-:::tip
-To learn more on what a "metric collection" is, see the [docs on Confident AI.](https://www.confident-ai.com/docs/llm-tracing/quickstart)
-:::
+✅ Done. Every trace your AI agent produces will now be sent to Confident AI, and failing traces will show up there.
 
 `deepeval`'s LLM tracing implementation is **non-instrusive**, meaning it will not affect any part of your code.
 

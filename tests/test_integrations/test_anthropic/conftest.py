@@ -1,14 +1,9 @@
 import pytest
 
+from tests.test_integrations.utils import confident_trace_instrumentation
+
 
 @pytest.fixture(scope="function", autouse=True)
 def _setup_anthropic_instrumentation():
-    from deepeval.anthropic.patch import (
-        # patch_anthropic_classes,
-        # unpatch_anthropic_classes,
-        _ANTHROPIC_PATCHED,
-    )
-
-    # patch_anthropic_classes()
-    # yield
-    # unpatch_anthropic_classes()
+    with confident_trace_instrumentation("anthropic"):
+        yield

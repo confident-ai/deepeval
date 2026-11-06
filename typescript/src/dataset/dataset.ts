@@ -1187,8 +1187,7 @@ export class EvaluationDataset {
             _datasetId: traceGolden._datasetId,
             _datasetRank: traceGolden._datasetRank,
           });
-          const { confidentApiKey: _omit, ...traceApi } =
-            traceManager.createTraceApi(primary);
+          const traceApi = traceManager.createTraceApi(primary);
           allCases.push({
             testCase,
             metricsData: primary.metricsData ?? [],

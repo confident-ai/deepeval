@@ -1,142 +1,99 @@
 {
-  "uuid": "trace_6194759dcd9d439aa5d289353b36ce52",
-  "baseSpans": [],
+  "uuid": "d12e28953b83939394d9f61122eee238",
+  "baseSpans": [
+    {
+      "uuid": "dfb6db1169988f6d",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e96d4295971c814e",
+      "startTime": "2026-10-21T16:56:00.724Z",
+      "endTime": "2026-10-21T16:56:01.848Z",
+      "integration": "OpenAI Agents"
+    },
+    {
+      "uuid": "a15cbfe41516fae8",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "146febc8a8c42eb2",
+      "startTime": "2026-10-21T16:56:00.727Z",
+      "endTime": "2026-10-21T16:56:01.846Z",
+      "integration": "OpenAI Agents"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "a0dab822-b4f2-4ba6-8863-5b79a3039c87",
+      "uuid": "e96d4295971c814e",
+      "name": "openai_agents_session",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-21T16:56:00.723Z",
+      "endTime": "2026-10-21T16:56:01.848Z",
+      "input": "What is my name?",
+      "output": "Your name is Bob.",
+      "integration": "OpenAI Agents",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "146febc8a8c42eb2",
       "name": "SessionAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:38:42.805Z",
-      "endTime": "2026-01-29T14:38:43.507Z",
-      "metadata": {
-        "output_type": "str"
-      },
-      "input": [
-        {
-          "content": "My name is Bob",
-          "role": "user"
-        },
-        {
-          "id": "msg_06b914366bbdc48200697b70f282a4819fbef77b01c9fec003",
-          "content": [
-            {
-              "annotations": [],
-              "text": "Got it, Bob! How can I assist you today?",
-              "type": "output_text",
-              "logprobs": []
-            }
-          ],
-          "role": "assistant",
-          "status": "completed",
-          "type": "message"
-        },
-        {
-          "content": "What is my name?",
-          "role": "user"
-        }
-      ],
+      "parentUuid": "dfb6db1169988f6d",
+      "startTime": "2026-10-21T16:56:00.727Z",
+      "endTime": "2026-10-21T16:56:01.847Z",
+      "input": "What is my name?",
       "output": "Your name is Bob.",
+      "integration": "OpenAI Agents",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "OpenAI Agents"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "b2136f1c-3faa-425b-8d60-57cf532b7102",
-      "name": "LLM Generation",
+      "uuid": "3c69c7fa9ff26e7e",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "a0dab822-b4f2-4ba6-8863-5b79a3039c87",
-      "startTime": "2026-01-29T14:38:42.805Z",
-      "endTime": "2026-01-29T14:38:43.506Z",
-      "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0,
-        "invocation_params": {
-          "parallel_tool_calls": true,
-          "temperature": 0.0,
-          "tool_choice": "auto",
-          "tools": [],
-          "top_p": 1.0,
-          "reasoning": {},
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "truncation": "disabled"
-        }
-      },
+      "parentUuid": "a15cbfe41516fae8",
+      "startTime": "2026-10-21T16:56:00.729Z",
+      "endTime": "2026-10-21T16:56:01.844Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "Remember the user's name."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "My name is Bob"
         },
         {
           "role": "assistant",
-          "content": [
-            {
-              "type": "text",
-              "text": "Got it, Bob! How can I assist you today?"
-            }
-          ]
+          "content": "Nice to meet you, Bob! How can I assist you today?"
         },
         {
-          "type": "message",
           "role": "user",
           "content": "What is my name?"
         }
       ],
       "output": "Your name is Bob.",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 45.0,
-      "outputTokenCount": 6.0,
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 47.0,
+      "outputTokenCount": 6.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T14:38:42.804Z",
-  "endTime": "2026-01-29T14:38:43.508Z",
+  "startTime": "2026-10-21T16:56:00.723Z",
+  "endTime": "2026-10-21T16:56:01.848Z",
   "name": "openai_agents_session",
   "environment": "development",
   "threadId": "sync_sess_1",
-  "input": [
-    {
-      "type": "message",
-      "role": "system",
-      "content": "Remember the user's name."
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "My name is Bob"
-    },
-    {
-      "role": "assistant",
-      "content": [
-        {
-          "type": "text",
-          "text": "Got it, Bob! How can I assist you today?"
-        }
-      ]
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "What is my name?"
-    }
-  ],
+  "input": "What is my name?",
   "output": "Your name is Bob.",
   "status": "SUCCESS"
 }
