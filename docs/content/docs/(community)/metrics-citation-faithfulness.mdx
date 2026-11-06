@@ -70,6 +70,7 @@ There are nine optional parameters when creating a `CitationFaithfulnessMetric`:
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `0` for perfection, `1` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `require_citations`: a boolean which when set to `True`, fails (score `0.0`) any `actual_output` that contains no `[N]` citation markers, without calling the judge. Useful when every answer must be grounded with citations, as in compliance or RFP workflows. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.

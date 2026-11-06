@@ -1,3 +1,4 @@
+import re
 from typing import List, Optional, Union
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
@@ -53,6 +54,8 @@ class CitationFaithfulnessMetric(BaseMetric):
     to the matching passage.
     """
 
+    _CITATION_MARKER = re.compile(r"\[\s*\d+(?:\s*[,;]\s*\d+)*\s*\]")
+
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
         SingleTurnParams.ACTUAL_OUTPUT,
@@ -72,6 +75,7 @@ class CitationFaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        require_citations: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.eval_mode = resolve_eval_mode(eval_mode)
@@ -89,6 +93,7 @@ class CitationFaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.require_citations = require_citations
 
     def measure(
         self,
@@ -100,6 +105,8 @@ class CitationFaithfulnessMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
+            if self._fail_if_uncited(test_case):
+                return self.score
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
@@ -140,6 +147,8 @@ class CitationFaithfulnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self._fail_if_uncited(test_case):
+                return self.score
             if await a_run_system_one_eval(self, test_case):
                 return self._round_system_one_score()
 
@@ -155,6 +164,32 @@ class CitationFaithfulnessMetric(BaseMetric):
                 ],
             )
             return self.score
+
+    def _fail_if_uncited(self, test_case: LLMTestCase) -> bool:
+        """With ``require_citations``, an answer with no ``[N]`` markers fails
+        deterministically, without a judge call."""
+        if not self.require_citations or self._CITATION_MARKER.search(
+            test_case.actual_output or ""
+        ):
+            return False
+        self.verdict = CitationFaithfulnessVerdict(
+            verdict="unfaithful",
+            reasoning=(
+                "actual_output contains no [N] citation markers, and "
+                "require_citations=True."
+            ),
+        )
+        self.score = 0.0
+        self.reason = self._generate_reason()
+        self.success = self.is_successful()
+        self.verbose_logs = construct_verbose_logs(
+            self,
+            steps=[
+                "No [N] citation markers found in actual_output.",
+                f"Score: {self.score}\nReason: {self.reason}",
+            ],
+        )
+        return True
 
     def _build_prompt(self, test_case: LLMTestCase) -> str:
         numbered_passages = CitationFaithfulnessTemplate.number_passages(

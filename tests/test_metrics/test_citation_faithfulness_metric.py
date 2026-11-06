@@ -108,3 +108,67 @@ def test_async_measure_matches_sync():
 
     assert metric.score == 0.0
     assert metric.is_successful() is False
+
+
+class ExplodingJudge(FakeJudge):
+    """Fails the test if the judge is called."""
+
+    def __init__(self):
+        super().__init__(
+            CitationFaithfulnessVerdict(verdict="faithful", reasoning="")
+        )
+
+    def generate(self, *args, **kwargs):
+        raise AssertionError("judge should not be called")
+
+    async def a_generate(self, *args, **kwargs):
+        raise AssertionError("judge should not be called")
+
+
+UNCITED = LLMTestCase(
+    input=QUERY,
+    actual_output="The Eiffel Tower is 330 metres tall and was completed in 1889.",
+    retrieval_context=RETRIEVAL_CONTEXT,
+)
+
+
+def test_require_citations_fails_uncited_answer_without_judge_sync():
+    metric = CitationFaithfulnessMetric(
+        model=ExplodingJudge(), async_mode=False, require_citations=True
+    )
+    assert metric.measure(UNCITED) == 0.0
+    assert metric.is_successful() is False
+    assert "no [N] citation markers" in metric.reason
+
+
+def test_require_citations_fails_uncited_answer_without_judge_async():
+    metric = CitationFaithfulnessMetric(
+        model=ExplodingJudge(), async_mode=True, require_citations=True
+    )
+    assert metric.measure(UNCITED) == 0.0
+    assert metric.is_successful() is False
+
+
+def test_uncited_answer_still_judged_by_default():
+    judge = FakeJudge(
+        CitationFaithfulnessVerdict(verdict="faithful", reasoning="ok")
+    )
+    metric = CitationFaithfulnessMetric(model=judge, async_mode=False)
+    assert metric.measure(UNCITED) == 1.0
+    assert judge.last_prompt is not None
+
+
+def test_require_citations_lets_cited_answer_reach_judge():
+    judge = FakeJudge(
+        CitationFaithfulnessVerdict(verdict="faithful", reasoning="ok")
+    )
+    metric = CitationFaithfulnessMetric(
+        model=judge, async_mode=False, require_citations=True
+    )
+    test_case = LLMTestCase(
+        input=QUERY,
+        actual_output="It is 330 metres tall [1] and was completed in 1889 [1, 2].",
+        retrieval_context=RETRIEVAL_CONTEXT,
+    )
+    assert metric.measure(test_case) == 1.0
+    assert judge.last_prompt is not None
