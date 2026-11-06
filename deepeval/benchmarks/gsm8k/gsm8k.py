@@ -9,6 +9,7 @@ from deepeval.benchmarks.base_benchmark import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
 from deepeval.benchmarks.schema import NumberSchema
+from deepeval.benchmarks.utils import should_use_batch
 from deepeval.telemetry import capture_benchmark_run
 
 
@@ -43,7 +44,11 @@ class GSM8K(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, *args, **kwargs
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: Union[int, None] = None,
+        **kwargs,
     ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
@@ -51,29 +56,59 @@ class GSM8K(DeepEvalBaseBenchmark):
             overall_correct_predictions = 0
             overall_total_predictions = self.n_problems
             predictions_row = []
+            use_batch = should_use_batch(model, batch_size)
 
             # Solving each problem
             goldens = self.load_benchmark_dataset()[: self.n_problems]
-            for idx, golden in enumerate(
-                tqdm(goldens, desc=f"Processing {self.n_problems} problems")
-            ):
-                result = self.predict(model, golden)
-                prediction = result["prediction"]
-                score = result["score"]
 
-                if score:
-                    overall_correct_predictions += 1
-                predictions_row.append(
-                    (golden.input, prediction, golden.expected_output, score)
-                )
-                if self.verbose_mode:
-                    self.print_verbose_logs(
-                        idx,
-                        golden.input,
-                        golden.expected_output,
-                        prediction,
-                        score,
+            if use_batch:
+                for i in tqdm(
+                    range(0, len(goldens), batch_size),
+                    desc=f"Batch Processing {self.n_problems} problems (batch_size={batch_size})",
+                ):
+                    goldens_batch = goldens[i : i + batch_size]
+                    batch_predictions = self.batch_predict(model, goldens_batch)
+                    for golden, prediction_dict in zip(
+                        goldens_batch, batch_predictions
+                    ):
+                        prediction = prediction_dict["prediction"]
+                        score = prediction_dict["score"]
+                        if score:
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
+                        )
+            else:
+                for idx, golden in enumerate(
+                    tqdm(goldens, desc=f"Processing {self.n_problems} problems")
+                ):
+                    result = self.predict(model, golden)
+                    prediction = result["prediction"]
+                    score = result["score"]
+
+                    if score:
+                        overall_correct_predictions += 1
+                    predictions_row.append(
+                        (
+                            golden.input,
+                            prediction,
+                            golden.expected_output,
+                            score,
+                        )
                     )
+                    if self.verbose_mode:
+                        self.print_verbose_logs(
+                            idx,
+                            golden.input,
+                            golden.expected_output,
+                            prediction,
+                            score,
+                        )
 
             # Calculate overall accuracy
             overall_accuracy = (
@@ -126,6 +161,58 @@ class GSM8K(DeepEvalBaseBenchmark):
         )
 
         return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self, model: DeepEvalBaseLLM, goldens: List[Golden]
+    ) -> List[Dict]:
+        assert (
+            self.shots_dataset != None
+        ), "Example dataset is empty. Call load_benchmark."
+
+        prompts = []
+        for golden in goldens:
+            prompt = GSM8KTemplate.generate_output(
+                train_set=self.shots_dataset,
+                input=golden.input,
+                n_shots=self.n_shots,
+                enable_cot=self.enable_cot,
+            )
+            prompts.append(prompt)
+
+        try:
+            responses = model.batch_generate(
+                prompts=prompts, schemas=[NumberSchema for _ in prompts]
+            )
+            if not isinstance(responses, list):
+                raise TypeError(
+                    "batch_generate must return a list of responses"
+                )
+            predictions = [
+                self._extract_prediction_from_response(res) for res in responses
+            ]
+        except (TypeError, AttributeError):
+            prompts = [
+                prompt + f"\n\n{self.confinement_instructions}"
+                for prompt in prompts
+            ]
+            responses = model.batch_generate(prompts)
+            predictions = [
+                self._extract_prediction_from_response(res) for res in responses
+            ]
+
+        if len(predictions) != len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
+            )
+
+        res = []
+        for prediction, golden in zip(predictions, goldens):
+            score = self.scorer.exact_match_score(
+                golden.expected_output, prediction
+            )
+            res.append({"prediction": prediction, "score": score})
+
+        return res
 
     def _extract_prediction_from_response(self, res) -> str:
         """
