@@ -1,0 +1,36 @@
+[
+  {
+    "type": "score",
+    "question": "How well does the AI-generated [Image 1] in `actual_output` follow the text prompt in `input`?",
+    "levels": [
+      "Does not follow the prompt at all",
+      "Follows little of the prompt",
+      "Follows part of the prompt",
+      "Follows most of the prompt",
+      "Follows the prompt perfectly"
+    ],
+    "weight": 2
+  },
+  {
+    "type": "score",
+    "question": "How natural does [Image 1] look (sense of distance, shadows, lighting)?",
+    "levels": [
+      "Not natural at all",
+      "Mostly unnatural",
+      "Somewhat natural",
+      "Mostly natural",
+      "Completely natural"
+    ]
+  },
+  {
+    "type": "score",
+    "question": "How free is [Image 1] of artifacts (distortion, watermarks, scratches, blurred faces, unusual body parts, subjects that do not fit together)?",
+    "levels": [
+      "Large portions are distorted or broken",
+      "Many artifacts",
+      "Some artifacts",
+      "Few artifacts",
+      "No artifacts"
+    ]
+  }
+]

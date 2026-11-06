@@ -155,6 +155,20 @@ The `ImageReference` score is calculated as follows:
 
 <Equation formula="O = \frac{\sum_{i=1}^n R_i}{n}" />
 
+<Only id="python">
+
+### Drex-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes) with a System One model that reads images, such as [Nace's Drex Max](/integrations/models/nace#drex-max-as-a-multimodal-judge), the whole metric is one request over `actual_output` and its images, each referred to as `[Image N]`. It asks one question per image:
+
+| Question                                                                                                                                                                                     | Type  | Weight |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| How properly does the text in `actual_output` reference or explain [Image N]? (Not mentioned or referenced at all → Referenced explicitly, with completely proper placement and explanation) | Score | 1      |
+
+Each level maps onto $[0, 1]$, and the score is the weighted mean over the images. No LLM is called, and the reason is built from Drex's answers. Jev reads text only, so with Jev this metric stays on the LLM.
+
+</Only>
+
 ## FAQs
 
 <FAQs

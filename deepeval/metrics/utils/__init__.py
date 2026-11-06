@@ -51,6 +51,7 @@ from .system_one import (
     a_run_system_one_eval,
     format_system_one_reason,
     format_classification_reason,
+    system_one_reads,
 )
 from .metrics import (
     warn_score_direction_flipped,
@@ -75,6 +76,7 @@ from .models import (
     initialize_model,
     is_native_model,
     initialize_system_one_model,
+    initialize_image_system_one_model,
     should_use_azure_openai_embedding,
     should_use_local_embedding,
     should_use_ollama_embedding,
@@ -141,6 +143,7 @@ __all__ = [
     "compact_trace",
     "parse_questions",
     "run_system_one_eval",
+    "system_one_reads",
     "a_run_system_one_eval",
     "format_system_one_reason",
     "format_classification_reason",
@@ -166,6 +169,7 @@ __all__ = [
     "initialize_model",
     "is_native_model",
     "initialize_system_one_model",
+    "initialize_image_system_one_model",
     "should_use_azure_openai_embedding",
     "should_use_local_embedding",
     "should_use_ollama_embedding",

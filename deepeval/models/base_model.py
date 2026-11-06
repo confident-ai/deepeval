@@ -209,6 +209,27 @@ class DeepEvalBaseSystemOneModel(ABC):
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name
 
+    def supports_images(self) -> bool:
+        """Whether ``decide`` / ``a_decide`` also take ``images=``: a list of
+        ``MLLMImage`` the state and questions refer to as "Image 1",
+        "Image 2", ... in list order. Metrics only send a multimodal test case
+        to a model that does."""
+        return False
+
+    def check_budget(
+        self,
+        state: Any,
+        questions: Dict[str, "SystemOneQuestion"],
+        images: Optional[List[Any]] = None,
+    ) -> None:
+        """Raise ``SystemOneContextLimitError`` if the request will not fit in
+        one call. Metrics check before sending so an oversized test case gets
+        a clear error (or, under ``hybrid``, the LLM) rather than a 4xx. The
+        default is Jev's budget; a model with other limits overrides it."""
+        from deepeval.models.system_one.limits import check_context_budget
+
+        check_context_budget(state, questions)
+
     def noul(
         self, state: Any, questions: Dict[str, "NoulQuestion"]
     ) -> Tuple[Dict[str, "NoulAnswer"], Optional[float]]:

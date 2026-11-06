@@ -107,3 +107,50 @@ def resolve_classifier_eval_mode(
     `llm`, silently."""
     mode = resolve_eval_mode(override)
     return EvalMode.LLM if mode is EvalMode.HYBRID else mode
+
+
+###############################################
+# Decision provider
+###############################################
+#
+# Which System One model `hybrid` and `system_one` build when a metric is not
+# handed one: TypeSafe AI's Jev (`typesafe`, the default, so an existing setup
+# sees no change) or Nace's Drex (`nace`). Set by `deepeval set-typesafe` /
+# `deepeval set-nace`; an explicit `system_one_model=` on a metric wins.
+
+DECISION_PROVIDER_ENV_VAR = "DEEPEVAL_DECISION_PROVIDER"
+
+
+class DecisionProvider(str, Enum):
+    TYPESAFE = "typesafe"
+    NACE = "nace"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+DEFAULT_DECISION_PROVIDER = DecisionProvider.TYPESAFE
+
+
+def normalize_decision_provider(
+    value: Optional[str],
+) -> Optional[DecisionProvider]:
+    """The `DecisionProvider` for a raw value, or `None` if it is unset,
+    blank or unrecognised (case-insensitive, whitespace ignored)."""
+    if value is None:
+        return None
+    if isinstance(value, DecisionProvider):
+        return value
+    try:
+        return DecisionProvider(str(value).strip().lower())
+    except ValueError:
+        return None
+
+
+def resolve_decision_provider() -> DecisionProvider:
+    from deepeval.config.settings import get_settings
+
+    configured = normalize_decision_provider(
+        get_settings().DEEPEVAL_DECISION_PROVIDER
+    )
+    return configured if configured is not None else DEFAULT_DECISION_PROVIDER

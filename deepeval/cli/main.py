@@ -294,22 +294,33 @@ def set_eval_mode_command(
 
     handled, path, updates = edit_ctx.result
 
+    from deepeval.config.eval_mode import (
+        DecisionProvider,
+        resolve_decision_provider,
+    )
+
+    if resolve_decision_provider() is DecisionProvider.NACE:
+        judge = "Drex"
+        key_hint = "NACE_API_KEY is set (`deepeval set-nace`)"
+    else:
+        judge = "Jev"
+        key_hint = "TYPESAFE_API_KEY is set (`deepeval set-typesafe`)"
     if mode == EvalModes.SYSTEM_ONE:
         success_msg = (
             ":brain: Eval mode is now `system_one`: built-in metrics and "
-            "classifiers are decided entirely by your System One model (Jev) "
-            "in one request, with no LLM and no fallback (DAG metrics run as "
-            "`hybrid`, since their task nodes need the LLM). Make sure "
-            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
-            "`deepeval set-eval-mode llm` to switch back."
+            f"classifiers are decided entirely by your System One model "
+            f"({judge}) in one request, with no LLM and no fallback (DAG "
+            "metrics run as `hybrid`, since their task nodes need the LLM). "
+            f"Make sure {key_hint}; run `deepeval set-eval-mode llm` to "
+            "switch back."
         )
     elif mode == EvalModes.HYBRID:
         success_msg = (
             ":test_tube: Eval mode is now `hybrid`: the LLM extracts and "
-            "explains, your System One model (Jev) takes the decision points, "
-            "and the LLM covers any decision whose Jev call fails. Make sure "
-            "TYPESAFE_API_KEY is set (`deepeval set-typesafe`); run "
-            "`deepeval set-eval-mode llm` to switch back."
+            f"explains, your System One model ({judge}) takes the decision "
+            f"points, and the LLM covers any decision whose {judge} call "
+            f"fails. Make sure {key_hint}; run `deepeval set-eval-mode llm` "
+            "to switch back."
         )
     else:
         success_msg = (

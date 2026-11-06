@@ -61,6 +61,7 @@ _PROVIDER_BY_CLASS = {
     "OpenRouterModel": "OpenRouter",
     "PortkeyModel": "Portkey",
     "TypeSafeModel": "TypeSafe AI",
+    "NaceModel": "Nace",
     "OpenAIEmbeddingModel": "OpenAI",
     "AzureOpenAIEmbeddingModel": "Azure OpenAI",
     "OllamaEmbeddingModel": "Ollama",
@@ -91,6 +92,7 @@ _RELEVANT_MARKERS = (
     "DEEPEVAL_LOCAL_STORE",
     "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
     "DEEPEVAL_EVAL_MODE",
+    "DEEPEVAL_DECISION_PROVIDER",
     "DEEPEVAL_VOICE_FOLDER",
     "DEEPEVAL_TTS_MODEL",
     "DEEPEVAL_STT_MODEL",
@@ -470,11 +472,21 @@ def _local_storage_section() -> Dict[str, Any]:
 
 def _eval_mode_section() -> Dict[str, Any]:
     """Which eval mode is in effect, always shown (even on defaults)."""
-    from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
+    from deepeval.config.eval_mode import (
+        DECISION_PROVIDER_ENV_VAR,
+        EVAL_MODE_ENV_VAR,
+        resolve_decision_provider,
+        resolve_eval_mode,
+    )
 
     return {
         "eval_mode": resolve_eval_mode().value,
         "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
+        or "built-in default",
+        "decision_provider": resolve_decision_provider().value,
+        "decision_provider_source": resolve_setting_source(
+            DECISION_PROVIDER_ENV_VAR
+        )
         or "built-in default",
     }
 
@@ -579,6 +591,11 @@ def diagnose_command(
         "Eval mode",
         f"[bold]{eval_mode['eval_mode']}[/bold] "
         f"[dim]({eval_mode['eval_mode_source']})[/dim]",
+    )
+    table.add_row(
+        "Decision provider",
+        f"[bold]{eval_mode['decision_provider']}[/bold] "
+        f"[dim]({eval_mode['decision_provider_source']})[/dim]",
     )
     console.print(table)
     console.print(

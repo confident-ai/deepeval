@@ -1,0 +1,13 @@
+[
+{% for k in range(1, image_count + 1) %}  {
+    "type": "score",
+    "question": "How coherent is [Image {{ k }}] with the text around it in `actual_output` (the text just above and below it)?",
+    "levels": [
+      "Not coherent with the text",
+      "Minimally coherent with the text",
+      "Somewhat coherent, but with elements unrelated to the text",
+      "Highly coherent with the text",
+      "Perfectly coherent: it corresponds with and enhances the text"
+    ]
+  }{% if not loop.last %},{% endif %}
+{% endfor %}]

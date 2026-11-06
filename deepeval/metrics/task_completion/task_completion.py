@@ -10,6 +10,7 @@ from deepeval.metrics.utils import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneScoreSpec,
     compact_trace,
     format_decision_reason,
@@ -277,7 +278,7 @@ class TaskCompletionMetric(BaseMetric):
         """`system_one` eval mode: the whole metric as one Jev request over
         the trace (or `input`, `actual_output` and `tools_called` when there
         is none); see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         has_trace = isinstance(test_case._trace_dict, Dict)
         task = self.task if self._is_task_provided else None

@@ -147,6 +147,22 @@ These scores assess aspects such as alignment with the prompt and resemblance to
 
 These scores evaluate the naturalness and absence of artifacts in the image. The minimum value among these sub-scores represents the PQ score. For the PQ evaluation, only the synthesized image is used to prevent confusion from the input conditions.
 
+<Only id="python">
+
+### Drex-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes) with a System One model that reads images, such as [Nace's Drex Max](/integrations/models/nace#drex-max-as-a-multimodal-judge), the whole metric is one request over the prompt in `input` and the generated image, with each image referred to as `[Image N]`. It asks:
+
+| Question                                                                                                                                                                                              | Type  | Weight |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| How well does the AI-generated [Image 1] in `actual_output` follow the text prompt in `input`? (Does not follow the prompt at all → Follows the prompt perfectly)                                     | Score | 2      |
+| How natural does [Image 1] look (sense of distance, shadows, lighting)? (Not natural at all → Completely natural)                                                                                     | Score | 1      |
+| How free is [Image 1] of artifacts (distortion, watermarks, scratches, blurred faces, unusual body parts, subjects that do not fit together)? (Large portions are distorted or broken → No artifacts) | Score | 1      |
+
+Each level maps onto $[0, 1]$, and the score is the weighted mean. No LLM is called, and the reason is built from Drex's answers. Jev reads text only, so with Jev this metric stays on the LLM.
+
+</Only>
+
 ## FAQs
 
 <FAQs

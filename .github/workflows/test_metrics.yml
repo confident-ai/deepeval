@@ -62,10 +62,10 @@ jobs:
         run: poetry install --no-interaction --only main
 
       #----------------------------------------------
-      #    Install Pillow for PIL and mcp[cli]
+      #    Install Pillow for PIL, mcp[cli] and the optional System One SDK
       #----------------------------------------------
       - name: Install metric dependencies
-        run: poetry run pip install Pillow mcp["cli"]
+        run: poetry run pip install Pillow mcp["cli"] nace-sdk
 
       #----------------------------------------------
       #              run test suite
