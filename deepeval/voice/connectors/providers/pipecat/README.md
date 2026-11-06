@@ -51,13 +51,13 @@ accumulates them and `bot-stopped-speaking` clears the buffer.
 | --- | --- | --- |
 | `WebsocketServerTransport` | Covered | [WebSocket server](https://docs.pipecat.ai/server/services/transport/websocket-server) |
 | `FastAPIWebsocketTransport` | Covered | [FastAPI WebSocket](https://docs.pipecat.ai/server/services/transport/fastapi-websocket) |
-| `ProtobufFrameSerializer` | Covered | [Serializers](https://docs.pipecat.ai/server/utilities/serializers/introduction) |
+| `ProtobufFrameSerializer` | Covered | [Serializers](https://docs.pipecat.ai/api-reference/server/services/serializers/introduction) |
 | `add_wav_header=True` on the transport | Covered | [WebSocket server](https://docs.pipecat.ai/server/services/transport/websocket-server) |
 | RTVI turn signals and bot transcripts | Covered | [RTVI](https://docs.pipecat.ai/server/frameworks/rtvi/introduction) |
 | `client-ready` handshake | Covered | [RTVI](https://docs.pipecat.ai/server/frameworks/rtvi/introduction) |
 | `bot-output` (the successor to `bot-transcription`) | Not covered | [RTVI messages](https://docs.pipecat.ai/client/js/api-reference/callbacks) |
 | Client-side function calls over `client-message` | Not covered | [RTVI](https://docs.pipecat.ai/server/frameworks/rtvi/introduction) |
-| `TwilioFrameSerializer`, `ExotelFrameSerializer`, and the other telephony dialects | Not covered | [Serializers](https://docs.pipecat.ai/server/utilities/serializers/introduction) |
+| `TwilioFrameSerializer`, `ExotelFrameSerializer`, and the other telephony dialects | Not covered | [Serializers](https://docs.pipecat.ai/api-reference/server/services/serializers/introduction) |
 | Daily, LiveKit, and the other WebRTC transports | Not covered here | [Transports](https://docs.pipecat.ai/server/services/transport/daily) |
 | SmallWebRTC transport | Not covered | [SmallWebRTC](https://docs.pipecat.ai/server/services/transport/small-webrtc) |
 
