@@ -8,11 +8,13 @@ languages: [python]
 DeepEval allows you to use any model supported by LiteLLM to run evals, either through the CLI or directly in Python.
 
 :::note
-Before getting started, make sure you have LiteLLM installed. It will not be installed automatically with DeepEval, you need to install it separately:
+Before getting started, make sure you have LiteLLM installed. It will not be installed automatically with DeepEval. Install it together with DeepEval through the `litellm` extra:
 
 ```bash
-pip install litellm
+pip install "deepeval[litellm]"
 ```
+
+You can also install it separately with `pip install litellm`.
 
 :::
 
