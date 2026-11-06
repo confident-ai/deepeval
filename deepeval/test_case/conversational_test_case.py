@@ -8,9 +8,8 @@ from pydantic import (
     model_validator,
     AliasChoices,
 )
-from typing import List, Optional, Dict, Literal, Tuple, Union
+from typing import List, Optional, Dict, Literal, Union
 from copy import deepcopy
-from dataclasses import dataclass
 from enum import Enum
 
 from deepeval.test_case.llm_test_case import (

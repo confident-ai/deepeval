@@ -224,8 +224,8 @@ def _make_hashable(obj):
     if obj is None:
         return None
     elif isinstance(obj, dict):
-        # Convert dict to tuple of sorted key-value pairs
-        return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
+        # Dict equality is order-independent, and keys need not be sortable.
+        return frozenset((k, _make_hashable(v)) for k, v in obj.items())
     elif isinstance(obj, (list, tuple)):
         # Convert list/tuple to tuple of hashable elements
         return tuple(_make_hashable(item) for item in obj)
