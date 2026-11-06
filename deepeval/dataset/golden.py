@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from pydantic import (
     AliasChoices,
     BaseModel,
+    ConfigDict,
     Field,
     PrivateAttr,
     model_validator,
 )
 from typing import Literal, Optional, Dict, List, Tuple
 from typing import Union
+from deepeval.models.base_model import DeepEvalBaseTTS
 from deepeval.test_case import (
     ToolCall,
     Turn,
@@ -23,6 +25,7 @@ from .expectations import Expectations
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
+LineQuality = Literal["wideband", "phone"]
 
 _INTERRUPTION_LEVELS = ("rare", "normal", "frequent")
 _OVERLAP_BEHAVIORS = ("yield", "adaptive", "insist")
@@ -87,6 +90,8 @@ class Persona(BaseModel):
     field below `metadata` is voice-only and is ignored by text simulations.
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     name: Optional[str] = Field(default=None)
     # The free-form persona prompt: demographics, personality, emotional arc,
     # speaking style, filler words — who the user is, never what they want.
@@ -101,6 +106,12 @@ class Persona(BaseModel):
 
     # --- voice only: audio ---
     voice: Optional[str] = Field(default=None)
+    # How the caller should sound, for TTS models that take instructions.
+    voice_instructions: Optional[str] = Field(default=None)
+    # Speaks through this model instead of the `VoiceConfig` one.
+    tts_model: Optional[DeepEvalBaseTTS] = Field(default=None, exclude=True)
+    # "phone" band-limits and μ-law encodes the caller like a phone call.
+    line_quality: LineQuality = Field(default="wideband")
     background_noise: Optional[BackgroundNoiseSettings] = Field(default=None)
     multilingual_stt: bool = Field(default=False)
     # Seconds of agent silence or hold music before the caller hangs up.
@@ -138,15 +149,34 @@ class Persona(BaseModel):
         body = "\n\n".join(section for section in sections if section)
         return f"<persona>\n{body}\n</persona>"
 
-    def tts_kwargs(self) -> Dict:
-        """Synthesis kwargs for this persona's voice.
+    def tts_kwargs(self, tts_model: Optional[DeepEvalBaseTTS] = None) -> Dict:
+        """Synthesis kwargs for this persona's voice on `tts_model`.
 
         `voice` is the only vocal knob declared on
         `DeepEvalBaseTTS.a_synthesize`, so it is the only one portable across
-        TTS implementations. Rate and delivery style belong on the TTS model's
-        own `generation_kwargs`.
+        TTS implementations. `voice_instructions` is passed as `instructions`
+        only to models that take it, and is ignored by the rest.
         """
-        return {} if self.voice is None else {"voice": self.voice}
+        kwargs: Dict = {} if self.voice is None else {"voice": self.voice}
+        if not self.voice_instructions:
+            return kwargs
+        if tts_model is not None and tts_model.supports_voice_instructions():
+            kwargs["instructions"] = self.voice_instructions
+        else:
+            warnings.warn(
+                "Persona `voice_instructions` are ignored: the TTS model does "
+                "not take instructions."
+            )
+        return kwargs
+
+    def caller_tts_model(self, tts_model: DeepEvalBaseTTS) -> DeepEvalBaseTTS:
+        """The TTS model this persona speaks through on one call."""
+        from deepeval.voice.phone_line import PhoneLineTTS
+
+        tts_model = self.tts_model or tts_model
+        if self.line_quality == "phone":
+            return PhoneLineTTS(tts_model)
+        return tts_model
 
 
 def resolve_persona(

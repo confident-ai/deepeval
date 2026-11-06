@@ -307,6 +307,10 @@ class DeepEvalBaseTTS(ABC):
     def supports_streaming(self) -> bool:
         return False
 
+    def supports_voice_instructions(self) -> bool:
+        """Whether `instructions` can steer how this model delivers speech."""
+        return False
+
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name

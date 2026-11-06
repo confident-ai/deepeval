@@ -266,7 +266,11 @@ async def test_the_caller_waits_for_the_agent_to_finish_its_turn():
 
     took = await asyncio.wait_for(
         simulator._take_agent_backlog(
-            _VoiceSession(connector=connector, persona=None),
+            _VoiceSession(
+                connector=connector,
+                persona=None,
+                tts_model=simulator._voice.tts_model,
+            ),
             turns,
             time.perf_counter(),
         ),
@@ -298,7 +302,11 @@ async def test_a_stale_end_signal_without_speech_is_dropped():
     turns = []
 
     took = await simulator._take_agent_backlog(
-        _VoiceSession(connector=connector, persona=None),
+        _VoiceSession(
+            connector=connector,
+            persona=None,
+            tts_model=simulator._voice.tts_model,
+        ),
         turns,
         time.perf_counter(),
     )

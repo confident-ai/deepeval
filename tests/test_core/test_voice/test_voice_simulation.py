@@ -49,8 +49,11 @@ class _StubTTS(DeepEvalBaseTTS):
 
     sample_rate = _RATE
 
-    def __init__(self):
+    def __init__(self, cost: float = _TTS_COST, instructions: bool = False):
         self.spoken: List[str] = []
+        self.kwargs: List[dict] = []
+        self.cost = cost
+        self.instructions = instructions
         super().__init__(model="stub-tts")
 
     def load_model(self):
@@ -60,12 +63,16 @@ class _StubTTS(DeepEvalBaseTTS):
         self, text: str, *args, voice: Optional[str] = None, **kwargs
     ) -> Tuple[Audio, Optional[float]]:
         self.spoken.append(text)
-        return _tone(0.2), _TTS_COST
+        self.kwargs.append(kwargs)
+        return _tone(0.2), self.cost
 
     async def a_synthesize(
         self, text: str, *args, voice: Optional[str] = None, **kwargs
     ) -> Tuple[Audio, Optional[float]]:
         return self.synthesize(text, voice=voice, **kwargs)
+
+    def supports_voice_instructions(self) -> bool:
+        return self.instructions
 
     def get_model_name(self) -> str:
         return "stub-tts"
@@ -149,8 +156,9 @@ def _simulate(
     turn_detection: str = "eager",
     reply: str = "the agent speaks",
     reply_seconds: float = 0.4,
+    tts: Optional[DeepEvalBaseTTS] = None,
 ):
-    tts, stt = _StubTTS(), _StubSTT()
+    tts, stt = tts or _StubTTS(), _StubSTT()
     connector = CallbackVoiceConnector(
         _agent(reply, reply_seconds), turn_detection=turn_detection
     )
@@ -274,3 +282,84 @@ def test_muted_persona_still_alternates_turns():
         "assistant",
     ]
     assert all(turn.content == "" for turn in case.turns if turn.role == "user")
+
+
+def test_a_persona_tts_model_speaks_and_is_billed_instead():
+    simulator_tts, persona_tts = _StubTTS(), _StubTTS(cost=2.0)
+    persona = Persona(characteristics="A caller.", tts_model=persona_tts)
+
+    simulator, case = _simulate(persona=persona, tts=simulator_tts)
+
+    user_turns = sum(1 for turn in case.turns if turn.role == "user")
+    assert simulator_tts.spoken == []
+    assert len(persona_tts.spoken) == user_turns
+    assert simulator.tts_cost == pytest.approx(2.0 * user_turns)
+
+
+def test_a_phone_line_persona_is_heard_through_the_phone_line():
+    persona = Persona(characteristics="A caller.", line_quality="phone")
+
+    simulator, case = _simulate(persona=persona, max_user_simulations=1)
+
+    user_audio = next(turn.audio for turn in case.turns if turn.role == "user")
+    assert user_audio.get_bytes() != _tone(0.2).get_bytes()
+    assert simulator.tts_cost == pytest.approx(_TTS_COST)
+
+
+def test_voice_instructions_reach_a_tts_model_that_takes_them():
+    tts = _StubTTS(instructions=True)
+    persona = Persona(characteristics="A caller.", voice_instructions="Calm.")
+
+    _simulate(persona=persona, tts=tts, max_user_simulations=1)
+
+    assert tts.kwargs[0]["instructions"] == "Calm."
+
+
+def test_voice_instructions_are_ignored_by_a_tts_model_that_cannot_take_them():
+    tts = _StubTTS()
+    persona = Persona(characteristics="A caller.", voice_instructions="Calm.")
+
+    with pytest.warns(UserWarning, match="voice_instructions"):
+        _simulate(persona=persona, tts=tts, max_user_simulations=1)
+
+    assert "instructions" not in tts.kwargs[0]
+
+
+def test_only_gpt_4o_mini_tts_takes_voice_instructions():
+    from deepeval.models.tts import OpenAITTSModel
+    from deepeval.voice.phone_line import PhoneLineTTS
+
+    mini = OpenAITTSModel(model="gpt-4o-mini-tts", api_key="test")
+
+    assert mini.supports_voice_instructions() is True
+    assert PhoneLineTTS(mini).supports_voice_instructions() is True
+    assert (
+        OpenAITTSModel(
+            model="tts-1", api_key="test"
+        ).supports_voice_instructions()
+        is False
+    )
+
+
+def test_persona_tts_kwargs_carry_instructions_only_for_models_that_take_them():
+    persona = Persona(
+        characteristics="A caller.", voice="coral", voice_instructions="Calm."
+    )
+
+    assert persona.tts_kwargs(_StubTTS(instructions=True)) == {
+        "voice": "coral",
+        "instructions": "Calm.",
+    }
+    with pytest.warns(UserWarning):
+        assert persona.tts_kwargs(_StubTTS()) == {"voice": "coral"}
+
+
+def test_the_tts_model_stays_out_of_the_serialized_persona():
+    persona = Persona(
+        characteristics="A caller.", tts_model=_StubTTS(), line_quality="phone"
+    )
+
+    assert persona.model_dump(exclude_defaults=True, mode="json") == {
+        "characteristics": "A caller.",
+        "line_quality": "phone",
+    }
