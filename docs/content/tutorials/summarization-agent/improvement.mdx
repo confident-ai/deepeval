@@ -236,7 +236,7 @@ This raises an issue of which model to choose among the both as they each excel 
 
 In this situation, you can either use more test cases to run evaluations to get more data or use `deepeval`'s latest `ArenaGEval` to test which model is better among them by evaluating arena test cases. You can learn more about it [here](docs/metrics-arena-g-eval).
 
-**OR** alternatively, you can update your `MeetingSummarizer` to to use two different models for different tasks. Here's how you can do that:
+**OR** alternatively, you can update your `MeetingSummarizer` to use two different models for different tasks. Here's how you can do that:
 
 ```python {6-7,9-10,14,17,25,28,36,39}
 from deepeval.tracing import observe

@@ -48,7 +48,7 @@ class MedicalChatbot:
     @tool
     @observe(metrics=[ContextualRelevancyMetric()], type="retriever")
     def query_engine(self, query: str) -> str:
-        """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
+        """A tool to retrieve data on various diagnosis methods from gale encyclopedia"""
         # Give an appropriate description of the tool
         hits = self.client.search(
             collection_name="gale_encyclopedia",
