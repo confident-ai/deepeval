@@ -603,7 +603,11 @@ class ToolCorrectnessMetric(BaseMetric):
         return lcs[::-1], total_score
 
     # For matching input parameters
-    def _compare_dicts(self, dict1: Dict, dict2: Dict):
+    def _compare_dicts(self, dict1: Optional[Dict], dict2: Optional[Dict]):
+        # `ToolCall.input_parameters` is optional, so a tool called without
+        # arguments may carry `None`. Treat it the same as no arguments.
+        dict1 = dict1 if dict1 is not None else {}
+        dict2 = dict2 if dict2 is not None else {}
         if dict1 == dict2:
             return 1.0
         if self.should_exact_match:
