@@ -1,0 +1,3 @@
+pytest>=8
+# Optional, for DeepEval reporting (the suite also runs without it):
+deepeval>=1.0
