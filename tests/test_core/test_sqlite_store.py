@@ -188,6 +188,13 @@ def _q(db_path: Path, sql: str, *params):
         return conn.execute(sql, params).fetchall()
 
 
+def _captured_stderr(capsys) -> str:
+    # Warnings go through `rich.print`, which wraps lines at the console
+    # width. A long tmp path can push the break into the middle of the
+    # message, so compare with whitespace collapsed.
+    return " ".join(capsys.readouterr().err.split())
+
+
 # --------------------------------------------------------------------------- #
 
 
@@ -817,9 +824,8 @@ class TestTestRunManagerIntegration:
         mgr.save_test_run_locally()
         mgr.last_saved_run_id = 999  # row that does not exist
         mgr._record_confident_test_run_id("cai_x")  # must not raise
-        assert (
-            "could not record Confident AI test run id"
-            in capsys.readouterr().err
+        assert "could not record Confident AI test run id" in _captured_stderr(
+            capsys
         )
 
     def test_read_only_env_is_noop(self, tmp_path: Path, monkeypatch):
@@ -849,7 +855,7 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        assert "disk I/O error" in _captured_stderr(capsys)
         assert mgr.last_saved_path is None
 
 
