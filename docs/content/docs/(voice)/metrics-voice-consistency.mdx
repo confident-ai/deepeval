@@ -72,12 +72,15 @@ For `VoiceConsistencyMetric` the breakdown carries the three component scores an
             "rms_dbfs": -21.4,
             "pitch_mean_hz": 118.2,
             "zero_crossing_rate": 0.061,
+            "zero_crossings_per_second": 488.0,
         }
     ],
 }
 ```
 
 Here `turn` is the turn's zero-based position in the conversation, counting user turns too — not the assistant reply number.
+
+`zero_crossing_rate` is the raw fraction of adjacent samples that cross zero. The timbre comparison uses `zero_crossings_per_second`, which multiplies that fraction by the sample rate decoded from each WAV header. This keeps clips recorded at different sample rates comparable, even when the optional `Audio.sampleRate` metadata is missing or stale.
 
 ## How Is It Calculated?
 

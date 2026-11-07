@@ -20,6 +20,7 @@ MIN_PAUSE_FLOOR_RMS = 8.0
 @dataclass
 class AudioMeasurements:
     duration: float
+    sample_rate: int
     rms_dbfs: float
     clipping_fraction: float
     silence_fraction: float
@@ -259,6 +260,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
+        sample_rate=sample_rate,
         rms_dbfs=dbfs(rms(samples)),
         clipping_fraction=sum(abs(sample) >= 32760 for sample in samples)
         / len(samples),
