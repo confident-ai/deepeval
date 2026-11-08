@@ -103,23 +103,65 @@ class _ObservedAsyncGenIter:
     after ``break``), ensuring the span is always closed.
     """
 
-    __slots__ = ("_agen_iter", "_observer", "_entered", "_done")
+    __slots__ = (
+        "_agen_iter",
+        "_observer",
+        "_entered",
+        "_done",
+        "_span_stack",
+        "_trace",
+    )
 
     def __init__(self, agen, observer):
         self._agen_iter = agen.__aiter__()
         self._observer = observer
         self._entered = False
         self._done = False
+        self._span_stack = []
+        self._trace = None
 
     def __aiter__(self):
         return self
 
-    async def __anext__(self):
+    def _resume_context(self):
+        if self._done:
+            return
         if not self._entered:
             self._observer.__enter__()
             self._entered = True
+            self._capture_context()
+        else:
+            # Another generator or task may have changed the context since
+            # our last yield. Restore the generator's suspended context,
+            # including any nested observer still open across the yield.
+            # A nested generator may have been closed by the consumer while
+            # we were suspended. Never reactivate one of its ended spans.
+            span = next(
+                (
+                    span
+                    for span in self._span_stack
+                    if span.uuid in trace_manager.active_spans
+                ),
+                None,
+            )
+            current_span_context.set(span)
+            current_trace_context.set(self._trace)
+
+    def _capture_context(self):
+        if not self._done:
+            self._span_stack = []
+            span = current_span_context.get()
+            while span is not None:
+                self._span_stack.append(span)
+                span = trace_manager.get_span_by_uuid(span.parent_uuid)
+            self._trace = current_trace_context.get()
+
+    async def __anext__(self):
+        self._resume_context()
         try:
-            return await self._agen_iter.__anext__()
+            value = await self._agen_iter.__anext__()
+            self._capture_context()
+            return value
         except StopAsyncIteration:
             self._finish()
             raise
@@ -130,23 +172,31 @@ class _ObservedAsyncGenIter:
     def _finish(self):
         if self._entered and not self._done:
             self._done = True
-            self._observer.__exit__(None, None, None)
+            try:
+                self._observer.__exit__(None, None, None)
+            finally:
+                self._span_stack = []
+                self._trace = None
 
     def _finish_err(self, e):
         if self._entered and not self._done:
             self._done = True
-            self._observer.__exit__(type(e), e, e.__traceback__)
+            try:
+                self._observer.__exit__(type(e), e, e.__traceback__)
+            finally:
+                self._span_stack = []
+                self._trace = None
 
     async def aclose(self):
         self._finish()
         await self._agen_iter.aclose()
 
     async def athrow(self, typ, val=None, tb=None):
-        if not self._entered:
-            self._observer.__enter__()
-            self._entered = True
+        self._resume_context()
         try:
-            return await self._agen_iter.athrow(typ, val, tb)
+            value = await self._agen_iter.athrow(typ, val, tb)
+            self._capture_context()
+            return value
         except StopAsyncIteration:
             self._finish()
             raise
