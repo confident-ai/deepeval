@@ -58,7 +58,9 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
         Mock(return_value=(None, None)),
     )
     monkeypatch.setattr(global_test_run_manager, "save_test_run", Mock())
-    monkeypatch.setattr(evaluation_module, "get_is_running_deepeval", lambda: True)
+    monkeypatch.setattr(
+        evaluation_module, "get_is_running_deepeval", lambda: True
+    )
 
     try:
         # An accumulated test run should use the configuration for each
@@ -76,7 +78,9 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
                 hyperparameters=hyperparameters,
                 _skip_reset=True,
                 async_config=AsyncConfig(run_async=run_async),
-                display_config=DisplayConfig(show_indicator=False, print_results=False),
+                display_config=DisplayConfig(
+                    show_indicator=False, print_results=False
+                ),
             )
 
         assert observed == [
@@ -125,19 +129,25 @@ def test_evaluate_cache_reads_and_writes_use_current_hyperparameters(
         observed.append(("lookup", dict(hyperparameters), False))
         return None
 
-    def record_write(test_case, cached_test_case, hyperparameters, to_temp=False):
+    def record_write(
+        test_case, cached_test_case, hyperparameters, to_temp=False
+    ):
         observed.append(("write", dict(hyperparameters), to_temp))
 
     monkeypatch.setattr(
         global_test_run_cache_manager, "get_cached_test_case", record_lookup
     )
-    monkeypatch.setattr(global_test_run_cache_manager, "cache_test_case", record_write)
+    monkeypatch.setattr(
+        global_test_run_cache_manager, "cache_test_case", record_write
+    )
     monkeypatch.setattr(
         evaluation_module,
         "capture_evaluation_run",
         lambda *args, **kwargs: nullcontext(),
     )
-    monkeypatch.setattr(evaluation_module, "get_is_running_deepeval", lambda: True)
+    monkeypatch.setattr(
+        evaluation_module, "get_is_running_deepeval", lambda: True
+    )
     monkeypatch.setattr(global_test_run_manager, "save_test_run", Mock())
 
     try:
