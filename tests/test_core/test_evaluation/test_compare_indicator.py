@@ -43,9 +43,15 @@ def test_async_compare_runs_cases_with_or_without_indicator(
     monkeypatch.setattr(
         compare_module, "capture_evaluation_run", lambda *args: nullcontext()
     )
-    monkeypatch.setattr(compare_module, "update_test_run_map", lambda **kwargs: None)
-    monkeypatch.setattr(compare_module, "process_test_runs", lambda **kwargs: None)
-    monkeypatch.setattr(compare_module, "wrap_up_experiment", lambda **kwargs: None)
+    monkeypatch.setattr(
+        compare_module, "update_test_run_map", lambda **kwargs: None
+    )
+    monkeypatch.setattr(
+        compare_module, "process_test_runs", lambda **kwargs: None
+    )
+    monkeypatch.setattr(
+        compare_module, "wrap_up_experiment", lambda **kwargs: None
+    )
 
     result = compare_module.compare(
         test_cases=[case],
