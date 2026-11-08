@@ -16,7 +16,11 @@ from deepeval.cli.utils import (
     USE_STT_KEYS,
     USE_TTS_KEYS,
 )
-from deepeval.config.settings import Settings, reset_settings  # noqa: E402
+from deepeval.config.settings import (
+    Settings,
+    get_settings,
+    reset_settings,
+)  # noqa: E402
 from deepeval.config.utils import parse_bool
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
@@ -529,6 +533,32 @@ def test_set_unset_llm_provider_roundtrip(
     assert "YES" not in [
         store2.get(k) for k in USE_LLM_KEYS
     ], "Expected no LLM USE_* key to remain YES after unset"
+
+
+def test_set_openai_without_model_preserves_active_provider(
+    runner: CliRunner,
+    hidden_store_dir: Path,
+    env_path: Path,
+) -> None:
+    save = f"dotenv:{env_path}"
+    _invoke_ok(
+        runner,
+        ["set-anthropic", "--model", "claude-sonnet-4-5", "--save", save],
+    )
+    assert get_settings().OPENAI_MODEL_NAME is None
+
+    store_path = hidden_store_dir / ".deepeval"
+    original_store = store_path.read_bytes()
+    original_env = env_path.read_bytes()
+
+    result = runner.invoke(cli_app, ["set-openai", "--save", save])
+
+    assert result.exit_code == 2
+    assert "OpenAI model name is not set" in result.output
+    assert get_settings().USE_ANTHROPIC_MODEL is True
+    assert get_settings().USE_OPENAI_MODEL is None
+    assert store_path.read_bytes() == original_store
+    assert env_path.read_bytes() == original_env
 
 
 EMBED_PROVIDER_CASES: List[_ProviderCase] = [
