@@ -58,9 +58,7 @@ def test_evaluate_sets_hyperparameters_before_execution(monkeypatch, run_async):
         Mock(return_value=(None, None)),
     )
     monkeypatch.setattr(global_test_run_manager, "save_test_run", Mock())
-    monkeypatch.setattr(
-        evaluation_module, "get_is_running_deepeval", lambda: True
-    )
+    monkeypatch.setattr(evaluation_module, "get_is_running_deepeval", lambda: True)
 
     try:
         # An accumulated test run should use the configuration for each
@@ -135,9 +133,7 @@ def test_evaluate_cache_reads_and_writes_use_current_hyperparameters(
     monkeypatch.setattr(
         global_test_run_cache_manager, "get_cached_test_case", record_lookup
     )
-    monkeypatch.setattr(
-        global_test_run_cache_manager, "cache_test_case", record_write
-    )
+    monkeypatch.setattr(global_test_run_cache_manager, "cache_test_case", record_write)
     monkeypatch.setattr(
         evaluation_module,
         "capture_evaluation_run",
