@@ -95,6 +95,21 @@ from deepeval.evaluate.execute._common import (
 )
 
 
+def _reset_metrics(
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+) -> None:
+    for metric in metrics:
+        metric.skipped = False
+        metric.error = None
+        metric.score = None
+        metric.reason = None
+        metric.success = None
+        metric.evaluation_cost = None
+        metric.input_tokens = None
+        metric.output_tokens = None
+        metric.verbose_logs = None
+
+
 def _reset_classifiers(classifiers: List[BaseClassifier]) -> None:
     for classifier in classifiers:
         classifier.error = None
@@ -251,8 +266,7 @@ def execute_test_cases(
                 def _run_case():
                     nonlocal new_cached_test_case, current_index, llm_test_case_count, conversational_test_case_count, case_classifications
                     record_test_case(test_case)
-                    for metric in metrics:
-                        metric.error = None  # Reset metric error
+                    _reset_metrics(metrics_for_case)
                     _reset_classifiers(classifiers)
 
                     if isinstance(test_case, LLMTestCase):
@@ -739,9 +753,7 @@ async def _a_execute_llm_test_cases(
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
     cached_test_case = None
-    for metric in metrics:
-        metric.skipped = False
-        metric.error = None  # Reset metric error
+    _reset_metrics(metrics)
     _reset_classifiers(classifiers)
 
     # only use cache when NOT conversational test case
@@ -896,9 +908,7 @@ async def _a_execute_conversational_test_cases(
         total=len(metrics) + len(classifiers),
     )
 
-    for metric in metrics:
-        metric.skipped = False
-        metric.error = None  # Reset metric error
+    _reset_metrics(metrics)
     _reset_classifiers(classifiers)
 
     api_test_case: ConversationalApiTestCase = create_api_test_case(
