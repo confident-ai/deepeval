@@ -35,6 +35,15 @@ An invalid value logs `Ignoring invalid value for <NAME>` and falls back to the 
 
 ## General Settings
 
+<Only id="python">
+
+For configuration-based decision-provider selection, see the
+[System One environment variables](/integrations/models/system-one-api#configure-the-connection).
+`DEEPEVAL_SYSTEM_ONE_PROVIDER` defaults to `typesafe`; `systemone` selects a
+compatible HTTP endpoint independently of the evaluation LLM.
+
+</Only>
+
 These are the core settings for controlling `deepeval`'s behavior, file paths, and run identifiers.
 
 | Variable                     | Values                     | Effect                                                                                                                                                        |

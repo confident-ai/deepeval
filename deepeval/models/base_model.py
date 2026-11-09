@@ -185,6 +185,18 @@ class DeepEvalBaseSystemOneModel(ABC):
         self.name = parse_model_name(model)
         self.model = self.load_model()
 
+    def check_request(
+        self, state: Any, questions: Dict[str, "SystemOneQuestion"]
+    ) -> None:
+        """Validate a request before dispatch or batching.
+
+        Custom providers can override this to declare their own capabilities
+        and context limits. The default preserves the existing Jev budget.
+        """
+        from deepeval.models.system_one.limits import check_context_budget
+
+        check_context_budget(state, questions)
+
     @abstractmethod
     def load_model(self, *args, **kwargs) -> Any:
         pass
