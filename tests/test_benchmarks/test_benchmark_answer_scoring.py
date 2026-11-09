@@ -13,6 +13,7 @@ from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
 from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.drop.drop import DELIMITER
 from deepeval.benchmarks.big_bench_hard.big_bench_hard import BigBenchHard
+from deepeval.benchmarks.gsm8k.gsm8k import GSM8K
 from deepeval.benchmarks.tasks import BigBenchHardTask
 from deepeval.dataset import Golden
 
@@ -101,3 +102,47 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# GSM8K: a (prediction, cost) tuple from a free-text generate() must not be
+# silently converted into the literal string "None"
+# --------------------------------------------------------------------------- #
+
+
+class _FakeTupleModel:
+    """A custom model that follows the documented (result, cost) contract but
+    does not support schema-constrained generation."""
+
+    def get_model_name(self):
+        return "fake"
+
+    def generate(self, prompt, schema=None):
+        if schema is not None:
+            raise TypeError("schema-constrained generation is not supported")
+        return ("42", 0.0)
+
+
+def _gsm8k() -> GSM8K:
+    # Bypass __init__ (which imports the optional HF `datasets` package);
+    # predict() only needs these attributes.
+    bench = GSM8K.__new__(GSM8K)
+    bench.shots_dataset = []
+    bench.n_shots = 0
+    bench.enable_cot = False
+    bench.scorer = Scorer()
+    bench.confinement_instructions = (
+        "Make sure to output only the numerical answer."
+    )
+    return bench
+
+
+def test_gsm8k_free_text_tuple_prediction_is_scored_correctly():
+    bench = _gsm8k()
+    result = bench.predict(
+        _FakeTupleModel(), Golden(input="6 * 7 = ?", expected_output="42")
+    )
+    # Previously _extract_from_tuple had no branch for a plain string and
+    # returned None, so prediction became "None" and score became 0.
+    assert result["prediction"] == "42"
+    assert result["score"] == 1
