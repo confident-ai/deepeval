@@ -55,6 +55,7 @@ class MetricConfiguration(BaseModel):
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
+    prompt_instructions: Optional[List[str]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -379,6 +380,7 @@ class Cache:
             "embeddings",
             "evaluation_params",
             "assessment_questions",
+            "prompt_instructions",
             "evaluation_steps",
         ]
 
@@ -465,6 +467,7 @@ class Cache:
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
+            "prompt_instructions",  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
