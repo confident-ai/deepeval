@@ -4,6 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.metrics import GEval
+from deepeval.metrics.g_eval import Rubric
 from deepeval.metrics.g_eval.utils import (
     CONVERSATIONAL_G_EVAL_API_PARAMS,
     G_EVAL_API_PARAMS,
@@ -18,6 +20,7 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     convert_turn_to_dict,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
@@ -138,6 +141,107 @@ def test_calculate_weighted_summed_score_ignores_out_of_range_candidates():
     )
 
     assert calculate_weighted_summed_score(9, raw_response) == 9
+
+
+def test_calculate_weighted_summed_score_ignores_candidates_below_score_min():
+    # A 1-5 rubric: the judge puts 30% on "0", which is below the minimum.
+    raw_response = create_raw_response(
+        [
+            create_logprob_token(
+                "1",
+                math.log(0.7),
+                [("1", math.log(0.7)), ("0", math.log(0.3))],
+            ),
+        ]
+    )
+
+    weighted = calculate_weighted_summed_score(
+        1, raw_response, score_max=5, score_min=1
+    )
+    assert weighted == pytest.approx(1.0, abs=0.01)
+
+
+def test_calculate_weighted_summed_score_counts_zero_by_default():
+    # Without a rubric minimum, "0" is still a valid candidate.
+    raw_response = create_raw_response(
+        [
+            create_logprob_token(
+                "1",
+                math.log(0.7),
+                [("1", math.log(0.7)), ("0", math.log(0.3))],
+            ),
+        ]
+    )
+
+    weighted = calculate_weighted_summed_score(1, raw_response)
+    assert weighted == pytest.approx(0.7, abs=0.01)
+
+
+class MockJudge(DeepEvalBaseLLM):
+    """Returns score 1 with 70% probability and puts 30% on 0."""
+
+    def __init__(self):
+        super().__init__("mock-judge")
+
+    def load_model(self):
+        return None
+
+    def get_model_name(self):
+        return "mock-judge"
+
+    def generate(self, prompt, *a, **k):
+        return '{"reason": "weak", "score": 1}'
+
+    async def a_generate(self, prompt, *a, **k):
+        return self.generate(prompt, *a, **k)
+
+    def _raw(self):
+        token = SimpleNamespace(
+            token="1",
+            logprob=math.log(0.7),
+            top_logprobs=[
+                SimpleNamespace(token="1", logprob=math.log(0.7)),
+                SimpleNamespace(token="0", logprob=math.log(0.3)),
+            ],
+        )
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(
+                        content='{"reason": "weak", "score": 1}'
+                    ),
+                    logprobs=SimpleNamespace(content=[token]),
+                )
+            ]
+        )
+
+    def generate_raw_response(self, prompt, top_logprobs=None, **k):
+        return self._raw(), 0.0
+
+    async def a_generate_raw_response(self, prompt, top_logprobs=None, **k):
+        return self._raw(), 0.0
+
+
+def test_geval_score_stays_in_range_when_rubric_starts_above_zero():
+    metric = GEval(
+        name="Helpfulness",
+        evaluation_steps=["Judge how helpful the answer is."],
+        evaluation_params=[
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+        ],
+        rubric=[
+            Rubric(score_range=(1, 2), expected_outcome="Unhelpful."),
+            Rubric(score_range=(3, 5), expected_outcome="Helpful."),
+        ],
+        model=MockJudge(),
+        async_mode=False,
+    )
+
+    score = metric.measure(
+        LLMTestCase(input="q", actual_output="a"), _show_indicator=False
+    )
+    assert score == pytest.approx(0.0, abs=0.01)
 
 
 def test_calculate_weighted_summed_score_uses_final_score_token():
