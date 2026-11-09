@@ -8,3 +8,4 @@ from ..squad.squad import SQuADTask
 from ..math_qa.math_qa import MathQATask
 from ..logi_qa.logi_qa import LogiQATask
 from ..bbq.bbq import BBQTask
+from ..halu_eval.halu_eval import HaluEvalTask
