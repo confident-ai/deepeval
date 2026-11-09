@@ -236,6 +236,7 @@ class Golden(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _dataset_version: Optional[str] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def set_is_multimodal(self):
@@ -354,6 +355,7 @@ class ConversationalGolden(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _dataset_version: Optional[str] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def sync_persona(self):
@@ -382,6 +384,9 @@ class ConversationalGolden(BaseModel):
             if re.search(pattern, self.user_description) is not None:
                 self.multimodal = True
                 return self
+        if self.context and any(re.search(pattern, c) for c in self.context):
+            self.multimodal = True
+            return self
         if self.turns:
             for turn in self.turns:
                 if re.search(pattern, turn.content) is not None:

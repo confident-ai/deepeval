@@ -5,7 +5,6 @@ languages: [python, typescript]
 ---
 
 import { FlaskConical, GitMerge, PackageCheck, Workflow } from "lucide-react";
-import { ASSETS } from "@site/src/assets";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
 import ClaudeCodeTerminal from "@site/src/sections/home/ClaudeCodeTerminal";
 import TraceLoopConnector from "@site/src/sections/home/TraceLoopConnector";
@@ -76,10 +75,9 @@ identify the failing span, patch the prompt or code, and run the eval again.
 
 <ClaudeCodeTerminal />
 
-That loop starts locally, where iteration is fastest. When your team needs to
-collaborate on results, compare regressions, monitor production traces, or share
-reports with non-engineers, DeepEval integrates natively with
-[Confident AI](https://www.confident-ai.com).
+That loop starts locally, where iteration is fastest. Once you've shipped,
+failing production traces become the best source of your next goldens, which is
+where [Confident AI](https://www.confident-ai.com/products/llm-observability) comes in.
 
 :::info[Vibe coding?]
 Have your coding agent drive this loop instead. **[Learn how →](/docs/vibe-coding)**
@@ -109,7 +107,7 @@ The goal is not to choose one forever. Start with test cases when you need a
 simple quality gate. Add traces when you need to understand how your application
 arrived at the result.
 
-<ImageDisplayer src={ASSETS.deepevalTuiInspect} alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons" />
+<ImageDisplayer id="screenshots/deepeval/inspect-trace-tree" />
 
 :::info
 Already using another observability tool? Visit [Comparisons](/docs/introduction-comparisons)
@@ -128,6 +126,17 @@ same artifacts you do: failing metrics, reasons, traces, and test runs. That
 makes evals usable not only by humans, but by the tools helping you edit the
 agent.
 
+## Voice-Native Evals
+
+A voice agent is a live call, not a text chatbot with a microphone attached, so
+DeepEval evaluates it voice-natively. Metrics read the audio on each turn of a
+conversation to score how your agent sounded and when it spoke, alongside the
+multi-turn metrics that judge what was said. Simulated callers speak to your
+deployed agent through connectors like Vapi, LiveKit, and Pipecat, and the calls
+they produce run through the same pipeline as every other eval: goldens in, test
+cases out, metrics on top. See [voice evaluation](/docs/evaluation-voice) to get
+started.
+
 ## No Cold-Starts
 
 Good evals need examples. Without a dataset, it is hard to know whether a prompt,
@@ -139,15 +148,14 @@ helps you bootstrap a dataset from documents, contexts, or seed examples. This
 lets you cover edge cases before users find them, instead of waiting for enough
 production traffic or manual QA cycles to build coverage.
 
-## Enterprise Platform When Needed
+## Production Monitoring Once You Ship
 
-Local iteration should stay fast, but teams eventually need shared reports,
-regression analysis, trace observability, production monitoring, dataset
-management, prompt versioning, and collaboration with non-engineers.
-
-DeepEval integrates natively with [Confident AI](https://www.confident-ai.com)
-for those workflows, with **0 lines of additional code required.** The same evals you run locally can become shared test runs,
-experiments, dashboards, and monitoring jobs when your team needs a platform, all you have to do is export a `CONFIDENT_API_KEY`.
+Local iteration should stay fast, but the evals you write before launch only
+cover the failures you could predict. Once your app is in production,
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has
+written an eval for them, clusters them into failure modes, routes them to the
+right annotators (engineers, QA, domain experts, PMs), and turns them into
+goldens for your next eval.
 
 ## Opinionated Primitives, Simple API
 

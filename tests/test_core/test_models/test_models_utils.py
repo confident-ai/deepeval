@@ -4,10 +4,14 @@ from pydantic import SecretStr
 
 from deepeval.errors import DeepEvalError
 from deepeval.models.base_model import DeepEvalModelData
+from types import SimpleNamespace
+
 from deepeval.models.utils import (
     require_secret_api_key,
     require_costs,
     normalize_kwargs_and_extract_aliases,
+    prompt_audio_tokens,
+    token_cost,
 )
 
 
@@ -236,3 +240,45 @@ def test_require_costs_partial_registry_falls_back_to_constructor():
     )
     assert inp == 0.05
     assert out == 0.10
+
+
+def _priced(audio_input_price=None):
+    return DeepEvalModelData(
+        input_price=2.0e-6,
+        output_price=10.0e-6,
+        audio_input_price=audio_input_price,
+    )
+
+
+def test_token_cost_without_audio_prices_every_input_token_as_text():
+    cost = token_cost(_priced(), 1000, 100)
+
+    assert cost == pytest.approx(1000 * 2.0e-6 + 100 * 10.0e-6)
+    assert (cost.input_tokens, cost.output_tokens) == (1000, 100)
+
+
+def test_token_cost_bills_audio_tokens_at_the_audio_rate():
+    cost = token_cost(_priced(audio_input_price=32.0e-6), 1000, 100, 600)
+
+    assert cost == pytest.approx(400 * 2.0e-6 + 600 * 32.0e-6 + 100 * 10.0e-6)
+    assert (cost.input_tokens, cost.output_tokens) == (1000, 100)
+
+
+def test_token_cost_is_unknown_for_audio_without_an_audio_price():
+    cost = token_cost(_priced(), 1000, 100, 600)
+
+    assert cost.value is None
+    assert (cost.input_tokens, cost.output_tokens) == (1000, 100)
+
+
+def test_token_cost_is_none_for_an_unpriced_model():
+    assert token_cost(DeepEvalModelData(), 1000, 100, 600) is None
+
+
+def test_prompt_audio_tokens_reads_openai_usage():
+    usage = SimpleNamespace(
+        prompt_tokens_details=SimpleNamespace(audio_tokens=42)
+    )
+
+    assert prompt_audio_tokens(usage) == 42
+    assert prompt_audio_tokens(SimpleNamespace(prompt_tokens=5)) == 0

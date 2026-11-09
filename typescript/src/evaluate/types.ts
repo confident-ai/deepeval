@@ -12,6 +12,29 @@ import type { Hyperparameters } from "@/evaluate/hyperparameters";
 // Mirrors deepeval/evaluate/types.py (+ test_run MetricData), trimmed to what
 // the local runner needs today. Extend toward the Python shape as we grow.
 
+export enum ExpectationKind {
+  MUST = "MUST",
+  MUST_NOT = "MUST_NOT",
+}
+
+export interface ExpectationVerdict {
+  kind: ExpectationKind;
+  condition: string;
+  status: "pass" | "fail" | "unable_to_evaluate";
+  reason: string;
+  evidence: string;
+}
+
+export interface ExpectationsData {
+  success?: boolean;
+  score?: number;
+  reason?: string;
+  verdicts: ExpectationVerdict[];
+  evaluationModel?: string;
+  evaluationCost?: number;
+  error?: string;
+}
+
 export interface MetricData {
   name: string;
   /** `null` = score-only. */
@@ -27,6 +50,12 @@ export interface MetricData {
   verboseLogs?: string;
   error?: string;
   skipped: boolean;
+  expectationsData?: ExpectationsData;
+}
+
+/** Every uploaded metrics list goes through this. */
+export function withoutExpectations(metricsData: MetricData[]): MetricData[] {
+  return metricsData.filter((m) => m.expectationsData == null);
 }
 
 /** Flaky and score-only metrics don't vote. */

@@ -1,7 +1,6 @@
 import time
 import asyncio
 import pytest
-import tenacity
 
 from deepeval.evaluate import execute as execute_module
 from deepeval.test_case import LLMTestCase
@@ -78,8 +77,8 @@ def test_per_task_timeout_sync_path(settings):
 async def test_per_attempt_timeout_async_path(settings):
     """
     Per-attempt timeout enforced inside retry decorator via asyncio.wait_for.
-    A larger outer timeout, and a smaller inner timeout ensures Tenacity retries and raises RetryError.
-    After exhausting attempts, the last exception is asyncio.TimeoutError.
+    A larger outer timeout, and a smaller inner timeout ensures Tenacity retries.
+    After exhausting attempts, the last attempt's asyncio.TimeoutError is re-raised.
     """
     with settings.edit(persist=False):
         settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 20
@@ -97,7 +96,7 @@ async def test_per_attempt_timeout_async_path(settings):
     )
 
     t0 = time.perf_counter()
-    with pytest.raises(tenacity.RetryError) as ei:
+    with pytest.raises((asyncio.TimeoutError, TimeoutError)):
         await execute_module.a_execute_test_cases(
             test_cases=[tc],
             metrics=[metric],
@@ -108,8 +107,6 @@ async def test_per_attempt_timeout_async_path(settings):
         )
     dur = time.perf_counter() - t0
 
-    last_exc = ei.value.last_attempt.exception()
-    assert isinstance(last_exc, (asyncio.TimeoutError, TimeoutError))
     # Ballpark duration: ~ 1s (first attempt) + backoff (~1.x s) + 1s (second attempt)
     assert 2.0 <= dur <= 6.0
 
@@ -143,12 +140,10 @@ def test_per_attempt_timeout_sync_path(settings):
         )
 
     t0 = time.perf_counter()
-    with pytest.raises(tenacity.RetryError) as err:
+    with pytest.raises((asyncio.TimeoutError, TimeoutError)):
         run_sync()
     dur = time.perf_counter() - t0
 
-    last_exc = err.value.last_attempt.exception()
-    assert isinstance(last_exc, (asyncio.TimeoutError, TimeoutError))
     assert 2.0 <= dur <= 6.0
 
 

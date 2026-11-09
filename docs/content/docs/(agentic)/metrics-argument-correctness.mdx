@@ -12,7 +12,7 @@ languages: [python, typescript]
   referenceless={true}
 />
 
-The argument correctness metric is an agentic LLM metric that assesses your LLM agent's ability to generate the correct arguments for the tools it calls. It is calculated by determining whether the arguments for each tool call is correct based on the input.
+The argument correctness metric is an agentic LLM metric that assesses your AI agent's ability to generate the correct arguments for the tools it calls. It is calculated by determining whether the arguments for each tool call is correct based on the input.
 
 :::info
 The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, and is also referenceless. If you're looking to deterministically evaluate argument correctness, refer to the [tool correctness metric](/docs/metrics-tool-correctness) instead.
@@ -212,6 +212,13 @@ for await (const golden of dataset.evalsIterator()) {
 
 </Switch>
 
+When the span a metric is attached to has no <Term py="tools_called" ts="toolsCalled"/> of its own, `deepeval` takes them from the trace. Each tool call belongs to the LLM span that chose its arguments: the tool span's parent if that is an LLM span, otherwise the latest LLM span before it at the same level.
+
+- **On an agent (or any other) span**, it judges the tool calls of every LLM span nested under it against that span's `input`.
+- **On an LLM span**, it judges the tool calls that LLM span made.
+- **On a tool span**, it judges that tool call against the `input` of the LLM span that made it.
+- **On the trace**, it judges the tool calls of every LLM span in the trace.
+
 ### As a standalone
 
 You can also run the `ArgumentCorrectnessMetric` on a single test case as a standalone, one-off execution.
@@ -241,10 +248,6 @@ console.log(metric.score, metric.reason);
 </Case>
 
 </Switch>
-
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
-:::
 
 ## How Is It Calculated?
 

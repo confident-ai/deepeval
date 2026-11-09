@@ -491,17 +491,17 @@ prompt.update(
     },
     {
       question:
-        "Can my team manage and version prompts on the cloud with a UI instead of in code?",
+        "Can I see which prompt versions fail in production?",
       answer: (
         <>
-          Prompts work entirely locally from files or code. If your team prefers
-          a shared, versioned prompt store,{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team) lets you edit and version prompts
-          in a UI and{" "}
-          <code>pull()</code> a specific version into your evals by alias — so
-          non-engineers can iterate on prompts while your code just references a
-          version. It's optional and file/code-based prompts behave identically.
+          Prompts work entirely locally from files or code. If you{" "}
+          <code>pull()</code> versioned prompts from{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>,
+          the version is logged on each production trace, so failing traces
+          point back to the prompt that produced them. It's optional and
+          file/code-based prompts behave identically.
         </>
       ),
     },

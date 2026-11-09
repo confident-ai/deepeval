@@ -6,6 +6,7 @@ import Papa from "papaparse";
 import {
   convertGoldensToTestCases,
   convertConvoGoldensToConvoTestCases,
+  stripLocalExpectationFields,
   stripPrivateFields,
   parseDelimited,
   safeJsonParse,
@@ -484,6 +485,7 @@ export class EvaluationDataset {
                 comments: goldenData.comments,
                 name: goldenData.name,
                 customColumnKeyValues: goldenData.customColumnKeyValues,
+                expectations: goldenData.expectations,
               }),
           )
         : undefined,
@@ -506,6 +508,7 @@ export class EvaluationDataset {
                 comments: goldenData.comments,
                 name: goldenData.name,
                 customColumnKeyValues: goldenData.customColumnKeyValues,
+                expectations: goldenData.expectations,
                 turns: goldenData.turns
                   ? parseTurns(goldenData.turns)
                   : undefined,
@@ -582,6 +585,7 @@ export class EvaluationDataset {
     }
     const body = stripPrivateFields(JSON.parse(JSON.stringify(apiDataset)));
     this.stripGoldenIds(body);
+    stripLocalExpectationFields(body.goldens ?? body.conversationalGoldens);
     console.log(`Pushing '${alias}' to Confident AI...`);
     const result = await api.sendRequest(
       HttpMethods.POST,
@@ -671,6 +675,7 @@ export class EvaluationDataset {
     };
     const body = stripPrivateFields(apiDataset);
     this.stripGoldenIds(body);
+    stripLocalExpectationFields(body.goldens ?? body.conversationalGoldens);
 
     console.log(
       `Queueing ${goldens.length} golden(s) to '${alias}' on Confident AI...`,
@@ -739,6 +744,7 @@ export class EvaluationDataset {
     const api = new Api();
     const body = stripPrivateFields(JSON.parse(JSON.stringify(golden)));
     delete body.id;
+    stripLocalExpectationFields([body]);
     body.finalized = finalized;
     await api.sendRequest(
       HttpMethods.PUT,

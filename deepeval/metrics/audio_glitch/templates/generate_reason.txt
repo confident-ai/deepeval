@@ -1,0 +1,24 @@
+The audio glitch score is {{ score }}, which is the share of turns with audio on which signal analysis of the recording found no glitch. The score is already decided; your job is to explain it.
+
+Each event below is one glitch found in one turn's audio, with these fields:
+- 'type': "held_tone" is a steady tone the speaker's audio emitted instead of speech (a TTS or line artifact, not a word); "dead_stream" is a run of exact digital silence inside the turn, which is lost audio rather than a pause; "stream_cut" means the turn's audio stopped mid-speech and the same speaker resumed after a gap; "clipping" is distorted audio that hit maximum volume; "audio_undecodable" means the clip could not be read.
+- 'role': "user" is the caller, "assistant" is the voice agent.
+- 'turn': the position of the turn in the conversation, counting from 0.
+- 'start_time': seconds from the start of the call when known, otherwise None.
+- 'position': whether the glitch sits at the "start", "middle" or "end" of the turn.
+- 'duration_seconds', 'pitch_hz', 'level_dbfs', 'gap_seconds': measurements of the glitch where they apply.
+- 'turn_text': what was said on that turn.
+- 'previous_turn_role' and 'previous_turn_text': the turn that came just before it.
+
+Events: {{ events }}
+
+Explain why the score is {{ score }}. Name each event by speaker, turn and time, and say what a listener would have heard. Then look across the events for patterns and state them plainly when they hold: whether every glitch follows the same kind of sentence (for example one that ends in a number, a name or a question), whether they all sit in the same place in a turn, and whether they all affect the same speaker. Say that these are failures of the audio pipeline, not mistakes in what the agent decided to say. Do not suggest causes the events do not support.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key. No words or explanation is needed.
+**
+
+Example JSON:
+{
+  "reason": "The score is <audio_glitch_score> because <your_reason>."
+}

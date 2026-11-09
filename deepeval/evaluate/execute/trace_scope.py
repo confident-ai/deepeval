@@ -53,6 +53,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _execute_metric,
     _skip_metrics_for_error,
     _trace_error,
@@ -162,10 +163,11 @@ def _assert_test_from_current_trace(
         expected_tools=current_trace.expected_tools,
         comments=golden.comments,
         name=golden.name,
-        _dataset_alias=golden._dataset_alias,
-        _dataset_id=golden._dataset_id,
-        _dataset_rank=golden._dataset_rank,
     )
+    test_case._dataset_alias = golden._dataset_alias
+    test_case._dataset_id = golden._dataset_id
+    test_case._dataset_version = golden._dataset_version
+    test_case._dataset_rank = golden._dataset_rank
     metrics = with_expectation_evaluators(metrics, [test_case])
     api_test_case = create_api_test_case(
         test_case=test_case,
@@ -238,6 +240,7 @@ def _assert_test_from_current_trace(
                 )
             )
             return
+        _attach_span_tree(llm_test_case, current_trace, span)
 
         api_span.metrics_data = []
         for metric in metrics:
@@ -300,6 +303,7 @@ def _assert_test_from_current_trace(
             llm_test_case_for_trace._trace_dict = (
                 trace_manager.create_nested_spans_dict(root_for_dfs)
             )
+        _attach_span_tree(llm_test_case_for_trace, current_trace, None)
 
         trace_api.metrics_data = []
         for metric in current_trace.metrics:

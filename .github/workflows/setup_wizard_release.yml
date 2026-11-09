@@ -1,0 +1,89 @@
+name: Setup Wizard Release
+
+# `deepeval setup` and `npx deepeval setup` download the newest published
+# `setup-v<version>` release, whose tag must match setup-wizard/package.json.
+
+on:
+  push:
+    tags: ["setup-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            os: darwin
+            arch: x64
+          - runner: macos-15
+            os: darwin
+            arch: arm64
+          - runner: ubuntu-24.04
+            os: linux
+            arch: x64
+          - runner: ubuntu-24.04-arm
+            os: linux
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        working-directory: setup-wizard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: setup-wizard/package-lock.json
+      # A tag whose version differs from package.json would publish assets the
+      # launchers never ask for, under a name they do not expect.
+      - name: Check tag matches package version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "setup-v$VERSION" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match setup-wizard version $VERSION."
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run check
+      - name: Build SEA executable
+        run: npm run build:sea -- --output deepeval-setup
+      # Nothing else proves the injected binary can start on this runner, and a
+      # broken one would otherwise reach users as a published asset.
+      - name: Smoke test executable
+        run: ./release/deepeval-setup --help
+      - name: Create archive
+        run: tar -C release -czf deepeval-setup-${{ matrix.os }}-${{ matrix.arch }}.tar.gz deepeval-setup
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.os }}-${{ matrix.arch }}
+          path: setup-wizard/deepeval-setup-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: artifacts
+          merge-multiple: true
+      - name: Create checksums
+        working-directory: artifacts
+        run: sha256sum *.tar.gz > SHA256SUMS
+      # This job uploads artifacts rather than sources, so it never checks the
+      # repository out, and `gh` cannot infer the repository from a local remote.
+      # GitHub has one "Latest" badge for the whole repository, and release.yml
+      # keeps it on the Python SDK, so the wizard never claims it.
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME"
+          artifacts/*.tar.gz artifacts/SHA256SUMS
+          --repo "$GITHUB_REPOSITORY" --title "Setup wizard ${GITHUB_REF_NAME#setup-v}"
+          --generate-notes --verify-tag --latest=false

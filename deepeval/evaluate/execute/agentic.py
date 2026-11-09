@@ -65,6 +65,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _skip_metrics_for_error,
     _trace_error,
     filter_duplicate_results,
@@ -129,9 +130,10 @@ async def _a_execute_agentic_test_case(
             metadata=golden.additional_metadata,
             comments=golden.comments,
             name=golden.name,
-            _dataset_alias=golden._dataset_alias,
-            _dataset_id=golden._dataset_id,
         )
+        test_case._dataset_alias = golden._dataset_alias
+        test_case._dataset_id = golden._dataset_id
+        test_case._dataset_version = golden._dataset_version
         current_trace.metrics = with_expectation_evaluators(
             current_trace.metrics, [test_case]
         )
@@ -275,9 +277,10 @@ async def _a_execute_agentic_test_case(
                         expected_tools=None,
                         comments=golden.comments,
                         name=golden.name,
-                        _dataset_alias=golden._dataset_alias,
-                        _dataset_id=golden._dataset_id,
                     )
+                    test_case._dataset_alias = golden._dataset_alias
+                    test_case._dataset_id = golden._dataset_id
+                    test_case._dataset_version = golden._dataset_version
                 if trace is not None and trace_api is None:
                     trace_api = create_api_trace(trace, golden)
 
@@ -414,6 +417,7 @@ async def _a_execute_span_test_case(
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+    _attach_span_tree(test_case, current_trace, span)
 
     for metric in metrics:
         metric.skipped = False
@@ -522,6 +526,7 @@ async def _a_execute_trace_test_case(
         test_case._trace_dict = trace_manager.create_nested_spans_dict(
             trace.root_spans[0]
         )
+    _attach_span_tree(test_case, trace, None)
 
     for metric in metrics:
         metric.skipped = False

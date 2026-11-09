@@ -436,7 +436,7 @@ for await (const chunk of textStream) {
 | `otelEndpoint`          | `string`  | OTLP endpoint override. Defaults to Confident AI's OTel URL.                  |
 | `name`                  | `string`  | Default trace name.                                                         |
 | `environment`           | `string`  | Trace environment, e.g. `"development"` or `"production"`.                    |
-| `traceMetricCollection` | `string`  | Trace-level metric collection, for online evals on live traffic.              |
+| `traceMetricCollection` | `string`  | Trace-level metric collection, for online evals on production traces.              |
 | `isTestMode`            | `boolean` | Force in-process spans outside of an eval session (unit tests, local debug).  |
 | `debug`                 | `boolean` | Log configure / flush diagnostics.                                          |
 
@@ -510,12 +510,10 @@ For native tracing helpers (`observe`, `updateCurrentTrace`, `updateCurrentSpan`
         <>
           Yes. Keep <code>configureAiSdkTracing(...)</code> registered, pass
           telemetry on each call, and set <code>threadId</code> /{" "}
-          <code>userId</code> in <code>experimental_telemetry.metadata</code>;
-          those live traces support{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals?utm_source=deepeval&utm_medium=docs&utm_content=faq_online_evals&ref_page=/integrations/frameworks/ai-sdk">
-            online evals
-          </a>{" "}
-          on real traffic when a <code>traceMetricCollection</code> is set.
+          <code>userId</code> in <code>experimental_telemetry.metadata</code>.
+          With a <code>traceMetricCollection</code> set,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> runs evals on every production
+          trace and flags the failing ones.
         </>
       ),
     },

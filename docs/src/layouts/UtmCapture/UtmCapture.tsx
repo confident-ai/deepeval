@@ -11,7 +11,7 @@
  *    read the current URL's `utm_*` params and persist them in localStorage as
  *    first_touch (write-once within 180-day TTL) + last_touch (overwrites).
  *    This lets the original Google / LinkedIn / etc. campaign survive the
- *    deepeval-docs hop into app.confident-ai.com at signup.
+ *    deepeval-docs hop into cloud.confident-ai.com at signup.
  *
  * 2. OUTBOUND: on every click that targets a Confident AI host, stamp the full
  *    UTM payload onto the anchor's href before the browser navigates.
@@ -24,8 +24,8 @@
  *      utm_campaign = last_touch.utm_campaign     (visitor-derived)
  *      utm_term     = last_touch.utm_term         (visitor-derived)
  *      ref_page     = window.location.pathname
- *      site_path    = the docs pages this tab read, ">" separated
- *                     (app.confident-ai.com only)
+ *      site_path    = where this tab arrived from and the docs pages it read,
+ *                     ">" separated (every browser-clickable Confident host)
  *
  *    Caller-set params on the existing href are preserved (we never clobber).
  *    The two params this listener owns itself, ref_page and site_path, are
@@ -34,8 +34,11 @@
  *
  * 3. TRAIL: on mount and on every SPA route change (the history.pushState /
  *    replaceState patch plus popstate), call recordDocsPageView to append the
- *    current pathname to a per-tab sessionStorage trail. Outbound links to
- *    app.confident-ai.com carry it as `site_path` (see visitor-attribution.ts).
+ *    current pathname to a per-tab sessionStorage trail. captureDocsArrival
+ *    runs alongside it and records the external site this tab came from; it
+ *    decides once per tab, so the later calls cost nothing. Outbound links to
+ *    any Confident AI host carry both as `site_path`
+ *    (see visitor-attribution.ts).
  *
  * ─── Why click-time, not React event handlers ───────────────────────────────
  * Document-level capture-phase listeners on `mousedown`, `auxclick`, and
@@ -67,6 +70,7 @@ import {
   type UtmMedium,
 } from "@/src/utils/utm";
 import {
+  captureDocsArrival,
   captureVisitorUtms,
   getLastTouchParams,
   recordDocsPageView,
@@ -164,6 +168,11 @@ function captureAndRecord(): void {
     captureVisitorUtms();
   } catch {
     // never let attribution errors break navigation
+  }
+  try {
+    captureDocsArrival();
+  } catch {
+    // the arrival host is optional
   }
   try {
     recordDocsPageView(window.location.pathname);

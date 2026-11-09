@@ -11,7 +11,9 @@ import { LLMTestCase, ConversationalTestCase, Turn } from "@/test-case";
 import { DeepEvalBaseLLM, type GenerationResult } from "@/models";
 import { evaluate } from "@/evaluate";
 import { evaluateCase } from "@/evaluate/test-run/run-metrics";
-import { buildTestCaseEntry, postPersistedTestRun } from "@/evaluate/confident";
+import { buildTestCaseEntry } from "@/evaluate/confident";
+import { ExpectationKind } from "@/evaluate/types";
+import { Api } from "@/confident/api";
 import { withExpectations } from "@/evaluate/expectations";
 import { testCaseCacheKey } from "@/evaluate/test-run/cache";
 import * as utils from "@/metrics/utils";
@@ -23,6 +25,7 @@ import * as path from "path";
 
 class Judge extends DeepEvalBaseLLM {
   prompts: string[] = [];
+  reasonPrompts: string[] = [];
   constructor(
     private status = "pass",
     private invalid = false,
@@ -36,6 +39,10 @@ class Judge extends DeepEvalBaseLLM {
     prompt: string,
     _schema?: z.ZodType<T>,
   ): Promise<GenerationResult<T>> {
+    if (!prompt.includes("Observed case:")) {
+      this.reasonPrompts.push(prompt);
+      return { cost: 0, output: { reason: "Judged reason" } as T };
+    }
     this.prompts.push(prompt);
     const requirements = JSON.parse(
       prompt.split("Requirements: ")[1].split("\nObserved case:")[0],
@@ -193,22 +200,167 @@ test.each(["pass", "unable_to_evaluate"])(
   },
 );
 
-test("persisted upload marker blocks retries without changing API entries", async () => {
-  const persisted = buildTestCaseEntry(
-    { testCase: single(new Expectations()), metricsData: [], runDuration: 0 },
+test.each([false, true])(
+  "uploads expectationsData instead of the Expectations metric (conversation=%s)",
+  async (conversation) => {
+    const send = jest
+      .spyOn(Api.prototype, "sendRequest")
+      .mockResolvedValue({ link: "link", id: "run-id" });
+    const expectations = new Expectations({
+      must: ["Greet"],
+      mustNot: ["Insult"],
+      model: new Judge(),
+    });
+    const tc = conversation
+      ? new ConversationalTestCase({
+          turns: [new Turn({ role: "assistant", content: "Hello" })],
+          expectations,
+        })
+      : single(expectations);
+    process.env.CONFIDENT_API_KEY = "fake-key";
+    try {
+      const result = await evaluate([tc], undefined, options);
+      // Locally the check still reports like any metric.
+      expect(result.testResults[0].metricsData!.map((m) => m.name)).toContain(
+        "Expectations",
+      );
+    } finally {
+      delete process.env.CONFIDENT_API_KEY;
+    }
+
+    const payload = send.mock.calls[0][2] as Record<string, any>;
+    const [uploaded] = [
+      ...payload.testCases,
+      ...payload.conversationalTestCases,
+    ];
+    expect(uploaded).not.toHaveProperty("expectations");
+    expect(uploaded.metricsData).toEqual([]);
+    expect(payload.metricsScores).toEqual([]);
+    expect(uploaded.expectationsData).toMatchObject({
+      success: true,
+      score: 1,
+      reason: "Judged reason",
+      evaluationModel: "expectation-judge",
+      verdicts: [
+        { kind: "MUST", condition: "Greet", status: "pass" },
+        { kind: "MUST_NOT", condition: "Insult", status: "pass" },
+      ],
+    });
+  },
+);
+
+test("an errored check uploads its verdicts and error", () => {
+  const { entry } = buildTestCaseEntry(
+    {
+      testCase: single(new Expectations({ must: ["Greet"] })),
+      metricsData: [
+        {
+          name: "Expectations",
+          threshold: 1,
+          success: false,
+          strictMode: true,
+          flaky: false,
+          skipped: false,
+          error: "Unable to evaluate expectations",
+          evaluationCost: 0,
+          expectationsData: {
+            success: false,
+            error: "Unable to evaluate expectations",
+            evaluationCost: 0.01,
+            verdicts: [
+              {
+                kind: ExpectationKind.MUST,
+                condition: "Greet",
+                status: "unable_to_evaluate",
+                reason: "Judged",
+                evidence: "",
+              },
+            ],
+          },
+        },
+      ],
+      runDuration: 0,
+    },
     0,
   );
-  expect(persisted.hasExpectations).toBe(true);
-  expect(persisted.entry).not.toHaveProperty("expectations");
-  process.env.CONFIDENT_API_KEY = "fake-key";
-  try {
-    expect(
-      await postPersistedTestRun([JSON.parse(JSON.stringify(persisted))], 0),
-    ).toEqual({ link: null, testRunId: null });
-  } finally {
-    delete process.env.CONFIDENT_API_KEY;
-  }
+  expect(entry.metricsData).toEqual([]);
+  expect(entry.success).toBe(false);
+  // Cost follows the metric data, which a cache hit zeroes.
+  expect(entry.expectationsData).toMatchObject({
+    error: "Unable to evaluate expectations",
+    evaluationCost: 0,
+    verdicts: [{ status: "unable_to_evaluate" }],
+  });
 });
+
+test.each([false, true])(
+  "push, queue and update keep judge config local (conversation=%s)",
+  async (conversation) => {
+    const send = jest
+      .spyOn(Api.prototype, "sendRequest")
+      .mockResolvedValue({});
+    jest.spyOn(console, "log").mockImplementation(() => {});
+    const expectations = new Expectations({
+      must: ["Cite a source"],
+      mustNot: ["Mention competitors"],
+      model: new Judge(),
+      evalMode: "llm",
+    });
+    const golden = conversation
+      ? new ConversationalGolden({ scenario: "Hi", expectations })
+      : new Golden({ input: "Hi", expectations });
+    const dataset = new EvaluationDataset({
+      goldens:
+        golden instanceof ConversationalGolden ? [golden] : [golden as Golden],
+    });
+    process.env.CONFIDENT_API_KEY = "fake-key";
+    try {
+      await dataset.push({ alias: "alias" });
+      await dataset.queue({ alias: "alias", goldens: [golden] });
+      golden.id = "golden-id";
+      await dataset.updateGolden({ golden, alias: "alias" });
+    } finally {
+      delete process.env.CONFIDENT_API_KEY;
+    }
+
+    const key = conversation ? "conversationalGoldens" : "goldens";
+    const bodies = send.mock.calls.map((call) => call[2] as any);
+    for (const goldenBody of [bodies[0][key][0], bodies[1][key][0], bodies[2]]) {
+      expect(goldenBody.expectations).toEqual({
+        must: ["Cite a source"],
+        mustNot: ["Mention competitors"],
+      });
+    }
+    // The user's golden keeps its local judge configuration.
+    expect(golden.expectations?.evalMode).toBe("llm");
+    expect(golden.expectations?.model).toBeInstanceOf(Judge);
+  },
+);
+
+test.each([false, true])(
+  "pull reads expectations (conversation=%s)",
+  async (conversation) => {
+    const golden = {
+      ...(conversation ? { scenario: "Hi" } : { input: "Hi" }),
+      expectations: { must: ["Cite a source"], mustNot: ["Insult"] },
+    };
+    jest.spyOn(Api.prototype, "sendRequest").mockResolvedValue({
+      id: "dataset",
+      [conversation ? "conversationalGoldens" : "goldens"]: [golden],
+    });
+    process.env.CONFIDENT_API_KEY = "fake-key";
+    const dataset = new EvaluationDataset();
+    try {
+      await dataset.pull({ alias: "alias" });
+    } finally {
+      delete process.env.CONFIDENT_API_KEY;
+    }
+
+    const [pulled] = dataset.goldens;
+    expect(pulled.expectations?.must).toEqual(["Cite a source"]);
+    expect(pulled.expectations?.mustNot).toEqual(["Insult"]);
+  },
+);
 
 test("cache includes conditions and action evidence, serialization omits clients", () => {
   const tc = single(new Expectations({ must: ["Greet"], model: new Judge() }));
@@ -271,7 +423,7 @@ test("golden trace assertion evaluates expectations with observed evidence", asy
   expect(model.prompts[0]).toContain('"trace"');
 });
 
-test("iterator evaluates golden expectations and retains local-only upload marker", async () => {
+test("iterator evaluates golden expectations", async () => {
   const model = new Judge();
   const dataset = new EvaluationDataset({
     goldens: [
@@ -294,9 +446,6 @@ test("iterator evaluates golden expectations and retains local-only upload marke
     await agent((golden as Golden).input);
   }
   expect(model.prompts).toHaveLength(1);
-  expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining("not available on Confident AI yet"),
-  );
 });
 
 test("different cases use their own judges", async () => {
@@ -313,4 +462,40 @@ test("different cases use their own judges", async () => {
   expect(result.testResults.map((r) => r.success)).toEqual([true, false]);
   expect(passModel.prompts).toHaveLength(1);
   expect(failModel.prompts).toHaveLength(1);
+});
+
+test("measure exposes verdicts in condition order and writes a reason", async () => {
+  const model = new Judge();
+  const testCase = single(
+    new Expectations({ must: ["Greet"], mustNot: ["Insult"], model }),
+  );
+  const [evaluator] = withExpectations([], testCase) as any[];
+  await evaluator.measure(testCase);
+  expect(
+    evaluator.verdicts.map((v: { id: string; status: string }) => [
+      v.id,
+      v.status,
+    ]),
+  ).toEqual([
+    ["must[0]", "pass"],
+    ["mustNot[0]", "pass"],
+  ]);
+  expect(evaluator.reason).toBe("Judged reason");
+  expect(model.reasonPrompts).toHaveLength(1);
+  expect(model.reasonPrompts[0]).toContain("Score:\n1");
+  expect(model.reasonPrompts[0]).toContain("Insult");
+});
+
+test("unable to evaluate keeps verdicts and skips the reason pass", async () => {
+  const model = new Judge("unable_to_evaluate");
+  const testCase = single(new Expectations({ must: ["Greet"], model }));
+  const [evaluator] = withExpectations([], testCase) as any[];
+  await expect(evaluator.measure(testCase)).rejects.toThrow(
+    "Unable to evaluate expectations",
+  );
+  expect(evaluator.verdicts.map((v: { status: string }) => v.status)).toEqual(
+    ["unable_to_evaluate"],
+  );
+  expect(evaluator.reason).toBeUndefined();
+  expect(model.reasonPrompts).toHaveLength(0);
 });
