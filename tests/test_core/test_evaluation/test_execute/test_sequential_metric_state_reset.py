@@ -116,7 +116,8 @@ def test_sequential_skip_on_missing_params_does_not_leak_skipped_flag():
 
 def test_sequential_error_does_not_leak_previous_case_verbose_logs_or_score():
     """When case 1 succeeds and case 2 errors under ignore_errors=True,
-    case 2's MetricData must not inherit case 1's verbose_logs or stale state."""
+    case 2's MetricData must not inherit case 1's verbose_logs or stale state.
+    """
     metric = _FailWithoutSettingScoreMetric()
     case_ok = LLMTestCase(input="q1", actual_output="good")
     case_err = LLMTestCase(input="q2", actual_output="boom")
