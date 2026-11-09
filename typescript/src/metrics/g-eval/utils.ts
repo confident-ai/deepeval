@@ -159,12 +159,15 @@ function isPrefixOfLargerScore(token: string, scoreMax: number): boolean {
 /**
  * Average the scores the judge considered, weighted by their probability — the
  * G-Eval paper's scoring, and a port of Python's `calculate_weighted_summed_score`.
- * Falls back to `rawScore` when there is nothing to weight.
+ * Candidates outside `scoreMin`..`scoreMax` are ignored, so the result stays
+ * inside the score range. Falls back to `rawScore` when there is nothing to
+ * weight.
  */
 export function calculateWeightedSummedScore(
   rawScore: number,
   logProbs: ContentTokenLogProbs[] | undefined,
   scoreMax = 10,
+  scoreMin = 0,
 ): number {
   const span = logProbs && findScoreSpan(logProbs, rawScore);
   if (!logProbs || !span) return rawScore;
@@ -191,6 +194,8 @@ export function calculateWeightedSummedScore(
       continue;
     } else {
       score = parseInt(candidate.token, 10);
+      // e.g. "0" under a 1-5 rubric would pull the score below 1
+      if (score < scoreMin) continue;
     }
 
     const prob = Math.exp(logprob);
@@ -213,7 +218,12 @@ export function calculateWeightedSummedScore(
 export async function evaluateGEvalPrompt(
   metric: BaseMetricCore,
   prompt: string,
-  options: { topLogprobs: number; strictMode: boolean; scoreMax?: number },
+  options: {
+    topLogprobs: number;
+    strictMode: boolean;
+    scoreMax?: number;
+    scoreMin?: number;
+  },
 ): Promise<[number, string]> {
   const model = metric.model;
   if (model?.generateRaw && model.supportsLogProbs() !== false) {
@@ -226,7 +236,12 @@ export async function evaluateGEvalPrompt(
       return [
         options.strictMode
           ? score
-          : calculateWeightedSummedScore(score, logProbs, options.scoreMax),
+          : calculateWeightedSummedScore(
+              score,
+              logProbs,
+              options.scoreMax,
+              options.scoreMin,
+            ),
         reason,
       ];
     } catch {

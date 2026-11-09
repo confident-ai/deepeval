@@ -368,9 +368,12 @@ def calculate_weighted_summed_score(
     raw_score: int,
     raw_response: ChatCompletion,
     score_max: int = 10,
+    score_min: int = 0,
 ) -> Union[int, float]:
     """Average the scores the judge considered, weighted by their probability.
-    Falls back to ``raw_score`` when there is nothing to weight."""
+    Candidates outside ``score_min``..``score_max`` are ignored, so the result
+    stays inside the score range. Falls back to ``raw_score`` when there is
+    nothing to weight."""
     tokens = raw_response.choices[0].logprobs.content
     span = _find_score_span(tokens, raw_score)
     if span is None:
@@ -397,6 +400,9 @@ def calculate_weighted_summed_score(
         else:
             score = int(candidate.token)
             logprob = candidate.logprob
+            if score < score_min:
+                # e.g. "0" under a 1-5 rubric would pull the score below 1
+                continue
 
         prob = math.exp(logprob)
         weighted_sum += score * prob

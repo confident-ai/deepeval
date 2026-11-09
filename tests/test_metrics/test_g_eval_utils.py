@@ -4,6 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.metrics import GEval
+from deepeval.metrics.g_eval import Rubric
 from deepeval.metrics.g_eval.utils import (
     CONVERSATIONAL_G_EVAL_API_PARAMS,
     G_EVAL_API_PARAMS,
@@ -13,6 +15,7 @@ from deepeval.metrics.g_eval.utils import (
     construct_test_case_string,
     calculate_weighted_summed_score,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     check_llm_test_case_params,
@@ -138,6 +141,102 @@ def test_calculate_weighted_summed_score_ignores_out_of_range_candidates():
     )
 
     assert calculate_weighted_summed_score(9, raw_response) == 9
+
+
+def test_calculate_weighted_summed_score_ignores_candidates_below_score_min():
+    # Under a 1-5 rubric the judge emits 1, with 30% of its probability on
+    # "0". Counting "0" would give 0.7, which G-Eval normalizes to a negative
+    # score.
+    raw_response = create_raw_response(
+        [
+            create_logprob_token(
+                "1", math.log(0.7), [("1", math.log(0.7)), ("0", math.log(0.3))]
+            ),
+        ]
+    )
+
+    assert (
+        calculate_weighted_summed_score(
+            1, raw_response, score_max=5, score_min=1
+        )
+        == 1
+    )
+    # A range that starts at 0 still weights "0" in.
+    assert calculate_weighted_summed_score(
+        1, raw_response, score_max=5
+    ) == pytest.approx(0.7)
+
+
+class _LogprobJudge(DeepEvalBaseLLM):
+    """Answers with a fixed score and the log probs of its score token."""
+
+    def __init__(self, content, score_token):
+        super().__init__("logprob-judge")
+        self.content = content
+        self.score_token = score_token
+
+    def load_model(self, *args, **kwargs):
+        return None
+
+    def get_model_name(self):
+        return "logprob-judge"
+
+    def generate(self, prompt, *args, **kwargs):
+        return self.content
+
+    async def a_generate(self, prompt, *args, **kwargs):
+        return self.content
+
+    def _raw_response(self):
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content=self.content),
+                    logprobs=SimpleNamespace(content=[self.score_token]),
+                )
+            ]
+        )
+
+    def generate_raw_response(self, prompt, top_logprobs=None, **kwargs):
+        return self._raw_response(), 0.0
+
+    async def a_generate_raw_response(
+        self, prompt, top_logprobs=None, **kwargs
+    ):
+        return self._raw_response(), 0.0
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_geval_score_stays_in_range_for_rubric_not_starting_at_zero(
+    async_mode,
+):
+    judge = _LogprobJudge(
+        '{"reason": "weak", "score": 1}',
+        create_logprob_token(
+            "1", math.log(0.7), [("1", math.log(0.7)), ("0", math.log(0.3))]
+        ),
+    )
+    metric = GEval(
+        name="Helpfulness",
+        evaluation_steps=["Judge how helpful the answer is."],
+        evaluation_params=[
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+        ],
+        rubric=[
+            Rubric(score_range=(1, 2), expected_outcome="Unhelpful."),
+            Rubric(score_range=(3, 5), expected_outcome="Helpful."),
+        ],
+        model=judge,
+        async_mode=async_mode,
+    )
+
+    score = metric.measure(
+        LLMTestCase(input="q", actual_output="a"), _show_indicator=False
+    )
+
+    # The judge gave the lowest rubric score, so the metric is 0, not -0.075.
+    assert score == 0.0
 
 
 def test_calculate_weighted_summed_score_uses_final_score_token():
