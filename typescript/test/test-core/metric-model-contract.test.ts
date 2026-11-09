@@ -3,12 +3,14 @@
 
 import { z } from "zod";
 import { AnswerRelevancyMetric } from "@/metrics/answer-relevancy/answer-relevancy";
+import { GEval } from "@/metrics";
 import { generateWithSchema } from "@/metrics/utils";
 import {
   calculateWeightedSummedScore,
   evaluateGEvalPrompt,
 } from "@/metrics/g-eval/utils";
 import { DeepEvalBaseLLM } from "@/models";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import type {
   ContentTokenLogProbs,
   GenerationResult,
@@ -264,6 +266,36 @@ describe("evaluateGEvalPrompt", () => {
       scoreMin: 1,
     });
     expect(score).toBe(1);
+  });
+
+  it("keeps GEval's score at 0 or above for a rubric that starts above 0", async () => {
+    // The judge gives the rubric minimum (1 of 1-5) with 30% on "0".
+    const metric = new GEval({
+      name: "Helpfulness",
+      evaluationSteps: ["Judge how helpful the answer is."],
+      evaluationParams: [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+      ],
+      rubric: [
+        { scoreRange: [1, 2], expectedOutcome: "Unhelpful." },
+        { scoreRange: [3, 5], expectedOutcome: "Helpful." },
+      ],
+      model: new StubModel(
+        { output: { score: 1, reason: "weak" }, cost: 0 },
+        async () => ({
+          output: '{"score": 1, "reason": "weak"}',
+          cost: 0,
+          logProbs: [tokenLogProbs("1", { "1": 0.7, "0": 0.3 })],
+        }),
+      ),
+      showIndicator: false,
+    });
+
+    const score = await metric.measure(
+      new LLMTestCase({ input: "q", actualOutput: "a" }),
+    );
+    expect(score).toBe(0);
   });
 
   it("returns the unweighted score in strict mode", async () => {

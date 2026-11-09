@@ -159,9 +159,9 @@ function isPrefixOfLargerScore(token: string, scoreMax: number): boolean {
 /**
  * Average the scores the judge considered, weighted by their probability — the
  * G-Eval paper's scoring, and a port of Python's `calculate_weighted_summed_score`.
- * Candidates outside `scoreMin`..`scoreMax` are ignored, so the result stays
- * inside the score range. Falls back to `rawScore` when there is nothing to
- * weight.
+ * Alternative scores outside `scoreMin`..`scoreMax` are ignored; the emitted
+ * `rawScore` itself is kept as is. Falls back to `rawScore` when there is
+ * nothing to weight.
  */
 export function calculateWeightedSummedScore(
   rawScore: number,

@@ -15,12 +15,12 @@ from deepeval.metrics.g_eval.utils import (
     construct_test_case_string,
     calculate_weighted_summed_score,
 )
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     check_llm_test_case_params,
     convert_turn_to_dict,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,

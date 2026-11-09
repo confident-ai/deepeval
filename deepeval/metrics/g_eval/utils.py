@@ -371,9 +371,9 @@ def calculate_weighted_summed_score(
     score_min: int = 0,
 ) -> Union[int, float]:
     """Average the scores the judge considered, weighted by their probability.
-    Candidates outside ``score_min``..``score_max`` are ignored, so the result
-    stays inside the score range. Falls back to ``raw_score`` when there is
-    nothing to weight."""
+    Alternative scores outside ``score_min``..``score_max`` are ignored; the
+    emitted ``raw_score`` itself is kept as is. Falls back to ``raw_score``
+    when there is nothing to weight."""
     tokens = raw_response.choices[0].logprobs.content
     span = _find_score_span(tokens, raw_score)
     if span is None:
