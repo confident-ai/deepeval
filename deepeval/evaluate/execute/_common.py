@@ -116,13 +116,60 @@ def _skip_metrics_for_error(
     return False
 
 
+def _metrics_for_execution(metrics, errored: bool) -> List[BaseMetric]:
+    """Keep error-aware diagnostics while skipping ordinary quality metrics.
+
+    The caller carries ancestor failure down the walker, so a successful child
+    of a failed component does not unexpectedly run legacy output judges.
+    This does not alter the captured span/trace status.
+    """
+    eligible = []
+    for metric in metrics or []:
+        if errored and not getattr(metric, "evaluate_on_error", False):
+            metric.skipped = True
+        else:
+            eligible.append(metric)
+    return eligible
+
+
+def _span_api_for_evaluation(span: BaseSpan):
+    """Represent an unfinished capture without mutating its native evidence.
+
+    The result API has no IN_PROGRESS status. Mark its exported row errored
+    while leaving the original span available for UNKNOWN-aware metrics.
+    """
+    export_span = span
+    if span.status == TraceSpanStatus.IN_PROGRESS:
+        export_span = span.model_copy(
+            update={
+                "status": TraceSpanStatus.ERRORED,
+                "error": span.error
+                or "Span was still in progress at evaluation time.",
+            }
+        )
+    return trace_manager._convert_span_to_api_span(export_span)
+
+
 def _attach_span_tree(
-    test_case: LLMTestCase, trace: Trace, span: Optional[BaseSpan]
+    test_case: LLMTestCase,
+    trace: Trace,
+    span: Optional[BaseSpan],
+    *,
+    capture_boundary_ids=(),
 ) -> None:
     """Let metrics that look past their own span (e.g. ArgumentCorrectness)
     reach the rest of the trace. `span` is None for a trace-level test case."""
     test_case._trace_root_spans = trace.root_spans
     test_case._trace_span = span
+    test_case._trace_capture_boundary_ids = tuple(capture_boundary_ids)
+    scope = span if span is not None else trace
+    test_case._trace_capture_complete = (
+        getattr(scope, "end_time", None) is not None
+        and getattr(scope, "status", None)
+        in (TraceSpanStatus.SUCCESS, TraceSpanStatus.ERRORED)
+        and not getattr(scope, "drop", False)
+        and not getattr(trace, "drop", False)
+    )
 
 
 def _trace_error(current_trace: Trace) -> Optional[str]:

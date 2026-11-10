@@ -70,6 +70,7 @@ from deepeval.evaluate.utils import (
     count_total_metrics_for_trace,
     count_metrics_in_span_subtree,
     extract_trace_test_results,
+    iter_span_forest,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import (
@@ -86,6 +87,8 @@ logger = logging.getLogger(__name__)
 
 from deepeval.evaluate.execute._common import (
     _attach_span_tree,
+    _metrics_for_execution,
+    _span_api_for_evaluation,
     _await_with_outer_deadline,
     _execute_metric,
     _log_gather_timeout,
@@ -240,13 +243,12 @@ def execute_agentic_test_cases_from_loop(
                 span: BaseSpan,
                 progress: Optional[Progress] = None,
                 pbar_eval_id: Optional[int] = None,
+                inherited_error: bool = False,
             ):
                 # Create API Span
                 metrics: List[BaseMetric] = list(span.metrics or [])
 
-                api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(
-                    span
-                )
+                api_span: BaseApiSpan = _span_api_for_evaluation(span)
 
                 if isinstance(span, AgentSpan):
                     trace_api.agent_spans.append(api_span)
@@ -264,22 +266,26 @@ def execute_agentic_test_cases_from_loop(
                 if _skip_metrics_for_error(span=span, trace=current_trace):
                     api_span.status = TraceSpanApiStatus.ERRORED
                     api_span.error = span.error or _trace_error(current_trace)
-                    if progress and pbar_eval_id is not None:
-                        update_pbar(
-                            progress,
-                            pbar_eval_id,
-                            advance=count_metrics_in_span_subtree(span),
-                        )
+
+                failed = inherited_error or _skip_metrics_for_error(
+                    span=span, trace=current_trace
+                )
+                metrics = _metrics_for_execution(metrics, failed)
+                if progress and pbar_eval_id is not None:
+                    update_pbar(
+                        progress,
+                        pbar_eval_id,
+                        advance=len(span.metrics or []) - len(metrics),
+                    )
+
+                if not metrics:
                     return
 
-                for child in span.children:
-                    dfs(child, progress, pbar_eval_id)
-
-                if not span.metrics:
-                    return
-
-                requires_trace = any(
+                requires_prompt_trace = any(
                     metric.requires_trace for metric in metrics
+                )
+                requires_trace = requires_prompt_trace or any(
+                    metric.requires_native_trace for metric in metrics
                 )
 
                 llm_test_case = None
@@ -301,9 +307,10 @@ def execute_agentic_test_cases_from_loop(
                 if requires_trace:
                     if llm_test_case is None:
                         llm_test_case = LLMTestCase(input="None")
-                    llm_test_case._trace_dict = (
-                        trace_manager.create_nested_spans_dict(span)
-                    )
+                    if requires_prompt_trace:
+                        llm_test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(span)
+                        )
                 else:
                     if llm_test_case is None:
                         api_span.status = TraceSpanApiStatus.ERRORED
@@ -369,22 +376,25 @@ def execute_agentic_test_cases_from_loop(
 
             start_time = time.perf_counter()
 
-            # On errored traces, skip trace-level metrics (no test case
-            # to judge) but DO run the span-level DFS walker below —
-            # it's what hydrates ``trace_api.*_spans`` for the dashboard,
-            # and per-span metric skip is handled inside ``dfs``.
+            # Failed runs still carry evidence for explicitly error-aware
+            # diagnostics. Ordinary output metrics remain skipped.
             skip_metrics_for_this_golden = False
             if _skip_metrics_for_error(trace=current_trace):
                 trace_api.status = TraceSpanApiStatus.ERRORED
-                if progress and pbar_eval_id is not None:
-                    update_pbar(
-                        progress,
-                        pbar_eval_id,
-                        advance=count_total_metrics_for_trace(current_trace),
-                    )
-            elif current_trace.metrics:
+            eligible_trace_metrics = _metrics_for_execution(
+                current_trace.metrics,
+                _skip_metrics_for_error(trace=current_trace),
+            )
+            if progress and pbar_eval_id is not None:
+                update_pbar(
+                    progress,
+                    pbar_eval_id,
+                    advance=len(current_trace.metrics or [])
+                    - len(eligible_trace_metrics),
+                )
+            if eligible_trace_metrics:
                 requires_trace = any(
-                    metric.requires_trace for metric in current_trace.metrics
+                    metric.requires_trace for metric in eligible_trace_metrics
                 )
 
                 # Build the trace-level LLMTestCase from the golden
@@ -407,7 +417,7 @@ def execute_agentic_test_cases_from_loop(
                     expected_tools=current_trace.expected_tools,
                 )
 
-                if requires_trace:
+                if requires_trace and current_trace.root_spans:
                     llm_test_case._trace_dict = (
                         trace_manager.create_nested_spans_dict(
                             current_trace.root_spans[0]
@@ -416,14 +426,14 @@ def execute_agentic_test_cases_from_loop(
                 _attach_span_tree(llm_test_case, current_trace, None)
 
                 if not skip_metrics_for_this_golden:
-                    for metric in current_trace.metrics:
+                    for metric in eligible_trace_metrics:
                         metric.skipped = False
                         metric.error = None
                         if display_config.verbose_mode is not None:
                             metric.verbose_mode = display_config.verbose_mode
 
                     trace_api.metrics_data = []
-                    for metric in current_trace.metrics:
+                    for metric in eligible_trace_metrics:
                         res = _execute_metric(
                             metric=metric,
                             test_case=llm_test_case,
@@ -449,8 +459,10 @@ def execute_agentic_test_cases_from_loop(
             # just ``root_spans[0]``: OTel integrations can land
             # multiple logical roots when a child ends before its
             # parent. Mirrors the async path in ``agentic.py``.
-            for root in current_trace.root_spans:
-                dfs(root, progress, pbar_eval_id)
+            for span, inherited_error in iter_span_forest(
+                current_trace.root_spans, postorder=True
+            ):
+                dfs(span, progress, pbar_eval_id, inherited_error)
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time

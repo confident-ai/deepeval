@@ -308,7 +308,9 @@ def execute_test_cases(
                             # here, we will check for an additional property on the flattened test cases to see if updating is necessary
                             api_test_case.update_metric_data(metric_data)
                             emitted[current_index] = True
-                            if metric.error is None:
+                            if metric.error is None and getattr(
+                                metric, "cacheable", True
+                            ):
                                 cache_metric_data = deepcopy(metric_data)
                                 cache_metric_data.evaluation_cost = 0  # Cached metrics will have evaluation cost as 0, not None.
                                 updated_cached_metric_data = CachedMetricData(
@@ -824,7 +826,7 @@ async def _a_execute_llm_test_cases(
             metric_data = create_metric_data(metric)
             api_test_case.update_metric_data(metric_data)
 
-            if metric.error is None:
+            if metric.error is None and getattr(metric, "cacheable", True):
                 cache_metric_data = deepcopy(metric_data)
                 cache_metric_data.evaluation_cost = (
                     0  # Create new copy and save 0 for cost
