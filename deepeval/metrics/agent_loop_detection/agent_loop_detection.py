@@ -213,8 +213,12 @@ class AgentLoopDetectionMetric(BaseMetric):
             self.score = 0.0
             self.success = False
             self.reason = (
-                "No trace data found. This metric requires trace "
-                "data from @observe."
+                (
+                    "No trace data found. This metric requires trace "
+                    "data from @observe."
+                )
+                if self.include_reason
+                else None
             )
             self.verbose_logs = ""
             return
@@ -258,7 +262,9 @@ class AgentLoopDetectionMetric(BaseMetric):
         if self.check_call_graph_cycles and cycle_score < 1.0:
             reasons.append(cycle_reason)
 
-        if self.score == 1.0:
+        if not self.include_reason:
+            self.reason = None
+        elif self.score == 1.0:
             self.reason = "No loop patterns detected."
         else:
             self.reason = " ".join([r for r in reasons if r])
