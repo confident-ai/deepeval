@@ -75,3 +75,12 @@ def test_schema_added_after_caching_does_not_reuse_cached_score():
     assert getattr(cached, "expected_schema", None) is None
 
     assert not Cache.same_metric_configs(_metric(Strict), cached)
+
+
+def test_dict_json_correctness_schema_reuses_cached_score():
+    schema = {"type": "object", "properties": {"name": {"type": "string"}}}
+    cached = _as_read_from_cache_file(
+        Cache.create_metric_configuration(_metric(schema))
+    )
+    assert Cache.same_metric_configs(_metric(schema), cached)
+    assert not Cache.same_metric_configs(_metric({"type": "object"}), cached)
