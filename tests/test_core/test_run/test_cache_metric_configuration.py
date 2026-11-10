@@ -1,7 +1,16 @@
-from deepeval.metrics import GEval
+import pytest
+
+from deepeval import evaluate
+from deepeval.evaluate.configs import CacheConfig, DisplayConfig
+from deepeval.metrics import (
+    GEval,
+    PatternMatchMetric,
+    ToolCorrectnessMetric,
+    ToolPermissionMetric,
+)
 from deepeval.metrics.g_eval import Rubric
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.test_case import SingleTurnParams
+from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.test_run.cache import Cache, MetricConfiguration
 
 
@@ -79,3 +88,110 @@ def test_rubric_added_after_caching_does_not_reuse_cached_score():
     assert getattr(cached, "rubric", None) is None
 
     assert not Cache.same_metric_configs(_geval(STRICT), cached)
+
+
+# Deterministic metrics: the score depends only on these settings, so a
+# cached score can only be reused for the same ones.
+
+
+def _cached(metric):
+    return _as_read_from_cache_file(Cache.create_metric_configuration(metric))
+
+
+@pytest.mark.parametrize(
+    "cached_metric, metric",
+    [
+        (PatternMatchMetric(pattern=r".*"), PatternMatchMetric(pattern=r"\d+")),
+        (
+            PatternMatchMetric(pattern="ok", ignore_case=True),
+            PatternMatchMetric(pattern="ok", ignore_case=False),
+        ),
+        (
+            ToolCorrectnessMetric(model=_StaticJudge()),
+            ToolCorrectnessMetric(
+                should_consider_ordering=True, model=_StaticJudge()
+            ),
+        ),
+        (
+            ToolCorrectnessMetric(model=_StaticJudge()),
+            ToolCorrectnessMetric(
+                should_exact_match=True, model=_StaticJudge()
+            ),
+        ),
+        (
+            ToolPermissionMetric(denied_tools=["send_email"]),
+            ToolPermissionMetric(denied_tools=["send_email", "delete_db"]),
+        ),
+        (
+            ToolPermissionMetric(allowed_tools=["search", "delete_db"]),
+            ToolPermissionMetric(allowed_tools=["search"]),
+        ),
+        (
+            ToolPermissionMetric(allowed_tools=[], denied_tools=["delete_db"]),
+            ToolPermissionMetric(denied_tools=["delete_db"]),
+        ),
+    ],
+    ids=[
+        "pattern",
+        "ignore_case",
+        "tool_ordering",
+        "tool_exact_match",
+        "denied_tools",
+        "allowed_tools",
+        "empty_allowlist_vs_none",
+    ],
+)
+def test_changed_deterministic_metric_settings_do_not_reuse_cached_score(
+    cached_metric, metric
+):
+    assert not Cache.same_metric_configs(metric, _cached(cached_metric))
+
+
+@pytest.mark.parametrize(
+    "cached_metric, metric",
+    [
+        (
+            PatternMatchMetric(pattern=r"\d+"),
+            PatternMatchMetric(pattern=r"\d+"),
+        ),
+        (
+            ToolCorrectnessMetric(
+                should_consider_ordering=True, model=_StaticJudge()
+            ),
+            ToolCorrectnessMetric(
+                should_consider_ordering=True, model=_StaticJudge()
+            ),
+        ),
+        (
+            ToolPermissionMetric(
+                allowed_tools=["search", "lookup"], denied_tools=["a", "b"]
+            ),
+            ToolPermissionMetric(
+                allowed_tools=["lookup", "search"], denied_tools=["b", "a"]
+            ),
+        ),
+    ],
+    ids=["pattern", "tool_ordering", "tool_lists_in_another_order"],
+)
+def test_same_deterministic_metric_settings_reuse_cached_score(
+    cached_metric, metric
+):
+    assert Cache.same_metric_configs(metric, _cached(cached_metric))
+
+
+def test_tightened_pattern_is_rechecked_by_evaluate(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    def run(pattern):
+        result = evaluate(
+            [LLMTestCase(input="Order id?", actual_output="I don't know")],
+            [PatternMatchMetric(pattern=pattern)],
+            cache_config=CacheConfig(use_cache=True, write_cache=True),
+            display_config=DisplayConfig(
+                print_results=False, show_indicator=False
+            ),
+        )
+        return result.test_results[0].metrics_data[0].success
+
+    assert run(r".*") is True
+    assert run(r"\d+") is False

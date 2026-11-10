@@ -57,6 +57,13 @@ class MetricConfiguration(BaseModel):
     assessment_questions: Optional[List[str]] = None
     rubric: Optional[List[Dict[str, Any]]] = None
     expected_schema: Optional[Dict[str, Any]] = None
+    # Deterministic metrics: their score depends only on these settings.
+    pattern: Optional[str] = None
+    ignore_case: Optional[bool] = None
+    should_exact_match: Optional[bool] = None
+    should_consider_ordering: Optional[bool] = None
+    allowed_tools: Optional[List[str]] = None
+    denied_tools: Optional[List[str]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -384,6 +391,7 @@ class Cache:
             "evaluation_steps",
             "rubric",
             "expected_schema",
+            *Cache._DETERMINISTIC_METRIC_FIELDS,
         ]
 
         for field in config_fields:
@@ -393,6 +401,8 @@ class Cache:
                 metric_value = Cache._serialize_rubric(metric_value)
             if field == "expected_schema":
                 metric_value = Cache._serialize_expected_schema(metric_value)
+            if field in Cache._TOOL_NAME_FIELDS:
+                metric_value = Cache._serialize_tool_names(metric_value)
 
             # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
@@ -466,6 +476,26 @@ class Cache:
             return None
         return [item.model_dump(mode="json") for item in rubric]
 
+    # PatternMatchMetric, ToolCorrectnessMetric and ToolPermissionMetric
+    # pass or fail on these settings alone, so they are part of the cache key.
+    _DETERMINISTIC_METRIC_FIELDS = (
+        "pattern",
+        "ignore_case",
+        "should_exact_match",
+        "should_consider_ordering",
+        "allowed_tools",
+        "denied_tools",
+    )
+    _TOOL_NAME_FIELDS = ("allowed_tools", "denied_tools")
+
+    @staticmethod
+    def _serialize_tool_names(tools: Any) -> Optional[List[str]]:
+        # ToolPermissionMetric keeps these as sets. Sort them so the order
+        # doesn't matter, and keep None (no allowlist) apart from [].
+        if tools is None:
+            return None
+        return sorted(tools)
+
     @staticmethod
     def _serialize_expected_schema(schema: Any) -> Optional[Dict[str, Any]]:
         # JsonCorrectnessMetric passes or fails an output against this schema,
@@ -496,6 +526,7 @@ class Cache:
             "assessment_questions",  # checked
             "rubric",  # checked
             "expected_schema",  # checked
+            *Cache._DETERMINISTIC_METRIC_FIELDS,  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
@@ -505,6 +536,8 @@ class Cache:
                 value = Cache._serialize_rubric(value)
             if field == "expected_schema":
                 value = Cache._serialize_expected_schema(value)
+            if field in Cache._TOOL_NAME_FIELDS:
+                value = Cache._serialize_tool_names(value)
             config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)
