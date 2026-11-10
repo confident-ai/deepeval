@@ -7,10 +7,19 @@ license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/confident-ai/deepeval"
 documentation = "https://deepeval.com"
+homepage = "https://deepeval.com"
+keywords = ["llm", "evaluation", "llm-evaluation", "evals", "ai-agents", "rag", "llm-as-a-judge", "pytest"]
+classifiers = [
+  "Intended Audience :: Developers",
+  "Framework :: Pytest",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Software Development :: Testing",
+]
 exclude = ["tests/*", "scripts/*", "typescript/*"]
 
 [tool.poetry.urls]
 "Confident AI" = "https://www.confident-ai.com"
+"Issues" = "https://github.com/confident-ai/deepeval/issues"
 
 [tool.poetry.scripts]
 deepeval = 'deepeval.cli.main:app'
