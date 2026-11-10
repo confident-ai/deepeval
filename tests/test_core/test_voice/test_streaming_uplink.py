@@ -338,6 +338,26 @@ async def test_a_speech_model_that_cannot_stream_still_sends_whole_utterances():
 
 
 @pytest.mark.asyncio
+async def test_a_phone_persona_streams_its_utterance_over_the_phone_line():
+    from deepeval.dataset import Persona
+    from deepeval.voice.line_quality import LineQualityFilter
+
+    wire = _Wire(trailing_silence_ms=0)
+    simulator = _voice_simulator(wire, _StreamingTTS(first_frame_delay=0.0))
+    persona = Persona(characteristics="A caller.", line_quality="phone")
+
+    await simulator._send_user_utterance(
+        _VoiceSession(connector=wire, persona=persona),
+        "Where is my order?",
+        persona,
+        trailing_silence=False,
+    )
+
+    whole = LineQualityFilter("phone").filter_pcm(_FRAME * 3, _RATE)
+    assert b"".join(wire.sent) == whole
+
+
+@pytest.mark.asyncio
 async def test_collecting_a_stream_preserves_order_and_rate():
     pcm, rate = await collect_pcm_chunks(_stream(b"\x01\x00", b"\x02\x00"))
 

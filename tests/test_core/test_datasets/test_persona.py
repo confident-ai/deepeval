@@ -15,6 +15,14 @@ from deepeval.dataset.utils import (
 from deepeval.test_case import Turn
 
 
+class _TTS:
+    def __init__(self, takes_instructions: bool):
+        self.takes_instructions = takes_instructions
+
+    def supports_voice_instructions(self) -> bool:
+        return self.takes_instructions
+
+
 class TestPersonaPrompt:
     def test_prompt_block_wraps_the_characteristics(self):
         persona = Persona(characteristics="  You are in a hurry.  ")
@@ -76,6 +84,47 @@ class TestPersonaVoice:
         persona = Persona(characteristics="Anyone", voice="coral")
 
         assert persona.tts_kwargs() == {"voice": "coral"}
+
+    def test_voice_instructions_reach_a_model_that_takes_them(self):
+        persona = Persona(
+            characteristics="Anyone",
+            voice="coral",
+            voice_instructions="Scottish accent, speaks quickly.",
+        )
+
+        assert persona.tts_kwargs(_TTS(takes_instructions=True)) == {
+            "voice": "coral",
+            "instructions": "Scottish accent, speaks quickly.",
+        }
+
+    def test_voice_instructions_stay_off_a_model_that_does_not(self):
+        persona = Persona(
+            characteristics="Anyone", voice_instructions="Scottish accent."
+        )
+
+        assert persona.tts_kwargs(_TTS(takes_instructions=False)) == {}
+        assert persona.tts_kwargs(object()) == {}
+        assert persona.tts_kwargs() == {}
+
+    def test_only_gpt_4o_mini_tts_takes_voice_instructions(self):
+        from deepeval.models import OpenAITTSModel
+
+        def takes(model: str) -> bool:
+            return OpenAITTSModel(
+                model=model, api_key="test"
+            ).supports_voice_instructions()
+
+        assert takes("gpt-4o-mini-tts")
+        assert takes("gpt-4o-mini-tts-2025-03-20")
+        assert not takes("tts-1")
+        assert not takes("tts-1-hd")
+
+    def test_line_quality_defaults_to_wideband(self):
+        assert Persona(characteristics="Anyone").line_quality == "wideband"
+
+    def test_rejects_an_unknown_line_quality(self):
+        with pytest.raises(ValueError):
+            Persona(characteristics="Anyone", line_quality="satellite")
 
     def test_background_volume_is_bounded(self):
         with pytest.raises(ValueError):

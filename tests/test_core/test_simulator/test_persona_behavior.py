@@ -13,11 +13,13 @@ from deepeval.dataset import (
 from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import Audio
 from deepeval.voice import VoiceConfig
+from deepeval.voice.background import mix_background
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.callback import (
     CallbackVoiceConnector,
 )
 from deepeval.voice.connectors.types import ConnectorTurn
+from deepeval.voice.line_quality import apply_line_quality
 from tests.test_core.test_simulator.helpers import StaticSimulatorModel
 
 
@@ -95,6 +97,44 @@ def test_persona_voice_reaches_the_tts_model():
     simulator.simulate([golden], max_user_simulations=1)
 
     assert tts.calls and tts.calls[0]["voice"] == "coral"
+
+
+class InstructableTTS(RecordingTTS):
+    def supports_voice_instructions(self) -> bool:
+        return True
+
+
+def test_voice_instructions_reach_a_tts_model_that_takes_them():
+    tts = InstructableTTS()
+    simulator = _simulator(RecordingAgent(), tts=tts)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="An impatient caller.",
+            voice_instructions="Scottish accent, speaks quickly.",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert tts.calls[0]["instructions"] == "Scottish accent, speaks quickly."
+
+
+def test_voice_instructions_stay_off_a_tts_model_that_does_not_take_them():
+    tts = RecordingTTS()
+    simulator = _simulator(RecordingAgent(), tts=tts)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="An impatient caller.",
+            voice_instructions="Scottish accent.",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert tts.calls
+    assert all("instructions" not in call for call in tts.calls)
 
 
 def test_multilingual_stt_requests_language_detection():
@@ -217,6 +257,33 @@ def test_background_audio_is_mixed_into_the_uplink(tmp_path):
 
     pcm, _, _ = audio_utils.wav_bytes_to_pcm16(agent.uplinks[0].get_bytes())
     assert int.from_bytes(pcm[:2], "little", signed=True) == 1500
+
+
+def test_a_phone_line_carries_the_background_along_with_the_voice(tmp_path):
+    bed = tmp_path / "cafe.wav"
+    bed.write_bytes(
+        audio_utils.pcm16_to_wav_bytes(
+            (500).to_bytes(2, "little", signed=True) * 240, sample_rate=24000
+        )
+    )
+    background = BackgroundNoiseSettings(audio=str(bed), volume=1.0)
+    agent = RecordingAgent()
+    simulator = _simulator(agent)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="A caller in a cafe, on their phone.",
+            background_noise=background,
+            line_quality="phone",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    expected = apply_line_quality(
+        mix_background(_wav_audio(), background), "phone"
+    )
+    assert agent.uplinks[0].get_bytes() == expected.get_bytes()
 
 
 def test_persona_interruption_behavior_selects_the_duplex_path():
