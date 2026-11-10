@@ -17,11 +17,11 @@ import {
   isAIMessage,
   isChatGeneration,
   parsePromptsToMessages,
-  prepareToolCallInputParameters,
   safeExtractTokenUsage,
 } from "@/integrations/langchain/utils";
 import { RunHierarchyTracker } from "@/integrations/langchain/langgraph-utils";
 import { SpanType, TraceSpanStatus } from "@/tracing/tracing";
+import { prepareToolCallInputParameters } from "@/tracing/utils";
 import { traceManager } from "@/tracing";
 import { recordTracingIntegration } from "@/telemetry";
 import { Integration } from "@/tracing/integrations";

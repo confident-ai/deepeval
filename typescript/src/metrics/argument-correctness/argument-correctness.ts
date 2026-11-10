@@ -24,6 +24,7 @@ import {
 } from "@/metrics/argument-correctness/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
 import { prepareMeasure } from "@/metrics/prepare-measure";
+import { withToolCallsFromTrace } from "@/metrics/argument-correctness/utils";
 
 const TEMPLATE_CLASS = "ArgumentCorrectnessMetric";
 
@@ -73,6 +74,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
+    testCase = withToolCallsFromTrace(testCase);
     this.error = undefined;
     await this.startProgress();
     try {

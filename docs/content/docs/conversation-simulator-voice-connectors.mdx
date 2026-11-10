@@ -43,6 +43,8 @@ Here are the connectors available on `deepeval` so far:
 | `VapiConnector`          | WebSocket  | Vapi assistants, addressed by `assistant_id`.                        |
 | `ElevenLabsConnector`    | WebSocket  | ElevenLabs agents, addressed by `agent_id`.                          |
 | `LiveKitConnector`       | WebRTC     | Agents dispatched into LiveKit rooms.                                |
+| `PhoneConnector`         | SIP        | [Phone numbers](#phone-calls), called through LiveKit or Twilio.     |
+| `SIPConnector`           | SIP        | [SIP addresses](#phone-calls), called through LiveKit.               |
 | `PipecatConnector`       | WebSocket  | Self-hosted Pipecat pipelines, addressed by URL.                     |
 | `WebSocketConnector`     | WebSocket  | Custom agents that speak raw audio over a WebSocket.                 |
 | `CallbackVoiceConnector` | In-process | A Python callable, no network — handy for testing your own pipeline. |
@@ -234,3 +236,56 @@ The preset matters more everywhere else, because silence is the only evidence th
 ::::note
 The underlying millisecond values are chosen as a coordinated preset rather than exposed individually, for the same reason [interruption timing](/docs/conversation-simulator-voice-interruptions#when-does-it-interrupt) is: they are interdependent, and picking them apart is guesswork without knowing how the turn-taking loop uses them.
 ::::
+
+## Phone Calls
+
+When your agent answers a phone number or a SIP address, `deepeval` can call it the way a real caller would, through your own telephony account. `PhoneConnector` calls a phone number and `SIPConnector` calls a SIP address, and the `provider` you pass decides which account places the call:
+
+```python
+from deepeval.voice import PhoneConnector, LiveKitProvider, TwilioProvider
+
+connector = PhoneConnector(
+    "+14155550100",
+    caller_id="+14155550199",
+    provider=LiveKitProvider(trunk_id="ST_xxxxxxxxxxxx"),
+)
+
+connector = PhoneConnector(
+    "+14155550100",
+    caller_id="+14155550199",
+    provider=TwilioProvider(public_url="https://your-tunnel.ngrok.app"),
+)
+```
+
+| | `LiveKitProvider` | `TwilioProvider` |
+| --- | --- | --- |
+| `PhoneConnector` | [Through a SIP trunk](/integrations/voice-agent-connectors/livekit#calling-a-phone-number) | [Through your Twilio account](/integrations/voice-agent-connectors/twilio) |
+| `SIPConnector` | [Directly](/integrations/voice-agent-connectors/livekit#calling-a-sip-address) | Not supported |
+
+Switching provider only changes the `provider` argument. The rest of the call is set up the same way. There is **ONE** mandatory and **SIX** optional parameters shared by every provider when creating a `PhoneConnector`:
+
+- `phone_number`: A string phone number in E.164 format, with the country code, such as `"+14155550100"`.
+- `provider`: A `LiveKitProvider` or `TwilioProvider` holding the account to call through. Its own parameters are on the provider's page.
+- [Optional] `caller_id`: A string number your agent sees calling. Required with `TwilioProvider`, where it must be a number on your Twilio account. With `LiveKitProvider` it defaults to `None`, which uses the trunk's own number.
+- [Optional] `ring_timeout_s`: An integer number of seconds to let the phone ring before giving up. Defaulted to `45`.
+- [Optional] `max_call_duration_s`: An integer number of seconds after which the call is ended. Defaulted to `1800`.
+- [Optional] `dial_interval_s`: A float number of seconds to keep between dials. Defaulted to `1.0`.
+- [Optional] `silence_timeout_s`: A float number of seconds without speech after which the call is [hung up](#hanging-up-silent-calls). Defaulted to `None`.
+- [Optional] `turn_detection`: A string preset (`"eager"`, `"balanced"` or `"patient"`) controlling how long a pause has to last before your agent is considered finished speaking. Defaulted to `"patient"`, because phone agents pause longer than web ones.
+
+Each simulated conversation places its own call, so phone simulations run in parallel like any other.
+
+## Hanging Up Silent Calls
+
+A call where nobody speaks (an agent that crashed, a line that went dead) otherwise runs until the turn ceiling gives up, again and again. Mix `SilenceTimeoutMixin` into any connector to hang up once neither side has spoken for `silence_timeout_s` seconds:
+
+```python
+from deepeval.voice import LiveKitConnector, SilenceTimeoutMixin
+
+class MyConnector(SilenceTimeoutMixin, LiveKitConnector):
+    pass
+
+connector = MyConnector(agent_name="support-agent", silence_timeout_s=30)
+```
+
+The mixin goes first in the class bases so it wraps the connector's own methods. Agent audio counts as speech only when it's louder than the connector's `silence_threshold_rms`, so line noise doesn't keep a dead call open. Once the call is hung up, the simulator ends that conversation the same way it does when your agent hangs up. Leave `silence_timeout_s` unset to never hang up for silence.

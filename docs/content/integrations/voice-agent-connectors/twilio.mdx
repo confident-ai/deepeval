@@ -1,0 +1,71 @@
+---
+title: Twilio Phone Calls
+sidebar_label: Twilio
+languages: [python]
+---
+
+In `deepeval`, you can run a [voice simulation](/docs/conversation-simulator-voice-mode) against any agent that answers a phone number, by calling it through your own Twilio account. The connector places a real call with Twilio's API, and Twilio streams the call audio back to a small server `deepeval` runs on your machine, so the simulated caller can talk and listen at the same time.
+
+No Twilio SDK is needed. If your agent runs on LiveKit, a [`LiveKitProvider`](/integrations/voice-agent-connectors/livekit#calling-a-phone-number) calls it without a public URL.
+
+### Setting Up Your Credentials
+
+Your account SID and auth token place the call. DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+TWILIO_ACCOUNT_SID=<your-account-sid>
+TWILIO_AUTH_TOKEN=<your-auth-token>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export TWILIO_ACCOUNT_SID=<your-account-sid>
+export TWILIO_AUTH_TOKEN=<your-auth-token>
+```
+
+### Exposing the Audio Server
+
+Twilio sends call audio over a [Media Stream](https://www.twilio.com/docs/voice/media-streams), which has to reach `deepeval` at a public `wss://` address. `deepeval` listens on port `8765` by default, so expose that port with a tunnel such as [ngrok](https://ngrok.com/docs/start):
+
+```bash
+ngrok http 8765
+```
+
+Pass the `https://` address the tunnel prints as `public_url`. On a server that's already reachable, pass its own address instead.
+
+### In Code
+
+```python
+from deepeval.voice import PhoneConnector, TwilioProvider, VoiceConfig
+
+voice_config = VoiceConfig(
+    connector=PhoneConnector(
+        "+14155550100",
+        caller_id="+14155550199",
+        provider=TwilioProvider(public_url="https://your-tunnel.ngrok.app"),
+    ),
+    ...,
+)
+```
+
+With Twilio, `caller_id` is required and must be a number on your Twilio account. `PhoneConnector`'s other parameters, such as `ring_timeout_s` and `silence_timeout_s`, are listed in [Phone Calls](/docs/conversation-simulator-voice-connectors#phone-calls). There are **ONE** mandatory and **FOUR** optional parameters when creating a `TwilioProvider`:
+
+- `public_url`: A string `https://` or `wss://` address that forwards to `deepeval`'s port.
+- [Optional] `account_sid`: A string Twilio account SID. Defaults to `TWILIO_ACCOUNT_SID`.
+- [Optional] `auth_token`: A string Twilio auth token. Defaults to `TWILIO_AUTH_TOKEN`.
+- [Optional] `host`: A string address the audio server listens on. Defaulted to `"0.0.0.0"`.
+- [Optional] `port`: An integer port the audio server listens on. Defaulted to `8765`.
+
+If the call can't be placed or isn't answered, the run stops with the reason, such as a busy line, no answer, or a `public_url` that doesn't reach your machine.
+
+:::note
+Phone audio carries no transcript, so every agent reply is transcribed with your [speech-to-text model](/integrations/stt/openai). Twilio streams 8 kHz audio, the same quality a real caller hears.
+:::
+
+### Parallel Calls
+
+Every simulated conversation places its own call, and all of them share the one audio server, so up to `max_concurrent` calls run at once. Calls are placed `dial_interval_s` apart because Twilio accepts one new call per second per account by default. Raise it in the Twilio console before running many calls in parallel.

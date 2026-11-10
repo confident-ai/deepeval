@@ -442,6 +442,8 @@ class LLMTestCase(BaseModel):
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
     )
     _trace_dict: Optional[Dict] = PrivateAttr(default=None)
+    _trace_root_spans: Optional[List[Any]] = PrivateAttr(default=None)
+    _trace_span: Optional[Any] = PrivateAttr(default=None)
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
