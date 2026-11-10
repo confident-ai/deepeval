@@ -18,10 +18,7 @@ const logger = getLogger("deepeval.cache");
 const CACHE_VERSION = 1;
 
 /**
- * The metric knobs that change a score. The fields after `includeReason`
- * define a G-Eval or a JsonCorrectnessMetric, and a few other metrics take
- * `evaluationParams` too. A metric without a field, and an entry cached before
- * these were added, read as null.
+ * The metric knobs that change a score.
  */
 interface MetricConfiguration {
   evalMode?: string;
@@ -119,8 +116,6 @@ function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
     strictMode: metric.strictMode,
     includeReason: metric.includeReason,
     criteria: definition.criteria ?? null,
-    // A metric with `criteria` writes the steps it generates from them onto
-    // itself, and those differ from run to run, so steps only count without.
     evaluationSteps:
       definition.criteria == null ? (definition.evaluationSteps ?? null) : null,
     evaluationParams: definition.evaluationParams ?? null,
