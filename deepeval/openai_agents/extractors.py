@@ -431,6 +431,11 @@ def update_trace_properties_from_span_data(
     span_data: Union["ResponseSpanData", "GenerationSpanData"],
 ):
     if isinstance(span_data, ResponseSpanData):
+        # A failed model call ends the span without a Response object
+        # (ResponseSpanData.response is Optional), so there is no input
+        # or output to record on the trace.
+        if span_data.response is None:
+            return
         if not trace.input:
             trace.input = parse_response_input(
                 span_data.input, span_data.response.instructions
