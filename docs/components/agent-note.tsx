@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Bot } from "lucide-react";
 import styles from "@site/src/components/Callout/Callout.module.scss";
 
 /**
@@ -7,16 +6,16 @@ import styles from "@site/src/components/Callout/Callout.module.scss";
  *
  * Usage in MDX: `<AgentNote tag="de-intro" />`. The text and the copyable
  * prompt are filled in at build time by `lib/remark-agent-note.ts`, so they
- * also appear in the page's llms markdown output.
+ * also appear in the page's llms markdown output. The text starts with
+ * "For AI agents.", so the box has no separate title. `data-nosnippet` keeps
+ * the note out of search result snippets.
  */
 export function AgentNote({ tag, children }: { tag: string; children?: ReactNode }) {
   return (
     <aside className={styles.callout} data-type="secondary" data-agent-note={tag}>
-      <div className={styles.header}>
-        <Bot className={styles.icon} />
-        <span className={styles.title}>For AI agents</span>
+      <div className={styles.body} data-nosnippet="">
+        {children}
       </div>
-      <div className={styles.body}>{children}</div>
     </aside>
   );
 }

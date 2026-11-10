@@ -113,7 +113,7 @@ const Footer = () => {
               Open-source LLM evaluation framework. Apache 2.0 licensed.
             </p>
             <p className={styles.tagline}>
-              DeepEval is built by{" "}
+              DeepEval is built and maintained by{" "}
               <a
                 href="https://www.confident-ai.com"
                 target="_blank"
