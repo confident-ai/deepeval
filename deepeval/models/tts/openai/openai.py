@@ -38,6 +38,8 @@ _TTS_PRICE_PER_1M_CHARS = {
 
 
 class OpenAITTSModel(DeepEvalBaseTTS):
+    provider = PS.OPENAI
+
     def __init__(
         self,
         model: Optional[str] = None,

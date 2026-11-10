@@ -45,6 +45,8 @@ class CartesiaTTSModel(DeepEvalBaseTTS):
     your Cartesia account rather than a name from a fixed cast.
     """
 
+    provider = PS.CARTESIA
+
     def __init__(
         self,
         model: Optional[str] = None,

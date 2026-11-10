@@ -14,6 +14,7 @@ from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
 
 if TYPE_CHECKING:
+    from deepeval.constants import ProviderSlug
     from deepeval.test_case import Audio, AudioChunk
     from deepeval.models.system_one.schema import (
         ChoiceAnswer,
@@ -251,6 +252,9 @@ class DeepEvalBaseTTS(ABC):
     # synthesized speech have to know it to resample the uplink, so it is
     # declared here rather than left for each implementation to invent.
     sample_rate: int = 24000
+    # Which entry of a persona's per-provider `voice` dict this model speaks
+    # with. None means only a plain string `voice` reaches it.
+    provider: Optional["ProviderSlug"] = None
 
     def __init__(self, model: Optional[str] = None, *args, **kwargs):
         self.name = parse_model_name(model)
