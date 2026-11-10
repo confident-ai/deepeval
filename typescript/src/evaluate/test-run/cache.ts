@@ -15,13 +15,29 @@ import type { AnyTestCase, MetricData } from "@/evaluate/types";
 const logger = getLogger("deepeval.cache");
 const CACHE_VERSION = 1;
 
-/** The metric knobs that change a score. */
+/**
+ * The metric knobs that change a score. The fields after `includeReason` define
+ * a G-Eval, and a few other metrics take `evaluationParams` too. A metric
+ * without a field, and an entry cached before these were added, read as null.
+ */
 interface MetricConfiguration {
   evalMode?: string;
   threshold?: number | null;
   evaluationModel?: string;
   strictMode: boolean;
   includeReason: boolean;
+  criteria?: string | null;
+  evaluationSteps?: string[] | null;
+  evaluationParams?: string[] | null;
+  rubric?: unknown[] | null;
+}
+
+/** Read off a metric without importing the metric classes into the cache. */
+interface MetricDefinition {
+  criteria?: string;
+  evaluationSteps?: string[];
+  evaluationParams?: string[];
+  rubric?: unknown[];
 }
 
 interface CachedMetric {
@@ -90,13 +106,26 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
 }
 
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
+  const definition = metric as BaseMetricCore & MetricDefinition;
   return {
     evalMode: metric.evalMode,
     threshold: metric.threshold,
     evaluationModel: metric.evaluationModel,
     strictMode: metric.strictMode,
     includeReason: metric.includeReason,
+    criteria: definition.criteria ?? null,
+    // A metric with `criteria` writes the steps it generates from them onto
+    // itself, and those differ from run to run, so steps only count without.
+    evaluationSteps:
+      definition.criteria == null ? (definition.evaluationSteps ?? null) : null,
+    evaluationParams: definition.evaluationParams ?? null,
+    rubric: definition.rubric ?? null,
   };
+}
+
+/** Compares JSON values, so a configuration read back from disk still matches. */
+function sameValue(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
 function sameConfiguration(
@@ -108,7 +137,11 @@ function sameConfiguration(
     a.threshold === b.threshold &&
     a.evaluationModel === b.evaluationModel &&
     a.strictMode === b.strictMode &&
-    a.includeReason === b.includeReason
+    a.includeReason === b.includeReason &&
+    sameValue(a.criteria, b.criteria) &&
+    sameValue(a.evaluationSteps, b.evaluationSteps) &&
+    sameValue(a.evaluationParams, b.evaluationParams) &&
+    sameValue(a.rubric, b.rubric)
   );
 }
 
