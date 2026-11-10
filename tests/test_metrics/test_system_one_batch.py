@@ -153,7 +153,7 @@ async def test_each_jev_model_gets_its_own_request(is_async):
 @sync_and_async
 @pytest.mark.asyncio
 async def test_request_over_budget_is_split(is_async, monkeypatch):
-    def at_most_three_questions(state, questions):
+    def at_most_three_questions(state, questions, **limits):
         if len(questions) > 3:
             raise SystemOneContextLimitError(
                 "too big", estimated_tokens=2, limit_tokens=1

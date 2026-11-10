@@ -47,6 +47,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.models.system_one.limits import (
     SystemOneContextLimitError,
     check_context_budget,
+    context_limits,
 )
 from deepeval.test_case import (
     ConversationalTestCase,
@@ -236,7 +237,9 @@ def _decide(metric: Any, state: Any, questions: Any):
     # builds, so it checks the budget itself rather than relying on the
     # model to (a custom `DeepEvalBaseSystemOneModel` may not).
     try:
-        check_context_budget(state, questions)
+        check_context_budget(
+            state, questions, **context_limits(metric.system_one_model)
+        )
         return metric.system_one_model.decide(state, questions)
     except Exception as e:  # noqa: BLE001 - only the overflow is rewrapped
         inner = _unwrap(e)
@@ -247,7 +250,9 @@ def _decide(metric: Any, state: Any, questions: Any):
 
 async def _a_decide(metric: Any, state: Any, questions: Any):
     try:
-        check_context_budget(state, questions)
+        check_context_budget(
+            state, questions, **context_limits(metric.system_one_model)
+        )
         return await metric.system_one_model.a_decide(state, questions)
     except Exception as e:  # noqa: BLE001 - only the overflow is rewrapped
         inner = _unwrap(e)
