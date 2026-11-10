@@ -175,5 +175,10 @@ class OpenAITTSModel(DeepEvalBaseTTS):
     def supports_streaming(self) -> bool:
         return True
 
+    def supports_voice_instructions(self) -> bool:
+        # tts-1 and tts-1-hd do not take `instructions`; dated
+        # gpt-4o-mini-tts snapshots keep the prefix.
+        return self.name.startswith("gpt-4o-mini-tts")
+
     def get_model_name(self) -> str:
         return self.name

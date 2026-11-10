@@ -307,6 +307,14 @@ class DeepEvalBaseTTS(ABC):
     def supports_streaming(self) -> bool:
         return False
 
+    def supports_voice_instructions(self) -> bool:
+        """Whether synthesis takes `instructions` on how to speak.
+
+        A persona's `voice_instructions` (accent, pacing, tone) are only sent
+        to models that return True here.
+        """
+        return False
+
     @abstractmethod
     def get_model_name(self, *args, **kwargs) -> str:
         return self.name
