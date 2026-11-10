@@ -56,6 +56,7 @@ class MetricConfiguration(BaseModel):
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
     rubric: Optional[List[Dict[str, Any]]] = None
+    expected_schema: Optional[Dict[str, Any]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -382,6 +383,7 @@ class Cache:
             "assessment_questions",
             "evaluation_steps",
             "rubric",
+            "expected_schema",
         ]
 
         for field in config_fields:
@@ -389,6 +391,8 @@ class Cache:
             cached_value = getattr(metric_configuration, field, None)
             if field == "rubric":
                 metric_value = Cache._serialize_rubric(metric_value)
+            if field == "expected_schema":
+                metric_value = Cache._serialize_expected_schema(metric_value)
 
             # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
@@ -463,6 +467,18 @@ class Cache:
         return [item.model_dump(mode="json") for item in rubric]
 
     @staticmethod
+    def _serialize_expected_schema(schema: Any) -> Optional[Dict[str, Any]]:
+        # JsonCorrectnessMetric passes or fails an output against this schema,
+        # so a cached result is only reused for the same one.
+        if schema is None:
+            return None
+        try:
+            return schema.model_json_schema()
+        except Exception:
+            # Types JSON Schema can't express: key on the model's name.
+            return {"title": getattr(schema, "__qualname__", repr(schema))}
+
+    @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
         config_kwargs = {}
         config_fields = [
@@ -479,6 +495,7 @@ class Cache:
             "evaluation_params",  # checked
             "assessment_questions",  # checked
             "rubric",  # checked
+            "expected_schema",  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
@@ -486,6 +503,8 @@ class Cache:
                 value = value.__class__.__name__
             if field == "rubric":
                 value = Cache._serialize_rubric(value)
+            if field == "expected_schema":
+                value = Cache._serialize_expected_schema(value)
             config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)

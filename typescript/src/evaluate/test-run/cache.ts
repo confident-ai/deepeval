@@ -5,20 +5,23 @@ import { expectationEvidence } from "@/evaluate/expectations";
 
 import * as fs from "fs";
 import * as path from "path";
+import type { ZodType } from "zod";
 import { CACHE_FILE, HIDDEN_DIR } from "@/constants";
 import { isReadOnlyFileSystem } from "@/config/utils";
 import { getLogger } from "@/logger";
 import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetricCore } from "@/metrics/base-metrics";
+import { toJsonSchema } from "@/models/utils";
 import type { AnyTestCase, MetricData } from "@/evaluate/types";
 
 const logger = getLogger("deepeval.cache");
 const CACHE_VERSION = 1;
 
 /**
- * The metric knobs that change a score. The fields after `includeReason` define
- * a G-Eval, and a few other metrics take `evaluationParams` too. A metric
- * without a field, and an entry cached before these were added, read as null.
+ * The metric knobs that change a score. The fields after `includeReason`
+ * define a G-Eval or a JsonCorrectnessMetric, and a few other metrics take
+ * `evaluationParams` too. A metric without a field, and an entry cached before
+ * these were added, read as null.
  */
 interface MetricConfiguration {
   evalMode?: string;
@@ -30,6 +33,7 @@ interface MetricConfiguration {
   evaluationSteps?: string[] | null;
   evaluationParams?: string[] | null;
   rubric?: unknown[] | null;
+  expectedSchema?: Record<string, unknown> | null;
 }
 
 /** Read off a metric without importing the metric classes into the cache. */
@@ -38,6 +42,7 @@ interface MetricDefinition {
   evaluationSteps?: string[];
   evaluationParams?: string[];
   rubric?: unknown[];
+  expectedSchema?: ZodType;
 }
 
 interface CachedMetric {
@@ -120,6 +125,9 @@ function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
       definition.criteria == null ? (definition.evaluationSteps ?? null) : null,
     evaluationParams: definition.evaluationParams ?? null,
     rubric: definition.rubric ?? null,
+    expectedSchema: definition.expectedSchema
+      ? toJsonSchema(definition.expectedSchema)
+      : null,
   };
 }
 
@@ -141,7 +149,8 @@ function sameConfiguration(
     sameValue(a.criteria, b.criteria) &&
     sameValue(a.evaluationSteps, b.evaluationSteps) &&
     sameValue(a.evaluationParams, b.evaluationParams) &&
-    sameValue(a.rubric, b.rubric)
+    sameValue(a.rubric, b.rubric) &&
+    sameValue(a.expectedSchema, b.expectedSchema)
   );
 }
 
