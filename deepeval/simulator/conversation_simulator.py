@@ -2,6 +2,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Awaitable,
+    Dict,
     Optional,
     List,
     Tuple,
@@ -195,11 +196,28 @@ class _VoiceRun:
     tts_model: "DeepEvalBaseTTS"
     stt_model: "DeepEvalBaseSTT"
 
+    # Personas' TTS models given by name, built once and kept as long as
+    # `tts_model` is.
+    named_tts_models: Dict[str, "DeepEvalBaseTTS"] = field(default_factory=dict)
+
     # Per `simulate()` call.
     tts_cost: float = 0.0
     stt_cost: float = 0.0
     run_timestamp: Optional[str] = None
     num_goldens: int = 0
+
+    def tts_model_for(self, persona: Optional["Persona"]) -> "DeepEvalBaseTTS":
+        """The persona's own TTS model, or the simulator's if it has none."""
+        model = persona.tts_model if persona is not None else None
+        if model is None:
+            return self.tts_model
+        if not isinstance(model, str):
+            return model
+        if model not in self.named_tts_models:
+            from deepeval.voice.config import resolve_tts_model
+
+            self.named_tts_models[model] = resolve_tts_model(model)
+        return self.named_tts_models[model]
 
     def begin_run(self, num_goldens: int) -> None:
         self.tts_cost = 0.0
@@ -1103,11 +1121,10 @@ class ConversationSimulator:
         from deepeval.voice.line_quality import LineQualityFilter
 
         voice = self._voice
-        tts_kwargs = self._persona_tts_kwargs(persona, voice.tts_model)
-        if not voice.tts_model.supports_streaming():
-            audio, tts_cost = await voice.tts_model.a_synthesize(
-                text, **tts_kwargs
-            )
+        tts_model = voice.tts_model_for(persona)
+        tts_kwargs = self._persona_tts_kwargs(persona, tts_model)
+        if not tts_model.supports_streaming():
+            audio, tts_cost = await tts_model.a_synthesize(text, **tts_kwargs)
             if tts_cost is not None:
                 voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
@@ -1127,7 +1144,7 @@ class ConversationSimulator:
         )
 
         async def _frames():
-            async for chunk in voice.tts_model.a_synthesize_stream(
+            async for chunk in tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
                 yield line.filter_chunk(mixer.mix_chunk(chunk))
@@ -1137,7 +1154,7 @@ class ConversationSimulator:
         result = await session.connector.stream_uplink_chunks(
             _frames(), trailing_silence=trailing_silence
         )
-        tts_cost = voice.tts_model.synthesis_cost(text)
+        tts_cost = tts_model.synthesis_cost(text)
         if tts_cost is not None:
             voice.tts_cost += tts_cost
         logger.debug(
@@ -1410,10 +1427,11 @@ class ConversationSimulator:
         everything else goes through `_voice_duplex_exchange`.
         """
         voice = self._voice
+        tts_model = voice.tts_model_for(session.persona)
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
-        user_audio, tts_cost = await voice.tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(session.persona, voice.tts_model)
+        user_audio, tts_cost = await tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(session.persona, tts_model)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1644,7 +1662,7 @@ class ConversationSimulator:
         voice = self._voice
         exchange = DuplexExchange(
             connector=session.connector,
-            tts_model=voice.tts_model,
+            tts_model=voice.tts_model_for(session.persona),
             stt_model=voice.stt_model,
             policy=session.policy,
             floor=session.floor,

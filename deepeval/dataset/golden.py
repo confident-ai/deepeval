@@ -5,12 +5,16 @@ from dataclasses import dataclass
 from pydantic import (
     AliasChoices,
     BaseModel,
+    ConfigDict,
     Field,
     PrivateAttr,
+    field_validator,
     model_validator,
 )
-from typing import TYPE_CHECKING, Literal, Optional, Dict, List, Tuple
+from typing import Any, Literal, Optional, Dict, List, Tuple
 from typing import Union
+from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
+from deepeval.models.base_model import DeepEvalBaseTTS
 from deepeval.test_case import (
     ToolCall,
     Turn,
@@ -19,9 +23,6 @@ from deepeval.test_case import (
 )
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
-
-if TYPE_CHECKING:
-    from deepeval.models.base_model import DeepEvalBaseTTS
 
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]
@@ -91,6 +92,8 @@ class Persona(BaseModel):
     field below `metadata` is voice-only and is ignored by text simulations.
     """
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     name: Optional[str] = Field(default=None)
     # The free-form persona prompt: demographics, personality, emotional arc,
     # speaking style, filler words — who the user is, never what they want.
@@ -104,13 +107,47 @@ class Persona(BaseModel):
     muted: bool = Field(default=False)
 
     # --- voice only: audio ---
-    voice: Optional[str] = Field(default=None)
+    tts_model: Optional[Union[str, DeepEvalBaseTTS]] = Field(default=None)
+    voice: Optional[Union[str, Dict[str, str]]] = Field(default=None)
     voice_instructions: Optional[str] = Field(default=None)
     background_noise: Optional[BackgroundNoiseSettings] = Field(default=None)
     line_quality: LineQuality = Field(default="wideband")
     multilingual_stt: bool = Field(default=False)
     # Seconds of agent silence or hold music before the caller hangs up.
     hold_timeout: Optional[float] = Field(default=None, gt=0)
+
+    @field_validator("tts_model", mode="plain")
+    @classmethod
+    def _accept_any_tts_model(cls, model: Any) -> Any:
+        if (
+            model is None
+            or isinstance(model, str)
+            or hasattr(model, "a_synthesize")
+        ):
+            return model
+        raise ValueError(
+            "tts_model must be a TTS model name or a DeepEvalBaseTTS, not "
+            f"{type(model).__name__}."
+        )
+
+    @field_validator("voice")
+    @classmethod
+    def _key_voices_by_provider(
+        cls, voice: Optional[Union[str, Dict[str, str]]]
+    ) -> Optional[Union[str, Dict[str, str]]]:
+        if not isinstance(voice, dict):
+            return voice
+        keyed = {
+            slugify(provider): voice_id for provider, voice_id in voice.items()
+        }
+        unknown = sorted(set(keyed) - SUPPORTED_PROVIDER_SLUGS)
+        if unknown:
+            raise ValueError(
+                f"Unknown voice provider {unknown[0]!r}; key voices by "
+                "provider, e.g. 'openai', 'elevenlabs', 'cartesia' or "
+                "'deepgram'."
+            )
+        return keyed
 
     def prompt_block(self) -> str:
         """Render the persona for a simulator prompt.
@@ -144,16 +181,19 @@ class Persona(BaseModel):
         body = "\n\n".join(section for section in sections if section)
         return f"<persona>\n{body}\n</persona>"
 
-    def tts_kwargs(self, tts_model: Optional["DeepEvalBaseTTS"] = None) -> Dict:
+    def tts_kwargs(self, tts_model: Optional[DeepEvalBaseTTS] = None) -> Dict:
         """Synthesis kwargs for this persona's voice on `tts_model`.
 
         `voice` is the only vocal knob declared on
-        `DeepEvalBaseTTS.a_synthesize`, so it goes to every TTS model.
-        `voice_instructions` go out as `instructions` only to a model whose
-        `supports_voice_instructions()` says it takes them: other providers
-        pass unknown kwargs straight to their APIs, which reject them.
+        `DeepEvalBaseTTS.a_synthesize`, so it goes to every TTS model; when it
+        is keyed by provider, the model gets its own provider's entry, or its
+        default voice if there is none. `voice_instructions` go out as
+        `instructions` only to a model whose `supports_voice_instructions()`
+        says it takes them: other providers pass unknown kwargs straight to
+        their APIs, which reject them.
         """
-        kwargs: Dict = {} if self.voice is None else {"voice": self.voice}
+        voice = self._voice_on(tts_model)
+        kwargs: Dict = {} if voice is None else {"voice": voice}
         # Duck-typed TTS models need not define the capability check.
         supports_instructions = getattr(
             tts_model, "supports_voice_instructions", None
@@ -165,6 +205,12 @@ class Persona(BaseModel):
         ):
             kwargs["instructions"] = self.voice_instructions
         return kwargs
+
+    def _voice_on(self, tts_model: Optional[DeepEvalBaseTTS]) -> Optional[str]:
+        if not isinstance(self.voice, dict):
+            return self.voice
+        provider = getattr(tts_model, "provider", None)
+        return None if provider is None else self.voice.get(slugify(provider))
 
 
 def resolve_persona(

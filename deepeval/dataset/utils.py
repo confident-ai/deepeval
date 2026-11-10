@@ -55,10 +55,21 @@ def persona_kwargs(raw_persona: Any, user_description: Optional[str]) -> Dict:
 
 
 def serialize_persona(persona: Optional[Persona]) -> Optional[Dict]:
-    """Dump a persona for file output, omitting defaults to keep rows small."""
+    """Dump a persona for file output, omitting defaults to keep rows small.
+
+    A `tts_model` given as a model object has no file form, so only a model
+    name is written.
+    """
     if persona is None:
         return None
-    return persona.model_dump(exclude_defaults=True, mode="json")
+    exclude = (
+        None
+        if persona.tts_model is None or isinstance(persona.tts_model, str)
+        else {"tts_model"}
+    )
+    return persona.model_dump(
+        exclude_defaults=True, mode="json", exclude=exclude
+    )
 
 
 def serialize_retrieval_context(retrieval_context):
