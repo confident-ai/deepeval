@@ -1045,8 +1045,8 @@ class ConversationSimulator:
         return conversational_test_case
 
     @staticmethod
-    def _persona_tts_kwargs(persona) -> dict:
-        return {} if persona is None else persona.tts_kwargs()
+    def _persona_tts_kwargs(persona, tts_model) -> dict:
+        return {} if persona is None else persona.tts_kwargs(tts_model)
 
     @staticmethod
     def _stt_kwargs(session: _VoiceSession) -> dict:
@@ -1070,6 +1070,19 @@ class ConversationSimulator:
 
         return mix_background(audio, persona.background_noise)
 
+    @staticmethod
+    def _apply_line_quality(session: _VoiceSession, audio: "Audio") -> "Audio":
+        """Carry one uplink utterance over the persona's line.
+
+        Runs after `_mix_background`, so the background crosses the line too.
+        """
+        persona = session.persona
+        if persona is None:
+            return audio
+        from deepeval.voice.line_quality import apply_line_quality
+
+        return apply_line_quality(audio, persona.line_quality)
+
     async def _send_user_utterance(
         self,
         session: _VoiceSession,
@@ -1087,9 +1100,10 @@ class ConversationSimulator:
         instead would place it on the call before the agent heard anything.
         """
         from deepeval.voice.background import BackgroundMixer
+        from deepeval.voice.line_quality import LineQualityFilter
 
         voice = self._voice
-        tts_kwargs = self._persona_tts_kwargs(persona)
+        tts_kwargs = self._persona_tts_kwargs(persona, voice.tts_model)
         if not voice.tts_model.supports_streaming():
             audio, tts_cost = await voice.tts_model.a_synthesize(
                 text, **tts_kwargs
@@ -1098,6 +1112,7 @@ class ConversationSimulator:
                 voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
             audio = self._mix_background(session, audio)
+            audio = self._apply_line_quality(session, audio)
             started_at = time.perf_counter()
             await session.connector.stream_uplink(
                 audio, trailing_silence=trailing_silence
@@ -1107,12 +1122,15 @@ class ConversationSimulator:
         mixer = BackgroundMixer(
             persona.background_noise if persona is not None else None
         )
+        line = LineQualityFilter(
+            persona.line_quality if persona is not None else "wideband"
+        )
 
         async def _frames():
             async for chunk in voice.tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
-                yield mixer.mix_chunk(chunk)
+                yield line.filter_chunk(mixer.mix_chunk(chunk))
 
         tts_started = time.perf_counter()
         logger.debug("User TTS stream started: characters=%d", len(text))
@@ -1188,6 +1206,7 @@ class ConversationSimulator:
         silence = self._mix_background(
             session, self._silence_audio(session, _SILENCE_PROBE_SECONDS)
         )
+        silence = self._apply_line_quality(session, silence)
         if turns and turns[-1].role == "user":
             turns[-1].audio = silence
         return await self._voice_exchange(session, silence, turns)
@@ -1394,7 +1413,7 @@ class ConversationSimulator:
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
         user_audio, tts_cost = await voice.tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(session.persona)
+            input, **self._persona_tts_kwargs(session.persona, voice.tts_model)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1405,6 +1424,7 @@ class ConversationSimulator:
         if tts_cost is not None:
             voice.tts_cost += tts_cost
         user_audio = self._mix_background(session, user_audio)
+        user_audio = self._apply_line_quality(session, user_audio)
         if turns and turns[-1].role == "user":
             turns[-1].audio = user_audio
 

@@ -9,7 +9,7 @@ from pydantic import (
     PrivateAttr,
     model_validator,
 )
-from typing import Literal, Optional, Dict, List, Tuple
+from typing import TYPE_CHECKING, Literal, Optional, Dict, List, Tuple
 from typing import Union
 from deepeval.test_case import (
     ToolCall,
@@ -20,9 +20,13 @@ from deepeval.test_case import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
 
+if TYPE_CHECKING:
+    from deepeval.models.base_model import DeepEvalBaseTTS
+
 
 InterruptionLevel = Literal["rare", "normal", "frequent"]
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
+LineQuality = Literal["wideband", "phone"]
 
 _INTERRUPTION_LEVELS = ("rare", "normal", "frequent")
 _OVERLAP_BEHAVIORS = ("yield", "adaptive", "insist")
@@ -101,7 +105,9 @@ class Persona(BaseModel):
 
     # --- voice only: audio ---
     voice: Optional[str] = Field(default=None)
+    voice_instructions: Optional[str] = Field(default=None)
     background_noise: Optional[BackgroundNoiseSettings] = Field(default=None)
+    line_quality: LineQuality = Field(default="wideband")
     multilingual_stt: bool = Field(default=False)
     # Seconds of agent silence or hold music before the caller hangs up.
     hold_timeout: Optional[float] = Field(default=None, gt=0)
@@ -138,15 +144,27 @@ class Persona(BaseModel):
         body = "\n\n".join(section for section in sections if section)
         return f"<persona>\n{body}\n</persona>"
 
-    def tts_kwargs(self) -> Dict:
-        """Synthesis kwargs for this persona's voice.
+    def tts_kwargs(self, tts_model: Optional["DeepEvalBaseTTS"] = None) -> Dict:
+        """Synthesis kwargs for this persona's voice on `tts_model`.
 
         `voice` is the only vocal knob declared on
-        `DeepEvalBaseTTS.a_synthesize`, so it is the only one portable across
-        TTS implementations. Rate and delivery style belong on the TTS model's
-        own `generation_kwargs`.
+        `DeepEvalBaseTTS.a_synthesize`, so it goes to every TTS model.
+        `voice_instructions` go out as `instructions` only to a model whose
+        `supports_voice_instructions()` says it takes them: other providers
+        pass unknown kwargs straight to their APIs, which reject them.
         """
-        return {} if self.voice is None else {"voice": self.voice}
+        kwargs: Dict = {} if self.voice is None else {"voice": self.voice}
+        # Duck-typed TTS models need not define the capability check.
+        supports_instructions = getattr(
+            tts_model, "supports_voice_instructions", None
+        )
+        if (
+            self.voice_instructions
+            and supports_instructions is not None
+            and supports_instructions()
+        ):
+            kwargs["instructions"] = self.voice_instructions
+        return kwargs
 
 
 def resolve_persona(
