@@ -17,9 +17,7 @@ import type { AnyTestCase, MetricData } from "@/evaluate/types";
 const logger = getLogger("deepeval.cache");
 const CACHE_VERSION = 1;
 
-/**
- * The metric knobs that change a score.
- */
+/** The metric knobs that change a score. */
 interface MetricConfiguration {
   evalMode?: string;
   threshold?: number | null;
