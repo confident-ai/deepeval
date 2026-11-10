@@ -41,14 +41,14 @@ There is **ONE** mandatory and **TWELVE** optional parameters when creating a `P
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
 - [Optional] `metadata`: a dictionary of structured facts about the caller (an account number, a resume, an order) that the simulator can draw on. Defaulted to `None`.
-- [Optional] `tts_model`: a [TTS model](#tts-model) object or model name this caller speaks with instead of the one on your `VoiceConfig`. Defaulted to `None`.
-- [Optional] `voice`: a string voice ID passed to the TTS model, or a dictionary of voice IDs [keyed by provider](#voice). Defaulted to `None` (the TTS model's own default voice).
-- [Optional] `voice_instructions`: a string describing [how the caller sounds](#how-they-sound) — accent, pacing, and tone — for TTS models that take spoken instructions. Defaulted to `None`.
+- [Optional] `tts_model`: a [TTS model](#tts-model), as an object or a model name, that this caller speaks through instead of the one on your `VoiceConfig`. Defaulted to `None`.
+- [Optional] `voice`: a voice ID for the caller's TTS model, or a dictionary of voice IDs [keyed by provider](#voice). Defaulted to `None` (the TTS model's own default voice).
+- [Optional] `voice_instructions`: a string of [plain-language direction](#voice-instructions) on how the caller speaks — accent, pace, tone — for TTS models that take it. Defaulted to `None`.
 - [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
 - [Optional] `muted`: a boolean which when set to `True` makes the caller stay completely silent for the whole call. Defaulted to `False`.
 - [Optional] `background_noise`: a [`BackgroundNoiseSettings`](#background-noise) that loops ambient audio underneath the caller's speech. Defaulted to `None`.
-- [Optional] `line_quality`: either `"wideband"` or `"phone"`, where `"phone"` makes the caller [sound like they're on a phone call](#line-quality). Defaulted to `"wideband"`.
+- [Optional] `line_quality`: either `"wideband"` or `"phone"`, where `"phone"` carries the caller to your agent [over a simulated phone line](#line-quality). Defaulted to `"wideband"`.
 - [Optional] `multilingual_stt`: a boolean which when set to `True` asks your `stt_model` to detect the agent's language per utterance instead of locking to one. Defaulted to `False`.
 - [Optional] `hold_timeout`: a float number of seconds of agent silence or hold music before the caller hangs up. Defaulted to `None`.
 
@@ -60,7 +60,7 @@ Only `name`, `characteristics` and `metadata` apply to text simulations. Everyth
 
 ## Configuring Characteristics
 
-`characteristics` is a **prompt, not a label**. The simulator model writes the caller's dialogue from it and the TTS model speaks that text verbatim — so emotion, hesitation, and pacing come mostly from the words you tell the persona to use. [`voice_instructions`](#how-they-sound) can shape the delivery on top, on TTS models that take them.
+`characteristics` is a **prompt, not a label**. The simulator model writes the caller's dialogue from it and the TTS model speaks that text verbatim — so emotion, hesitation, and pacing come mostly from the words you give the persona. On TTS models that take them, [`voice_instructions`](#voice-instructions) can direct the delivery as well.
 
 Describe behavior in terms of word choice and conversational patterns:
 
@@ -87,7 +87,7 @@ A few things that matter more in voice than in text:
 
 ### TTS Model
 
-Every caller speaks through the `tts_model` on your [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) unless their persona brings its own. Set `tts_model` on a persona to give that caller a different model, or a different provider, within the same run:
+By default, every caller speaks through the `tts_model` on your [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models). Give a persona its own `tts_model` and that caller speaks through it instead, so a single run can mix models and providers:
 
 ```python
 from deepeval.dataset import Persona
@@ -99,7 +99,9 @@ persona = Persona(
 )
 ```
 
-`tts_model` takes the same values as `VoiceConfig(tts_model=...)`: a TTS model object, or a model name. A name belongs to the provider your [environment selects](/docs/environment-variables), so pass model objects to mix providers in one run.
+`tts_model` accepts the same values as `VoiceConfig(tts_model=...)`: a TTS model object, or a model name. A name is read as a model of the provider your [environment selects](/docs/environment-variables), so pass model objects when you want to mix providers.
+
+The persona's [`voice`](#voice) has to be one this model knows, or keyed by provider so each model finds its own. What the persona's model spends is priced at that model's own rates and still adds up in the simulator's `tts_cost`.
 
 ### Voice
 
@@ -112,7 +114,7 @@ persona = Persona(
 )
 ```
 
-A voice ID only means something to the provider it came from. To keep a persona working across providers, key `voice` by provider instead — `"openai"`, `"elevenlabs"`, `"cartesia"`, or `"deepgram"` — and each TTS model speaks with its own provider's entry:
+Voice IDs don't carry across providers: `"onyx"` means nothing to ElevenLabs. To keep a persona working whichever model speaks for it, key `voice` by provider — `"openai"`, `"elevenlabs"`, `"cartesia"`, or `"deepgram"` — and each TTS model picks its own provider's entry:
 
 ```python
 persona = Persona(
@@ -121,25 +123,26 @@ persona = Persona(
 )
 ```
 
-A TTS model whose provider has no entry speaks with its own default voice.
+A model whose provider has no entry falls back to its own default voice.
 
-Provider-specific knobs such as speaking rate or pitch are **not** persona fields, because no two TTS providers spell them the same way. Set those on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) and keep the persona portable.
+Speaking rate and pitch are **not** persona fields, because every provider spells them differently. Set them on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) so the persona stays portable.
 
-### How They Sound
+### Voice Instructions
 
-`voice_instructions` describes how the caller speaks — accent, pacing, tone — in plain words:
+`voice` chooses who speaks; `voice_instructions` directs how they speak. Describe the delivery the way you would brief an actor — accent, pace, tone, mood:
 
 ```python
 persona = Persona(
     characteristics="You are calling about a delivery that is three days late.",
-    voice_instructions="Scottish accent, speaks quickly, sounds a little impatient.",
+    voice="coral",
+    voice_instructions="Light Scottish accent. Speaks quickly and sounds a little impatient.",
 )
 ```
 
-The instructions are sent to TTS models that take spoken instructions, which today is `OpenAITTSModel` with `gpt-4o-mini-tts` (the default). Any other TTS model ignores them.
+Today only `OpenAITTSModel` with `gpt-4o-mini-tts`, the default model, takes instructions. Other TTS models skip them, so the same persona still runs anywhere; it just sounds plainer.
 
 :::tip
-To receive them in your own `DeepEvalBaseTTS`, return `True` from `supports_voice_instructions()` and accept an `instructions` keyword argument in `a_synthesize` (and `a_synthesize_stream`, if you stream).
+To support instructions in your own `DeepEvalBaseTTS`, return `True` from `supports_voice_instructions()` and accept an `instructions` keyword in `a_synthesize` (and in `a_synthesize_stream`, if it streams).
 :::
 
 ### Background Noise
@@ -166,7 +169,7 @@ Pick a file that loops cleanly — an abrupt cut or trailing silence repeats for
 
 ### Line Quality
 
-Most voice agents are reached by phone, and a phone call carries far less of a voice than a microphone does. `line_quality="phone"` puts the caller on a phone line: everything they send — speech, background noise, and silence — is cut to the 300–3400 Hz band a phone call carries and coded the way phone networks code it (G.711 μ-law), so your agent hears the caller as it would on a real call:
+Most voice agents are reached by phone, where callers sound nothing like a TTS model in a quiet room: the line carries only 300–3400 Hz and codes every sample as 8-bit μ-law (G.711). Test only against clean, full-band speech and your agent's speech recognition looks better than it will on real calls. Set `line_quality="phone"` and everything the caller sends — speech, background noise, even silence — crosses that same narrowband channel before your agent hears it:
 
 ```python
 from deepeval.dataset import Persona, BackgroundNoiseSettings
@@ -178,10 +181,10 @@ persona = Persona(
 )
 ```
 
-The default, `"wideband"`, sends the caller's audio exactly as the TTS model produced it.
+The default, `"wideband"`, sends the caller's audio at the TTS model's full quality.
 
 :::note
-When the simulator calls your agent over a real phone number or SIP trunk, the phone network already does this to the audio. `line_quality` is for connectors that would otherwise deliver studio-quality audio, such as WebRTC and WebSocket.
+Calls placed over a real phone number or SIP trunk already cross the phone network, so leave `line_quality` at `"wideband"` for those. It's for connectors that would otherwise hand your agent studio-quality audio, such as WebRTC and WebSocket.
 :::
 
 ## Configuring Behavior
@@ -271,15 +274,14 @@ Barge-in is a whole simulation mode of its own — how the judge decides to inte
       ),
     },
     {
-      question: "Why isn't there a speaking rate field?",
+      question: "Can a persona set an accent or a speaking rate?",
       answer: (
         <>
-          Because <code>voice</code> is the only synthesis knob every{" "}
-          <code>DeepEvalBaseTTS</code> implementation shares. Rate and pitch are
-          spelled differently by every provider, so they belong on your TTS
-          model rather than on the persona. Accent, pacing, and tone can be
-          described in <code>voice_instructions</code> for TTS models that take
-          spoken instructions.
+          An accent, yes: describe it in <code>voice_instructions</code> on a
+          TTS model that takes them, or pick a <code>voice</code> that already
+          has one. A speaking rate, no. Rate and pitch are spelled differently
+          by every provider, so they belong on your TTS model rather than on the
+          persona.
         </>
       ),
     },
