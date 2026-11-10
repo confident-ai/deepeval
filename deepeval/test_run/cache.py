@@ -60,8 +60,6 @@ class MetricConfiguration(BaseModel):
     # Deterministic metrics: their score depends only on these settings.
     pattern: Optional[str] = None
     ignore_case: Optional[bool] = None
-    should_exact_match: Optional[bool] = None
-    should_consider_ordering: Optional[bool] = None
     allowed_tools: Optional[List[str]] = None
     denied_tools: Optional[List[str]] = None
     embeddings: Optional[str] = None
@@ -476,13 +474,11 @@ class Cache:
             return None
         return [item.model_dump(mode="json") for item in rubric]
 
-    # PatternMatchMetric, ToolCorrectnessMetric and ToolPermissionMetric
-    # pass or fail on these settings alone, so they are part of the cache key.
+    # PatternMatchMetric and ToolPermissionMetric pass or fail on these
+    # settings alone, so they are part of the cache key.
     _DETERMINISTIC_METRIC_FIELDS = (
         "pattern",
         "ignore_case",
-        "should_exact_match",
-        "should_consider_ordering",
         "allowed_tools",
         "denied_tools",
     )

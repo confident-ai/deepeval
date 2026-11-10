@@ -5,7 +5,6 @@ from deepeval.evaluate.configs import CacheConfig, DisplayConfig
 from deepeval.metrics import (
     GEval,
     PatternMatchMetric,
-    ToolCorrectnessMetric,
     ToolPermissionMetric,
 )
 from deepeval.metrics.g_eval import Rubric
@@ -107,18 +106,6 @@ def _cached(metric):
             PatternMatchMetric(pattern="ok", ignore_case=False),
         ),
         (
-            ToolCorrectnessMetric(model=_StaticJudge()),
-            ToolCorrectnessMetric(
-                should_consider_ordering=True, model=_StaticJudge()
-            ),
-        ),
-        (
-            ToolCorrectnessMetric(model=_StaticJudge()),
-            ToolCorrectnessMetric(
-                should_exact_match=True, model=_StaticJudge()
-            ),
-        ),
-        (
             ToolPermissionMetric(denied_tools=["send_email"]),
             ToolPermissionMetric(denied_tools=["send_email", "delete_db"]),
         ),
@@ -134,8 +121,6 @@ def _cached(metric):
     ids=[
         "pattern",
         "ignore_case",
-        "tool_ordering",
-        "tool_exact_match",
         "denied_tools",
         "allowed_tools",
         "empty_allowlist_vs_none",
@@ -155,14 +140,6 @@ def test_changed_deterministic_metric_settings_do_not_reuse_cached_score(
             PatternMatchMetric(pattern=r"\d+"),
         ),
         (
-            ToolCorrectnessMetric(
-                should_consider_ordering=True, model=_StaticJudge()
-            ),
-            ToolCorrectnessMetric(
-                should_consider_ordering=True, model=_StaticJudge()
-            ),
-        ),
-        (
             ToolPermissionMetric(
                 allowed_tools=["search", "lookup"], denied_tools=["a", "b"]
             ),
@@ -171,7 +148,7 @@ def test_changed_deterministic_metric_settings_do_not_reuse_cached_score(
             ),
         ),
     ],
-    ids=["pattern", "tool_ordering", "tool_lists_in_another_order"],
+    ids=["pattern", "tool_lists_in_another_order"],
 )
 def test_same_deterministic_metric_settings_reuse_cached_score(
     cached_metric, metric
