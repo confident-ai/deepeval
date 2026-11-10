@@ -1,5 +1,6 @@
 """Voice behavior driven by the golden's `Persona`."""
 
+from types import SimpleNamespace
 from typing import List, Optional
 
 import pytest
@@ -11,6 +12,7 @@ from deepeval.dataset import (
     Persona,
 )
 from deepeval.simulator import ConversationSimulator
+from deepeval.simulator.conversation_simulator import _VoiceSession
 from deepeval.test_case import Audio
 from deepeval.voice import VoiceConfig
 from deepeval.voice.background import mix_background
@@ -135,6 +137,101 @@ def test_voice_instructions_stay_off_a_tts_model_that_does_not_take_them():
 
     assert tts.calls
     assert all("instructions" not in call for call in tts.calls)
+
+
+class ProviderTTS(RecordingTTS):
+    def __init__(self, provider: str):
+        super().__init__()
+        self.provider = provider
+
+
+def test_a_persona_with_its_own_tts_model_speaks_with_it():
+    shared, own = RecordingTTS(), RecordingTTS()
+    simulator = _simulator(RecordingAgent(), tts=shared)
+    goldens = [
+        ConversationalGolden(
+            scenario="Refund",
+            persona=Persona(characteristics="A caller.", tts_model=own),
+        ),
+        ConversationalGolden(
+            scenario="Cancel", persona=Persona(characteristics="A caller.")
+        ),
+    ]
+
+    simulator.simulate(goldens, max_user_simulations=1)
+
+    assert len(own.calls) == 1
+    assert len(shared.calls) == 1
+
+
+def test_a_voice_per_provider_follows_the_personas_own_tts_model():
+    own = ProviderTTS("elevenlabs")
+    simulator = _simulator(RecordingAgent(), tts=ProviderTTS("openai"))
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="A caller.",
+            tts_model=own,
+            voice={"openai": "ash", "elevenlabs": "el-voice"},
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert own.calls[0]["voice"] == "el-voice"
+
+
+def test_a_tts_model_name_is_built_once_per_simulator(monkeypatch):
+    built: List[str] = []
+    named = RecordingTTS()
+
+    def fake_resolve(model):
+        built.append(model)
+        return named
+
+    simulator = _simulator(RecordingAgent())
+    monkeypatch.setattr("deepeval.voice.config.resolve_tts_model", fake_resolve)
+    persona = Persona(characteristics="A caller.", tts_model="tts-1")
+    goldens = [
+        ConversationalGolden(scenario="Refund", persona=persona),
+        ConversationalGolden(scenario="Cancel", persona=persona),
+    ]
+
+    simulator.simulate(goldens, max_user_simulations=1)
+
+    assert built == ["tts-1"]
+    assert len(named.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_barge_ins_speak_with_the_personas_own_tts_model(monkeypatch):
+    seen = {}
+
+    class _Exchange:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+        async def run(self, **kwargs):
+            return SimpleNamespace(
+                barges=0, tts_cost=0.0, stt_cost=0.0, turns=[]
+            )
+
+    monkeypatch.setattr("deepeval.voice.duplex.DuplexExchange", _Exchange)
+    own = RecordingTTS()
+    persona = Persona(characteristics="A caller.", tts_model=own)
+    simulator = _simulator(RecordingAgent())
+    session = _VoiceSession(
+        connector=CallbackVoiceConnector(RecordingAgent()), persona=persona
+    )
+
+    await simulator._run_duplex(
+        session,
+        ConversationalGolden(scenario="Refund", persona=persona),
+        [],
+        0.0,
+    )
+
+    assert seen["tts_model"] is own
 
 
 def test_multilingual_stt_requests_language_detection():

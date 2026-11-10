@@ -8,19 +8,25 @@ from deepeval.dataset import (
     InterruptionBehavior,
     Persona,
 )
+from deepeval.constants import ProviderSlug
 from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
+    serialize_persona,
 )
 from deepeval.test_case import Turn
 
 
 class _TTS:
-    def __init__(self, takes_instructions: bool):
+    def __init__(self, takes_instructions: bool = False, provider=None):
         self.takes_instructions = takes_instructions
+        self.provider = provider
 
     def supports_voice_instructions(self) -> bool:
         return self.takes_instructions
+
+    async def a_synthesize(self, text: str, **kwargs):
+        raise NotImplementedError
 
 
 class TestPersonaPrompt:
@@ -118,6 +124,75 @@ class TestPersonaVoice:
         assert takes("gpt-4o-mini-tts-2025-03-20")
         assert not takes("tts-1")
         assert not takes("tts-1-hd")
+
+    def test_a_voice_per_provider_speaks_with_the_models_own(self):
+        persona = Persona(
+            characteristics="Anyone",
+            voice={"openai": "ash", "elevenlabs": "el-voice"},
+        )
+
+        assert persona.tts_kwargs(_TTS(provider="elevenlabs")) == {
+            "voice": "el-voice"
+        }
+        assert persona.tts_kwargs(_TTS(provider=ProviderSlug.OPENAI)) == {
+            "voice": "ash"
+        }
+
+    def test_a_provider_without_a_voice_gets_the_models_default(self):
+        persona = Persona(characteristics="Anyone", voice={"openai": "ash"})
+
+        assert persona.tts_kwargs(_TTS(provider="cartesia")) == {}
+        assert persona.tts_kwargs(_TTS(provider=None)) == {}
+        assert persona.tts_kwargs() == {}
+
+    def test_voice_providers_are_keyed_by_slug(self):
+        persona = Persona(
+            characteristics="Anyone",
+            voice={"OpenAI": "ash", ProviderSlug.DEEPGRAM: "zeus"},
+        )
+
+        assert persona.voice == {"openai": "ash", "deepgram": "zeus"}
+
+    def test_rejects_an_unknown_voice_provider(self):
+        with pytest.raises(ValueError, match="Unknown voice provider"):
+            Persona(characteristics="Anyone", voice={"open_ai": "ash"})
+
+    def test_each_built_in_tts_model_names_its_provider(self):
+        from deepeval.models import (
+            CartesiaTTSModel,
+            DeepgramTTSModel,
+            ElevenLabsTTSModel,
+            OpenAITTSModel,
+        )
+
+        assert OpenAITTSModel.provider == "openai"
+        assert ElevenLabsTTSModel.provider == "elevenlabs"
+        assert CartesiaTTSModel.provider == "cartesia"
+        assert DeepgramTTSModel.provider == "deepgram"
+
+    def test_tts_model_takes_a_name_or_a_model(self):
+        model = _TTS()
+
+        assert Persona(characteristics="Anyone").tts_model is None
+        assert (
+            Persona(characteristics="Anyone", tts_model="tts-1").tts_model
+            == "tts-1"
+        )
+        assert (
+            Persona(characteristics="Anyone", tts_model=model).tts_model
+            is model
+        )
+
+    def test_rejects_a_tts_model_that_cannot_synthesize(self):
+        with pytest.raises(ValueError, match="tts_model must be"):
+            Persona(characteristics="Anyone", tts_model=5)
+
+    def test_files_keep_a_tts_model_name_but_not_a_model_object(self):
+        named = Persona(characteristics="Anyone", tts_model="tts-1")
+        built = Persona(characteristics="Anyone", tts_model=_TTS())
+
+        assert serialize_persona(named)["tts_model"] == "tts-1"
+        assert serialize_persona(built) == {"characteristics": "Anyone"}
 
     def test_line_quality_defaults_to_wideband(self):
         assert Persona(characteristics="Anyone").line_quality == "wideband"

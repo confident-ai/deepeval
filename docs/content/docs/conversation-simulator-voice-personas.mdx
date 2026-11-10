@@ -36,12 +36,13 @@ persona = Persona(
 )
 ```
 
-There is **ONE** mandatory and **ELEVEN** optional parameters when creating a `Persona`:
+There is **ONE** mandatory and **TWELVE** optional parameters when creating a `Persona`:
 
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
 - [Optional] `metadata`: a dictionary of structured facts about the caller (an account number, a resume, an order) that the simulator can draw on. Defaulted to `None`.
-- [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
+- [Optional] `tts_model`: a [TTS model](#tts-model) object or model name this caller speaks with instead of the one on your `VoiceConfig`. Defaulted to `None`.
+- [Optional] `voice`: a string voice ID passed to the TTS model, or a dictionary of voice IDs [keyed by provider](#voice). Defaulted to `None` (the TTS model's own default voice).
 - [Optional] `voice_instructions`: a string describing [how the caller sounds](#how-they-sound) — accent, pacing, and tone — for TTS models that take spoken instructions. Defaulted to `None`.
 - [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
@@ -84,9 +85,25 @@ A few things that matter more in voice than in text:
 
 ## Configuring Audio
 
+### TTS Model
+
+Every caller speaks through the `tts_model` on your [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) unless their persona brings its own. Set `tts_model` on a persona to give that caller a different model, or a different provider, within the same run:
+
+```python
+from deepeval.dataset import Persona
+from deepeval.models import ElevenLabsTTSModel
+
+persona = Persona(
+    characteristics="You are a retiree calling about a billing error.",
+    tts_model=ElevenLabsTTSModel(model="eleven_flash_v2_5"),
+)
+```
+
+`tts_model` takes the same values as `VoiceConfig(tts_model=...)`: a TTS model object, or a model name. A name belongs to the provider your [environment selects](/docs/environment-variables), so pass model objects to mix providers in one run.
+
 ### Voice
 
-`voice` is passed straight through to your `tts_model`, so valid values depend on the model you configured on [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) — `"alloy"`, `"onyx"`, `"shimmer"`, etc. for the default `OpenAITTSModel`.
+`voice` is passed straight through to the caller's TTS model, so valid values depend on that model — `"alloy"`, `"onyx"`, `"shimmer"`, etc. for the default `OpenAITTSModel`.
 
 ```python
 persona = Persona(
@@ -94,6 +111,17 @@ persona = Persona(
     voice="onyx",
 )
 ```
+
+A voice ID only means something to the provider it came from. To keep a persona working across providers, key `voice` by provider instead — `"openai"`, `"elevenlabs"`, `"cartesia"`, or `"deepgram"` — and each TTS model speaks with its own provider's entry:
+
+```python
+persona = Persona(
+    characteristics="You are an older adult who is uncomfortable with technology.",
+    voice={"openai": "onyx", "elevenlabs": "<your ElevenLabs voice ID>"},
+)
+```
+
+A TTS model whose provider has no entry speaks with its own default voice.
 
 Provider-specific knobs such as speaking rate or pitch are **not** persona fields, because no two TTS providers spell them the same way. Set those on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`) and keep the persona portable.
 
