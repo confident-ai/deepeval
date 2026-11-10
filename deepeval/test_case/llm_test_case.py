@@ -343,6 +343,7 @@ class ToolCall(BaseModel):
 class RetrievedContextData(BaseModel):
     context: str
     source: str
+    metadata: Optional[Dict] = None
 
     @model_serializer
     def serialize_model(self) -> str:
