@@ -1,3 +1,4 @@
+import hashlib
 import json
 from difflib import SequenceMatcher
 from typing import Optional, List, Tuple, Dict
@@ -349,8 +350,10 @@ class AgentLoopDetectionMetric(BaseMetric):
         Including the input in the DFS label drastically reduces false
         positives when two structurally different spans share a
         ``type:name`` pair (e.g. two different agents both named
-        ``"planner"``).  We truncate to 64 chars to keep labels readable
-        in cycle-path messages.
+        ``"planner"``).  The hash covers the whole input: agent inputs
+        often start with the same instructions or context, so a prefix
+        would make inputs that only differ later look identical.  Cycle
+        path messages leave the hash out.
         """
         raw = span.get("input", "")
         if isinstance(raw, dict):
@@ -358,7 +361,8 @@ class AgentLoopDetectionMetric(BaseMetric):
                 raw = json.dumps(raw, sort_keys=True)
             except (TypeError, ValueError):
                 raw = str(raw)
-        return str(raw)[:64]
+        encoded = str(raw).encode("utf-8", errors="surrogatepass")
+        return hashlib.sha256(encoded).hexdigest()[:16]
 
     def _score_call_graph_cycles(
         self, trace_dict: Optional[Dict]

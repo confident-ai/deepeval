@@ -327,6 +327,60 @@ def test_same_name_different_input_not_a_cycle():
     assert metric.success is True
 
 
+_SHARED_INSTRUCTIONS = (
+    "You are the travel planner. Use the available tools for every step "
+    "and report back when the task is done. "
+)
+
+
+@pytest.mark.parametrize(
+    "outer_input, inner_input",
+    [
+        (
+            _SHARED_INSTRUCTIONS + "Task: plan a trip to Paris",
+            _SHARED_INSTRUCTIONS + "Task: book a hotel in Paris",
+        ),
+        (
+            {"instructions": _SHARED_INSTRUCTIONS, "task": "plan a trip"},
+            {"instructions": _SHARED_INSTRUCTIONS, "task": "book a hotel"},
+        ),
+    ],
+    ids=["text", "dict"],
+)
+def test_inputs_that_differ_after_a_long_shared_start_are_not_a_cycle(
+    outer_input, inner_input
+):
+    """Agent inputs often start with the same instructions. The label must
+    tell them apart by the whole input, not only by its first characters."""
+    inner_planner = {
+        "type": "agent",
+        "name": "planner",
+        "input": inner_input,
+        "output": "hotel booked",
+        "children": [],
+    }
+    outer_planner = {
+        "type": "agent",
+        "name": "planner",
+        "input": outer_input,
+        "output": "trip planned",
+        "children": [
+            _make_tool_span(
+                "delegate", {"to": "planner"}, children=[inner_planner]
+            ),
+        ],
+    }
+    metric = AgentLoopDetectionMetric(
+        check_tool_repetition=False,
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=True,
+    )
+    metric._calculate_metric(_make_test_case(outer_planner))
+
+    assert metric.score_breakdown["call_graph_cycles"] == 1.0
+    assert metric.success is True
+
+
 # ---------------------------------------------------------------------------
 # Test 10: Reordered-but-identical reasoning is caught by SequenceMatcher
 # ---------------------------------------------------------------------------
