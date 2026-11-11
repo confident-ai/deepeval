@@ -667,3 +667,29 @@ class TestSpokenPrefix:
 
     def test_silence_so_far_means_nothing_heard(self):
         assert _spoken_prefix(self.transcript, 0.0) == ""
+
+
+class _EndsQuietlyWhileCallerTalks(_StillTalking):
+    def __init__(self, floor: FloorController):
+        self.floor = floor
+
+    async def iter_agent_events(self):
+        yield AgentEvent(audio=_quiet(300), received_at=time.perf_counter())
+        self.floor.on_user_barge_start(time.perf_counter())
+        yield AgentEvent(turn_complete=True, received_at=time.perf_counter())
+        while True:
+            await asyncio.sleep(0.05)
+
+
+@pytest.mark.asyncio
+async def test_a_reply_ended_without_speech_still_has_a_start_time():
+    policy = interruption_policy("normal")
+    floor = FloorController(policy=policy)
+    connector = _EndsQuietlyWhileCallerTalks(floor)
+    exchange = _exchange(connector, stt_model=_StubSTT(), floor=floor)
+
+    result = await _run_one_turn(exchange, connector, timeout=5)
+
+    assistant = next(t for t in result.turns if t.role == "assistant")
+    assert assistant.audio is not None
+    assert assistant.audio.start_time is not None
