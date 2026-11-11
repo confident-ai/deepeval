@@ -38,7 +38,6 @@
     "inner_added"
   ],
   "environment": "testing",
-  "userId": "outer_user",
   "input": {
     "data": "test"
   },

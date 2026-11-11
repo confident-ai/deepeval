@@ -21,12 +21,7 @@
       "model": "gpt-4o",
       "provider": "OpenAI",
       "inputTokenCount": 13.0,
-      "outputTokenCount": 28.0,
-      "metricCollection": "test_collection_1",
-      "promptAlias": "asd",
-      "promptVersion": "00.00.01",
-      "promptLabel": "test-label",
-      "promptCommitHash": "bab04ec"
+      "outputTokenCount": 28.0
     }
   ],
   "retrieverSpans": [],
@@ -42,7 +37,6 @@
   ],
   "environment": "development",
   "threadId": "test_thread_id_1",
-  "userId": "test_user_id_1",
   "input": "Hello, how are you?",
   "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here to help you. How can I assist you today?",
   "status": "SUCCESS"

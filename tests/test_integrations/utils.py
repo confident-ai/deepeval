@@ -3,10 +3,48 @@ import json
 import re
 import os
 
+from contextlib import contextmanager
 from typing import Dict, Any
 from functools import wraps
 import inspect
 from deepeval.utils import get_or_create_event_loop
+
+
+@contextmanager
+def confident_trace_instrumentation(*instrumentations: str):
+    """Run under a fresh confident-trace with only ``instrumentations`` on."""
+    from deepeval.tracing.otel.setup import (
+        ensure_confident_trace,
+        shutdown_confident_trace,
+    )
+
+    shutdown_confident_trace()
+    ensure_confident_trace(instrumentations)
+    try:
+        yield
+    finally:
+        shutdown_confident_trace()
+
+
+@contextmanager
+def collecting_traces():
+    """Collect every trace the bridge sees, as an async evaluation would."""
+    from deepeval.tracing.tracing import trace_manager
+    from deepeval.tracing.types import EvalMode, EvalSession
+
+    trace_manager.eval_session = EvalSession(mode=EvalMode.ITERATOR_ASYNC)
+    try:
+        yield trace_manager.eval_session.traces_to_evaluate
+    finally:
+        trace_manager.eval_session = EvalSession()
+        trace_manager.clear_traces()
+
+
+def walk_spans(spans):
+    """Every span in a tree of spans, parents first."""
+    for span in spans:
+        yield span
+        yield from walk_spans(span.children)
 
 
 def is_generate_mode() -> bool:
@@ -522,6 +560,14 @@ def _assert_trace_capture_succeeded(
     raise AssertionError(
         "Trace capture produced an empty dict for " f"{json_path!r}.\n"
     )
+
+
+def trace_json(json_path: str):
+    """``generate_trace_json`` under ``GENERATE_SCHEMAS``, else
+    ``assert_trace_json``."""
+    if is_generate_mode():
+        return generate_trace_json(json_path)
+    return assert_trace_json(json_path)
 
 
 def assert_trace_json(json_path: str):

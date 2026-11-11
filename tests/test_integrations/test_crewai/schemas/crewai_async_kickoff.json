@@ -1,42 +1,238 @@
 {
-  "uuid": "de536308-dea1-422a-ba77-e2eb4aa51889",
+  "uuid": "5348b9313cf6f7129cd391185589545b",
   "baseSpans": [
     {
-      "uuid": "7225efdd-35a5-4a6f-8c37-e687607c2509",
-      "name": "kickoff_async",
+      "uuid": "e21f3fb726700392",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:31.795Z",
-      "endTime": "2026-06-01T17:24:32.870Z",
-      "input": {},
-      "output": "Processed output: Async Request 1 has been successfully processed.",
-      "integration": "CrewAI"
-    },
-    {
-      "uuid": "336938d3-496b-4d40-86a5-231ce63278b1",
-      "name": "kickoff",
-      "status": "SUCCESS",
-      "type": "base",
-      "parentUuid": "7225efdd-35a5-4a6f-8c37-e687607c2509",
-      "startTime": "2026-06-01T17:24:31.795Z",
-      "endTime": "2026-06-01T17:24:32.870Z",
+      "startTime": "2026-10-21T17:48:00.506Z",
+      "endTime": "2026-10-21T17:48:02.061Z",
       "input": {
         "input": "Async Request 1"
       },
       "output": "Processed output: Async Request 1 has been successfully processed.",
       "integration": "CrewAI"
+    },
+    {
+      "uuid": "0fe5d9b2a9c6c4bd",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e21f3fb726700392",
+      "startTime": "2026-10-21T17:48:00.710Z",
+      "endTime": "2026-10-21T17:48:02.055Z",
+      "input": {
+        "description": "Process this input asynchronously: Async Request 1",
+        "context": ""
+      },
+      "output": "Processed output: Async Request 1 has been successfully processed.",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1b0c849a5658d345",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "fa7a4b80e325f810",
+      "startTime": "2026-10-21T17:48:00.721Z",
+      "endTime": "2026-10-21T17:48:02.047Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "800f5cb43c51613e",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.042Z",
+      "endTime": "2026-10-21T17:48:02.042Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "c075f88d1c0b618d",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.042Z",
+      "endTime": "2026-10-21T17:48:02.042Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "ec7595d6329af56b",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.041Z",
+      "endTime": "2026-10-21T17:48:02.041Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "feec38b2a11f19b0",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.041Z",
+      "endTime": "2026-10-21T17:48:02.041Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "83b59489af654c22",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.040Z",
+      "endTime": "2026-10-21T17:48:02.040Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "4d7f47516740910f",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.037Z",
+      "endTime": "2026-10-21T17:48:02.039Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "312ffd6e51e8e76a",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:02.036Z",
+      "endTime": "2026-10-21T17:48:02.037Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e5cd562e9289d9fa",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:00.729Z",
+      "endTime": "2026-10-21T17:48:02.035Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e56c0b502cacd1f6",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:00.729Z",
+      "endTime": "2026-10-21T17:48:00.729Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e9431fe00efaa007",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:00.727Z",
+      "endTime": "2026-10-21T17:48:00.728Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "74e408a591f13196",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:00.726Z",
+      "endTime": "2026-10-21T17:48:00.727Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "eeef51101c2928f6",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "1b0c849a5658d345",
+      "startTime": "2026-10-21T17:48:00.724Z",
+      "endTime": "2026-10-21T17:48:00.726Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "d6cc9bd6-5e04-45c1-9367-35a941dc35d8",
-      "name": "execute_task",
+      "uuid": "fa7a4b80e325f810",
+      "name": "Async Worker",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "336938d3-496b-4d40-86a5-231ce63278b1",
-      "startTime": "2026-06-01T17:24:31.805Z",
-      "endTime": "2026-06-01T17:24:32.863Z",
-      "input": "Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "0fe5d9b2a9c6c4bd",
+      "startTime": "2026-10-21T17:48:00.710Z",
+      "endTime": "2026-10-21T17:48:02.054Z",
+      "input": {
+        "description": "Process this input asynchronously: Async Request 1",
+        "context": ""
+      },
       "output": "Processed output: Async Request 1 has been successfully processed.",
       "integration": "CrewAI",
       "availableTools": [],
@@ -45,35 +241,33 @@
   ],
   "llmSpans": [
     {
-      "uuid": "fe73a953-50c9-4c05-a510-6469dc4e63c0",
-      "name": "call",
+      "uuid": "8d8ea3609037c5c9",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "d6cc9bd6-5e04-45c1-9367-35a941dc35d8",
-      "startTime": "2026-06-01T17:24:31.809Z",
-      "endTime": "2026-06-01T17:24:32.856Z",
+      "parentUuid": "e5cd562e9289d9fa",
+      "startTime": "2026-10-21T17:48:00.730Z",
+      "endTime": "2026-10-21T17:48:02.016Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Async Worker. Digital worker\nYour personal goal is: Process requests fast",
-          "cache_breakpoint": true
+          "content": "You are Async Worker. Digital worker\nYour personal goal is: Process requests fast"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Process this input asynchronously: Async Request 1\n\nThis is the expected criteria for your final answer: Processed output.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "Processed output: Async Request 1 has been successfully processed.",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T17:24:31.795Z",
-  "endTime": "2026-06-01T17:24:32.870Z",
+  "startTime": "2026-10-21T17:48:00.506Z",
+  "endTime": "2026-10-21T17:48:02.061Z",
+  "name": "crew crew",
   "environment": "development",
   "input": {
     "input": "Async Request 1"

@@ -273,7 +273,7 @@ def test_untraced_test_case_without_tool_calls_is_still_missing():
 @pytest.fixture
 def _offline_tracing(monkeypatch):
     monkeypatch.setenv("CONFIDENT_TRACE_FLUSH", "0")
-    monkeypatch.setattr(trace_manager, "post_trace", lambda *a, **k: None)
+    monkeypatch.setattr(trace_manager, "tracing_enabled", False)
     yield
     trace_manager.eval_session = EvalSession()
 

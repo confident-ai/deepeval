@@ -22,7 +22,6 @@
   "endTime": "2026-01-29T09:53:13.982Z",
   "environment": "testing",
   "threadId": "thread_456",
-  "userId": "user_123",
   "input": {
     "data": "test"
   },

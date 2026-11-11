@@ -153,19 +153,6 @@
   "endTime": "2026-10-21T14:05:41.875Z",
   "environment": "development",
   "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
-  "output": [
-    {
-      "role": "assistant",
-      "content": {
-        "type": "tool_call",
-        "id": "call_mabMKj00p0xgPErfyhsFrPdf",
-        "name": "get_weather",
-        "arguments": {
-          "location": "San Francisco",
-          "unit": "c"
-        }
-      }
-    }
-  ],
+  "output": "The current temperature in San Francisco is 18\u00b0C and the weather is partly cloudy. A great travel tip for this weather is to dress in layers, as the temperature can change throughout the day, and don't forget to bring a light jacket for the cooler evenings.",
   "status": "SUCCESS"
 }
