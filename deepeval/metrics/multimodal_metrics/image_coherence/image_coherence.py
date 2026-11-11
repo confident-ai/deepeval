@@ -4,17 +4,25 @@ from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import SingleTurnParams, LLMTestCase, MLLMImage
 from deepeval.metrics.utils import (
+    SystemOneEvalSpec,
+    initialize_image_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    system_one_reads,
     construct_verbose_logs,
-    check_llm_test_case_params,
+    prepare_measure,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
     ReasonScore,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.jev_eval.utils import extract_images
 from deepeval.utils import (
     get_or_create_event_loop,
     convert_to_multi_modal_array,
@@ -43,9 +51,23 @@ class ImageCoherenceMetric(BaseMetric):
         evaluation_template: Type[
             ImageCoherenceTemplate
         ] = ImageCoherenceTemplate,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
     ):
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        # Under `system_one` the images go to a System One model that reads
+        # them (Drex Max) and the reason is built from its answers.
+        self.eval_mode, self.system_one_model = (
+            initialize_image_system_one_model(system_one_model, eval_mode)
+        )
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
+        self.include_reason = True
         self.threshold = 1 if strict_mode else threshold
         self.strict_mode = strict_mode
         self.async_mode = async_mode
@@ -60,18 +82,7 @@ class ImageCoherenceMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -85,6 +96,8 @@ class ImageCoherenceMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
                 actual_output = convert_to_multi_modal_array(
                     test_case.actual_output
                 )
@@ -173,24 +186,15 @@ class ImageCoherenceMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
             actual_output = convert_to_multi_modal_array(
                 test_case.actual_output
             )
@@ -356,6 +360,28 @@ class ImageCoherenceMetric(BaseMetric):
 
     def calculate_score(self, scores: List[float]) -> float:
         return sum(scores) / len(scores)
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: every image in `actual_output` judged against the text around it, in one request to a System One
+        model that reads images (Drex Max)."""
+        if not system_one_reads(self, test_case):
+            return None
+        _, images = extract_images(test_case.actual_output)
+        if not images:
+            raise ValueError(
+                f"The test case must have atleast one image in the `actual_output` to calculate {self.__name__} score"
+            )
+        return SystemOneEvalSpec(
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions",
+                    image_count=len(images),
+                )
+            ),
+        )
 
     @property
     def __name__(self):

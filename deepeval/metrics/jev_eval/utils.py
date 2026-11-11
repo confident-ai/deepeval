@@ -10,7 +10,7 @@ where ``v_i`` is the value each primitive's answer maps onto in ``[0, 1]``.
 Everything here is pure: no LLM, no network.
 """
 
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -25,6 +25,7 @@ from deepeval.models.system_one.schema import (
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
+    MLLMImage,
     MultiTurnParams,
     SingleTurnParams,
 )
@@ -65,6 +66,30 @@ def initialize_jev_model(
             f"JevEval needs Jev to score, but it is not usable: {e} "
             "Pass a configured `TypeSafeModel` as `system_one_model`, or "
             "install `typesafe-sdk` and set TYPESAFE_API_KEY."
+        ) from e
+
+
+def initialize_drex_model(
+    model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
+) -> DeepEvalBaseSystemOneModel:
+    """DrexEval needs Drex in every mode; there is no LLM to fall back to.
+    ``model`` is a configured System One model or a Drex model name."""
+    if isinstance(model, DeepEvalBaseSystemOneModel):
+        return model
+    if model is not None and not isinstance(model, str):
+        raise TypeError(
+            f"Unsupported type for system_one_model: {type(model)}. Expected "
+            "None, str, or DeepEvalBaseSystemOneModel."
+        )
+    from deepeval.models.system_one.nace_model import NaceModel
+
+    try:
+        return NaceModel(model=model)
+    except DeepEvalError as e:
+        raise DeepEvalError(
+            f"DrexEval needs Drex to score, but it is not usable: {e} "
+            "Pass a configured `NaceModel` as `system_one_model`, or "
+            "install `nace-sdk` and set NACE_API_KEY."
         ) from e
 
 
@@ -326,6 +351,41 @@ def construct_multi_turn_state(
     if fields:
         state["test_case"] = fields
     return _jsonable(state)
+
+
+def extract_images(state: Any) -> Tuple[Any, List[MLLMImage]]:
+    """``state`` with every ``MLLMImage`` placeholder replaced by
+    ``[Image N]``, and the images in that order: the numbering a System One
+    model that reads images (Drex Max) resolves by list position. An image
+    that appears twice keeps its number. PDFs have no System One form."""
+    images: List[MLLMImage] = []
+    numbers: Dict[str, int] = {}
+
+    def number(image: MLLMImage) -> str:
+        if image.mimeType == "application/pdf":
+            raise DeepEvalError(
+                "System One models read images, not PDFs. Judge test cases "
+                "with PDFs with the LLM."
+            )
+        placeholder = str(image)
+        if placeholder not in numbers:
+            images.append(image)
+            numbers[placeholder] = len(images)
+        return f"[Image {numbers[placeholder]}]"
+
+    def walk(value: Any) -> Any:
+        if isinstance(value, str):
+            return "".join(
+                part if isinstance(part, str) else number(part)
+                for part in MLLMImage.parse_multimodal_string(value)
+            )
+        if isinstance(value, dict):
+            return {k: walk(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [walk(v) for v in value]
+        return value
+
+    return walk(state), images
 
 
 ###############################################

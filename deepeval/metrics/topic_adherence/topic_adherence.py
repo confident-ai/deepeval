@@ -12,6 +12,7 @@ from deepeval.metrics.utils import (
     generate_with_schema_and_extract,
     SystemOneBinarySpec,
     SystemOneEvalSpec,
+    system_one_reads,
     parse_questions,
     run_system_one_eval,
     a_run_system_one_eval,
@@ -407,7 +408,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         """`system_one` eval mode: the whole conversation and
         `relevant_topics` as one Jev request, with one Noul per topic and one
         for off-topic questions; see EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=self._required_test_case_params,

@@ -1,0 +1,164 @@
+---
+id: metrics-drex-eval
+title: DrexEval
+sidebar_label: DrexEval
+languages: [python]
+---
+
+<MetricTagsDisplayer usesLLMs={false} drex={true} singleTurn={true} multiTurn={true} custom={true} />
+
+DrexEval is [`JevEval`](/docs/metrics-jev-eval) judged by [Nace](/integrations/models/nace)'s Drex instead of TypeSafe AI's Jev. You write bounded **questions** about an LLM interaction, Drex answers each one with a calibrated probability, and the score is the **weighted mean** of those answers. The questions, the equation and the deterministic reason are exactly JevEval's, so a metric written for one runs on the other unchanged.
+
+What Drex adds is **images**. On a multimodal test case, DrexEval sends the images to Drex Max, so your questions can ask about what an image shows, not just about the text around it.
+
+No LLM is involved at any point: even the `reason` is built from Drex's answers and their confidence.
+
+:::tip
+If you want a custom metric where an LLM drafts the evaluation logic from a one-line `criteria`, use [`GEval`](/docs/metrics-llm-evals). DrexEval is for when you already know **what** you want decided and want it decided the same way every run.
+:::
+
+## Usage
+
+First, if you haven't already, install the Nace SDK (Python 3.11+) and save your API key:
+
+```bash
+pip install nace-sdk
+export NACE_API_KEY=<your-nace-api-key>
+```
+
+Instantiate the metric with the test case fields your questions talk about, and the questions themselves:
+
+<Tabs items={["Single-Turn", "Multi-Turn"]}>
+<Tab value="Single-Turn">
+
+```python
+from deepeval.metrics.drex_eval import Noul, Score, Choice
+from deepeval.test_case import SingleTurnParams
+from deepeval.metrics import DrexEval
+
+tool_faithfulness = DrexEval(
+    name="Tool Faithfulness",
+    evaluation_params=[
+        SingleTurnParams.ACTUAL_OUTPUT,
+        SingleTurnParams.TOOLS_CALLED,
+    ],
+    questions=[
+        Noul(
+            "Every fact and figure in actual_output appears in the output of a tool in tools_called.",
+            weight=2,
+        ),
+        Score(
+            "How much of actual_output is grounded in the outputs in tools_called?",
+            levels=["Fabricated", "Mostly fabricated", "Mostly grounded", "Fully grounded"],
+        ),
+        Choice(
+            "What did actual_output do with information the tools did not return?",
+            options={
+                "left_it_out": 1.0,
+                "flagged_it_as_unknown": 1.0,
+                "hedged_it": 0.5,
+                "stated_it_as_fact": 0.0,
+                "nothing_missing": None,
+            },
+        ),
+    ],
+)
+```
+
+</Tab>
+<Tab value="Multi-Turn">
+
+```python
+from deepeval.metrics.drex_eval import Noul
+from deepeval.test_case import MultiTurnParams
+from deepeval.metrics import ConversationalDrexEval
+
+resolution = ConversationalDrexEval(
+    name="Resolution",
+    evaluation_params=[MultiTurnParams.CONTENT],
+    questions=[
+        Noul("By the last turn, the assistant has resolved the user's issue."),
+        Noul("The assistant never asks the user for information they already gave."),
+    ],
+)
+```
+
+The turns' `content` and `role` are always part of the state.
+
+</Tab>
+</Tabs>
+
+Then measure a test case, or pass the metric to `evaluate()`:
+
+```python
+from deepeval.test_case import LLMTestCase, ToolCall
+
+test_case = LLMTestCase(
+    input="What's the weather in Paris right now?",
+    actual_output="It's 18°C and sunny in Paris, with a light breeze.",
+    tools_called=[
+        ToolCall(
+            name="get_weather",
+            input_parameters={"city": "Paris"},
+            output={"temp_c": 18, "condition": "sunny"},
+        )
+    ],
+)
+
+tool_faithfulness.measure(test_case)
+print(tool_faithfulness.score, tool_faithfulness.reason)
+print(tool_faithfulness.score_breakdown)  # every question's probabilities
+```
+
+There are **TWO** mandatory and **EIGHT** optional parameters when creating a `DrexEval`, the same as `JevEval`'s:
+
+- `name`: the name of the metric.
+- `questions`: a list of `Noul`, `Score` and `Choice` questions. See [JevEval's questions](/docs/metrics-jev-eval) for how each one maps onto a value in `[0, 1]`.
+- [Optional] `evaluation_params`: the test case fields the questions refer to. Leave it out to send the agent's trace instead.
+- [Optional] `system_one_model`: a `NaceModel`, or the name of a Drex model. Defaults to a `NaceModel` built from `NACE_MODEL_NAME`, falling back to `drex-max-v1.1`. Any other System One model, such as a `TypeSafeModel`, works too.
+- [Optional] `threshold`: the passing threshold, defaulted to `0.5`.
+- [Optional] `include_reason`: whether to build a reason. Defaulted to `True`.
+- [Optional] `strict_mode`: a binary score, `1` only when every applicable question is answered in its best way (a `Noul` at `P(yes) >= 0.5`). Defaulted to `False`.
+- [Optional] `async_mode`: whether to run concurrently. Defaulted to `True`.
+- [Optional] `verbose_mode`: prints the questions, answers and score. Defaulted to `False`.
+- [Optional] `flaky`: marks the metric flaky. Defaulted to `False`.
+
+## Judging Images
+
+When a test case carries images, DrexEval sends them to Drex Max with the state. Each `MLLMImage` in the fields you evaluate is replaced in the state by `[Image 1]`, `[Image 2]`, ... in order of first appearance, and your questions can name them the same way:
+
+```python
+from deepeval.metrics.drex_eval import Noul, Choice
+from deepeval.test_case import LLMTestCase, MLLMImage, SingleTurnParams
+from deepeval.metrics import DrexEval
+
+product_photo = DrexEval(
+    name="Product Photo",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+    questions=[
+        Noul("actual_output describes what [Image 1] shows accurately."),
+        Choice(
+            "Does [Image 1] show visible damage?",
+            options={"damaged": 0.0, "undamaged": 1.0},
+        ),
+    ],
+)
+
+product_photo.measure(
+    LLMTestCase(
+        input=f"Is this lamp in good condition? {MLLMImage(url='./lamp.jpg')}",
+        actual_output="Yes, the lamp looks undamaged.",
+    )
+)
+print(product_photo.evaluation_model)  # drex-max-v1.1 (Nace)
+```
+
+Drex Max takes up to 8 images and 512 questions per request. A `NaceModel` set to a text-only Drex (`drex-v1.5`, `drex-v2.0`) refuses images rather than dropping them, so leave the model unset or set a Drex Max model.
+
+## How Is It Calculated?
+
+Exactly as [JevEval](/docs/metrics-jev-eval): each answer becomes a value in `[0, 1]` (`P(yes)` for a `Noul`, the expected level for a `Score`, the credit-weighted probability for a `Choice`), and the score is their weighted mean over the applicable questions:
+
+<Equation formula="\text{score} = \frac{\displaystyle\sum_i w_i \, v_i}{\displaystyle\sum_i w_i}" />
+
+The reason describes each `Noul` with the same bands deepeval uses for verdicts: `P(yes) >= 0.65` likely holds, `0.35` to `0.65` unclear, and below `0.35` likely fails. `metric.confidence` is the least decisive answer, and `metric.score_breakdown` keeps every question's full probabilities.

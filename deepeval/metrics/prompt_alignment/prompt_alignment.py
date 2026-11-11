@@ -13,6 +13,7 @@ from deepeval.metrics.utils import (
     generate_qag_verdicts,
     a_generate_qag_verdicts,
     SystemOneEvalSpec,
+    system_one_reads,
     SystemOneVerdictSpec,
     initialize_system_one_model,
     parse_questions,
@@ -276,7 +277,7 @@ class PromptAlignmentMetric(BaseMetric):
         """`system_one` eval mode: one Noul per prompt instruction over
         `input` and `actual_output`, in a single Jev request; see
         EXPERIMENTAL.md."""
-        if test_case.multimodal:
+        if not system_one_reads(self, test_case):
             return None
         return SystemOneEvalSpec(
             evaluation_params=self._required_params,

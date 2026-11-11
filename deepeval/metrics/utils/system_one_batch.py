@@ -30,10 +30,7 @@ from deepeval.config.eval_mode import EvalMode
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.base_metric import BaseConversationalMetric, BaseMetric
 from deepeval.metrics.indicator import start_measure
-from deepeval.models.system_one.limits import (
-    SystemOneContextLimitError,
-    check_context_budget,
-)
+from deepeval.models.system_one.limits import SystemOneContextLimitError
 from deepeval.models.system_one.schema import (
     SystemOneAnswers,
     SystemOneQuestion,
@@ -81,8 +78,9 @@ class _Request:
         }
 
     def admit(self, entry: _Entry) -> bool:
-        """Add `entry` when it asks the same Jev model, its state merges
-        without conflict and the merged request still fits Jev's budget."""
+        """Add `entry` when it asks the same System One model, its state
+        merges without conflict and the merged request still fits that
+        model's budget (for Drex Max, its question cap too)."""
         model_name = entry.metric.system_one_model.get_model_name()
         if model_name != self.model.get_model_name():
             return False
@@ -91,7 +89,7 @@ class _Request:
             return False
         merged = _Request(self.entries + [entry], state)
         try:
-            check_context_budget(merged.state, merged.questions)
+            self.model.check_budget(merged.state, merged.questions)
         except SystemOneContextLimitError:
             return False
         self.entries, self.state = merged.entries, merged.state
@@ -161,8 +159,9 @@ def _candidates(
         metric_type = BaseConversationalMetric
     else:
         return []
-    # Every whole-metric spec returns `None` for a multimodal test case, so
-    # none of its metrics could be batched.
+    # Each metric numbers the images in its own state ("[Image 1]", ...),
+    # so the states of a multimodal test case do not merge: every metric
+    # sends its own request.
     if test_case.multimodal:
         return []
     return [
@@ -220,7 +219,9 @@ def _setup(
         if not prepared:
             continue
         start_measure(metric, async_mode=async_mode)
-        entries.append(_Entry(metric, *prepared))
+        # No images: multimodal test cases are not batched (`_candidates`).
+        spec, state, questions, _ = prepared
+        entries.append(_Entry(metric, spec, state, questions))
         handled.append(metric)
     return handled, entries
 
@@ -294,12 +295,12 @@ def _settle(request: _Request, result: Any, ignore_errors: bool) -> None:
 # builds, so it checks the budget itself rather than relying on the model to
 # (a custom `DeepEvalBaseSystemOneModel` may not).
 def _call(request: _Request) -> Any:
-    check_context_budget(request.state, request.questions)
+    request.model.check_budget(request.state, request.questions)
     return request.model.decide(request.state, request.questions)
 
 
 async def _a_call(request: _Request) -> Any:
-    check_context_budget(request.state, request.questions)
+    request.model.check_budget(request.state, request.questions)
     return await request.model.a_decide(request.state, request.questions)
 
 
@@ -334,9 +335,12 @@ def _indicator(
     if progress is not None:
         metrics = sum(len(request.entries) for request in requests)
         count = len(requests)
+        models = ", ".join(
+            sorted({request.model.get_model_name() for request in requests})
+        )
         task = add_pbar(
             progress,
-            f"    ⚡ Jev: judging {metrics} metrics in {count} "
+            f"    ⚡ {models}: judging {metrics} metrics in {count} "
             f"request{'s' if count != 1 else ''}",
         )
         yield

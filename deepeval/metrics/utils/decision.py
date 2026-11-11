@@ -25,7 +25,10 @@ from deepeval.metrics.base_metric import (
     BaseMetric,
     BaseConversationalMetric,
 )
-from deepeval.models.system_one.limits import SystemOneContextLimitError
+from deepeval.models.system_one.limits import (
+    SystemOneContextLimitError,
+    SystemOneQuestionLimitError,
+)
 from deepeval.models.system_one.schema import (
     ChoiceQuestion,
     NoulQuestion,
@@ -125,10 +128,12 @@ def _system_one_active(metric: Any, spec: Optional[Any]) -> bool:
         # that will not get better on retry (auth). Stay on the LLM path.
         return False
     if getattr(metric, "system_one_model", None) is None:
+        from deepeval.metrics.utils.models import system_one_setup_hint
+
         raise DeepEvalError(
             f"{EVAL_MODE_ENV_VAR}={mode} routes decisions to a System One "
-            f"model, but {type(metric).__name__} has none configured. Set "
-            f"TYPESAFE_API_KEY or switch back with "
+            f"model, but {type(metric).__name__} has none configured. "
+            f"{system_one_setup_hint()} Or switch back with "
             f"`deepeval set-eval-mode {EvalMode.LLM}`."
         )
     return True
@@ -200,16 +205,36 @@ def _is_permanent(exc: BaseException) -> bool:
             return True
     except Exception:  # SDK optional
         pass
+    try:
+        from nace_sdk import (
+            NaceAuthenticationError,
+            NacePermissionDeniedError,
+        )
+
+        if isinstance(
+            exc, (NaceAuthenticationError, NacePermissionDeniedError)
+        ):
+            return True
+    except Exception:  # SDK optional
+        pass
     text = str(exc).lower()
     return isinstance(exc, DeepEvalError) and (
-        "api key" in text or "typesafe_sdk" in text or "typesafe-sdk" in text
+        "api key" in text
+        or "typesafe_sdk" in text
+        or "typesafe-sdk" in text
+        or "nace_sdk" in text
+        or "nace-sdk" in text
+        # A 402: no call succeeds until the account is topped up.
+        or "no available funds" in text
     )
 
 
 def _describe_failure(exc: BaseException) -> str:
+    if isinstance(exc, SystemOneQuestionLimitError):
+        return f"question limit ({exc.question_count} > {exc.max_questions})"
     if isinstance(exc, SystemOneContextLimitError):
         if exc.limit_tokens is None:
-            return "context limit (rejected by Jev)"
+            return "context limit (rejected by the model)"
         return (
             f"context limit ({exc.estimated_tokens} est. tokens > "
             f"{exc.limit_tokens})"
@@ -234,6 +259,12 @@ def _system_one_error_types() -> Tuple[type, ...]:
         types.append(TypeSafeError)
     except Exception:  # SDK optional
         pass
+    try:
+        from nace_sdk import NaceError
+
+        types.append(NaceError)
+    except Exception:  # SDK optional
+        pass
     return tuple(types)
 
 
@@ -241,12 +272,15 @@ def context_limit_error(
     metric: Any, exc: SystemOneContextLimitError
 ) -> ContextWindowExceededError:
     """The error a `system_one` metric raises when its test case does not
-    fit in Jev's context: Jev cannot judge it, and the LLM can."""
+    fit in the System One model's context: it cannot judge it, and the LLM
+    can."""
     name = getattr(metric, "__name__", type(metric).__name__)
+    model = getattr(metric, "system_one_model", None)
+    judge = model.get_model_name() if model is not None else "System One"
     return ContextWindowExceededError(
         f"{name} could not run on System One: {exc} This test case is too "
-        f"large for Jev to judge in one request. Switch this metric back to "
-        f'the LLM with `eval_mode="{EvalMode.LLM}"` or '
+        f"large for {judge} to judge in one request. Switch this metric back "
+        f'to the LLM with `eval_mode="{EvalMode.LLM}"` or '
         f"`deepeval set-eval-mode {EvalMode.LLM}`."
     )
 

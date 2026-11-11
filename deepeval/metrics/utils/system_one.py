@@ -44,10 +44,7 @@ from pydantic import Field, TypeAdapter, ValidationError
 from typing_extensions import Annotated
 
 from deepeval.errors import DeepEvalError
-from deepeval.models.system_one.limits import (
-    SystemOneContextLimitError,
-    check_context_budget,
-)
+from deepeval.models.system_one.limits import SystemOneContextLimitError
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
@@ -168,9 +165,24 @@ def parse_questions(rendered: str) -> List["JevQuestion"]:
 ###############################################
 
 
-def _prepare(
-    metric: Any, test_case: Any
-) -> Optional[Tuple[SystemOneEvalSpec, Dict[str, Any], Dict[str, Any]]]:
+def system_one_reads(metric: Any, test_case: Any) -> bool:
+    """Whether the metric's System One model can judge ``test_case``: any
+    text-only one, and a multimodal one when the model reads images (Drex
+    Max). Whole-metric specs return ``None`` for a test case it cannot."""
+    if not getattr(test_case, "multimodal", False):
+        return True
+    model = getattr(metric, "system_one_model", None)
+    return model is not None and model.supports_images()
+
+
+# What one whole-metric request sends: the spec it came from, the state, the
+# questions, and the images the state refers to as "[Image N]".
+SystemOneRequest = Tuple[
+    SystemOneEvalSpec, Dict[str, Any], Dict[str, Any], List[Any]
+]
+
+
+def _prepare(metric: Any, test_case: Any) -> Optional[SystemOneRequest]:
     """Everything needed for the one `decide()` call, or `None` when this
     measure should not go through Jev at all."""
     mode = effective_eval_mode(metric)
@@ -194,21 +206,25 @@ def _prepare(
 
 def _request_for(
     metric: Any, test_case: Any, spec: SystemOneEvalSpec
-) -> Optional[Tuple[SystemOneEvalSpec, Dict[str, Any], Dict[str, Any]]]:
-    """The state and questions `spec` sends for `test_case`, or `None` for a
-    test case type Jev has no state for."""
+) -> Optional[SystemOneRequest]:
+    """The state, questions and images `spec` sends for `test_case`, or
+    `None` for a test case type System One has no state for."""
     mode = effective_eval_mode(metric)
     if getattr(metric, "system_one_model", None) is None:
+        from deepeval.metrics.utils.models import system_one_setup_hint
+
         raise DeepEvalError(
             f"{EVAL_MODE_ENV_VAR}={mode} runs {type(metric).__name__} on a "
-            f"System One model, but none is configured. Set TYPESAFE_API_KEY "
-            f"or switch back with `deepeval set-eval-mode {EvalMode.LLM}`."
+            f"System One model, but none is configured. "
+            f"{system_one_setup_hint()} Or switch back with `deepeval "
+            f"set-eval-mode {EvalMode.LLM}`."
         )
 
     from deepeval.metrics.jev_eval.utils import (
         build_questions,
         construct_multi_turn_state,
         construct_single_turn_state,
+        extract_images,
     )
 
     if isinstance(test_case, ConversationalTestCase):
@@ -228,16 +244,36 @@ def _request_for(
     for key, value in spec.extra_state.items():
         if value is not None:
             state[key] = _jsonable(value)
-    return spec, state, build_questions(spec.questions)
+    images: List[Any] = []
+    if getattr(test_case, "multimodal", False):
+        state, images = extract_images(state)
+    return spec, state, build_questions(spec.questions), images
 
 
-def _decide(metric: Any, state: Any, questions: Any):
+def model_decide(model: Any, state: Any, questions: Any, images: List[Any]):
+    """``model.decide``, passing ``images`` only when there are any, so a
+    text-only model never sees the argument."""
+    if images:
+        return model.decide(state, questions, images=images)
+    return model.decide(state, questions)
+
+
+async def a_model_decide(
+    model: Any, state: Any, questions: Any, images: List[Any]
+):
+    if images:
+        return await model.a_decide(state, questions, images=images)
+    return await model.a_decide(state, questions)
+
+
+def _decide(metric: Any, state: Any, questions: Any, images: List[Any]):
     # The runner sends the whole test case, the largest state any metric
     # builds, so it checks the budget itself rather than relying on the
     # model to (a custom `DeepEvalBaseSystemOneModel` may not).
+    model = metric.system_one_model
     try:
-        check_context_budget(state, questions)
-        return metric.system_one_model.decide(state, questions)
+        model.check_budget(state, questions, images or None)
+        return model_decide(model, state, questions, images)
     except Exception as e:  # noqa: BLE001 - only the overflow is rewrapped
         inner = _unwrap(e)
         if isinstance(inner, SystemOneContextLimitError):
@@ -245,10 +281,11 @@ def _decide(metric: Any, state: Any, questions: Any):
         raise
 
 
-async def _a_decide(metric: Any, state: Any, questions: Any):
+async def _a_decide(metric: Any, state: Any, questions: Any, images: List[Any]):
+    model = metric.system_one_model
     try:
-        check_context_budget(state, questions)
-        return await metric.system_one_model.a_decide(state, questions)
+        model.check_budget(state, questions, images or None)
+        return await a_model_decide(model, state, questions, images)
     except Exception as e:  # noqa: BLE001 - only the overflow is rewrapped
         inner = _unwrap(e)
         if isinstance(inner, SystemOneContextLimitError):
@@ -287,7 +324,6 @@ def _populate(
         else None
     )
     metric.success = metric.is_successful()
-    metric.evaluation_model = metric.system_one_model.get_model_name()
     metric.verbose_logs = construct_verbose_logs(
         metric,
         steps=[
@@ -305,8 +341,8 @@ def run_system_one_eval(metric: Any, test_case: Any) -> bool:
     prepared = _prepare(metric, test_case)
     if prepared is None:
         return False
-    spec, state, questions = prepared
-    _populate(metric, spec, *_decide(metric, state, questions))
+    spec, state, questions, images = prepared
+    _populate(metric, spec, *_decide(metric, state, questions, images))
     return True
 
 
@@ -315,8 +351,10 @@ async def a_run_system_one_eval(metric: Any, test_case: Any) -> bool:
     prepared = _prepare(metric, test_case)
     if prepared is None:
         return False
-    spec, state, questions = prepared
-    _populate(metric, spec, *(await _a_decide(metric, state, questions)))
+    spec, state, questions, images = prepared
+    _populate(
+        metric, spec, *(await _a_decide(metric, state, questions, images))
+    )
     return True
 
 
@@ -367,8 +405,8 @@ def _outcome_line(index: int, outcome: "QuestionOutcome") -> str:
 def format_system_one_reason(
     metric: Any, outcomes: Sequence["QuestionOutcome"]
 ) -> str:
-    """The reason for a measure Jev decided: judge, confidence, one line per
-    question, and how the score follows from them."""
+    """The reason for a measure System One decided: judge, confidence, one
+    line per question, and how the score follows from them."""
     from deepeval.metrics.jev_eval.utils import min_confidence
 
     confidence = min_confidence(outcomes)

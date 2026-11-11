@@ -7,6 +7,12 @@ languages: [python, typescript]
 
 In `deepeval`, the **eval mode** decides who judges your LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>: an LLM alone, an LLM and Jev together, or Jev alone. Jev is TypeSafe AI's System One model. Instead of generating text, it answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities.
 
+<Only id="python">
+
+Nace's [Drex](/integrations/models/nace) answers the same questions and can take Jev's place everywhere on this page: see [choosing the System One provider](#choosing-the-system-one-provider). Drex Max also reads images.
+
+</Only>
+
 ## Quick Summary
 
 Every LLM-as-a-judge metric works in steps. It **extracts** the pieces of your test case it needs to judge (the statements in an answer, the claims it makes, the task an agent was given), **decides** about each piece, turns those decisions into a **score**, and writes a **reason**. The eval mode sets who does each step:
@@ -221,14 +227,42 @@ The reason is built from the same answers rather than generated, so the same ans
 :::caution
 Nothing falls back to the LLM in this mode:
 
-- **Test case too large** (over 32k tokens of test case plus question, or 64k for the whole request): caught before sending, and raises an error telling you to switch the metric back to `llm`.
+- **Test case too large** (over 32k tokens of test case plus question, or 64k for the whole request, for Jev; Drex's [limits](/integrations/models/nace#limits-and-errors) are larger): caught before sending, and raises an error telling you to switch the metric back to `llm`.
 - **Any other Jev error** (rate limit after retries, rejected key, network error): raised as-is.
-- **Multimodal test cases**: raise up front, since Jev evaluates text.
+- **Multimodal test cases**: raise up front, since Jev evaluates text<Only id="python">. Drex Max judges them with their images</Only>.
   :::
 
 :::info
 Scores from different eval modes are not the same number: a `system_one` score comes from Jev's answers, not the LLM chain's equation. Keep a metric on one eval mode when comparing runs.
 :::
+
+<Only id="python">
+
+## Choosing The System One Provider
+
+`hybrid` and `system_one` decide with TypeSafe AI's Jev unless you choose Nace's Drex. Set `DEEPEVAL_DECISION_PROVIDER` (`typesafe`, the default, or `nace`) with the CLI or your environment:
+
+```bash
+pip install nace-sdk
+deepeval set-nace --prompt-api-key --save=dotenv  # sets DEEPEVAL_DECISION_PROVIDER=nace
+deepeval set-eval-mode system_one --save=dotenv
+```
+
+Every metric then builds a `NaceModel` where it would have built a `TypeSafeModel`; `deepeval set-typesafe` switches back. A `system_one_model` passed to a metric always wins, so you can also mix both in one run:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.models import NaceModel, TypeSafeModel
+
+metrics = [
+    FaithfulnessMetric(system_one_model=NaceModel(), eval_mode="system_one"),
+    AnswerRelevancyMetric(system_one_model=TypeSafeModel(), eval_mode="system_one"),
+]
+```
+
+Under `system_one`, a test case with images goes to Drex Max with its images, including the [image metrics](/docs/multimodal-metrics-image-coherence). Jev is text-only, so with Jev a multimodal test case has to stay on the LLM.
+
+</Only>
 
 ## Confidence Scores
 
@@ -267,6 +301,7 @@ Each metric's page states which eval modes it supports and how it behaves under 
 
 - [`GEval`](/docs/metrics-llm-evals): always runs as `llm`.
 - [`JevEval`](/docs/metrics-jev-eval): always judged by Jev, whatever the eval mode.
+- [`DrexEval`](/docs/metrics-drex-eval) (Python): always judged by Drex, whatever the eval mode.
 - [`DAGMetric`](/docs/metrics-dag): Jev decides judgement nodes, and `system_one` runs as `hybrid` since task nodes need the LLM.
 - [`FaithfulnessMetric`](/docs/metrics-faithfulness): supports all three modes.
 - [`TaskCompletionMetric`](/docs/metrics-task-completion): supports all three modes, with Jev giving a graded score under `hybrid`.

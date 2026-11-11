@@ -59,6 +59,9 @@ class KeyValues(Enum):
     # Who decides in LLM-as-a-judge metrics (`deepeval set-eval-mode`)
     DEEPEVAL_EVAL_MODE = "eval_mode"
 
+    # System One provider (`deepeval set-typesafe` / `deepeval set-nace`)
+    DEEPEVAL_DECISION_PROVIDER = "decision_provider"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"
@@ -178,6 +181,12 @@ class ModelKeyValues(Enum):
     TYPESAFE_API_KEY = "TYPESAFE_API_KEY"
     TYPESAFE_MODEL_NAME = "TYPESAFE_MODEL_NAME"
     TYPESAFE_COST_PER_INPUT_TOKEN = "TYPESAFE_COST_PER_INPUT_TOKEN"
+
+    # Nace (System One)
+    NACE_API_KEY = "NACE_API_KEY"
+    NACE_MODEL_NAME = "NACE_MODEL_NAME"
+    NACE_BASE_URL = "NACE_BASE_URL"
+    NACE_COST_PER_INPUT_TOKEN = "NACE_COST_PER_INPUT_TOKEN"
 
 
 class EmbeddingKeyValues(Enum):

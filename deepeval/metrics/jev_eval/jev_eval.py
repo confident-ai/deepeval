@@ -9,10 +9,15 @@ confidence.
 
 Without ``evaluation_params`` the state is the agent's trace instead of test
 case fields, so the questions can ask about the whole trajectory.
+
+A multimodal test case is judged when the System One model reads images
+(``NaceModel``, Drex Max): its images are sent alongside the state, which
+refers to them as ``[Image 1]``, ``[Image 2]``, ... ``DrexEval`` is this metric
+with Drex as its default judge.
 """
 
 import asyncio
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseMetric
@@ -24,6 +29,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     format_system_one_reason,
 )
+from deepeval.metrics.utils.system_one import a_model_decide, model_decide
 from deepeval.models import DeepEvalBaseSystemOneModel
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.utils import get_or_create_event_loop
@@ -35,6 +41,7 @@ from .utils import (
     aggregate_strict,
     build_questions,
     construct_single_turn_state,
+    extract_images,
     format_outcomes_for_logs,
     initialize_jev_model,
     mark_strict,
@@ -45,6 +52,9 @@ from .utils import (
 
 
 class JevEval(BaseMetric):
+    # The tag `__name__` appends; `DrexEval` changes it.
+    _suffix = "JevEval"
+
     def __init__(
         self,
         name: str,
@@ -72,7 +82,9 @@ class JevEval(BaseMetric):
             list(evaluation_params) if evaluation_params is not None else None
         )
         self.questions = validate_questions(questions)
-        self.system_one_model = initialize_jev_model(system_one_model)
+        self.system_one_model = self._initialize_system_one_model(
+            system_one_model
+        )
         self.include_reason = include_reason
         self.evaluation_model = self.system_one_model.get_model_name()
         self.strict_mode = strict_mode
@@ -88,15 +100,22 @@ class JevEval(BaseMetric):
     # Measure
     ###############################################
 
+    def _initialize_system_one_model(
+        self, model: Optional[Union[str, DeepEvalBaseSystemOneModel]]
+    ) -> DeepEvalBaseSystemOneModel:
+        return initialize_jev_model(model)
+
     @property
     def requires_trace(self) -> bool:
         return not self.evaluation_params
 
     def _check_params(self, test_case: LLMTestCase) -> None:
-        if test_case.multimodal:
+        if test_case.multimodal and not self.system_one_model.supports_images():
             raise ValueError(
-                f"{self.__name__} evaluates text only: Jev has no image "
-                "input. Pass a text-only LLMTestCase."
+                f"{self.__name__} evaluates text only: "
+                f"{self.system_one_model.get_model_name()} has no image "
+                "input. Pass a text-only LLMTestCase, or a System One model "
+                "that reads images (NaceModel with Drex Max)."
             )
         check_llm_test_case_params(
             test_case,
@@ -121,6 +140,13 @@ class JevEval(BaseMetric):
         if self.requires_trace:
             return {"trace": compact_trace(test_case._trace_dict)}
         return construct_single_turn_state(self.evaluation_params, test_case)
+
+    def _request(self, test_case: LLMTestCase) -> Tuple[Dict[str, Any], List]:
+        """The state, and the images it refers to as ``[Image N]``."""
+        state = self._state(test_case)
+        if test_case.multimodal:
+            return extract_images(state)
+        return state, []
 
     def measure(
         self,
@@ -152,8 +178,7 @@ class JevEval(BaseMetric):
                     )
                 )
             else:
-                outcomes = self._decide(self._state(test_case))
-                self._finalize(outcomes)
+                self._finalize(self._decide(*self._request(test_case)))
             return self.score
 
     async def a_measure(
@@ -171,24 +196,33 @@ class JevEval(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            outcomes = await self._a_decide(self._state(test_case))
-            self._finalize(outcomes)
+            self._finalize(await self._a_decide(*self._request(test_case)))
             return self.score
 
     ###############################################
-    # Decision (Jev)
+    # Decision (System One)
     ###############################################
 
-    def _decide(self, state: Dict[str, Any]) -> List[QuestionOutcome]:
-        answers, cost = self.system_one_model.decide(
-            state, build_questions(self.questions)
+    def _decide(
+        self, state: Dict[str, Any], images: List
+    ) -> List[QuestionOutcome]:
+        answers, cost = model_decide(
+            self.system_one_model,
+            state,
+            build_questions(self.questions),
+            images,
         )
         self._accrue(cost)
         return outcomes_from_answers(self.questions, answers)
 
-    async def _a_decide(self, state: Dict[str, Any]) -> List[QuestionOutcome]:
-        answers, cost = await self.system_one_model.a_decide(
-            state, build_questions(self.questions)
+    async def _a_decide(
+        self, state: Dict[str, Any], images: List
+    ) -> List[QuestionOutcome]:
+        answers, cost = await a_model_decide(
+            self.system_one_model,
+            state,
+            build_questions(self.questions),
+            images,
         )
         self._accrue(cost)
         return outcomes_from_answers(self.questions, answers)
@@ -238,5 +272,5 @@ class JevEval(BaseMetric):
     @property
     def __name__(self):
         if self._include_jev_eval_suffix:
-            return f"{self.name} [JevEval]"
+            return f"{self.name} [{self._suffix}]"
         return self.name

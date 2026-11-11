@@ -357,7 +357,8 @@ def test_hybrid_falls_back_when_jev_rejects_as_too_large():
     metric.measure(TEST_CASE)
     assert metric.score == 0.5
     assert (
-        "context limit (rejected by Jev)" in metric.system_one_fallback_reason
+        "context limit (rejected by the model)"
+        in metric.system_one_fallback_reason
     )
 
 

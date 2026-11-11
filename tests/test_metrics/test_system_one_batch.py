@@ -153,16 +153,16 @@ async def test_each_jev_model_gets_its_own_request(is_async):
 @sync_and_async
 @pytest.mark.asyncio
 async def test_request_over_budget_is_split(is_async, monkeypatch):
-    def at_most_three_questions(state, questions):
+    def at_most_three_questions(state, questions, images=None):
         if len(questions) > 3:
             raise SystemOneContextLimitError(
                 "too big", estimated_tokens=2, limit_tokens=1
             )
 
-    monkeypatch.setattr(
-        system_one_batch, "check_context_budget", at_most_three_questions
-    )
     model = jev()
+    # The budget is the model's own, so a Drex Max question cap or a custom
+    # model's limit splits the batch the same way.
+    monkeypatch.setattr(model, "check_budget", at_most_three_questions)
     metrics = [relevancy(model), faithfulness(model)]
 
     await run(metrics, make_case(), is_async)
