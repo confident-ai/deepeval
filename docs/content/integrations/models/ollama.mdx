@@ -81,11 +81,11 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 </Tab>
 <Tab value="ENV">
 
-First point `deepeval` at Ollama. `LOCAL_MODEL_API_KEY` must be the literal string `ollama` — that value is what routes a plain model name to your Ollama server instead of a hosted provider:
+First point `deepeval` at Ollama. `USE_OLLAMA_MODEL` is what routes a plain model name to your Ollama server instead of a hosted provider:
 
 ```bash
 # .env.local
-LOCAL_MODEL_API_KEY=ollama
+USE_OLLAMA_MODEL=true
 LOCAL_MODEL_BASE_URL=http://localhost:11434
 ```
 
@@ -99,7 +99,9 @@ answer_relevancy = AnswerRelevancyMetric(
 )
 ```
 
-Running `deepeval set-ollama --model=deepseek-r1:1.5b --save` writes these same variables for you.
+Running `deepeval set-ollama --model=deepseek-r1:1.5b --save=dotenv` writes these same variables for you.
+
+Configurations that set `LOCAL_MODEL_API_KEY=ollama` instead still select Ollama, as long as `USE_OLLAMA_MODEL` is not set.
 
 </Tab>
 </Tabs>

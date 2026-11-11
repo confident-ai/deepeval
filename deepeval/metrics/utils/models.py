@@ -1,14 +1,13 @@
 from typing import Optional, Tuple, Union
 
-from pydantic import SecretStr
-
 from deepeval.config.eval_mode import (
     EVAL_MODE_ENV_VAR,
     EvalMode,
     EvalModeName,
     resolve_eval_mode,
 )
-from deepeval.config.settings import get_settings
+from deepeval.config.settings import get_settings, is_ollama_selected
+from deepeval.config.utils import parse_bool
 from deepeval.errors import DeepEvalError
 from deepeval.key_handler import (
     ModelKeyValues,
@@ -87,16 +86,21 @@ def should_use_local_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def _ollama_flag(setting: Optional[bool], key) -> Optional[bool]:
+    if setting is not None:
+        return setting
+    value = KEY_FILE_HANDLER.fetch_data(key)
+    return parse_bool(value) if value is not None else None
+
+
 def should_use_ollama_model():
-    local_key = SETTINGS.LOCAL_MODEL_API_KEY
-    if local_key:
-        # `LOCAL_MODEL_API_KEY` is a `SecretStr`, which never compares equal to
-        # a plain string, so the sentinel is read out before comparing.
-        if isinstance(local_key, SecretStr):
-            local_key = local_key.get_secret_value()
-        return local_key == "ollama"
-    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
-    return value == "ollama"
+    return is_ollama_selected(
+        _ollama_flag(
+            SETTINGS.USE_OLLAMA_MODEL, ModelKeyValues.USE_OLLAMA_MODEL
+        ),
+        SETTINGS.LOCAL_MODEL_API_KEY
+        or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY),
+    )
 
 
 def should_use_gemini_model():
@@ -322,10 +326,16 @@ def should_use_local_embedding():
 
 
 def should_use_ollama_embedding():
-    api_key = KEY_FILE_HANDLER.fetch_data(
-        EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
+    return is_ollama_selected(
+        _ollama_flag(
+            SETTINGS.USE_OLLAMA_EMBEDDINGS,
+            EmbeddingKeyValues.USE_OLLAMA_EMBEDDINGS,
+        ),
+        SETTINGS.LOCAL_EMBEDDING_API_KEY
+        or KEY_FILE_HANDLER.fetch_data(
+            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
+        ),
     )
-    return api_key == "ollama"
 
 
 def initialize_embedding_model(

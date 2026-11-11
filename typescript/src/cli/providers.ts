@@ -41,6 +41,8 @@ export interface ProviderSpec {
   extraOptions?: ProviderExtraOption[];
   /** Set unconditionally by `set-*` (Ollama's placeholder API key). */
   fixedValues?: Partial<Record<SettingName, string>>;
+  legacySelector?: { setting: SettingName; value: string };
+  sharedSettings?: SettingName[];
   /** Extra keys `unset-*` clears beyond the ones above. */
   extraUnsetSettings?: SettingName[];
   /** Secrets `unset-* --clear-secrets` removes. */
@@ -155,7 +157,7 @@ export const PROVIDERS: ProviderSpec[] = [
   {
     id: "ollama",
     label: "Ollama",
-    useFlag: "USE_LOCAL_MODEL",
+    useFlag: "USE_OLLAMA_MODEL",
     modelSetting: "OLLAMA_MODEL_NAME",
     extraOptions: [
       {
@@ -169,6 +171,8 @@ export const PROVIDERS: ProviderSpec[] = [
     ],
     // Ollama ignores the key, but the OpenAI-compatible client requires one.
     fixedValues: { LOCAL_MODEL_API_KEY: "ollama" },
+    legacySelector: { setting: "LOCAL_MODEL_API_KEY", value: "ollama" },
+    sharedSettings: ["USE_LOCAL_MODEL", "LOCAL_MODEL_BASE_URL"],
     secretSettings: ["LOCAL_MODEL_API_KEY"],
     successNoun: "a local Ollama model",
   },
@@ -337,6 +341,16 @@ export const USE_LLM_FLAGS: SettingName[] = [
   ...new Set(PROVIDERS.map((provider) => provider.useFlag)),
 ];
 
+export function isProviderSelected(
+  provider: ProviderSpec,
+  values: Record<string, unknown>,
+): boolean {
+  const flag = values[provider.useFlag];
+  if (flag !== undefined && flag !== null) return flag === true;
+  const selector = provider.legacySelector;
+  return selector !== undefined && values[selector.setting] === selector.value;
+}
+
 export function getProvider(id: string): ProviderSpec | undefined {
   return PROVIDERS.find((provider) => provider.id === id);
 }
@@ -352,5 +366,6 @@ export function ownedSettings(provider: ProviderSpec): SettingName[] {
   for (const setting of provider.extraUnsetSettings ?? []) {
     settings.push(setting);
   }
-  return [...new Set(settings)];
+  const shared = new Set(provider.sharedSettings ?? []);
+  return [...new Set(settings)].filter((setting) => !shared.has(setting));
 }

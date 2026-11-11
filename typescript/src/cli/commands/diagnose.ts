@@ -82,7 +82,7 @@ function resolveActiveProvider(): {
   }
   const provider = getProvider(selected) ?? null;
   const reason =
-    selected === "ollama"
+    selected === "ollama" && getSettings().USE_OLLAMA_MODEL !== true
       ? "LOCAL_MODEL_API_KEY is the Ollama placeholder"
       : `${provider?.useFlag} is set`;
   return { provider, reason };

@@ -27,8 +27,10 @@ export function selectProvider(): ProviderId | null {
   if (settings.USE_OPENAI_MODEL) return "openai";
   if (settings.USE_GEMINI_MODEL) return "gemini";
   if (settings.USE_PORTKEY_MODEL) return "portkey";
-  // The placeholder key `set-ollama` writes is what marks Ollama, as in Python.
-  if (settings.LOCAL_MODEL_API_KEY === "ollama") return "ollama";
+  // Unset, USE_OLLAMA_MODEL falls back to the placeholder key `set-ollama`
+  // writes, as in Python.
+  if (settings.USE_OLLAMA_MODEL ?? settings.LOCAL_MODEL_API_KEY === "ollama")
+    return "ollama";
   if (settings.USE_LOCAL_MODEL) return "local-model";
   if (settings.USE_AZURE_OPENAI) return "azure-openai";
   if (settings.USE_MOONSHOT_MODEL) return "moonshot";

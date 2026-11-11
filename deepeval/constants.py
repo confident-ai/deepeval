@@ -3,6 +3,7 @@ from typing import Literal, Union, get_args
 import os
 
 KEY_FILE: str = ".deepeval"
+OLLAMA_API_KEY_SELECTOR: str = "ollama"
 HIDDEN_DIR: str = os.getenv("DEEPEVAL_CACHE_FOLDER", ".deepeval")
 PYTEST_RUN_TEST_NAME: str = "CONFIDENT_AI_RUN_TEST_NAME"
 PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME: str = (
