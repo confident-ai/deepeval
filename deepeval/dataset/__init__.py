@@ -11,7 +11,11 @@ if TYPE_CHECKING:
         ConversationalGolden,
         Persona,
         BackgroundNoiseSettings,
+        BackgroundSpeaker,
         InterruptionBehavior,
+        LineSettings,
+        SpeechPatternSettings,
+        VoiceSettings,
     )
 
 __all__ = [
@@ -21,7 +25,11 @@ __all__ = [
     "ConversationalGolden",
     "Persona",
     "BackgroundNoiseSettings",
+    "BackgroundSpeaker",
     "InterruptionBehavior",
+    "LineSettings",
+    "SpeechPatternSettings",
+    "VoiceSettings",
     "get_current_golden",
 ]
 
@@ -37,7 +45,11 @@ def __getattr__(name: str):
         "ConversationalGolden",
         "Persona",
         "BackgroundNoiseSettings",
+        "BackgroundSpeaker",
         "InterruptionBehavior",
+        "LineSettings",
+        "SpeechPatternSettings",
+        "VoiceSettings",
     }:
         module = import_module(".golden", __name__)
     else:
