@@ -431,6 +431,8 @@ def update_trace_properties_from_span_data(
     span_data: Union["ResponseSpanData", "GenerationSpanData"],
 ):
     if isinstance(span_data, ResponseSpanData):
+        if span_data.response is None:
+            return
         if not trace.input:
             trace.input = parse_response_input(
                 span_data.input, span_data.response.instructions
