@@ -91,10 +91,7 @@ test("changed evaluationTemplate does not reuse cached score", () => {
 test("same topLogprobs and evaluationTemplate reuse cached score", () => {
   cacheFor(geval({ topLogprobs: 3 }));
 
-  const hit = getCachedMetricData(
-    testCase,
-    geval({ topLogprobs: 3 }),
-  );
+  const hit = getCachedMetricData(testCase, geval({ topLogprobs: 3 }));
   expect(hit).not.toBeNull();
   expect(hit?.score).toBe(0.7);
 });
