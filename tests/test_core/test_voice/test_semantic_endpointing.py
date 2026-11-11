@@ -143,7 +143,10 @@ def test_duplex_listen_captures_the_greeting():
     async def run():
         connector = _QuietAfterSentence()
         session = _VoiceSession(
-            connector=connector, persona=None, floor=FloorController()
+            connector=connector,
+            persona=None,
+            tts_model=simulator._voice.tts_model,
+            floor=FloorController(),
         )
         turns = []
         async with connector:

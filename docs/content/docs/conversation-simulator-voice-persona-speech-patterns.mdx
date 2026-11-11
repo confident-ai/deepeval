@@ -1,0 +1,342 @@
+---
+id: conversation-simulator-voice-persona-speech-patterns
+title: Speech Patterns
+sidebar_label: Speech Patterns
+languages: [python]
+beta: true
+---
+
+`SpeechPatternSettings` gives the simulated caller **the habits real people have on the phone**. Set it as `speech_patterns` on a [`Persona`](/docs/conversation-simulator-voice-personas).
+
+Each pattern is `"rare"`, `"normal"` or `"frequent"`, and is off when left as `None`.
+
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. The wording patterns are heard on the caller's reply after the agent offers some appointment times, written by the simulator model with the pattern off, at `"normal"` and at `"frequent"`. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. This is the caller with nothing set:
+
+<SettingPlayer
+  settings={[
+    {
+      "name": "nothing set",
+      "options": [
+        {
+          "label": "None",
+          "code": "Persona(characteristics=\"...\")",
+          "src": "/audio/personas/baseline.mp3"
+        }
+      ]
+    }
+  ]}
+/>
+
+## Create Speech Pattern Settings
+
+```python
+from deepeval.dataset import Persona, SpeechPatternSettings
+
+persona = Persona(
+    characteristics="You are calling from a busy cafe and keep losing your train of thought.",
+    speech_patterns=SpeechPatternSettings(
+        fillers="frequent",
+        mid_sentence_pauses="normal",
+        self_corrects="rare",
+    ),
+)
+```
+
+There are **EIGHT** optional parameters when creating a `SpeechPatternSettings`, in two groups.
+
+## Timing Patterns
+
+These change how the caller's audio is timed and mixed, and are voice-only. They test whether your agent knows when it is being spoken to and when the caller has finished.
+
+- [Optional] `mid_sentence_pauses`: how often the caller stops for a second or two in the middle of a sentence and then carries on. An agent that answers during the pause has cut them off.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "mid_sentence_pauses",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(mid_sentence_pauses=\"frequent\")",
+            "src": "/audio/personas/pattern-mid-sentence-pauses-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `slow_to_answer`: how often the caller takes a few seconds to start replying. An agent that re-prompts straight away is too impatient.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "slow_to_answer",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(slow_to_answer=\"frequent\")",
+            "src": "/audio/personas/pattern-slow-to-answer-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `side_speech`: how often the caller turns away and says something to someone else in the room before answering. The aside is quieter, and your agent should not treat it as part of the request.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "side_speech",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(side_speech=\"frequent\")",
+            "src": "/audio/personas/pattern-side-speech-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+The simulator model writes the caller's asides from the persona before the call. If the persona also has [`other_speakers`](/docs/conversation-simulator-voice-persona-background-noise#other-speakers), the asides are things the caller would say to them.
+
+## Wording Patterns
+
+These change what the caller says, so they apply to text simulations too.
+
+- [Optional] `fillers`: how often the caller uses filler words such as um, uh and you know.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "fillers",
+        "options": [
+          {
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "SpeechPatternSettings(fillers=\"normal\")",
+            "src": "/audio/personas/pattern-fillers-normal.mp3"
+          },
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(fillers=\"frequent\")",
+            "src": "/audio/personas/pattern-fillers-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `trails_off`: how often the caller leaves a sentence unfinished.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "trails_off",
+        "options": [
+          {
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "SpeechPatternSettings(trails_off=\"normal\")",
+            "src": "/audio/personas/pattern-trails-off-normal.mp3"
+          },
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(trails_off=\"frequent\")",
+            "src": "/audio/personas/pattern-trails-off-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `asks_to_repeat`: how often the caller asks the agent to repeat or rephrase what it just said.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "asks_to_repeat",
+        "options": [
+          {
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "SpeechPatternSettings(asks_to_repeat=\"normal\")",
+            "src": "/audio/personas/pattern-asks-to-repeat-normal.mp3"
+          },
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(asks_to_repeat=\"frequent\")",
+            "src": "/audio/personas/pattern-asks-to-repeat-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `self_corrects`: how often the caller corrects themselves mid-sentence, as in "Tuesday - no, sorry, Wednesday". Your agent should act on the corrected value.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "self_corrects",
+        "options": [
+          {
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "SpeechPatternSettings(self_corrects=\"normal\")",
+            "src": "/audio/personas/pattern-self-corrects-normal.mp3"
+          },
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(self_corrects=\"frequent\")",
+            "src": "/audio/personas/pattern-self-corrects-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `switches_language`: how often the caller switches between their languages mid-conversation. Needs at least two `languages` on the persona.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "switches_language",
+        "options": [
+          {
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "SpeechPatternSettings(switches_language=\"normal\")",
+            "src": "/audio/personas/pattern-switches-language-normal.mp3"
+          },
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(switches_language=\"frequent\")",
+            "src": "/audio/personas/pattern-switches-language-frequent.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+```python
+persona = Persona(
+    characteristics="You grew up in Miami and mix English and Spanish without noticing.",
+    languages=["English", "Spanish"],
+    speech_patterns=SpeechPatternSettings(switches_language="normal"),
+    multilingual_stt=True,
+)
+```
+
+:::note
+A pattern that is `"frequent"` shows up in roughly six utterances out of ten, `"normal"` in about a third, and `"rare"` in about one in seven. Which utterances is decided from the persona, so the same persona makes the same call every time.
+:::
+
+## Coming Soon
+
+This is not available yet. It is here to show what is planned.
+
+- `backchannels`: how often the caller says something short like "mm-hmm" or "okay" while the agent is still talking, without meaning to take over. Your agent should keep going. One that stops has mistaken an acknowledgement for an interruption. This is the agent speaking, with a caller acknowledging it twice:
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "backchannels",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(backchannels=\"frequent\")",
+            "src": "/audio/personas/preview-backchannels.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+## TTS Model Support
+
+Timing patterns are applied to the caller's audio after it is synthesized, and wording patterns are written by the simulator model before it, so every pattern works with every TTS model.
+
+<TtsSupportTable
+  rows={[
+    {
+      "setting": "mid_sentence_pauses",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "slow_to_answer",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "side_speech",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "fillers",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "trails_off",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "asks_to_repeat",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "self_corrects",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "switches_language",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    }
+  ]}
+/>
+
+`switches_language` needs a voice that can speak each of the caller's languages, which depends on the model and voice you pick.

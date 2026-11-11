@@ -106,6 +106,7 @@ class BackgroundMixer:
     def enabled(self) -> bool:
         return (
             self._settings is not None
+            and self._settings.audio is not None
             and self._gain > 0
             and not self._unavailable
         )
