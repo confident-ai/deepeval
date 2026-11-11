@@ -10,6 +10,10 @@
       "endTime": "2026-02-27T11:14:38.078Z",
       "input": {
         "message": "alpha beta"
+      },
+      "output": {
+        "type": "wrapper",
+        "data": "end"
       }
     },
     {
@@ -22,6 +26,12 @@
       "endTime": "2026-02-27T11:14:38.078Z",
       "input": {
         "message": "alpha beta"
+      },
+      "output": {
+        "type": "final_response",
+        "data": {
+          "content": "alpha beta"
+        }
       }
     }
   ],
@@ -34,6 +44,10 @@
   "environment": "development",
   "input": {
     "message": "alpha beta"
+  },
+  "output": {
+    "type": "wrapper",
+    "data": "end"
   },
   "status": "SUCCESS"
 }

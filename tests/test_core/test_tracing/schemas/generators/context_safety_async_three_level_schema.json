@@ -10,6 +10,10 @@
       "endTime": "2026-02-27T11:14:38.131Z",
       "input": {
         "data": "x y"
+      },
+      "output": {
+        "level": "top",
+        "stage": "end"
       }
     },
     {
@@ -22,6 +26,10 @@
       "endTime": "2026-02-27T11:14:38.131Z",
       "input": {
         "data": "x y"
+      },
+      "output": {
+        "level": "mid",
+        "stage": "end"
       }
     },
     {
@@ -34,7 +42,8 @@
       "endTime": "2026-02-27T11:14:38.131Z",
       "input": {
         "data": "x y"
-      }
+      },
+      "output": "y"
     }
   ],
   "agentSpans": [],
@@ -46,6 +55,10 @@
   "environment": "development",
   "input": {
     "data": "x y"
+  },
+  "output": {
+    "level": "top",
+    "stage": "end"
   },
   "status": "SUCCESS"
 }
