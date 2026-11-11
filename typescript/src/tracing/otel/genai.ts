@@ -1,4 +1,4 @@
-/** GenAI semantic convention 1.37.0 attribute keys that deepeval reads. */
+/** GenAI semantic convention 1.41.0 attribute keys that deepeval reads. */
 export const GenAIAttr = {
   OPERATION_NAME: "gen_ai.operation.name",
   PROVIDER_NAME: "gen_ai.provider.name",
