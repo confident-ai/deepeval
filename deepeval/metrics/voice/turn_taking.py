@@ -15,6 +15,7 @@ from deepeval.voice.timeline import build_audio_timeline
 RESPONSE_DELAY_MIN_COUNT = 3
 RESPONSE_DELAY_SPREAD_TAU = 2.0
 RESPONSE_DELAY_WEIGHT = 0.2
+CONTIGUOUS_CLIP_TOLERANCE_SECONDS = 0.001
 
 
 class TurnTakingNaturalnessMetric(BaseVoiceMetric):
@@ -39,12 +40,26 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
             )
 
         transitions: List[Dict] = []
+        unmeasured_transitions: List[Dict] = []
         scores: List[float] = []
         response_delay_seconds: List[float] = []
         for current, following in zip(timeline, timeline[1:]):
             if current.role == following.role:
                 continue
             gap_seconds = following.start_time - current.end_time
+            gap_source = "audio"
+            if abs(gap_seconds) <= CONTIGUOUS_CLIP_TOLERANCE_SECONDS:
+                latency_ms = test_case.turns[following.turn_index].latency_ms
+                if current.role != "user" or latency_ms is None:
+                    unmeasured_transitions.append(
+                        {
+                            "from_turn": current.turn_index,
+                            "to_turn": following.turn_index,
+                        }
+                    )
+                    continue
+                gap_seconds = latency_ms / 1000
+                gap_source = "latency"
             if gap_seconds >= 0:
                 # Smoothly decreases as silence grows; there is no hard cap.
                 transition_score = math.exp(-gap_seconds / 2.5)
@@ -66,10 +81,22 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
                     "to_turn": following.turn_index,
                     "kind": kind,
                     "gap_seconds": gap_seconds,
+                    "gap_source": gap_source,
                     "score": transition_score,
                 }
             )
         if not scores:
+            if unmeasured_transitions:
+                return (
+                    None,
+                    "No speaker transition had a measurable gap: every turn's "
+                    "audio ends exactly where the next one starts and no "
+                    "response latency was provided.",
+                    {
+                        "transitions": transitions,
+                        "unmeasured_transitions": unmeasured_transitions,
+                    },
+                )
             return (
                 None,
                 "No cross-speaker transitions were available to evaluate.",
@@ -103,10 +130,19 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
                 f"delay varied by ±{spread:.2f}s across "
                 f"{len(response_delay_seconds)} replies."
             )
+        if unmeasured_transitions:
+            reason += (
+                f" {len(unmeasured_transitions)} transition(s) were left out "
+                "because their audio clips touch with no measurable gap."
+            )
         return (
             score,
             reason,
-            {"transitions": transitions, "response_delays": response_delays},
+            {
+                "transitions": transitions,
+                "unmeasured_transitions": unmeasured_transitions,
+                "response_delays": response_delays,
+            },
         )
 
     @property
