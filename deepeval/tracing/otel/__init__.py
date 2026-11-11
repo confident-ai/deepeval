@@ -1,7 +1,2 @@
-from .exporter import ConfidentSpanExporter
-from .context_aware_processor import ContextAwareSpanProcessor
-
-__all__ = [
-    "ConfidentSpanExporter",
-    "ContextAwareSpanProcessor",
-]
+"""deepeval on OpenTelemetry: confident-trace traces, and ``setup`` collects
+the spans of deepeval-owned traces as deepeval spans."""

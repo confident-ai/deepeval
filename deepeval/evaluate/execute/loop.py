@@ -35,6 +35,7 @@ from deepeval.tracing.tracing import (
     ToolSpan,
 )
 from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.otel.setup import start_automatic_tracing
 from deepeval.tracing.api import (
     BaseApiSpan,
 )
@@ -95,7 +96,6 @@ from deepeval.evaluate.execute._common import (
     _snapshot_tasks,
     _trace_error,
     filter_duplicate_results,
-    log_prompt,
 )
 from deepeval.evaluate.execute.agentic import (
     _a_execute_agentic_test_case,
@@ -252,7 +252,6 @@ def execute_agentic_test_cases_from_loop(
                     trace_api.agent_spans.append(api_span)
                 elif isinstance(span, LlmSpan):
                     trace_api.llm_spans.append(api_span)
-                    log_prompt(span, test_run_manager)
                 elif isinstance(span, RetrieverSpan):
                     trace_api.retriever_spans.append(api_span)
                 elif isinstance(span, ToolSpan):
@@ -479,6 +478,7 @@ def execute_agentic_test_cases_from_loop(
         ):
             _raise_no_metrics_error()
 
+    stop_automatic_tracing = start_automatic_tracing()
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -502,6 +502,7 @@ def execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
+        stop_automatic_tracing()
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment, so state can't leak
         # into the next run.
@@ -916,6 +917,7 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
 
+    stop_automatic_tracing = start_automatic_tracing()
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -946,6 +948,7 @@ def a_execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
+        stop_automatic_tracing()
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment.
         local_trace_manager.eval_session = EvalSession()
