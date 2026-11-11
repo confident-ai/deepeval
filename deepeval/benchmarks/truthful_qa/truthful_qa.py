@@ -288,12 +288,12 @@ class TruthfulQA(DeepEvalBaseBenchmark):
 
         # Load full dataset
         if self.mc_dataset is None:
-            gen_dataset = load_dataset("truthful_qa", "generation")[
+            gen_dataset = load_dataset("truthfulqa/truthful_qa", "generation")[
                 "validation"
             ]
-            mc_dataset = load_dataset("truthful_qa", "multiple_choice")[
-                "validation"
-            ]
+            mc_dataset = load_dataset(
+                "truthfulqa/truthful_qa", "multiple_choice"
+            )["validation"]
             df_mc, df_gen = mc_dataset.to_pandas(), gen_dataset.to_pandas()
             merged_df = pd.merge(
                 df_mc,
