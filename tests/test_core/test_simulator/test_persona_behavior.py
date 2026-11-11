@@ -1,5 +1,6 @@
 """Voice behavior driven by the golden's `Persona`."""
 
+from types import SimpleNamespace
 from typing import List, Optional
 
 import pytest
@@ -11,13 +12,16 @@ from deepeval.dataset import (
     Persona,
 )
 from deepeval.simulator import ConversationSimulator
+from deepeval.simulator.conversation_simulator import _VoiceSession
 from deepeval.test_case import Audio
 from deepeval.voice import VoiceConfig
+from deepeval.voice.background import mix_background
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.callback import (
     CallbackVoiceConnector,
 )
 from deepeval.voice.connectors.types import ConnectorTurn
+from deepeval.voice.line_quality import apply_line_quality
 from tests.test_core.test_simulator.helpers import StaticSimulatorModel
 
 
@@ -95,6 +99,139 @@ def test_persona_voice_reaches_the_tts_model():
     simulator.simulate([golden], max_user_simulations=1)
 
     assert tts.calls and tts.calls[0]["voice"] == "coral"
+
+
+class InstructableTTS(RecordingTTS):
+    def supports_voice_instructions(self) -> bool:
+        return True
+
+
+def test_voice_instructions_reach_a_tts_model_that_takes_them():
+    tts = InstructableTTS()
+    simulator = _simulator(RecordingAgent(), tts=tts)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="An impatient caller.",
+            voice_instructions="Scottish accent, speaks quickly.",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert tts.calls[0]["instructions"] == "Scottish accent, speaks quickly."
+
+
+def test_voice_instructions_stay_off_a_tts_model_that_does_not_take_them():
+    tts = RecordingTTS()
+    simulator = _simulator(RecordingAgent(), tts=tts)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="An impatient caller.",
+            voice_instructions="Scottish accent.",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert tts.calls
+    assert all("instructions" not in call for call in tts.calls)
+
+
+class ProviderTTS(RecordingTTS):
+    def __init__(self, provider: str):
+        super().__init__()
+        self.provider = provider
+
+
+def test_a_persona_with_its_own_tts_model_speaks_with_it():
+    shared, own = RecordingTTS(), RecordingTTS()
+    simulator = _simulator(RecordingAgent(), tts=shared)
+    goldens = [
+        ConversationalGolden(
+            scenario="Refund",
+            persona=Persona(characteristics="A caller.", tts_model=own),
+        ),
+        ConversationalGolden(
+            scenario="Cancel", persona=Persona(characteristics="A caller.")
+        ),
+    ]
+
+    simulator.simulate(goldens, max_user_simulations=1)
+
+    assert len(own.calls) == 1
+    assert len(shared.calls) == 1
+
+
+def test_a_voice_per_provider_follows_the_personas_own_tts_model():
+    own = ProviderTTS("elevenlabs")
+    simulator = _simulator(RecordingAgent(), tts=ProviderTTS("openai"))
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="A caller.",
+            tts_model=own,
+            voice={"openai": "ash", "elevenlabs": "el-voice"},
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    assert own.calls[0]["voice"] == "el-voice"
+
+
+def test_a_tts_model_name_is_built_once_per_simulator(monkeypatch):
+    built: List[str] = []
+    named = RecordingTTS()
+
+    def fake_resolve(model):
+        built.append(model)
+        return named
+
+    simulator = _simulator(RecordingAgent())
+    monkeypatch.setattr("deepeval.voice.config.resolve_tts_model", fake_resolve)
+    persona = Persona(characteristics="A caller.", tts_model="tts-1")
+    goldens = [
+        ConversationalGolden(scenario="Refund", persona=persona),
+        ConversationalGolden(scenario="Cancel", persona=persona),
+    ]
+
+    simulator.simulate(goldens, max_user_simulations=1)
+
+    assert built == ["tts-1"]
+    assert len(named.calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_barge_ins_speak_with_the_personas_own_tts_model(monkeypatch):
+    seen = {}
+
+    class _Exchange:
+        def __init__(self, **kwargs):
+            seen.update(kwargs)
+
+        async def run(self, **kwargs):
+            return SimpleNamespace(
+                barges=0, tts_cost=0.0, stt_cost=0.0, turns=[]
+            )
+
+    monkeypatch.setattr("deepeval.voice.duplex.DuplexExchange", _Exchange)
+    own = RecordingTTS()
+    persona = Persona(characteristics="A caller.", tts_model=own)
+    simulator = _simulator(RecordingAgent())
+    session = _VoiceSession(
+        connector=CallbackVoiceConnector(RecordingAgent()), persona=persona
+    )
+
+    await simulator._run_duplex(
+        session,
+        ConversationalGolden(scenario="Refund", persona=persona),
+        [],
+        0.0,
+    )
+
+    assert seen["tts_model"] is own
 
 
 def test_multilingual_stt_requests_language_detection():
@@ -217,6 +354,33 @@ def test_background_audio_is_mixed_into_the_uplink(tmp_path):
 
     pcm, _, _ = audio_utils.wav_bytes_to_pcm16(agent.uplinks[0].get_bytes())
     assert int.from_bytes(pcm[:2], "little", signed=True) == 1500
+
+
+def test_a_phone_line_carries_the_background_along_with_the_voice(tmp_path):
+    bed = tmp_path / "cafe.wav"
+    bed.write_bytes(
+        audio_utils.pcm16_to_wav_bytes(
+            (500).to_bytes(2, "little", signed=True) * 240, sample_rate=24000
+        )
+    )
+    background = BackgroundNoiseSettings(audio=str(bed), volume=1.0)
+    agent = RecordingAgent()
+    simulator = _simulator(agent)
+    golden = ConversationalGolden(
+        scenario="Refund",
+        persona=Persona(
+            characteristics="A caller in a cafe, on their phone.",
+            background_noise=background,
+            line_quality="phone",
+        ),
+    )
+
+    simulator.simulate([golden], max_user_simulations=1)
+
+    expected = apply_line_quality(
+        mix_background(_wav_audio(), background), "phone"
+    )
+    assert agent.uplinks[0].get_bytes() == expected.get_bytes()
 
 
 def test_persona_interruption_behavior_selects_the_duplex_path():

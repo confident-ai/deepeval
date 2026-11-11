@@ -13,6 +13,7 @@ from deepeval.test_case import Audio, Turn
 from deepeval.voice.background import BackgroundMixer, mix_background
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.floor_control import FloorController, FloorState
+from deepeval.voice.line_quality import LineQualityFilter, apply_line_quality
 from deepeval.voice.streaming import PcmRecorder
 from deepeval.voice.interruption import (
     InterruptionPolicy,
@@ -208,12 +209,19 @@ class DuplexExchange:
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
         self.tts_kwargs = (
-            golden.persona.tts_kwargs() if golden.persona is not None else {}
+            golden.persona.tts_kwargs(tts_model)
+            if golden.persona is not None
+            else {}
         )
         self.background_noise = (
             golden.persona.background_noise
             if golden.persona is not None
             else None
+        )
+        self.line_quality = (
+            golden.persona.line_quality
+            if golden.persona is not None
+            else "wideband"
         )
 
     async def run(
@@ -362,6 +370,7 @@ class DuplexExchange:
                 if tts_cost is not None:
                     result.tts_cost += tts_cost
                 audio = mix_background(audio, self.background_noise)
+                audio = apply_line_quality(audio, self.line_quality)
                 sent_at = time.perf_counter()
                 _take_floor(barge, sent_at)
                 _finish_barge(barge, audio, sent_at)
@@ -371,6 +380,7 @@ class DuplexExchange:
                 return
 
             mixer = BackgroundMixer(self.background_noise)
+            line = LineQualityFilter(self.line_quality)
             recorder = PcmRecorder()
             sent_at: Optional[float] = None
 
@@ -383,7 +393,7 @@ class DuplexExchange:
                 async for chunk in self.tts_model.a_synthesize_stream(
                     barge.utterance, **self.tts_kwargs
                 ):
-                    mixed = mixer.mix_chunk(chunk)
+                    mixed = line.filter_chunk(mixer.mix_chunk(chunk))
                     recorder.add(mixed)
                     yield mixed
 

@@ -639,6 +639,85 @@ async def test_a_barge_is_heard_from_its_first_frame_not_its_last():
     assert audio_duration(barge.audio) == pytest.approx(0.6, abs=0.01)
 
 
+class _InstructableStreamingTTS(_StreamingTTS):
+    frame_delay = 0.05
+
+    def __init__(self):
+        self.kwargs: list = []
+
+    def supports_voice_instructions(self) -> bool:
+        return True
+
+    async def a_synthesize_stream(self, text, **kwargs):
+        self.kwargs.append(kwargs)
+        async for chunk in super().a_synthesize_stream(text, **kwargs):
+            yield chunk
+
+
+@pytest.mark.asyncio
+async def test_a_barge_goes_out_in_the_personas_voice_over_its_line():
+    from deepeval.dataset import Persona
+    from deepeval.voice.line_quality import LineQualityFilter
+
+    async def a_generate_schema(prompt, schema):
+        return schema(
+            should_interrupt=True,
+            utterance="Just check it.",
+            reason="The caller has waited long enough.",
+        )
+
+    wire = _StreamingWire(_tone(6000))
+    tts = _InstructableStreamingTTS()
+    policy = interruption_policy("frequent")
+    exchange = DuplexExchange(
+        connector=wire,
+        tts_model=tts,
+        stt_model=_StubSTT(),
+        policy=policy,
+        floor=FloorController(policy=policy),
+        golden=ConversationalGolden(
+            scenario="Test",
+            persona=Persona(
+                characteristics="A caller.",
+                voice_instructions="Scottish accent.",
+                line_quality="phone",
+            ),
+        ),
+        language="English",
+        a_generate_schema=a_generate_schema,
+        call_started_at=time.perf_counter(),
+    )
+    probe = Audio.from_bytes(
+        audio_utils.pcm16_to_wav_bytes(_tone(10), sample_rate=24000),
+        "audio/wav",
+    )
+    turns = [Turn(role="user", content="Hello", audio=probe)]
+
+    await wire.connect()
+    try:
+        await asyncio.wait_for(
+            exchange.run(
+                turns=turns,
+                sent_at=time.perf_counter(),
+                barges_this_conversation=0,
+            ),
+            timeout=20,
+        )
+    finally:
+        await wire.disconnect()
+
+    barge = next(
+        t
+        for t in turns
+        if t.role == "user" and (t.metadata or {}).get("barge_in")
+    )
+    pcm, _, _ = audio_utils.wav_bytes_to_pcm16(barge.audio.get_bytes())
+    assert pcm == LineQualityFilter("phone").filter_pcm(
+        _tone(200) * _StreamingTTS.frames, 24000
+    )
+    assert tts.kwargs[0]["instructions"] == "Scottish accent."
+
+
 class TestSpokenPrefix:
     """The judge may only see the reply as far as the caller has heard it."""
 
