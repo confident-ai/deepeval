@@ -1,0 +1,56 @@
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+
+  &:hover {
+    color: var(--color-fd-foreground);
+    border-color: color-mix(in srgb, var(--color-fd-foreground) 40%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: 2px;
+  }
+
+  &[aria-checked="true"] {
+    border-color: var(--color-fd-foreground);
+    background: var(--color-fd-foreground);
+    color: var(--color-fd-background);
+
+    .count {
+      background: color-mix(in srgb, var(--color-fd-background) 18%, transparent);
+      color: inherit;
+    }
+  }
+}
+
+.count {
+  padding: 0.1rem 0.35rem;
+  background: var(--color-fd-accent);
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--color-fd-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}

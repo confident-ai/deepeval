@@ -7,6 +7,7 @@ import {
   Building2,
   History,
   Newspaper,
+  Trophy,
 } from "lucide-react";
 import { gitConfig } from "./shared";
 import Wordmark from "@/src/components/Wordmark";
@@ -24,6 +25,7 @@ import Wordmark from "@/src/components/Wordmark";
 //   Guides       → Compass       (directional walkthroughs)
 //   Tutorials    → GraduationCap (learning path)
 //   Integrations → Blocks        (modular pluggable pieces)
+//   Benchmarks   → Trophy        (ranked results)
 //   Enterprise   → Building2     (organization / deployment)
 //   Changelog    → History       (time-ordered records)
 //   Blog         → Newspaper     (articles / posts)
@@ -51,6 +53,12 @@ export const navLinks = [
     url: "/integrations",
     activeBase: "/integrations",
     icon: <Blocks />,
+  },
+  {
+    text: "Benchmarks",
+    url: "/benchmarks",
+    activeBase: "/benchmarks",
+    icon: <Trophy />,
   },
   {
     text: "Enterprise",

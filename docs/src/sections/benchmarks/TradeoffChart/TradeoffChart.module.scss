@@ -1,0 +1,192 @@
+.figure {
+  margin: 0;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+}
+
+.plot {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.svg {
+  display: block;
+}
+
+.grid {
+  stroke: var(--color-fd-border);
+  stroke-width: 1;
+}
+
+.tick {
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-size: 11px;
+  fill: var(--color-fd-muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.front {
+  fill: none;
+  stroke: var(--color-fd-foreground);
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+  stroke-linejoin: round;
+}
+
+.xTitle,
+.yTitle {
+  position: absolute;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+  pointer-events: none;
+}
+
+.xTitle {
+  right: 32px;
+  bottom: 6px;
+}
+
+.yTitle {
+  top: 12px;
+  left: 14px;
+}
+
+.marker {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+  cursor: default;
+  transform: translate(-50%, -50%);
+  transition:
+    border-color 140ms ease,
+    opacity 140ms ease;
+
+  &:focus-visible {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: 2px;
+  }
+}
+
+.label {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 16px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+  pointer-events: none;
+  transition: color 140ms ease;
+}
+
+// Models off the frontier recede; the ones on it carry the emphasis.
+.item[data-front="false"] .marker {
+  opacity: 0.5;
+}
+
+.item[data-front="true"] {
+  .marker {
+    border-color: color-mix(in srgb, var(--color-fd-foreground) 55%, transparent);
+  }
+
+  .label {
+    color: var(--color-fd-foreground);
+  }
+}
+
+.item[data-active="true"] {
+  .marker {
+    z-index: 2;
+    border-color: var(--color-fd-foreground);
+    opacity: 1;
+  }
+
+  .label {
+    color: var(--color-fd-foreground);
+  }
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 3;
+  min-width: 11rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-popover);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
+  font-size: 12px;
+  color: var(--color-fd-foreground);
+  pointer-events: none;
+  transform: translate(22px, -50%);
+
+  &[data-flip="true"] {
+    transform: translate(calc(-100% - 22px), -50%);
+  }
+
+  strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  dl {
+    margin: 0.5rem 0 0;
+  }
+
+  dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.2rem;
+  }
+
+  dt {
+    color: var(--color-fd-muted-foreground);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-numeric), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tooltipProvider {
+  color: var(--color-fd-muted-foreground);
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
+  padding: 0.6rem 0.9rem;
+  border-top: 1px solid var(--color-fd-border);
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legendLine {
+  width: 1.25rem;
+  height: 1px;
+  background: var(--color-fd-foreground);
+  opacity: 0.45;
+}

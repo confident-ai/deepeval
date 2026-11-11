@@ -31,6 +31,7 @@
   /* Foundation — warm off-white */
   --color-fd-background: hsl(40, 25%, 97%);
   --color-bg-inverse: #000000;
+  --color-text-inverse: #ffffff;
   --color-fd-foreground: hsl(0, 0%, 9%);
   --color-fd-muted: hsl(40, 15%, 94%);
   --color-fd-muted-foreground: hsl(0, 0%, 52%);
@@ -61,6 +62,7 @@
 .dark {
   --color-fd-background: hsl(0, 0%, 7%);
   --color-bg-inverse: #ffffff;
+  --color-text-inverse: #000000;
   --color-fd-foreground: hsl(0, 0%, 92%);
   --color-fd-muted: hsl(0, 0%, 13%);
   --color-fd-muted-foreground: hsla(0, 0%, 78%, 0.8);
@@ -88,10 +90,17 @@
 
 :root {
   --color-bg-inverse: #000000;
+  --color-text-inverse: #ffffff;
 }
 
 .dark {
   --color-bg-inverse: #ffffff;
+  --color-text-inverse: #000000;
+}
+
+::selection {
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
 }
 
 /* MDX content — cap each child block and center it inside the page

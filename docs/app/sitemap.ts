@@ -8,6 +8,7 @@ import {
   blogSource,
 } from '@/lib/source';
 import { siteUrl } from '@/lib/shared';
+import { getBenchmarkSlugs } from '@/lib/benchmarks/repository';
 
 // Matches the old Docusaurus-generated `sitemap.xml` (enabled by default
 // via the classic preset). We enumerate every page from each Fumadocs
@@ -32,7 +33,7 @@ const sources: AnySource[] = [
   blogSource,
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = sources.flatMap((source) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     source.getPages().map((page: any) => {
@@ -44,9 +45,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
+  const benchmarkSlugs = await getBenchmarkSlugs();
+
   return [
     { url: `${siteUrl}/`, lastModified: new Date() },
     { url: `${siteUrl}/enterprise` },
+    { url: `${siteUrl}/benchmarks` },
+    ...benchmarkSlugs.map((slug) => ({
+      url: `${siteUrl}/benchmarks/${slug}`,
+    })),
     ...entries,
   ];
 }

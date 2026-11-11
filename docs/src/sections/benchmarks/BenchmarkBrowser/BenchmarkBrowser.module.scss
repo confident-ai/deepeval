@@ -1,0 +1,15 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.empty {
+  margin: 0;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--color-fd-border);
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-fd-muted-foreground);
+}

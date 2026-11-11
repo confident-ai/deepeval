@@ -1,0 +1,38 @@
+.toggle {
+  flex: none;
+  display: inline-flex;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.7rem;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 13px;
+    color: var(--color-fd-muted-foreground);
+    cursor: pointer;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      color: var(--color-fd-foreground);
+    }
+
+    &[aria-pressed="true"] {
+      background: var(--color-fd-foreground);
+      color: var(--color-fd-background);
+    }
+
+    &:focus-visible {
+      outline: 1px solid var(--color-fd-ring);
+      outline-offset: 2px;
+    }
+  }
+}

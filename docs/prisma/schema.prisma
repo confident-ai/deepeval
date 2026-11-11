@@ -1,0 +1,351 @@
+// Benchmark results for the /benchmarks pages.
+//
+// Scores are only comparable within one benchmark version, so everything a
+// result depends on (metrics, segments, skills, test cases) hangs off
+// `BenchmarkVersion`. Ranks are never stored; they are derived from scores.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BenchmarkCategory {
+  AI_AGENTS
+  VOICE_AGENTS
+  SPEECH_TO_SPEECH
+  SPEECH_TO_TEXT
+  LANGUAGE_MODELS
+}
+
+enum GradingMethod {
+  PROGRAMMATIC
+  LLM_JUDGE
+  MIXED
+}
+
+enum MetricUnit {
+  PERCENT
+  SECONDS
+  MILLISECONDS
+  USD
+  MULTIPLIER
+  COUNT
+}
+
+enum DatasetHost {
+  HUGGING_FACE
+  GITHUB
+}
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model Provider {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  models Model[]
+
+  @@map("providers")
+}
+
+// A model is identified by its provider plus its name.
+model Model {
+  id          String    @id @default(cuid())
+  providerId  String    @map("provider_id")
+  name        String
+  slug        String
+  openWeights Boolean   @default(false) @map("open_weights")
+  releasedAt  DateTime? @map("released_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  provider           Provider           @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  runs               Run[]
+  leaderboardEntries LeaderboardEntry[]
+
+  @@unique([providerId, name])
+  @@unique([providerId, slug])
+  @@map("models")
+}
+
+// A benchmark resolves uniquely by its slug or by its exact name.
+model Benchmark {
+  id               String            @id @default(cuid())
+  slug             String            @unique
+  name             String            @unique
+  category         BenchmarkCategory
+  tagline          String
+  summary          String
+  runSnippet       String            @map("run_snippet")
+  // Display order on the landing page, ascending.
+  position         Int               @default(0)
+  // The version the pages show. Null until a version is ready to publish.
+  currentVersionId String?           @unique @map("current_version_id")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  versions       BenchmarkVersion[] @relation("BenchmarkVersions")
+  currentVersion BenchmarkVersion?  @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+  faqs           Faq[]
+
+  @@map("benchmarks")
+}
+
+model BenchmarkVersion {
+  id               String        @id @default(cuid())
+  benchmarkId      String        @map("benchmark_id")
+  version          String
+  releasedAt       DateTime      @map("released_at")
+  gradingMethod    GradingMethod @map("grading_method")
+  gradingSummary   String        @map("grading_summary")
+  judgeModel       String?       @map("judge_model")
+  runsPerCase      Int           @map("runs_per_case")
+  // What segments divide the test set by, e.g. "Domain".
+  segmentLabel     String        @map("segment_label")
+  datasetUnit      String        @map("dataset_unit")
+  datasetSource    String        @map("dataset_source")
+  datasetLicense   String        @map("dataset_license")
+  datasetHost      DatasetHost   @map("dataset_host")
+  datasetUrl       String        @map("dataset_url")
+  primaryMetricId  String?       @unique @map("primary_metric_id")
+  tradeoffMetricId String?       @unique @map("tradeoff_metric_id")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  benchmark          Benchmark          @relation("BenchmarkVersions", fields: [benchmarkId], references: [id], onDelete: Cascade)
+  currentFor         Benchmark?         @relation("CurrentVersion")
+  primaryMetric      Metric?            @relation("PrimaryMetric", fields: [primaryMetricId], references: [id], onDelete: SetNull)
+  tradeoffMetric     Metric?            @relation("TradeoffMetric", fields: [tradeoffMetricId], references: [id], onDelete: SetNull)
+  metrics            Metric[]           @relation("VersionMetrics")
+  segments           Segment[]
+  skills             Skill[]
+  methodology        MethodologyStep[]
+  cases              Case[]
+  runs               Run[]
+  leaderboardEntries LeaderboardEntry[]
+
+  @@unique([benchmarkId, version])
+  @@map("benchmark_versions")
+}
+
+model Metric {
+  id             String     @id @default(cuid())
+  versionId      String     @map("version_id")
+  // Stable identifier within the version, e.g. "resolved".
+  key            String
+  label          String
+  // Heading for this metric's "best picks" card; null leaves it out.
+  pickLabel      String?    @map("pick_label")
+  description    String
+  unit           MetricUnit
+  higherIsBetter Boolean    @map("higher_is_better")
+  decimals       Int        @default(1)
+  position       Int        @default(0)
+
+  version       BenchmarkVersion  @relation("VersionMetrics", fields: [versionId], references: [id], onDelete: Cascade)
+  primaryFor    BenchmarkVersion? @relation("PrimaryMetric")
+  tradeoffFor   BenchmarkVersion? @relation("TradeoffMetric")
+  runScores     RunScore[]
+  segmentScores RunSegmentScore[]
+
+  @@unique([versionId, key])
+  @@map("metrics")
+}
+
+model Segment {
+  id        String @id @default(cuid())
+  versionId String @map("version_id")
+  key       String
+  label     String
+  position  Int    @default(0)
+
+  version BenchmarkVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  cases   Case[]
+  scores  RunSegmentScore[]
+
+  @@unique([versionId, key])
+  @@map("segments")
+}
+
+model Skill {
+  id          String @id @default(cuid())
+  versionId   String @map("version_id")
+  key         String
+  label       String
+  description String
+  position    Int    @default(0)
+
+  version BenchmarkVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  cases   Case[]
+  scores  RunSkillScore[]
+
+  @@unique([versionId, key])
+  @@map("skills")
+}
+
+model MethodologyStep {
+  id        String @id @default(cuid())
+  versionId String @map("version_id")
+  position  Int
+  title     String
+  body      String
+
+  version BenchmarkVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, position])
+  @@map("methodology_steps")
+}
+
+model Faq {
+  id          String @id @default(cuid())
+  benchmarkId String @map("benchmark_id")
+  position    Int
+  question    String
+  answer      String
+
+  benchmark Benchmark @relation(fields: [benchmarkId], references: [id], onDelete: Cascade)
+
+  @@unique([benchmarkId, position])
+  @@map("faqs")
+}
+
+// One test case. Only its identifier is stored; the content lives with the
+// dataset, and held-out content stays in private storage.
+model Case {
+  id         String  @id @default(cuid())
+  versionId  String  @map("version_id")
+  // The dataset's own identifier for the case.
+  externalId String  @map("external_id")
+  segmentId  String? @map("segment_id")
+  heldOut    Boolean @default(false) @map("held_out")
+
+  version BenchmarkVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  segment Segment?         @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+  skills  Skill[]
+  results CaseResult[]
+
+  @@unique([versionId, externalId])
+  @@index([segmentId])
+  @@map("cases")
+}
+
+// One model evaluated once on one benchmark version.
+model Run {
+  id              String    @id @default(cuid())
+  versionId       String    @map("version_id")
+  modelId         String    @map("model_id")
+  status          RunStatus @default(QUEUED)
+  deepevalVersion String    @map("deepeval_version")
+  config          Json?
+  costUsd         Decimal?  @map("cost_usd") @db.Decimal(12, 4)
+  startedAt       DateTime? @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  version          BenchmarkVersion  @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  model            Model             @relation(fields: [modelId], references: [id], onDelete: Restrict)
+  results          CaseResult[]
+  scores           RunScore[]
+  segmentScores    RunSegmentScore[]
+  skillScores      RunSkillScore[]
+  leaderboardEntry LeaderboardEntry?
+
+  // Lets a leaderboard entry reference a run of the same version and model.
+  @@unique([id, versionId, modelId])
+  @@index([versionId, modelId])
+  @@map("runs")
+}
+
+// The source of truth for every aggregate: one row per case per attempt.
+model CaseResult {
+  id             String   @id @default(cuid())
+  runId          String   @map("run_id")
+  caseId         String   @map("case_id")
+  attempt        Int      @default(1)
+  passed         Boolean?
+  score          Float?
+  latencyMs      Int?     @map("latency_ms")
+  costUsd        Decimal? @map("cost_usd") @db.Decimal(12, 6)
+  output         String?
+  judgeRationale String?  @map("judge_rationale")
+  // Transcript, audio or other large artefact in object storage.
+  artifactUrl    String?  @map("artifact_url")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  run  Run  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  case Case @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, caseId, attempt])
+  @@index([caseId])
+  @@map("case_results")
+}
+
+model RunScore {
+  runId       String @map("run_id")
+  metricId    String @map("metric_id")
+  value       Float
+  // Half-width of the 95% interval, in metric units.
+  ciHalfWidth Float? @map("ci_half_width")
+
+  run    Run    @relation(fields: [runId], references: [id], onDelete: Cascade)
+  metric Metric @relation(fields: [metricId], references: [id], onDelete: Cascade)
+
+  @@id([runId, metricId])
+  @@map("run_scores")
+}
+
+model RunSegmentScore {
+  runId     String @map("run_id")
+  metricId  String @map("metric_id")
+  segmentId String @map("segment_id")
+  value     Float
+
+  run     Run     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  metric  Metric  @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  segment Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([runId, metricId, segmentId])
+  @@map("run_segment_scores")
+}
+
+model RunSkillScore {
+  runId   String @map("run_id")
+  skillId String @map("skill_id")
+  // 0 to 100, higher is better.
+  value   Float
+
+  run   Run   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([runId, skillId])
+  @@map("run_skill_scores")
+}
+
+// The published result for one model on one benchmark version. Runs are
+// never edited; publishing a correction points the entry at a new run.
+model LeaderboardEntry {
+  id          String   @id @default(cuid())
+  versionId   String   @map("version_id")
+  modelId     String   @map("model_id")
+  runId       String   @unique @map("run_id")
+  publishedAt DateTime @default(now()) @map("published_at")
+
+  version BenchmarkVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  model   Model            @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  run     Run              @relation(fields: [runId, versionId, modelId], references: [id, versionId, modelId], onDelete: NoAction)
+
+  @@unique([versionId, modelId])
+  // Required by Prisma for the one-to-one link to `Run`; `runId` is
+  // already unique on its own.
+  @@unique([runId, versionId, modelId])
+  @@map("leaderboard_entries")
+}

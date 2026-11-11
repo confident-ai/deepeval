@@ -1,0 +1,243 @@
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  width: 100%;
+  border-bottom: 1px solid var(--color-fd-border);
+
+  @media (max-width: 960px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 2.25rem 1rem 2.5rem;
+
+  @media (min-width: 768px) {
+    padding: 2.25rem 1rem 2.5rem;
+  }
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin-bottom: 0.75rem;
+  font-size: 13px;
+  color: var(--color-fd-muted-foreground);
+  text-decoration: none;
+  transition: color 160ms ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    color: var(--color-fd-foreground);
+  }
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: var(--color-fd-foreground);
+  text-wrap: balance;
+}
+
+.summary {
+  margin: 0;
+  max-width: 34rem;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--color-fd-muted-foreground);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.4rem;
+}
+
+.podium {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--color-fd-border);
+
+  @media (max-width: 960px) {
+    border-left: 0;
+    border-top: 1px solid var(--color-fd-border);
+  }
+}
+
+.podiumItem {
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "rank model score"
+    "rank provider score";
+  align-items: center;
+  column-gap: 1.1rem;
+  row-gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--color-fd-border);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  @media (min-width: 768px) {
+    padding: 0.9rem 1rem;
+  }
+}
+
+// Taller than the row on purpose: the logo is cropped top and bottom.
+.podiumBackdrop {
+  position: absolute;
+  top: 50%;
+  right: 8.5rem;
+  width: 9rem;
+  height: 9rem;
+  color: var(--color-fd-foreground);
+  opacity: 0.35;
+  transform: translateY(-50%);
+  transition: opacity 180ms ease;
+
+  .podiumItem:first-child & {
+    opacity: 0.9;
+  }
+
+  // Hovering any row moves the emphasis to that row.
+  .podium:hover & {
+    opacity: 0.35;
+  }
+
+  .podium:hover .podiumItem:hover & {
+    opacity: 0.9;
+  }
+
+  @media (max-width: 560px) {
+    display: none;
+  }
+}
+
+.podiumRank,
+.podiumModel,
+.podiumProvider,
+.podiumScore {
+  position: relative;
+}
+
+.podiumRank {
+  grid-area: rank;
+  font-size: 40px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--color-fd-foreground);
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.podiumModel {
+  grid-area: model;
+  align-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  white-space: nowrap;
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-fd-foreground);
+}
+
+.podiumProvider {
+  grid-area: provider;
+  align-self: start;
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.podiumScore {
+  grid-area: score;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-fd-foreground);
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.podiumItem:not(:first-child) .podiumScore {
+  color: var(--color-fd-muted-foreground);
+}
+
+.facts {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid var(--color-fd-border);
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fact {
+  padding: 0.9rem 1rem;
+  border-right: 1px solid var(--color-fd-border);
+  font-size: 13px;
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  dt {
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+  }
+
+  dd {
+    margin: 0.25rem 0 0;
+    color: var(--color-fd-foreground);
+  }
+
+  @media (min-width: 768px) {
+    padding: 0.9rem 1rem;
+  }
+
+  @media (max-width: 960px) {
+    border-bottom: 1px solid var(--color-fd-border);
+
+    &:nth-child(2n) {
+      border-right: 0;
+    }
+
+    &:last-child {
+      border-bottom: 0;
+    }
+  }
+}

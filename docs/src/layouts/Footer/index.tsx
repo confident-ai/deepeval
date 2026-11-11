@@ -26,7 +26,7 @@ const COLUMNS: FooterColumn[] = [
         label: "Prompt Optimization",
         href: "/docs/prompt-optimization-introduction",
       },
-      { label: "Benchmarks", href: "/docs/benchmarks-introduction" },
+      { label: "Benchmarks", href: "/benchmarks" },
     ],
   },
   {

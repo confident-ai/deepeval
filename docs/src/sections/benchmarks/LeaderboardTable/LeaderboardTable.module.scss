@@ -1,0 +1,180 @@
+.wrap {
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+}
+
+.scroll {
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-fd-border);
+  }
+
+  thead th {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-fd-muted-foreground);
+    background: var(--color-fd-muted);
+    white-space: nowrap;
+  }
+
+  tbody tr:last-child th,
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover {
+    background: var(--color-fd-muted);
+  }
+}
+
+.rankCol {
+  width: 3rem;
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.table .numCol {
+  text-align: right;
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+// Column headers are labels, so they stay in the text font.
+.table thead th.numCol,
+.table thead th.dateCol,
+.table thead th.rankCol {
+  font-family: inherit;
+}
+
+.dateCol {
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+  font-size: 13px;
+}
+
+.table .dateCol {
+  text-align: right;
+}
+
+.sortButton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &[data-active="true"] {
+    color: var(--color-fd-foreground);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: 3px;
+  }
+}
+
+// Out of flow, so the label's right edge lines up with the values below it.
+.sortIcon {
+  position: absolute;
+  right: calc(100% + 0.25rem);
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+
+  .sortButton[data-active="true"] & {
+    opacity: 1;
+  }
+}
+
+.modelCell {
+  font-weight: 400;
+}
+
+.modelRow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--color-fd-foreground);
+  white-space: nowrap;
+}
+
+.provider {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.tag {
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--color-fd-border);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-fd-muted-foreground);
+}
+
+.value {
+  color: var(--color-fd-muted-foreground);
+
+  &[data-primary="true"] {
+    font-weight: 500;
+    color: var(--color-fd-foreground);
+  }
+}
+
+.interval {
+  margin-left: 0.4rem;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-fd-muted-foreground);
+}
+
+.track {
+  display: block;
+  width: 100%;
+  min-width: 7rem;
+  height: 3px;
+  margin-top: 0.4rem;
+  background: var(--color-fd-accent);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  background: var(--color-fd-foreground);
+  opacity: 0.45;
+
+  tr[data-top="true"] & {
+    opacity: 1;
+  }
+}

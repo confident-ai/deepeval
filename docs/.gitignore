@@ -3,6 +3,7 @@
 
 # generated content
 .source
+/generated/prisma
 
 # test & build
 /coverage

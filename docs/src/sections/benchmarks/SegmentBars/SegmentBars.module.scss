@@ -1,0 +1,237 @@
+.figure {
+  --plot-height: 15rem;
+  --axis-width: 3.25rem;
+
+  margin: 0;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.1rem;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--color-fd-border);
+  list-style: none;
+  font-size: 12px;
+  color: var(--color-fd-foreground);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+}
+
+.direction {
+  margin-left: auto;
+  color: var(--color-fd-muted-foreground);
+}
+
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+
+.swatch,
+.bar {
+  &[data-series="0"] {
+    background: var(--bm-series-1, #2a78d6);
+  }
+
+  &[data-series="1"] {
+    background: var(--bm-series-2, #eb6834);
+  }
+
+  &[data-series="2"] {
+    background: var(--bm-series-3, #1baf7a);
+  }
+
+  &[data-series="3"] {
+    background: var(--bm-series-4, #eda100);
+  }
+
+  &[data-series="4"] {
+    background: var(--bm-series-5, #e87ba4);
+  }
+}
+
+.scroll {
+  overflow-x: auto;
+}
+
+.chart {
+  display: grid;
+  grid-template-columns: var(--axis-width) minmax(0, 1fr);
+  // Room for the tallest value label above the plot.
+  padding: 1.75rem 0.9rem 0.9rem 0;
+  min-width: calc(var(--axis-width) + 9 * (var(--bars) * 0.9rem + 2rem));
+}
+
+.axis {
+  position: relative;
+  height: var(--plot-height);
+}
+
+.tick {
+  position: absolute;
+  right: 0.6rem;
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--color-fd-muted-foreground);
+  transform: translateY(50%);
+  font-variant-numeric: tabular-nums;
+}
+
+.groups {
+  position: relative;
+  display: flex;
+}
+
+.grid {
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--plot-height);
+  pointer-events: none;
+}
+
+.gridLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-fd-border);
+}
+
+.group {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  outline: none;
+  transition: opacity 140ms ease;
+
+  &[data-dimmed="true"] {
+    opacity: 0.4;
+  }
+
+  &:focus-visible .bars {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: 2px;
+  }
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  height: var(--plot-height);
+  padding: 0 12%;
+}
+
+.bar {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 1.6rem;
+  min-height: 1px;
+}
+
+.value {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.25rem 0;
+}
+
+.labelText {
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--color-fd-muted-foreground);
+  text-wrap: balance;
+
+  .group[data-active="true"] & {
+    color: var(--color-fd-foreground);
+  }
+}
+
+.tooltip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  min-width: 12rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-popover);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
+  font-size: 12px;
+  color: var(--color-fd-foreground);
+  pointer-events: none;
+  transform: translate(-50%, -30%);
+
+  &[data-edge="start"] {
+    left: 0;
+    transform: translate(0, -30%);
+  }
+
+  &[data-edge="end"] {
+    left: auto;
+    right: 0;
+    transform: translate(0, -30%);
+  }
+
+  strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  dl {
+    margin: 0.5rem 0 0;
+  }
+
+  dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.25rem;
+  }
+
+  dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--color-fd-muted-foreground);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-numeric), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.gapRow {
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--color-fd-border);
+}

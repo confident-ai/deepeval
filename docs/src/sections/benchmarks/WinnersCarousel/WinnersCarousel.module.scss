@@ -1,0 +1,136 @@
+.carousel {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  min-height: 19rem;
+  overflow: hidden;
+  // Rows fade in and out at the edges instead of being cut off.
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    #000 18%,
+    #000 82%,
+    transparent
+  );
+
+  @media (max-width: 960px) {
+    height: 19rem;
+  }
+}
+
+.track {
+  position: absolute;
+  inset: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: scroll var(--duration) linear infinite;
+
+  .carousel:hover &,
+  .carousel:focus-within & {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes scroll {
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.row {
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 1.5rem 2rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+
+  &:hover {
+    background: var(--color-fd-muted);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: -1px;
+  }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.benchmark {
+  overflow: hidden;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-fd-foreground);
+}
+
+.model {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-fd-muted-foreground);
+}
+
+.metric {
+  &::before {
+    content: "·";
+    margin-right: 0.4rem;
+  }
+}
+
+.score {
+  font-family: var(--font-numeric), ui-monospace, monospace;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--color-fd-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
+
+// Phones: the row keeps all three parts, at sizes that fit the name.
+@media (max-width: 560px) {
+  .link {
+    gap: 0.8rem;
+    padding: 1.1rem 1rem;
+
+    > :first-child {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  .benchmark {
+    font-size: 19px;
+  }
+
+  .score {
+    font-size: 24px;
+  }
+}

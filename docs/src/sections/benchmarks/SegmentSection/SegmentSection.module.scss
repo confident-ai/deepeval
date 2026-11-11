@@ -1,0 +1,22 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+
+  @media (max-width: 720px) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+
+    > :last-child {
+      align-self: flex-end;
+    }
+  }
+}
