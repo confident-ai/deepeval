@@ -182,6 +182,7 @@ There are **SEVEN** optional parameters when creating an `AnswerRelevancyMetric`
     to `True`.
   </Only>
 - [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="penalize_ambiguous_claims" ts="penalizeAmbiguousClaims"/>: a boolean which when set to <Term py="True" ts="true"/>, will **not** count statements that are ambiguous as relevant. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="evaluation_template" ts="evaluationTemplate"/>: of type <Term py="AnswerRelevancyTemplate" ts="AnswerRelevancyTemplateOverride"/>, which allows you to [override the default prompts](#customize-your-template) used to compute the `AnswerRelevancyMetric` score. Defaulted to `deepeval`'s default prompts.
 - [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="system_one_model" ts="systemOneModel"/>: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` <Term py="eval_mode" ts="evalMode"/>. Defaulted to <DefaultSystemOneModel />.
