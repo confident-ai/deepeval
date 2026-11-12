@@ -242,7 +242,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             user_content, retrieval_context, multimodal
         )
         score, reason = await self._a_get_interaction_score_and_reason(
-            user_content, verdicts, multimodal
+            user_content,
+            verdicts,
+            multimodal,
+            retrieval_context_count=len(retrieval_context),
         )
         interaction_score = InteractionContextualRelevancyScore(
             score=score,
@@ -272,7 +275,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             user_content, retrieval_context, multimodal
         )
         score, reason = self._get_interaction_score_and_reason(
-            user_content, verdicts, multimodal
+            user_content,
+            verdicts,
+            multimodal,
+            retrieval_context_count=len(retrieval_context),
         )
         interaction_score = InteractionContextualRelevancyScore(
             score=score,
@@ -383,17 +389,26 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
             ),
         )
 
+    def _empty_verdicts_reason(self, retrieval_context_count: int) -> str:
+        if retrieval_context_count == 0:
+            return "There were no retrieval contexts in the given turns to evaluate the contextual relevancy."
+        # The contexts exist but the judge returned no verdicts for them, so
+        # say that instead of reporting that there were none (#3629).
+        return (
+            f"The evaluation model returned no verdicts for the "
+            f"{retrieval_context_count} retrieval context(s) in the given "
+            f"turns, so the contextual relevancy could not be evaluated."
+        )
+
     async def _a_get_interaction_score_and_reason(
         self,
         input: str,
         verdicts: List[ContextualRelevancyVerdict],
         multimodal: bool,
+        retrieval_context_count: int = 0,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return (
-                1,
-                "There were no retrieval contexts in the given turns to evaluate the contextual relevancy.",
-            )
+            return 1, self._empty_verdicts_reason(retrieval_context_count)
 
         score = self._calculate_interaction_score(verdicts)
         reason = await self._a_get_interaction_reason(
@@ -410,12 +425,10 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         input: str,
         verdicts: List[ContextualRelevancyVerdict],
         multimodal: bool,
+        retrieval_context_count: int = 0,
     ) -> Tuple[float, str]:
         if len(verdicts) == 0:
-            return (
-                1,
-                "There were no retrieval contexts in the given turns to evaluate the contextual relevancy.",
-            )
+            return 1, self._empty_verdicts_reason(retrieval_context_count)
 
         score = self._calculate_interaction_score(verdicts)
         reason = self._get_interaction_reason(
