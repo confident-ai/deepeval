@@ -4,6 +4,7 @@ Each exchange below has three fields:
 - 'spoken': what the caller actually said, word for word.
 - 'transcribed': what the agent's own speech-to-text made of that speech. This is the thing you are judging.
 - 'agent_reply': what the agent said back. It is context only — never judge the quality of the reply.
+- 'also_audible' (only on some exchanges): other speech that was on the line but not addressed to the agent, such as an aside or another voice. 'transcribed' may include it or leave it out; neither counts against the agent.
 
 Exchanges: {{ exchanges }}
 

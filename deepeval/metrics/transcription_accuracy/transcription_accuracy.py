@@ -79,20 +79,28 @@ def _initialize_stt_model_for_audio(
 def get_transcribed_exchanges(turns: List[Turn]) -> List[Dict[str, str]]:
     exchanges: List[Dict[str, str]] = []
     spoken: List[str] = []
+    also_audible: List[str] = []
     for turn in turns:
         if turn.role == "user":
             if turn.content:
                 spoken.append(turn.content)
+            # Asides and other voices a simulated caller's audio carried.
+            also_audible.extend(
+                event["text"]
+                for event in (turn.metadata or {}).get("events", [])
+                if event.get("text")
+            )
             continue
         if turn.provider_transcript is not None and spoken:
-            exchanges.append(
-                {
-                    "spoken": " ".join(spoken),
-                    "transcribed": turn.provider_transcript,
-                    "agent_reply": turn.content,
-                }
-            )
-        spoken = []
+            exchange = {
+                "spoken": " ".join(spoken),
+                "transcribed": turn.provider_transcript,
+                "agent_reply": turn.content,
+            }
+            if also_audible:
+                exchange["also_audible"] = " ".join(also_audible)
+            exchanges.append(exchange)
+        spoken, also_audible = [], []
     return exchanges
 
 
