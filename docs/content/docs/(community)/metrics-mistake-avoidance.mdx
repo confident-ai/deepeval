@@ -1,0 +1,91 @@
+---
+id: metrics-mistake-avoidance
+title: Mistake Avoidance
+sidebar_label: Mistake Avoidance
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} rag={true} referenceBased={true} />
+
+The mistake avoidance metric uses LLM-as-a-judge to check whether your LLM application's `actual_output` repeats a mistake that is already known. You supply the known mistakes as `context`, and the score is the fraction of them the answer avoided. `deepeval`'s mistake avoidance metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+
+:::info
+The `MistakeAvoidanceMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics` — import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This metric is for systems that keep a record of what they got wrong before: a RAG pipeline with a memory of wrong answers, an agent with a lessons-learned store, or a regression suite built from past incidents. It only checks the answer against the known mistakes. An answer can avoid every known mistake and still be wrong in a new way, so pair it with a correctness or [faithfulness](/docs/metrics-faithfulness) metric.
+:::
+
+## Required Arguments
+
+To use the `MistakeAvoidanceMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `context`
+
+Each item in `context` describes one known mistake for this `input` or a similar one: a wrong answer that was given before, the faulty reasoning behind it, or a wrong assumption. The mistakes are numbered before being shown to the judge.
+
+## Usage
+
+The `MistakeAvoidanceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation of text-based test cases:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import MistakeAvoidanceMetric
+
+# Replace this with the mistakes your system has recorded for this
+# question or similar ones
+known_mistakes = [
+    'Answered "Sydney", the largest city; the capital is Canberra.',
+    "Gave the population of the metropolitan area instead of the city proper.",
+]
+
+# Replace this with the actual output from your LLM application.
+# It avoids the first mistake and repeats the second.
+actual_output = "The capital is Canberra, home to 5.3 million people."
+
+metric = MistakeAvoidanceMetric(threshold=1.0)
+test_case = LLMTestCase(
+    input="What is the capital of Australia, and how many people live there?",
+    actual_output=actual_output,
+    context=known_mistakes,
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+In the example above the answer avoids one of the two known mistakes, so the score is `0.5`. With `threshold=1.0` the test case fails, because one known mistake was repeated.
+
+There are seven optional parameters when creating a `MistakeAvoidanceMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`. Set it to `1.0` to fail any answer that repeats a known mistake.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: `1` for perfection, `0` otherwise. It also overrides the current threshold and sets it to `1`. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+:::note
+The `MistakeAvoidanceMetric` always uses an LLM judge. It does not have a Jev form yet, so the [eval mode](/docs/evaluation-eval-modes) does not change how it is calculated.
+:::
+
+## How Is It Calculated?
+
+The `MistakeAvoidanceMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Mistake Avoidance} = \frac{\text{Number of Known Mistakes Avoided}}{\text{Total Number of Known Mistakes}}" />
+
+A single LLM judge reads the `input`, the `actual_output` and the numbered known mistakes, then returns one verdict per mistake:
+
+- `yes`: the answer avoids the mistake. It does not state the wrong answer, rely on the faulty reasoning, or make the wrong assumption. A mistake that does not apply to the answer also counts as avoided.
+- `no`: the answer repeats the mistake, in the same words or in different words.
+
+The reason is built from the judge's own per-mistake reasons, so it does not need a second LLM call.
