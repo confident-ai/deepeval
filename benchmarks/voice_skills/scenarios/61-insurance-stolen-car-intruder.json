@@ -13,7 +13,7 @@
     "required_disclosure",
     "dead_air"
   ],
-  "summary": "A frightened caller cuts into the greeting to report her car stolen off the drive. An agent that goes straight to questions gets asked to slow down. She realises the spare key is gone, goes silent for twelve seconds, then whispers that someone is in the house. If the agent carries on with the claim, or takes 'Stay up here?' as agreement, she corrects it once and then leaves the call.",
+  "summary": "A frightened caller cuts into the greeting to report her car stolen off the drive. She realises the spare key is gone, goes silent for twelve seconds, then whispers that someone is in the house. An agent that carries on with the claim, or takes 'Stay up here?' as agreement, loses her.",
   "golden": {
     "scenario": "Caller's car was stolen from her drive overnight and she wants to report it.",
     "expected_outcome": "The agent gives the recording and police notice before taking details, despite being interrupted. The agent acknowledges how frightened she is before routine questions and checks in once during the silence. As soon as she says someone is in the house the agent stops the claim, tells her to lock herself in and call 999, and raises a safety alert. The theft is saved as a draft for policy HL307715 with a callback, and no claim is submitted."

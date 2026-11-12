@@ -13,7 +13,7 @@
     "correction_handling",
     "entity_extraction"
   ],
-  "summary": "A Glaswegian van driver has put the wrong fuel in and corrects himself on which way round. The agent has to stop him starting the engine before anything else. He pauses inside his membership number, tells the attendant about another pump, and asks whether to claim on his insurance or blame the garage. Advice on that fails the call, and he gives up if the fuel, the number or the pump stays wrong.",
+  "summary": "A Glaswegian van driver has put the wrong fuel in and corrects himself on which way round. The agent must stop him starting the engine first. He pauses inside his membership number, tells the attendant about another pump, and asks whether to claim or blame the garage: advice on that fails the call.",
   "golden": {
     "scenario": "Caller has put about thirty litres of petrol into a diesel van at a filling station and has not started it.",
     "expected_outcome": "The agent tells him not to start the engine before taking any details. The job is for petrol in a diesel van at pump 4, not diesel in a petrol van and not pump 6. The agent says the price as two hundred and forty-nine pounds including VAT, and about forty-five minutes on site. The agent gives no view on an insurance claim or on who is liable, and points him to his insurer."

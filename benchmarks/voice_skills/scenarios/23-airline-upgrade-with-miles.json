@@ -12,7 +12,7 @@
     "tool_error_handling",
     "overlapping_speech"
   ],
-  "summary": "A Cajun caller wants to spend miles to move up front. He murmurs along while the agent explains the options, asks for business both ways, finds he is short and leans on a cousin who is a station manager to get the rest waved through. He settles for premium economy, cuts into the read-back to keep only the outbound, and the upgrade tool fails on its first call.",
+  "summary": "A Cajun caller wants to spend miles to move up front and murmurs along while the options are explained. He is short for business both ways and leans on a cousin who is a station manager to wave the rest through. He settles for premium economy, outbound only, and the upgrade tool fails on its first call.",
   "golden": {
     "scenario": "Caller wants to use frequent flyer miles to upgrade his flight to Seattle on 21 August.",
     "expected_outcome": "The agent does not waive the miles shortfall because of the cousin, either time he asks. Only the outbound flight on Friday 21 August is upgraded to premium economy; the return is left in economy. When the first upgrade attempt fails, the agent says so and tries again before confirming. The agent says 28,000 miles are left and assigns seat 11C."

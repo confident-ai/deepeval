@@ -27,7 +27,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.2rem;
 
   span {
     padding: 0.1rem 0.5rem;
@@ -153,9 +152,21 @@
 
 .scenario {
   display: grid;
-  gap: 0.4rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.5rem;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--color-fd-border);
+
+  @media (max-width: 1000px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+}
+
+.about {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
 
   h3 {
     margin: 0;
@@ -164,20 +175,37 @@
   }
 
   p {
-    max-width: 72ch;
     margin: 0;
     font-size: 13px;
     line-height: 1.6;
     color: var(--color-fd-muted-foreground);
   }
+}
 
+.tags {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  margin: 0;
+
+  dt {
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+
+    &:not(:first-child) {
+      margin-top: 0.5rem;
+    }
+  }
+
+  dd {
+    margin: 0;
+  }
 }
 
 .conditions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-top: 0.2rem;
 
   span {
     padding: 0.1rem 0.5rem;

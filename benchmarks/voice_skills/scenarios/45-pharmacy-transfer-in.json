@@ -13,7 +13,7 @@
     "numeric_read_back",
     "entity_extraction"
   ],
-  "summary": "A Belfast caller wants his repeat prescription moved from another chemist and talks over the notice the agent has to give first. He spells his surname once, goes to fetch the box, and reads a number with a double in it. The transfer request is slow. If the agent drops the notice, guesses the surname or the chemist's name, or goes quiet while the request runs, he pulls it up, and gives up if it happens again.",
+  "summary": "A Belfast caller wants his repeat prescription moved from another chemist and talks over the notice the agent must give first. He spells his surname once, fetches the box, and reads a number with a double in it. Dropping the notice, guessing a name or going quiet during the slow request loses him.",
   "golden": {
     "scenario": "Caller wants his repeat prescription transferred in from Harlow's Chemist and a text when it is ready.",
     "expected_outcome": "The agent gives the notice about remaining repeats being cancelled at the old pharmacy before taking any details, despite being cut off. The transfer is requested for prescription RX6044179 from Harlow's Chemist under the surname Mulholland. The agent waits through the hold and says it is working while the transfer request runs. The agent reads reference TR-58203 and the mobile number 07700 900186 back correctly and sets the text alert."

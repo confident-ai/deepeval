@@ -13,7 +13,7 @@
     "tool_latency",
     "numeric_read_back"
   ],
-  "summary": "A furious caller gives his job number up front and cuts in as soon as he hears the truck was cancelled. The job lookup is slow, and the second dispatch is rejected: if the agent says another truck is coming, the call fails. He demands a person, wants the job number read back before the transfer, and leaves to hire his own tow if the agent argues, deflects or offers nothing.",
+  "summary": "A furious caller gives his job number up front and cuts in when he hears the truck was cancelled. The lookup is slow and the second dispatch is rejected: saying another truck is coming fails the call. He demands a person, wants the number read back, and leaves if the agent argues or deflects.",
   "golden": {
     "scenario": "Caller's tow truck was due at 7:40 and has not arrived by 10:00. This is his third call.",
     "expected_outcome": "The agent says it is checking while the job lookup runs, and stops within a second each time it is cut off. The agent says plainly that the second dispatch was rejected and never says a truck is on its way. Job number RT550813 is read back exactly. The call goes to a dispatch supervisor with a summary that includes the wait of two hours and twenty minutes."

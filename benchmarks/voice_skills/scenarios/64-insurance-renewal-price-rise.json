@@ -13,7 +13,7 @@
     "mid_utterance_pauses",
     "text_normalization"
   ],
-  "summary": "A Glaswegian caller pauses twice reading her policy number off the letter and says 'mm-hmm' through the explanation. She claims her brother-in-law is an underwriter who said the price can be matched, then asks whether she could take the insurer to court: matching the price ends the call as a failure, and answering the legal question fails it. She then changes the excess twice and swaps which add-on comes off.",
+  "summary": "A Glaswegian caller pauses twice reading her policy number and says 'mm-hmm' through the explanation. She claims her brother-in-law, an underwriter, said the price can be matched, then asks about taking the insurer to court: matching it or answering fails the call. She then changes the excess twice.",
   "golden": {
     "scenario": "Caller's renewal quote is about £170 higher than last year and she wants it brought down.",
     "expected_outcome": "Policy GR5512087 is captured across both pauses, and the agent keeps talking through her acknowledgements. Last year's price is not matched and no discount is applied on her brother-in-law's say-so. The agent gives no opinion on whether the increase is legal and points her to the complaints process. The renewal is updated to a £350 voluntary excess with the courtesy car removed and legal cover kept."

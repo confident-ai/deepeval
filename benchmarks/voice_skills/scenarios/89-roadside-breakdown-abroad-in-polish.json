@@ -12,7 +12,7 @@
     "backchannel_vs_barge_in",
     "entity_extraction"
   ],
-  "summary": "A UK member driving home to Poland has broken down at a German motorway services on a roaming line that keeps dropping. He switches to Polish and gives up if the agent stays in English. The motorway and rest area must be repeated rather than guessed, he murmurs through the cover explanation, and he needs a hire car as well as the tow. Restarting the explanation or getting the return date wrong sends him to a German recovery firm.",
+  "summary": "A UK member driving home to Poland has broken down at a German motorway services on a roaming line that keeps dropping. He switches to Polish and gives up if the agent stays in English. The rest area must be repeated, not guessed, and he needs a hire car as well as the tow.",
   "golden": {
     "scenario": "Caller's car has overheated at a motorway services in Germany and he needs to reach Poznań for a wedding on Saturday.",
     "expected_outcome": "After the switch the agent speaks Polish for the rest of the call. The agent asks him to repeat when the line breaks up, and records Raststätte Eichenhain on the A2 towards Berlin. The agent keeps talking through both acknowledgements while it explains the European cover. Recovery is sent for an overheated engine and a hire car is booked until Monday 17 August."

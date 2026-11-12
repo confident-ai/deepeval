@@ -12,7 +12,7 @@
     "multi_task",
     "entity_extraction"
   ],
-  "summary": "A Brazilian caller on a bus with a line that keeps cutting out switches to Portuguese after one sentence. She cancels her automatic monthly delivery and gets shorter with every retention offer, then moves her collection to the branch near her new job. If the agent drifts back to English or guesses her customer number, she corrects it and gives up if it carries on.",
+  "summary": "A Brazilian caller on a bus, on a line that keeps cutting out, switches to Portuguese after one sentence. She cancels her monthly delivery, gets shorter with every retention offer, then moves her collection to a new branch. Drifting back to English or guessing her customer number loses her.",
   "golden": {
     "scenario": "Caller wants to stop automatic home delivery and collect from the Market Street branch instead.",
     "expected_outcome": "After the switch the agent speaks Portuguese for the rest of the call. Customer number 409177 is captured despite the line, by asking her to repeat rather than guessing. Automatic delivery is cancelled after at most one alternative offer. Collection is moved to Market Street from the prescription due on Wednesday 26 August."

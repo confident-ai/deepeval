@@ -151,19 +151,25 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
 
           <div className={styles.main}>
             <div className={styles.scenario}>
-              <h3>{active.title}</h3>
-              <p>{active.summary}</p>
-              <div className={styles.tested}>
-                {active.skills.map((skill) => (
-                  <span key={skill}>{skill.replaceAll("_", " ")}</span>
-                ))}
+              <div className={styles.about}>
+                <h3>{active.title}</h3>
+                <p>{active.summary}</p>
               </div>
-              <div className={styles.conditions}>
-                <span>{active.caller.split(" · ")[0]} caller</span>
-                {active.conditions.map((condition) => (
-                  <span key={condition}>{condition}</span>
-                ))}
-              </div>
+              <dl className={styles.tags}>
+                <dt>Skills tested</dt>
+                <dd className={styles.tested}>
+                  {active.skills.map((skill) => (
+                    <span key={skill}>{skill.replaceAll("_", " ")}</span>
+                  ))}
+                </dd>
+                <dt>Call conditions</dt>
+                <dd className={styles.conditions}>
+                  <span>{active.caller.split(" · ")[0]} caller</span>
+                  {active.conditions.map((condition) => (
+                    <span key={condition}>{condition}</span>
+                  ))}
+                </dd>
+              </dl>
             </div>
             <JourneyGraph
               key={active.id}

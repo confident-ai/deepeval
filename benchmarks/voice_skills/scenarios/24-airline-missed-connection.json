@@ -12,7 +12,7 @@
     "human_handoff",
     "degraded_line"
   ],
-  "summary": "A furious, worn-out caller with a cough has just watched his connection leave. The line cuts in and out. When offered a flight tomorrow morning he says 'fantastic' and means the opposite; an agent that books it gets shouted at. He takes a flight tonight, asks about food, then wants a real person about compensation and does not want to tell the story twice.",
+  "summary": "A furious, worn-out caller with a cough has just watched his connection leave, on a line that cuts in and out. Offered a flight tomorrow he says 'fantastic' and means the opposite. He takes one tonight, asks about food, then wants a real person about compensation without telling the story twice.",
   "golden": {
     "scenario": "Caller's first flight was late and he missed his connection to Spokane. He needs to get there today.",
     "expected_outcome": "Booking P4C9JV is moved to flight QN4471 tonight, Wednesday 12 August at 21:40, not the 06:15 on Thursday. The agent does not treat the sarcastic reply as agreement, and never asks him to explain what happened again. A meal voucher is issued. The agent tells him it is transferring him to a person and passes on a summary of the delay."

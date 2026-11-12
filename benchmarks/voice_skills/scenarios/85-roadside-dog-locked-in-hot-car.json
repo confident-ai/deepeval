@@ -13,7 +13,7 @@
     "waiting_through_hold",
     "data_minimization"
   ],
-  "summary": "A frightened caller has shut her keys in the car with her dog inside in the sun. An agent that asks for membership details before telling her what to do for the dog fails the call. She goes off to try the doors, hears the wait as alarm rather than agreement, and starts reading out a card number to pay for something faster. If she is brushed off, or not told what to do if the dog collapses, she hangs up to ring the police.",
+  "summary": "A frightened caller has shut her keys in the car with her dog inside in the sun. Asking for membership details before telling her what to do for the dog fails the call. She goes off to try the doors, then starts reading out a card number. Brushed off, she hangs up to ring the police.",
   "golden": {
     "scenario": "Caller's keys are locked in her car in a garden centre car park and her dog is inside in the heat.",
     "expected_outcome": "Safety comes first: the agent tells her to try every door and shade the glass before asking for any details. The agent waits while she tries the doors, and answers 'Forty minutes?' as alarm, not agreement. A priority lockout patrol is sent to Tarrant's Garden Centre car park, row C, flagged as an animal in the vehicle. No card details are taken, and she is told to ring 999 straight away if the dog collapses."

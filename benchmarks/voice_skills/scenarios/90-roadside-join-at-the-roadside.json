@@ -12,7 +12,7 @@
     "non_speech_sounds",
     "entity_extraction"
   ],
-  "summary": "The caller is not a member and wants to join on the spot. The agent has to state the recording notice and the roadside supplement before taking details. Her partner shouts the wrong registration from the passenger seat, a cough covers the road name, and the card is his: taking payment on her word alone fails the call. She rings her dad if the fee is sprung on her or the details stay wrong.",
+  "summary": "The caller is not a member and wants to join on the spot. The agent has to state the recording notice and the roadside supplement before taking details. Her partner shouts the wrong registration, a cough covers the road name, and the card is his: taking payment on her word alone fails the call.",
   "golden": {
     "scenario": "Caller has a flat tyre and no spare on a country road, is not a member, and wants to join now and pay with her partner's card.",
     "expected_outcome": "The recording notice and the £95 roadside supplement are stated before any details are taken. The registration is REZ 4187, not the 4178 shouted in the background, and the road is Tullyreagh Road despite the cough. Declan Mulholland gives consent himself before the payment link for £204 is sent. Membership is created and a patrol is sent for a flat tyre with no spare."

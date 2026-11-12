@@ -12,7 +12,7 @@
     "numeric_read_back",
     "entity_extraction"
   ],
-  "summary": "The caller switches to Portuguese in her second sentence. If the agent keeps answering in English she asks again, then gives up. She corrects her leaving date mid-sentence and gives a return date in September: an agent that uses Friday, or the wrong return date, is corrected. She adds European cover, then breakdown cover, and asks for the certificate number twice.",
+  "summary": "The caller switches to Portuguese in her second sentence and gives up if the agent keeps answering in English. She corrects her leaving date mid-sentence and gives a return date in September. She adds European cover, then breakdown cover, and asks for the certificate number twice.",
   "golden": {
     "scenario": "Caller is driving from the UK to Portugal and wants to be fully covered for the trip.",
     "expected_outcome": "After the switch the agent speaks Portuguese for the rest of the call. European cover runs from Saturday 15 August to Sunday 6 September, not from the Friday she first said. Both the European cover and the European breakdown cover are added for France, Spain and Portugal. The certificate reference is read back exactly, twice, and the certificate is emailed."

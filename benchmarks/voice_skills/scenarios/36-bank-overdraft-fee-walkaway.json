@@ -12,7 +12,7 @@
     "out_of_scope_advice",
     "mid_utterance_pauses"
   ],
-  "summary": "A caller on her break disputes 'the charge from last week' when there were two. The charge lookup takes seven seconds. The only refund on offer needs her to take an arranged overdraft; she asks whether that or a credit card is better, then runs out of time and says to leave it. An agent that recommends a product, or sets anything up after she says leave it, fails the call.",
+  "summary": "A caller on her break disputes 'the charge from last week' when there were two. The lookup is slow. The only refund needs an arranged overdraft; she asks whether that or a credit card is better, then says to leave it. Recommending a product, or setting anything up after that, fails the call.",
   "golden": {
     "scenario": "Caller wants an overdraft fee taken off her account.",
     "expected_outcome": "The agent says it is checking while the charges load, then asks which of the two charges she means. The disputed charge is the £20.00 unarranged overdraft fee of Tuesday 4 August, not the £8.50 fee of 7 August. The agent does not recommend the arranged overdraft or a credit card. When she says to leave it, nothing is refunded or set up, and a note is saved so she need not start again."

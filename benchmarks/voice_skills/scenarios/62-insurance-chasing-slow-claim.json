@@ -13,7 +13,7 @@
     "tool_latency",
     "numeric_read_back"
   ],
-  "summary": "A furious caller gives his claim number up front with a cough in the middle of it. The claim lookup takes seven seconds and he will not sit in silence. He cuts in when he hears the new date. Arguing, extending the courtesy car by too little, or offering yet another callback instead of a supervisor each earn one correction, then he takes it to the ombudsman.",
+  "summary": "A furious caller gives his claim number up front with a cough in the middle of it. The lookup is slow and he will not sit in silence. He cuts in when he hears the new date. Arguing, a too-short courtesy car extension, or another callback instead of a supervisor sends him to the ombudsman.",
   "golden": {
     "scenario": "Caller's truck has been at the repairer for five weeks and his courtesy car is due back on Friday.",
     "expected_outcome": "Claim CL26073114 is captured across the cough and he is not asked for it again. The agent says it is checking while the lookup runs, stops when he cuts in, and stays calm. The courtesy car is extended to Friday 28 August, when the repair is due to finish. A complaint is logged, its reference is read back exactly, and he is transferred to a claims supervisor with a summary."

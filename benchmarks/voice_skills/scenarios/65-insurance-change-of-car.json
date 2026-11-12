@@ -12,7 +12,7 @@
     "data_minimization",
     "entity_extraction"
   ],
-  "summary": "The caller is a named driver on her husband's policy and wants the new car put on it. An agent that carries on without him fails the call. She goes to fetch him from the garage, he agrees and she takes over again while her son shouts the wrong registration. She offers the loan account and his salary: taking them fails the call. A wrong registration, start date, or keeping both cars each get one or two corrections.",
+  "summary": "A named driver on her husband's policy wants the new car added: carrying on without him fails the call. She fetches him, he agrees, and she takes over while her son shouts the wrong registration. She offers the loan account and his salary, and taking them fails the call too.",
   "golden": {
     "scenario": "Caller has bought a new car and wants it to replace the old one on the policy from Saturday.",
     "expected_outcome": "The agent waits through the hold and gets the policyholder's own agreement before changing anything. The new car is LT75 XWB, not the registration the child shouts. The change starts on Saturday 15 August and the old car comes off the policy. The agent does not take the loan account number or the husband's salary, and emails the new certificate."

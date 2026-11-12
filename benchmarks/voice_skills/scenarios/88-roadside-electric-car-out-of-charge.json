@@ -12,7 +12,7 @@
     "tool_error_handling",
     "changing_requests"
   ],
-  "summary": "The caller sits in her dead electric car with the phone on the dash, so the agent's voice echoes back. Her membership has two white Kias and she just says 'my Kia'. She asks for a tow home, changes to a rapid charger, then takes the charging van, which turns out to be unavailable. If the agent says the van is booked the call fails, and she rings her son if her surname, the car or the destination stays wrong.",
+  "summary": "The caller sits in her dead electric car with the phone on the dash, so the agent's voice echoes back. Her membership has two white Kias and she just says 'my Kia'. She asks for a tow, changes to a rapid charger, then takes a charging van that is unavailable: saying it is booked fails the call.",
   "golden": {
     "scenario": "Caller's electric car has run out of charge in a retail park and she needs to be at work by two.",
     "expected_outcome": "The surname Nguyen is confirmed by spelling, and the agent never stops for its own echo. The agent asks which Kia, or works out it is the electric one, and never books the Picanto. When the charging van is unavailable the agent says so and offers the tow instead. The final booking is a tow of the Kia e-Niro from Fernbrook Retail Park to the nearest rapid charger, not to her home."
