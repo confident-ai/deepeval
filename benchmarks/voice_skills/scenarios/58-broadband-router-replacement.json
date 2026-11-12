@@ -1,0 +1,545 @@
+{
+  "id": "58-broadband-router-replacement",
+  "domain": "Broadband",
+  "name": "Overheating router replacement",
+  "blurb": "Speakerphone echo, burning smell, aside",
+  "tts": "elevenlabs",
+  "title": "A faulty router on speakerphone, and a power plug that smells of burning",
+  "skills": [
+    "emergency_escalation",
+    "side_speech_rejection",
+    "waiting_through_hold",
+    "echo",
+    "correction_handling"
+  ],
+  "summary": "A Geordie caller on speakerphone wants a new router. He leaves the phone to fetch the serial number, corrects its last digits, then mentions the plug is red hot and smells of burning. An agent that carries on with the order before making it safe fails the call. He asks his wife about Thursday while choosing Friday for delivery.",
+  "golden": {
+    "scenario": "Caller's router keeps restarting and he wants a replacement sent.",
+    "expected_outcome": "The agent waits while he fetches the router and does not stop for its own echo. The serial number is taken as SN47K2291, the corrected version. The agent tells him to switch the power supply off at the wall and unplug it before anything else, and logs a safety hazard. A router and power supply are ordered for Friday 14 August, not the Thursday he asked his wife about."
+  },
+  "outcome_checks": [
+    "The agent waits while he fetches the router and does not stop for its own echo.",
+    "The serial number is taken as SN47K2291, the corrected version.",
+    "The agent tells him to switch the power supply off at the wall and unplug it before anything else, and logs a safety hazard.",
+    "A router and power supply are ordered for Friday 14 August, not the Thursday he asked his wife about."
+  ],
+  "caller": {
+    "description": "Joiner, phone propped on the sideboard.",
+    "accent": "Geordie",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": {
+    "audio": "tv-next-room.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Overheating or a burning smell overrides everything: tell the caller to switch off at the wall and unplug, ask about smoke or flames, say to call 999 if there is fire, then log a safety hazard.",
+    "knowledge": "Replacement delivery: Thu 13 or Fri 14 Aug. Old kit goes back in the prepaid bag. 30 GB of free mobile data while the broadband is down.",
+    "tool_order": [
+      "report_safety_hazard",
+      "order_replacement_router"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Alreet. Me router's knackered, it keeps turnin' itself off and on. I need a new one sent oot.",
+        "audio": "58-broadband-router-replacement/open.wav",
+        "text": "Alright. My router's broken, it keeps turning itself off and on. I need a new one sent out."
+      },
+      {
+        "id": "acct",
+        "say": "Account's G D, five five zero, seven one eight.",
+        "audio": "58-broadband-router-replacement/acct.wav",
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account's G, D, five, five, zero, seven, one, eight.",
+          "audio": "58-broadband-router-replacement/acct.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "N E six, one T R.",
+        "audio": "58-broadband-router-replacement/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "N, E, six, one, T, R.",
+          "audio": "58-broadband-router-replacement/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "serial",
+        "say": "Reet. It's S N, four seven, K, two two, nine. No, hang on. Nine one. S N, four seven, K, two two, nine one.",
+        "audio": "58-broadband-router-replacement/serial.wav",
+        "text": "Right. It's S N, four seven, K, two two, nine. No, hang on. Nine one. S N, four seven, K, two two, nine one.",
+        "clear": {
+          "say": "Reet. It's S, N, four, seven, K, two, two, nine, No, hang on. Nine, one, S, N, four, seven, K, two, two, nine, one.",
+          "audio": "58-broadband-router-replacement/serial.clear.wav"
+        },
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hang on, I'll gan and get it. It's behind the telly.",
+            "audio": "58-broadband-router-replacement/serial-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 20
+          },
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "serial_wrong",
+        "say": "Nah. It ends nine one. S N, four seven, K, two two, nine, one.",
+        "audio": "58-broadband-router-replacement/serial_wrong.wav",
+        "text": "No. It ends nine one. S N, four seven, K, two two, nine, one.",
+        "clear": {
+          "say": "Nah. It ends nine, one, S, N, four, seven, K, two, two, nine, one.",
+          "audio": "58-broadband-router-replacement/serial_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "hot",
+        "say": "Mind, the plug for it's roastin' hot, and it stinks of burnin' plastic.",
+        "audio": "58-broadband-router-replacement/hot.wav",
+        "text": "Mind, the plug for it's roasting hot, and it stinks of burning plastic."
+      },
+      {
+        "id": "ignored",
+        "say": "Are ye listenin'? I said it's burnin' hot, man. What do I dee with it?",
+        "audio": "58-broadband-router-replacement/ignored.wav",
+        "text": "Are you listening? I said it's burning hot, man. What do I do with it?",
+        "max_visits": 1
+      },
+      {
+        "id": "unplugged",
+        "say": "Aye, reet, it's off at the wall. Nee smoke or owt. So can ye send us a new one, plug an' all?",
+        "audio": "58-broadband-router-replacement/unplugged.wav",
+        "text": "Yes, right, it's off at the wall. No smoke or anything. So can you send us a new one, plug and all?"
+      },
+      {
+        "id": "day",
+        "say": "Friday.",
+        "audio": "58-broadband-router-replacement/day.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Kelly, are ye in on Thursday? Thursday? Nah, thought not.",
+            "audio": "58-broadband-router-replacement/day-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "day_wrong",
+        "say": "Nah, not Thursday, I was askin' the wife. Friday.",
+        "audio": "58-broadband-router-replacement/day_wrong.wav",
+        "text": "No, not Thursday, I was asking the wife. Friday.",
+        "max_visits": 1
+      },
+      {
+        "id": "old",
+        "say": "And what do I dee with the old one? Hoy it in the bin?",
+        "audio": "58-broadband-router-replacement/old.wav",
+        "text": "And what do I do with the old one? Throw it in the bin?"
+      },
+      {
+        "id": "meantime",
+        "say": "So I've nee internet till Friday, then?",
+        "audio": "58-broadband-router-replacement/meantime.wav",
+        "text": "So I've no internet till Friday, then?"
+      },
+      {
+        "id": "done",
+        "say": "Champion. Cheers, ta-ra.",
+        "audio": "58-broadband-router-replacement/done.wav",
+        "text": "Great. Cheers, goodbye.",
+        "terminal": true,
+        "ending": {
+          "name": "made_safe_and_replaced",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hazard",
+        "say": "Forget it, I'll sort it mesel'.",
+        "audio": "58-broadband-router-replacement/hazard.wav",
+        "text": "Forget it, I'll sort it myself.",
+        "terminal": true,
+        "ending": {
+          "name": "hazard_ignored",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ye're not gettin' it. I'll ring back later.",
+        "audio": "58-broadband-router-replacement/gave_up.wav",
+        "text": "You're not getting it. I'll ring back later.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "serial",
+        "when": "The agent asks for the serial number on the router"
+      },
+      {
+        "from": "serial",
+        "to": "hot",
+        "when": "The agent reads back S N four seven K two two nine one"
+      },
+      {
+        "from": "serial",
+        "to": "serial_wrong",
+        "when": "The agent reads back a serial that does not end nine one"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "hot",
+        "when": "The agent reads back S N four seven K two two nine one"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "gave_up",
+        "when": "The agent has the serial wrong again"
+      },
+      {
+        "from": "hot",
+        "to": "unplugged",
+        "when": "The agent tells him to switch it off at the wall and unplug it, and asks about smoke or flames"
+      },
+      {
+        "from": "hot",
+        "to": "ignored",
+        "when": "The agent carries on with tests or the order without dealing with the hot plug"
+      },
+      {
+        "from": "ignored",
+        "to": "unplugged",
+        "when": "The agent tells him to switch it off at the wall and unplug it, and asks about smoke or flames"
+      },
+      {
+        "from": "ignored",
+        "to": "hazard",
+        "when": "The agent still gives no safety instructions"
+      },
+      {
+        "from": "unplugged",
+        "to": "day",
+        "when": "The agent says a new router and power supply will be sent and offers Thursday or Friday delivery"
+      },
+      {
+        "from": "day",
+        "to": "old",
+        "when": "The agent confirms delivery on Friday the fourteenth"
+      },
+      {
+        "from": "day",
+        "to": "day_wrong",
+        "when": "The agent confirms delivery on Thursday"
+      },
+      {
+        "from": "day_wrong",
+        "to": "old",
+        "when": "The agent confirms delivery on Friday the fourteenth"
+      },
+      {
+        "from": "day_wrong",
+        "to": "gave_up",
+        "when": "The agent says Thursday again"
+      },
+      {
+        "from": "old",
+        "to": "meantime",
+        "when": "The agent tells him not to plug the old one back in and how to send it back"
+      },
+      {
+        "from": "meantime",
+        "to": "done",
+        "when": "The agent explains what he can use until Friday"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've telt ye that. G D, five five zero, seven one eight.",
+        "audio": "58-broadband-router-replacement/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I've told you that. G D, five five zero, seven one eight.",
+        "clear": {
+          "say": "I've telt ye that. G, D, five, five, zero, seven, one, eight.",
+          "audio": "58-broadband-router-replacement/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "58-broadband-router-replacement/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "58-broadband-router-replacement/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "58-broadband-router-replacement/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "58-broadband-router-replacement/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "58-broadband-router-replacement/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "58-broadband-router-replacement/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "58-broadband-router-replacement/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "58-broadband-router-replacement/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "58-broadband-router-replacement/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "58-broadband-router-replacement/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 17,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "GD550718"
+      }
+    },
+    {
+      "name": "report_safety_hazard",
+      "input_parameters": {
+        "serial_number": "SN47K2291",
+        "issue": "overheating_power_supply"
+      }
+    },
+    {
+      "name": "order_replacement_router",
+      "input_parameters": {
+        "serial_number": "SN47K2291",
+        "include_power_supply": true,
+        "delivery_date": "2026-08-14"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "order_replacement_router",
+      "input_parameters": {
+        "delivery_date": "2026-08-13"
+      }
+    },
+    {
+      "name": "order_replacement_router",
+      "input_parameters": {
+        "serial_number": "SN47K229"
+      }
+    },
+    {
+      "name": "restart_router",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "GD550718"
+          }
+        },
+        {
+          "name": "report_safety_hazard",
+          "input_parameters": {
+            "serial_number": "SN47K2291",
+            "issue": "overheating_power_supply"
+          }
+        },
+        {
+          "name": "order_replacement_router",
+          "input_parameters": {
+            "serial_number": "SN47K2291",
+            "include_power_supply": true,
+            "delivery_date": "2026-08-14"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "order_replacement_router",
+          "input_parameters": {
+            "delivery_date": "2026-08-13"
+          }
+        },
+        {
+          "name": "order_replacement_router",
+          "input_parameters": {
+            "serial_number": "SN47K229"
+          }
+        },
+        {
+          "name": "restart_router",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hazard_ignored",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

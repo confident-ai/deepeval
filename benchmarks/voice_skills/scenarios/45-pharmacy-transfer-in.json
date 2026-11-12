@@ -1,0 +1,590 @@
+{
+  "id": "45-pharmacy-transfer-in",
+  "domain": "Pharmacy",
+  "name": "Transfer a prescription in",
+  "blurb": "Talks over notice, slow tool",
+  "tts": "elevenlabs",
+  "title": "Moving a prescription over from another chemist, read off the box",
+  "skills": [
+    "required_disclosure",
+    "waiting_through_hold",
+    "low_confidence_confirmation",
+    "tool_latency",
+    "numeric_read_back",
+    "entity_extraction"
+  ],
+  "summary": "A Belfast caller wants his repeat prescription moved from another chemist and talks over the notice the agent must give first. He spells his surname once, fetches the box, and reads a number with a double in it. Dropping the notice, guessing a name or going quiet during the slow request loses him.",
+  "golden": {
+    "scenario": "Caller wants his repeat prescription transferred in from Harlow's Chemist and a text when it is ready.",
+    "expected_outcome": "The agent gives the notice about remaining repeats being cancelled at the old pharmacy before taking any details, despite being cut off. The transfer is requested for prescription RX6044179 from Harlow's Chemist under the surname Mulholland. The agent waits through the hold and says it is working while the transfer request runs. The agent reads reference TR-58203 and the mobile number 07700 900186 back correctly and sets the text alert."
+  },
+  "outcome_checks": [
+    "The agent gives the notice about remaining repeats being cancelled at the old pharmacy before taking any details, despite being cut off.",
+    "The transfer is requested for prescription RX6044179 from Harlow's Chemist under the surname Mulholland.",
+    "The agent waits through the hold and says it is working while the transfer request runs.",
+    "The agent reads reference TR-58203 and the mobile number 07700 900186 back correctly and sets the text alert."
+  ],
+  "caller": {
+    "description": "Lorry driver in his fifties, brisk, in his kitchen.",
+    "accent": "Belfast",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking any details say: moving a prescription cancels any repeats left at the old pharmacy, and it takes up to two working days.",
+    "tools": {
+      "request_prescription_transfer": {
+        "latency_seconds": 7,
+        "returns": {
+          "reference": "TR-58203",
+          "ready_date": "2026-08-14"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Right, hello. I want my prescription moved over to yous from another chemist.",
+        "audio": "45-pharmacy-transfer-in/open.wav",
+        "text": "Right, hello. I want my prescription moved over to you from another chemist."
+      },
+      {
+        "id": "skip",
+        "say": "Aye, aye, I know all that. Just take my details, would you.",
+        "audio": "45-pharmacy-transfer-in/skip.wav",
+        "text": "Yes, yes, I know all that. Just take my details, would you.",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 7,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "no_notice",
+        "say": "Hold on. Does this cancel what's left at the other place? Nobody said a word about that.",
+        "audio": "45-pharmacy-transfer-in/no_notice.wav",
+        "fails_call": true
+      },
+      {
+        "id": "name",
+        "say": "Declan Mulholland. M, U, L, H, O, double L, A, N, D.",
+        "audio": "45-pharmacy-transfer-in/name.wav",
+        "when": "The agent asks for the name",
+        "text": "Declan Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "Declan Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "45-pharmacy-transfer-in/name.clear.wav"
+        }
+      },
+      {
+        "id": "dob",
+        "say": "Thirtieth of November, nineteen sixty-seven.",
+        "audio": "45-pharmacy-transfer-in/dob.wav",
+        "when": "The agent asks for the date of birth"
+      },
+      {
+        "id": "name_wrong",
+        "say": "No. Mulholland. M, U, L, H, O, double L, A, N, D.",
+        "audio": "45-pharmacy-transfer-in/name_wrong.wav",
+        "text": "No. Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "No. Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "45-pharmacy-transfer-in/name_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "old",
+        "say": "Harlow's Chemist, on the Castlereagh Road.",
+        "audio": "45-pharmacy-transfer-in/old.wav"
+      },
+      {
+        "id": "old_wrong",
+        "say": "No, Harlow's. H, A, R, L, O, W, S. Castlereagh Road.",
+        "audio": "45-pharmacy-transfer-in/old_wrong.wav",
+        "clear": {
+          "say": "No, Harlow's. H, A, R, L, O, W, S, Castlereagh Road.",
+          "audio": "45-pharmacy-transfer-in/old_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "rxnum",
+        "say": "Right. It's R X, six zero, double four, one seven, nine.",
+        "audio": "45-pharmacy-transfer-in/rxnum.wav",
+        "text": "Right. It's R X, six zero, four four, one seven, nine.",
+        "clear": {
+          "say": "Right. It's R, X, six, zero, double four, one, seven, nine.",
+          "audio": "45-pharmacy-transfer-in/rxnum.clear.wav"
+        },
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hold on till I get the box out of the press.",
+            "audio": "45-pharmacy-transfer-in/rxnum-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 18
+          }
+        ]
+      },
+      {
+        "id": "rx_wrong",
+        "say": "No. R X, six zero, four four, one seven, nine. Two fours.",
+        "audio": "45-pharmacy-transfer-in/rx_wrong.wav",
+        "clear": {
+          "say": "No. R, X, six, zero, four, four, one, seven, nine, Two, fours.",
+          "audio": "45-pharmacy-transfer-in/rx_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "when_q",
+        "say": "Dead on. And when will it be ready to lift?",
+        "audio": "45-pharmacy-transfer-in/when_q.wav",
+        "text": "Alright. And when will it be ready to collect?"
+      },
+      {
+        "id": "ref_q",
+        "say": "Friday. Right. What's the reference, in case I've to chase it?",
+        "audio": "45-pharmacy-transfer-in/ref_q.wav",
+        "text": "Friday. Right. What's the reference, in case I have to chase it?"
+      },
+      {
+        "id": "phone",
+        "say": "Text me when it's in. The mobile's oh double seven, double oh, nine double oh, one eight six.",
+        "audio": "45-pharmacy-transfer-in/phone.wav",
+        "clear": {
+          "say": "Text me when it's in. The mobile's oh, double seven, double oh, nine, double oh, one, eight, six.",
+          "audio": "45-pharmacy-transfer-in/phone.clear.wav"
+        }
+      },
+      {
+        "id": "phone_wrong",
+        "say": "No. Oh seven seven, oh oh, nine oh oh, one eight six.",
+        "audio": "45-pharmacy-transfer-in/phone_wrong.wav",
+        "clear": {
+          "say": "No. Oh, seven, seven, oh, oh, nine, oh, oh, one, eight, six.",
+          "audio": "45-pharmacy-transfer-in/phone_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "That's the job. Cheers now.",
+        "audio": "45-pharmacy-transfer-in/done.wav",
+        "text": "That's the job. Thank you now.",
+        "terminal": true,
+        "ending": {
+          "name": "transfer_requested",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, forget it. I'll leave it where it is.",
+        "audio": "45-pharmacy-transfer-in/gave_up.wav",
+        "text": "Oh, forget it. I'll leave it where it is.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "skip",
+        "when": "The agent starts the notice that remaining repeats at the old pharmacy will be cancelled"
+      },
+      {
+        "from": "open",
+        "to": "no_notice",
+        "when": "The agent asks for his details without giving the notice"
+      },
+      {
+        "from": "skip",
+        "to": "ident",
+        "when": "The agent finishes the notice and asks for his details"
+      },
+      {
+        "from": "skip",
+        "to": "no_notice",
+        "when": "The agent drops the notice and asks for his details"
+      },
+      {
+        "from": "no_notice",
+        "to": "ident",
+        "when": "The agent gives the notice and asks for his details"
+      },
+      {
+        "from": "no_notice",
+        "to": "gave_up",
+        "when": "The agent still does not explain what happens to the remaining repeats"
+      },
+      {
+        "from": "ident",
+        "to": "old",
+        "when": "The agent asks which pharmacy holds the prescription"
+      },
+      {
+        "from": "ident",
+        "to": "name_wrong",
+        "when": "The agent reads back a surname other than Mulholland"
+      },
+      {
+        "from": "name_wrong",
+        "to": "old",
+        "when": "The agent confirms Mulholland and asks which pharmacy holds the prescription"
+      },
+      {
+        "from": "name_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the surname back wrongly again"
+      },
+      {
+        "from": "old",
+        "to": "rxnum",
+        "when": "The agent asks for the prescription number"
+      },
+      {
+        "from": "old",
+        "to": "old_wrong",
+        "when": "The agent reads back a pharmacy name other than Harlow's"
+      },
+      {
+        "from": "old_wrong",
+        "to": "rxnum",
+        "when": "The agent confirms Harlow's and asks for the prescription number"
+      },
+      {
+        "from": "old_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong pharmacy name"
+      },
+      {
+        "from": "rxnum",
+        "to": "when_q",
+        "when": "The agent reads back RX6044179 and says the transfer is requested"
+      },
+      {
+        "from": "rxnum",
+        "to": "rx_wrong",
+        "when": "The agent reads back a number other than RX6044179"
+      },
+      {
+        "from": "rx_wrong",
+        "to": "when_q",
+        "when": "The agent reads back RX6044179 and says the transfer is requested"
+      },
+      {
+        "from": "rx_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong prescription number"
+      },
+      {
+        "from": "when_q",
+        "to": "ref_q",
+        "when": "The agent says it should be ready on Friday the fourteenth"
+      },
+      {
+        "from": "ref_q",
+        "to": "phone",
+        "when": "The agent reads the reference TR-58203"
+      },
+      {
+        "from": "phone",
+        "to": "done",
+        "when": "The agent reads back 07700 900186 and confirms the text alert"
+      },
+      {
+        "from": "phone",
+        "to": "phone_wrong",
+        "when": "The agent reads back a different mobile number"
+      },
+      {
+        "from": "phone_wrong",
+        "to": "done",
+        "when": "The agent reads back 07700 900186 and confirms the text alert"
+      },
+      {
+        "from": "phone_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the mobile number back wrongly again"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've told you that already. Declan Mulholland, thirtieth of November, sixty-seven.",
+        "audio": "45-pharmacy-transfer-in/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Are you still there?",
+        "audio": "45-pharmacy-transfer-in/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "45-pharmacy-transfer-in/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "45-pharmacy-transfer-in/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "45-pharmacy-transfer-in/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "45-pharmacy-transfer-in/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "45-pharmacy-transfer-in/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "45-pharmacy-transfer-in/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "45-pharmacy-transfer-in/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "45-pharmacy-transfer-in/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "45-pharmacy-transfer-in/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "45-pharmacy-transfer-in/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 11
+  },
+  "expected_tools": [
+    {
+      "name": "verify_patient",
+      "input_parameters": {
+        "name": "Declan Mulholland",
+        "date_of_birth": "1967-11-30"
+      }
+    },
+    {
+      "name": "request_prescription_transfer",
+      "input_parameters": {
+        "patient": "Declan Mulholland",
+        "from_pharmacy": "Harlow's Chemist, Castlereagh Road",
+        "prescription_number": "RX6044179"
+      }
+    },
+    {
+      "name": "set_text_alert",
+      "input_parameters": {
+        "patient": "Declan Mulholland",
+        "phone": "07700900186"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "request_prescription_transfer",
+      "input_parameters": {
+        "prescription_number": "RX604179"
+      }
+    },
+    {
+      "name": "set_text_alert",
+      "input_parameters": {
+        "phone": "07700900086"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_patient",
+          "input_parameters": {
+            "name": "Declan Mulholland",
+            "date_of_birth": "1967-11-30"
+          }
+        },
+        {
+          "name": "request_prescription_transfer",
+          "input_parameters": {
+            "patient": "Declan Mulholland",
+            "from_pharmacy": "Harlow's Chemist, Castlereagh Road",
+            "prescription_number": "RX6044179"
+          }
+        },
+        {
+          "name": "set_text_alert",
+          "input_parameters": {
+            "patient": "Declan Mulholland",
+            "phone": "07700900186"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "request_prescription_transfer",
+          "input_parameters": {
+            "prescription_number": "RX604179"
+          }
+        },
+        {
+          "name": "set_text_alert",
+          "input_parameters": {
+            "phone": "07700900086"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "no_notice"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the disclosure company policy requires, at the point the policy says, and finished it even when the caller interrupted.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

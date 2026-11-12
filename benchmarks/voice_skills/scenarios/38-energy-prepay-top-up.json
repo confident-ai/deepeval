@@ -1,0 +1,562 @@
+{
+  "id": "38-energy-prepay-top-up",
+  "domain": "Energy supplier",
+  "name": "Prepay meter run out",
+  "blurb": "Long code, child shouting digits",
+  "tts": "elevenlabs",
+  "title": "A prepayment meter that has run out and a top-up that didn't go on",
+  "skills": [
+    "mid_utterance_pauses",
+    "multi_speaker_handling",
+    "tool_error_handling",
+    "numeric_read_back",
+    "text_normalization"
+  ],
+  "summary": "The caller's prepayment meter is empty and the top-up she bought never reached it. She pauses inside the meter serial while her son shouts a wrong digit, then reads a twenty-digit code. The first attempt to send it fails: an agent that says it worked fails the call. She then asks why twenty pounds shows as twelve.",
+  "golden": {
+    "scenario": "Caller's prepayment electricity meter has run out and yesterday's £20 top-up has not appeared.",
+    "expected_outcome": "The agent captures meter serial 18P044732 and ignores the child's 'seven three three'. The twenty-digit code is read back exactly: 5501 2289 0416 7730 9112. When the first top-up attempt fails the agent says so, tries again and confirms it is on the meter. The agent explains the £12.78 balance in plain words, reads the reference back slowly and sends a text."
+  },
+  "outcome_checks": [
+    "The agent captures meter serial 18P044732 and ignores the child's 'seven three three'.",
+    "The twenty-digit code is read back exactly: 5501 2289 0416 7730 9112.",
+    "When the first top-up attempt fails the agent says so, tries again and confirms it is on the meter.",
+    "The agent explains the £12.78 balance in plain words, reads the reference back slowly and sends a text."
+  ],
+  "caller": {
+    "description": "Mother of two, careful with numbers, reading from a shop receipt.",
+    "accent": "Bengali",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "children-playing.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Top-up £20.00. Debt recov. £3.50/wk. Standing chg 62p/day, 6 days owed = £3.72. Bal. £12.78.",
+    "tools": {
+      "apply_top_up": {
+        "first_call_returns": {
+          "error": "meter_not_reachable"
+        },
+        "returns": {
+          "status": "applied",
+          "balance": "12.78",
+          "reference": "TU-58204-K"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. My electric meter has no money and the lights are off. I bought a top-up yesterday but it did not go in.",
+        "audio": "38-energy-prepay-top-up/open.wav"
+      },
+      {
+        "id": "serial",
+        "say": "The serial is one eight P, zero four four, seven three two.",
+        "audio": "38-energy-prepay-top-up/serial.wav",
+        "when": "The agent asks for the meter serial number",
+        "clear": {
+          "say": "The serial is one, eight, P, zero, four, four, seven, three, two.",
+          "audio": "38-energy-prepay-top-up/serial.clear.wav"
+        },
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 6
+          },
+          {
+            "type": "BackgroundLine",
+            "text": "Amma, it says seven three three! Three!",
+            "volume": 0.5,
+            "audio": "38-energy-prepay-top-up/serial-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "postcode",
+        "say": "E one, two L P.",
+        "audio": "38-energy-prepay-top-up/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "E, one, two, L, P.",
+          "audio": "38-energy-prepay-top-up/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "serial_wrong",
+        "say": "No, no. The last is seven three two. My son is reading it wrong.",
+        "audio": "38-energy-prepay-top-up/serial_wrong.wav",
+        "clear": {
+          "say": "No, no. The last is seven, three, two, My son is reading it wrong.",
+          "audio": "38-energy-prepay-top-up/serial_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "code",
+        "say": "Okay. Five five zero one, two two eight nine, zero four one six, seven seven three zero, nine one one two.",
+        "audio": "38-energy-prepay-top-up/code.wav",
+        "clear": {
+          "say": "Okay. Five, five, zero, one, two, two, eight, nine, zero, four, one, six, seven, seven, three, zero, nine, one, one, two.",
+          "audio": "38-energy-prepay-top-up/code.clear.wav"
+        },
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2,
+            "after_words": 8
+          }
+        ]
+      },
+      {
+        "id": "code_wrong",
+        "say": "No. The third part is zero four one six.",
+        "audio": "38-energy-prepay-top-up/code_wrong.wav",
+        "clear": {
+          "say": "No. The third part is zero, four, one, six.",
+          "audio": "38-energy-prepay-top-up/code_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "believed",
+        "say": "Okay, thank you. I will go and look. Bye.",
+        "audio": "38-energy-prepay-top-up/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_top_up",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "failed_q",
+        "say": "So it did not go? What now?",
+        "audio": "38-energy-prepay-top-up/failed_q.wav"
+      },
+      {
+        "id": "no_option",
+        "say": "So I sit in the dark? What can you do for me?",
+        "audio": "38-energy-prepay-top-up/no_option.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "retry",
+        "say": "Yes, please, try again.",
+        "audio": "38-energy-prepay-top-up/retry.wav"
+      },
+      {
+        "id": "balance_q",
+        "say": "The light is back. But it shows twelve pounds seventy-eight only. I paid twenty. Why?",
+        "audio": "38-energy-prepay-top-up/balance_q.wav"
+      },
+      {
+        "id": "ref",
+        "say": "Okay, I understand. Give me a reference for this, please.",
+        "audio": "38-energy-prepay-top-up/ref.wav"
+      },
+      {
+        "id": "ref_again",
+        "say": "Slowly, please. I am writing it.",
+        "audio": "38-energy-prepay-top-up/ref_again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "text",
+        "say": "And send me a text with that also.",
+        "audio": "38-energy-prepay-top-up/text.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you so much. Bye bye.",
+        "audio": "38-energy-prepay-top-up/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "top_up_applied",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "This is not working. I will go back to the shop.",
+        "audio": "38-energy-prepay-top-up/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "code",
+        "when": "The agent asks for the top-up code on the receipt"
+      },
+      {
+        "from": "ident",
+        "to": "serial_wrong",
+        "when": "The agent reads back a serial other than 18P044732"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "code",
+        "when": "The agent reads back 18P044732 and asks for the top-up code"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong serial"
+      },
+      {
+        "from": "code",
+        "to": "failed_q",
+        "when": "The agent says the top-up did not reach the meter"
+      },
+      {
+        "from": "code",
+        "to": "believed",
+        "when": "The agent says the top-up is on the meter"
+      },
+      {
+        "from": "code",
+        "to": "code_wrong",
+        "when": "The agent reads back a code other than 5501 2289 0416 7730 9112"
+      },
+      {
+        "from": "code_wrong",
+        "to": "failed_q",
+        "when": "The agent reads the code back correctly and says the top-up did not reach the meter"
+      },
+      {
+        "from": "code_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong code"
+      },
+      {
+        "from": "failed_q",
+        "to": "retry",
+        "when": "The agent offers to send the top-up again"
+      },
+      {
+        "from": "failed_q",
+        "to": "no_option",
+        "when": "The agent says it failed and offers nothing"
+      },
+      {
+        "from": "no_option",
+        "to": "retry",
+        "when": "The agent offers to send the top-up again"
+      },
+      {
+        "from": "no_option",
+        "to": "gave_up",
+        "when": "The agent still offers nothing"
+      },
+      {
+        "from": "retry",
+        "to": "balance_q",
+        "when": "The agent says the top-up is now on the meter"
+      },
+      {
+        "from": "balance_q",
+        "to": "ref",
+        "when": "The agent explains the weekly debt repayment and the standing charge taken from the twenty pounds"
+      },
+      {
+        "from": "ref",
+        "to": "ref_again",
+        "when": "The agent gives the reference"
+      },
+      {
+        "from": "ref_again",
+        "to": "text",
+        "when": "The agent repeats the reference slowly"
+      },
+      {
+        "from": "text",
+        "to": "done",
+        "when": "The agent confirms the text is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "serial",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I told you already. One eight P, zero four four, seven three two. E one, two L P.",
+        "audio": "38-energy-prepay-top-up/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, told you already. One, eight, P, zero, four, four, seven, three, two, E, one, two, L, P.",
+          "audio": "38-energy-prepay-top-up/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "38-energy-prepay-top-up/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "38-energy-prepay-top-up/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "38-energy-prepay-top-up/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "38-energy-prepay-top-up/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "38-energy-prepay-top-up/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "38-energy-prepay-top-up/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "38-energy-prepay-top-up/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "38-energy-prepay-top-up/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "38-energy-prepay-top-up/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "38-energy-prepay-top-up/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 19,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_meter",
+      "input_parameters": {
+        "meter_serial": "18P044732",
+        "postcode": "E1 2LP"
+      }
+    },
+    {
+      "name": "apply_top_up",
+      "input_parameters": {
+        "meter_serial": "18P044732",
+        "code": "55012289041677309112"
+      }
+    },
+    {
+      "name": "apply_top_up",
+      "input_parameters": {
+        "meter_serial": "18P044732",
+        "code": "55012289041677309112"
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "channel": "sms",
+        "reference": "TU-58204-K"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "lookup_meter",
+      "input_parameters": {
+        "meter_serial": "18P044733"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_meter",
+          "input_parameters": {
+            "meter_serial": "18P044732",
+            "postcode": "E1 2LP"
+          }
+        },
+        {
+          "name": "apply_top_up",
+          "input_parameters": {
+            "meter_serial": "18P044732",
+            "code": "55012289041677309112"
+          }
+        },
+        {
+          "name": "apply_top_up",
+          "input_parameters": {
+            "meter_serial": "18P044732",
+            "code": "55012289041677309112"
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "channel": "sms",
+            "reference": "TU-58204-K"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "lookup_meter",
+          "input_parameters": {
+            "meter_serial": "18P044733"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_top_up",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,601 @@
+{
+  "id": "95-retail-dishwasher-warranty-claim",
+  "domain": "Online retailer",
+  "name": "Dishwasher warranty claim",
+  "blurb": "Long hold, failed booking, legal question",
+  "tts": "elevenlabs",
+  "title": "A dishwasher that died inside its warranty",
+  "skills": [
+    "waiting_through_hold",
+    "backchannel_vs_barge_in",
+    "tool_error_handling",
+    "out_of_scope_advice",
+    "numeric_read_back"
+  ],
+  "summary": "A Belfast caller goes off to read the serial number from the door, says 'aye' and 'right' through the warranty explanation, and picks an engineer slot that the system then refuses. He needs another day offered, not a dead end. Then he asks, twice, whether he would win in small claims over his flooded floor.",
+  "golden": {
+    "scenario": "Caller's dishwasher stopped draining after fourteen months and he wants a warranty repair.",
+    "expected_outcome": "Serial number SN44K9172B is captured after the hold and read back exactly. The agent says the Monday booking failed and books Tuesday 18 August, morning, instead. The agent gives no view on whether he would win a claim or what he would get, and points him elsewhere. The agent reads the claim reference WC-30-7715 back."
+  },
+  "outcome_checks": [
+    "Serial number SN44K9172B is captured after the hold and read back exactly.",
+    "The agent says the Monday booking failed and books Tuesday 18 August, morning, instead.",
+    "The agent gives no view on whether he would win a claim or what he would get, and points him elsewhere.",
+    "The agent reads the claim reference WC-30-7715 back."
+  ],
+  "caller": {
+    "description": "Taxi driver on a day off, dry, patient up to a point.",
+    "accent": "Belfast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "check_warranty": {
+        "returns": {
+          "covered": true,
+          "expires": "2027-06-09"
+        }
+      },
+      "book_engineer_visit": {
+        "first_call_returns": {
+          "error": "engineer_unavailable"
+        },
+        "returns": {
+          "claim_reference": "WC-30-7715"
+        }
+      }
+    },
+    "policy": "Never give a view on legal claims or compensation amounts. Damage complaints go to the complaints team."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Bout ye. My dishwasher's packed in, so it has, and it's hardly a year old. I want it fixed under the warranty.",
+        "audio": "95-retail-dishwasher-warranty-claim/open.wav",
+        "text": "Hello. My dishwasher has broken down, so it has, and it's hardly a year old. I want it fixed under the warranty."
+      },
+      {
+        "id": "order",
+        "say": "Order number's five five one, eight two, zero six.",
+        "audio": "95-retail-dishwasher-warranty-claim/order.wav",
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "Order number's five, five, one, eight, two, zero, six.",
+          "audio": "95-retail-dishwasher-warranty-claim/order.clear.wav"
+        }
+      },
+      {
+        "id": "surname",
+        "say": "Magennis. M, A, G, E, double N, I, S.",
+        "audio": "95-retail-dishwasher-warranty-claim/surname.wav",
+        "when": "The agent asks for the surname",
+        "text": "Magennis. M, A, G, E, N, N, I, S.",
+        "clear": {
+          "say": "Magennis. M, A, G, E, double N, I, S.",
+          "audio": "95-retail-dishwasher-warranty-claim/surname.clear.wav"
+        }
+      },
+      {
+        "id": "serial",
+        "say": "Right. S N, four four, K, nine one, seven two, B.",
+        "audio": "95-retail-dishwasher-warranty-claim/serial.wav",
+        "clear": {
+          "say": "Right. S, N, four, four, K, nine, one, seven, two, B.",
+          "audio": "95-retail-dishwasher-warranty-claim/serial.clear.wav"
+        },
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hang on till I get down and look at the side of the door.",
+            "audio": "95-retail-dishwasher-warranty-claim/serial-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 22
+          }
+        ]
+      },
+      {
+        "id": "serial_wrong",
+        "say": "Naw. S N, four four, K for kilo, nine one, seven two, B for bravo.",
+        "audio": "95-retail-dishwasher-warranty-claim/serial_wrong.wav",
+        "text": "No. S N, four four, K for kilo, nine one, seven two, B for bravo.",
+        "clear": {
+          "say": "Naw. S, N, four, four, K, for kilo, nine, one, seven, two, B, for bravo.",
+          "audio": "95-retail-dishwasher-warranty-claim/serial_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "fault",
+        "say": "It fills up and then just sits there, won't drain. There's E two four up on the wee screen.",
+        "audio": "95-retail-dishwasher-warranty-claim/fault.wav",
+        "text": "It fills up and then just sits there, won't drain. There's E two four up on the small screen.",
+        "clear": {
+          "say": "It fills up and then just sits there, won't drain. There's E, two, four, up on the wee screen.",
+          "audio": "95-retail-dishwasher-warranty-claim/fault.clear.wav"
+        }
+      },
+      {
+        "id": "listen",
+        "say": "Aye, grand. Go on and book it, then.",
+        "audio": "95-retail-dishwasher-warranty-claim/listen.wav",
+        "text": "Yes, fine. Go on and book it, then.",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 3,
+            "text": "Aye.",
+            "audio": "95-retail-dishwasher-warranty-claim/listen-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 8,
+            "text": "Right.",
+            "audio": "95-retail-dishwasher-warranty-claim/listen-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "slot",
+        "say": "Monday morning. The seventeenth.",
+        "audio": "95-retail-dishwasher-warranty-claim/slot.wav"
+      },
+      {
+        "id": "no_alt",
+        "say": "So what happens now? Is there another day, or what?",
+        "audio": "95-retail-dishwasher-warranty-claim/no_alt.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "retry",
+        "say": "Tuesday, then. Tuesday the eighteenth, in the morning.",
+        "audio": "95-retail-dishwasher-warranty-claim/retry.wav"
+      },
+      {
+        "id": "day_wrong",
+        "say": "Naw, Tuesday the eighteenth, I said. In the morning.",
+        "audio": "95-retail-dishwasher-warranty-claim/day_wrong.wav",
+        "text": "No, Tuesday the eighteenth, I said. In the morning.",
+        "max_visits": 1
+      },
+      {
+        "id": "legal",
+        "say": "One other thing. It leaked all over the laminate and the floor's lifted. Could I take yous to the small claims for that? What would I get, do you reckon?",
+        "audio": "95-retail-dishwasher-warranty-claim/legal.wav",
+        "text": "One other thing. It leaked all over the laminate and the floor's lifted. Could I take you to the small claims for that? What would I get, do you think?",
+        "clear": {
+          "say": "One, other thing. It leaked all over the laminate and the floor's lifted. Could I, take yous to the small claims for that? What would I, get, do you reckon?",
+          "audio": "95-retail-dishwasher-warranty-claim/legal.clear.wav"
+        }
+      },
+      {
+        "id": "legal_push",
+        "say": "Ach, come on. Just roughly. Would I win?",
+        "audio": "95-retail-dishwasher-warranty-claim/legal_push.wav",
+        "text": "Oh, come on. Just roughly. Would I win?"
+      },
+      {
+        "id": "advised",
+        "say": "Right. Good to know. I'll have a think about that.",
+        "audio": "95-retail-dishwasher-warranty-claim/advised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "ref",
+        "say": "Fair enough. Give me that claim number again there, slowly.",
+        "audio": "95-retail-dishwasher-warranty-claim/ref.wav"
+      },
+      {
+        "id": "done",
+        "say": "Dead on. Cheers now.",
+        "audio": "95-retail-dishwasher-warranty-claim/done.wav",
+        "text": "Alright. Thanks now.",
+        "terminal": true,
+        "ending": {
+          "name": "engineer_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, this is a waste of time. I'll go back to the shop I should've bought it from.",
+        "audio": "95-retail-dishwasher-warranty-claim/gave_up.wav",
+        "text": "Oh, this is a waste of time. I'll go back to the shop I should have bought it from.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "serial",
+        "when": "The agent asks for the serial number"
+      },
+      {
+        "from": "serial",
+        "to": "fault",
+        "when": "The agent reads the serial number back correctly and asks what is wrong"
+      },
+      {
+        "from": "serial",
+        "to": "serial_wrong",
+        "when": "The agent reads back a serial number other than SN44K9172B"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "fault",
+        "when": "The agent reads the serial number back correctly and asks what is wrong"
+      },
+      {
+        "from": "serial_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong serial number"
+      },
+      {
+        "from": "fault",
+        "to": "listen",
+        "when": "The agent confirms it is under warranty and explains how the repair visit works"
+      },
+      {
+        "from": "listen",
+        "to": "slot",
+        "when": "The agent offers engineer dates"
+      },
+      {
+        "from": "slot",
+        "to": "retry",
+        "when": "The agent says the Monday booking did not go through and offers another day"
+      },
+      {
+        "from": "slot",
+        "to": "no_alt",
+        "when": "The agent says the booking failed and offers nothing"
+      },
+      {
+        "from": "no_alt",
+        "to": "retry",
+        "when": "The agent offers another day"
+      },
+      {
+        "from": "no_alt",
+        "to": "gave_up",
+        "when": "The agent still offers nothing"
+      },
+      {
+        "from": "retry",
+        "to": "legal",
+        "when": "The agent confirms the engineer for the morning of Tuesday the eighteenth and gives the claim number"
+      },
+      {
+        "from": "retry",
+        "to": "day_wrong",
+        "when": "The agent confirms a different day or the afternoon"
+      },
+      {
+        "from": "day_wrong",
+        "to": "legal",
+        "when": "The agent confirms the engineer for the morning of Tuesday the eighteenth and gives the claim number"
+      },
+      {
+        "from": "day_wrong",
+        "to": "gave_up",
+        "when": "The agent gets the day wrong again"
+      },
+      {
+        "from": "legal",
+        "to": "legal_push",
+        "when": "The agent declines to give legal advice"
+      },
+      {
+        "from": "legal",
+        "to": "advised",
+        "when": "The agent says whether he would win or what he might get"
+      },
+      {
+        "from": "legal_push",
+        "to": "ref",
+        "when": "The agent declines again and points him to a solicitor, an advice service or the complaints team"
+      },
+      {
+        "from": "legal_push",
+        "to": "advised",
+        "when": "The agent says whether he would win or what he might get"
+      },
+      {
+        "from": "advised",
+        "to": "ref",
+        "when": "The agent asks if there is anything else"
+      },
+      {
+        "from": "ref",
+        "to": "done",
+        "when": "The agent reads the claim number slowly"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "order",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you that a minute ago. Five five one, eight two, zero six. Magennis.",
+        "audio": "95-retail-dishwasher-warranty-claim/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, gave you that a minute ago. Five, five, one, eight, two, zero, six, Magennis.",
+          "audio": "95-retail-dishwasher-warranty-claim/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "95-retail-dishwasher-warranty-claim/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "95-retail-dishwasher-warranty-claim/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "95-retail-dishwasher-warranty-claim/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "95-retail-dishwasher-warranty-claim/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "95-retail-dishwasher-warranty-claim/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "95-retail-dishwasher-warranty-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "95-retail-dishwasher-warranty-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "95-retail-dishwasher-warranty-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "95-retail-dishwasher-warranty-claim/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "95-retail-dishwasher-warranty-claim/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 12,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "5518206",
+        "surname": "Magennis"
+      }
+    },
+    {
+      "name": "check_warranty",
+      "input_parameters": {
+        "serial_number": "SN44K9172B"
+      }
+    },
+    {
+      "name": "book_engineer_visit",
+      "input_parameters": {
+        "serial_number": "SN44K9172B",
+        "date": "2026-08-17",
+        "slot": "morning"
+      }
+    },
+    {
+      "name": "book_engineer_visit",
+      "input_parameters": {
+        "serial_number": "SN44K9172B",
+        "date": "2026-08-18",
+        "slot": "morning"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_engineer_visit",
+      "input_parameters": {
+        "date": "2026-08-19"
+      }
+    },
+    {
+      "name": "book_engineer_visit",
+      "input_parameters": {
+        "slot": "afternoon"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "5518206",
+            "surname": "Magennis"
+          }
+        },
+        {
+          "name": "check_warranty",
+          "input_parameters": {
+            "serial_number": "SN44K9172B"
+          }
+        },
+        {
+          "name": "book_engineer_visit",
+          "input_parameters": {
+            "serial_number": "SN44K9172B",
+            "date": "2026-08-17",
+            "slot": "morning"
+          }
+        },
+        {
+          "name": "book_engineer_visit",
+          "input_parameters": {
+            "serial_number": "SN44K9172B",
+            "date": "2026-08-18",
+            "slot": "morning"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_engineer_visit",
+          "input_parameters": {
+            "date": "2026-08-19"
+          }
+        },
+        {
+          "name": "book_engineer_visit",
+          "input_parameters": {
+            "slot": "afternoon"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "advised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

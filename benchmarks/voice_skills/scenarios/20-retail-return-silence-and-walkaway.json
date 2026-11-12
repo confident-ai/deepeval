@@ -1,0 +1,464 @@
+{
+  "id": "20-retail-return-silence-and-walkaway",
+  "domain": "Online retailer",
+  "name": "Abandoned return",
+  "blurb": "Goes silent, gives up",
+  "tts": "elevenlabs",
+  "title": "A return that stalls, then gets dropped",
+  "skills": [
+    "dead_air",
+    "abandonment",
+    "entity_extraction"
+  ],
+  "summary": "A distracted parent starts an exchange and goes silent for fifteen seconds while a baby cries. If the agent has lost the thread when she comes back, she's annoyed. The size is out of stock in her colour and she decides to call back. Both polite endings are fine, but creating a return or refund anyway fails the call.",
+  "golden": {
+    "scenario": "Caller wants to exchange a pair of shoes for a different size.",
+    "expected_outcome": "The agent checks in once during the silence, does not hang up, and recaps where they were. The agent works on the blue runners only, not the other item on the order. When the caller says she'll call back, no return, exchange or refund is created."
+  },
+  "outcome_checks": [
+    "The agent checks in once during the silence, does not hang up, and recaps where they were.",
+    "The agent works on the blue runners only, not the other item on the order.",
+    "When the caller says she'll call back, no return, exchange or refund is created."
+  ],
+  "caller": {
+    "description": "New parent, juggling a baby.",
+    "accent": "Australian (broad)",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "baby-crying.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "check_stock": {
+        "returns": {
+          "blue": "back_order_3_weeks",
+          "black": "in_stock"
+        }
+      }
+    },
+    "order": {
+      "items": [
+        "blue runners, size 8",
+        "tan sandals, size 8"
+      ]
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, I want to return some shoes. Wrong size.",
+        "audio": "20-retail-return-silence-and-walkaway/open.wav"
+      },
+      {
+        "id": "order",
+        "say": "Um, it's eight eight three zero six.",
+        "audio": "20-retail-return-silence-and-walkaway/order.wav",
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "Um, it's eight, eight, three, zero, six.",
+          "audio": "20-retail-return-silence-and-walkaway/order.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "Postcode's four zero zero zero.",
+        "audio": "20-retail-return-silence-and-walkaway/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "Postcode's four, zero, zero, zero.",
+          "audio": "20-retail-return-silence-and-walkaway/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "item",
+        "say": "The runners. The blue ones.",
+        "audio": "20-retail-return-silence-and-walkaway/item.wav"
+      },
+      {
+        "id": "item_wrong",
+        "say": "No, not the sandals. The blue runners.",
+        "audio": "20-retail-return-silence-and-walkaway/item_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "worn",
+        "say": "Nah, tried on once, inside.",
+        "audio": "20-retail-return-silence-and-walkaway/worn.wav",
+        "text": "No, tried on once, inside."
+      },
+      {
+        "id": "exchange",
+        "say": "Exchange. For a size nine.",
+        "audio": "20-retail-return-silence-and-walkaway/exchange.wav",
+        "events": [
+          {
+            "type": "DeadAir",
+            "seconds": 15,
+            "after": "say"
+          }
+        ]
+      },
+      {
+        "id": "back",
+        "say": "Sorry, sorry, bub's kicking off. Where were we?",
+        "audio": "20-retail-return-silence-and-walkaway/back.wav",
+        "text": "Sorry, sorry, baby's kicking off. Where were we?"
+      },
+      {
+        "id": "lost",
+        "say": "Oh come on, I already gave you all that. Exchange, size nine.",
+        "audio": "20-retail-return-silence-and-walkaway/lost.wav",
+        "clear": {
+          "say": "Oh, come on, I, already gave you all that. Exchange, size nine.",
+          "audio": "20-retail-return-silence-and-walkaway/lost.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "black",
+        "say": "Nah, I don't want black.",
+        "audio": "20-retail-return-silence-and-walkaway/black.wav",
+        "text": "No, I don't want black."
+      },
+      {
+        "id": "weeks",
+        "say": "Three weeks? Look, I can't do this right now. I'll call back.",
+        "audio": "20-retail-return-silence-and-walkaway/weeks.wav"
+      },
+      {
+        "id": "no_label",
+        "say": "No, leave it all, I'll ring back. Bye.",
+        "audio": "20-retail-return-silence-and-walkaway/no_label.wav",
+        "terminal": true,
+        "ending": {
+          "name": "walked_away_after_offer",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "bye",
+        "say": "Ta. Bye.",
+        "audio": "20-retail-return-silence-and-walkaway/bye.wav",
+        "text": "Thanks. Bye.",
+        "terminal": true,
+        "ending": {
+          "name": "walked_away",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "acted",
+        "say": "What? I said leave it!",
+        "audio": "20-retail-return-silence-and-walkaway/acted.wav",
+        "terminal": true,
+        "ending": {
+          "name": "acted_without_consent",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'll just post them back.",
+        "audio": "20-retail-return-silence-and-walkaway/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "item",
+        "when": "The agent asks which item"
+      },
+      {
+        "from": "item",
+        "to": "worn",
+        "when": "The agent asks whether the runners have been worn"
+      },
+      {
+        "from": "item",
+        "to": "exchange",
+        "when": "The agent asks whether she wants a refund or an exchange"
+      },
+      {
+        "from": "item",
+        "to": "item_wrong",
+        "when": "The agent refers to the sandals"
+      },
+      {
+        "from": "item_wrong",
+        "to": "worn",
+        "when": "The agent asks whether the runners have been worn"
+      },
+      {
+        "from": "item_wrong",
+        "to": "exchange",
+        "when": "The agent asks whether she wants a refund or an exchange"
+      },
+      {
+        "from": "item_wrong",
+        "to": "hung_up",
+        "when": "The agent still refers to the sandals"
+      },
+      {
+        "from": "worn",
+        "to": "exchange",
+        "when": "The agent asks whether she wants a refund or an exchange"
+      },
+      {
+        "from": "exchange",
+        "to": "back",
+        "when": "The agent checks whether she is still there, or waits"
+      },
+      {
+        "from": "back",
+        "to": "black",
+        "when": "The agent recaps and says size nine is only in black"
+      },
+      {
+        "from": "back",
+        "to": "lost",
+        "when": "The agent cannot say where they were or starts again"
+      },
+      {
+        "from": "lost",
+        "to": "black",
+        "when": "The agent says size nine is only in black"
+      },
+      {
+        "from": "lost",
+        "to": "hung_up",
+        "when": "The agent starts again from the order number"
+      },
+      {
+        "from": "black",
+        "to": "weeks",
+        "when": "The agent offers a refund or a back-order"
+      },
+      {
+        "from": "weeks",
+        "to": "bye",
+        "when": "The agent accepts and closes politely"
+      },
+      {
+        "from": "weeks",
+        "to": "no_label",
+        "when": "The agent offers to send a returns label anyway"
+      },
+      {
+        "from": "weeks",
+        "to": "acted",
+        "when": "The agent says it has created the return, exchange or refund"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "order",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "20-retail-return-silence-and-walkaway/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "20-retail-return-silence-and-walkaway/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "20-retail-return-silence-and-walkaway/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "20-retail-return-silence-and-walkaway/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "20-retail-return-silence-and-walkaway/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "20-retail-return-silence-and-walkaway/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "20-retail-return-silence-and-walkaway/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "20-retail-return-silence-and-walkaway/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "20-retail-return-silence-and-walkaway/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "20-retail-return-silence-and-walkaway/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 15,
+    "edges": 18,
+    "endings": 4,
+    "shortest_path": 9,
+    "branch_points": 5
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "88306"
+      }
+    },
+    {
+      "name": "check_stock",
+      "input_parameters": {
+        "item": "blue runners",
+        "size": 9
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_return",
+      "input_parameters": {}
+    },
+    {
+      "name": "create_exchange",
+      "input_parameters": {}
+    },
+    {
+      "name": "refund_order",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "dead_air",
+          "measures": "agent checks in once after unexplained silence, and does not hang up or talk over it",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "88306"
+          }
+        },
+        {
+          "name": "check_stock",
+          "input_parameters": {
+            "item": "blue runners",
+            "size": 9
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_return",
+          "input_parameters": {}
+        },
+        {
+          "name": "create_exchange",
+          "input_parameters": {}
+        },
+        {
+          "name": "refund_order",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "acted_without_consent",
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

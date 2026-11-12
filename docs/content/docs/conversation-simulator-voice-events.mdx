@@ -1,0 +1,115 @@
+---
+id: conversation-simulator-voice-events
+title: Voice Events
+sidebar_label: Voice Events
+languages: [python]
+beta: true
+---
+
+Voice events make the simulated caller **do one specific thing at one specific moment**: an aside on the turn where they give their address, a long pause in the middle of their card number, twenty seconds away from the phone before they read out a policy number.
+
+[Speech patterns](/docs/conversation-simulator-voice-persona-speech-patterns) set how often the caller does something across the whole call, picked at random. Voice events set it on a single node of a [simulation graph](/docs/conversation-simulator-simulation-graph), so every agent you test meets the same thing at the same point in the call.
+
+```python title="main.py"
+from deepeval.simulator import ConversationSimulator, SimulationNode
+from deepeval.simulator.events import Hold, MidSentencePause, SideSpeech, SlowToAnswer
+
+
+def give_address(turns, golden):
+    return "It's 14 Byres Road, Glasgow, G12 8TA."
+
+
+def give_policy_number(turns, golden):
+    return "Okay, it's P L four four one nine zero."
+
+
+address = SimulationNode(
+    action=give_address,
+    events=[
+        SideSpeech(text="Hang on, it's the courier at the door."),
+        MidSentencePause(seconds=2.5, after_words=4),
+    ],
+)
+policy = SimulationNode(
+    action=give_policy_number,
+    ending="done",
+    events=[SlowToAnswer(text="Let me find the letter."), Hold(seconds=20)],
+)
+address.add_node(policy, when="The assistant asks for the policy number")
+
+simulator = ConversationSimulator(
+    voice_config=voice_config,
+    simulation_graph=address,
+)
+```
+
+Every event happens once, on the turn its node produces.
+
+## Events That Change the Audio
+
+These are applied in [voice mode](/docs/conversation-simulator-voice-mode). Events that come before the caller's line are played in the order you list them.
+
+| Event              | What the caller does                                                         | Fields                                                                 |
+| ------------------ | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `SlowToAnswer`     | Says something before going quiet, such as "Hang on, let me find it."        | `text`, or `audio` for a recording of it.                              |
+| `Hold`             | Goes quiet for a while before their line, having said they need a moment.    | `seconds`. Defaulted to `20`.                                          |
+| `DeadAir`          | Goes quiet before their line without saying why.                             | `seconds`. Defaulted to `10`.                                          |
+| `SideSpeech`       | Says something to someone else, more quietly, before their line.             | `text` or `audio`. `volume`, defaulted to `0.5`.                       |
+| `BackgroundLine`   | Another person in the room talks over the caller's line.                     | `text` or `audio`. `volume`, defaulted to `0.5`.                       |
+| `MidSentencePause` | Stops in the middle of their line.                                           | `seconds`, defaulted to `2`. `after_words` or `at_seconds` for where.  |
+| `NonSpeechSound`   | Coughs or makes another noise in the middle of their line.                   | `audio`, a recording of the sound. `kind`. `after_words` or `at_seconds`. |
+
+`after_words` places a pause or a sound by how far through the line's words it falls, so `after_words=4` in an eight-word line puts it halfway through the audio.
+
+## Events That Label the Line
+
+These change nothing in the audio. They mark what the line is testing, so it is on the turn for metrics and for anyone reading the test case. Put the behaviour itself in the node's line or its recording.
+
+| Event              | Marks a line where the caller                              | Fields     |
+| ------------------ | ---------------------------------------------------------- | ---------- |
+| `SelfCorrects`     | Corrects themselves, such as "Tuesday, no, Wednesday".     | None.      |
+| `TrailsOff`        | Leaves the sentence unfinished.                            | None.      |
+| `AsksToRepeat`     | Asks the agent to say something again.                     | None.      |
+| `SwitchesLanguage` | Starts speaking another language.                          | `language` |
+| `Prosody`          | Means something by tone, such as sarcasm or a question.    | `cue`      |
+| `SpeakerChange`    | Is a different person from the caller.                     | `voice`    |
+
+:::note
+Cutting in on the agent and saying "mm-hmm" while it talks are not events yet. Set them for the whole call on the persona, with [interruption behaviour](/docs/conversation-simulator-voice-interruptions) and the `backchannels` [speech pattern](/docs/conversation-simulator-voice-persona-speech-patterns).
+:::
+
+## Same Audio Every Run
+
+For a benchmark, every agent has to hear exactly the same caller. Any event that says something takes an `audio` recording, played instead of synthesizing its `text`:
+
+```python
+from deepeval.test_case import Audio
+
+address = SimulationNode(
+    action=give_address,
+    events=[
+        SideSpeech(
+            text="Hang on, it's the courier at the door.",
+            audio=Audio(url="recordings/courier-aside.wav"),
+        ),
+    ],
+)
+```
+
+The node's own line can be a recording too: see [Returning Audio](/docs/conversation-simulator-simulation-graph#returning-audio).
+
+## What Gets Recorded
+
+Every event is written to the caller's turn under `metadata["events"]`. Events that take up time say where they fell, in seconds from the start of that turn's audio:
+
+```python
+turn.metadata["events"]
+# [
+#     {"type": "SideSpeech", "text": "Hang on, it's the courier at the door.",
+#      "volume": 0.5, "offset_seconds": 0.0, "seconds": 1.8},
+#     {"type": "MidSentencePause", "seconds": 2.5, "after_words": 4,
+#      "offset_seconds": 4.1},
+# ]
+```
+
+[`TurnTakingNaturalnessMetric`](/docs/metrics-turn-taking-naturalness#sub-scores) reads these for its sub-scores: whether the agent talked into a pause, or hung up during a hold.

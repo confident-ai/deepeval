@@ -38,6 +38,7 @@ from deepeval.simulator.template import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
+    CallerVoiceProfile,
     SimulatedInput,
 )
 from deepeval.simulator.controller.controller import (
@@ -57,6 +58,7 @@ from deepeval.voice.recording import CallRecorder, RecordingConnector
 from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
+    from deepeval.voice.recorded_speech import RecordedSpeechTTS
     from deepeval.dataset import Persona
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.test_case import Audio
@@ -126,6 +128,40 @@ class _AgentBacklog:
         self.trailing_silence_s = 0.0
 
 
+def _spoken_during_caller_turn(
+    events: List["AgentEvent"], sample_rate: int, call_started_at: float
+) -> Optional[Turn]:
+    """An agent reply that began and ended inside the caller's own turn."""
+    from deepeval.voice.duplex import _pcm_to_audio
+
+    pcm = b"".join(event.audio for event in events if event.audio)
+    if not pcm:
+        return None
+    audio = _pcm_to_audio(pcm, sample_rate)
+    heard_at = next(
+        (event.received_at for event in events if event.audio), None
+    )
+    if heard_at is not None:
+        audio.start_time = max(0.0, heard_at - call_started_at)
+    return Turn(
+        role="assistant",
+        content=next(
+            (
+                event.transcript
+                for event in reversed(events)
+                if event.transcript
+            ),
+            "",
+        ),
+        audio=audio,
+        tools_called=[
+            call for event in events for call in event.tools_called or []
+        ]
+        or None,
+        metadata={"during_caller_turn": True},
+    )
+
+
 def _continued_agent_turn(previous: Turn, content: str, audio: "Audio") -> Turn:
     """The agent's turn with what it went on to say before the caller spoke.
 
@@ -169,16 +205,30 @@ class _VoiceSession:
 
     connector: "BaseVoiceConnector"
     persona: Optional["Persona"]
+    tts_model: "DeepEvalBaseTTS"
     policy: Optional["InterruptionPolicy"] = None
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
     barges: int = 0
     recorder: Optional[CallRecorder] = None
+    # How the caller sounds, worked out from the persona's characteristics.
+    delivery: Optional[str] = None
+    # Plays the lines a simulation graph node returned a recording for.
+    recorded: Optional["RecordedSpeechTTS"] = None
 
     @property
     def is_duplex(self) -> bool:
-        """A barge policy or a full-duplex line both take the duplex path."""
-        return self.policy is not None or self.connector.supports_duplex
+        """A barge policy, backchannels, echo or a full-duplex line all take
+        the duplex path: each needs the caller heard while the agent talks."""
+        persona = self.persona
+        patterns = persona.speech_patterns if persona is not None else None
+        line = persona.line if persona is not None else None
+        return (
+            self.policy is not None
+            or self.connector.supports_duplex
+            or (patterns is not None and patterns.backchannels is not None)
+            or (line is not None and line.echo)
+        )
 
 
 @dataclass
@@ -219,12 +269,25 @@ class _VoiceRun:
         recorder = CallRecorder() if self.config.record_call else None
         if recorder is not None:
             connector = RecordingConnector(connector, recorder)
+        from deepeval.voice.recorded_speech import RecordedSpeechTTS
+
+        # A persona with a TTS model of its own speaks through that one, which
+        # leaves nowhere to play a recording from.
+        own_voice = persona is not None and persona.tts_model is not None
+        recorded = None if own_voice else RecordedSpeechTTS(self.tts_model)
+        tts_model = recorded or self.tts_model
         return _VoiceSession(
             connector=connector,
             persona=persona,
+            tts_model=(
+                persona.caller_tts_model(tts_model)
+                if persona is not None
+                else tts_model
+            ),
             policy=policy,
             floor=floor or FloorController(),
             recorder=recorder,
+            recorded=recorded,
         )
 
     @property
@@ -677,7 +740,7 @@ class ConversationSimulator:
 
             # Route to the next graph node based on the assistant reply.
             self._graph_runner.advance(
-                self, graph_state, assistant_turn.content
+                self, graph_state, assistant_turn.content, turns
             )
 
             if emission_end:
@@ -695,6 +758,7 @@ class ConversationSimulator:
             additional_metadata={
                 **(golden.additional_metadata or {}),
                 **additional_metadata,
+                **self._graph_runner.summary(graph_state),
             },
             comments=golden.comments,
         )
@@ -757,6 +821,9 @@ class ConversationSimulator:
             # connected before the first turn and disconnected when the
             # conversation ends (or errors).
             if session is not None:
+                # Before the line opens: an agent that greets on connect
+                # should not be left talking to nobody while this is written.
+                await self._prepare_caller_voice(session, golden)
                 connect_started = time.perf_counter()
                 logger.debug(
                     "Voice connector connect started: %s",
@@ -917,6 +984,10 @@ class ConversationSimulator:
                         break
                     agent_catch_ups = 0
                     turns.append(emission.turn)
+                    if session is not None:
+                        await self._prepare_recorded(
+                            session, emission.turn, emission.events
+                        )
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
@@ -995,7 +1066,7 @@ class ConversationSimulator:
                 route_started = time.perf_counter()
                 logger.debug("Simulation graph routing started")
                 await self._graph_runner.a_advance(
-                    self, graph_state, assistant_turn.content
+                    self, graph_state, assistant_turn.content, turns
                 )
                 logger.debug(
                     "Simulation graph routing finished after %.2fs",
@@ -1024,6 +1095,7 @@ class ConversationSimulator:
             additional_metadata={
                 **(golden.additional_metadata or {}),
                 **additional_metadata,
+                **self._graph_runner.summary(graph_state),
             },
             comments=golden.comments,
         )
@@ -1045,8 +1117,64 @@ class ConversationSimulator:
         return conversational_test_case
 
     @staticmethod
-    def _persona_tts_kwargs(persona) -> dict:
-        return {} if persona is None else persona.tts_kwargs()
+    def _persona_tts_kwargs(session: _VoiceSession) -> dict:
+        persona = session.persona
+        if persona is None:
+            return {}
+        return persona.tts_kwargs(session.tts_model, session.delivery)
+
+    async def _prepare_caller_voice(
+        self, session: _VoiceSession, golden: ConversationalGolden
+    ) -> None:
+        """Write the parts of the call a persona implies but does not state.
+
+        How the caller sounds, what they say to the room and what the people
+        around them say all follow from the persona, so the simulator model is
+        asked for them once, before the first turn.
+        """
+        from deepeval.simulator.caller_voice_template import (
+            CallerVoiceTemplate,
+        )
+        from deepeval.voice.caller_speech import CallerSpeechTTS
+
+        persona = session.persona
+        if persona is None or persona.muted:
+            return
+        tts_model = session.tts_model
+        patterns, noise = persona.speech_patterns, persona.background_noise
+        # A TTS model that only duck-types the base class cannot say whether
+        # it takes instructions, which is the same as not taking them.
+        takes_instructions = getattr(
+            tts_model, "supports_voice_instructions", lambda: False
+        )
+        delivery = self._voice.config.persona_delivery and takes_instructions()
+        asides = patterns is not None and patterns.side_speech is not None
+        speakers = (
+            [speaker.characteristics for speaker in noise.other_speakers]
+            if noise is not None
+            else []
+        )
+        if not (delivery or asides or speakers):
+            return
+        try:
+            profile: CallerVoiceProfile = await self.a_generate_schema(
+                CallerVoiceTemplate.describe_caller_voice(
+                    persona,
+                    self.language,
+                    delivery=delivery,
+                    asides=asides,
+                    background_speakers=speakers,
+                ),
+                CallerVoiceProfile,
+            )
+        except Exception as exc:
+            # The call is still worth making in the persona's plain voice.
+            logger.warning("Could not prepare the caller's voice: %s", exc)
+            return
+        if delivery:
+            session.delivery = profile.delivery
+        if isinstance(tts_model, CallerSpeechTTS):
+            tts_model.use_lines(profile.asides, profile.background_lines)
 
     @staticmethod
     def _stt_kwargs(session: _VoiceSession) -> dict:
@@ -1089,11 +1217,10 @@ class ConversationSimulator:
         from deepeval.voice.background import BackgroundMixer
 
         voice = self._voice
-        tts_kwargs = self._persona_tts_kwargs(persona)
-        if not voice.tts_model.supports_streaming():
-            audio, tts_cost = await voice.tts_model.a_synthesize(
-                text, **tts_kwargs
-            )
+        tts_model = session.tts_model
+        tts_kwargs = self._persona_tts_kwargs(session)
+        if not tts_model.supports_streaming():
+            audio, tts_cost = await tts_model.a_synthesize(text, **tts_kwargs)
             if tts_cost is not None:
                 voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
@@ -1109,7 +1236,7 @@ class ConversationSimulator:
         )
 
         async def _frames():
-            async for chunk in voice.tts_model.a_synthesize_stream(
+            async for chunk in tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
                 yield mixer.mix_chunk(chunk)
@@ -1119,7 +1246,7 @@ class ConversationSimulator:
         result = await session.connector.stream_uplink_chunks(
             _frames(), trailing_silence=trailing_silence
         )
-        tts_cost = voice.tts_model.synthesis_cost(text)
+        tts_cost = tts_model.synthesis_cost(text)
         if tts_cost is not None:
             voice.tts_cost += tts_cost
         logger.debug(
@@ -1128,6 +1255,37 @@ class ConversationSimulator:
             (result.first_frame_at or tts_started) - tts_started,
         )
         return result.audio, result.first_frame_at or time.perf_counter()
+
+    async def _prepare_recorded(
+        self, session: _VoiceSession, turn: Turn, events: List[Any]
+    ) -> None:
+        """Ready the audio for a turn a node gave a recording or voice events
+        for, so the caller's voice plays it in place of synthesizing the text.
+
+        The recording goes out through the same line and background as any
+        other line, and each event is written back onto the turn with where it
+        fell in the audio.
+        """
+        from deepeval.voice.recorded_speech import assemble_utterance
+
+        recorded = session.recorded
+        if recorded is None or (turn.audio is None and not events):
+            return
+
+        async def _synthesize(text: str) -> "Audio":
+            audio, cost = await recorded.inner.a_synthesize(
+                text, **self._persona_tts_kwargs(session)
+            )
+            if cost is not None:
+                self._voice.tts_cost += cost
+            return audio
+
+        audio, records = await assemble_utterance(
+            turn.content, turn.audio, events, recorded.sample_rate, _synthesize
+        )
+        recorded.clips[turn.content] = audio
+        if records:
+            turn.metadata = {**(turn.metadata or {}), "events": records}
 
     @staticmethod
     def _silence_audio(session: _VoiceSession, seconds: float) -> "Audio":
@@ -1393,8 +1551,8 @@ class ConversationSimulator:
         voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
-        user_audio, tts_cost = await voice.tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(session.persona)
+        user_audio, tts_cost = await session.tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(session)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1489,6 +1647,7 @@ class ConversationSimulator:
             audio=conn_turn.audio if replied else None,
             latency_ms=conn_turn.latency_ms if replied else None,
             provider_transcript=conn_turn.provider_transcript,
+            tools_called=conn_turn.tools_called,
         )
 
     async def _voice_duplex_exchange(
@@ -1516,6 +1675,13 @@ class ConversationSimulator:
         # connectors, whose uplink calls return at wildly different points —
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
+
+        for spoken in session.connector.take_agent_speech_during_uplink():
+            mid_turn = _spoken_during_caller_turn(
+                spoken, session.connector.recv_sample_rate, call_started_at
+            )
+            if mid_turn is not None:
+                turns.append(mid_turn)
 
         assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:
@@ -1620,7 +1786,7 @@ class ConversationSimulator:
         voice = self._voice
         exchange = DuplexExchange(
             connector=session.connector,
-            tts_model=voice.tts_model,
+            tts_model=session.tts_model,
             stt_model=voice.stt_model,
             policy=session.policy,
             floor=session.floor,
@@ -1628,6 +1794,7 @@ class ConversationSimulator:
             language=self.language,
             a_generate_schema=self.a_generate_schema,
             call_started_at=session.started_at or time.perf_counter(),
+            tts_kwargs=self._persona_tts_kwargs(session),
         )
         result = await exchange.run(
             turns=turns,

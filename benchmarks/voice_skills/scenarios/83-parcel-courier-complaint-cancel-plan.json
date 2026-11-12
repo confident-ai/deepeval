@@ -1,0 +1,523 @@
+{
+  "id": "83-parcel-courier-complaint-cancel-plan",
+  "domain": "Parcel delivery",
+  "name": "Courier complaint, plan cancelled",
+  "blurb": "Cough, dropped claim, one offer only",
+  "tts": "elevenlabs",
+  "title": "A parcel thrown over the gate, a dropped claim and a cancelled plan",
+  "skills": [
+    "cancellation_handling",
+    "non_speech_sounds",
+    "abandonment",
+    "numeric_read_back",
+    "entity_extraction"
+  ],
+  "summary": "A caller coughs through his membership number, complains about a driver and starts a claim, then drops it when he hears what it needs. An agent that files the claim anyway, or makes a second offer to keep him, gets told off once and then loses him. He wants the cancellation reference twice.",
+  "golden": {
+    "scenario": "Caller wants to complain about a courier and cancel his delivery plan.",
+    "expected_outcome": "Membership number DP317406 is captured despite the cough. The complaint about the delivery on Monday 10 August is logged, and no damage claim is opened after he drops it. The plan is cancelled with at most one offer to stay. Reference CX-90-3317 is read back exactly, and he is told the plan ends Monday 31 August with no further charge."
+  },
+  "outcome_checks": [
+    "Membership number DP317406 is captured despite the cough.",
+    "The complaint about the delivery on Monday 10 August is logged, and no damage claim is opened after he drops it.",
+    "The plan is cancelled with at most one offer to stay.",
+    "Reference CX-90-3317 is read back exactly, and he is told the plan ends Monday 31 August with no further charge."
+  ],
+  "caller": {
+    "description": "Joiner, has a chesty cough, fed up but civil.",
+    "accent": "Belfast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "One offer to stay at most before cancelling. A damage claim needs photos and a receipt.",
+    "tools": {
+      "cancel_membership": {
+        "returns": {
+          "reference": "CX-90-3317",
+          "ends": "2026-08-31",
+          "further_charges": 0
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Right, hello. Your driver's after firing my parcel over the back gate again. Into a puddle. That's the third time. I want to complain, and I want out of this Doorstep Plus thing.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/open.wav"
+      },
+      {
+        "id": "member",
+        "say": "D P, three one, seven... seven four, zero six.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/member.wav",
+        "when": "The agent asks for the membership number",
+        "clear": {
+          "say": "D, P, three, one, seven, seven, four, zero, six.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/member.clear.wav"
+        },
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 5
+          }
+        ]
+      },
+      {
+        "id": "postcode",
+        "say": "B T nine, six F N.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "B, T, nine, six, F, N.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "member_wrong",
+        "say": "No. D P, three one, seven four, zero six.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/member_wrong.wav",
+        "clear": {
+          "say": "No. D, P, three, one, seven, four, zero, six.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/member_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "which",
+        "say": "Monday there. The tenth. A box of books, soaked through.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/which.wav"
+      },
+      {
+        "id": "claim",
+        "say": "Aye, go on then. What do you need off me?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/claim.wav",
+        "text": "Yes, go on then. What do you need from me?"
+      },
+      {
+        "id": "drop",
+        "say": "Photos and a receipt? Ach, forget the claim. Not worth the hassle. Just cancel the plan.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/drop.wav",
+        "text": "Photos and a receipt? Oh, forget the claim. Not worth the hassle. Just cancel the plan."
+      },
+      {
+        "id": "claimed_anyway",
+        "say": "I said forget the claim. Don't be putting a claim in.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/claimed_anyway.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "no_offer",
+        "say": "No. I don't want three months free. Cancel it.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/no_offer.wav"
+      },
+      {
+        "id": "again",
+        "say": "I've said no. Cancel it.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/again.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "ref",
+        "say": "Give me that reference again?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/ref.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "ref_wrong",
+        "say": "That's different from what you said a second ago. Which is it?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/ref_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "ends",
+        "say": "And when does it stop? Am I charged again?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/ends.wav"
+      },
+      {
+        "id": "done",
+        "say": "Grand. Cheers.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "complaint_logged_plan_cancelled",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, I'll just cancel the direct debit at the bank.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/gave_up.wav",
+        "text": "Oh, I'll just cancel the direct debit at the bank.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "which",
+        "when": "The agent asks which delivery the complaint is about"
+      },
+      {
+        "from": "ident",
+        "to": "member_wrong",
+        "when": "The agent reads back a number other than DP317406"
+      },
+      {
+        "from": "member_wrong",
+        "to": "which",
+        "when": "The agent reads the right number back and asks which delivery the complaint is about"
+      },
+      {
+        "from": "member_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong number"
+      },
+      {
+        "from": "which",
+        "to": "claim",
+        "when": "The agent confirms the complaint is logged and asks whether he wants to claim for the books"
+      },
+      {
+        "from": "which",
+        "to": "drop",
+        "when": "The agent confirms the complaint is logged and says a claim needs photos and a receipt"
+      },
+      {
+        "from": "claim",
+        "to": "drop",
+        "when": "The agent says a claim needs photos and a receipt"
+      },
+      {
+        "from": "drop",
+        "to": "no_offer",
+        "when": "The agent drops the claim and makes one offer to keep the plan"
+      },
+      {
+        "from": "drop",
+        "to": "ref",
+        "when": "The agent drops the claim, cancels the plan and gives the reference"
+      },
+      {
+        "from": "drop",
+        "to": "claimed_anyway",
+        "when": "The agent says it will open or has opened a claim"
+      },
+      {
+        "from": "claimed_anyway",
+        "to": "no_offer",
+        "when": "The agent confirms no claim is open and makes one offer to keep the plan"
+      },
+      {
+        "from": "claimed_anyway",
+        "to": "ref",
+        "when": "The agent confirms no claim is open, cancels the plan and gives the reference"
+      },
+      {
+        "from": "claimed_anyway",
+        "to": "gave_up",
+        "when": "The agent still goes ahead with the claim"
+      },
+      {
+        "from": "no_offer",
+        "to": "ref",
+        "when": "The agent cancels the plan and gives the reference"
+      },
+      {
+        "from": "no_offer",
+        "to": "again",
+        "when": "The agent makes a second offer or argues"
+      },
+      {
+        "from": "again",
+        "to": "ref",
+        "when": "The agent cancels the plan and gives the reference"
+      },
+      {
+        "from": "again",
+        "to": "gave_up",
+        "when": "The agent still does not cancel"
+      },
+      {
+        "from": "ref",
+        "to": "ends",
+        "when": "The agent repeats CX-90-3317"
+      },
+      {
+        "from": "ref",
+        "to": "ref_wrong",
+        "when": "The agent reads back a reference other than CX-90-3317"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "ends",
+        "when": "The agent reads CX-90-3317"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "gave_up",
+        "when": "The agent still reads a different reference"
+      },
+      {
+        "from": "ends",
+        "to": "done",
+        "when": "The agent says the plan ends on Monday 31 August and he will not be charged again"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "member",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've given you that already.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "83-parcel-courier-complaint-cancel-plan/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "83-parcel-courier-complaint-cancel-plan/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 23,
+    "endings": 2,
+    "shortest_path": 8,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "get_membership",
+      "input_parameters": {
+        "membership_number": "DP317406"
+      }
+    },
+    {
+      "name": "log_complaint",
+      "input_parameters": {
+        "membership_number": "DP317406",
+        "delivery_date": "2026-08-10",
+        "category": "parcel_thrown"
+      }
+    },
+    {
+      "name": "cancel_membership",
+      "input_parameters": {
+        "membership_number": "DP317406"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_damage_claim",
+      "input_parameters": {
+        "membership_number": "DP317406"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "get_membership",
+          "input_parameters": {
+            "membership_number": "DP317406"
+          }
+        },
+        {
+          "name": "log_complaint",
+          "input_parameters": {
+            "membership_number": "DP317406",
+            "delivery_date": "2026-08-10",
+            "category": "parcel_thrown"
+          }
+        },
+        {
+          "name": "cancel_membership",
+          "input_parameters": {
+            "membership_number": "DP317406"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_damage_claim",
+          "input_parameters": {
+            "membership_number": "DP317406"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

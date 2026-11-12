@@ -1,0 +1,629 @@
+{
+  "id": "65-insurance-change-of-car",
+  "domain": "Motor insurance",
+  "name": "Change of car",
+  "blurb": "Not the policyholder, child shouting",
+  "tts": "elevenlabs",
+  "title": "Swapping the car on a husband's policy",
+  "skills": [
+    "consent_verification",
+    "multi_speaker_handling",
+    "waiting_through_hold",
+    "data_minimization",
+    "entity_extraction"
+  ],
+  "summary": "A named driver on her husband's policy wants the new car added: carrying on without him fails the call. She fetches him, he agrees, and she takes over while her son shouts the wrong registration. She offers the loan account and his salary, and taking them fails the call too.",
+  "golden": {
+    "scenario": "Caller has bought a new car and wants it to replace the old one on the policy from Saturday.",
+    "expected_outcome": "The agent waits through the hold and gets the policyholder's own agreement before changing anything. The new car is LT75 XWB, not the registration the child shouts. The change starts on Saturday 15 August and the old car comes off the policy. The agent does not take the loan account number or the husband's salary, and emails the new certificate."
+  },
+  "outcome_checks": [
+    "The agent waits through the hold and gets the policyholder's own agreement before changing anything.",
+    "The new car is LT75 XWB, not the registration the child shouts.",
+    "The change starts on Saturday 15 August and the old car comes off the policy.",
+    "The agent does not take the loan account number or the husband's salary, and emails the new certificate."
+  ],
+  "caller": {
+    "description": "Named driver on her husband's policy, phone on the table.",
+    "accent": "Chinese (Mandarin)",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "speakerphone"
+  },
+  "background": {
+    "audio": "living-room-tv.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Only the policyholder can change the vehicle. A named driver needs the policyholder to agree on the call. Only the registration, the start date and what happens to the old car are needed.",
+    "tools": {
+      "quote_vehicle_change": {
+        "returns": {
+          "extra_premium": "32.50"
+        }
+      }
+    },
+    "account": {
+      "policyholder": "Liang Guo",
+      "named_drivers": [
+        "Mei Guo"
+      ],
+      "card_on_file": true
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. We buy new car. I want change the car on our insurance.",
+        "audio": "65-insurance-change-of-car/open.wav"
+      },
+      {
+        "id": "policy",
+        "say": "Policy number is A V, nine one, zero four, six two.",
+        "audio": "65-insurance-change-of-car/policy.wav",
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "Policy number is A, V, nine, one, zero, four, six, two.",
+          "audio": "65-insurance-change-of-car/policy.clear.wav"
+        }
+      },
+      {
+        "id": "name",
+        "say": "My name is Mei Guo. The policy is under my husband, Liang Guo.",
+        "audio": "65-insurance-change-of-car/name.wav",
+        "when": "The agent asks for her name"
+      },
+      {
+        "id": "consent",
+        "say": "Hello, yes. This is Liang Guo. My wife can change the car. I agree.",
+        "audio": "65-insurance-change-of-car/consent.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Okay. He is in the garage. I get him, wait.",
+            "audio": "65-insurance-change-of-car/consent-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 18
+          },
+          {
+            "type": "SpeakerChange",
+            "voice": "male, Chinese (Mandarin)"
+          }
+        ]
+      },
+      {
+        "id": "h_dob",
+        "say": "Second of November, nineteen seventy-eight.",
+        "audio": "65-insurance-change-of-car/h_dob.wav",
+        "events": [
+          {
+            "type": "SpeakerChange",
+            "voice": "male, Chinese (Mandarin)"
+          }
+        ]
+      },
+      {
+        "id": "skipped",
+        "say": "Oh, you don't need him? Okay, good.",
+        "audio": "65-insurance-change-of-car/skipped.wav",
+        "fails_call": true
+      },
+      {
+        "id": "reg",
+        "say": "New car is L T, seven five, X W B.",
+        "audio": "65-insurance-change-of-car/reg.wav",
+        "clear": {
+          "say": "New car is L, T, seven, five, X, W, B.",
+          "audio": "65-insurance-change-of-car/reg.clear.wav"
+        },
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "Mama! It says five seven! Five seven, X W B!",
+            "volume": 0.5,
+            "audio": "65-insurance-change-of-car/reg-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "reg_wrong",
+        "say": "No. Seven five. L T, seven five, X W B. That was my son.",
+        "audio": "65-insurance-change-of-car/reg_wrong.wav",
+        "clear": {
+          "say": "No. Seven, five, L, T, seven, five, X, W, B, That was my son.",
+          "audio": "65-insurance-change-of-car/reg_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "start",
+        "say": "From Saturday. We collect it Saturday, the fifteenth.",
+        "audio": "65-insurance-change-of-car/start.wav"
+      },
+      {
+        "id": "date_wrong",
+        "say": "No, not from today. Saturday, the fifteenth.",
+        "audio": "65-insurance-change-of-car/date_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "old",
+        "say": "Old car is sold already. Take it off.",
+        "audio": "65-insurance-change-of-car/old.wav"
+      },
+      {
+        "id": "both_wrong",
+        "say": "No! Not two cars. Old one is gone. Only the new one.",
+        "audio": "65-insurance-change-of-car/both_wrong.wav",
+        "clear": {
+          "say": "No! Not two, cars. Old one, is gone. Only the new one.",
+          "audio": "65-insurance-change-of-car/both_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "finance",
+        "say": "Car is on finance. You need the loan account number, and how much my husband earns? I have the papers here.",
+        "audio": "65-insurance-change-of-car/finance.wav"
+      },
+      {
+        "id": "took",
+        "say": "Okay. Loan account is seven seven zero, four one...",
+        "audio": "65-insurance-change-of-car/took.wav",
+        "clear": {
+          "say": "Okay. Loan account is seven, seven, zero, four, one.",
+          "audio": "65-insurance-change-of-car/took.clear.wav"
+        },
+        "events": [
+          {
+            "type": "TrailsOff"
+          }
+        ],
+        "fails_call": true
+      },
+      {
+        "id": "price",
+        "say": "Thirty-two pounds fifty more? Okay. Use the card you have.",
+        "audio": "65-insurance-change-of-car/price.wav"
+      },
+      {
+        "id": "cert",
+        "say": "And send the new certificate to our email, please.",
+        "audio": "65-insurance-change-of-car/cert.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. Bye-bye.",
+        "audio": "65-insurance-change-of-car/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "car_changed",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "This is too confusing. My husband will go to the office.",
+        "audio": "65-insurance-change-of-car/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "consent",
+        "when": "The agent says the policyholder must agree and asks to speak to him"
+      },
+      {
+        "from": "ident",
+        "to": "skipped",
+        "when": "The agent carries on without the policyholder"
+      },
+      {
+        "from": "skipped",
+        "to": "reg",
+        "when": "The agent asks for the new registration"
+      },
+      {
+        "from": "consent",
+        "to": "h_dob",
+        "when": "The agent asks him for his date of birth"
+      },
+      {
+        "from": "consent",
+        "to": "reg",
+        "when": "The agent accepts his agreement and asks for the new registration"
+      },
+      {
+        "from": "h_dob",
+        "to": "reg",
+        "when": "The agent confirms and asks for the new registration"
+      },
+      {
+        "from": "reg",
+        "to": "start",
+        "when": "The agent reads back LT75 XWB and asks when the change should start"
+      },
+      {
+        "from": "reg",
+        "to": "reg_wrong",
+        "when": "The agent reads back a registration other than LT75 XWB"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "start",
+        "when": "The agent reads back LT75 XWB and asks when the change should start"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong registration"
+      },
+      {
+        "from": "start",
+        "to": "old",
+        "when": "The agent confirms Saturday the fifteenth and asks about the old car"
+      },
+      {
+        "from": "start",
+        "to": "date_wrong",
+        "when": "The agent says the change starts today or on another date"
+      },
+      {
+        "from": "date_wrong",
+        "to": "old",
+        "when": "The agent confirms Saturday the fifteenth and asks about the old car"
+      },
+      {
+        "from": "date_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong date"
+      },
+      {
+        "from": "old",
+        "to": "finance",
+        "when": "The agent confirms the new car replaces the old one"
+      },
+      {
+        "from": "old",
+        "to": "both_wrong",
+        "when": "The agent says both cars will be on the policy"
+      },
+      {
+        "from": "both_wrong",
+        "to": "finance",
+        "when": "The agent confirms the new car replaces the old one"
+      },
+      {
+        "from": "both_wrong",
+        "to": "gave_up",
+        "when": "The agent still has both cars on the policy"
+      },
+      {
+        "from": "finance",
+        "to": "price",
+        "when": "The agent says those are not needed and gives the extra premium"
+      },
+      {
+        "from": "finance",
+        "to": "took",
+        "when": "The agent asks for the loan account number or his salary"
+      },
+      {
+        "from": "took",
+        "to": "price",
+        "when": "The agent gives the extra premium"
+      },
+      {
+        "from": "price",
+        "to": "cert",
+        "when": "The agent confirms the payment and the change"
+      },
+      {
+        "from": "cert",
+        "to": "done",
+        "when": "The agent confirms the certificate is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "policy",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already say this. A V, nine one, zero four, six two.",
+        "audio": "65-insurance-change-of-car/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already say this. A, V, nine, one, zero, four, six, two.",
+          "audio": "65-insurance-change-of-car/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "65-insurance-change-of-car/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "65-insurance-change-of-car/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "65-insurance-change-of-car/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "65-insurance-change-of-car/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "65-insurance-change-of-car/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "65-insurance-change-of-car/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "65-insurance-change-of-car/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "65-insurance-change-of-car/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "65-insurance-change-of-car/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "65-insurance-change-of-car/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 19,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "policy_number": "AV910462"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Liang Guo",
+        "date_of_birth": "1978-11-02"
+      }
+    },
+    {
+      "name": "quote_vehicle_change",
+      "input_parameters": {
+        "registration": "LT75XWB",
+        "start_date": "2026-08-15"
+      }
+    },
+    {
+      "name": "change_vehicle",
+      "input_parameters": {
+        "policy_number": "AV910462",
+        "registration": "LT75XWB",
+        "start_date": "2026-08-15",
+        "remove_current_vehicle": true
+      }
+    },
+    {
+      "name": "send_certificate",
+      "input_parameters": {
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "change_vehicle",
+      "input_parameters": {
+        "registration": "LT57XWB"
+      }
+    },
+    {
+      "name": "change_vehicle",
+      "input_parameters": {
+        "start_date": "2026-08-12"
+      }
+    },
+    {
+      "name": "add_vehicle",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "policy_number": "AV910462"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Liang Guo",
+            "date_of_birth": "1978-11-02"
+          }
+        },
+        {
+          "name": "quote_vehicle_change",
+          "input_parameters": {
+            "registration": "LT75XWB",
+            "start_date": "2026-08-15"
+          }
+        },
+        {
+          "name": "change_vehicle",
+          "input_parameters": {
+            "policy_number": "AV910462",
+            "registration": "LT75XWB",
+            "start_date": "2026-08-15",
+            "remove_current_vehicle": true
+          }
+        },
+        {
+          "name": "send_certificate",
+          "input_parameters": {
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "change_vehicle",
+          "input_parameters": {
+            "registration": "LT57XWB"
+          }
+        },
+        {
+          "name": "change_vehicle",
+          "input_parameters": {
+            "start_date": "2026-08-12"
+          }
+        },
+        {
+          "name": "add_vehicle",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "skipped",
+        "took"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "consent_verification",
+      "exists": true,
+      "name": "Consent Verification",
+      "criteria": "The agent verified identity and got explicit consent from the right person before acting.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "data_minimization",
+      "exists": true,
+      "name": "Data Minimization",
+      "criteria": "The agent did not ask for, accept or store sensitive data the task did not need.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

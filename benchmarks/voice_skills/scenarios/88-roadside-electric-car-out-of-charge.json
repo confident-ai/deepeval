@@ -1,0 +1,615 @@
+{
+  "id": "88-roadside-electric-car-out-of-charge",
+  "domain": "Roadside assistance",
+  "name": "Electric car out of charge",
+  "blurb": "Echo, two Kias, changes of plan",
+  "tts": "elevenlabs",
+  "title": "An electric car out of charge, and three changes of plan",
+  "skills": [
+    "echo",
+    "ambiguity_resolution",
+    "low_confidence_confirmation",
+    "tool_error_handling",
+    "changing_requests"
+  ],
+  "summary": "The caller sits in her dead electric car with the phone on the dash, so the agent's voice echoes back. Her membership has two white Kias and she just says 'my Kia'. She asks for a tow, changes to a rapid charger, then takes a charging van that is unavailable: saying it is booked fails the call.",
+  "golden": {
+    "scenario": "Caller's electric car has run out of charge in a retail park and she needs to be at work by two.",
+    "expected_outcome": "The surname Nguyen is confirmed by spelling, and the agent never stops for its own echo. The agent asks which Kia, or works out it is the electric one, and never books the Picanto. When the charging van is unavailable the agent says so and offers the tow instead. The final booking is a tow of the Kia e-Niro from Fernbrook Retail Park to the nearest rapid charger, not to her home."
+  },
+  "outcome_checks": [
+    "The surname Nguyen is confirmed by spelling, and the agent never stops for its own echo.",
+    "The agent asks which Kia, or works out it is the electric one, and never books the Picanto.",
+    "When the charging van is unavailable the agent says so and offers the tow instead.",
+    "The final booking is a tow of the Kia e-Niro from Fernbrook Retail Park to the nearest rapid charger, not to her home."
+  ],
+  "caller": {
+    "description": "Nurse on her way to a shift, careful and polite.",
+    "accent": "Vietnamese",
+    "pace": "slow",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Out of charge: offer the mobile charging van first. If none is free, tow to the nearest rapid charger.",
+    "account": {
+      "vehicles": [
+        "white Kia e-Niro (electric)",
+        "white Kia Picanto (petrol)"
+      ]
+    },
+    "tools": {
+      "book_mobile_charge": {
+        "first_call_returns": {
+          "error": "van_unavailable"
+        }
+      },
+      "book_tow": {
+        "returns": {
+          "eta_minutes": 35,
+          "destination": "Halden Road rapid charging hub"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. My car has no more battery. It is electric car, and it stopped.",
+        "audio": "88-roadside-electric-car-out-of-charge/open.wav"
+      },
+      {
+        "id": "safe",
+        "say": "Yes, I am safe. The car is in a parking bay. I am sitting inside.",
+        "audio": "88-roadside-electric-car-out-of-charge/safe.wav"
+      },
+      {
+        "id": "name",
+        "say": "Nguyen. N, G, U, Y, E, N. First name Thuy.",
+        "audio": "88-roadside-electric-car-out-of-charge/name.wav",
+        "when": "The agent asks for her name",
+        "clear": {
+          "say": "Nguyen. N, G, U, Y, E, N, First name Thuy.",
+          "audio": "88-roadside-electric-car-out-of-charge/name.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "L E six five, two W Q.",
+        "audio": "88-roadside-electric-car-out-of-charge/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "L, E, six, five, two, W, Q.",
+          "audio": "88-roadside-electric-car-out-of-charge/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "name_wrong",
+        "say": "No. N, G, U, Y, E, N. Nguyen.",
+        "audio": "88-roadside-electric-car-out-of-charge/name_wrong.wav",
+        "clear": {
+          "say": "No. N, G, U, Y, E, N, Nguyen.",
+          "audio": "88-roadside-electric-car-out-of-charge/name_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "which",
+        "say": "My Kia. The white one.",
+        "audio": "88-roadside-electric-car-out-of-charge/which.wav"
+      },
+      {
+        "id": "niro",
+        "say": "The electric one. The Niro.",
+        "audio": "88-roadside-electric-car-out-of-charge/niro.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "No, not the Picanto. Picanto is petrol. The electric one, the Niro.",
+        "audio": "88-roadside-electric-car-out-of-charge/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "where",
+        "say": "Fernbrook Retail Park. Outside the pet shop.",
+        "audio": "88-roadside-electric-car-out-of-charge/where.wav"
+      },
+      {
+        "id": "home",
+        "say": "Can you take the car to my house, please?",
+        "audio": "88-roadside-electric-car-out-of-charge/home.wav"
+      },
+      {
+        "id": "charger",
+        "say": "Wait. No. At home the charger is slow, and I must be at work at two. Take it to a fast charger, the nearest one.",
+        "audio": "88-roadside-electric-car-out-of-charge/charger.wav",
+        "clear": {
+          "say": "Wait. No. At home the charger is slow, and I, must be at work at two, Take it to a fast charger, the nearest one.",
+          "audio": "88-roadside-electric-car-out-of-charge/charger.clear.wav"
+        }
+      },
+      {
+        "id": "van",
+        "say": "Oh. A van can charge it here? That is better. Send the van.",
+        "audio": "88-roadside-electric-car-out-of-charge/van.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Good. I will wait for the van. Goodbye.",
+        "audio": "88-roadside-electric-car-out-of-charge/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_van_booking",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "no_option",
+        "say": "So what can you do? I cannot stay here all day.",
+        "audio": "88-roadside-electric-car-out-of-charge/no_option.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "back_tow",
+        "say": "Okay. Then the tow truck again. To the fast charger, not my house.",
+        "audio": "88-roadside-electric-car-out-of-charge/back_tow.wav"
+      },
+      {
+        "id": "home_wrong",
+        "say": "No! Not my house. The fast charger.",
+        "audio": "88-roadside-electric-car-out-of-charge/home_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "eta",
+        "say": "Yes, correct. How long must I wait?",
+        "audio": "88-roadside-electric-car-out-of-charge/eta.wav"
+      },
+      {
+        "id": "done",
+        "say": "Okay. Thank you very much. Goodbye.",
+        "audio": "88-roadside-electric-car-out-of-charge/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "tow_to_rapid_charger",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "It is okay. I will call my son.",
+        "audio": "88-roadside-electric-car-out-of-charge/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "safe",
+        "when": "The agent asks whether she is somewhere safe"
+      },
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "safe",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "which",
+        "when": "The agent asks which vehicle it is"
+      },
+      {
+        "from": "ident",
+        "to": "name_wrong",
+        "when": "The agent says or spells a surname other than Nguyen"
+      },
+      {
+        "from": "name_wrong",
+        "to": "which",
+        "when": "The agent asks which vehicle it is"
+      },
+      {
+        "from": "name_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong surname"
+      },
+      {
+        "from": "which",
+        "to": "niro",
+        "when": "The agent asks which of the two Kias"
+      },
+      {
+        "from": "which",
+        "to": "assumed",
+        "when": "The agent assumes it is the Picanto"
+      },
+      {
+        "from": "which",
+        "to": "where",
+        "when": "The agent works out it is the electric e-Niro and asks where she is"
+      },
+      {
+        "from": "niro",
+        "to": "where",
+        "when": "The agent asks where she is"
+      },
+      {
+        "from": "assumed",
+        "to": "where",
+        "when": "The agent confirms the e-Niro and asks where she is"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent still refers to the Picanto"
+      },
+      {
+        "from": "where",
+        "to": "home",
+        "when": "The agent asks what she would like done or offers a tow"
+      },
+      {
+        "from": "home",
+        "to": "charger",
+        "when": "The agent starts to confirm a tow to her home address"
+      },
+      {
+        "from": "charger",
+        "to": "van",
+        "when": "The agent says a mobile charging van could top the car up where it is"
+      },
+      {
+        "from": "charger",
+        "to": "eta",
+        "when": "The agent confirms a tow to the nearest rapid charger"
+      },
+      {
+        "from": "van",
+        "to": "believed",
+        "when": "The agent says the charging van is booked"
+      },
+      {
+        "from": "van",
+        "to": "back_tow",
+        "when": "The agent says the van is not available and offers the tow instead"
+      },
+      {
+        "from": "van",
+        "to": "no_option",
+        "when": "The agent says the van is not available and offers nothing"
+      },
+      {
+        "from": "no_option",
+        "to": "back_tow",
+        "when": "The agent offers the tow"
+      },
+      {
+        "from": "no_option",
+        "to": "gave_up",
+        "when": "The agent still offers nothing"
+      },
+      {
+        "from": "back_tow",
+        "to": "eta",
+        "when": "The agent confirms a tow to the nearest rapid charger"
+      },
+      {
+        "from": "back_tow",
+        "to": "home_wrong",
+        "when": "The agent says the tow is to her home"
+      },
+      {
+        "from": "home_wrong",
+        "to": "eta",
+        "when": "The agent confirms a tow to the nearest rapid charger"
+      },
+      {
+        "from": "home_wrong",
+        "to": "gave_up",
+        "when": "The agent says her home again"
+      },
+      {
+        "from": "eta",
+        "to": "done",
+        "when": "The agent gives an arrival time"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "echo",
+        "when": "The agent stops mid-sentence or asks whether the caller said something",
+        "say": "I did not say anything. Please continue.",
+        "audio": "88-roadside-electric-car-out-of-charge/reaction-echo.wav",
+        "max_visits": 3,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I told you already. Nguyen. L E six five, two W Q.",
+        "audio": "88-roadside-electric-car-out-of-charge/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, told you already. Nguyen. L, E, six, five, two, W, Q.",
+          "audio": "88-roadside-electric-car-out-of-charge/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "88-roadside-electric-car-out-of-charge/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "88-roadside-electric-car-out-of-charge/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "88-roadside-electric-car-out-of-charge/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "88-roadside-electric-car-out-of-charge/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "88-roadside-electric-car-out-of-charge/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "88-roadside-electric-car-out-of-charge/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "88-roadside-electric-car-out-of-charge/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "88-roadside-electric-car-out-of-charge/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "88-roadside-electric-car-out-of-charge/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "88-roadside-electric-car-out-of-charge/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 21,
+    "edges": 27,
+    "endings": 3,
+    "shortest_path": 9,
+    "branch_points": 10
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_member",
+      "input_parameters": {
+        "surname": "Nguyen",
+        "postcode": "LE65 2WQ"
+      }
+    },
+    {
+      "name": "book_mobile_charge",
+      "input_parameters": {
+        "vehicle": "Kia e-Niro",
+        "location": "Fernbrook Retail Park"
+      }
+    },
+    {
+      "name": "book_tow",
+      "input_parameters": {
+        "vehicle": "Kia e-Niro",
+        "pickup": "Fernbrook Retail Park",
+        "destination": "nearest_rapid_charger"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_tow",
+      "input_parameters": {
+        "destination": "home"
+      }
+    },
+    {
+      "name": "book_tow",
+      "input_parameters": {
+        "vehicle": "Kia Picanto"
+      }
+    },
+    {
+      "name": "book_mobile_charge",
+      "input_parameters": {
+        "vehicle": "Kia Picanto"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_member",
+          "input_parameters": {
+            "surname": "Nguyen",
+            "postcode": "LE65 2WQ"
+          }
+        },
+        {
+          "name": "book_mobile_charge",
+          "input_parameters": {
+            "vehicle": "Kia e-Niro",
+            "location": "Fernbrook Retail Park"
+          }
+        },
+        {
+          "name": "book_tow",
+          "input_parameters": {
+            "vehicle": "Kia e-Niro",
+            "pickup": "Fernbrook Retail Park",
+            "destination": "nearest_rapid_charger"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_tow",
+          "input_parameters": {
+            "destination": "home"
+          }
+        },
+        {
+          "name": "book_tow",
+          "input_parameters": {
+            "vehicle": "Kia Picanto"
+          }
+        },
+        {
+          "name": "book_mobile_charge",
+          "input_parameters": {
+            "vehicle": "Kia Picanto"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_van_booking",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

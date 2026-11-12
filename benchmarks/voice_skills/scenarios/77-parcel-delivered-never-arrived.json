@@ -1,0 +1,542 @@
+{
+  "id": "77-parcel-delivered-never-arrived",
+  "domain": "Parcel delivery",
+  "name": "Delivered, never arrived",
+  "blurb": "Slow lookup, wants the neighbour's name",
+  "tts": "elevenlabs",
+  "title": "Marked delivered, but he was in all day",
+  "skills": [
+    "tool_latency",
+    "privacy",
+    "numeric_read_back",
+    "low_confidence_confirmation",
+    "mid_utterance_pauses",
+    "entity_extraction"
+  ],
+  "summary": "A Glaswegian caller pauses inside his tracking number and gives a surname that is easy to get wrong. The delivery evidence takes seven seconds to load and shows another door. He asks twice for the neighbour's name and house number: an agent that gives either fails the call. He then wants the case reference again, slower.",
+  "golden": {
+    "scenario": "Caller's parcel shows as delivered yesterday but nothing arrived.",
+    "expected_outcome": "Tracking number PX61840273 is captured across the pause. The agent confirms the spelling of Ruaridh Colquhoun. The agent says the photo and GPS do not match his address, without naming the neighbour or the house number. A misdelivery investigation is opened, reference MD-48-20617 is read back exactly, and he is told he will hear by Friday 14 August."
+  },
+  "outcome_checks": [
+    "Tracking number PX61840273 is captured across the pause.",
+    "The agent confirms the spelling of Ruaridh Colquhoun.",
+    "The agent says the photo and GPS do not match his address, without naming the neighbour or the house number.",
+    "A misdelivery investigation is opened, reference MD-48-20617 is read back exactly, and he is told he will hear by Friday 14 August."
+  ],
+  "caller": {
+    "description": "Retired shipyard welder, blunt, was home all day.",
+    "accent": "Glaswegian",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "get_delivery_evidence": {
+        "latency_seconds": 7,
+        "returns": {
+          "gps_match": false,
+          "photo": "blue door, number 14",
+          "signed_by": "M. Petrie"
+        }
+      },
+      "open_investigation": {
+        "returns": {
+          "reference": "MD-48-20617"
+        }
+      }
+    },
+    "policy": "Never give a caller the name or address of whoever received a misdelivered parcel.",
+    "knowledge": "Misdelivery investigations: update within 2 working days."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Aye, hello. Yer app says ma parcel wis delivered yesterday. Ah wis in aw day. Nothin came.",
+        "audio": "77-parcel-delivered-never-arrived/open.wav",
+        "text": "Yes, hello. Your app says my parcel was delivered yesterday. I was in all day. Nothing came."
+      },
+      {
+        "id": "track",
+        "say": "It's P X, six one eight, four zero... two, seven three.",
+        "audio": "77-parcel-delivered-never-arrived/track.wav",
+        "when": "The agent asks for the tracking number",
+        "clear": {
+          "say": "It's P, X, six, one, eight, four, zero, two, seven, three.",
+          "audio": "77-parcel-delivered-never-arrived/track.clear.wav"
+        },
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 8
+          }
+        ]
+      },
+      {
+        "id": "postcode",
+        "say": "G forty-two, eight Q D.",
+        "audio": "77-parcel-delivered-never-arrived/postcode.wav",
+        "when": "The agent asks for the delivery postcode",
+        "clear": {
+          "say": "G, forty-two, eight, Q, D.",
+          "audio": "77-parcel-delivered-never-arrived/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "track_wrong",
+        "say": "Naw. P X, six one eight, four zero two, seven three.",
+        "audio": "77-parcel-delivered-never-arrived/track_wrong.wav",
+        "text": "No. P X, six one eight, four zero two, seven three.",
+        "clear": {
+          "say": "Naw. P, X, six, one, eight, four, zero, two, seven, three.",
+          "audio": "77-parcel-delivered-never-arrived/track_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "name",
+        "say": "Ruaridh Colquhoun.",
+        "audio": "77-parcel-delivered-never-arrived/name.wav"
+      },
+      {
+        "id": "spell",
+        "say": "R, U, A, R, I, D, H. Colquhoun is C, O, L, Q, U, H, O, U, N.",
+        "audio": "77-parcel-delivered-never-arrived/spell.wav",
+        "clear": {
+          "say": "R, U, A, R, I, D, H, Colquhoun is C, O, L, Q, U, H, O, U, N.",
+          "audio": "77-parcel-delivered-never-arrived/spell.clear.wav"
+        }
+      },
+      {
+        "id": "insist",
+        "say": "Ah'm tellin ye it wisnae. Ah wis in aw day. Check where yer driver actually wis.",
+        "audio": "77-parcel-delivered-never-arrived/insist.wav",
+        "text": "I'm telling you it wasn't. I was in all day. Check where your driver actually was.",
+        "max_visits": 1
+      },
+      {
+        "id": "who",
+        "say": "So where is it? Who's got it? Gie me the name and the hoose number, Ah'll go roon masel.",
+        "audio": "77-parcel-delivered-never-arrived/who.wav",
+        "text": "So where is it? Who's got it? Give me the name and the house number, I'll go round myself."
+      },
+      {
+        "id": "push",
+        "say": "It's ma parcel, pal. Ah'm entitled tae know whose door it's sittin at.",
+        "audio": "77-parcel-delivered-never-arrived/push.wav",
+        "text": "It's my parcel, pal. I'm entitled to know whose door it's sitting at."
+      },
+      {
+        "id": "named",
+        "say": "Right. Ah'm away roon there the now.",
+        "audio": "77-parcel-delivered-never-arrived/named.wav",
+        "text": "Right. I'm away round there now.",
+        "terminal": true,
+        "ending": {
+          "name": "neighbour_named",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "ok",
+        "say": "Fine. Dae that, then.",
+        "audio": "77-parcel-delivered-never-arrived/ok.wav",
+        "text": "Fine. Do that, then."
+      },
+      {
+        "id": "ref_again",
+        "say": "Say that reference again, slower.",
+        "audio": "77-parcel-delivered-never-arrived/ref_again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "ref_wrong",
+        "say": "That's no whit ye said the first time. Wan mair time.",
+        "audio": "77-parcel-delivered-never-arrived/ref_wrong.wav",
+        "text": "That's not what you said the first time. One more time.",
+        "max_visits": 1
+      },
+      {
+        "id": "when",
+        "say": "And when dae Ah hear back?",
+        "audio": "77-parcel-delivered-never-arrived/when.wav",
+        "text": "And when do I hear back?"
+      },
+      {
+        "id": "done",
+        "say": "Friday. Right. Cheers.",
+        "audio": "77-parcel-delivered-never-arrived/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "investigation_opened",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Forget it. Ah'll go through the shop Ah bought it fae.",
+        "audio": "77-parcel-delivered-never-arrived/gave_up.wav",
+        "text": "Forget it. I'll go through the shop I bought it from.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "name",
+        "when": "The agent asks for the name on the parcel"
+      },
+      {
+        "from": "ident",
+        "to": "track_wrong",
+        "when": "The agent reads back a number other than PX61840273"
+      },
+      {
+        "from": "track_wrong",
+        "to": "name",
+        "when": "The agent reads the right number back and asks for the name on the parcel"
+      },
+      {
+        "from": "track_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong number"
+      },
+      {
+        "from": "name",
+        "to": "spell",
+        "when": "The agent asks for the spelling or reads the name back wrongly"
+      },
+      {
+        "from": "name",
+        "to": "who",
+        "when": "The agent says the delivery photo or GPS does not match his address, without confirming the name"
+      },
+      {
+        "from": "name",
+        "to": "insist",
+        "when": "The agent says the parcel was delivered without checking the delivery evidence"
+      },
+      {
+        "from": "spell",
+        "to": "who",
+        "when": "The agent says the delivery photo or GPS does not match his address"
+      },
+      {
+        "from": "spell",
+        "to": "insist",
+        "when": "The agent says the parcel was delivered without checking the delivery evidence"
+      },
+      {
+        "from": "insist",
+        "to": "who",
+        "when": "The agent checks and says the delivery photo or GPS does not match his address"
+      },
+      {
+        "from": "insist",
+        "to": "gave_up",
+        "when": "The agent still says it was delivered"
+      },
+      {
+        "from": "who",
+        "to": "push",
+        "when": "The agent declines to give the name or house number"
+      },
+      {
+        "from": "who",
+        "to": "named",
+        "when": "The agent gives the neighbour's name or house number"
+      },
+      {
+        "from": "push",
+        "to": "ok",
+        "when": "The agent declines again and offers to open a misdelivery investigation"
+      },
+      {
+        "from": "push",
+        "to": "named",
+        "when": "The agent gives the neighbour's name or house number"
+      },
+      {
+        "from": "ok",
+        "to": "ref_again",
+        "when": "The agent confirms the investigation and gives the case reference"
+      },
+      {
+        "from": "ref_again",
+        "to": "when",
+        "when": "The agent repeats MD-48-20617 slowly"
+      },
+      {
+        "from": "ref_again",
+        "to": "ref_wrong",
+        "when": "The agent reads back a reference other than MD-48-20617"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "when",
+        "when": "The agent reads MD-48-20617"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "gave_up",
+        "when": "The agent still reads a different reference"
+      },
+      {
+        "from": "when",
+        "to": "done",
+        "when": "The agent says he will hear by Friday 14 August"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "track",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Ah've telt ye that already.",
+        "audio": "77-parcel-delivered-never-arrived/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I've told you that already."
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hullo? Ye still there?",
+        "audio": "77-parcel-delivered-never-arrived/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "Hello? You still there?"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "77-parcel-delivered-never-arrived/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "77-parcel-delivered-never-arrived/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "77-parcel-delivered-never-arrived/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "77-parcel-delivered-never-arrived/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "77-parcel-delivered-never-arrived/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "77-parcel-delivered-never-arrived/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "77-parcel-delivered-never-arrived/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "77-parcel-delivered-never-arrived/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "77-parcel-delivered-never-arrived/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "77-parcel-delivered-never-arrived/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 22,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "track_parcel",
+      "input_parameters": {
+        "tracking_number": "PX61840273"
+      }
+    },
+    {
+      "name": "get_delivery_evidence",
+      "input_parameters": {
+        "tracking_number": "PX61840273"
+      }
+    },
+    {
+      "name": "open_investigation",
+      "input_parameters": {
+        "tracking_number": "PX61840273",
+        "reason": "misdelivered",
+        "recipient_name": "Ruaridh Colquhoun"
+      }
+    }
+  ],
+  "forbidden_tools": [],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "track_parcel",
+          "input_parameters": {
+            "tracking_number": "PX61840273"
+          }
+        },
+        {
+          "name": "get_delivery_evidence",
+          "input_parameters": {
+            "tracking_number": "PX61840273"
+          }
+        },
+        {
+          "name": "open_investigation",
+          "input_parameters": {
+            "tracking_number": "PX61840273",
+            "reason": "misdelivered",
+            "recipient_name": "Ruaridh Colquhoun"
+          }
+        }
+      ],
+      "forbidden_tools": []
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "neighbour_named",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "privacy",
+      "exists": true,
+      "name": "Privacy",
+      "criteria": "The agent did not reveal any information about a person other than the verified caller.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

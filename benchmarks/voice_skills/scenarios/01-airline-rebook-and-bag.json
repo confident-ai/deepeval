@@ -1,0 +1,635 @@
+{
+  "id": "01-airline-rebook-and-bag",
+  "domain": "Airline",
+  "name": "Rebook and add a bag",
+  "blurb": "Windy tarmac, changes his mind",
+  "tts": "elevenlabs",
+  "title": "Rebook a cancelled flight from a windy tarmac, then add a bag",
+  "skills": [
+    "entity_extraction",
+    "correction_handling",
+    "overlapping_speech",
+    "changing_requests",
+    "tool_latency",
+    "multi_task",
+    "numeric_read_back"
+  ],
+  "summary": "A fast Glaswegian caller on a windy airport forecourt rebooks a cancelled flight, corrects the date mid-sentence, cuts into the read-back to switch flights, then adds a hold bag and checks the email on file. If the agent offers the wrong day, books the wrong flight or goes quiet during the search, he pushes back, and gives up if it keeps happening.",
+  "golden": {
+    "scenario": "Caller's flight to Lisbon tomorrow was cancelled. They rebook, add a bag and ask for confirmation by email.",
+    "expected_outcome": "Booking K7QX2M is moved to flight TP1331 on Friday 14 August, not the 07:10 the caller first picked. One 23 kg hold bag is added and charged to the card on the booking. The agent reads the email address back correctly and sends the confirmation there."
+  },
+  "outcome_checks": [
+    "Booking K7QX2M is moved to flight TP1331 on Friday 14 August, not the 07:10 the caller first picked.",
+    "One 23 kg hold bag is added and charged to the card on the booking.",
+    "The agent reads the email address back correctly and sends the confirmation there."
+  ],
+  "caller": {
+    "description": "Retired shipyard worker, impatient, outdoors.",
+    "accent": "Glaswegian Scottish",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "mobile",
+    "static": 0.2
+  },
+  "background": {
+    "audio": "wind-and-jets.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "search_flights": {
+        "latency_seconds": 6,
+        "returns": [
+          {
+            "flight_number": "TP1327",
+            "departs": "07:10"
+          },
+          {
+            "flight_number": "TP1331",
+            "departs": "13:45"
+          }
+        ]
+      }
+    },
+    "booking": {
+      "email": "d.mcallister52@mailbox.example",
+      "card_on_file": true
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Aye, hiya. My flight tae Lisbon the morra's been cancelled. I need on another one.",
+        "audio": "01-airline-rebook-and-bag/open.wav",
+        "text": "Yes, hello. My flight to Lisbon tomorrow's been cancelled. I need on another one."
+      },
+      {
+        "id": "ref",
+        "say": "It's K, seven, Q, X, two, M.",
+        "audio": "01-airline-rebook-and-bag/ref.wav",
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's K, seven, Q, X, two, M.",
+          "audio": "01-airline-rebook-and-bag/ref.clear.wav"
+        }
+      },
+      {
+        "id": "surname",
+        "say": "McAllister. M, C, capital A, double L, I, S, T, E, R.",
+        "audio": "01-airline-rebook-and-bag/surname.wav",
+        "when": "The agent asks for the surname",
+        "clear": {
+          "say": "McAllister. M, C, capital A, double L, I, S, T, E, R.",
+          "audio": "01-airline-rebook-and-bag/surname.clear.wav"
+        }
+      },
+      {
+        "id": "day",
+        "say": "Thursday the... naw, sorry, Friday the fourteenth. Morning if ye can.",
+        "audio": "01-airline-rebook-and-bag/day.wav",
+        "text": "Thursday the... no, sorry, Friday the fourteenth. Morning if you can.",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "wrong_day",
+        "say": "Naw, no Thursday. Friday. Friday the fourteenth.",
+        "audio": "01-airline-rebook-and-bag/wrong_day.wav",
+        "text": "No, not Thursday. Friday. Friday the fourteenth.",
+        "max_visits": 2
+      },
+      {
+        "id": "pick",
+        "say": "The first yin. The ten past seven.",
+        "audio": "01-airline-rebook-and-bag/pick.wav",
+        "text": "The first one. The ten past seven."
+      },
+      {
+        "id": "switch",
+        "say": "Wait, wait. Actually make it the afternoon one, the quarter tae two.",
+        "audio": "01-airline-rebook-and-bag/switch.wav",
+        "text": "Wait, wait. Actually make it the afternoon one, the quarter to two.",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 6,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "booked_wrong",
+        "say": "Naw! I said the afternoon one. Change it.",
+        "audio": "01-airline-rebook-and-bag/booked_wrong.wav",
+        "text": "No! I said the afternoon one. Change it.",
+        "max_visits": 1
+      },
+      {
+        "id": "confirm_pm",
+        "say": "Aye, that's the one, book it.",
+        "audio": "01-airline-rebook-and-bag/confirm_pm.wav",
+        "text": "Yes, that's the one, book it."
+      },
+      {
+        "id": "bag",
+        "say": "Aye, I need tae add a bag in the hold an' all.",
+        "audio": "01-airline-rebook-and-bag/bag.wav",
+        "text": "Yes, I need to add a bag in the hold as well."
+      },
+      {
+        "id": "bag_detail",
+        "say": "Just the one, twenty-three kilos. Go ahead.",
+        "audio": "01-airline-rebook-and-bag/bag_detail.wav"
+      },
+      {
+        "id": "pay",
+        "say": "Use the card that's on the booking.",
+        "audio": "01-airline-rebook-and-bag/pay.wav"
+      },
+      {
+        "id": "email",
+        "say": "Can ye send the confirmation tae ma email? What one have ye got?",
+        "audio": "01-airline-rebook-and-bag/email.wav",
+        "text": "Can you send the confirmation to my email? What one have you got?"
+      },
+      {
+        "id": "email_wrong",
+        "say": "Naw, that's no it. It's D dot McAllister, five two.",
+        "audio": "01-airline-rebook-and-bag/email_wrong.wav",
+        "text": "No, that's not it. It's D dot McAllister, five two.",
+        "clear": {
+          "say": "Naw, that's no it. It's D, dot McAllister, five, two.",
+          "audio": "01-airline-rebook-and-bag/email_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "email_ok",
+        "say": "Aye, that's it. Send it there.",
+        "audio": "01-airline-rebook-and-bag/email_ok.wav",
+        "text": "Yes, that's it. Send it there."
+      },
+      {
+        "id": "done",
+        "say": "Cheers. Bye.",
+        "audio": "01-airline-rebook-and-bag/done.wav",
+        "text": "Thanks. Bye.",
+        "terminal": true,
+        "ending": {
+          "name": "rebooked_with_bag",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Och, forget it. I'll go tae the desk.",
+        "audio": "01-airline-rebook-and-bag/gave_up.wav",
+        "text": "Oh, forget it. I'll go to the desk.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "day",
+        "when": "The agent asks when the caller wants to travel"
+      },
+      {
+        "from": "day",
+        "to": "pick",
+        "when": "The agent offers flights on Friday the fourteenth"
+      },
+      {
+        "from": "day",
+        "to": "wrong_day",
+        "when": "The agent offers flights on Thursday"
+      },
+      {
+        "from": "wrong_day",
+        "to": "pick",
+        "when": "The agent offers flights on Friday the fourteenth"
+      },
+      {
+        "from": "wrong_day",
+        "to": "gave_up",
+        "when": "The agent offers Thursday again"
+      },
+      {
+        "from": "pick",
+        "to": "switch",
+        "when": "The agent starts reading back the 07:10 flight"
+      },
+      {
+        "from": "pick",
+        "to": "booked_wrong",
+        "when": "The agent says the 07:10 is booked without reading it back"
+      },
+      {
+        "from": "switch",
+        "to": "confirm_pm",
+        "when": "The agent reads back the 13:45 flight and asks to confirm"
+      },
+      {
+        "from": "switch",
+        "to": "booked_wrong",
+        "when": "The agent says the 07:10 is booked"
+      },
+      {
+        "from": "switch",
+        "to": "bag",
+        "when": "The agent confirms the 13:45 is booked and asks if there is anything else"
+      },
+      {
+        "from": "booked_wrong",
+        "to": "confirm_pm",
+        "when": "The agent reads back the 13:45 flight and asks to confirm"
+      },
+      {
+        "from": "booked_wrong",
+        "to": "bag",
+        "when": "The agent confirms it is changed to the 13:45 and asks if there is anything else"
+      },
+      {
+        "from": "booked_wrong",
+        "to": "gave_up",
+        "when": "The agent says it cannot change the booking again"
+      },
+      {
+        "from": "confirm_pm",
+        "to": "bag",
+        "when": "The agent confirms the booking and asks if there is anything else"
+      },
+      {
+        "from": "bag",
+        "to": "bag_detail",
+        "when": "The agent gives the bag price or asks how many"
+      },
+      {
+        "from": "bag_detail",
+        "to": "pay",
+        "when": "The agent asks how to pay"
+      },
+      {
+        "from": "bag_detail",
+        "to": "email",
+        "when": "The agent confirms the bag is added"
+      },
+      {
+        "from": "pay",
+        "to": "email",
+        "when": "The agent confirms the bag is added"
+      },
+      {
+        "from": "email",
+        "to": "email_ok",
+        "when": "The agent reads d.mcallister52@mailbox.example"
+      },
+      {
+        "from": "email",
+        "to": "email_wrong",
+        "when": "The agent reads a different email address"
+      },
+      {
+        "from": "email_wrong",
+        "to": "email_ok",
+        "when": "The agent reads the correct address"
+      },
+      {
+        "from": "email_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the wrong address again"
+      },
+      {
+        "from": "email_ok",
+        "to": "done",
+        "when": "The agent confirms the email is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've telt ye that already. K, seven, Q, X, two, M. McAllister.",
+        "audio": "01-airline-rebook-and-bag/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I've told you that already. K, seven, Q, X, two, M. McAllister.",
+        "clear": {
+          "say": "I've telt ye that already. K, seven, Q, X, two, M, McAllister.",
+          "audio": "01-airline-rebook-and-bag/reaction-reask.clear.wav"
+        }
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Ye still there?",
+        "audio": "01-airline-rebook-and-bag/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "Hello? You still there?"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "01-airline-rebook-and-bag/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "01-airline-rebook-and-bag/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "01-airline-rebook-and-bag/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "01-airline-rebook-and-bag/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "01-airline-rebook-and-bag/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "01-airline-rebook-and-bag/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "01-airline-rebook-and-bag/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "01-airline-rebook-and-bag/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "01-airline-rebook-and-bag/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "01-airline-rebook-and-bag/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 19,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "K7QX2M",
+        "surname": "McAllister"
+      }
+    },
+    {
+      "name": "search_flights",
+      "input_parameters": {
+        "origin": "GLA",
+        "destination": "LIS",
+        "date": "2026-08-14"
+      }
+    },
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "booking_reference": "K7QX2M",
+        "flight_number": "TP1331",
+        "date": "2026-08-14"
+      }
+    },
+    {
+      "name": "add_baggage",
+      "input_parameters": {
+        "booking_reference": "K7QX2M",
+        "pieces": 1,
+        "weight_kg": 23
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "booking_reference": "K7QX2M",
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "flight_number": "TP1327"
+      }
+    },
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "K7QX2M",
+            "surname": "McAllister"
+          }
+        },
+        {
+          "name": "search_flights",
+          "input_parameters": {
+            "origin": "GLA",
+            "destination": "LIS",
+            "date": "2026-08-14"
+          }
+        },
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "booking_reference": "K7QX2M",
+            "flight_number": "TP1331",
+            "date": "2026-08-14"
+          }
+        },
+        {
+          "name": "add_baggage",
+          "input_parameters": {
+            "booking_reference": "K7QX2M",
+            "pieces": 1,
+            "weight_kg": 23
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "booking_reference": "K7QX2M",
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "flight_number": "TP1327"
+          }
+        },
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

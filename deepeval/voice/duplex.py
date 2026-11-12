@@ -4,13 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
 import time
+import zlib
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from deepeval.dataset import ConversationalGolden
-from deepeval.test_case import Audio, Turn
+from deepeval.test_case import Audio, ToolCall, Turn
+from deepeval.models.tts._frames import pcm_chunk
 from deepeval.voice.background import BackgroundMixer, mix_background
+from deepeval.voice.caller_speech import _scaled
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.floor_control import FloorController, FloorState
 from deepeval.voice.streaming import PcmRecorder
@@ -40,6 +44,14 @@ _AGENT_CHARS_PER_SECOND = 13.0
 
 _SEMANTIC_EOT_SILENCE_MS = 500.0
 _STT_ON_SILENCE_MS = 200.0
+
+# Seconds of agent speech between one backchannel and the next.
+BACKCHANNEL_GAP_SECONDS = {"rare": 8.0, "normal": 5.0, "frequent": 3.0}
+BACKCHANNEL_WORDS = ("Mm-hmm.", "Okay.", "Yeah.", "Right.", "Uh-huh.")
+
+# How late and how loud the agent's own voice comes back on an echoing line.
+ECHO_DELAY_SECONDS = 0.25
+ECHO_GAIN = 0.35
 
 
 def _looks_complete(text: str) -> bool:
@@ -88,6 +100,7 @@ class _AgentUtterance:
     pcm: bytearray = field(default_factory=bytearray)
     transcript: str = ""
     provider_transcript_parts: List[str] = field(default_factory=list)
+    tools_called: List[ToolCall] = field(default_factory=list)
     first_audio_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
@@ -102,6 +115,10 @@ class _AgentUtterance:
     speech_pcm_len: int = 0
     transcribed_pcm_len: int = 0
 
+    # What the caller said under this reply without taking the floor.
+    backchannels: List[Dict] = field(default_factory=list)
+    last_backchannel_pcm_len: int = 0
+
     def reset(
         self, *, index: int, sent_at: float, awaiting_end_signal: bool
     ) -> None:
@@ -111,6 +128,7 @@ class _AgentUtterance:
         self.pcm = bytearray()
         self.transcript = ""
         self.provider_transcript_parts = []
+        self.tools_called = []
         self.first_audio_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
@@ -119,6 +137,8 @@ class _AgentUtterance:
         self.last_stt_pcm_len = 0
         self.speech_pcm_len = 0
         self.transcribed_pcm_len = 0
+        self.backchannels = []
+        self.last_backchannel_pcm_len = 0
 
 
 @dataclass
@@ -196,6 +216,7 @@ class DuplexExchange:
         language: str,
         a_generate_schema,
         call_started_at: float,
+        tts_kwargs: Optional[dict] = None,
     ):
         self.connector = connector
         self.tts_model = tts_model
@@ -207,14 +228,42 @@ class DuplexExchange:
         self.a_generate_schema = a_generate_schema
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
-        self.tts_kwargs = (
-            golden.persona.tts_kwargs() if golden.persona is not None else {}
-        )
+        if tts_kwargs is None:
+            tts_kwargs = (
+                golden.persona.tts_kwargs(tts_model)
+                if golden.persona is not None
+                else {}
+            )
+        self.tts_kwargs = tts_kwargs
         self.background_noise = (
             golden.persona.background_noise
             if golden.persona is not None
             else None
         )
+        persona = golden.persona
+        patterns = persona.speech_patterns if persona is not None else None
+        self.backchannels = (
+            patterns.backchannels if patterns is not None else None
+        )
+        line = persona.line if persona is not None else None
+        self.echo = line is not None and line.echo
+        self.rng = random.Random(
+            zlib.crc32(
+                f"{persona.name}|{persona.characteristics}".encode()
+                if persona is not None
+                else b""
+            )
+        )
+        self._backchannel_clips: Dict[str, Audio] = {}
+
+    async def _backchannel_audio(self, text: str) -> Tuple[Audio, float]:
+        """One backchannel's audio, synthesized once and reused."""
+        if text in self._backchannel_clips:
+            return self._backchannel_clips[text], 0.0
+        audio, cost = await self.tts_model.a_synthesize(text, **self.tts_kwargs)
+        audio = mix_background(audio, self.background_noise)
+        self._backchannel_clips[text] = audio
+        return audio, cost or 0.0
 
     async def run(
         self,
@@ -241,6 +290,9 @@ class DuplexExchange:
         pending_decision: Optional[InterruptDecision] = None
         stt_task: Optional[asyncio.Task] = None
         event_task: Optional[asyncio.Task] = None
+        backchannel_task: Optional[asyncio.Task] = None
+        echo_frames: Optional[asyncio.Queue] = None
+        echo_task: Optional[asyncio.Task] = None
         last_judge_at: Optional[float] = None
         # Whether the transport has ever handed us text. Sticky for the whole
         # exchange: it describes the transport, not this reply.
@@ -413,6 +465,96 @@ class DuplexExchange:
             )
             await _speak_barge(barge)
 
+        def _start_echo() -> None:
+            """Send the agent's own voice back up the line as it arrives.
+
+            One stream for as long as the caller is quiet: the transport keeps
+            a single uplink, so anything the caller says ends it first and it
+            starts again once they are done.
+            """
+            nonlocal echo_frames, echo_task
+            frames: asyncio.Queue = asyncio.Queue()
+            frames.put_nowait(
+                b"\x00\x00" * int(self.sample_rate * ECHO_DELAY_SECONDS)
+            )
+
+            async def _chunks():
+                while (pcm := await frames.get()) is not None:
+                    yield pcm_chunk(pcm, sample_rate=self.sample_rate)
+
+            echo_frames = frames
+            echo_task = asyncio.create_task(
+                self.connector.stream_uplink_chunks(
+                    _chunks(), trailing_silence=False
+                )
+            )
+
+        async def _stop_echo() -> None:
+            """End the echo stream before the caller's own speech goes out.
+
+            Waited on rather than left to the transport, which reopens the same
+            uplink for the next send: an echo still running would then resume
+            and interleave with the caller's words.
+            """
+            nonlocal echo_frames, echo_task
+            if echo_task is None:
+                return
+            echo_frames.put_nowait(None)
+            await self.connector.stop_uplink()
+            try:
+                await echo_task
+            except Exception:
+                logger.exception("Echo failed")
+            echo_frames, echo_task = None, None
+
+        def _due_backchannel() -> bool:
+            """The agent has talked long enough since the last acknowledgement.
+
+            Counted in agent speech rather than wall time, so a reply full of
+            pauses is not nodded along to more than a steady one.
+            """
+            if (
+                self.backchannels is None
+                or backchannel_task is not None
+                or barge is not None
+                or not self.floor.agent_speaking
+                or self.floor.user_uplink_active
+            ):
+                return False
+            spoken_s = (
+                (utterance.speech_pcm_len - utterance.last_backchannel_pcm_len)
+                / 2
+                / self.sample_rate
+            )
+            return spoken_s >= BACKCHANNEL_GAP_SECONDS[self.backchannels]
+
+        def _start_backchannel() -> asyncio.Task:
+            """Acknowledge the agent without taking the floor.
+
+            The floor controller is left alone: nothing about a backchannel is
+            an attempt to speak, so an agent that stops for it has mistaken an
+            acknowledgement for an interruption, and the turn records that.
+            """
+            text = self.rng.choice(BACKCHANNEL_WORDS)
+            utterance.last_backchannel_pcm_len = utterance.speech_pcm_len
+            utterance.backchannels.append(
+                {
+                    "content": text,
+                    "offset_seconds": round(
+                        len(utterance.pcm) / 2 / self.sample_rate, 2
+                    ),
+                }
+            )
+
+            async def _say() -> None:
+                audio, cost = await self._backchannel_audio(text)
+                result.tts_cost += cost
+                await self.connector.stream_uplink(
+                    audio, trailing_silence=False
+                )
+
+            return asyncio.create_task(_say())
+
         def _start_barge(utterance: str, *, frustrated: bool) -> _Barge:
             barge = _Barge(utterance=utterance, frustrated=frustrated)
             barge.task = asyncio.create_task(_speak_barge(barge))
@@ -487,7 +629,12 @@ class DuplexExchange:
                 provider_transcript=(
                     " ".join(utterance.provider_transcript_parts) or None
                 ),
-                metadata=metadata,
+                tools_called=list(utterance.tools_called) or None,
+                metadata=(
+                    {**(metadata or {}), "backchannels": utterance.backchannels}
+                    if utterance.backchannels
+                    else metadata
+                ),
             )
             # Place the reply where it began rather than at the end: a barge is
             # appended the moment it fires, so appending here would record the
@@ -587,13 +734,24 @@ class DuplexExchange:
                         logger.exception("Barge failed")
                     barge = None
 
+                if backchannel_task is not None and backchannel_task.done():
+                    try:
+                        backchannel_task.result()
+                    except Exception:
+                        logger.exception("Backchannel failed")
+                    backchannel_task = None
+
+                # A barge waits for a backchannel still going out: one caller
+                # cannot say two things on the line at once.
                 if (
                     pending_decision is not None
                     and pending_decision.should_interrupt
                     and self.floor.can_run_judge
                     and pending_decision.utterance
                     and barge is None
+                    and backchannel_task is None
                 ):
+                    await _stop_echo()
                     barge = _start_barge(
                         pending_decision.utterance,
                         frustrated=self.floor.frustrated,
@@ -634,6 +792,7 @@ class DuplexExchange:
                     # Ask the judge once more, in frustration, for something to
                     # cut back in with. Off the loop for the same reason as any
                     # other barge: the agent has the floor until this is spoken.
+                    await _stop_echo()
                     barge = _Barge(utterance="", frustrated=True)
                     barge.task = asyncio.create_task(
                         _speak_frustrated_barge(barge)
@@ -672,6 +831,20 @@ class DuplexExchange:
                         event.provider_transcript
                     )
 
+                if event.tools_called:
+                    utterance.tools_called.extend(event.tools_called)
+
+                if event.audio and self.echo:
+                    if (
+                        echo_task is None
+                        and barge is None
+                        and backchannel_task is None
+                        and not self.floor.user_uplink_active
+                    ):
+                        _start_echo()
+                    if echo_frames is not None:
+                        echo_frames.put_nowait(_scaled(event.audio, ECHO_GAIN))
+
                 if event.audio:
                     silent = audio_utils.is_silent(
                         event.audio, self.connector.silence_threshold_rms
@@ -696,6 +869,9 @@ class DuplexExchange:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
                         utterance.speech_pcm_len = len(utterance.pcm)
+                        if _due_backchannel():
+                            await _stop_echo()
+                            backchannel_task = _start_backchannel()
                     else:
                         if await _advance_end_of_turn(frame_ms, arrived_at):
                             exchange_done = True
@@ -741,8 +917,12 @@ class DuplexExchange:
                         # Keep listening for follow-up agent speech briefly.
                         continue
                     elif utterance.started:
-                        # The agent said it was done and nobody was barging.
-                        await _finalize_assistant(interrupted=False)
+                        # Nobody was barging. The agent either finished or
+                        # stopped for something it heard, such as its own
+                        # voice coming back down the line.
+                        await _finalize_assistant(
+                            interrupted=event.interrupted
+                        )
                         exchange_done = True
                         continue
 
@@ -789,6 +969,12 @@ class DuplexExchange:
         finally:
             if judge_task is not None and not judge_task.done():
                 judge_task.cancel()
+            await _stop_echo()
+            if backchannel_task is not None:
+                try:
+                    await backchannel_task
+                except Exception:
+                    logger.exception("Backchannel failed during cleanup")
             if barge is not None:
                 if barge.turn is None and not barge.task.done():
                     # The agent finished while this was still being synthesized,

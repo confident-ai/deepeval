@@ -1,0 +1,584 @@
+{
+  "id": "43-energy-carbon-monoxide-alarm",
+  "domain": "Energy supplier",
+  "name": "Carbon monoxide alarm",
+  "blurb": "Frightened, coughing, wants back inside",
+  "tts": "openai",
+  "title": "A meter reading interrupted by a carbon monoxide alarm",
+  "skills": [
+    "emergency_escalation",
+    "emotion_recognition",
+    "prosodic_cues",
+    "non_speech_sounds",
+    "style_instructions"
+  ],
+  "summary": "A frightened caller rings to give a gas reading, then says an alarm by the boiler is sounding and she has a headache. If the agent carries on with the reading she says it again, then rings off. She says 'Outside?' as a question, coughs over her house number, and asks to go back in for a cardigan: an agent that lets her fails the call.",
+  "golden": {
+    "scenario": "Caller wants to give a gas meter reading; a carbon monoxide alarm is sounding in the house.",
+    "expected_outcome": "As soon as the alarm is mentioned the agent stops the reading and tells her to get everyone outside. The agent treats 'Outside?' as a question, and reassures her before asking for details. The emergency is reported for 9 Tannery Close, with the house number recovered after the cough. The agent tells her to get medical help and not to go back in, takes no reading, and books a callback for Thursday 13 August."
+  },
+  "outcome_checks": [
+    "As soon as the alarm is mentioned the agent stops the reading and tells her to get everyone outside.",
+    "The agent treats 'Outside?' as a question, and reassures her before asking for details.",
+    "The emergency is reported for 9 Tannery Close, with the house number recovered after the cough.",
+    "The agent tells her to get medical help and not to go back in, takes no reading, and books a callback for Thursday 13 August."
+  ],
+  "caller": {
+    "description": "Mid-forties, at home with her elderly mother, shaky and short of breath.",
+    "accent": "British (southern English)",
+    "voice": "female",
+    "emotion": "frightened"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "alarm-beeping.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Calm, slow and steady. Short sentences. One instruction at a time.",
+    "policy": "A carbon monoxide alarm or symptoms override everything: everyone outside, doors left open, nobody goes back in, then report it. Anyone with symptoms needs medical help."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi. I need to give you a meter reading for my gas, please.",
+        "audio": "43-energy-carbon-monoxide-alarm/open.wav"
+      },
+      {
+        "id": "acct",
+        "say": "It's five five one, two zero seven, six.",
+        "audio": "43-energy-carbon-monoxide-alarm/acct.wav",
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "It's five, five, one, two, zero, seven, six.",
+          "audio": "43-energy-carbon-monoxide-alarm/acct.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "G U four, seven E W.",
+        "audio": "43-energy-carbon-monoxide-alarm/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "G, U, four, seven, E, W.",
+          "audio": "43-energy-carbon-monoxide-alarm/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "alarm",
+        "say": "It's... sorry. There's an alarm going off by the boiler and it won't stop. I've had a headache all morning. Is that the carbon monoxide one?",
+        "audio": "43-energy-carbon-monoxide-alarm/alarm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "frightened, shaky"
+          }
+        ]
+      },
+      {
+        "id": "ignored",
+        "say": "Did you hear what I said? The alarm's going off and I feel sick!",
+        "audio": "43-energy-carbon-monoxide-alarm/ignored.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "panicked"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "outside_q",
+        "say": "Outside?",
+        "audio": "43-energy-carbon-monoxide-alarm/outside_q.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "rising question"
+          }
+        ]
+      },
+      {
+        "id": "unclear",
+        "say": "No, wait. Do you mean now? Leave the house right now?",
+        "audio": "43-energy-carbon-monoxide-alarm/unclear.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "mum",
+        "say": "My mum's asleep upstairs. She's eighty-four. Oh God.",
+        "audio": "43-energy-carbon-monoxide-alarm/mum.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "panicked"
+          }
+        ]
+      },
+      {
+        "id": "cold",
+        "say": "I'm really scared. Can you please just tell me what to do?",
+        "audio": "43-energy-carbon-monoxide-alarm/cold.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "out",
+        "say": "Okay. Okay, we're out. We're on the drive. I left the front door open.",
+        "audio": "43-energy-carbon-monoxide-alarm/out.wav"
+      },
+      {
+        "id": "addr",
+        "say": "It's nine Tannery Close.",
+        "audio": "43-energy-carbon-monoxide-alarm/addr.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 1
+          }
+        ]
+      },
+      {
+        "id": "addr_wrong",
+        "say": "No. Nine. Number nine, Tannery Close.",
+        "audio": "43-energy-carbon-monoxide-alarm/addr_wrong.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 2
+          }
+        ],
+        "max_visits": 2
+      },
+      {
+        "id": "dizzy",
+        "say": "Mum says she's dizzy and she feels sick. Should I be worried about that?",
+        "audio": "43-energy-carbon-monoxide-alarm/dizzy.wav"
+      },
+      {
+        "id": "back_in",
+        "say": "Okay. Can I just nip back in and switch the boiler off? And get her cardigan?",
+        "audio": "43-energy-carbon-monoxide-alarm/back_in.wav"
+      },
+      {
+        "id": "went_in",
+        "say": "Right, I'll be quick. Can someone ring me tomorrow about the reading?",
+        "audio": "43-energy-carbon-monoxide-alarm/went_in.wav",
+        "fails_call": true
+      },
+      {
+        "id": "ok",
+        "say": "No. Okay. I'll stay out here. Can someone ring me tomorrow about the reading?",
+        "audio": "43-energy-carbon-monoxide-alarm/ok.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. Thank you so much. Bye.",
+        "audio": "43-energy-carbon-monoxide-alarm/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "emergency_handled",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "I'm going to ring nine nine nine. Bye.",
+        "audio": "43-energy-carbon-monoxide-alarm/hung_up.wav",
+        "clear": {
+          "say": "I'm going to ring nine, nine, nine, Bye.",
+          "audio": "43-energy-carbon-monoxide-alarm/hung_up.clear.wav"
+        },
+        "terminal": true,
+        "ending": {
+          "name": "emergency_ignored",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "alarm",
+        "when": "The agent asks for the gas meter reading"
+      },
+      {
+        "from": "alarm",
+        "to": "outside_q",
+        "when": "The agent tells her to get everyone outside straight away"
+      },
+      {
+        "from": "alarm",
+        "to": "ignored",
+        "when": "The agent asks again for the reading or carries on with the routine"
+      },
+      {
+        "from": "ignored",
+        "to": "outside_q",
+        "when": "The agent tells her to get everyone outside straight away"
+      },
+      {
+        "from": "ignored",
+        "to": "hung_up",
+        "when": "The agent still carries on with the reading"
+      },
+      {
+        "from": "outside_q",
+        "to": "mum",
+        "when": "The agent confirms she must leave now and asks who else is in the house"
+      },
+      {
+        "from": "outside_q",
+        "to": "unclear",
+        "when": "The agent takes it as agreement and moves on"
+      },
+      {
+        "from": "unclear",
+        "to": "mum",
+        "when": "The agent confirms she must leave now and asks who else is in the house"
+      },
+      {
+        "from": "unclear",
+        "to": "hung_up",
+        "when": "The agent does not give a clear instruction"
+      },
+      {
+        "from": "mum",
+        "to": "out",
+        "when": "The agent reassures her and tells her to bring her mother out and leave the door open"
+      },
+      {
+        "from": "mum",
+        "to": "cold",
+        "when": "The agent asks for the address or other details without reassuring her"
+      },
+      {
+        "from": "cold",
+        "to": "out",
+        "when": "The agent reassures her and tells her to bring her mother out and leave the door open"
+      },
+      {
+        "from": "cold",
+        "to": "hung_up",
+        "when": "The agent still asks for details"
+      },
+      {
+        "from": "out",
+        "to": "addr",
+        "when": "The agent asks for the house number and street"
+      },
+      {
+        "from": "addr",
+        "to": "dizzy",
+        "when": "The agent reads back 9 Tannery Close and says the gas emergency service is on its way"
+      },
+      {
+        "from": "addr",
+        "to": "addr_wrong",
+        "when": "The agent reads back a house number other than nine"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "dizzy",
+        "when": "The agent reads back 9 Tannery Close and says the gas emergency service is on its way"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "hung_up",
+        "when": "The agent still has the wrong house number"
+      },
+      {
+        "from": "dizzy",
+        "to": "back_in",
+        "when": "The agent tells her to call 999 or get medical help for her mother now"
+      },
+      {
+        "from": "back_in",
+        "to": "ok",
+        "when": "The agent tells her not to go back inside"
+      },
+      {
+        "from": "back_in",
+        "to": "went_in",
+        "when": "The agent says she can go back in"
+      },
+      {
+        "from": "ok",
+        "to": "done",
+        "when": "The agent says the reading can wait and books a callback for tomorrow"
+      },
+      {
+        "from": "went_in",
+        "to": "done",
+        "when": "The agent says the reading can wait and books a callback for tomorrow"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Are you still there? Please!",
+        "audio": "43-energy-carbon-monoxide-alarm/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I told you that already! Five five one, two zero seven, six.",
+        "audio": "43-energy-carbon-monoxide-alarm/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, told you that already! Five, five, one, two, zero, seven, six.",
+          "audio": "43-energy-carbon-monoxide-alarm/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "43-energy-carbon-monoxide-alarm/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "43-energy-carbon-monoxide-alarm/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "43-energy-carbon-monoxide-alarm/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "43-energy-carbon-monoxide-alarm/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "43-energy-carbon-monoxide-alarm/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "43-energy-carbon-monoxide-alarm/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "43-energy-carbon-monoxide-alarm/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "43-energy-carbon-monoxide-alarm/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "43-energy-carbon-monoxide-alarm/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "43-energy-carbon-monoxide-alarm/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 20,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 12,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "5512076",
+        "postcode": "GU4 7EW"
+      }
+    },
+    {
+      "name": "report_gas_emergency",
+      "input_parameters": {
+        "address": "9 Tannery Close",
+        "postcode": "GU4 7EW",
+        "type": "carbon_monoxide",
+        "symptoms": true
+      }
+    },
+    {
+      "name": "schedule_callback",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "submit_meter_reading",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "5512076",
+            "postcode": "GU4 7EW"
+          }
+        },
+        {
+          "name": "report_gas_emergency",
+          "input_parameters": {
+            "address": "9 Tannery Close",
+            "postcode": "GU4 7EW",
+            "type": "carbon_monoxide",
+            "symptoms": true
+          }
+        },
+        {
+          "name": "schedule_callback",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "submit_meter_reading",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "emergency_ignored"
+      ],
+      "fails_on_nodes": [
+        "went_in"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

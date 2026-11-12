@@ -41,8 +41,9 @@ metric = TurnTakingNaturalnessMetric(threshold=0.6)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating a `TurnTakingNaturalnessMetric`:
+There are **SIX** optional parameters when creating a `TurnTakingNaturalnessMetric`:
 
+- [Optional] `sub_scores`: a list of the [sub-scores](#sub-scores) to compute. When given, the metric's score is the lowest of the sub-scores the call tested. Defaulted to `None`.
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
@@ -88,6 +89,38 @@ For `TurnTakingNaturalnessMetric` the breakdown is one entry per speaker change:
 ```
 
 A negative `gap_seconds` is overlap: the next speaker started before the previous one finished. `response_delays` summarises the caller-to-agent gaps only — how long the agent waited before replying each time, and how much that wait varied.
+
+## Sub-Scores
+
+The single score blends every hand-off in the call. To check one behaviour at a time, name the sub-scores you want:
+
+```python
+metric = TurnTakingNaturalnessMetric(
+    sub_scores=["reply_speed", "mid_utterance_pauses", "waiting_through_hold"]
+)
+metric.measure(test_case)
+
+print(metric.score_breakdown["sub_scores"])
+# {
+#     "reply_speed": {"score": 0.71, "p50_seconds": 0.86, "p90_seconds": 1.9, "replies": 9},
+#     "mid_utterance_pauses": {"score": 0.5, "pauses": 2, "talked_into": 1},
+#     "waiting_through_hold": {"score": None},
+# }
+```
+
+A sub-score is `None` when the call never tested it: a call without a hold says nothing about holds. The metric's score becomes the lowest of the sub-scores that were tested, and the reason names it.
+
+| Sub-score                 | Scores                                                                                   | Needs |
+| ------------------------- | ---------------------------------------------------------------------------------------- | ----- |
+| `reply_speed`             | The typical wait before the agent replies. Reports the median and 90th percentile.       | Any call. |
+| `premature_response`      | The share of replies that did not start while the caller was still talking.              | Any call. |
+| `overlapping_speech`      | How quickly the agent stopped after the caller cut in.                                   | A caller that [interrupts](/docs/conversation-simulator-voice-interruptions). |
+| `mid_utterance_pauses`    | The share of mid-sentence pauses the agent waited through.                               | A [`MidSentencePause`](/docs/conversation-simulator-voice-events) event. |
+| `backchannel_vs_barge_in` | The share of "mm-hmm"s the agent kept talking through.                                   | The `backchannels` [speech pattern](/docs/conversation-simulator-voice-persona-speech-patterns). |
+| `echo`                    | The share of agent replies not cut short with no caller speech to explain it.            | `echo=True` on the persona's [line](/docs/conversation-simulator-voice-persona-line). |
+| `tool_latency`            | The share of replies that used a tool and started within 3 seconds.                      | `tools_called` on the agent's turns. |
+| `waiting_through_hold`    | Whether the agent waited through a hold, checking in at most twice, without hanging up.  | A `Hold` event. |
+| `dead_air`                | The same, for silence the caller did not explain.                                        | A `DeadAir` event. |
 
 ## How Is It Calculated?
 

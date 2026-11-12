@@ -1,0 +1,576 @@
+{
+  "id": "69-hotel-wedding-room-block",
+  "domain": "Hotel",
+  "name": "Wedding room block",
+  "blurb": "Vague count, changes, long terms",
+  "tts": "elevenlabs",
+  "title": "A wedding block that changes size twice, and a brunch",
+  "skills": [
+    "ambiguity_resolution",
+    "changing_requests",
+    "multi_task",
+    "backchannel_vs_barge_in",
+    "text_normalization",
+    "numeric_read_back"
+  ],
+  "summary": "The mother of the bride wants 'ten rooms, maybe twelve' for the wedding weekend. An agent that picks a number for her is pulled up. She says 'mm-hmm' through the block terms, asks for the deposit, then splits the block so two rooms are Saturday only, starts to add a cot and drops it, books a brunch and wants the block code read slowly.",
+  "golden": {
+    "scenario": "Caller wants a block of rooms for her daughter's wedding weekend and a Sunday brunch for the family.",
+    "expected_outcome": "The agent asks whether she wants ten or twelve rooms instead of choosing. The block is held from Friday 28 to Sunday 30 August: ten rooms for two nights and two rooms for Saturday night only, with no cot. The agent says the deposit as five hundred and nineteen pounds twenty and the release date as Friday the fourteenth of August. Brunch is booked for 24 people at 11:00 on Sunday 30 August and block code LB2908K is read back exactly."
+  },
+  "outcome_checks": [
+    "The agent asks whether she wants ten or twelve rooms instead of choosing.",
+    "The block is held from Friday 28 to Sunday 30 August: ten rooms for two nights and two rooms for Saturday night only, with no cot.",
+    "The agent says the deposit as five hundred and nineteen pounds twenty and the release date as Friday the fourteenth of August.",
+    "Brunch is booked for 24 people at 11:00 on Sunday 30 August and block code LB2908K is read back exactly."
+  ],
+  "caller": {
+    "description": "Mother of the bride, organised, talks in long runs.",
+    "accent": "Jamaican",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Grp. rate £118 per rm/night, min. 10 rms. Dep. 20% of block total. Unsold rms released Fri 14 Aug. Private dining seats 30.",
+    "tools": {
+      "create_room_block": {
+        "returns": {
+          "block_code": "LB2908K"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Good morning. Mi daughter getting married end of the month and mi need rooms fi the family.",
+        "audio": "69-hotel-wedding-room-block/open.wav",
+        "text": "Good morning. My daughter is getting married at the end of the month and I need rooms for the family."
+      },
+      {
+        "id": "dates",
+        "say": "Friday the twenty-eighth to Sunday the thirtieth. The wedding is the Saturday.",
+        "audio": "69-hotel-wedding-room-block/dates.wav",
+        "when": "The agent asks for the dates"
+      },
+      {
+        "id": "name",
+        "say": "Put it under Beverley Lattibeaudiere. L, A, double T, I, B, E, A, U, D, I, E, R, E.",
+        "audio": "69-hotel-wedding-room-block/name.wav",
+        "when": "The agent asks for a name for the block",
+        "clear": {
+          "say": "Put it under Beverley Lattibeaudiere. L, A, double T, I, B, E, A, U, D, I, E, R, E.",
+          "audio": "69-hotel-wedding-room-block/name.clear.wav"
+        }
+      },
+      {
+        "id": "rooms",
+        "say": "Ten rooms. Maybe twelve. Somewhere about there.",
+        "audio": "69-hotel-wedding-room-block/rooms.wav"
+      },
+      {
+        "id": "twelve",
+        "say": "Twelve. Make it twelve.",
+        "audio": "69-hotel-wedding-room-block/twelve.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "Hold on, mi never tell you which one yet. Twelve. Mi want twelve.",
+        "audio": "69-hotel-wedding-room-block/assumed.wav",
+        "text": "Hold on, I never told you which one yet. Twelve. I want twelve.",
+        "max_visits": 1
+      },
+      {
+        "id": "deposit",
+        "say": "Right. So how much is the deposit altogether?",
+        "audio": "69-hotel-wedding-room-block/deposit.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 3,
+            "text": "Mm-hmm.",
+            "audio": "69-hotel-wedding-room-block/deposit-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 8,
+            "text": "Yes, yes.",
+            "audio": "69-hotel-wedding-room-block/deposit-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "deposit_wrong",
+        "say": "That can't be right. Twenty percent, twelve rooms, two nights. Work it out again.",
+        "audio": "69-hotel-wedding-room-block/deposit_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "split",
+        "say": "Wait now. Two of the rooms only coming the Saturday night. So ten for the two nights, two for the one night.",
+        "audio": "69-hotel-wedding-room-block/split.wav",
+        "text": "Wait now. Two of the rooms are only coming the Saturday night. So ten for the two nights, two for the one night.",
+        "clear": {
+          "say": "Wait now. Two, of the rooms only coming the Saturday night. So ten for the two, nights, two, for the one, night.",
+          "audio": "69-hotel-wedding-room-block/split.clear.wav"
+        }
+      },
+      {
+        "id": "split_wrong",
+        "say": "No, no. Ten rooms for both nights. Two rooms Saturday alone. Twelve rooms still.",
+        "audio": "69-hotel-wedding-room-block/split_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "cot",
+        "say": "And put a cot in one of them... no, forget the cot, the baby stopping with her granny.",
+        "audio": "69-hotel-wedding-room-block/cot.wav",
+        "text": "And put a cot in one of them... no, forget the cot, the baby is staying with her granny.",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "brunch",
+        "say": "One more thing. The Sunday morning mi want a brunch for all of we. Twenty-four people, eleven o'clock.",
+        "audio": "69-hotel-wedding-room-block/brunch.wav",
+        "text": "One more thing. The Sunday morning I want a brunch for all of us. Twenty-four people, eleven o'clock."
+      },
+      {
+        "id": "code",
+        "say": "Read mi that block code again, slow. Mi writing it down.",
+        "audio": "69-hotel-wedding-room-block/code.wav",
+        "text": "Read me that block code again, slow. I am writing it down.",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "say": "Lovely. Send everything to mi email. Bye bye.",
+        "audio": "69-hotel-wedding-room-block/done.wav",
+        "text": "Lovely. Send everything to my email. Bye bye.",
+        "terminal": true,
+        "ending": {
+          "name": "block_and_brunch_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "No sir. Mi going try the hotel down the road.",
+        "audio": "69-hotel-wedding-room-block/gave_up.wav",
+        "text": "No sir. I am going to try the hotel down the road.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "details"
+      },
+      {
+        "from": "details",
+        "to": "rooms",
+        "when": "The agent asks how many rooms"
+      },
+      {
+        "from": "rooms",
+        "to": "twelve",
+        "when": "The agent asks whether she wants ten or twelve"
+      },
+      {
+        "from": "rooms",
+        "to": "assumed",
+        "when": "The agent goes ahead with ten or twelve without asking"
+      },
+      {
+        "from": "assumed",
+        "to": "deposit",
+        "when": "The agent explains the group rate, the deposit and the release date for twelve rooms"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent still has ten rooms"
+      },
+      {
+        "from": "twelve",
+        "to": "deposit",
+        "when": "The agent explains the group rate, the deposit and the release date for twelve rooms"
+      },
+      {
+        "from": "deposit",
+        "to": "split",
+        "when": "The agent gives a deposit of £566.40"
+      },
+      {
+        "from": "deposit",
+        "to": "deposit_wrong",
+        "when": "The agent gives a different deposit"
+      },
+      {
+        "from": "deposit_wrong",
+        "to": "split",
+        "when": "The agent gives a deposit of £566.40"
+      },
+      {
+        "from": "deposit_wrong",
+        "to": "gave_up",
+        "when": "The agent gives a wrong deposit again"
+      },
+      {
+        "from": "split",
+        "to": "cot",
+        "when": "The agent reads back ten rooms for two nights and two for Saturday night, with a deposit of £519.20"
+      },
+      {
+        "from": "split",
+        "to": "split_wrong",
+        "when": "The agent reads back a different split or a different deposit"
+      },
+      {
+        "from": "split_wrong",
+        "to": "cot",
+        "when": "The agent reads back ten rooms for two nights and two for Saturday night, with a deposit of £519.20"
+      },
+      {
+        "from": "split_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the split wrong"
+      },
+      {
+        "from": "cot",
+        "to": "brunch",
+        "when": "The agent confirms the block without a cot and gives the block code"
+      },
+      {
+        "from": "brunch",
+        "to": "code",
+        "when": "The agent confirms brunch for twenty-four at eleven on Sunday the thirtieth"
+      },
+      {
+        "from": "code",
+        "to": "done",
+        "when": "The agent repeats block code LB2908K"
+      },
+      {
+        "from": "code",
+        "to": "gave_up",
+        "when": "The agent gives a code that differs from the first time"
+      }
+    ],
+    "groups": [
+      {
+        "id": "details",
+        "nodes": [
+          "dates",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Mi tell you that already. Lattibeaudiere, Friday the twenty-eighth to Sunday the thirtieth.",
+        "audio": "69-hotel-wedding-room-block/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I told you that already. Lattibeaudiere, Friday the twenty-eighth to Sunday the thirtieth."
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "69-hotel-wedding-room-block/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "69-hotel-wedding-room-block/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "69-hotel-wedding-room-block/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "69-hotel-wedding-room-block/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "69-hotel-wedding-room-block/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "69-hotel-wedding-room-block/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "69-hotel-wedding-room-block/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "69-hotel-wedding-room-block/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "69-hotel-wedding-room-block/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "69-hotel-wedding-room-block/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 19,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "check_group_availability",
+      "input_parameters": {
+        "check_in": "2026-08-28",
+        "check_out": "2026-08-30",
+        "rooms": 12
+      }
+    },
+    {
+      "name": "create_room_block",
+      "input_parameters": {
+        "name": "Beverley Lattibeaudiere",
+        "check_in": "2026-08-28",
+        "check_out": "2026-08-30",
+        "rooms_two_nights": 10,
+        "rooms_saturday_only": 2
+      }
+    },
+    {
+      "name": "book_private_dining",
+      "input_parameters": {
+        "date": "2026-08-30",
+        "time": "11:00",
+        "guests": 24
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_room_block",
+      "input_parameters": {
+        "rooms_two_nights": 12
+      }
+    },
+    {
+      "name": "create_room_block",
+      "input_parameters": {
+        "rooms_two_nights": 8
+      }
+    },
+    {
+      "name": "add_cot",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "check_group_availability",
+          "input_parameters": {
+            "check_in": "2026-08-28",
+            "check_out": "2026-08-30",
+            "rooms": 12
+          }
+        },
+        {
+          "name": "create_room_block",
+          "input_parameters": {
+            "name": "Beverley Lattibeaudiere",
+            "check_in": "2026-08-28",
+            "check_out": "2026-08-30",
+            "rooms_two_nights": 10,
+            "rooms_saturday_only": 2
+          }
+        },
+        {
+          "name": "book_private_dining",
+          "input_parameters": {
+            "date": "2026-08-30",
+            "time": "11:00",
+            "guests": 24
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_room_block",
+          "input_parameters": {
+            "rooms_two_nights": 12
+          }
+        },
+        {
+          "name": "create_room_block",
+          "input_parameters": {
+            "rooms_two_nights": 8
+          }
+        },
+        {
+          "name": "add_cot",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

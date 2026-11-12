@@ -1,0 +1,58 @@
+---
+id: metrics-simulation-path
+title: Simulation Path
+sidebar_label: Simulation Path
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} usesLLMs={false} referenceless={true} />
+
+The simulation path metric checks **where a [simulation graph](/docs/conversation-simulator-simulation-graph) conversation ended up**. It passes when the simulated user reached an ending that is not a failure, without ever saying a line marked `fails=True`.
+
+A graph can describe more than the call going well: the caller correcting the agent, getting short with it, and hanging up. This metric turns the route the conversation took into a pass or a fail, with no LLM involved.
+
+## Usage
+
+Give your graph [endings](/docs/conversation-simulator-simulation-graph#endings), simulate, and evaluate what comes back:
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import SimulationPathMetric
+from deepeval.simulator import ConversationSimulator, SimulationNode
+
+opening = SimulationNode(action=ask_to_cancel)
+done = SimulationNode(action=say_thanks, ending="cancelled")
+hung_up = SimulationNode(action=hang_up, ending="hung_up", fails=True)
+opening.add_node(done, when="The assistant confirms the cancellation")
+opening.add_node(hung_up, when="The assistant keeps offering discounts")
+
+simulator = ConversationSimulator(
+    model_callback=model_callback,
+    simulation_graph=opening,
+)
+test_cases = simulator.simulate([golden])
+
+evaluate(test_cases=test_cases, metrics=[SimulationPathMetric()])
+```
+
+There are **SIX** optional parameters when creating a `SimulationPathMetric`:
+
+- [Optional] `expected_endings`: a list of ending names that count as a pass. Any other ending fails. Defaulted to `None`, which accepts every ending that is not `fails=True`.
+- [Optional] `threshold`: a number representing the minimum passing score. Defaulted to `1.0`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The score is 1 or 0. It is 0 when any of these is true:
+
+- The conversation stopped before reaching an ending, for example because it ran out of turns.
+- The conversation went [off script](/docs/conversation-simulator-simulation-graph#off-script).
+- The simulated user said a `fails=True` line.
+- `expected_endings` was given and the ending reached is not in it.
+
+Otherwise it is 1. The metric is skipped, with a score of `None`, for a test case that did not come from a simulation graph.
+
+`score_breakdown` holds the `ending`, the `failed_nodes` and the full `path`.

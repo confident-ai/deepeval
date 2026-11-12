@@ -1,0 +1,283 @@
+---
+id: conversation-simulator-voice-persona-line
+title: Line Quality
+sidebar_label: Line Quality
+languages: [python]
+beta: true
+---
+
+`LineSettings` controls **the connection the simulated caller is on**. Set it as `line` on a [`Persona`](/docs/conversation-simulator-voice-personas).
+
+Most voice agents are reached over the phone, and phone lines are worse than a TTS voice makes them sound. `LineSettings` puts the caller's speech through the kind of connection your real callers are on, so your agent's speech recognition has to work through it.
+
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. `dropouts` and `garbled` use a longer sentence, with one, three and six faults in it at `"rare"`, `"normal"` and `"frequent"`. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. Start with the caller with nothing set, then switch between a few settings to compare:
+
+<SettingPlayer
+  settings={[
+    {
+      "name": "compare",
+      "options": [
+        {
+          "label": "Dropouts",
+          "code": "LineSettings(dropouts=\"frequent\")",
+          "src": "/audio/personas/line-dropouts-frequent.mp3"
+        },
+        {
+          "label": "Static",
+          "code": "LineSettings(static=0.5)",
+          "src": "/audio/personas/line-static-0-5.mp3"
+        },
+        {
+          "label": "Mobile",
+          "code": "LineSettings(quality=\"mobile\")",
+          "src": "/audio/personas/line-quality-mobile.mp3"
+        },
+        {
+          "label": "Phone",
+          "code": "LineSettings(quality=\"phone\")",
+          "src": "/audio/personas/line-quality-phone.mp3"
+        },
+        {
+          "label": "None",
+          "code": "Persona(characteristics=\"...\")",
+          "src": "/audio/personas/baseline.mp3"
+        }
+      ]
+    }
+  ]}
+/>
+
+## Create Line Settings
+
+```python
+from deepeval.dataset import Persona, LineSettings
+
+persona = Persona(
+    characteristics="You are calling from your car.",
+    line=LineSettings(quality="phone", dropouts="rare", static=0.2),
+)
+```
+
+There are **SIX** optional parameters when creating a `LineSettings`:
+
+- [Optional] `quality`: either `"wideband"`, `"phone"`, `"mobile"` or `"speakerphone"`. Defaulted to `"wideband"`.
+  - `"wideband"` is the clean voice as the TTS model made it.
+  - `"phone"` is a landline: band-limited to 300–3400 Hz and μ-law encoded.
+  - `"mobile"` is a weak mobile connection: a narrower band, encoded more coarsely.
+  - `"speakerphone"` is a caller talking from across a room: quieter, with the room echoing, on a phone line.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "quality",
+        "options": [
+          {
+            "label": "mobile",
+            "code": "LineSettings(quality=\"mobile\")",
+            "src": "/audio/personas/line-quality-mobile.mp3"
+          },
+          {
+            "label": "speakerphone",
+            "code": "LineSettings(quality=\"speakerphone\")",
+            "src": "/audio/personas/line-quality-speakerphone.mp3"
+          },
+          {
+            "label": "phone",
+            "code": "LineSettings(quality=\"phone\")",
+            "src": "/audio/personas/line-quality-phone.mp3"
+          },
+          {
+            "label": "wideband",
+            "code": "LineSettings(quality=\"wideband\")",
+            "src": "/audio/personas/baseline.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `dropouts`: either `"rare"`, `"normal"` or `"frequent"`, for how often the caller's audio cuts out for a fraction of a second. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "dropouts",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "LineSettings(dropouts=\"frequent\")",
+            "src": "/audio/personas/line-dropouts-frequent.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "LineSettings(dropouts=\"normal\")",
+            "src": "/audio/personas/line-dropouts-normal.mp3"
+          },
+          {
+            "label": "rare",
+            "code": "LineSettings(dropouts=\"rare\")",
+            "src": "/audio/personas/line-dropouts-rare.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `garbled`: either `"rare"`, `"normal"` or `"frequent"`, for how often a stretch of the caller's audio comes through distorted. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "garbled",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "LineSettings(garbled=\"frequent\")",
+            "src": "/audio/personas/line-garbled-frequent.mp3"
+          },
+          {
+            "label": "normal",
+            "code": "LineSettings(garbled=\"normal\")",
+            "src": "/audio/personas/line-garbled-normal.mp3"
+          },
+          {
+            "label": "rare",
+            "code": "LineSettings(garbled=\"rare\")",
+            "src": "/audio/personas/line-garbled-rare.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `static`: a float between `0.0` and `1.0` for how much hiss is on the line. Defaulted to `0.0`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "static",
+        "options": [
+          {
+            "label": "1.0",
+            "code": "LineSettings(static=1.0)",
+            "src": "/audio/personas/line-static-1-0.mp3"
+          },
+          {
+            "label": "0.5",
+            "code": "LineSettings(static=0.5)",
+            "src": "/audio/personas/line-static-0-5.mp3"
+          },
+          {
+            "label": "0.2",
+            "code": "LineSettings(static=0.2)",
+            "src": "/audio/personas/line-static-0-2.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `delay_ms`: an integer number of milliseconds of network delay before each thing the caller says reaches the agent. Defaulted to `0`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "delay_ms",
+        "options": [
+          {
+            "label": "1500 ms",
+            "code": "LineSettings(delay_ms=1500)",
+            "src": "/audio/personas/line-delay-1500-ms.mp3"
+          },
+          {
+            "label": "500 ms",
+            "code": "LineSettings(delay_ms=500)",
+            "src": "/audio/personas/line-delay-500-ms.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `echo`: a boolean which, when set to `True`, sends the agent's own voice back down the line a quarter of a second later and at about a third of the volume, as happens when the caller is on a loud speakerphone. An agent with weak echo cancellation hears itself, and interrupts itself or transcribes its own words as the caller's. Defaulted to `False`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "echo",
+        "options": [
+          {
+            "label": "echo",
+            "code": "LineSettings(echo=True)",
+            "src": "/audio/personas/preview-echo.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+  Echo is sent while the agent is talking, so it needs a connector that supports [interruptions](/docs/conversation-simulator-voice-interruptions). It stops while the caller is saying something and picks up again after, and it is never recorded as a turn.
+
+The line works on streamed and whole utterances alike and costs nothing. Faults fall in the same places every time you run the same persona, so a failure you find is one you can reproduce.
+
+## Using The Phone Filter On Its Own
+
+To apply the phone filter outside a simulation, wrap any TTS model in `PhoneLineTTS`:
+
+```python
+from deepeval.models.tts import OpenAITTSModel
+from deepeval.voice.phone_line import PhoneLineTTS
+
+tts_model = PhoneLineTTS(OpenAITTSModel())
+```
+
+## TTS Model Support
+
+The line is applied to the caller's audio after it is synthesized, so every setting works with every TTS model, including one you write yourself.
+
+<TtsSupportTable
+  rows={[
+    {
+      "setting": "quality",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "dropouts",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "garbled",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "static",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "delay_ms",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "echo",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    }
+  ]}
+/>

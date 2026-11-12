@@ -2,7 +2,6 @@
   "title": "Voice Mode",
   "pages": [
     "../conversation-simulator-voice-connectors",
-    "../conversation-simulator-voice-personas",
-    "../conversation-simulator-voice-interruptions"
+    "../conversation-simulator-voice-personas"
   ]
 }

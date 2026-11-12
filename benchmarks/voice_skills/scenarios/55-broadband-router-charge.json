@@ -1,0 +1,568 @@
+{
+  "id": "55-broadband-router-charge",
+  "domain": "Broadband",
+  "name": "Charge for returned router",
+  "blurb": "Furious, sarcastic, refund rejected",
+  "tts": "openai",
+  "title": "A furious caller, a charge for a returned router and a refund that is rejected",
+  "skills": [
+    "upset_caller",
+    "prosodic_cues",
+    "overlapping_speech",
+    "false_success",
+    "human_handoff"
+  ],
+  "summary": "A furious caller finds a fifty-five pound charge for a router she sent back. She cuts into the bill read-out and answers the twenty-eight day review with sarcasm. The refund tool rejects the amount: an agent that says it is refunded fails the call. She wants a manager and will not explain it all twice.",
+  "golden": {
+    "scenario": "Caller's bill is £96 instead of £41 because of a charge for a router she returned in June.",
+    "expected_outcome": "The agent never says the £55.00 has been refunded, because the refund was rejected. The agent does not take 'Oh, wonderful. Twenty-eight days.' as agreement. The £55.00 is put in dispute so it is not collected with the direct debit on the 20th. The agent transfers her to a manager, says so, and passes on a summary."
+  },
+  "outcome_checks": [
+    "The agent never says the £55.00 has been refunded, because the refund was rejected.",
+    "The agent does not take 'Oh, wonderful. Twenty-eight days.' as agreement.",
+    "The £55.00 is put in dispute so it is not collected with the direct debit on the 20th.",
+    "The agent transfers her to a manager, says so, and passes on a summary."
+  ],
+  "caller": {
+    "description": "Solicitor's PA, cutting and precise.",
+    "accent": "British (southern English)",
+    "pace": "fast",
+    "voice": "female",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "refund_charge": {
+        "returns": {
+          "status": "rejected",
+          "reason": "over_agent_refund_limit"
+        }
+      },
+      "get_bill": {
+        "returns": {
+          "package": "41.00",
+          "router_non_return_charge": "55.00",
+          "total": "96.00",
+          "direct_debit_date": "2026-08-20"
+        }
+      }
+    },
+    "account": {
+      "router_returned": "2026-06-18"
+    },
+    "policy": "Refunds over the agent limit go to a review that takes up to 28 days. A disputed amount is not collected. Transfer to a manager when asked, with a summary.",
+    "tool_order": [
+      "raise_dispute",
+      "transfer_to_human"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "I've just opened my bill and you've charged me ninety-six pounds. It's forty-one. Every month, forty-one. What on earth is this?",
+        "audio": "55-broadband-router-charge/open.wav"
+      },
+      {
+        "id": "acct",
+        "say": "Q T, eight one five, three three zero.",
+        "audio": "55-broadband-router-charge/acct.wav",
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Q, T, eight, one, five, three, three, zero.",
+          "audio": "55-broadband-router-charge/acct.clear.wav"
+        }
+      },
+      {
+        "id": "name",
+        "say": "Harriet Lascelles. L, A, S, C, E, double L, E, S.",
+        "audio": "55-broadband-router-charge/name.wav",
+        "when": "The agent asks for her name",
+        "clear": {
+          "say": "Harriet Lascelles. L, A, S, C, E, double L, E, S.",
+          "audio": "55-broadband-router-charge/name.clear.wav"
+        }
+      },
+      {
+        "id": "breakdown",
+        "say": "Yes, I can read, thank you. I'm asking why there's a fifty-five pound router charge on it.",
+        "audio": "55-broadband-router-charge/breakdown.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 6,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "returned",
+        "say": "I sent that router back in June. I have the receipt in my hand.",
+        "audio": "55-broadband-router-charge/returned.wav"
+      },
+      {
+        "id": "again",
+        "say": "I have just told you. Fifty-five pounds, for a router I returned. Do keep up.",
+        "audio": "55-broadband-router-charge/again.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "refund",
+        "say": "So take it off. Now, please.",
+        "audio": "55-broadband-router-charge/refund.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Good. About time. Goodbye.",
+        "audio": "55-broadband-router-charge/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_refund",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "sarcasm",
+        "say": "Oh, wonderful. Twenty-eight days. That's just marvellous.",
+        "audio": "55-broadband-router-charge/sarcasm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "took_literally",
+        "say": "No, it is not marvellous! I was being sarcastic. I'm not waiting a month for my own money.",
+        "audio": "55-broadband-router-charge/took_literally.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "ddebit",
+        "say": "And don't you dare take ninety-six pounds from my account on the twentieth.",
+        "audio": "55-broadband-router-charge/ddebit.wav"
+      },
+      {
+        "id": "manager",
+        "say": "I want a manager. A real person. Now.",
+        "audio": "55-broadband-router-charge/manager.wav"
+      },
+      {
+        "id": "stall",
+        "say": "I said a manager. Put me through.",
+        "audio": "55-broadband-router-charge/stall.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "summary_q",
+        "say": "And am I going to have to explain all of this again to them?",
+        "audio": "55-broadband-router-charge/summary_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Fine. Put me through, then.",
+        "audio": "55-broadband-router-charge/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "disputed_and_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'm going to the ombudsman.",
+        "audio": "55-broadband-router-charge/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "breakdown",
+        "when": "The agent starts reading out the bill"
+      },
+      {
+        "from": "ident",
+        "to": "returned",
+        "when": "The agent says the extra is a router non-return charge and asks about the router"
+      },
+      {
+        "from": "breakdown",
+        "to": "returned",
+        "when": "The agent asks whether she returned the router"
+      },
+      {
+        "from": "breakdown",
+        "to": "again",
+        "when": "The agent asks her to explain the problem again"
+      },
+      {
+        "from": "again",
+        "to": "returned",
+        "when": "The agent asks whether she returned the router"
+      },
+      {
+        "from": "again",
+        "to": "hung_up",
+        "when": "The agent asks her to explain again"
+      },
+      {
+        "from": "returned",
+        "to": "refund",
+        "when": "The agent confirms the return is on record and agrees the charge is wrong"
+      },
+      {
+        "from": "refund",
+        "to": "believed",
+        "when": "The agent says the fifty-five pounds has been refunded"
+      },
+      {
+        "from": "refund",
+        "to": "sarcasm",
+        "when": "The agent says it could not refund it and that a review takes up to twenty-eight days"
+      },
+      {
+        "from": "sarcasm",
+        "to": "took_literally",
+        "when": "The agent takes her reply as agreement or thanks her for understanding"
+      },
+      {
+        "from": "sarcasm",
+        "to": "ddebit",
+        "when": "The agent acknowledges she is not happy with the wait and says what it can do now"
+      },
+      {
+        "from": "took_literally",
+        "to": "ddebit",
+        "when": "The agent apologises and says what it can do now"
+      },
+      {
+        "from": "took_literally",
+        "to": "hung_up",
+        "when": "The agent carries on as if she agreed"
+      },
+      {
+        "from": "ddebit",
+        "to": "manager",
+        "when": "The agent confirms the fifty-five pounds is in dispute and will not be collected on the twentieth"
+      },
+      {
+        "from": "manager",
+        "to": "summary_q",
+        "when": "The agent says it is transferring her to a manager"
+      },
+      {
+        "from": "manager",
+        "to": "stall",
+        "when": "The agent keeps handling it or refuses to transfer"
+      },
+      {
+        "from": "stall",
+        "to": "summary_q",
+        "when": "The agent says it is transferring her to a manager"
+      },
+      {
+        "from": "stall",
+        "to": "hung_up",
+        "when": "The agent still does not transfer"
+      },
+      {
+        "from": "summary_q",
+        "to": "done",
+        "when": "The agent says it has passed on a summary so she will not need to repeat herself"
+      },
+      {
+        "from": "summary_q",
+        "to": "hung_up",
+        "when": "The agent says she will need to explain it again"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I have already told you. Q T, eight one five, three three zero. Lascelles.",
+        "audio": "55-broadband-router-charge/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, have already told you. Q, T, eight, one, five, three, three, zero, Lascelles.",
+          "audio": "55-broadband-router-charge/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "55-broadband-router-charge/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "55-broadband-router-charge/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "55-broadband-router-charge/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "55-broadband-router-charge/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "55-broadband-router-charge/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "55-broadband-router-charge/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "55-broadband-router-charge/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "55-broadband-router-charge/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "55-broadband-router-charge/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "55-broadband-router-charge/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "QT815330"
+      }
+    },
+    {
+      "name": "get_bill",
+      "input_parameters": {
+        "account_number": "QT815330",
+        "month": "2026-08"
+      }
+    },
+    {
+      "name": "refund_charge",
+      "input_parameters": {
+        "account_number": "QT815330",
+        "amount": "55.00"
+      }
+    },
+    {
+      "name": "raise_dispute",
+      "input_parameters": {
+        "account_number": "QT815330",
+        "amount": "55.00"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "billing_manager"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "raise_dispute",
+      "input_parameters": {
+        "amount": "96.00"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "QT815330"
+          }
+        },
+        {
+          "name": "get_bill",
+          "input_parameters": {
+            "account_number": "QT815330",
+            "month": "2026-08"
+          }
+        },
+        {
+          "name": "refund_charge",
+          "input_parameters": {
+            "account_number": "QT815330",
+            "amount": "55.00"
+          }
+        },
+        {
+          "name": "raise_dispute",
+          "input_parameters": {
+            "account_number": "QT815330",
+            "amount": "55.00"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "billing_manager"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "raise_dispute",
+          "input_parameters": {
+            "amount": "96.00"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_refund",
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "false_success",
+      "exists": true,
+      "name": "False Success",
+      "criteria": "The agent never said an action was done when the tool call had failed or been rejected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

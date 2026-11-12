@@ -76,6 +76,9 @@ from .multimodal_metrics import (
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
 )
+from .conversational_tool_correctness import ConversationalToolCorrectnessMetric
+from .simulation import SimulationEfficiencyMetric, SimulationPathMetric
+from .voice_style import VoiceStyleMetric
 from .voice import (
     AgentResponsivenessMetric,
     AudioIntegrityMetric,
@@ -157,6 +160,10 @@ __all__ = [
     "ImageCoherenceMetric",
     "ImageHelpfulnessMetric",
     "ImageReferenceMetric",
+    "ConversationalToolCorrectnessMetric",
+    "SimulationPathMetric",
+    "SimulationEfficiencyMetric",
+    "VoiceStyleMetric",
     # Voice metrics
     "VoiceNaturalnessMetric",
     "TurnTakingNaturalnessMetric",

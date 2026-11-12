@@ -5,12 +5,15 @@ from dataclasses import dataclass
 from pydantic import (
     AliasChoices,
     BaseModel,
+    ConfigDict,
     Field,
     PrivateAttr,
+    field_validator,
     model_validator,
 )
-from typing import Literal, Optional, Dict, List, Tuple
+from typing import Any, Literal, Optional, Dict, List, Tuple
 from typing import Union
+from deepeval.models.base_model import DeepEvalBaseTTS
 from deepeval.test_case import (
     ToolCall,
     Turn,
@@ -20,9 +23,11 @@ from deepeval.test_case import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
 
-
-InterruptionLevel = Literal["rare", "normal", "frequent"]
+Frequency = Literal["rare", "normal", "frequent"]
+InterruptionLevel = Frequency
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
+LineQuality = Literal["wideband", "phone", "mobile", "speakerphone"]
+Pace = Literal["slow", "fast"]
 
 _INTERRUPTION_LEVELS = ("rare", "normal", "frequent")
 _OVERLAP_BEHAVIORS = ("yield", "adaptive", "insist")
@@ -36,6 +41,67 @@ _OVERLAP_PROSE = {
     "yield": "If you both end up talking at once, you back off and let the agent finish.",
     "adaptive": "If you both end up talking at once, you hold on briefly and then back off.",
     "insist": "If you both end up talking at once, you keep talking until the agent stops.",
+}
+_PACE_PROSE = {
+    "slow": "Speak very slowly, leaving a clear pause between phrases.",
+    "fast": "Speak very fast, as quickly as you can while staying clear.",
+}
+# Closes every voice direction. Without it a TTS model drifts back to its own
+# even, polished delivery within a sentence or two.
+_HOLD_DELIVERY = (
+    "Hold this delivery on every word, from the first to the last. Never "
+    "fall back to a neutral, polished or customer-service voice. You are a "
+    "real person on a phone call, not a narrator."
+)
+
+
+def _strength_band(strength: float) -> int:
+    """Which third of the scale a strength falls in: 0, 1 or 2."""
+    return min(2, int(strength * 3))
+
+
+# A TTS model cannot follow a number, so each third of the scale gets its own
+# wording, from barely there to as strong as it gets.
+_ACCENT_PROSE = (
+    "Speak with a light {accent} accent: clearly from there, but soft and "
+    "easy on the ear.",
+    "Speak with a strong {accent} accent on every word, the way someone "
+    "who has lived there all their life speaks.",
+    "Speak with an extremely thick, heavy {accent} accent on every word, "
+    "so broad that an outsider has to listen closely to follow it.",
+)
+_EMOTION_PROSE = (
+    "Sound a little {emotion}: it shows in your tone, but you are holding "
+    "it in.",
+    "Sound very {emotion}: let it colour your tone, pace and emphasis in "
+    "every sentence.",
+    "Sound overwhelmingly {emotion}, far past the point of hiding it: it "
+    "takes over your voice, your breathing and your pace completely.",
+)
+_STRENGTH_WORD = ("light", "strong", "extreme")
+_EMOTION_DEGREE = ("a little ", "", "very ")
+_HOW_OFTEN = {
+    "rare": "once in a while",
+    "normal": "every few sentences",
+    "frequent": "in almost every sentence, often more than once",
+}
+# The speech patterns that change what the caller says. The rest change how
+# the audio is timed and mixed, which the words cannot carry.
+_WORDING_PATTERNS = {
+    "fillers": (
+        "You use filler words such as um, uh, well or you know {often}."
+    ),
+    "trails_off": (
+        "You leave a sentence unfinished {often}, ending it on a dash, as in "
+        '"I was hoping to move it to -".'
+    ),
+    "asks_to_repeat": (
+        "You ask the agent to repeat or rephrase what it just said {often}."
+    ),
+    "self_corrects": (
+        "You say the wrong thing and correct yourself mid-sentence {often}, "
+        'as in "Tuesday - no, sorry, Wednesday".'
+    ),
 }
 
 
@@ -67,12 +133,91 @@ class InterruptionBehavior:
             )
 
 
-class BackgroundNoiseSettings(BaseModel):
-    """Ambient audio looped underneath the simulated caller's speech."""
+class VoiceSettings(BaseModel):
+    """How the simulated caller sounds."""
 
-    # Path to a .wav or .mp3 file.
-    audio: str
+    # Voice ID passed to the TTS model.
+    id: Optional[str] = Field(default=None)
+    accent: Optional[str] = Field(default=None)
+    # How thick the accent is, from a faint trace (0.0) to very heavy (1.0).
+    accent_strength: float = Field(default=1.0, ge=0.0, le=1.0)
+    emotion: Optional[str] = Field(default=None)
+    # How openly the emotion shows, from a hint (0.0) to overwhelming (1.0).
+    emotion_strength: float = Field(default=1.0, ge=0.0, le=1.0)
+    pace: Optional[Pace] = Field(default=None)
+    # How loud the caller is, where 1.0 is the voice as the TTS model made it.
+    volume: float = Field(default=1.0, ge=0.0, le=1.0)
+    # Anything else about delivery: energy, tone.
+    instructions: Optional[str] = Field(default=None)
+
+
+class LineSettings(BaseModel):
+    """The connection the caller's speech travels over."""
+
+    # "phone" band-limits and μ-law encodes the caller like a landline call,
+    # "mobile" is a weak mobile connection, and "speakerphone" is a caller
+    # talking from across a room.
+    quality: LineQuality = Field(default="wideband")
+    # Short gaps where the caller's audio cuts out.
+    dropouts: Optional[Frequency] = Field(default=None)
+    # Short spans where the caller's audio is distorted.
+    garbled: Optional[Frequency] = Field(default=None)
+    static: float = Field(default=0.0, ge=0.0, le=1.0)
+    # Network delay added before each thing the caller says.
+    delay_ms: int = Field(default=0, ge=0)
+    # The agent's own voice coming back down the line a moment later, as on a
+    # loud speakerphone.
+    echo: bool = Field(default=False)
+
+
+class BackgroundSpeaker(BaseModel):
+    """Someone else in the room, heard faintly behind the caller."""
+
+    # Who they are and what they talk about.
+    characteristics: str
+    voice: Optional[VoiceSettings] = Field(default=None)
+    frequency: Frequency = Field(default="normal")
     volume: float = Field(default=0.3, ge=0.0, le=1.0)
+
+    @field_validator("voice", mode="before")
+    @classmethod
+    def _voice_from_id(cls, value: Any) -> Any:
+        return {"id": value} if isinstance(value, str) else value
+
+
+class BackgroundNoiseSettings(BaseModel):
+    """What can be heard around the simulated caller."""
+
+    # Path or URL to a .wav or .mp3 file, looped under the caller's speech.
+    audio: Optional[str] = Field(default=None)
+    volume: float = Field(default=0.3, ge=0.0, le=1.0)
+    other_speakers: List[BackgroundSpeaker] = Field(default_factory=list)
+
+
+class SpeechPatternSettings(BaseModel):
+    """Habits in how the simulated caller talks."""
+
+    # --- change what the caller says; apply to text simulations too ---
+    fillers: Optional[Frequency] = Field(default=None)
+    trails_off: Optional[Frequency] = Field(default=None)
+    asks_to_repeat: Optional[Frequency] = Field(default=None)
+    self_corrects: Optional[Frequency] = Field(default=None)
+    switches_language: Optional[Frequency] = Field(default=None)
+
+    # --- voice only: change how the caller's audio is timed and mixed ---
+    mid_sentence_pauses: Optional[Frequency] = Field(default=None)
+    slow_to_answer: Optional[Frequency] = Field(default=None)
+    # The caller turns away and says something to someone else in the room.
+    side_speech: Optional[Frequency] = Field(default=None)
+    # The caller says "mm-hmm" or "okay" while the agent is still talking,
+    # without meaning to take over.
+    backchannels: Optional[Frequency] = Field(default=None)
+
+    @property
+    def shapes_audio(self) -> bool:
+        return any(
+            (self.mid_sentence_pauses, self.slow_to_answer, self.side_speech)
+        )
 
 
 class Persona(BaseModel):
@@ -83,28 +228,75 @@ class Persona(BaseModel):
     they are trying to do. Keep behavioral traits here and task instructions
     on the golden.
 
-    `name`, `characteristics` and `metadata` apply to every simulation. Every
-    field below `metadata` is voice-only and is ignored by text simulations.
+    `name`, `characteristics`, `metadata`, `languages` and the wording half of
+    `speech_patterns` apply to every simulation. Everything else is voice-only
+    and is ignored by text simulations.
     """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: Optional[str] = Field(default=None)
     # The free-form persona prompt: demographics, personality, emotional arc,
-    # speaking style, filler words — who the user is, never what they want.
+    # speaking style — who the user is, never what they want.
     # Successor to `ConversationalGolden.user_description`.
     characteristics: str
     metadata: Optional[Dict] = Field(default=None)
+    languages: Optional[List[str]] = Field(default=None)
+    speech_patterns: Optional[SpeechPatternSettings] = Field(default=None)
 
     # --- voice only: behavior ---
     interruption_behavior: Optional[InterruptionBehavior] = Field(default=None)
     speaks_first: bool = Field(default=True)
     muted: bool = Field(default=False)
-
-    # --- voice only: audio ---
-    voice: Optional[str] = Field(default=None)
-    background_noise: Optional[BackgroundNoiseSettings] = Field(default=None)
-    multilingual_stt: bool = Field(default=False)
     # Seconds of agent silence or hold music before the caller hangs up.
     hold_timeout: Optional[float] = Field(default=None, gt=0)
+
+    # --- voice only: audio ---
+    voice: Optional[VoiceSettings] = Field(default=None)
+    line: Optional[LineSettings] = Field(default=None)
+    background_noise: Optional[BackgroundNoiseSettings] = Field(default=None)
+    # Speaks through this model instead of the `VoiceConfig` one.
+    tts_model: Optional[DeepEvalBaseTTS] = Field(default=None, exclude=True)
+    multilingual_stt: bool = Field(default=False)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _nest_flat_voice_fields(cls, data: Any) -> Any:
+        """Accept a bare voice ID and the flat names these settings once had."""
+        if not isinstance(data, dict):
+            return data
+        data = dict(data)
+        voice = data.get("voice")
+        if isinstance(voice, str):
+            voice = {"id": voice}
+        if "voice_instructions" in data:
+            instructions = data.pop("voice_instructions")
+            if isinstance(voice, VoiceSettings):
+                voice = voice.model_dump()
+            voice = {**(voice or {}), "instructions": instructions}
+        if voice is not None:
+            data["voice"] = voice
+        if "line_quality" in data:
+            quality = data.pop("line_quality")
+            line = data.get("line")
+            if isinstance(line, LineSettings):
+                line = line.model_dump()
+            data["line"] = {**(line or {}), "quality": quality}
+        return data
+
+    @model_validator(mode="after")
+    def _check_language_switching(self):
+        patterns = self.speech_patterns
+        if (
+            patterns is not None
+            and patterns.switches_language is not None
+            and len(self.languages or []) < 2
+        ):
+            raise ValueError(
+                "`switches_language` needs at least two `languages` on the "
+                "persona to switch between."
+            )
+        return self
 
     def prompt_block(self) -> str:
         """Render the persona for a simulator prompt.
@@ -122,6 +314,14 @@ class Persona(BaseModel):
             )
 
         behavior: List[str] = []
+        if self.voice is not None and self.voice.emotion:
+            degree = _EMOTION_DEGREE[
+                _strength_band(self.voice.emotion_strength)
+            ]
+            behavior.append(f"Right now you feel {degree}{self.voice.emotion}.")
+        if self.languages and len(self.languages) > 1:
+            behavior.append("You speak " + ", ".join(self.languages) + ".")
+        behavior.extend(self._speech_pattern_prose())
         if self.interruption_behavior is not None:
             behavior.append(
                 _FREQUENCY_PROSE[self.interruption_behavior.frequency]
@@ -138,15 +338,116 @@ class Persona(BaseModel):
         body = "\n\n".join(section for section in sections if section)
         return f"<persona>\n{body}\n</persona>"
 
-    def tts_kwargs(self) -> Dict:
-        """Synthesis kwargs for this persona's voice.
+    def voice_brief(self) -> str:
+        """The voice settings in words, for whoever writes the direction."""
+        voice = self.voice
+        if voice is None:
+            return "None"
+        stated = [
+            (
+                f"Accent: {voice.accent}, "
+                f"{_STRENGTH_WORD[_strength_band(voice.accent_strength)]}"
+                if voice.accent
+                else ""
+            ),
+            (
+                f"Emotion: {voice.emotion}, "
+                f"{_STRENGTH_WORD[_strength_band(voice.emotion_strength)]}"
+                if voice.emotion
+                else ""
+            ),
+            f"Pace: {voice.pace}" if voice.pace else "",
+            f"Also: {voice.instructions}" if voice.instructions else "",
+        ]
+        return "\n".join(line for line in stated if line) or "None"
 
-        `voice` is the only vocal knob declared on
-        `DeepEvalBaseTTS.a_synthesize`, so it is the only one portable across
-        TTS implementations. Rate and delivery style belong on the TTS model's
-        own `generation_kwargs`.
+    def _speech_pattern_prose(self) -> List[str]:
+        patterns = self.speech_patterns
+        if patterns is None:
+            return []
+        prose = [
+            sentence.format(often=_HOW_OFTEN[getattr(patterns, name)])
+            for name, sentence in _WORDING_PATTERNS.items()
+            if getattr(patterns, name) is not None
+        ]
+        if patterns.switches_language is not None:
+            prose.append(
+                "You switch between your languages mid-sentence "
+                f"{_HOW_OFTEN[patterns.switches_language]}."
+            )
+        return prose
+
+    def delivery_instructions(
+        self, derived: Optional[str] = None
+    ) -> Optional[str]:
+        """The caller's voice direction: one instruction, the same on every line.
+
+        `derived` is the direction the simulator model wrote from the persona
+        before the call. The explicit voice settings follow it so they have
+        the last word, and the whole is closed by the reminder to hold it.
         """
-        return {} if self.voice is None else {"voice": self.voice}
+        voice = self.voice
+        parts = [derived.strip()] if derived and derived.strip() else []
+        if voice is not None:
+            if voice.accent:
+                parts.append(
+                    _ACCENT_PROSE[_strength_band(voice.accent_strength)].format(
+                        accent=voice.accent
+                    )
+                )
+            if voice.emotion:
+                parts.append(
+                    _EMOTION_PROSE[
+                        _strength_band(voice.emotion_strength)
+                    ].format(emotion=voice.emotion)
+                )
+            if voice.pace:
+                parts.append(_PACE_PROSE[voice.pace])
+            if voice.instructions:
+                parts.append(voice.instructions.strip())
+        if not parts:
+            return None
+        return " ".join(parts + [_HOLD_DELIVERY])
+
+    def tts_kwargs(
+        self,
+        tts_model: Optional[DeepEvalBaseTTS] = None,
+        delivery: Optional[str] = None,
+    ) -> Dict:
+        """Synthesis kwargs for this persona's voice on `tts_model`.
+
+        The voice ID is the only vocal knob declared on
+        `DeepEvalBaseTTS.a_synthesize`, so it is the only one portable across
+        TTS implementations. Delivery is passed as `instructions` only to
+        models that take it, and is ignored by the rest.
+        """
+        voice = self.voice
+        kwargs: Dict = {}
+        if voice is not None and voice.id is not None:
+            kwargs["voice"] = voice.id
+        instructions = self.delivery_instructions(delivery)
+        if not instructions:
+            return kwargs
+        if tts_model is not None and tts_model.supports_voice_instructions():
+            kwargs["instructions"] = instructions
+        elif self.delivery_instructions() is not None:
+            warnings.warn(
+                "Persona `voice` accent, emotion and instructions are "
+                "ignored: the TTS model does not take instructions."
+            )
+        return kwargs
+
+    def caller_tts_model(self, tts_model: DeepEvalBaseTTS) -> DeepEvalBaseTTS:
+        """The TTS model this persona speaks through on one call."""
+        from deepeval.voice.caller_speech import CallerSpeechTTS
+        from deepeval.voice.phone_line import PhoneLineTTS
+
+        tts_model = self.tts_model or tts_model
+        if self.line is not None and self.line.quality != "wideband":
+            tts_model = PhoneLineTTS(tts_model, self.line.quality)
+        if CallerSpeechTTS.applies_to(self):
+            tts_model = CallerSpeechTTS(tts_model, self)
+        return tts_model
 
 
 def resolve_persona(

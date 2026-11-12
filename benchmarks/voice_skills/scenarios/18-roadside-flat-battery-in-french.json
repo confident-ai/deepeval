@@ -1,0 +1,454 @@
+{
+  "id": "18-roadside-flat-battery-in-french",
+  "domain": "Roadside assistance",
+  "name": "Flat battery in French",
+  "blurb": "Switches to French, echo",
+  "tts": "elevenlabs",
+  "title": "A flat battery, continued in French, with echo",
+  "skills": [
+    "language_switching",
+    "echo",
+    "entity_extraction",
+    "text_normalization"
+  ],
+  "summary": "The caller sits in his car with the phone on the dash, so the agent's voice echoes back. He switches to French and gives up if the agent stays in English. He has a flight to catch: if the arrival time ignores his 2 pm deadline he objects, and if nothing sooner is offered he takes a taxi.",
+  "golden": {
+    "scenario": "Caller's car won't start at home and he needs to leave for the airport at 2 pm.",
+    "expected_outcome": "After the switch the agent speaks French for the rest of the call. The agent never stops for, or answers, its own echo. A battery call-out is sent to 42 rue des Érables, appartement 3, for a 2019 Mazda 3. The agent gives an arrival time before the 2 pm deadline and the price of a replacement battery."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks French for the rest of the call.",
+    "The agent never stops for, or answers, its own echo.",
+    "A battery call-out is sent to 42 rue des Érables, appartement 3, for a 2019 Mazda 3.",
+    "The agent gives an arrival time before the 2 pm deadline and the price of a replacement battery."
+  ],
+  "caller": {
+    "description": "Polite, watching the clock.",
+    "accent": "Québécois",
+    "voice": "male",
+    "languages": [
+      "en",
+      "fr"
+    ]
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Battery replacement on site: $189.00 + tax. ETA 45 min.",
+    "tools": {
+      "dispatch_service": {
+        "returns": {
+          "eta_minutes": 45
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, my car won't start. I think the battery's dead.",
+        "audio": "18-roadside-flat-battery-in-french/open.wav"
+      },
+      {
+        "id": "member",
+        "say": "Seven seven four, two zero nine, one.",
+        "audio": "18-roadside-flat-battery-in-french/member.wav",
+        "clear": {
+          "say": "Seven, seven, four, two, zero, nine, one.",
+          "audio": "18-roadside-flat-battery-in-french/member.clear.wav"
+        }
+      },
+      {
+        "id": "switch",
+        "say": "At home. Excusez-moi, c'est plus facile en français pour moi. Je peux continuer en français?",
+        "audio": "18-roadside-flat-battery-in-french/switch.wav",
+        "text": "At home. Excuse me, it's easier in French for me. Can I continue in French?",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "fr"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Désolé, en français, s'il vous plaît?",
+        "audio": "18-roadside-flat-battery-in-french/english.wav",
+        "text": "Sorry, in French, please?",
+        "max_visits": 2
+      },
+      {
+        "id": "addr",
+        "say": "Quarante-deux, rue des Érables, appartement trois.",
+        "audio": "18-roadside-flat-battery-in-french/addr.wav",
+        "text": "Forty-two, Maple Street, apartment three."
+      },
+      {
+        "id": "addr_wrong",
+        "say": "Non. Quarante-deux. Rue des Érables. Appartement trois.",
+        "audio": "18-roadside-flat-battery-in-french/addr_wrong.wav",
+        "text": "No. Forty-two. Maple Street. Apartment three.",
+        "max_visits": 2
+      },
+      {
+        "id": "symptom",
+        "say": "Quand je tourne la clé, ça fait juste clic-clic. Les lumières sont faibles.",
+        "audio": "18-roadside-flat-battery-in-french/symptom.wav",
+        "when": "The agent asks what happens when he starts the car",
+        "text": "When I turn the key, it just goes click-click. The lights are weak."
+      },
+      {
+        "id": "car",
+        "say": "Une Mazda trois, deux mille dix-neuf, grise.",
+        "audio": "18-roadside-flat-battery-in-french/car.wav",
+        "when": "The agent asks for the vehicle",
+        "text": "A Mazda three, two thousand nineteen, gray."
+      },
+      {
+        "id": "deadline",
+        "say": "Oui, dans mon entrée. Mais je dois partir pour l'aéroport à quatorze heures.",
+        "audio": "18-roadside-flat-battery-in-french/deadline.wav",
+        "text": "Yes, in my driveway. But I have to leave for the airport at fourteen hours."
+      },
+      {
+        "id": "too_late",
+        "say": "Mais c'est trop tard! Je vous ai dit quatorze heures.",
+        "audio": "18-roadside-flat-battery-in-french/too_late.wav",
+        "text": "But it's too late! I told you fourteen hours.",
+        "max_visits": 1
+      },
+      {
+        "id": "price",
+        "say": "D'accord. Et si la batterie est morte, vous pouvez la remplacer sur place? C'est combien?",
+        "audio": "18-roadside-flat-battery-in-french/price.wav",
+        "text": "Okay. And if the battery is dead, can you replace it on site? How much is it?"
+      },
+      {
+        "id": "send",
+        "say": "Ça va. Envoyez-le.",
+        "audio": "18-roadside-flat-battery-in-french/send.wav",
+        "text": "That's fine. Send him."
+      },
+      {
+        "id": "done",
+        "say": "Merci beaucoup. Au revoir.",
+        "audio": "18-roadside-flat-battery-in-french/done.wav",
+        "text": "Thank you very much. Goodbye.",
+        "terminal": true,
+        "ending": {
+          "name": "battery_callout_sent",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "taxi",
+        "say": "Laissez faire. Je vais prendre un taxi.",
+        "audio": "18-roadside-flat-battery-in-french/taxi.wav",
+        "text": "Never mind. I'll take a taxi.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "member",
+        "when": "The agent asks for the membership number"
+      },
+      {
+        "from": "member",
+        "to": "switch",
+        "when": "The agent asks where the car is"
+      },
+      {
+        "from": "switch",
+        "to": "addr",
+        "when": "The agent agrees in French and asks for the address"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "addr",
+        "when": "The agent switches to French and asks for the address"
+      },
+      {
+        "from": "english",
+        "to": "taxi",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "addr",
+        "to": "details"
+      },
+      {
+        "from": "addr",
+        "to": "addr_wrong",
+        "when": "The agent reads the address back incorrectly"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "details"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "taxi",
+        "when": "The agent still has the wrong address"
+      },
+      {
+        "from": "details",
+        "to": "deadline",
+        "when": "The agent asks whether the car is somewhere safe"
+      },
+      {
+        "from": "details",
+        "to": "price",
+        "when": "The agent gives an arrival time"
+      },
+      {
+        "from": "deadline",
+        "to": "price",
+        "when": "The agent gives an arrival time before two o'clock"
+      },
+      {
+        "from": "deadline",
+        "to": "too_late",
+        "when": "The agent gives an arrival time after two o'clock or ignores the deadline"
+      },
+      {
+        "from": "too_late",
+        "to": "price",
+        "when": "The agent gives an arrival time before two o'clock"
+      },
+      {
+        "from": "too_late",
+        "to": "taxi",
+        "when": "The agent cannot offer anything sooner"
+      },
+      {
+        "from": "price",
+        "to": "send",
+        "when": "The agent gives the battery price"
+      },
+      {
+        "from": "send",
+        "to": "done",
+        "when": "The agent confirms the call-out"
+      }
+    ],
+    "groups": [
+      {
+        "id": "details",
+        "nodes": [
+          "symptom",
+          "car"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "echo",
+        "when": "The agent stops mid-sentence or asks whether the caller said something",
+        "say": "Non, je n'ai rien dit. Continuez.",
+        "audio": "18-roadside-flat-battery-in-french/reaction-echo.wav",
+        "max_visits": 3,
+        "then": "resume",
+        "after_max_visits": "taxi",
+        "text": "No, I didn't say anything. Continue."
+      },
+      {
+        "id": "back_to_english",
+        "when": "The agent goes back to English after the switch",
+        "say": "En français, s'il vous plaît.",
+        "audio": "18-roadside-flat-battery-in-french/reaction-back_to_english.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "taxi",
+        "text": "In French, please."
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "18-roadside-flat-battery-in-french/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "18-roadside-flat-battery-in-french/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "18-roadside-flat-battery-in-french/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "18-roadside-flat-battery-in-french/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "18-roadside-flat-battery-in-french/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "18-roadside-flat-battery-in-french/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "18-roadside-flat-battery-in-french/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "18-roadside-flat-battery-in-french/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "18-roadside-flat-battery-in-french/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "18-roadside-flat-battery-in-french/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 18,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_member",
+      "input_parameters": {
+        "membership_number": "7742091"
+      }
+    },
+    {
+      "name": "dispatch_service",
+      "input_parameters": {
+        "type": "battery",
+        "address": "42 rue des Érables, appartement 3",
+        "vehicle": "Mazda 3 2019"
+      }
+    }
+  ],
+  "forbidden_tools": [],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_member",
+          "input_parameters": {
+            "membership_number": "7742091"
+          }
+        },
+        {
+          "name": "dispatch_service",
+          "input_parameters": {
+            "type": "battery",
+            "address": "42 rue des Érables, appartement 3",
+            "vehicle": "Mazda 3 2019"
+          }
+        }
+      ],
+      "forbidden_tools": []
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

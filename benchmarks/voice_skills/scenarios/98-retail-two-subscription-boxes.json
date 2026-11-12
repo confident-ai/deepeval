@@ -1,0 +1,573 @@
+{
+  "id": "98-retail-two-subscription-boxes",
+  "domain": "Online retailer",
+  "name": "Two subscription boxes",
+  "blurb": "Long pauses, drops the card change",
+  "tts": "elevenlabs",
+  "title": "Cancel one subscription box and pause the other",
+  "skills": [
+    "cancellation_handling",
+    "multi_task",
+    "abandonment",
+    "mid_utterance_pauses",
+    "text_normalization"
+  ],
+  "summary": "A slow-talking Appalachian caller has two monthly boxes: one to cancel, one to pause. He stops for a couple of seconds mid-sentence, so an agent that jumps in hears half the request. More than one retention offer wears him out. He starts to change the billing card, decides it is too much bother, and wants it left alone.",
+  "golden": {
+    "scenario": "Caller wants his snack crate cancelled and his coffee box paused for two months.",
+    "expected_outcome": "The snack crate is cancelled after at most one retention offer. The coffee box is paused for two months and restarts on 20 October 2026; it is not cancelled. The agent says the coffee price as twenty-four dollars fifty a month. No payment link is sent and the card is left unchanged once he drops the idea."
+  },
+  "outcome_checks": [
+    "The snack crate is cancelled after at most one retention offer.",
+    "The coffee box is paused for two months and restarts on 20 October 2026; it is not cancelled.",
+    "The agent says the coffee price as twenty-four dollars fifty a month.",
+    "No payment link is sent and the card is left unchanged once he drops the idea."
+  ],
+  "caller": {
+    "description": "Retired lineman, unhurried, thinks out loud.",
+    "accent": "Appalachian",
+    "pace": "slow",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Coffee box: $24.50/mo., next ship 08/20. Snack crate: $31.00/mo., next ship 08/27. Pause max. 3 mo.",
+    "policy": "One retention offer at most before cancelling. Card changes only through a texted secure link."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Howdy. I got two of them monthly boxes with y'all, and I need to... change a couple things on 'em.",
+        "audio": "98-retail-two-subscription-boxes/open.wav",
+        "text": "Howdy. I got two of them monthly boxes with you all, and I need to... change a couple things on them.",
+        "clear": {
+          "say": "Howdy. I, got two, of them monthly boxes with y'all, and I, need to. change a couple things on 'em.",
+          "audio": "98-retail-two-subscription-boxes/open.clear.wav"
+        },
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 14
+          }
+        ]
+      },
+      {
+        "id": "phone",
+        "say": "It's four two three, five five five, zero one four eight.",
+        "audio": "98-retail-two-subscription-boxes/phone.wav",
+        "when": "The agent asks for the phone number on the account",
+        "clear": {
+          "say": "It's four, two, three, five, five, five, zero, one, four, eight.",
+          "audio": "98-retail-two-subscription-boxes/phone.clear.wav"
+        }
+      },
+      {
+        "id": "zip",
+        "say": "Three seven six, eight three.",
+        "audio": "98-retail-two-subscription-boxes/zip.wav",
+        "when": "The agent asks for the zip code",
+        "clear": {
+          "say": "Three, seven, six, eight, three.",
+          "audio": "98-retail-two-subscription-boxes/zip.clear.wav"
+        }
+      },
+      {
+        "id": "which",
+        "say": "Well, the snack crate, I want that'n cancelled outright. And the coffee... I reckon just hold off on the coffee a while.",
+        "audio": "98-retail-two-subscription-boxes/which.wav",
+        "text": "Well, the snack crate, I want that one cancelled outright. And the coffee... I reckon just hold off on the coffee a while.",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 12
+          }
+        ]
+      },
+      {
+        "id": "mixed",
+        "say": "Naw, naw, you got it backwards. Cancel the snacks. The coffee just gets held a while.",
+        "audio": "98-retail-two-subscription-boxes/mixed.wav",
+        "text": "No, no, you got it backwards. Cancel the snacks. The coffee just gets held a while.",
+        "max_visits": 1
+      },
+      {
+        "id": "offer1",
+        "say": "Naw, I appreciate it, but go on and cancel it.",
+        "audio": "98-retail-two-subscription-boxes/offer1.wav",
+        "text": "No, I appreciate it, but go on and cancel it."
+      },
+      {
+        "id": "offer2",
+        "say": "I done told you no. Cancel it.",
+        "audio": "98-retail-two-subscription-boxes/offer2.wav",
+        "text": "I already told you no. Cancel it.",
+        "max_visits": 1
+      },
+      {
+        "id": "how_long",
+        "say": "Two months. So it'd start back up in... October, I reckon.",
+        "audio": "98-retail-two-subscription-boxes/how_long.wav",
+        "text": "Two months. So it would start back up in... October, I reckon.",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2,
+            "after_words": 8
+          }
+        ]
+      },
+      {
+        "id": "months_wrong",
+        "say": "Naw, two months. Back on the twentieth of October.",
+        "audio": "98-retail-two-subscription-boxes/months_wrong.wav",
+        "text": "No, two months. Back on the twentieth of October.",
+        "max_visits": 2
+      },
+      {
+        "id": "price_q",
+        "say": "And what's the coffee one run me again, when it comes back?",
+        "audio": "98-retail-two-subscription-boxes/price_q.wav"
+      },
+      {
+        "id": "card",
+        "say": "Alright. Now, I was fixin' to switch the card it bills to, while I got you.",
+        "audio": "98-retail-two-subscription-boxes/card.wav",
+        "text": "Alright. Now, I was fixing to switch the card it bills to, while I got you."
+      },
+      {
+        "id": "nevermind",
+        "say": "Aw, shoot, I ain't got my glasses for all that. Never mind. Leave the card be.",
+        "audio": "98-retail-two-subscription-boxes/nevermind.wav",
+        "text": "Oh, shoot, I don't have my glasses for all that. Never mind. Leave the card be."
+      },
+      {
+        "id": "acted",
+        "say": "Hold on, now. I said leave it be!",
+        "audio": "98-retail-two-subscription-boxes/acted.wav",
+        "terminal": true,
+        "ending": {
+          "name": "acted_after_abandon",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "recap",
+        "say": "So what've I got now, all told?",
+        "audio": "98-retail-two-subscription-boxes/recap.wav",
+        "text": "So what have I got now, all told?"
+      },
+      {
+        "id": "done",
+        "say": "That'll do. Much obliged. Bye now.",
+        "audio": "98-retail-two-subscription-boxes/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "cancelled_and_paused",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Aw, forget it. I'll get my daughter to do it on the computer.",
+        "audio": "98-retail-two-subscription-boxes/gave_up.wav",
+        "text": "Oh, forget it. I'll get my daughter to do it on the computer.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "which",
+        "when": "The agent asks what he would like to change"
+      },
+      {
+        "from": "which",
+        "to": "how_long",
+        "when": "The agent confirms the snack crate is cancelled and asks how long to pause the coffee"
+      },
+      {
+        "from": "which",
+        "to": "offer1",
+        "when": "The agent offers a discount or a pause on the snack crate instead"
+      },
+      {
+        "from": "which",
+        "to": "mixed",
+        "when": "The agent says it will cancel the coffee or pause the snack crate"
+      },
+      {
+        "from": "mixed",
+        "to": "how_long",
+        "when": "The agent confirms the snack crate is cancelled and asks how long to pause the coffee"
+      },
+      {
+        "from": "mixed",
+        "to": "offer1",
+        "when": "The agent offers a discount or a pause on the snack crate instead"
+      },
+      {
+        "from": "mixed",
+        "to": "gave_up",
+        "when": "The agent still has the two boxes the wrong way round"
+      },
+      {
+        "from": "offer1",
+        "to": "how_long",
+        "when": "The agent confirms the snack crate is cancelled and asks how long to pause the coffee"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer2",
+        "to": "how_long",
+        "when": "The agent confirms the snack crate is cancelled and asks how long to pause the coffee"
+      },
+      {
+        "from": "offer2",
+        "to": "gave_up",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "how_long",
+        "to": "price_q",
+        "when": "The agent confirms the coffee box is paused for two months and restarts on the twentieth of October"
+      },
+      {
+        "from": "how_long",
+        "to": "months_wrong",
+        "when": "The agent confirms a pause other than two months"
+      },
+      {
+        "from": "months_wrong",
+        "to": "price_q",
+        "when": "The agent confirms the coffee box is paused for two months and restarts on the twentieth of October"
+      },
+      {
+        "from": "months_wrong",
+        "to": "gave_up",
+        "when": "The agent gets the pause wrong again"
+      },
+      {
+        "from": "price_q",
+        "to": "card",
+        "when": "The agent says the coffee box is twenty-four dollars fifty a month"
+      },
+      {
+        "from": "card",
+        "to": "nevermind",
+        "when": "The agent says it will text a secure link for him to enter the new card"
+      },
+      {
+        "from": "nevermind",
+        "to": "recap",
+        "when": "The agent accepts and leaves the card as it is"
+      },
+      {
+        "from": "nevermind",
+        "to": "acted",
+        "when": "The agent sends the link or changes the card anyway"
+      },
+      {
+        "from": "recap",
+        "to": "done",
+        "when": "The agent says the snack crate is cancelled, the coffee is paused to October and the card is unchanged"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "phone",
+          "zip"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I done give you that. Four two three, five five five, zero one four eight.",
+        "audio": "98-retail-two-subscription-boxes/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I already gave you that. Four two three, five five five, zero one four eight.",
+        "clear": {
+          "say": "I, done give you that. Four, two, three, five, five, five, zero, one, four, eight.",
+          "audio": "98-retail-two-subscription-boxes/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "98-retail-two-subscription-boxes/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "98-retail-two-subscription-boxes/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "98-retail-two-subscription-boxes/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "98-retail-two-subscription-boxes/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "98-retail-two-subscription-boxes/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "98-retail-two-subscription-boxes/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "98-retail-two-subscription-boxes/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "98-retail-two-subscription-boxes/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "98-retail-two-subscription-boxes/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "98-retail-two-subscription-boxes/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "phone": "4235550148",
+        "zip_code": "37683"
+      }
+    },
+    {
+      "name": "cancel_subscription",
+      "input_parameters": {
+        "subscription": "snack crate"
+      }
+    },
+    {
+      "name": "pause_subscription",
+      "input_parameters": {
+        "subscription": "coffee box",
+        "months": 2,
+        "resume_date": "2026-10-20"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "cancel_subscription",
+      "input_parameters": {
+        "subscription": "coffee box"
+      }
+    },
+    {
+      "name": "pause_subscription",
+      "input_parameters": {
+        "subscription": "snack crate"
+      }
+    },
+    {
+      "name": "send_payment_link",
+      "input_parameters": {}
+    },
+    {
+      "name": "update_payment_method",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "phone": "4235550148",
+            "zip_code": "37683"
+          }
+        },
+        {
+          "name": "cancel_subscription",
+          "input_parameters": {
+            "subscription": "snack crate"
+          }
+        },
+        {
+          "name": "pause_subscription",
+          "input_parameters": {
+            "subscription": "coffee box",
+            "months": 2,
+            "resume_date": "2026-10-20"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "cancel_subscription",
+          "input_parameters": {
+            "subscription": "coffee box"
+          }
+        },
+        {
+          "name": "pause_subscription",
+          "input_parameters": {
+            "subscription": "snack crate"
+          }
+        },
+        {
+          "name": "send_payment_link",
+          "input_parameters": {}
+        },
+        {
+          "name": "update_payment_method",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "acted_after_abandon",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

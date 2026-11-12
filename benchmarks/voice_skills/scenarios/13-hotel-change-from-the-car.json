@@ -1,0 +1,526 @@
+{
+  "id": "13-hotel-change-from-the-car",
+  "domain": "Hotel",
+  "name": "Booking change from a car",
+  "blurb": "Speakerphone echo, an aside",
+  "tts": "elevenlabs",
+  "title": "Changing a booking from a car speakerphone",
+  "skills": [
+    "echo",
+    "side_speech_rejection",
+    "multi_task",
+    "text_normalization",
+    "low_confidence_confirmation"
+  ],
+  "summary": "The caller is driving with the phone on speaker, so the agent hears its own voice come back. If it keeps stopping to ask whether he spoke, he gives up until he's parked. He extends his stay, talks to a passenger about a different day, adds parking and late check-out, and checks the total: a wrong total gets queried.",
+  "golden": {
+    "scenario": "Caller extends a weekend booking by a night and adds parking and a late check-out.",
+    "expected_outcome": "The agent never stops for, or answers, its own echo. Check-out moves to Monday 17 August; the Saturday and Sunday in the aside are ignored. Parking is added for three nights and late check-out set for 1 pm. The agent says 'Saint Andrew's Square', 'three p.m.' and a total of £472.50 naturally."
+  },
+  "outcome_checks": [
+    "The agent never stops for, or answers, its own echo.",
+    "Check-out moves to Monday 17 August; the Saturday and Sunday in the aside are ignored.",
+    "Parking is added for three nights and late check-out set for 1 pm.",
+    "The agent says 'Saint Andrew's Square', 'three p.m.' and a total of £472.50 naturally."
+  ],
+  "caller": {
+    "description": "Driving, passenger beside him.",
+    "accent": "Nigerian",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": {
+    "audio": "car-interior.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Rm. 412, Dlx King, £139.50/night. Parking £18/night. Check-in 3 p.m. Addr: 9 St. Andrew's Sq.",
+    "reservation": {
+      "check_in": "2026-08-14",
+      "check_out": "2026-08-16"
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, I've got a booking for this weekend and I need to change it.",
+        "audio": "13-hotel-change-from-the-car/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Booking is under Chukwuemeka Eze. Surname E, Z, E.",
+        "audio": "13-hotel-change-from-the-car/name.wav",
+        "clear": {
+          "say": "Booking is under Chukwuemeka Eze. Surname E, Z, E.",
+          "audio": "13-hotel-change-from-the-car/name.clear.wav"
+        }
+      },
+      {
+        "id": "spell",
+        "say": "C, H, U, K, W, U, E, M, E, K, A.",
+        "audio": "13-hotel-change-from-the-car/spell.wav",
+        "clear": {
+          "say": "C, H, U, K, W, U, E, M, E, K, A.",
+          "audio": "13-hotel-change-from-the-car/spell.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "change",
+        "say": "Make it Friday to Monday instead. Three nights.",
+        "audio": "13-hotel-change-from-the-car/change.wav"
+      },
+      {
+        "id": "yes3",
+        "say": "Yes, three nights is fine.",
+        "audio": "13-hotel-change-from-the-car/yes3.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Is your mum coming Saturday or Sunday? Sunday? Okay.",
+            "audio": "13-hotel-change-from-the-car/yes3-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "wrong_out",
+        "say": "No, Monday. I was talking to my wife. Check-out is Monday.",
+        "audio": "13-hotel-change-from-the-car/wrong_out.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "parking",
+        "say": "And add parking.",
+        "audio": "13-hotel-change-from-the-car/parking.wav"
+      },
+      {
+        "id": "all3",
+        "say": "All three nights.",
+        "audio": "13-hotel-change-from-the-car/all3.wav"
+      },
+      {
+        "id": "addr_q",
+        "say": "Where exactly are you? What's the address?",
+        "audio": "13-hotel-change-from-the-car/addr_q.wav"
+      },
+      {
+        "id": "checkin_q",
+        "say": "And what time is check-in?",
+        "audio": "13-hotel-change-from-the-car/checkin_q.wav"
+      },
+      {
+        "id": "late",
+        "say": "Can I get a late check-out on the Monday?",
+        "audio": "13-hotel-change-from-the-car/late.wav"
+      },
+      {
+        "id": "one",
+        "say": "One o'clock is fine.",
+        "audio": "13-hotel-change-from-the-car/one.wav"
+      },
+      {
+        "id": "total",
+        "say": "What's the new total?",
+        "audio": "13-hotel-change-from-the-car/total.wav"
+      },
+      {
+        "id": "total_wrong",
+        "say": "That doesn't sound right. Three nights, and three nights of parking?",
+        "audio": "13-hotel-change-from-the-car/total_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Okay, good. Send it to my email. Bye.",
+        "audio": "13-hotel-change-from-the-car/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "stay_extended",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "parked",
+        "say": "This line is useless. I'll call back when I've parked.",
+        "audio": "13-hotel-change-from-the-car/parked.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "name",
+        "when": "The agent asks for the name or reference"
+      },
+      {
+        "from": "name",
+        "to": "change",
+        "when": "The agent reads the booking and asks what to change"
+      },
+      {
+        "from": "name",
+        "to": "spell",
+        "when": "The agent asks him to spell the first name or cannot find the booking"
+      },
+      {
+        "from": "spell",
+        "to": "change",
+        "when": "The agent reads the booking and asks what to change"
+      },
+      {
+        "from": "spell",
+        "to": "parked",
+        "when": "The agent still cannot find the booking"
+      },
+      {
+        "from": "change",
+        "to": "yes3",
+        "when": "The agent gives the price for the extra night"
+      },
+      {
+        "from": "yes3",
+        "to": "parking",
+        "when": "The agent confirms check-out on Monday the seventeenth"
+      },
+      {
+        "from": "yes3",
+        "to": "wrong_out",
+        "when": "The agent confirms check-out on Saturday or Sunday"
+      },
+      {
+        "from": "wrong_out",
+        "to": "parking",
+        "when": "The agent confirms check-out on Monday the seventeenth"
+      },
+      {
+        "from": "wrong_out",
+        "to": "parked",
+        "when": "The agent still has the wrong check-out day"
+      },
+      {
+        "from": "parking",
+        "to": "all3",
+        "when": "The agent gives the parking price or asks which nights"
+      },
+      {
+        "from": "all3",
+        "to": "addr_q",
+        "when": "The agent confirms parking"
+      },
+      {
+        "from": "addr_q",
+        "to": "checkin_q",
+        "when": "The agent gives the address"
+      },
+      {
+        "from": "checkin_q",
+        "to": "late",
+        "when": "The agent gives the check-in time"
+      },
+      {
+        "from": "late",
+        "to": "one",
+        "when": "The agent offers a late check-out time"
+      },
+      {
+        "from": "one",
+        "to": "total",
+        "when": "The agent confirms late check-out"
+      },
+      {
+        "from": "total",
+        "to": "done",
+        "when": "The agent gives a total of £472.50"
+      },
+      {
+        "from": "total",
+        "to": "total_wrong",
+        "when": "The agent gives a different total"
+      },
+      {
+        "from": "total_wrong",
+        "to": "done",
+        "when": "The agent gives a total of £472.50"
+      },
+      {
+        "from": "total_wrong",
+        "to": "parked",
+        "when": "The agent gives a wrong total again"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "echo",
+        "when": "The agent stops mid-sentence or asks whether the caller said something",
+        "say": "No, I didn't say anything. Go on.",
+        "audio": "13-hotel-change-from-the-car/reaction-echo.wav",
+        "max_visits": 3,
+        "then": "resume",
+        "after_max_visits": "parked"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "13-hotel-change-from-the-car/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "13-hotel-change-from-the-car/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "13-hotel-change-from-the-car/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "13-hotel-change-from-the-car/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "13-hotel-change-from-the-car/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "13-hotel-change-from-the-car/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "13-hotel-change-from-the-car/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "13-hotel-change-from-the-car/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "13-hotel-change-from-the-car/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "13-hotel-change-from-the-car/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 12,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_reservation",
+      "input_parameters": {
+        "name": "Chukwuemeka Eze"
+      }
+    },
+    {
+      "name": "modify_reservation",
+      "input_parameters": {
+        "check_out": "2026-08-17"
+      }
+    },
+    {
+      "name": "add_parking",
+      "input_parameters": {
+        "nights": 3
+      }
+    },
+    {
+      "name": "request_late_checkout",
+      "input_parameters": {
+        "time": "13:00"
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "modify_reservation",
+      "input_parameters": {
+        "check_out": "2026-08-15"
+      }
+    },
+    {
+      "name": "modify_reservation",
+      "input_parameters": {
+        "check_out": "2026-08-16"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_reservation",
+          "input_parameters": {
+            "name": "Chukwuemeka Eze"
+          }
+        },
+        {
+          "name": "modify_reservation",
+          "input_parameters": {
+            "check_out": "2026-08-17"
+          }
+        },
+        {
+          "name": "add_parking",
+          "input_parameters": {
+            "nights": 3
+          }
+        },
+        {
+          "name": "request_late_checkout",
+          "input_parameters": {
+            "time": "13:00"
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "modify_reservation",
+          "input_parameters": {
+            "check_out": "2026-08-15"
+          }
+        },
+        {
+          "name": "modify_reservation",
+          "input_parameters": {
+            "check_out": "2026-08-16"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

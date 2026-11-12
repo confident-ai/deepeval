@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -34,3 +34,16 @@ class InterruptDecision(BaseModel):
     should_interrupt: bool
     reason: str
     utterance: Optional[str] = None
+
+
+class CallerVoiceProfile(BaseModel):
+    """What a persona implies about a call without spelling it out.
+
+    `delivery` is how the caller sounds, `asides` are what they say to someone
+    else in the room, and `background_lines` holds what each background
+    speaker says, in the order the persona lists them.
+    """
+
+    delivery: Optional[str] = None
+    asides: List[str] = []
+    background_lines: List[List[str]] = []

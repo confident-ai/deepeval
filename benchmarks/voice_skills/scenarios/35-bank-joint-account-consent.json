@@ -1,0 +1,568 @@
+{
+  "id": "35-bank-joint-account-consent",
+  "domain": "Retail bank",
+  "name": "Joint account, one voice",
+  "blurb": "Answers for partner, shouted deposit",
+  "tts": "elevenlabs",
+  "title": "Opening a joint account when only one partner is on the phone",
+  "skills": [
+    "consent_verification",
+    "multi_speaker_handling",
+    "low_confidence_confirmation",
+    "numeric_read_back",
+    "entity_extraction"
+  ],
+  "summary": "A caller wants a joint account for the bills and offers to answer for his partner, who is in the room. Opening it on his word fails the call. She shouts a different deposit from across the room, then properly comes to the phone to agree. Her double-barrelled name is said once, and he wants the new account number repeated slowly.",
+  "golden": {
+    "scenario": "Caller wants to open a joint bills account with his partner and put £200 in it.",
+    "expected_outcome": "The agent confirms the spelling of Shanelle Dacosta-Hyde instead of guessing. The account is not opened until Shanelle herself comes to the phone, agrees and gives her date of birth. The opening deposit is £200.00 from account 22805914, not the £500 shouted in the background. The agent reads the new sort code 40-17-52 and account number 70936418 digit by digit, twice when asked."
+  },
+  "outcome_checks": [
+    "The agent confirms the spelling of Shanelle Dacosta-Hyde instead of guessing.",
+    "The account is not opened until Shanelle herself comes to the phone, agrees and gives her date of birth.",
+    "The opening deposit is £200.00 from account 22805914, not the £500 shouted in the background.",
+    "The agent reads the new sort code 40-17-52 and account number 70936418 digit by digit, twice when asked."
+  ],
+  "caller": {
+    "description": "Bus driver on a day off, partner and baby in the room.",
+    "accent": "Jamaican",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "speakerphone"
+  },
+  "background": {
+    "audio": "living-room-baby-and-tv.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "A joint account needs each applicant to be verified and to agree on the call in their own voice. Nobody can consent for someone else.",
+    "tools": {
+      "open_joint_account": {
+        "returns": {
+          "sort_code": "40-17-52",
+          "account_number": "70936418"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yeah, good mornin. Mi and mi partner want open a joint account fi di bills dem.",
+        "audio": "35-bank-joint-account-consent/open.wav",
+        "text": "Yeah, good morning. Me and my partner want to open a joint account for the bills."
+      },
+      {
+        "id": "name",
+        "say": "Errol Fairweather.",
+        "audio": "35-bank-joint-account-consent/name.wav",
+        "when": "The agent asks for the caller's name"
+      },
+      {
+        "id": "acct",
+        "say": "Two two eight, zero five, nine one four.",
+        "audio": "35-bank-joint-account-consent/acct.wav",
+        "when": "The agent asks for his existing account number",
+        "clear": {
+          "say": "Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/acct.clear.wav"
+        }
+      },
+      {
+        "id": "acct_wrong",
+        "say": "No sah. Two two eight, zero five, nine one four.",
+        "audio": "35-bank-joint-account-consent/acct_wrong.wav",
+        "text": "No sir. Two two eight, zero five, nine one four.",
+        "clear": {
+          "say": "No sah. Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/acct_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "partner",
+        "say": "She name Shanelle Dacosta-Hyde.",
+        "audio": "35-bank-joint-account-consent/partner.wav",
+        "text": "Her name is Shanelle Dacosta-Hyde."
+      },
+      {
+        "id": "spell",
+        "say": "S, H, A, N, E, double L, E. Den Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
+        "audio": "35-bank-joint-account-consent/spell.wav",
+        "text": "S, H, A, N, E, double L, E. Then Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
+        "clear": {
+          "say": "S, H, A, N, E, double L, E, Den Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
+          "audio": "35-bank-joint-account-consent/spell.clear.wav"
+        }
+      },
+      {
+        "id": "name_wrong",
+        "say": "No, dat nuh right. Mek mi spell it fi yuh.",
+        "audio": "35-bank-joint-account-consent/name_wrong.wav",
+        "text": "No, that's not right. Let me spell it for you.",
+        "max_visits": 1
+      },
+      {
+        "id": "proxy_ask",
+        "say": "She busy wid di baby right now. Mi can answer fi her, she done seh yes already.",
+        "audio": "35-bank-joint-account-consent/proxy_ask.wav",
+        "text": "She is busy with the baby right now. I can answer for her, she already said yes."
+      },
+      {
+        "id": "proxy",
+        "say": "Alright. Her birthday a di nineteenth a June, ninety-two.",
+        "audio": "35-bank-joint-account-consent/proxy.wav",
+        "text": "Alright. Her birthday is the nineteenth of June, ninety-two.",
+        "fails_call": true
+      },
+      {
+        "id": "her_consent",
+        "say": "Hello? Yes, this is Shanelle. Yes, I agree to open the joint account with Errol.",
+        "audio": "35-bank-joint-account-consent/her_consent.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Shanelle! Come tek di phone a minute, di bank want hear it from yuh.",
+            "audio": "35-bank-joint-account-consent/her_consent-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 10
+          },
+          {
+            "type": "SpeakerChange",
+            "voice": "female, Jamaican"
+          }
+        ]
+      },
+      {
+        "id": "her_dob",
+        "say": "Nineteenth of June, nineteen ninety-two.",
+        "audio": "35-bank-joint-account-consent/her_dob.wav",
+        "events": [
+          {
+            "type": "SpeakerChange",
+            "voice": "female, Jamaican"
+          }
+        ]
+      },
+      {
+        "id": "deposit",
+        "say": "Start it wid two hundred pound, from mi own account.",
+        "audio": "35-bank-joint-account-consent/deposit.wav",
+        "text": "Start it with two hundred pounds, from my own account.",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "No, Errol, put in five hundred! Five hundred!",
+            "volume": 0.5,
+            "audio": "35-bank-joint-account-consent/deposit-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "five",
+        "say": "No, a she a shout inna di background. Two hundred. A me a pay it.",
+        "audio": "35-bank-joint-account-consent/five.wav",
+        "text": "No, it's her shouting in the background. Two hundred. I'm paying it.",
+        "max_visits": 1
+      },
+      {
+        "id": "again",
+        "say": "Seh di new account number again fi mi, slow.",
+        "audio": "35-bank-joint-account-consent/again.wav",
+        "text": "Say the new account number again for me, slowly.",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "say": "Bless up. Thanks, yuh hear.",
+        "audio": "35-bank-joint-account-consent/done.wav",
+        "text": "Bless up. Thanks, you hear.",
+        "terminal": true,
+        "ending": {
+          "name": "joint_account_opened",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gone",
+        "say": "Cho. Wi will come a di branch Saturday.",
+        "audio": "35-bank-joint-account-consent/gone.wav",
+        "text": "Tch. We will come to the branch Saturday.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "partner",
+        "when": "The agent asks for his partner's full name"
+      },
+      {
+        "from": "ident",
+        "to": "acct_wrong",
+        "when": "The agent reads back an account number other than 22805914"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "partner",
+        "when": "The agent asks for his partner's full name"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "gone",
+        "when": "The agent still has the wrong account number"
+      },
+      {
+        "from": "partner",
+        "to": "spell",
+        "when": "The agent asks him to spell her name"
+      },
+      {
+        "from": "partner",
+        "to": "name_wrong",
+        "when": "The agent reads the name back with the wrong spelling"
+      },
+      {
+        "from": "partner",
+        "to": "proxy_ask",
+        "when": "The agent says it needs to speak to her without confirming the spelling"
+      },
+      {
+        "from": "name_wrong",
+        "to": "spell",
+        "when": "The agent asks him to spell her name"
+      },
+      {
+        "from": "name_wrong",
+        "to": "gone",
+        "when": "The agent saves the name without checking"
+      },
+      {
+        "from": "spell",
+        "to": "proxy_ask",
+        "when": "The agent says it needs to speak to Shanelle herself"
+      },
+      {
+        "from": "proxy_ask",
+        "to": "her_consent",
+        "when": "The agent insists she must agree on the call herself"
+      },
+      {
+        "from": "proxy_ask",
+        "to": "proxy",
+        "when": "The agent accepts his word for her consent"
+      },
+      {
+        "from": "proxy",
+        "to": "deposit",
+        "when": "The agent asks about the opening deposit"
+      },
+      {
+        "from": "her_consent",
+        "to": "her_dob",
+        "when": "The agent asks her for her date of birth"
+      },
+      {
+        "from": "her_dob",
+        "to": "deposit",
+        "when": "The agent asks about the opening deposit"
+      },
+      {
+        "from": "deposit",
+        "to": "again",
+        "when": "The agent confirms two hundred pounds and gives the new sort code and account number"
+      },
+      {
+        "from": "deposit",
+        "to": "five",
+        "when": "The agent says five hundred pounds"
+      },
+      {
+        "from": "five",
+        "to": "again",
+        "when": "The agent confirms two hundred pounds and gives the new sort code and account number"
+      },
+      {
+        "from": "five",
+        "to": "gone",
+        "when": "The agent still has five hundred pounds"
+      },
+      {
+        "from": "again",
+        "to": "done",
+        "when": "The agent repeats the sort code and account number slowly, digit by digit"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "acct"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Mi just tell yuh dat. Two two eight, zero five, nine one four.",
+        "audio": "35-bank-joint-account-consent/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gone",
+        "text": "I just told you that. Two two eight, zero five, nine one four.",
+        "clear": {
+          "say": "Mi just tell yuh dat. Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "35-bank-joint-account-consent/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "35-bank-joint-account-consent/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "35-bank-joint-account-consent/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "35-bank-joint-account-consent/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "35-bank-joint-account-consent/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "35-bank-joint-account-consent/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "35-bank-joint-account-consent/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "35-bank-joint-account-consent/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "35-bank-joint-account-consent/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "35-bank-joint-account-consent/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Errol Fairweather",
+        "account_number": "22805914"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Shanelle Dacosta-Hyde",
+        "date_of_birth": "1992-06-19"
+      }
+    },
+    {
+      "name": "open_joint_account",
+      "input_parameters": {
+        "applicants": [
+          "Errol Fairweather",
+          "Shanelle Dacosta-Hyde"
+        ],
+        "opening_deposit": "200.00",
+        "funded_from": "22805914"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "open_joint_account",
+      "input_parameters": {
+        "opening_deposit": "500.00"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Errol Fairweather",
+            "account_number": "22805914"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Shanelle Dacosta-Hyde",
+            "date_of_birth": "1992-06-19"
+          }
+        },
+        {
+          "name": "open_joint_account",
+          "input_parameters": {
+            "applicants": [
+              "Errol Fairweather",
+              "Shanelle Dacosta-Hyde"
+            ],
+            "opening_deposit": "200.00",
+            "funded_from": "22805914"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "open_joint_account",
+          "input_parameters": {
+            "opening_deposit": "500.00"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "proxy"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "consent_verification",
+      "exists": true,
+      "name": "Consent Verification",
+      "criteria": "The agent verified identity and got explicit consent from the right person before acting.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

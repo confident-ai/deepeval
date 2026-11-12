@@ -44,3 +44,27 @@ export const GitHubMark: ComponentType<SVGProps<SVGSVGElement>> = (props) => (
     />
   </svg>
 );
+
+export const ElevenLabsMark: ComponentType<SVGProps<SVGSVGElement>> = (props) => (
+  <svg viewBox="-5 -5 34 34" color="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path fill="currentColor" d="M5 0h5v24H5V0zM14 0h5v24h-5V0z" />
+  </svg>
+);
+
+export const CartesiaMark: ComponentType<SVGProps<SVGSVGElement>> = (props) => (
+  <svg viewBox="51 56 313 313" color="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path
+      fill="currentColor"
+      d="M317.301 182.114V237.681H289.766L286.153 232.679L277.49 220.689L271.591 212.526L261.508 198.571L264.557 212.526L268.964 232.679L270.056 237.681L273.37 252.833L277.49 271.685L277.774 272.987L282.178 293.138L286.585 313.292H224.406L219.999 293.138L217.769 282.929L215.595 272.987L211.189 252.833L207.877 237.681L204.565 252.833L200.158 272.987L197.864 283.481L195.754 293.138L191.347 313.292H129.048L133.455 293.138L137.738 273.533V273.53L138.143 273.231L138.475 272.987L158.05 258.489L165.69 252.833L177.957 243.747L186.149 237.681H98.332V182.114H157.722L158.05 180.617L159.887 172.221L164.291 152.067L168.698 131.914L173.102 111.763H242.531L246.935 131.914L247.858 136.131L237.676 143.671L226.336 152.067L217.769 158.413L199.123 172.221L197.864 173.152L185.764 182.114H317.301Z"
+    />
+  </svg>
+);
+
+export const DeepgramMark: ComponentType<SVGProps<SVGSVGElement>> = (props) => (
+  <svg viewBox="-5 -5 34 34" color="currentColor" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path
+      fill="currentColor"
+      d="M11.203 24H1.517a.364.364 0 0 1-.258-.62l6.239-6.275a.366.366 0 0 1 .259-.108h3.52c2.723 0 5.025-2.127 5.107-4.845a5.004 5.004 0 0 0-4.999-5.148H7.613v4.646c0 .2-.164.364-.365.364H.968a.365.365 0 0 1-.363-.364V.364C.605.164.768 0 .969 0h10.416c6.684 0 12.111 5.485 12.01 12.187C23.293 18.77 17.794 24 11.202 24z"
+    />
+  </svg>
+);

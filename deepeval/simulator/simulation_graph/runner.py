@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.simulator.simulation_graph.node import SimulationNode
@@ -30,6 +30,7 @@ class TurnEmission:
 
     turn: Optional[Turn]
     end: bool
+    events: List[Any] = field(default_factory=list)
 
 
 @dataclass
@@ -38,6 +39,11 @@ class _GraphConversationState:
 
     current: SimulationNode
     visits: Dict[int, int] = field(default_factory=dict)
+    pending: Optional[SimulationNode] = None
+    path: List[str] = field(default_factory=list)
+    failed: List[str] = field(default_factory=list)
+    ending: Optional[str] = None
+    off_script: bool = False
 
 
 class _SimulationGraphRunner:
@@ -55,6 +61,95 @@ class _SimulationGraphRunner:
                 "root of the graph)."
             )
         self.root = root
+        self.shortest_path = _shortest_path(root)
+
+    def summary(self, state: _GraphConversationState) -> Dict[str, Any]:
+        """What a conversation did on the graph, for the test case metadata."""
+        if not (self.root.edges or self.root.terminal):
+            return {}
+        failed = bool(state.failed) or state.off_script
+        return {
+            "Simulation path": list(state.path),
+            "Simulation ending": state.ending,
+            "Simulation failed": failed,
+            "Failed nodes": list(state.failed),
+            "Shortest path": self.shortest_path,
+        }
+
+    def _enter(
+        self, state: _GraphConversationState
+    ) -> Optional[SimulationNode]:
+        if state.off_script:
+            return None
+        node = state.pending or state.current
+        state.pending = None
+        visits = state.visits.get(id(node), 0)
+        if node.max_visits is not None and visits >= node.max_visits:
+            return None
+        return node
+
+    @staticmethod
+    def _emitted(state: _GraphConversationState, node: SimulationNode) -> bool:
+        state.visits[id(node)] = state.visits.get(id(node), 0) + 1
+        state.path.append(node.name)
+        if node.fails:
+            state.failed.append(node.name)
+        if node.terminal and node is state.current:
+            state.ending = node.ending or node.name
+            return True
+        return False
+
+    def _choices(
+        self, state: _GraphConversationState
+    ) -> List[
+        Tuple[str, str, Optional[SimulationNode], Optional[SimulationNode]]
+    ]:
+        """Every way out of the current node: its edges, then the reactions."""
+        said = lambda node: bool(state.visits.get(id(node)))
+        choices = []
+        for child, when in state.current.edges:
+            said_once = child.group is not None and said(child)
+            # A line already said in another place, out of turn, is not
+            # said again.
+            twin = getattr(child, "same_line_as", None)
+            if not said_once and not (twin is not None and said(twin)):
+                choices.append(("edge", when, child, None))
+        for reaction, when, then in self.root.reactions:
+            twin = getattr(reaction, "same_line_as", None)
+            if twin is not None and (said(twin) or said(reaction)):
+                continue
+            choices.append(("reaction", when, reaction, then))
+        return choices
+
+    def _follow(
+        self,
+        state: _GraphConversationState,
+        choices: List[
+            Tuple[str, str, Optional[SimulationNode], Optional[SimulationNode]]
+        ],
+        choice: EdgeChoice,
+    ) -> None:
+        index = getattr(choice, "index", None)
+        if index is None or not (1 <= index <= len(choices)):
+            fallback = self.root.fallback
+            if fallback is None:
+                return
+            used = state.visits.get(id(fallback), 0)
+            if fallback.max_visits is not None and used >= fallback.max_visits:
+                state.off_script = True
+                state.ending = "off_script"
+            else:
+                state.pending = fallback
+            return
+        kind, _, node, then = choices[index - 1]
+        if kind == "edge":
+            state.current = node
+            return
+        used = state.visits.get(id(node), 0)
+        if node.max_visits is None or used < node.max_visits:
+            state.pending = node
+        elif then is not None:
+            state.current = then
 
     def new_conversation_state(self) -> _GraphConversationState:
         return _GraphConversationState(current=self.root, visits={})
@@ -72,9 +167,8 @@ class _SimulationGraphRunner:
         thread_id: str,
         language: str,
     ) -> TurnEmission:
-        node = state.current
-        visits = state.visits.get(id(node), 0)
-        if node.max_visits is not None and visits >= node.max_visits:
+        node = self._enter(state)
+        if node is None:
             return TurnEmission(turn=None, end=True)
 
         result = self._invoke_action(
@@ -93,25 +187,32 @@ class _SimulationGraphRunner:
             result = asyncio.run(result)
 
         turn = _normalize_user_turn(result, node)
-        state.visits[id(node)] = visits + 1
-
-        return TurnEmission(turn=turn, end=bool(node.terminal))
+        if node.events:
+            turn.metadata = {
+                **(turn.metadata or {}),
+                "events": [event.record() for event in node.events],
+            }
+        return TurnEmission(
+            turn=turn, end=self._emitted(state, node), events=node.events
+        )
 
     def advance(
         self,
         simulator: "ConversationSimulator",
         state: _GraphConversationState,
         assistant_reply: str,
+        turns: Optional[List[Turn]] = None,
     ) -> None:
-        node = state.current
-        if not node.edges:
+        choices = self._choices(state)
+        if not choices:
             return  # No edges -> stay on current node (no LLM call).
-        choices = [when for _, when in node.edges]
-        prompt = SimulationGraphTemplate.classify_edge(assistant_reply, choices)
+        prompt = SimulationGraphTemplate.classify_edge(
+            assistant_reply,
+            [when for _, when, _, _ in choices],
+            _recent(turns),
+        )
         choice: EdgeChoice = simulator.generate_schema(prompt, EdgeChoice)
-        next_node = _resolve_choice(node, choice)
-        if next_node is not None:
-            state.current = next_node
+        self._follow(state, choices, choice)
 
     # ------------------------------------------------------------------
     # Async API
@@ -126,9 +227,8 @@ class _SimulationGraphRunner:
         thread_id: str,
         language: str,
     ) -> TurnEmission:
-        node = state.current
-        visits = state.visits.get(id(node), 0)
-        if node.max_visits is not None and visits >= node.max_visits:
+        node = self._enter(state)
+        if node is None:
             return TurnEmission(turn=None, end=True)
 
         result = self._invoke_action(
@@ -144,27 +244,34 @@ class _SimulationGraphRunner:
             result = await result
 
         turn = _normalize_user_turn(result, node)
-        state.visits[id(node)] = visits + 1
-
-        return TurnEmission(turn=turn, end=bool(node.terminal))
+        if node.events:
+            turn.metadata = {
+                **(turn.metadata or {}),
+                "events": [event.record() for event in node.events],
+            }
+        return TurnEmission(
+            turn=turn, end=self._emitted(state, node), events=node.events
+        )
 
     async def a_advance(
         self,
         simulator: "ConversationSimulator",
         state: _GraphConversationState,
         assistant_reply: str,
+        turns: Optional[List[Turn]] = None,
     ) -> None:
-        node = state.current
-        if not node.edges:
+        choices = self._choices(state)
+        if not choices:
             return
-        choices = [when for _, when in node.edges]
-        prompt = SimulationGraphTemplate.classify_edge(assistant_reply, choices)
+        prompt = SimulationGraphTemplate.classify_edge(
+            assistant_reply,
+            [when for _, when, _, _ in choices],
+            _recent(turns),
+        )
         choice: EdgeChoice = await simulator.a_generate_schema(
             prompt, EdgeChoice
         )
-        next_node = _resolve_choice(node, choice)
-        if next_node is not None:
-            state.current = next_node
+        self._follow(state, choices, choice)
 
     # ------------------------------------------------------------------
     # Internals
@@ -212,6 +319,18 @@ class _SimulationGraphRunner:
         return node.action(**kwargs)
 
 
+def _recent(turns: Optional[List[Turn]], keep: int = 8) -> str:
+    """The last few turns before the assistant's latest reply."""
+    earlier = list(turns or [])
+    if earlier and earlier[-1].role == "assistant":
+        earlier = earlier[:-1]
+    earlier = earlier[-keep:]
+    return "\n".join(
+        f'{"User" if turn.role == "user" else "Assistant"}: {turn.content}'
+        for turn in earlier
+    )
+
+
 def _normalize_user_turn(
     result: Union[str, Turn], node: SimulationNode
 ) -> Turn:
@@ -230,12 +349,33 @@ def _normalize_user_turn(
     )
 
 
-def _resolve_choice(
-    node: SimulationNode, choice: EdgeChoice
-) -> Optional[SimulationNode]:
-    index = getattr(choice, "index", None)
-    if index is None:
-        return None
-    if not (1 <= index <= len(node.edges)):
-        return None
-    return node.edges[index - 1][0]
+def _shortest_path(root: SimulationNode) -> Optional[int]:
+    """Fewest user turns from the root to an ending that is not a failure.
+
+    Nodes in a group are all said, so entering a group costs its size.
+    """
+    best: Dict[int, int] = {id(root): 1}
+    queue: List[Tuple[int, SimulationNode]] = [(1, root)]
+    shortest: Optional[int] = None
+    while queue:
+        queue.sort(key=lambda item: item[0])
+        cost, node = queue.pop(0)
+        if cost > best.get(id(node), cost):
+            continue
+        if node.terminal:
+            if node.ending is not None and not node.fails:
+                shortest = cost if shortest is None else min(shortest, cost)
+            continue
+        for child, _ in node.edges:
+            if child.fails:
+                continue
+            if child.group is not None:
+                if child.group is node.group:
+                    continue
+                step = len(child.group.members)
+            else:
+                step = 1
+            if cost + step < best.get(id(child), cost + step + 1):
+                best[id(child)] = cost + step
+                queue.append((cost + step, child))
+    return shortest

@@ -1,0 +1,515 @@
+{
+  "id": "75-hotel-airport-shuttle-in-spanish",
+  "domain": "Hotel",
+  "name": "Shuttle booking in Spanish",
+  "blurb": "Switches language, echo, son interrupts",
+  "tts": "elevenlabs",
+  "title": "An airport shuttle, continued in Spanish, from a speakerphone",
+  "skills": [
+    "language_switching",
+    "multi_speaker_handling",
+    "echo",
+    "cancellation_handling",
+    "entity_extraction"
+  ],
+  "summary": "A guest on a room speakerphone, with echo, switches to Spanish in her second sentence. Her son calls out the wrong flight time from across the room. She books the dawn shuttle and cancels a private car: the agent may suggest keeping the car once, not twice. A wrong read-back is corrected once.",
+  "golden": {
+    "scenario": "Guest needs to get to the airport for an early flight on Friday and no longer wants her private car.",
+    "expected_outcome": "After the switch the agent speaks Spanish for the rest of the call. The shuttle is booked for 04:15 on Friday 14 August for two people and two bags, based on the 06:40 flight, not 07:40. The private car for Friday is cancelled after at most one suggestion to keep it. The agent never stops for, or answers, its own echo."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Spanish for the rest of the call.",
+    "The shuttle is booked for 04:15 on Friday 14 August for two people and two bags, based on the 06:40 flight, not 07:40.",
+    "The private car for Friday is cancelled after at most one suggestion to keep it.",
+    "The agent never stops for, or answers, its own echo."
+  ],
+  "caller": {
+    "description": "Retired teacher travelling with her adult son, more at ease in Spanish.",
+    "accent": "Spanish",
+    "voice": "female",
+    "languages": [
+      "en",
+      "es"
+    ]
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Shuttle: £9 per person, from the main entrance, 04:15 / 05:15 / 06:15. Arrive airport 2 h before departure. Private car cancellation free up to 24 h before.",
+    "policy": "One suggestion at most to keep a booking before cancelling it."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello, good morning. I am in room one one two. I need to go to the airport on Friday.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/open.wav",
+        "clear": {
+          "say": "Hello, good morning. I, am in room one, one, two, I, need to go to the airport on Friday.",
+          "audio": "75-hotel-airport-shuttle-in-spanish/open.clear.wav"
+        }
+      },
+      {
+        "id": "switch",
+        "say": "My flight is... Perdone, ¿me puede atender en español?",
+        "audio": "75-hotel-airport-shuttle-in-spanish/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "es"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Disculpe, no le entiendo bien. En español, por favor.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "flight",
+        "say": "El vuelo sale a las seis cuarenta de la mañana, el viernes catorce.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/flight.wav",
+        "when": "The agent asks for the flight time or the day",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "No, mamá, a las siete cuarenta. ¡Siete cuarenta!",
+            "volume": 0.5,
+            "audio": "75-hotel-airport-shuttle-in-spanish/flight-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "pax",
+        "say": "Somos dos personas, con dos maletas grandes.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/pax.wav",
+        "when": "The agent asks how many people or bags"
+      },
+      {
+        "id": "time_wrong",
+        "say": "No, no. A las seis cuarenta. Mi hijo se confunde con el vuelo de vuelta.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/time_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "pick",
+        "say": "Sí, la de las cuatro y cuarto. ¿Cuánto cuesta?",
+        "audio": "75-hotel-airport-shuttle-in-spanish/pick.wav"
+      },
+      {
+        "id": "cancel",
+        "say": "Bien. Y tengo un coche privado reservado para las cuatro de ese día. Cancélelo, por favor, ya no lo quiero.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/cancel.wav",
+        "clear": {
+          "say": "Bien. Y, tengo un, coche privado reservado para las cuatro, de ese día. Cancélelo, por favor, ya no lo quiero.",
+          "audio": "75-hotel-airport-shuttle-in-spanish/cancel.clear.wav"
+        }
+      },
+      {
+        "id": "no_keep",
+        "say": "No, gracias. Solo cancélelo.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/no_keep.wav"
+      },
+      {
+        "id": "pushed",
+        "say": "Ya le he dicho que no. Cancele el coche.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/pushed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "where",
+        "say": "Vale. ¿Y dónde nos recoge la lanzadera?",
+        "audio": "75-hotel-airport-shuttle-in-spanish/where.wav"
+      },
+      {
+        "id": "read_wrong",
+        "say": "No. Dos personas, el viernes, a las cuatro y cuarto.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/read_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Perfecto. Muchas gracias. Adiós.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/done.wav",
+        "text": "Perfect. Thank you very much. Goodbye.",
+        "terminal": true,
+        "ending": {
+          "name": "shuttle_booked_car_cancelled",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "colgar",
+        "say": "Mire, déjelo. Bajo a recepción y lo hago allí.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/colgar.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks for her flight details"
+      },
+      {
+        "from": "switch",
+        "to": "details",
+        "when": "The agent answers in Spanish"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent answers in English"
+      },
+      {
+        "from": "english",
+        "to": "details",
+        "when": "The agent answers in Spanish"
+      },
+      {
+        "from": "english",
+        "to": "colgar",
+        "when": "The agent answers in English again"
+      },
+      {
+        "from": "details",
+        "to": "pick",
+        "when": "The agent offers the 04:15 shuttle for the 06:40 flight"
+      },
+      {
+        "from": "details",
+        "to": "time_wrong",
+        "when": "The agent uses a flight time of 07:40 or offers a later shuttle"
+      },
+      {
+        "from": "time_wrong",
+        "to": "pick",
+        "when": "The agent offers the 04:15 shuttle for the 06:40 flight"
+      },
+      {
+        "from": "time_wrong",
+        "to": "colgar",
+        "when": "The agent still uses 07:40"
+      },
+      {
+        "from": "pick",
+        "to": "cancel",
+        "when": "The agent gives the price and confirms the 04:15 shuttle"
+      },
+      {
+        "from": "cancel",
+        "to": "where",
+        "when": "The agent confirms the private car is cancelled"
+      },
+      {
+        "from": "cancel",
+        "to": "no_keep",
+        "when": "The agent suggests keeping the private car"
+      },
+      {
+        "from": "no_keep",
+        "to": "where",
+        "when": "The agent confirms the private car is cancelled"
+      },
+      {
+        "from": "no_keep",
+        "to": "pushed",
+        "when": "The agent suggests keeping the car a second time"
+      },
+      {
+        "from": "pushed",
+        "to": "where",
+        "when": "The agent confirms the private car is cancelled"
+      },
+      {
+        "from": "pushed",
+        "to": "colgar",
+        "when": "The agent still does not cancel the car"
+      },
+      {
+        "from": "where",
+        "to": "done",
+        "when": "The agent gives the pick-up point and reads back two people, Friday, 04:15"
+      },
+      {
+        "from": "where",
+        "to": "read_wrong",
+        "when": "The agent reads back a different time, day or number of people"
+      },
+      {
+        "from": "read_wrong",
+        "to": "done",
+        "when": "The agent reads back two people, Friday, 04:15"
+      },
+      {
+        "from": "read_wrong",
+        "to": "colgar",
+        "when": "The agent reads it back wrongly again"
+      }
+    ],
+    "groups": [
+      {
+        "id": "details",
+        "nodes": [
+          "flight",
+          "pax"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "echo",
+        "when": "The agent stops mid-sentence or asks whether the caller said something",
+        "say": "No, no he dicho nada. Siga, siga.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/reaction-echo.wav",
+        "max_visits": 3,
+        "then": "resume",
+        "after_max_visits": "colgar"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Ya se lo he dicho. Viernes catorce, a las seis cuarenta, dos personas.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "colgar"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "75-hotel-airport-shuttle-in-spanish/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "75-hotel-airport-shuttle-in-spanish/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 8,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_reservation",
+      "input_parameters": {
+        "room": "112"
+      }
+    },
+    {
+      "name": "book_shuttle",
+      "input_parameters": {
+        "date": "2026-08-14",
+        "time": "04:15",
+        "passengers": 2,
+        "bags": 2
+      }
+    },
+    {
+      "name": "cancel_car_transfer",
+      "input_parameters": {
+        "room": "112",
+        "date": "2026-08-14"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_shuttle",
+      "input_parameters": {
+        "time": "05:15"
+      }
+    },
+    {
+      "name": "book_shuttle",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_reservation",
+          "input_parameters": {
+            "room": "112"
+          }
+        },
+        {
+          "name": "book_shuttle",
+          "input_parameters": {
+            "date": "2026-08-14",
+            "time": "04:15",
+            "passengers": 2,
+            "bags": 2
+          }
+        },
+        {
+          "name": "cancel_car_transfer",
+          "input_parameters": {
+            "room": "112",
+            "date": "2026-08-14"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_shuttle",
+          "input_parameters": {
+            "time": "05:15"
+          }
+        },
+        {
+          "name": "book_shuttle",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

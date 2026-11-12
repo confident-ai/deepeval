@@ -230,6 +230,7 @@ def prepare_measure(
     metric: Union[BaseMetric, BaseConversationalMetric],
     test_case: Union[LLMTestCase, ConversationalTestCase],
     multimodal: Optional[bool] = None,
+    audio: bool = False,
 ) -> None:
     """What every measure does before judging: validate the test case
     against the metric's required params and zero its cost and token
@@ -247,6 +248,7 @@ def prepare_measure(
             metric.model,
             multimodal,
             require_mcp_servers=metric._requires_mcp_servers,
+            audio=audio,
         )
     else:
         check_llm_test_case_params(

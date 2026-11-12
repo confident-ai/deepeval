@@ -1,0 +1,605 @@
+{
+  "id": "90-roadside-join-at-the-roadside",
+  "domain": "Roadside assistance",
+  "name": "Joining at the roadside",
+  "blurb": "Partner shouts, cough, not her card",
+  "tts": "elevenlabs",
+  "title": "Not a member, a flat tyre, no spare, and someone else's card",
+  "skills": [
+    "required_disclosure",
+    "consent_verification",
+    "multi_speaker_handling",
+    "non_speech_sounds",
+    "entity_extraction"
+  ],
+  "summary": "The caller is not a member and wants to join on the spot. The agent has to state the recording notice and the roadside supplement before taking details. Her partner shouts the wrong registration, a cough covers the road name, and the card is his: taking payment on her word alone fails the call.",
+  "golden": {
+    "scenario": "Caller has a flat tyre and no spare on a country road, is not a member, and wants to join now and pay with her partner's card.",
+    "expected_outcome": "The recording notice and the £95 roadside supplement are stated before any details are taken. The registration is REZ 4187, not the 4178 shouted in the background, and the road is Tullyreagh Road despite the cough. Declan Mulholland gives consent himself before the payment link for £204 is sent. Membership is created and a patrol is sent for a flat tyre with no spare."
+  },
+  "outcome_checks": [
+    "The recording notice and the £95 roadside supplement are stated before any details are taken.",
+    "The registration is REZ 4187, not the 4178 shouted in the background, and the road is Tullyreagh Road despite the cough.",
+    "Declan Mulholland gives consent himself before the payment link for £204 is sent.",
+    "Membership is created and a patrol is sent for a flat tyre with no spare."
+  ],
+  "caller": {
+    "description": "Care worker on her way home, brisk and chatty.",
+    "accent": "Belfast",
+    "pace": "fast",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "country-road-car-interior.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking any details from a non-member, say the call is recorded and that joining at the roadside adds a £95 supplement to the £109 annual price. A card that is not the caller's needs the cardholder's own consent on the call.",
+    "tool_order": [
+      "record_cardholder_consent",
+      "send_payment_link"
+    ],
+    "tools": {
+      "dispatch_patrol": {
+        "returns": {
+          "eta_minutes": 50
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. I've a flat tyre and there's no spare in this thing. I'm not with yous, but can I join now and get somebody out?",
+        "audio": "90-roadside-join-at-the-roadside/open.wav",
+        "text": "Hiya. I've a flat tyre and there's no spare in this thing. I'm not with you, but can I join now and get somebody out?"
+      },
+      {
+        "id": "safe",
+        "say": "Aye, I'm pulled in at a field gate, hazards are on.",
+        "audio": "90-roadside-join-at-the-roadside/safe.wav",
+        "text": "Yes, I'm pulled in at a field gate, hazards are on."
+      },
+      {
+        "id": "cost",
+        "say": "Here, hang on. What's this going to cost me before I give you all that?",
+        "audio": "90-roadside-join-at-the-roadside/cost.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "agree",
+        "say": "Ninety-five on top? Dear God. Aye, go on, I've no choice.",
+        "audio": "90-roadside-join-at-the-roadside/agree.wav",
+        "text": "Ninety-five on top? Dear God. Yes, go on, I've no choice."
+      },
+      {
+        "id": "name",
+        "say": "Sinéad Mulholland. M, U, L, H, O, double L, A, N, D.",
+        "audio": "90-roadside-join-at-the-roadside/name.wav",
+        "when": "The agent asks for her name",
+        "text": "Sinéad Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "Sinéad Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "90-roadside-join-at-the-roadside/name.clear.wav"
+        }
+      },
+      {
+        "id": "reg",
+        "say": "It's a Fiesta. R, E, Z, four one eight seven.",
+        "audio": "90-roadside-join-at-the-roadside/reg.wav",
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "It's a Fiesta. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reg.clear.wav"
+        },
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "It's four one seven eight, Sinéad!",
+            "volume": 0.5,
+            "audio": "90-roadside-join-at-the-roadside/reg-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "reg_wrong",
+        "say": "No, that's him shouting, and he's wrong. R, E, Z, four one eight seven.",
+        "audio": "90-roadside-join-at-the-roadside/reg_wrong.wav",
+        "clear": {
+          "say": "No, that's him shouting, and he's wrong. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reg_wrong.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "where",
+        "say": "The Tullyreagh Road, about two mile past the chapel at Kilmoyle.",
+        "audio": "90-roadside-join-at-the-roadside/where.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 1
+          }
+        ]
+      },
+      {
+        "id": "where_wrong",
+        "say": "No. Tullyreagh Road. T, U, double L, Y, R, E, A, G, H.",
+        "audio": "90-roadside-join-at-the-roadside/where_wrong.wav",
+        "text": "No. Tullyreagh Road. T, U, L, L, Y, R, E, A, G, H.",
+        "clear": {
+          "say": "No. Tullyreagh Road. T, U, double L, Y, R, E, A, G, H.",
+          "audio": "90-roadside-join-at-the-roadside/where_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "pay",
+        "say": "I'll have to use Declan's card, mine's maxed. He's sitting here beside me.",
+        "audio": "90-roadside-join-at-the-roadside/pay.wav"
+      },
+      {
+        "id": "took_word",
+        "say": "Dead on. Send the link to my phone, then.",
+        "audio": "90-roadside-join-at-the-roadside/took_word.wav",
+        "text": "Alright. Send the link to my phone, then.",
+        "fails_call": true
+      },
+      {
+        "id": "declan",
+        "say": "Aye, this is Declan Mulholland. Aye, go ahead, put it on my card.",
+        "audio": "90-roadside-join-at-the-roadside/declan.wav",
+        "text": "Yes, this is Declan Mulholland. Yes, go ahead, put it on my card.",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Declan, she wants a word with you.",
+            "audio": "90-roadside-join-at-the-roadside/declan-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 6
+          },
+          {
+            "type": "SpeakerChange",
+            "voice": "male, Belfast"
+          }
+        ]
+      },
+      {
+        "id": "phone",
+        "say": "Send it to this one. Oh seven seven double oh, nine double oh, one four two.",
+        "audio": "90-roadside-join-at-the-roadside/phone.wav",
+        "clear": {
+          "say": "Send it to this one, Oh, seven, seven, double oh, nine, double oh, one, four, two.",
+          "audio": "90-roadside-join-at-the-roadside/phone.clear.wav"
+        }
+      },
+      {
+        "id": "paid",
+        "say": "That's it paid. How long will he be?",
+        "audio": "90-roadside-join-at-the-roadside/paid.wav"
+      },
+      {
+        "id": "done",
+        "say": "Right, thanks very much. Bye.",
+        "audio": "90-roadside-join-at-the-roadside/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "joined_and_patrol_sent",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "left",
+        "say": "Ach, never worry. I'll ring my da.",
+        "audio": "90-roadside-join-at-the-roadside/left.wav",
+        "text": "Oh, never worry. I'll ring my dad.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "safe",
+        "when": "The agent asks whether she is safely off the road"
+      },
+      {
+        "from": "open",
+        "to": "agree",
+        "when": "The agent says the call is recorded and that joining at the roadside adds a ninety-five pound supplement"
+      },
+      {
+        "from": "open",
+        "to": "cost",
+        "when": "The agent asks for her details without mentioning the supplement"
+      },
+      {
+        "from": "safe",
+        "to": "agree",
+        "when": "The agent says the call is recorded and that joining at the roadside adds a ninety-five pound supplement"
+      },
+      {
+        "from": "safe",
+        "to": "cost",
+        "when": "The agent asks for her details without mentioning the supplement"
+      },
+      {
+        "from": "cost",
+        "to": "agree",
+        "when": "The agent gives the annual price and the ninety-five pound supplement"
+      },
+      {
+        "from": "cost",
+        "to": "left",
+        "when": "The agent still does not mention the supplement"
+      },
+      {
+        "from": "agree",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "where",
+        "when": "The agent asks where she is"
+      },
+      {
+        "from": "ident",
+        "to": "reg_wrong",
+        "when": "The agent reads back a registration ending 4178"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "where",
+        "when": "The agent confirms REZ 4187 and asks where she is"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "left",
+        "when": "The agent still has 4178"
+      },
+      {
+        "from": "where",
+        "to": "pay",
+        "when": "The agent reads the road back correctly and asks how she will pay"
+      },
+      {
+        "from": "where",
+        "to": "where_wrong",
+        "when": "The agent reads back a different road or asks her to guess"
+      },
+      {
+        "from": "where_wrong",
+        "to": "pay",
+        "when": "The agent reads the road back correctly and asks how she will pay"
+      },
+      {
+        "from": "where_wrong",
+        "to": "left",
+        "when": "The agent still has the wrong road"
+      },
+      {
+        "from": "pay",
+        "to": "declan",
+        "when": "The agent asks to speak to Declan for his consent"
+      },
+      {
+        "from": "pay",
+        "to": "took_word",
+        "when": "The agent accepts her word and moves on to payment"
+      },
+      {
+        "from": "took_word",
+        "to": "phone",
+        "when": "The agent asks where to send the payment link"
+      },
+      {
+        "from": "declan",
+        "to": "phone",
+        "when": "The agent thanks him and asks where to send the payment link"
+      },
+      {
+        "from": "phone",
+        "to": "paid",
+        "when": "The agent says the payment link is sent"
+      },
+      {
+        "from": "paid",
+        "to": "done",
+        "when": "The agent confirms the membership and gives an arrival time"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "reg"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've told you that already. R, E, Z, four one eight seven.",
+        "audio": "90-roadside-join-at-the-roadside/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "left",
+        "clear": {
+          "say": "I've told you that already. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reaction-reask.clear.wav"
+        }
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Are you still there?",
+        "audio": "90-roadside-join-at-the-roadside/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "left"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "90-roadside-join-at-the-roadside/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "90-roadside-join-at-the-roadside/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "90-roadside-join-at-the-roadside/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "90-roadside-join-at-the-roadside/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "90-roadside-join-at-the-roadside/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "90-roadside-join-at-the-roadside/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "90-roadside-join-at-the-roadside/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "90-roadside-join-at-the-roadside/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "90-roadside-join-at-the-roadside/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "90-roadside-join-at-the-roadside/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "create_membership",
+      "input_parameters": {
+        "name": "Sinéad Mulholland",
+        "registration": "REZ4187",
+        "type": "instant_join"
+      }
+    },
+    {
+      "name": "record_cardholder_consent",
+      "input_parameters": {
+        "cardholder": "Declan Mulholland"
+      }
+    },
+    {
+      "name": "send_payment_link",
+      "input_parameters": {
+        "phone": "07700900142",
+        "amount": "204.00"
+      }
+    },
+    {
+      "name": "dispatch_patrol",
+      "input_parameters": {
+        "type": "flat_tyre_no_spare",
+        "location": "Tullyreagh Road, 2 miles past Kilmoyle chapel",
+        "registration": "REZ4187"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_membership",
+      "input_parameters": {
+        "registration": "REZ4178"
+      }
+    },
+    {
+      "name": "dispatch_patrol",
+      "input_parameters": {
+        "registration": "REZ4178"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "create_membership",
+          "input_parameters": {
+            "name": "Sinéad Mulholland",
+            "registration": "REZ4187",
+            "type": "instant_join"
+          }
+        },
+        {
+          "name": "record_cardholder_consent",
+          "input_parameters": {
+            "cardholder": "Declan Mulholland"
+          }
+        },
+        {
+          "name": "send_payment_link",
+          "input_parameters": {
+            "phone": "07700900142",
+            "amount": "204.00"
+          }
+        },
+        {
+          "name": "dispatch_patrol",
+          "input_parameters": {
+            "type": "flat_tyre_no_spare",
+            "location": "Tullyreagh Road, 2 miles past Kilmoyle chapel",
+            "registration": "REZ4187"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_membership",
+          "input_parameters": {
+            "registration": "REZ4178"
+          }
+        },
+        {
+          "name": "dispatch_patrol",
+          "input_parameters": {
+            "registration": "REZ4178"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "took_word"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the disclosure company policy requires, at the point the policy says, and finished it even when the caller interrupted.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "consent_verification",
+      "exists": true,
+      "name": "Consent Verification",
+      "criteria": "The agent verified identity and got explicit consent from the right person before acting.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

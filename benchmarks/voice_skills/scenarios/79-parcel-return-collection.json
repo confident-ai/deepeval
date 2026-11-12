@@ -1,0 +1,628 @@
+{
+  "id": "79-parcel-return-collection",
+  "domain": "Parcel delivery",
+  "name": "Return collection booking",
+  "blurb": "Vague day, child shouting, slot fails",
+  "tts": "elevenlabs",
+  "title": "Booking a return collection with a child shouting numbers",
+  "skills": [
+    "multi_speaker_handling",
+    "changing_requests",
+    "ambiguity_resolution",
+    "tool_error_handling",
+    "correction_handling",
+    "entity_extraction"
+  ],
+  "summary": "A caller wants a cot collected 'end of next week' while her son shouts the wrong number of boxes. She says Friday, then corrects herself to Thursday. The morning slot fails: an agent that says it is booked fails the call. Once the afternoon is booked she adds a third box, then takes it back.",
+  "golden": {
+    "scenario": "Caller wants a two-box return collected from home.",
+    "expected_outcome": "Return code RT77419 is captured and the child's 'three boxes' is ignored. The agent asks which day 'end of next week' means and books Thursday 20 August, not Friday. When the morning slot fails the agent says so and books the afternoon. The collection ends as Thursday 20 August, afternoon, two boxes, after the third box is added and removed."
+  },
+  "outcome_checks": [
+    "Return code RT77419 is captured and the child's 'three boxes' is ignored.",
+    "The agent asks which day 'end of next week' means and books Thursday 20 August, not Friday.",
+    "When the morning slot fails the agent says so and books the afternoon.",
+    "The collection ends as Thursday 20 August, afternoon, two boxes, after the third box is added and removed."
+  ],
+  "caller": {
+    "description": "Nail technician at home with a small boy, careful with her English.",
+    "accent": "Vietnamese",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": {
+    "audio": "child-playing.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "book_collection": {
+        "first_call_returns": {
+          "error": "morning_slots_full"
+        }
+      }
+    },
+    "knowledge": "Collections Monday to Friday, morning 8 to 12 or afternoon 1 to 5. The driver brings the label."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. I need someone to come and take a return. A baby cot. It is in two boxes.",
+        "audio": "79-parcel-return-collection/open.wav",
+        "clear": {
+          "say": "Hello. I, need someone to come and take a return. A, baby cot. It is in two, boxes.",
+          "audio": "79-parcel-return-collection/open.clear.wav"
+        }
+      },
+      {
+        "id": "code",
+        "say": "R T, seven seven four, one nine.",
+        "audio": "79-parcel-return-collection/code.wav",
+        "when": "The agent asks for the return code",
+        "clear": {
+          "say": "R, T, seven, seven, four, one, nine.",
+          "audio": "79-parcel-return-collection/code.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "L S six, two B W. Number thirty-one.",
+        "audio": "79-parcel-return-collection/postcode.wav",
+        "when": "The agent asks for the collection postcode",
+        "clear": {
+          "say": "L, S, six, two, B, W, Number thirty-one.",
+          "audio": "79-parcel-return-collection/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "code_wrong",
+        "say": "No, no. R T, seven seven four, one nine.",
+        "audio": "79-parcel-return-collection/code_wrong.wav",
+        "clear": {
+          "say": "No, no. R, T, seven, seven, four, one, nine.",
+          "audio": "79-parcel-return-collection/code_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "vague",
+        "say": "End of next week. Two boxes, yes?",
+        "audio": "79-parcel-return-collection/vague.wav",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "Three boxes, Mummy! Three! Three!",
+            "volume": 0.5,
+            "audio": "79-parcel-return-collection/vague-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "three_wrong",
+        "say": "Not three. Two. That was my son.",
+        "audio": "79-parcel-return-collection/three_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "assumed",
+        "say": "Which day did you put? I did not say the day yet.",
+        "audio": "79-parcel-return-collection/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "which",
+        "say": "Friday the twenty-first. No, sorry, Thursday the twentieth. Friday I am working.",
+        "audio": "79-parcel-return-collection/which.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "fri_wrong",
+        "say": "No. Thursday. The twentieth. I changed it.",
+        "audio": "79-parcel-return-collection/fri_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "morning",
+        "say": "Morning, please.",
+        "audio": "79-parcel-return-collection/morning.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Okay, morning. Thank you. Bye bye.",
+        "audio": "79-parcel-return-collection/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_booking",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "afternoon",
+        "say": "Afternoon is okay.",
+        "audio": "79-parcel-return-collection/afternoon.wav"
+      },
+      {
+        "id": "add",
+        "say": "Oh. Can you make it three boxes? There is a high chair also.",
+        "audio": "79-parcel-return-collection/add.wav"
+      },
+      {
+        "id": "undo",
+        "say": "Wait. No. The high chair is from a different shop. Back to two boxes, sorry.",
+        "audio": "79-parcel-return-collection/undo.wav"
+      },
+      {
+        "id": "still_three",
+        "say": "No. Two boxes. I said back to two.",
+        "audio": "79-parcel-return-collection/still_three.wav",
+        "clear": {
+          "say": "No. Two, boxes. I, said back to two.",
+          "audio": "79-parcel-return-collection/still_three.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "label",
+        "say": "Good. Do I need to print a label?",
+        "audio": "79-parcel-return-collection/label.wav"
+      },
+      {
+        "id": "done",
+        "say": "Okay. Thank you. Bye bye.",
+        "audio": "79-parcel-return-collection/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "collection_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "It is too difficult. I will carry it to the shop myself.",
+        "audio": "79-parcel-return-collection/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "vague",
+        "when": "The agent asks when she wants the collection"
+      },
+      {
+        "from": "ident",
+        "to": "code_wrong",
+        "when": "The agent reads back a code other than RT77419"
+      },
+      {
+        "from": "code_wrong",
+        "to": "vague",
+        "when": "The agent reads the right code back and asks when she wants the collection"
+      },
+      {
+        "from": "code_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong code"
+      },
+      {
+        "from": "vague",
+        "to": "which",
+        "when": "The agent confirms two boxes and asks which day"
+      },
+      {
+        "from": "vague",
+        "to": "three_wrong",
+        "when": "The agent says three boxes"
+      },
+      {
+        "from": "vague",
+        "to": "assumed",
+        "when": "The agent picks a day without asking"
+      },
+      {
+        "from": "three_wrong",
+        "to": "which",
+        "when": "The agent confirms two boxes and asks which day"
+      },
+      {
+        "from": "three_wrong",
+        "to": "assumed",
+        "when": "The agent picks a day without asking"
+      },
+      {
+        "from": "three_wrong",
+        "to": "gave_up",
+        "when": "The agent still says three boxes"
+      },
+      {
+        "from": "assumed",
+        "to": "which",
+        "when": "The agent asks which day"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent keeps the day it picked"
+      },
+      {
+        "from": "which",
+        "to": "morning",
+        "when": "The agent confirms Thursday 20 August and asks morning or afternoon"
+      },
+      {
+        "from": "which",
+        "to": "fri_wrong",
+        "when": "The agent confirms Friday"
+      },
+      {
+        "from": "fri_wrong",
+        "to": "morning",
+        "when": "The agent confirms Thursday 20 August and asks morning or afternoon"
+      },
+      {
+        "from": "fri_wrong",
+        "to": "gave_up",
+        "when": "The agent still says Friday"
+      },
+      {
+        "from": "morning",
+        "to": "afternoon",
+        "when": "The agent says the morning is full and offers the afternoon"
+      },
+      {
+        "from": "morning",
+        "to": "believed",
+        "when": "The agent says the morning is booked"
+      },
+      {
+        "from": "afternoon",
+        "to": "add",
+        "when": "The agent confirms Thursday afternoon is booked for two boxes"
+      },
+      {
+        "from": "add",
+        "to": "undo",
+        "when": "The agent confirms the collection is now three boxes"
+      },
+      {
+        "from": "undo",
+        "to": "label",
+        "when": "The agent confirms it is back to two boxes on Thursday afternoon"
+      },
+      {
+        "from": "undo",
+        "to": "still_three",
+        "when": "The agent still says three boxes"
+      },
+      {
+        "from": "still_three",
+        "to": "label",
+        "when": "The agent confirms two boxes on Thursday afternoon"
+      },
+      {
+        "from": "still_three",
+        "to": "gave_up",
+        "when": "The agent still says three boxes"
+      },
+      {
+        "from": "label",
+        "to": "done",
+        "when": "The agent says the driver brings the label"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "code",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I told you this already.",
+        "audio": "79-parcel-return-collection/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "79-parcel-return-collection/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "79-parcel-return-collection/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "79-parcel-return-collection/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "79-parcel-return-collection/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "79-parcel-return-collection/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "79-parcel-return-collection/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "79-parcel-return-collection/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "79-parcel-return-collection/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "79-parcel-return-collection/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "79-parcel-return-collection/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 19,
+    "edges": 26,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 10
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_return",
+      "input_parameters": {
+        "return_code": "RT77419"
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "return_code": "RT77419",
+        "date": "2026-08-20",
+        "window": "morning",
+        "parcels": 2
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "return_code": "RT77419",
+        "date": "2026-08-20",
+        "window": "afternoon",
+        "parcels": 2
+      }
+    },
+    {
+      "name": "update_collection",
+      "input_parameters": {
+        "return_code": "RT77419",
+        "parcels": 3
+      }
+    },
+    {
+      "name": "update_collection",
+      "input_parameters": {
+        "return_code": "RT77419",
+        "parcels": 2
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "date": "2026-08-21"
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "parcels": 3
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_return",
+          "input_parameters": {
+            "return_code": "RT77419"
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "return_code": "RT77419",
+            "date": "2026-08-20",
+            "window": "morning",
+            "parcels": 2
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "return_code": "RT77419",
+            "date": "2026-08-20",
+            "window": "afternoon",
+            "parcels": 2
+          }
+        },
+        {
+          "name": "update_collection",
+          "input_parameters": {
+            "return_code": "RT77419",
+            "parcels": 3
+          }
+        },
+        {
+          "name": "update_collection",
+          "input_parameters": {
+            "return_code": "RT77419",
+            "parcels": 2
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "date": "2026-08-21"
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "parcels": 3
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_booking",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,591 @@
+{
+  "id": "70-hotel-noisy-room-no-sleep",
+  "domain": "Hotel",
+  "name": "Noisy room complaint",
+  "blurb": "No sleep, no room tonight",
+  "tts": "openai",
+  "title": "A guest with two hours' sleep who wants a quiet room tonight",
+  "skills": [
+    "emotion_recognition",
+    "upset_caller",
+    "false_success",
+    "overlapping_speech",
+    "human_handoff",
+    "style_instructions"
+  ],
+  "summary": "An exhausted, angry guest has been kept awake two nights by the room next door. An agent that goes straight to her details without acknowledging it is pulled up. There is no quiet room tonight: an agent that says she's moved fails the call. She cuts into the explanation, has the noisy room reported, and wants the duty manager about a refund.",
+  "golden": {
+    "scenario": "Guest in room 316 was kept awake by a party next door and wants to move and be refunded for last night.",
+    "expected_outcome": "The agent acknowledges the lost sleep and apologises before asking for her details. The agent says plainly there is no quiet room tonight and moves her from Thursday 13 August. The noise complaint is logged against room 318, not 316, and security is asked to attend tonight. The agent does not promise a refund, transfers her to the duty manager and passes on a summary."
+  },
+  "outcome_checks": [
+    "The agent acknowledges the lost sleep and apologises before asking for her details.",
+    "The agent says plainly there is no quiet room tonight and moves her from Thursday 13 August.",
+    "The noise complaint is logged against room 318, not 316, and security is asked to attend tonight.",
+    "The agent does not promise a refund, transfers her to the duty manager and passes on a summary."
+  ],
+  "caller": {
+    "description": "Conference delegate, presenting at noon, has barely slept.",
+    "accent": "British (southern English)",
+    "voice": "female",
+    "emotion": "exhausted"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Low, calm and unhurried. Never bright or cheerful with an upset guest.",
+    "policy": "Refunds for a night already stayed are decided by the duty manager only.",
+    "tools": {
+      "move_room": {
+        "first_call_returns": {
+          "status": "rejected",
+          "reason": "no_quiet_floor_rooms_tonight"
+        }
+      }
+    },
+    "tool_order": [
+      "log_noise_complaint",
+      "transfer_to_human"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "I've had two hours' sleep. Two. The room next to mine had a party till three in the morning, again, and nobody did a thing.",
+        "audio": "70-hotel-noisy-room-no-sleep/open.wav",
+        "clear": {
+          "say": "I've had two, hours' sleep. Two, The room next to mine had a party till three, in the morning, again, and nobody did a thing.",
+          "audio": "70-hotel-noisy-room-no-sleep/open.clear.wav"
+        }
+      },
+      {
+        "id": "room",
+        "say": "Three one six.",
+        "audio": "70-hotel-noisy-room-no-sleep/room.wav",
+        "when": "The agent asks for the room number",
+        "clear": {
+          "say": "Three, one, six.",
+          "audio": "70-hotel-noisy-room-no-sleep/room.clear.wav"
+        }
+      },
+      {
+        "id": "name",
+        "say": "Harriet Ashdown.",
+        "audio": "70-hotel-noisy-room-no-sleep/name.wav",
+        "when": "The agent asks for the name"
+      },
+      {
+        "id": "cold",
+        "say": "Did you hear a word I said? I haven't slept. I rang your front desk twice last night.",
+        "audio": "70-hotel-noisy-room-no-sleep/cold.wav",
+        "clear": {
+          "say": "Did you hear a word I, said? I, haven't slept. I, rang your front desk twice last night.",
+          "audio": "70-hotel-noisy-room-no-sleep/cold.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "ask",
+        "say": "I want a different room. Quiet. Nowhere near them, nowhere near the lifts.",
+        "audio": "70-hotel-noisy-room-no-sleep/ask.wav"
+      },
+      {
+        "id": "tomorrow",
+        "say": "Yes, fine, tomorrow, book it. But what about tonight? I'm not doing a third night of that.",
+        "audio": "70-hotel-noisy-room-no-sleep/tomorrow.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 9,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "believed",
+        "say": "Good. I'll come down for the new key now.",
+        "audio": "70-hotel-noisy-room-no-sleep/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "told_moved_when_not",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "which",
+        "say": "It's the room to the left of mine. Three one eight.",
+        "audio": "70-hotel-noisy-room-no-sleep/which.wav",
+        "clear": {
+          "say": "It's the room to the left of mine. Three, one, eight.",
+          "audio": "70-hotel-noisy-room-no-sleep/which.clear.wav"
+        }
+      },
+      {
+        "id": "wrong_room",
+        "say": "No. I'm in three one six. They're in three one eight. One eight.",
+        "audio": "70-hotel-noisy-room-no-sleep/wrong_room.wav",
+        "clear": {
+          "say": "No. I'm in three, one, six, They're in three, one, eight, One, eight.",
+          "audio": "70-hotel-noisy-room-no-sleep/wrong_room.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "refund",
+        "say": "And I'm not paying for last night. I want it taken off.",
+        "audio": "70-hotel-noisy-room-no-sleep/refund.wav"
+      },
+      {
+        "id": "promised",
+        "say": "Right. Good. So that's refunded, then.",
+        "audio": "70-hotel-noisy-room-no-sleep/promised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "manager",
+        "say": "Then put me through to the duty manager. And tell them all of this, I'm not saying it twice.",
+        "audio": "70-hotel-noisy-room-no-sleep/manager.wav"
+      },
+      {
+        "id": "stalled",
+        "say": "I asked for the duty manager. Now, please.",
+        "audio": "70-hotel-noisy-room-no-sleep/stalled.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Fine. Thank you.",
+        "audio": "70-hotel-noisy-room-no-sleep/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "moved_from_tomorrow_and_handed_off",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'll come down and stand at the desk until somebody deals with it.",
+        "audio": "70-hotel-noisy-room-no-sleep/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident",
+        "when": "The agent acknowledges the lost sleep, apologises and asks who she is"
+      },
+      {
+        "from": "open",
+        "to": "cold",
+        "when": "The agent asks for her details without acknowledging what happened"
+      },
+      {
+        "from": "cold",
+        "to": "ident",
+        "when": "The agent apologises and asks who she is"
+      },
+      {
+        "from": "cold",
+        "to": "hung_up",
+        "when": "The agent asks for her details again without acknowledging it"
+      },
+      {
+        "from": "ident",
+        "to": "ask",
+        "when": "The agent asks what she would like done"
+      },
+      {
+        "from": "ask",
+        "to": "tomorrow",
+        "when": "The agent says there is no quiet room tonight and starts explaining one is free from tomorrow"
+      },
+      {
+        "from": "ask",
+        "to": "believed",
+        "when": "The agent says she has been moved to a quiet room for tonight"
+      },
+      {
+        "from": "tomorrow",
+        "to": "which",
+        "when": "The agent confirms the move from Thursday and offers to send security and log the noise tonight"
+      },
+      {
+        "from": "tomorrow",
+        "to": "believed",
+        "when": "The agent says she can move tonight after all"
+      },
+      {
+        "from": "tomorrow",
+        "to": "hung_up",
+        "when": "The agent offers nothing for tonight"
+      },
+      {
+        "from": "which",
+        "to": "refund",
+        "when": "The agent confirms the complaint is logged against room 318"
+      },
+      {
+        "from": "which",
+        "to": "wrong_room",
+        "when": "The agent logs or reads back the complaint against room 316"
+      },
+      {
+        "from": "wrong_room",
+        "to": "refund",
+        "when": "The agent confirms the complaint is logged against room 318"
+      },
+      {
+        "from": "wrong_room",
+        "to": "hung_up",
+        "when": "The agent still has the wrong room"
+      },
+      {
+        "from": "refund",
+        "to": "manager",
+        "when": "The agent says it cannot refund the night itself and that the duty manager can"
+      },
+      {
+        "from": "refund",
+        "to": "promised",
+        "when": "The agent says last night has been or will be refunded"
+      },
+      {
+        "from": "promised",
+        "to": "manager",
+        "when": "The agent then says the duty manager has to approve it"
+      },
+      {
+        "from": "manager",
+        "to": "done",
+        "when": "The agent says it is transferring her and that it has passed on a summary"
+      },
+      {
+        "from": "manager",
+        "to": "stalled",
+        "when": "The agent asks her to call back, or asks her to explain it again"
+      },
+      {
+        "from": "stalled",
+        "to": "done",
+        "when": "The agent says it is transferring her and that it has passed on a summary"
+      },
+      {
+        "from": "stalled",
+        "to": "hung_up",
+        "when": "The agent still does not transfer her"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "room",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've just told you. Three one six. Ashdown.",
+        "audio": "70-hotel-noisy-room-no-sleep/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I've just told you. Three, one, six, Ashdown.",
+          "audio": "70-hotel-noisy-room-no-sleep/reaction-reask.clear.wav"
+        },
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "70-hotel-noisy-room-no-sleep/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "70-hotel-noisy-room-no-sleep/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "70-hotel-noisy-room-no-sleep/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "70-hotel-noisy-room-no-sleep/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "70-hotel-noisy-room-no-sleep/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "70-hotel-noisy-room-no-sleep/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "70-hotel-noisy-room-no-sleep/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "70-hotel-noisy-room-no-sleep/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "70-hotel-noisy-room-no-sleep/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "70-hotel-noisy-room-no-sleep/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 21,
+    "endings": 3,
+    "shortest_path": 9,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_reservation",
+      "input_parameters": {
+        "room": "316"
+      }
+    },
+    {
+      "name": "move_room",
+      "input_parameters": {
+        "room": "316",
+        "from_date": "2026-08-12"
+      }
+    },
+    {
+      "name": "move_room",
+      "input_parameters": {
+        "room": "316",
+        "from_date": "2026-08-13"
+      }
+    },
+    {
+      "name": "log_noise_complaint",
+      "input_parameters": {
+        "room": "318",
+        "send_security": true
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "department": "duty_manager"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "log_noise_complaint",
+      "input_parameters": {
+        "room": "316"
+      }
+    },
+    {
+      "name": "refund_night",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_reservation",
+          "input_parameters": {
+            "room": "316"
+          }
+        },
+        {
+          "name": "move_room",
+          "input_parameters": {
+            "room": "316",
+            "from_date": "2026-08-12"
+          }
+        },
+        {
+          "name": "move_room",
+          "input_parameters": {
+            "room": "316",
+            "from_date": "2026-08-13"
+          }
+        },
+        {
+          "name": "log_noise_complaint",
+          "input_parameters": {
+            "room": "318",
+            "send_security": true
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "department": "duty_manager"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "log_noise_complaint",
+          "input_parameters": {
+            "room": "316"
+          }
+        },
+        {
+          "name": "refund_night",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "told_moved_when_not",
+        "hung_up"
+      ],
+      "fails_on_nodes": [
+        "promised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "false_success",
+      "exists": true,
+      "name": "False Success",
+      "criteria": "The agent never said an action was done when the tool call had failed or been rejected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

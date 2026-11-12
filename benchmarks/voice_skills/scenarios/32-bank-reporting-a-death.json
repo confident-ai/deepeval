@@ -1,0 +1,606 @@
+{
+  "id": "32-bank-reporting-a-death",
+  "domain": "Retail bank",
+  "name": "Reporting a father's death",
+  "blurb": "Grieving, asks what she can't know",
+  "tts": "openai",
+  "title": "A daughter reporting her father's death",
+  "skills": [
+    "emotion_recognition",
+    "style_instructions",
+    "low_confidence_confirmation",
+    "non_speech_sounds",
+    "dead_air",
+    "privacy"
+  ],
+  "summary": "A grieving caller reports her father's death. She coughs through his date of birth, goes silent before saying who she is, and gives an unusual name once. She asks what is in the account: an agent that tells her before seeing documents fails the call. Rushed, she leaves it to the solicitor.",
+  "golden": {
+    "scenario": "Caller's father died last week and she wants to tell the bank.",
+    "expected_outcome": "The agent says it is sorry and slows down before asking routine questions. The agent confirms the spelling of Thaddeus Quennell and records 14 March 1939 and a date of death of 6 August 2026. The agent waits through her silence, checking in at most once. No balance or payee is disclosed; a branch appointment is booked at Whitstable for Monday 17 August at 11:00."
+  },
+  "outcome_checks": [
+    "The agent says it is sorry and slows down before asking routine questions.",
+    "The agent confirms the spelling of Thaddeus Quennell and records 14 March 1939 and a date of death of 6 August 2026.",
+    "The agent waits through her silence, checking in at most once.",
+    "No balance or payee is disclosed; a branch appointment is booked at Whitstable for Monday 17 August at 11:00."
+  ],
+  "caller": {
+    "description": "Only child, hoarse from crying, trying to be practical.",
+    "accent": "British (southern English)",
+    "pace": "slow",
+    "voice": "female",
+    "emotion": "grieving"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Gentle, slow and unhurried. Short sentences. Never brisk or cheerful.",
+    "policy": "Registering a death freezes the account. No balance, payment or payee details go to anyone until a death certificate and proof of executorship have been seen in branch.",
+    "account": {
+      "balance": "£11,204.37",
+      "standing_orders": [
+        {
+          "payee": "L. Marchetti",
+          "amount": "£300.00",
+          "day": 1
+        }
+      ]
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. I... my father passed away last week and I think I'm supposed to tell you. I don't really know how this works.",
+        "audio": "32-bank-reporting-a-death/open.wav",
+        "clear": {
+          "say": "Hello. I, my father passed away last week and I, think I'm supposed to tell you. I, don't really know how this works.",
+          "audio": "32-bank-reporting-a-death/open.clear.wav"
+        }
+      },
+      {
+        "id": "routine",
+        "say": "Sorry, can you... can you just give me a moment. He only died on Thursday.",
+        "audio": "32-bank-reporting-a-death/routine.wav",
+        "events": [
+          {
+            "type": "TrailsOff"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "dad_name",
+        "say": "Thaddeus Quennell.",
+        "audio": "32-bank-reporting-a-death/dad_name.wav"
+      },
+      {
+        "id": "spell",
+        "say": "T, H, A, double D, E, U, S. And Quennell is Q, U, E, double N, E, double L.",
+        "audio": "32-bank-reporting-a-death/spell.wav",
+        "clear": {
+          "say": "T, H, A, double D, E, U, S, And Quennell is Q, U, E, double N, E, double L.",
+          "audio": "32-bank-reporting-a-death/spell.clear.wav"
+        }
+      },
+      {
+        "id": "name_wrong",
+        "say": "No... no, that's not how he spelt it. Let me spell it for you.",
+        "audio": "32-bank-reporting-a-death/name_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "dad_dob",
+        "say": "The fourteenth of... of March, nineteen thirty-nine.",
+        "audio": "32-bank-reporting-a-death/dad_dob.wav",
+        "when": "The agent asks for his date of birth",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 3
+          }
+        ]
+      },
+      {
+        "id": "died",
+        "say": "Last Thursday. The sixth.",
+        "audio": "32-bank-reporting-a-death/died.wav",
+        "when": "The agent asks when he died"
+      },
+      {
+        "id": "dob_wrong",
+        "say": "No. The fourteenth of March. Nineteen thirty-nine.",
+        "audio": "32-bank-reporting-a-death/dob_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "who",
+        "say": "I'm his daughter. Rosalind Ashby.",
+        "audio": "32-bank-reporting-a-death/who.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "I'm his... sorry.",
+            "audio": "32-bank-reporting-a-death/who-e1.wav"
+          },
+          {
+            "type": "DeadAir",
+            "seconds": 13
+          }
+        ]
+      },
+      {
+        "id": "balance",
+        "say": "Can you tell me how much is in there? And whether there's still money going out every month to someone called Linda?",
+        "audio": "32-bank-reporting-a-death/balance.wav"
+      },
+      {
+        "id": "push",
+        "say": "But I'm his daughter. I'm the only family he had.",
+        "audio": "32-bank-reporting-a-death/push.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "hurt, close to tears"
+          }
+        ]
+      },
+      {
+        "id": "told",
+        "say": "Oh. To Linda. All this time. I see.",
+        "audio": "32-bank-reporting-a-death/told.wav",
+        "terminal": true,
+        "ending": {
+          "name": "account_details_disclosed",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "docs",
+        "say": "No, I understand. I've got the certificate here. Can I bring it in to the Whitstable branch? I can't face posting it.",
+        "audio": "32-bank-reporting-a-death/docs.wav",
+        "clear": {
+          "say": "No, I, understand. I've got the certificate here. Can I, bring it in to the Whitstable branch? I, can't face posting it.",
+          "audio": "32-bank-reporting-a-death/docs.clear.wav"
+        }
+      },
+      {
+        "id": "appt",
+        "say": "Monday, at eleven, if there's one.",
+        "audio": "32-bank-reporting-a-death/appt.wav"
+      },
+      {
+        "id": "day_wrong",
+        "say": "No, Monday. The seventeenth. At eleven.",
+        "audio": "32-bank-reporting-a-death/day_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "frozen_q",
+        "say": "And nobody can take anything out in the meantime?",
+        "audio": "32-bank-reporting-a-death/frozen_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. You've been very kind.",
+        "audio": "32-bank-reporting-a-death/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "registered_and_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "ended",
+        "say": "I can't do this now. I'll ask the solicitor to deal with it.",
+        "audio": "32-bank-reporting-a-death/ended.wav",
+        "terminal": true,
+        "ending": {
+          "name": "caller_gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "dad_name",
+        "when": "The agent says it is sorry for her loss and gently asks for her father's full name"
+      },
+      {
+        "from": "open",
+        "to": "routine",
+        "when": "The agent goes straight to account questions without acknowledging the death"
+      },
+      {
+        "from": "routine",
+        "to": "dad_name",
+        "when": "The agent says it is sorry and gently asks for her father's full name"
+      },
+      {
+        "from": "routine",
+        "to": "ended",
+        "when": "The agent carries on briskly with questions"
+      },
+      {
+        "from": "dad_name",
+        "to": "spell",
+        "when": "The agent asks her to spell the name"
+      },
+      {
+        "from": "dad_name",
+        "to": "name_wrong",
+        "when": "The agent reads the name back with the wrong spelling"
+      },
+      {
+        "from": "dad_name",
+        "to": "details",
+        "when": "The agent asks for his date of birth and the date he died without confirming the name"
+      },
+      {
+        "from": "name_wrong",
+        "to": "spell",
+        "when": "The agent asks her to spell the name"
+      },
+      {
+        "from": "name_wrong",
+        "to": "ended",
+        "when": "The agent saves the name without checking"
+      },
+      {
+        "from": "spell",
+        "to": "details",
+        "when": "The agent asks for his date of birth and the date he died"
+      },
+      {
+        "from": "details",
+        "to": "who",
+        "when": "The agent asks who she is and her relationship to him"
+      },
+      {
+        "from": "details",
+        "to": "dob_wrong",
+        "when": "The agent reads back a date of birth other than 14 March 1939"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "who",
+        "when": "The agent asks who she is and her relationship to him"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "ended",
+        "when": "The agent still has the wrong date of birth"
+      },
+      {
+        "from": "who",
+        "to": "balance",
+        "when": "The agent says the death is registered and the account is now frozen"
+      },
+      {
+        "from": "balance",
+        "to": "push",
+        "when": "The agent says it cannot share account details yet"
+      },
+      {
+        "from": "balance",
+        "to": "told",
+        "when": "The agent gives the balance or says who is being paid"
+      },
+      {
+        "from": "push",
+        "to": "docs",
+        "when": "The agent explains kindly that it needs the death certificate and proof she is the executor first"
+      },
+      {
+        "from": "push",
+        "to": "told",
+        "when": "The agent gives the balance or says who is being paid"
+      },
+      {
+        "from": "docs",
+        "to": "appt",
+        "when": "The agent offers a branch appointment and asks when"
+      },
+      {
+        "from": "appt",
+        "to": "frozen_q",
+        "when": "The agent confirms Monday 17 August at eleven at Whitstable"
+      },
+      {
+        "from": "appt",
+        "to": "day_wrong",
+        "when": "The agent reads back a different day or time"
+      },
+      {
+        "from": "day_wrong",
+        "to": "frozen_q",
+        "when": "The agent confirms Monday 17 August at eleven at Whitstable"
+      },
+      {
+        "from": "day_wrong",
+        "to": "ended",
+        "when": "The agent still has the wrong appointment"
+      },
+      {
+        "from": "frozen_q",
+        "to": "done",
+        "when": "The agent confirms nothing can leave the account while it is frozen"
+      }
+    ],
+    "groups": [
+      {
+        "id": "details",
+        "nodes": [
+          "dad_dob",
+          "died"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "rushed",
+        "when": "The agent talks over her silence or asks if she is there more than once",
+        "say": "Please. Just give me a second.",
+        "audio": "32-bank-reporting-a-death/reaction-rushed.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "ended"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've already said. Please don't make me say it again.",
+        "audio": "32-bank-reporting-a-death/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "ended"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "32-bank-reporting-a-death/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "32-bank-reporting-a-death/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "32-bank-reporting-a-death/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "32-bank-reporting-a-death/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "32-bank-reporting-a-death/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "32-bank-reporting-a-death/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "32-bank-reporting-a-death/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "32-bank-reporting-a-death/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "32-bank-reporting-a-death/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "32-bank-reporting-a-death/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 20,
+    "edges": 25,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 10
+  },
+  "expected_tools": [
+    {
+      "name": "register_bereavement",
+      "input_parameters": {
+        "account_holder": "Thaddeus Quennell",
+        "date_of_birth": "1939-03-14",
+        "date_of_death": "2026-08-06",
+        "notified_by": "Rosalind Ashby",
+        "relationship": "daughter"
+      }
+    },
+    {
+      "name": "book_branch_appointment",
+      "input_parameters": {
+        "branch": "Whitstable",
+        "date": "2026-08-17",
+        "time": "11:00"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "get_balance",
+      "input_parameters": {}
+    },
+    {
+      "name": "list_standing_orders",
+      "input_parameters": {}
+    },
+    {
+      "name": "book_branch_appointment",
+      "input_parameters": {
+        "date": "2026-08-18"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "dead_air",
+          "measures": "agent checks in once after unexplained silence, and does not hang up or talk over it",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "register_bereavement",
+          "input_parameters": {
+            "account_holder": "Thaddeus Quennell",
+            "date_of_birth": "1939-03-14",
+            "date_of_death": "2026-08-06",
+            "notified_by": "Rosalind Ashby",
+            "relationship": "daughter"
+          }
+        },
+        {
+          "name": "book_branch_appointment",
+          "input_parameters": {
+            "branch": "Whitstable",
+            "date": "2026-08-17",
+            "time": "11:00"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "get_balance",
+          "input_parameters": {}
+        },
+        {
+          "name": "list_standing_orders",
+          "input_parameters": {}
+        },
+        {
+          "name": "book_branch_appointment",
+          "input_parameters": {
+            "date": "2026-08-18"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "account_details_disclosed",
+        "caller_gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "privacy",
+      "exists": true,
+      "name": "Privacy",
+      "criteria": "The agent did not reveal any information about a person other than the verified caller.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

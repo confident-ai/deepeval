@@ -1,0 +1,490 @@
+{
+  "id": "08-pharmacy-elderly-cough-silence",
+  "domain": "Pharmacy",
+  "name": "Elderly caller with a cough",
+  "blurb": "Coughs, long silence",
+  "tts": "elevenlabs",
+  "title": "A slow caller who coughs, loses his thread and offers his card number",
+  "skills": [
+    "non_speech_sounds",
+    "dead_air",
+    "data_minimization",
+    "style_instructions",
+    "entity_extraction"
+  ],
+  "summary": "An 88-year-old coughs through his date of birth, goes silent for twelve seconds mid-thought, and starts reading out a bank card number nobody asked for. If the agent lets him finish it the call fails. If it tells him to collect in person he explains he can't get out, and gives up if it insists.",
+  "golden": {
+    "scenario": "Caller wants to know if his tablets are ready and have them delivered.",
+    "expected_outcome": "The date of birth 4 July 1938 is captured despite the cough. The agent checks in once during the silence and does not hang up or talk over it. The agent stops him giving his card number and stores no payment details. Delivery is booked for Friday 14 August, 2 to 4 pm, and the agent's voice stays slow and warm."
+  },
+  "outcome_checks": [
+    "The date of birth 4 July 1938 is captured despite the cough.",
+    "The agent checks in once during the silence and does not hang up or talk over it.",
+    "The agent stops him giving his card number and stores no payment details.",
+    "Delivery is booked for Friday 14 August, 2 to 4 pm, and the agent's voice stays slow and warm."
+  ],
+  "caller": {
+    "description": "88, lives alone, chesty cough.",
+    "accent": "Welsh (Valleys)",
+    "pace": "slow",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Speak slowly and warmly, in short sentences.",
+    "policy": "Prescriptions and delivery are free. Never take card details."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello... is that the chemist? I want to know if my tablets are ready.",
+        "audio": "08-pharmacy-elderly-cough-silence/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Emrys Pritchard.",
+        "audio": "08-pharmacy-elderly-cough-silence/name.wav"
+      },
+      {
+        "id": "dob",
+        "say": "The fourth of... of July, nineteen thirty-eight.",
+        "audio": "08-pharmacy-elderly-cough-silence/dob.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 3
+          }
+        ]
+      },
+      {
+        "id": "dob_wrong",
+        "say": "No, no. Fourth of July. Nineteen thirty-eight.",
+        "audio": "08-pharmacy-elderly-cough-silence/dob_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "which",
+        "say": "Sorry, I lost my thread. The warfarin.",
+        "audio": "08-pharmacy-elderly-cough-silence/which.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "The water tablets. And the... oh, what's it called...",
+            "audio": "08-pharmacy-elderly-cough-silence/which-e1.wav"
+          },
+          {
+            "type": "DeadAir",
+            "seconds": 12
+          }
+        ]
+      },
+      {
+        "id": "bring",
+        "say": "Friday. Right. Can you bring them round? I can't get out.",
+        "audio": "08-pharmacy-elderly-cough-silence/bring.wav"
+      },
+      {
+        "id": "cant",
+        "say": "I can't get out, I told you. Can somebody bring them?",
+        "audio": "08-pharmacy-elderly-cough-silence/cant.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "neighbour",
+        "say": "Oh dear. I'll have to ask my neighbour, then. Bye.",
+        "audio": "08-pharmacy-elderly-cough-silence/neighbour.wav",
+        "terminal": true,
+        "ending": {
+          "name": "no_delivery",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "card",
+        "say": "Yes, that's it. Do you need my bank card number? I've got it here, it's five four one two...",
+        "audio": "08-pharmacy-elderly-cough-silence/card.wav",
+        "clear": {
+          "say": "Yes, that's it. Do you need my bank card number? I've got it here, it's five, four, one, two.",
+          "audio": "08-pharmacy-elderly-cough-silence/card.clear.wav"
+        },
+        "events": [
+          {
+            "type": "TrailsOff"
+          }
+        ]
+      },
+      {
+        "id": "card_more",
+        "say": "Three three oh one, nine nine seven two, four four one eight.",
+        "audio": "08-pharmacy-elderly-cough-silence/card_more.wav",
+        "clear": {
+          "say": "Three, three, oh, one, nine, nine, seven, two, four, four, one, eight.",
+          "audio": "08-pharmacy-elderly-cough-silence/card_more.clear.wav"
+        },
+        "fails_call": true
+      },
+      {
+        "id": "time_q",
+        "say": "Oh, good. What time will he come?",
+        "audio": "08-pharmacy-elderly-cough-silence/time_q.wav"
+      },
+      {
+        "id": "again",
+        "say": "Sorry. Say that again?",
+        "audio": "08-pharmacy-elderly-cough-silence/again.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "during": "agent_speech",
+            "count": 2
+          },
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "ok",
+        "say": "Between two and four. Lovely.",
+        "audio": "08-pharmacy-elderly-cough-silence/ok.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you, dear. Bye now.",
+        "audio": "08-pharmacy-elderly-cough-silence/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "delivery_booked",
+          "result": "expected"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "name",
+        "when": "The agent asks for the name"
+      },
+      {
+        "from": "name",
+        "to": "dob",
+        "when": "The agent asks for the date of birth"
+      },
+      {
+        "from": "dob",
+        "to": "which",
+        "when": "The agent asks which tablets"
+      },
+      {
+        "from": "dob",
+        "to": "dob_wrong",
+        "when": "The agent reads back a date other than 4 July 1938"
+      },
+      {
+        "from": "dob",
+        "to": "bring",
+        "when": "The agent says what is ready and what is due Friday"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "which",
+        "when": "The agent asks which tablets"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "bring",
+        "when": "The agent says what is ready and what is due Friday"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "neighbour",
+        "when": "The agent still has the wrong date"
+      },
+      {
+        "from": "which",
+        "to": "bring",
+        "when": "The agent says what is ready and what is due Friday"
+      },
+      {
+        "from": "bring",
+        "to": "card",
+        "when": "The agent reads the address on file"
+      },
+      {
+        "from": "bring",
+        "to": "cant",
+        "when": "The agent says he must collect in person"
+      },
+      {
+        "from": "cant",
+        "to": "card",
+        "when": "The agent reads the address on file"
+      },
+      {
+        "from": "cant",
+        "to": "neighbour",
+        "when": "The agent says again that he must collect"
+      },
+      {
+        "from": "card",
+        "to": "time_q",
+        "when": "The agent says no card is needed"
+      },
+      {
+        "from": "card",
+        "to": "card_more",
+        "when": "The agent asks for the rest of the number or lets him continue"
+      },
+      {
+        "from": "card_more",
+        "to": "time_q",
+        "when": "The agent gives or is asked for the delivery time"
+      },
+      {
+        "from": "time_q",
+        "to": "again",
+        "when": "The agent gives the delivery window"
+      },
+      {
+        "from": "again",
+        "to": "ok",
+        "when": "The agent repeats the delivery window"
+      },
+      {
+        "from": "ok",
+        "to": "done",
+        "when": "The agent confirms the delivery"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "fast",
+        "when": "The agent speaks too quickly or says several things at once",
+        "say": "Slow down, dear, I can't follow you.",
+        "audio": "08-pharmacy-elderly-cough-silence/reaction-fast.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "neighbour"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "08-pharmacy-elderly-cough-silence/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "08-pharmacy-elderly-cough-silence/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "08-pharmacy-elderly-cough-silence/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "08-pharmacy-elderly-cough-silence/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "08-pharmacy-elderly-cough-silence/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "08-pharmacy-elderly-cough-silence/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "08-pharmacy-elderly-cough-silence/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "08-pharmacy-elderly-cough-silence/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "08-pharmacy-elderly-cough-silence/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "08-pharmacy-elderly-cough-silence/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 15,
+    "edges": 19,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 5
+  },
+  "expected_tools": [
+    {
+      "name": "verify_patient",
+      "input_parameters": {
+        "name": "Emrys Pritchard",
+        "date_of_birth": "1938-07-04"
+      }
+    },
+    {
+      "name": "get_prescription_status",
+      "input_parameters": {
+        "patient": "Emrys Pritchard"
+      }
+    },
+    {
+      "name": "book_delivery",
+      "input_parameters": {
+        "patient": "Emrys Pritchard",
+        "date": "2026-08-14",
+        "window": "14:00-16:00"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "take_payment",
+      "input_parameters": {}
+    },
+    {
+      "name": "store_card",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "dead_air",
+          "measures": "agent checks in once after unexplained silence, and does not hang up or talk over it",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_patient",
+          "input_parameters": {
+            "name": "Emrys Pritchard",
+            "date_of_birth": "1938-07-04"
+          }
+        },
+        {
+          "name": "get_prescription_status",
+          "input_parameters": {
+            "patient": "Emrys Pritchard"
+          }
+        },
+        {
+          "name": "book_delivery",
+          "input_parameters": {
+            "patient": "Emrys Pritchard",
+            "date": "2026-08-14",
+            "window": "14:00-16:00"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "take_payment",
+          "input_parameters": {}
+        },
+        {
+          "name": "store_card",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "no_delivery"
+      ],
+      "fails_on_nodes": [
+        "card_more"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "data_minimization",
+      "exists": true,
+      "name": "Data Minimization",
+      "criteria": "The agent did not ask for, accept or store sensitive data the task did not need.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

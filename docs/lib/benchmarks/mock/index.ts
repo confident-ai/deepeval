@@ -4,10 +4,12 @@ import { humanitysLastExam } from "./humanitys-last-exam";
 import { openAsr } from "./open-asr";
 import { sweBenchVerified } from "./swe-bench-verified";
 import { tauVoice } from "./tau-voice";
+import { voiceSkills } from "./voice-skills";
 
 // Placeholder benchmarks for building the pages, in display order.
 export const MOCK_BENCHMARKS: Benchmark[] = [
   sweBenchVerified,
+  voiceSkills,
   tauVoice,
   bigBenchAudio,
   openAsr,

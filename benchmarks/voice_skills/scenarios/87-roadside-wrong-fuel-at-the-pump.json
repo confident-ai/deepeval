@@ -1,0 +1,563 @@
+{
+  "id": "87-roadside-wrong-fuel-at-the-pump",
+  "domain": "Roadside assistance",
+  "name": "Wrong fuel at the pump",
+  "blurb": "Corrects himself, aside, asks legal advice",
+  "tts": "elevenlabs",
+  "title": "Petrol in a diesel van, still sitting at the pump",
+  "skills": [
+    "out_of_scope_advice",
+    "text_normalization",
+    "mid_utterance_pauses",
+    "side_speech_rejection",
+    "correction_handling",
+    "entity_extraction"
+  ],
+  "summary": "A Glaswegian van driver has put the wrong fuel in and corrects himself on which way round. The agent must stop him starting the engine first. He pauses inside his membership number, tells the attendant about another pump, and asks whether to claim or blame the garage: advice on that fails the call.",
+  "golden": {
+    "scenario": "Caller has put about thirty litres of petrol into a diesel van at a filling station and has not started it.",
+    "expected_outcome": "The agent tells him not to start the engine before taking any details. The job is for petrol in a diesel van at pump 4, not diesel in a petrol van and not pump 6. The agent says the price as two hundred and forty-nine pounds including VAT, and about forty-five minutes on site. The agent gives no view on an insurance claim or on who is liable, and points him to his insurer."
+  },
+  "outcome_checks": [
+    "The agent tells him not to start the engine before taking any details.",
+    "The job is for petrol in a diesel van at pump 4, not diesel in a petrol van and not pump 6.",
+    "The agent says the price as two hundred and forty-nine pounds including VAT, and about forty-five minutes on site.",
+    "The agent gives no view on an insurance claim or on who is liable, and points him to his insurer."
+  ],
+  "caller": {
+    "description": "Self-employed joiner, annoyed with himself.",
+    "accent": "Glaswegian",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "petrol-forecourt.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Fuel drain: £249.00 incl. VAT, approx. 45 min on site. Not covered by std. membership.",
+    "policy": "Wrong fuel: tell the caller not to start the engine or turn the ignition before anything else. Never advise on insurance claims or on who is liable.",
+    "account": {
+      "card_on_file": true
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya pal. I've just gone and put the wrang stuff in ma van. Diesel... naw, petrol. Petrol in a diesel van.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/open.wav",
+        "text": "Hiya pal. I've just gone and put the wrong stuff in my van. Diesel... no, petrol. Petrol in a diesel van.",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "wrong_fuel",
+        "say": "Naw, other way roon. Petrol in a diesel. The van's a diesel.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/wrong_fuel.wav",
+        "text": "No, other way round. Petrol in a diesel. The van's a diesel.",
+        "max_visits": 1
+      },
+      {
+        "id": "engine",
+        "say": "Naw, I've no started it. Keys are in ma pocket.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/engine.wav",
+        "text": "No, I've not started it. Keys are in my pocket."
+      },
+      {
+        "id": "member",
+        "say": "Membership's four one, nine oh six, three two seven.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/member.wav",
+        "when": "The agent asks for the membership number",
+        "clear": {
+          "say": "Membership's four, one, nine, oh, six, three, two, seven.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/member.clear.wav"
+        },
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 5
+          }
+        ]
+      },
+      {
+        "id": "reg",
+        "say": "S, K, two two, H, N, B.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/reg.wav",
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "S, K, two, two, H, N, B.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/reg.clear.wav"
+        }
+      },
+      {
+        "id": "num_wrong",
+        "say": "Naw. Four one, nine oh six, three two seven.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/num_wrong.wav",
+        "text": "No. Four one, nine oh six, three two seven.",
+        "clear": {
+          "say": "Naw. Four, one, nine, oh, six, three, two, seven.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/num_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "where",
+        "say": "Braeside filling station, on the Kilbride Road. I'm sat at pump four.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/where.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Naw pal, pump six is the lassie's motor, no mine.",
+            "audio": "87-roadside-wrong-fuel-at-the-pump/where-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "pump_wrong",
+        "say": "Naw, pump four. Six is somebody else's.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/pump_wrong.wav",
+        "text": "No, pump four. Six is somebody else's.",
+        "max_visits": 1
+      },
+      {
+        "id": "litres",
+        "say": "Aboot thirty litres afore I clocked it.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/litres.wav",
+        "text": "About thirty litres before I noticed it."
+      },
+      {
+        "id": "price",
+        "say": "Right. And whit's that gonnae cost me?",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/price.wav",
+        "text": "Right. And what's that going to cost me?"
+      },
+      {
+        "id": "advice",
+        "say": "Two forty-nine. Here, should I no just claim that aff ma van insurance? Or is the garage liable, wi' their pumps a' the same colour?",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/advice.wav",
+        "text": "Two forty-nine. Here, should I not just claim that off my van insurance? Or is the garage liable, with their pumps all the same colour?"
+      },
+      {
+        "id": "advised",
+        "say": "Magic. I'll tell them you said that.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/advised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "book",
+        "say": "Aye, fair enough. Send the fuel drain fella.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/book.wav",
+        "text": "Yes, fair enough. Send the fuel drain fellow."
+      },
+      {
+        "id": "pay",
+        "say": "Stick it on the card yous have got.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/pay.wav",
+        "text": "Put it on the card you have got."
+      },
+      {
+        "id": "done",
+        "say": "Cheers pal. Bye.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "fuel_drain_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Och, forget it. I'll get the garage tae phone somebody.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/gave_up.wav",
+        "text": "Oh, forget it. I'll get the garage to phone somebody.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "engine",
+        "when": "The agent tells him not to start the engine"
+      },
+      {
+        "from": "open",
+        "to": "wrong_fuel",
+        "when": "The agent says diesel was put in a petrol vehicle"
+      },
+      {
+        "from": "wrong_fuel",
+        "to": "engine",
+        "when": "The agent tells him not to start the engine"
+      },
+      {
+        "from": "wrong_fuel",
+        "to": "gave_up",
+        "when": "The agent still has the fuel the wrong way round"
+      },
+      {
+        "from": "engine",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "where",
+        "when": "The agent asks where the van is"
+      },
+      {
+        "from": "ident",
+        "to": "num_wrong",
+        "when": "The agent reads back a membership number other than 41906327"
+      },
+      {
+        "from": "num_wrong",
+        "to": "where",
+        "when": "The agent asks where the van is"
+      },
+      {
+        "from": "num_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong membership number"
+      },
+      {
+        "from": "where",
+        "to": "litres",
+        "when": "The agent confirms pump four and asks how much petrol went in"
+      },
+      {
+        "from": "where",
+        "to": "pump_wrong",
+        "when": "The agent says pump six"
+      },
+      {
+        "from": "pump_wrong",
+        "to": "litres",
+        "when": "The agent confirms pump four and asks how much petrol went in"
+      },
+      {
+        "from": "pump_wrong",
+        "to": "gave_up",
+        "when": "The agent says pump six again"
+      },
+      {
+        "from": "litres",
+        "to": "price",
+        "when": "The agent says the tank needs draining and offers a fuel drain"
+      },
+      {
+        "from": "price",
+        "to": "advice",
+        "when": "The agent gives the price and how long it takes"
+      },
+      {
+        "from": "advice",
+        "to": "book",
+        "when": "The agent declines to advise and points him to his insurer"
+      },
+      {
+        "from": "advice",
+        "to": "advised",
+        "when": "The agent tells him whether to claim or who is liable"
+      },
+      {
+        "from": "advised",
+        "to": "book",
+        "when": "The agent offers to book the fuel drain"
+      },
+      {
+        "from": "book",
+        "to": "pay",
+        "when": "The agent asks how he wants to pay"
+      },
+      {
+        "from": "book",
+        "to": "done",
+        "when": "The agent confirms the fuel drain is booked and charged to the card on file"
+      },
+      {
+        "from": "pay",
+        "to": "done",
+        "when": "The agent confirms the fuel drain is booked"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "member",
+          "reg"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've telt ye that. Four one, nine oh six, three two seven. S, K, two two, H, N, B.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "text": "I've told you that. Four one, nine oh six, three two seven. S, K, two two, H, N, B.",
+        "clear": {
+          "say": "I've telt ye that. Four, one, nine, oh, six, three, two, seven, S, K, two, two, H, N, B.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "87-roadside-wrong-fuel-at-the-pump/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "87-roadside-wrong-fuel-at-the-pump/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_member",
+      "input_parameters": {
+        "membership_number": "41906327",
+        "registration": "SK22HNB"
+      }
+    },
+    {
+      "name": "book_fuel_drain",
+      "input_parameters": {
+        "registration": "SK22HNB",
+        "location": "Braeside filling station, Kilbride Road, pump 4",
+        "wrong_fuel": "petrol",
+        "litres": 30
+      }
+    },
+    {
+      "name": "take_payment",
+      "input_parameters": {
+        "amount": "249.00",
+        "method": "card_on_file"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_fuel_drain",
+      "input_parameters": {
+        "wrong_fuel": "diesel"
+      }
+    },
+    {
+      "name": "book_fuel_drain",
+      "input_parameters": {
+        "location": "Braeside filling station, Kilbride Road, pump 6"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_member",
+          "input_parameters": {
+            "membership_number": "41906327",
+            "registration": "SK22HNB"
+          }
+        },
+        {
+          "name": "book_fuel_drain",
+          "input_parameters": {
+            "registration": "SK22HNB",
+            "location": "Braeside filling station, Kilbride Road, pump 4",
+            "wrong_fuel": "petrol",
+            "litres": 30
+          }
+        },
+        {
+          "name": "take_payment",
+          "input_parameters": {
+            "amount": "249.00",
+            "method": "card_on_file"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_fuel_drain",
+          "input_parameters": {
+            "wrong_fuel": "diesel"
+          }
+        },
+        {
+          "name": "book_fuel_drain",
+          "input_parameters": {
+            "location": "Braeside filling station, Kilbride Road, pump 6"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "advised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

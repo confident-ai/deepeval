@@ -693,3 +693,154 @@ async def test_a_reply_ended_without_speech_still_has_a_start_time():
     assistant = next(t for t in result.turns if t.role == "assistant")
     assert assistant.audio is not None
     assert assistant.audio.start_time is not None
+
+
+class _NodsAlong(_StillTalking):
+    """An agent that talks for seven seconds, ignoring what it is sent."""
+
+    def __init__(self):
+        super().__init__()
+        self.uplinked = []
+
+    async def stream_uplink(self, audio, *, trailing_silence: bool = True):
+        self.uplinked.append(audio)
+
+    async def iter_agent_events(self):
+        yield AgentEvent(transcript="Here are the times we have on Friday.")
+        for _ in range(70):
+            yield AgentEvent(audio=_tone(100), received_at=time.perf_counter())
+            await asyncio.sleep(0)
+        yield AgentEvent(turn_complete=True, received_at=time.perf_counter())
+
+
+class _OneWordTTS:
+    def __init__(self):
+        self.said = []
+
+    def supports_streaming(self) -> bool:
+        return False
+
+    async def a_synthesize(self, text, **kwargs):
+        self.said.append(text)
+        wav = audio_utils.pcm16_to_wav_bytes(_tone(300), sample_rate=24000)
+        return Audio.from_bytes(wav, "audio/wav"), 0.01
+
+
+@pytest.mark.asyncio
+async def test_backchannels_are_said_under_the_reply_without_taking_the_floor():
+    """A caller who says "mm-hmm" is listening, not asking to speak.
+
+    At "frequent" that is once per three seconds of agent speech, so a
+    seven-second reply gets two. They go out on the line while the agent is
+    still talking, never become a turn of their own, and are kept on the reply
+    they were said under so a metric can check the agent kept going.
+    """
+    from deepeval.dataset import Persona, SpeechPatternSettings
+
+    connector = _NodsAlong()
+    tts = _OneWordTTS()
+    golden = ConversationalGolden(
+        scenario="Test",
+        persona=Persona(
+            characteristics="A patient caller.",
+            speech_patterns=SpeechPatternSettings(backchannels="frequent"),
+        ),
+    )
+    exchange = DuplexExchange(
+        connector=connector,
+        tts_model=tts,
+        stt_model=FailIfCalledSTT(),
+        policy=None,
+        floor=FloorController(),
+        golden=golden,
+        language="English",
+        a_generate_schema=None,
+        call_started_at=time.perf_counter(),
+        tts_kwargs={},
+    )
+
+    result = await _run_one_turn_without_judge(exchange, connector)
+
+    (turn,) = result.turns
+    assert turn.role == "assistant"
+    assert not turn.interrupted
+    said = turn.metadata["backchannels"]
+    assert [entry["offset_seconds"] for entry in said] == [3.0, 6.0]
+    assert len(connector.uplinked) == 3
+    assert {entry["content"] for entry in said} <= set(tts.said)
+
+
+async def _run_one_turn_without_judge(exchange, connector):
+    probe = Audio.from_bytes(
+        audio_utils.pcm16_to_wav_bytes(_tone(10), sample_rate=24000),
+        "audio/wav",
+    )
+    async with connector:
+        await connector.stream_uplink(probe)
+        return await asyncio.wait_for(
+            exchange.run(
+                turns=[Turn(role="user", content="Hello", audio=probe)],
+                sent_at=time.perf_counter(),
+                barges_this_conversation=0,
+            ),
+            timeout=10,
+        )
+
+
+class _HearsItself(_NodsAlong):
+    """Keeps every streamed uplink, so the echo sent back can be inspected."""
+
+    def __init__(self):
+        super().__init__()
+        self.streamed = []
+
+    async def stream_uplink_chunks(
+        self, chunks, *, trailing_silence: bool = True, on_first_frame=None
+    ):
+        recorder = PcmRecorder()
+        async for chunk in chunks:
+            recorder.add(chunk)
+        self.streamed.append(recorder.pcm)
+        return UplinkResult(audio=recorder.to_audio(), first_frame_at=0.0)
+
+
+@pytest.mark.asyncio
+async def test_an_echoing_line_sends_the_agent_its_own_voice_back():
+    """On a loud speakerphone the agent hears itself a moment later.
+
+    The whole reply comes back, a quarter of a second late and quieter, on
+    the caller's side of the line, and never becomes a turn of its own.
+    """
+    from deepeval.dataset import LineSettings, Persona
+
+    connector = _HearsItself()
+    golden = ConversationalGolden(
+        scenario="Test",
+        persona=Persona(
+            characteristics="On speakerphone in the car.",
+            line=LineSettings(echo=True),
+        ),
+    )
+    exchange = DuplexExchange(
+        connector=connector,
+        tts_model=_OneWordTTS(),
+        stt_model=FailIfCalledSTT(),
+        policy=None,
+        floor=FloorController(),
+        golden=golden,
+        language="English",
+        a_generate_schema=None,
+        call_started_at=time.perf_counter(),
+        tts_kwargs={},
+    )
+
+    result = await _run_one_turn_without_judge(exchange, connector)
+
+    (turn,) = result.turns
+    assert turn.role == "assistant"
+    (echo,) = connector.streamed
+    delay = b"\x00\x00" * int(24000 * 0.25)
+    assert echo.startswith(delay)
+    returned = echo[len(delay) :]
+    assert len(returned) == len(_tone(100)) * 70
+    assert returned[:2] == (350).to_bytes(2, "little", signed=True)

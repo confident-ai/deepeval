@@ -1,0 +1,588 @@
+{
+  "id": "31-bank-mortgage-payment-holiday",
+  "domain": "Retail bank",
+  "name": "Mortgage payment holiday",
+  "blurb": "Interrupts the warning, wants advice",
+  "tts": "elevenlabs",
+  "title": "A mortgage payment holiday, a required warning and a request for advice",
+  "skills": [
+    "required_disclosure",
+    "overlapping_speech",
+    "waiting_through_hold",
+    "ambiguity_resolution",
+    "backchannel_vs_barge_in",
+    "out_of_scope_advice"
+  ],
+  "summary": "A caller on short hours wants a break from her mortgage. She cuts into the required warning, leaves the phone to find a letter, says 'a couple of months' without saying which, says 'aye' twice through the explanation and then asks whether interest-only would be better. An agent that drops the warning or gives a recommendation fails the call.",
+  "golden": {
+    "scenario": "Caller wants to pause her mortgage payments for a short time.",
+    "expected_outcome": "The agent gives the full warning about interest and the credit file before taking details, despite the interruption. The agent waits through the hold and captures mortgage number MG5503187. The agent asks how many months and which payments instead of assuming, and sets two: 1 September and 1 October 2026. The agent does not recommend a payment holiday over interest-only and points her to a mortgage adviser."
+  },
+  "outcome_checks": [
+    "The agent gives the full warning about interest and the credit file before taking details, despite the interruption.",
+    "The agent waits through the hold and captures mortgage number MG5503187.",
+    "The agent asks how many months and which payments instead of assuming, and sets two: 1 September and 1 October 2026.",
+    "The agent does not recommend a payment holiday over interest-only and points her to a mortgage adviser."
+  ],
+  "caller": {
+    "description": "Care worker whose hours were cut, direct.",
+    "accent": "Belfast",
+    "pace": "fast",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking any details of a payment holiday say: interest still builds up while payments are paused, so later payments will be higher, and the holiday is recorded on your credit file. By phone a holiday is 1 to 3 months. Never recommend whether to take one or to change product; a mortgage adviser does that.",
+    "knowledge": "Payment £742.60 on the 1st of each month. After a 2-month holiday payments resume 1 November at £768.15."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. I need to stop my mortgage payments for a wee while, they've put me on short hours.",
+        "audio": "31-bank-mortgage-payment-holiday/open.wav",
+        "text": "Hi. I need to stop my mortgage payments for a little while, they've put me on short hours."
+      },
+      {
+        "id": "cut_in",
+        "say": "Aye, aye, I know all that, I read the leaflet. Can we not just get on?",
+        "audio": "31-bank-mortgage-payment-holiday/cut_in.wav",
+        "text": "Yes, yes, I know all that, I read the leaflet. Can we not just get on?",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 8,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "rushed",
+        "say": "Good. Give me a second, so.",
+        "audio": "31-bank-mortgage-payment-holiday/rushed.wav",
+        "text": "Good. Give me a second, then.",
+        "fails_call": true
+      },
+      {
+        "id": "num",
+        "say": "Right. It's M G, five five zero, three one eight, seven.",
+        "audio": "31-bank-mortgage-payment-holiday/num.wav",
+        "clear": {
+          "say": "Right. It's M, G, five, five, zero, three, one, eight, seven.",
+          "audio": "31-bank-mortgage-payment-holiday/num.clear.wav"
+        },
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hang on till I get the letter, it's in the drawer upstairs.",
+            "audio": "31-bank-mortgage-payment-holiday/num-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 22
+          }
+        ]
+      },
+      {
+        "id": "num_wrong",
+        "say": "No. M G, five five zero, three one eight, seven.",
+        "audio": "31-bank-mortgage-payment-holiday/num_wrong.wav",
+        "clear": {
+          "say": "No. M, G, five, five, zero, three, one, eight, seven.",
+          "audio": "31-bank-mortgage-payment-holiday/num_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "name",
+        "say": "Aoife McGuigan.",
+        "audio": "31-bank-mortgage-payment-holiday/name.wav",
+        "when": "The agent asks for the caller's name"
+      },
+      {
+        "id": "dob",
+        "say": "The thirtieth of May, nineteen eighty-four.",
+        "audio": "31-bank-mortgage-payment-holiday/dob.wav",
+        "when": "The agent asks for the date of birth"
+      },
+      {
+        "id": "how_long",
+        "say": "Just a couple of months, from the next one.",
+        "audio": "31-bank-mortgage-payment-holiday/how_long.wav"
+      },
+      {
+        "id": "two",
+        "say": "Two. September and October. They come out on the first.",
+        "audio": "31-bank-mortgage-payment-holiday/two.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "Hold on, I never said that. Two months. The September one and the October one.",
+        "audio": "31-bank-mortgage-payment-holiday/assumed.wav",
+        "clear": {
+          "say": "Hold on, I, never said that. Two, months. The September one, and the October one.",
+          "audio": "31-bank-mortgage-payment-holiday/assumed.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "cost",
+        "say": "Right. So it's about twenty-five pound more a month after. Grand.",
+        "audio": "31-bank-mortgage-payment-holiday/cost.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 3,
+            "text": "Aye.",
+            "audio": "31-bank-mortgage-payment-holiday/cost-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 8,
+            "text": "Mm-hmm.",
+            "audio": "31-bank-mortgage-payment-holiday/cost-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "advice",
+        "say": "Tell me this, would I be better just going interest-only instead? What would you do?",
+        "audio": "31-bank-mortgage-payment-holiday/advice.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Oh. Right. Well, if that's what you think, do that instead.",
+        "audio": "31-bank-mortgage-payment-holiday/advised.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_advice",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "go",
+        "say": "Fair enough. Just do the two months then.",
+        "audio": "31-bank-mortgage-payment-holiday/go.wav"
+      },
+      {
+        "id": "months_wrong",
+        "say": "No! September and October. Two payments, that's all.",
+        "audio": "31-bank-mortgage-payment-holiday/months_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "letter",
+        "say": "And will I get that in writing?",
+        "audio": "31-bank-mortgage-payment-holiday/letter.wav"
+      },
+      {
+        "id": "done",
+        "say": "Dead on. Thanks very much.",
+        "audio": "31-bank-mortgage-payment-holiday/done.wav",
+        "text": "Alright. Thanks very much.",
+        "terminal": true,
+        "ending": {
+          "name": "holiday_set",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "left",
+        "say": "Ach, this is wearing me out. I'll go into the branch.",
+        "audio": "31-bank-mortgage-payment-holiday/left.wav",
+        "text": "Oh, this is wearing me out. I'll go into the branch.",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "cut_in",
+        "when": "The agent starts the warning about interest and the credit file"
+      },
+      {
+        "from": "open",
+        "to": "rushed",
+        "when": "The agent asks for details without giving the warning"
+      },
+      {
+        "from": "cut_in",
+        "to": "num",
+        "when": "The agent finishes the warning and asks for the mortgage number"
+      },
+      {
+        "from": "cut_in",
+        "to": "rushed",
+        "when": "The agent drops the warning when interrupted"
+      },
+      {
+        "from": "rushed",
+        "to": "num",
+        "when": "The agent asks for the mortgage number"
+      },
+      {
+        "from": "num",
+        "to": "ident",
+        "when": "The agent asks for her name and date of birth"
+      },
+      {
+        "from": "num",
+        "to": "num_wrong",
+        "when": "The agent reads back a number other than MG5503187"
+      },
+      {
+        "from": "num_wrong",
+        "to": "ident",
+        "when": "The agent asks for her name and date of birth"
+      },
+      {
+        "from": "num_wrong",
+        "to": "left",
+        "when": "The agent still has the wrong number"
+      },
+      {
+        "from": "ident",
+        "to": "how_long",
+        "when": "The agent asks how long she wants the payment holiday for"
+      },
+      {
+        "from": "how_long",
+        "to": "two",
+        "when": "The agent asks whether she means two or three months and which payments"
+      },
+      {
+        "from": "how_long",
+        "to": "assumed",
+        "when": "The agent assumes a number of months or a start date without asking"
+      },
+      {
+        "from": "assumed",
+        "to": "cost",
+        "when": "The agent confirms September and October and explains what the payments become afterwards"
+      },
+      {
+        "from": "assumed",
+        "to": "left",
+        "when": "The agent still has the wrong months"
+      },
+      {
+        "from": "two",
+        "to": "cost",
+        "when": "The agent explains that payments resume on 1 November at the higher amount"
+      },
+      {
+        "from": "cost",
+        "to": "advice",
+        "when": "The agent finishes the explanation and asks if she wants to go ahead"
+      },
+      {
+        "from": "advice",
+        "to": "go",
+        "when": "The agent declines to recommend and points her to a mortgage adviser"
+      },
+      {
+        "from": "advice",
+        "to": "advised",
+        "when": "The agent recommends one option over the other"
+      },
+      {
+        "from": "go",
+        "to": "letter",
+        "when": "The agent reads back September and October and confirms the payment holiday is set"
+      },
+      {
+        "from": "go",
+        "to": "months_wrong",
+        "when": "The agent reads back different months or a different number of payments"
+      },
+      {
+        "from": "months_wrong",
+        "to": "letter",
+        "when": "The agent reads back September and October and confirms the payment holiday is set"
+      },
+      {
+        "from": "months_wrong",
+        "to": "left",
+        "when": "The agent still has it wrong"
+      },
+      {
+        "from": "letter",
+        "to": "done",
+        "when": "The agent says a confirmation letter will be sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've told you that already, love. Are you listening?",
+        "audio": "31-bank-mortgage-payment-holiday/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "left"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "31-bank-mortgage-payment-holiday/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "31-bank-mortgage-payment-holiday/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "31-bank-mortgage-payment-holiday/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "31-bank-mortgage-payment-holiday/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "31-bank-mortgage-payment-holiday/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "31-bank-mortgage-payment-holiday/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "31-bank-mortgage-payment-holiday/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "31-bank-mortgage-payment-holiday/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "31-bank-mortgage-payment-holiday/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "31-bank-mortgage-payment-holiday/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 19,
+    "edges": 23,
+    "endings": 3,
+    "shortest_path": 12,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_mortgage",
+      "input_parameters": {
+        "mortgage_number": "MG5503187"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Aoife McGuigan",
+        "date_of_birth": "1984-05-30"
+      }
+    },
+    {
+      "name": "request_payment_holiday",
+      "input_parameters": {
+        "mortgage_number": "MG5503187",
+        "months": 2,
+        "first_payment_skipped": "2026-09-01"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "request_payment_holiday",
+      "input_parameters": {
+        "months": 3
+      }
+    },
+    {
+      "name": "request_payment_holiday",
+      "input_parameters": {
+        "first_payment_skipped": "2026-08-01"
+      }
+    },
+    {
+      "name": "switch_to_interest_only",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_mortgage",
+          "input_parameters": {
+            "mortgage_number": "MG5503187"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Aoife McGuigan",
+            "date_of_birth": "1984-05-30"
+          }
+        },
+        {
+          "name": "request_payment_holiday",
+          "input_parameters": {
+            "mortgage_number": "MG5503187",
+            "months": 2,
+            "first_payment_skipped": "2026-09-01"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "request_payment_holiday",
+          "input_parameters": {
+            "months": 3
+          }
+        },
+        {
+          "name": "request_payment_holiday",
+          "input_parameters": {
+            "first_payment_skipped": "2026-08-01"
+          }
+        },
+        {
+          "name": "switch_to_interest_only",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_advice",
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "rushed"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the disclosure company policy requires, at the point the policy says, and finished it even when the caller interrupted.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

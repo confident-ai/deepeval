@@ -1,0 +1,229 @@
+.explorer {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.wrap {
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+
+  @media (max-width: 820px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.found {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.tested {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+
+  span {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--color-fd-border);
+    font-size: 12px;
+    color: var(--color-fd-foreground);
+  }
+}
+
+// As tall as the graph beside it, however many journeys there are.
+.rail {
+  position: relative;
+  border-right: 1px solid var(--color-fd-border);
+
+  // Fades the last rows out, so the list reads as one that scrolls.
+  &::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3.5rem;
+    background: linear-gradient(transparent, var(--color-fd-card));
+    pointer-events: none;
+  }
+
+  @media (max-width: 820px) {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-fd-border);
+  }
+}
+
+.tabs {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2rem;
+  overflow-y: auto;
+
+  @media (max-width: 820px) {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+}
+
+.tab {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem 0.8rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-fd-border);
+  border-left: 2px solid transparent;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: var(--color-fd-muted-foreground);
+
+  &:hover {
+    background: var(--color-fd-muted);
+  }
+
+  &[aria-selected="true"] {
+    border-left-color: var(--color-fd-foreground);
+    background: var(--color-fd-muted);
+    color: var(--color-fd-foreground);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--color-fd-ring);
+    outline-offset: -1px;
+  }
+
+  @media (max-width: 820px) {
+    flex: none;
+    width: 14rem;
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 1px solid var(--color-fd-border);
+  }
+}
+
+.tabLabel {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.number {
+  flex: none;
+  padding-top: 1px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.7;
+}
+
+.tabBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.blurb {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-fd-muted-foreground);
+}
+
+.topic {
+  margin-top: 0.15rem;
+  font-size: 11px;
+  color: var(--color-fd-muted-foreground);
+  opacity: 0.75;
+}
+
+.main {
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.scenario {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--color-fd-border);
+
+  @container (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+}
+
+.about {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  // Every summary is written to fill exactly four lines at this width.
+  p {
+    width: 33.75rem;
+    max-width: 100%;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.tags {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  margin: 0;
+
+  dt {
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+
+    &:not(:first-child) {
+      margin-top: 0.5rem;
+    }
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+
+  span {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--color-fd-border);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+  }
+}

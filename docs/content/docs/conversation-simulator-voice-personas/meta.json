@@ -1,0 +1,11 @@
+{
+  "title": "Personas",
+  "defaultOpen": true,
+  "pages": [
+    "../conversation-simulator-voice-persona-background-noise",
+    "../conversation-simulator-voice-persona-line",
+    "../conversation-simulator-voice-persona-speech-patterns",
+    "../conversation-simulator-voice-interruptions",
+    "../conversation-simulator-voice-persona-voice"
+  ]
+}

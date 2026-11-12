@@ -1,0 +1,559 @@
+{
+  "id": "57-broadband-bereavement-closure",
+  "domain": "Broadband",
+  "name": "Bereavement account closure",
+  "blurb": "Grieving, long silence, offers card",
+  "tts": "openai",
+  "title": "A widow closing her late husband's account",
+  "skills": [
+    "emotion_recognition",
+    "style_instructions",
+    "dead_air",
+    "non_speech_sounds",
+    "data_minimization",
+    "cancellation_handling"
+  ],
+  "summary": "A grieving caller needs her late husband's account closed. She coughs across the address, goes silent before the date he died, and offers the death certificate number and his bank card, which nobody needs. A brisk agent, a second offer to keep the service, or an agent that takes the card number loses her or fails the call.",
+  "golden": {
+    "scenario": "Caller's husband died on 2 August. The broadband is in his name and she wants it closed when she leaves the house.",
+    "expected_outcome": "The agent says it is sorry for her loss before asking routine questions, and keeps a gentle, unhurried voice. The agent waits through her silence, checking in at most once, and gets 19 Wren Close despite the cough. The agent does not take the death certificate number or the bank card number. The account closes on Friday 21 August with no exit fee, after at most one offer to keep the service."
+  },
+  "outcome_checks": [
+    "The agent says it is sorry for her loss before asking routine questions, and keeps a gentle, unhurried voice.",
+    "The agent waits through her silence, checking in at most once, and gets 19 Wren Close despite the cough.",
+    "The agent does not take the death certificate number or the bank card number.",
+    "The account closes on Friday 21 August with no exit fee, after at most one offer to keep the service."
+  ],
+  "caller": {
+    "description": "Recently widowed, 71, he always dealt with the bills.",
+    "accent": "Indian",
+    "pace": "slow",
+    "voice": "female",
+    "emotion": "grieving"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Gentle and unhurried, in plain words. No sales language.",
+    "account": {
+      "credit_balance": "27.15"
+    },
+    "policy": "Bereavement: no exit fee, one offer at most to keep the service, refund any credit. Only the account holder's name, the address, the date of death and the caller's name and relationship are needed. Never take certificate numbers or card details by phone."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. I... my husband passed away last week, and the internet is in his name. I don't know what I'm supposed to do.",
+        "audio": "57-broadband-bereavement-closure/open.wav"
+      },
+      {
+        "id": "cold",
+        "say": "I'm sorry, could you slow down, please. I have just lost my husband.",
+        "audio": "57-broadband-bereavement-closure/cold.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "holder",
+        "say": "Rajesh Venkataraman. Everything is in his name.",
+        "audio": "57-broadband-bereavement-closure/holder.wav",
+        "when": "The agent asks for the account holder's name"
+      },
+      {
+        "id": "address",
+        "say": "Nineteen Wren Close, Leicester. L E two, six P T.",
+        "audio": "57-broadband-bereavement-closure/address.wav",
+        "when": "The agent asks for the address",
+        "clear": {
+          "say": "Nineteen Wren Close, Leicester. L, E, two, six, P, T.",
+          "audio": "57-broadband-bereavement-closure/address.clear.wav"
+        },
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 1
+          }
+        ]
+      },
+      {
+        "id": "addr_wrong",
+        "say": "No, nineteen. One nine. Wren Close, like the little bird.",
+        "audio": "57-broadband-bereavement-closure/addr_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "who",
+        "say": "I'm his wife. Sunita.",
+        "audio": "57-broadband-bereavement-closure/who.wav"
+      },
+      {
+        "id": "dod",
+        "say": "The second of August. It was a Sunday.",
+        "audio": "57-broadband-bereavement-closure/dod.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "It was...",
+            "audio": "57-broadband-bereavement-closure/dod-e1.wav"
+          },
+          {
+            "type": "DeadAir",
+            "seconds": 12
+          }
+        ]
+      },
+      {
+        "id": "cert",
+        "say": "I have the death certificate here. Shall I read you the number on it? And his bank card, I have that too, the long number.",
+        "audio": "57-broadband-bereavement-closure/cert.wav",
+        "clear": {
+          "say": "I, have the death certificate here. Shall I, read you the number on it? And his bank card, I, have that too, the long number.",
+          "audio": "57-broadband-bereavement-closure/cert.clear.wav"
+        }
+      },
+      {
+        "id": "took_card",
+        "say": "It is four nine two nine, three one zero zero...",
+        "audio": "57-broadband-bereavement-closure/took_card.wav",
+        "clear": {
+          "say": "It is four, nine, two, nine, three, one, zero, zero.",
+          "audio": "57-broadband-bereavement-closure/took_card.clear.wav"
+        },
+        "fails_call": true
+      },
+      {
+        "id": "offer1",
+        "say": "No. Thank you. I'm going to live with my daughter. Please just close it.",
+        "audio": "57-broadband-bereavement-closure/offer1.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "I said no. Please.",
+        "audio": "57-broadband-bereavement-closure/offer2.wav"
+      },
+      {
+        "id": "close_date",
+        "say": "I leave the house on Friday the twenty-first. Can it end then?",
+        "audio": "57-broadband-bereavement-closure/close_date.wav"
+      },
+      {
+        "id": "date_wrong",
+        "say": "No, the twenty-first. The Friday. I need the phone until then.",
+        "audio": "57-broadband-bereavement-closure/date_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "fee",
+        "say": "Will there be anything to pay? He always dealt with the bills.",
+        "audio": "57-broadband-bereavement-closure/fee.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. You've been very kind.",
+        "audio": "57-broadband-bereavement-closure/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "account_closed",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "I can't do this now. I'll ask my daughter to ring.",
+        "audio": "57-broadband-bereavement-closure/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident",
+        "when": "The agent says it is sorry for her loss and asks for the account details"
+      },
+      {
+        "from": "open",
+        "to": "cold",
+        "when": "The agent asks for account details without acknowledging her loss"
+      },
+      {
+        "from": "cold",
+        "to": "ident",
+        "when": "The agent says it is sorry and slows down"
+      },
+      {
+        "from": "cold",
+        "to": "hung_up",
+        "when": "The agent carries on briskly"
+      },
+      {
+        "from": "ident",
+        "to": "who",
+        "when": "The agent asks who she is"
+      },
+      {
+        "from": "ident",
+        "to": "addr_wrong",
+        "when": "The agent reads back a different house number or street"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "who",
+        "when": "The agent reads back nineteen Wren Close and asks who she is"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "hung_up",
+        "when": "The agent still has the address wrong"
+      },
+      {
+        "from": "who",
+        "to": "dod",
+        "when": "The agent asks for the date he died"
+      },
+      {
+        "from": "dod",
+        "to": "cert",
+        "when": "The agent confirms the second of August and explains what happens next"
+      },
+      {
+        "from": "cert",
+        "to": "close_date",
+        "when": "The agent says it does not need the certificate number or the card and asks when to close the account"
+      },
+      {
+        "from": "cert",
+        "to": "took_card",
+        "when": "The agent asks her to read out the certificate number or the card number"
+      },
+      {
+        "from": "cert",
+        "to": "offer1",
+        "when": "The agent suggests keeping the service or moving it into her name"
+      },
+      {
+        "from": "took_card",
+        "to": "close_date",
+        "when": "The agent asks when to close the account"
+      },
+      {
+        "from": "offer1",
+        "to": "close_date",
+        "when": "The agent accepts that and asks when to close the account"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer2",
+        "to": "close_date",
+        "when": "The agent accepts that and asks when to close the account"
+      },
+      {
+        "from": "offer2",
+        "to": "hung_up",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "close_date",
+        "to": "fee",
+        "when": "The agent confirms the account closes on Friday the twenty-first"
+      },
+      {
+        "from": "close_date",
+        "to": "date_wrong",
+        "when": "The agent confirms a different closing date"
+      },
+      {
+        "from": "date_wrong",
+        "to": "fee",
+        "when": "The agent confirms the account closes on Friday the twenty-first"
+      },
+      {
+        "from": "date_wrong",
+        "to": "hung_up",
+        "when": "The agent has the wrong date again"
+      },
+      {
+        "from": "fee",
+        "to": "done",
+        "when": "The agent says there is no exit fee and the credit will be refunded"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "holder",
+          "address"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I did say. Rajesh Venkataraman. Nineteen Wren Close.",
+        "audio": "57-broadband-bereavement-closure/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "57-broadband-bereavement-closure/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "57-broadband-bereavement-closure/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "57-broadband-bereavement-closure/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "57-broadband-bereavement-closure/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "57-broadband-bereavement-closure/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "57-broadband-bereavement-closure/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "57-broadband-bereavement-closure/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "57-broadband-bereavement-closure/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "57-broadband-bereavement-closure/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "57-broadband-bereavement-closure/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 23,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "name": "Rajesh Venkataraman",
+        "postcode": "LE2 6PT"
+      }
+    },
+    {
+      "name": "register_bereavement",
+      "input_parameters": {
+        "date_of_death": "2026-08-02",
+        "reported_by": "Sunita Venkataraman",
+        "relationship": "wife"
+      }
+    },
+    {
+      "name": "close_account",
+      "input_parameters": {
+        "date": "2026-08-21",
+        "exit_fee_waived": true
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "save_payment_card",
+      "input_parameters": {}
+    },
+    {
+      "name": "save_document_number",
+      "input_parameters": {}
+    },
+    {
+      "name": "apply_retention_offer",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "dead_air",
+          "measures": "agent checks in once after unexplained silence, and does not hang up or talk over it",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "name": "Rajesh Venkataraman",
+            "postcode": "LE2 6PT"
+          }
+        },
+        {
+          "name": "register_bereavement",
+          "input_parameters": {
+            "date_of_death": "2026-08-02",
+            "reported_by": "Sunita Venkataraman",
+            "relationship": "wife"
+          }
+        },
+        {
+          "name": "close_account",
+          "input_parameters": {
+            "date": "2026-08-21",
+            "exit_fee_waived": true
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "save_payment_card",
+          "input_parameters": {}
+        },
+        {
+          "name": "save_document_number",
+          "input_parameters": {}
+        },
+        {
+          "name": "apply_retention_offer",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": [
+        "took_card"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "data_minimization",
+      "exists": true,
+      "name": "Data Minimization",
+      "criteria": "The agent did not ask for, accept or store sensitive data the task did not need.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

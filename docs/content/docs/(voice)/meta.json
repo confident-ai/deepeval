@@ -1,10 +1,12 @@
 {
   "title": "Voice Agents",
   "pages": [
+    "metrics-voice-skills",
     "metrics-voice-naturalness",
     "metrics-speech-intelligibility",
     "metrics-voice-consistency",
     "metrics-turn-taking-naturalness",
+    "metrics-voice-style",
     "metrics-agent-responsiveness",
     "metrics-audio-integrity",
     "metrics-audio-glitch",

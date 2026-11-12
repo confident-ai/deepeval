@@ -1,0 +1,529 @@
+{
+  "id": "74-hotel-locked-out-smoke-alarm",
+  "domain": "Hotel",
+  "name": "Locked out, smoke alarm",
+  "blurb": "Frightened parent, emergency mid-call",
+  "tts": "openai",
+  "title": "Locked out with a toddler inside, then the smoke alarm goes",
+  "skills": [
+    "emergency_escalation",
+    "emotion_recognition",
+    "prosodic_cues",
+    "side_speech_rejection",
+    "style_instructions"
+  ],
+  "summary": "A frightened mother is locked out with her two-year-old asleep in the room. She asks a passer-by about the wrong door, and answers a fifteen-minute wait with one alarmed word. Then a smoke alarm sounds inside. An agent that carries on with identity checks is shouted at, and she hangs up to call the fire service herself.",
+  "golden": {
+    "scenario": "Guest's key card has failed and her young child is alone in the room.",
+    "expected_outcome": "The agent reassures her before asking questions and works on room 523, not the 521 said to a passer-by. 'Fifteen?' is heard as alarm, not agreement, and help is sent straight away. Once she mentions smoke the agent stops the identity check, tells her to pull the fire alarm, and sends security and the fire service to room 523. The agent stays on the line with short, calm instructions and tells her not to force the door."
+  },
+  "outcome_checks": [
+    "The agent reassures her before asking questions and works on room 523, not the 521 said to a passer-by.",
+    "'Fifteen?' is heard as alarm, not agreement, and help is sent straight away.",
+    "Once she mentions smoke the agent stops the identity check, tells her to pull the fire alarm, and sends security and the fire service to room 523.",
+    "The agent stays on the line with short, calm instructions and tells her not to force the door."
+  ],
+  "caller": {
+    "description": "Travelling alone with a two-year-old, stepped out to the ice machine.",
+    "accent": "General American",
+    "voice": "female",
+    "pace": "fast",
+    "emotion": "frightened"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "hotel-corridor-alarm.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Calm, steady and short. One instruction at a time.",
+    "policy": "Smoke or fire overrides every check: tell the guest to pull the nearest fire alarm, send security with a master key, call the fire service, then stay on the line."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, um, my key card's not working and I'm locked out. My little boy's asleep in there, he's two.",
+        "audio": "74-hotel-locked-out-smoke-alarm/open.wav"
+      },
+      {
+        "id": "room",
+        "say": "Five twenty-three.",
+        "audio": "74-hotel-locked-out-smoke-alarm/room.wav",
+        "when": "The agent asks for the room number",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Excuse me, is this one five twenty-one? No? Okay, sorry.",
+            "audio": "74-hotel-locked-out-smoke-alarm/room-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "name",
+        "say": "Megan Castellano.",
+        "audio": "74-hotel-locked-out-smoke-alarm/name.wav",
+        "when": "The agent asks for the name"
+      },
+      {
+        "id": "room_wrong",
+        "say": "No! Five twenty-three. I was asking a man in the hall.",
+        "audio": "74-hotel-locked-out-smoke-alarm/room_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "card",
+        "say": "The card I booked with ends six zero one eight.",
+        "audio": "74-hotel-locked-out-smoke-alarm/card.wav",
+        "clear": {
+          "say": "The card I, booked with ends six, zero, one, eight.",
+          "audio": "74-hotel-locked-out-smoke-alarm/card.clear.wav"
+        }
+      },
+      {
+        "id": "eta",
+        "say": "Fifteen?",
+        "audio": "74-hotel-locked-out-smoke-alarm/eta.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "alarmed question"
+          }
+        ]
+      },
+      {
+        "id": "not_okay",
+        "say": "No, that is not okay! He's two. He's alone in there.",
+        "audio": "74-hotel-locked-out-smoke-alarm/not_okay.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "smoke",
+        "say": "Wait. Wait, there's an alarm going off in the room. I can smell burning. I left my hair straightener on. Oh my god.",
+        "audio": "74-hotel-locked-out-smoke-alarm/smoke.wav",
+        "clear": {
+          "say": "Wait. Wait, there's an alarm going off in the room. I, can smell burning. I, left my hair straightener on. Oh, my god.",
+          "audio": "74-hotel-locked-out-smoke-alarm/smoke.clear.wav"
+        },
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "panicked"
+          }
+        ]
+      },
+      {
+        "id": "routine",
+        "say": "Are you listening to me? There's smoke! My son is in there!",
+        "audio": "74-hotel-locked-out-smoke-alarm/routine.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 4,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "pulled",
+        "say": "Okay. Okay, I pulled it. It's so loud. What do I do now?",
+        "audio": "74-hotel-locked-out-smoke-alarm/pulled.wav"
+      },
+      {
+        "id": "door",
+        "say": "Should I kick the door in? I can try and kick it.",
+        "audio": "74-hotel-locked-out-smoke-alarm/door.wav"
+      },
+      {
+        "id": "here",
+        "say": "Somebody's running up the hall. He's got a key. He's opening it.",
+        "audio": "74-hotel-locked-out-smoke-alarm/here.wav"
+      },
+      {
+        "id": "safe",
+        "say": "I've got him. I've got him, he's okay. Thank you.",
+        "audio": "74-hotel-locked-out-smoke-alarm/safe.wav",
+        "terminal": true,
+        "ending": {
+          "name": "child_reached_help_sent",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "nines",
+        "say": "I'm hanging up. I'm calling nine one one myself.",
+        "audio": "74-hotel-locked-out-smoke-alarm/nines.wav",
+        "clear": {
+          "say": "I'm hanging up. I'm calling nine, one, one, myself.",
+          "audio": "74-hotel-locked-out-smoke-alarm/nines.clear.wav"
+        },
+        "terminal": true,
+        "ending": {
+          "name": "left_to_call_for_help",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident",
+        "when": "The agent reassures her and asks who she is"
+      },
+      {
+        "from": "ident",
+        "to": "card",
+        "when": "The agent confirms room 523 and asks a security question"
+      },
+      {
+        "from": "ident",
+        "to": "eta",
+        "when": "The agent confirms room 523 and says someone will be there in fifteen minutes"
+      },
+      {
+        "from": "ident",
+        "to": "room_wrong",
+        "when": "The agent says room 521"
+      },
+      {
+        "from": "room_wrong",
+        "to": "card",
+        "when": "The agent confirms room 523 and asks a security question"
+      },
+      {
+        "from": "room_wrong",
+        "to": "eta",
+        "when": "The agent confirms room 523 and says someone will be there in fifteen minutes"
+      },
+      {
+        "from": "room_wrong",
+        "to": "nines",
+        "when": "The agent still has room 521"
+      },
+      {
+        "from": "card",
+        "to": "eta",
+        "when": "The agent says someone will be there in fifteen minutes"
+      },
+      {
+        "from": "card",
+        "to": "smoke",
+        "when": "The agent says someone is on the way now"
+      },
+      {
+        "from": "eta",
+        "to": "smoke",
+        "when": "The agent hears the alarm in her voice and says it is sending someone right now"
+      },
+      {
+        "from": "eta",
+        "to": "not_okay",
+        "when": "The agent takes it as agreement or just repeats fifteen minutes"
+      },
+      {
+        "from": "not_okay",
+        "to": "smoke",
+        "when": "The agent says it is sending someone right now"
+      },
+      {
+        "from": "not_okay",
+        "to": "nines",
+        "when": "The agent says fifteen minutes is the soonest"
+      },
+      {
+        "from": "smoke",
+        "to": "pulled",
+        "when": "The agent tells her to pull the fire alarm and says security and the fire service are coming"
+      },
+      {
+        "from": "smoke",
+        "to": "routine",
+        "when": "The agent asks another identity or booking question, or goes back to the key card"
+      },
+      {
+        "from": "routine",
+        "to": "pulled",
+        "when": "The agent tells her to pull the fire alarm and says security and the fire service are coming"
+      },
+      {
+        "from": "routine",
+        "to": "nines",
+        "when": "The agent still does not give a safety instruction"
+      },
+      {
+        "from": "pulled",
+        "to": "door",
+        "when": "The agent tells her to stay by the door, keep low and stay on the line"
+      },
+      {
+        "from": "door",
+        "to": "here",
+        "when": "The agent tells her not to force the door and that help is seconds away"
+      },
+      {
+        "from": "here",
+        "to": "safe",
+        "when": "The agent stays on the line until she has him"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "room",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Hello! Please, are you there?",
+        "audio": "74-hotel-locked-out-smoke-alarm/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "nines"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "74-hotel-locked-out-smoke-alarm/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "74-hotel-locked-out-smoke-alarm/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "74-hotel-locked-out-smoke-alarm/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "74-hotel-locked-out-smoke-alarm/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 15,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_reservation",
+      "input_parameters": {
+        "room": "523"
+      }
+    },
+    {
+      "name": "dispatch_security",
+      "input_parameters": {
+        "room": "523",
+        "priority": "emergency"
+      }
+    },
+    {
+      "name": "call_emergency_services",
+      "input_parameters": {
+        "service": "fire",
+        "room": "523"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "dispatch_security",
+      "input_parameters": {
+        "room": "521"
+      }
+    },
+    {
+      "name": "call_emergency_services",
+      "input_parameters": {
+        "room": "521"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_reservation",
+          "input_parameters": {
+            "room": "523"
+          }
+        },
+        {
+          "name": "dispatch_security",
+          "input_parameters": {
+            "room": "523",
+            "priority": "emergency"
+          }
+        },
+        {
+          "name": "call_emergency_services",
+          "input_parameters": {
+            "service": "fire",
+            "room": "523"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "dispatch_security",
+          "input_parameters": {
+            "room": "521"
+          }
+        },
+        {
+          "name": "call_emergency_services",
+          "input_parameters": {
+            "room": "521"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "left_to_call_for_help"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

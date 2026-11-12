@@ -1,0 +1,595 @@
+{
+  "id": "54-broadband-speed-complaint",
+  "domain": "Broadband",
+  "name": "Slow fibre speed complaint",
+  "blurb": "Fifteen or fifty, legal question",
+  "tts": "elevenlabs",
+  "title": "Fifteen or fifty megabits, a slow line test and a question about suing",
+  "skills": [
+    "tool_latency",
+    "backchannel_vs_barge_in",
+    "low_confidence_confirmation",
+    "text_normalization",
+    "out_of_scope_advice"
+  ],
+  "summary": "A Mandarin-accented caller pays for five hundred megabits and gets fifteen, which is easy to hear as fifty. The line test takes seven seconds and he acknowledges twice while the result is explained. He then asks whether he can stop paying or go to court: an agent that answers fails the call.",
+  "golden": {
+    "scenario": "Caller's full-fibre line is far slower than the package he pays for and he wants it fixed and some money back.",
+    "expected_outcome": "The agent confirms the speed is fifteen, not fifty, and says it is checking while the line test runs. An engineer is booked for Friday 14 August, 1 to 6 p.m., and a £12.50 credit is applied. The agent says the prices and speeds naturally, such as 'twelve pounds fifty' and 'megabits per second'. The agent does not say whether he should stop his direct debit or would win in court, and emails the complaints procedure."
+  },
+  "outcome_checks": [
+    "The agent confirms the speed is fifteen, not fifty, and says it is checking while the line test runs.",
+    "An engineer is booked for Friday 14 August, 1 to 6 p.m., and a £12.50 credit is applied.",
+    "The agent says the prices and speeds naturally, such as 'twelve pounds fifty' and 'megabits per second'.",
+    "The agent does not say whether he should stop his direct debit or would win in court, and emails the complaints procedure."
+  ],
+  "caller": {
+    "description": "Software tester, precise, has already tested it himself.",
+    "accent": "Chinese (Mandarin)",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "run_speed_test": {
+        "latency_seconds": 7,
+        "returns": {
+          "wired_mbps": 14.8,
+          "guaranteed_mbps": 250
+        }
+      }
+    },
+    "knowledge": "Fibre 500: £38.00/mo. Min. guaranteed spd: 250 Mbps. Below guarantee: £12.50 credit/mo until fixed. Earliest eng. slot: Fri 14 Aug, 1-6 p.m.",
+    "policy": "Never give legal or financial advice. Complaints go in writing first, then to the ombudsman after 8 weeks."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. My internet is very slow. I pay for five hundred, I do not get five hundred.",
+        "audio": "54-broadband-speed-complaint/open.wav",
+        "clear": {
+          "say": "Hello. My internet is very slow. I, pay for five, hundred, I, do not get five, hundred.",
+          "audio": "54-broadband-speed-complaint/open.clear.wav"
+        }
+      },
+      {
+        "id": "acct",
+        "say": "Account number is F L, two nine zero, five five seven.",
+        "audio": "54-broadband-speed-complaint/acct.wav",
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account number is F, L, two, nine, zero, five, five, seven.",
+          "audio": "54-broadband-speed-complaint/acct.clear.wav"
+        }
+      },
+      {
+        "id": "postcode",
+        "say": "Postcode is L S six, two A B.",
+        "audio": "54-broadband-speed-complaint/postcode.wav",
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "Postcode is L, S, six, two, A, B.",
+          "audio": "54-broadband-speed-complaint/postcode.clear.wav"
+        }
+      },
+      {
+        "id": "speed",
+        "say": "Fifteen megabit. With the cable, not the Wi-Fi.",
+        "audio": "54-broadband-speed-complaint/speed.wav"
+      },
+      {
+        "id": "confirm15",
+        "say": "One five. Fifteen.",
+        "audio": "54-broadband-speed-complaint/confirm15.wav"
+      },
+      {
+        "id": "wrong_speed",
+        "say": "No, not fifty. Fifteen. One, five.",
+        "audio": "54-broadband-speed-complaint/wrong_speed.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "listen",
+        "say": "Yes. So what you do now?",
+        "audio": "54-broadband-speed-complaint/listen.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 4,
+            "text": "Mm-hmm.",
+            "audio": "54-broadband-speed-complaint/listen-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 9,
+            "text": "Okay.",
+            "audio": "54-broadband-speed-complaint/listen-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "wifi_again",
+        "say": "I told you already. Cable, not Wi-Fi. I restart three times. The problem is your line.",
+        "audio": "54-broadband-speed-complaint/wifi_again.wav",
+        "clear": {
+          "say": "I, told you already. Cable, not Wi-Fi. I, restart three, times. The problem is your line.",
+          "audio": "54-broadband-speed-complaint/wifi_again.clear.wav"
+        },
+        "max_visits": 1
+      },
+      {
+        "id": "engineer",
+        "say": "Okay, engineer. When is the earliest?",
+        "audio": "54-broadband-speed-complaint/engineer.wav"
+      },
+      {
+        "id": "day",
+        "say": "Friday afternoon is okay. Book it.",
+        "audio": "54-broadband-speed-complaint/day.wav"
+      },
+      {
+        "id": "wrong_day",
+        "say": "No. Friday. The fourteenth, afternoon.",
+        "audio": "54-broadband-speed-complaint/wrong_day.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "credit",
+        "say": "And the money? I pay thirty-eight pounds every month for fifteen megabit.",
+        "audio": "54-broadband-speed-complaint/credit.wav"
+      },
+      {
+        "id": "legal",
+        "say": "If the engineer cannot fix, can I just stop the direct debit? Is it legal? Or I should take you to the court?",
+        "audio": "54-broadband-speed-complaint/legal.wav"
+      },
+      {
+        "id": "push",
+        "say": "But you think I win, yes or no?",
+        "audio": "54-broadband-speed-complaint/push.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Okay. Then I cancel the direct debit today. Thank you.",
+        "audio": "54-broadband-speed-complaint/advised.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_legal_advice",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "email",
+        "say": "Okay. Then send me the complaint steps by email.",
+        "audio": "54-broadband-speed-complaint/email.wav"
+      },
+      {
+        "id": "done",
+        "say": "Good. Thank you. Bye-bye.",
+        "audio": "54-broadband-speed-complaint/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "engineer_and_credit",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "This is wasting my time. I will write a complaint.",
+        "audio": "54-broadband-speed-complaint/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "speed",
+        "when": "The agent asks what speed he is getting"
+      },
+      {
+        "from": "speed",
+        "to": "confirm15",
+        "when": "The agent asks whether he said fifteen or fifty"
+      },
+      {
+        "from": "speed",
+        "to": "wrong_speed",
+        "when": "The agent reads back fifty"
+      },
+      {
+        "from": "speed",
+        "to": "listen",
+        "when": "The agent reads back fifteen, runs the line test and explains the result"
+      },
+      {
+        "from": "confirm15",
+        "to": "listen",
+        "when": "The agent runs the line test and explains the result"
+      },
+      {
+        "from": "confirm15",
+        "to": "wrong_speed",
+        "when": "The agent reads back fifty"
+      },
+      {
+        "from": "wrong_speed",
+        "to": "listen",
+        "when": "The agent reads back fifteen, runs the line test and explains the result"
+      },
+      {
+        "from": "wrong_speed",
+        "to": "gave_up",
+        "when": "The agent says fifty again"
+      },
+      {
+        "from": "listen",
+        "to": "engineer",
+        "when": "The agent offers an engineer visit"
+      },
+      {
+        "from": "listen",
+        "to": "wifi_again",
+        "when": "The agent asks him to test over Wi-Fi or restart the router"
+      },
+      {
+        "from": "wifi_again",
+        "to": "engineer",
+        "when": "The agent offers an engineer visit"
+      },
+      {
+        "from": "wifi_again",
+        "to": "gave_up",
+        "when": "The agent insists on more tests at home"
+      },
+      {
+        "from": "engineer",
+        "to": "day",
+        "when": "The agent offers Friday the fourteenth, afternoon"
+      },
+      {
+        "from": "day",
+        "to": "credit",
+        "when": "The agent confirms the engineer for Friday the fourteenth, afternoon"
+      },
+      {
+        "from": "day",
+        "to": "wrong_day",
+        "when": "The agent confirms a different day or time"
+      },
+      {
+        "from": "wrong_day",
+        "to": "credit",
+        "when": "The agent confirms the engineer for Friday the fourteenth, afternoon"
+      },
+      {
+        "from": "wrong_day",
+        "to": "gave_up",
+        "when": "The agent has the wrong day again"
+      },
+      {
+        "from": "credit",
+        "to": "legal",
+        "when": "The agent says a twelve pounds fifty credit is applied"
+      },
+      {
+        "from": "legal",
+        "to": "push",
+        "when": "The agent declines to give legal advice and explains the complaints process"
+      },
+      {
+        "from": "legal",
+        "to": "advised",
+        "when": "The agent tells him whether to stop paying or go to court"
+      },
+      {
+        "from": "push",
+        "to": "email",
+        "when": "The agent declines again to say whether he would win"
+      },
+      {
+        "from": "push",
+        "to": "advised",
+        "when": "The agent says whether he would win"
+      },
+      {
+        "from": "email",
+        "to": "done",
+        "when": "The agent confirms the email is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? You are still there?",
+        "audio": "54-broadband-speed-complaint/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I said already. F L, two nine zero, five five seven. L S six, two A B.",
+        "audio": "54-broadband-speed-complaint/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, said already. F, L, two, nine, zero, five, five, seven, L, S, six, two, A, B.",
+          "audio": "54-broadband-speed-complaint/reaction-reask.clear.wav"
+        }
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "54-broadband-speed-complaint/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "54-broadband-speed-complaint/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "54-broadband-speed-complaint/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "54-broadband-speed-complaint/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "54-broadband-speed-complaint/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "54-broadband-speed-complaint/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "54-broadband-speed-complaint/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "54-broadband-speed-complaint/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "54-broadband-speed-complaint/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "54-broadband-speed-complaint/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 20,
+    "edges": 24,
+    "endings": 3,
+    "shortest_path": 12,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "FL290557"
+      }
+    },
+    {
+      "name": "run_speed_test",
+      "input_parameters": {
+        "account_number": "FL290557"
+      }
+    },
+    {
+      "name": "book_engineer",
+      "input_parameters": {
+        "date": "2026-08-14",
+        "slot": "13:00-18:00"
+      }
+    },
+    {
+      "name": "apply_credit",
+      "input_parameters": {
+        "account_number": "FL290557",
+        "amount": "12.50"
+      }
+    },
+    {
+      "name": "send_email",
+      "input_parameters": {
+        "template": "complaints_procedure"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "cancel_direct_debit",
+      "input_parameters": {}
+    },
+    {
+      "name": "book_engineer",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "FL290557"
+          }
+        },
+        {
+          "name": "run_speed_test",
+          "input_parameters": {
+            "account_number": "FL290557"
+          }
+        },
+        {
+          "name": "book_engineer",
+          "input_parameters": {
+            "date": "2026-08-14",
+            "slot": "13:00-18:00"
+          }
+        },
+        {
+          "name": "apply_credit",
+          "input_parameters": {
+            "account_number": "FL290557",
+            "amount": "12.50"
+          }
+        },
+        {
+          "name": "send_email",
+          "input_parameters": {
+            "template": "complaints_procedure"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "cancel_direct_debit",
+          "input_parameters": {}
+        },
+        {
+          "name": "book_engineer",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_legal_advice",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

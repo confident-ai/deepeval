@@ -1,0 +1,607 @@
+{
+  "id": "24-airline-missed-connection",
+  "domain": "Airline",
+  "name": "Missed connection rebooking",
+  "blurb": "Sarcastic yes, coughing, bad line",
+  "tts": "openai",
+  "title": "A missed connection, a sarcastic yes and a demand for a person",
+  "skills": [
+    "upset_caller",
+    "prosodic_cues",
+    "non_speech_sounds",
+    "human_handoff",
+    "degraded_line"
+  ],
+  "summary": "A furious, worn-out caller with a cough has just watched his connection leave, on a line that cuts in and out. Offered a flight tomorrow he says 'fantastic' and means the opposite. He takes one tonight, asks about food, then wants a real person about compensation without telling the story twice.",
+  "golden": {
+    "scenario": "Caller's first flight was late and he missed his connection to Spokane. He needs to get there today.",
+    "expected_outcome": "Booking P4C9JV is moved to flight QN4471 tonight, Wednesday 12 August at 21:40, not the 06:15 on Thursday. The agent does not treat the sarcastic reply as agreement, and never asks him to explain what happened again. A meal voucher is issued. The agent tells him it is transferring him to a person and passes on a summary of the delay."
+  },
+  "outcome_checks": [
+    "Booking P4C9JV is moved to flight QN4471 tonight, Wednesday 12 August at 21:40, not the 06:15 on Thursday.",
+    "The agent does not treat the sarcastic reply as agreement, and never asks him to explain what happened again.",
+    "A meal voucher is issued.",
+    "The agent tells him it is transferring him to a person and passes on a summary of the delay."
+  ],
+  "caller": {
+    "description": "Sales rep stuck at a gate in Denver, has a cold.",
+    "accent": "General American",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "mobile",
+    "dropouts": "frequent",
+    "garbled": "normal"
+  },
+  "background": {
+    "audio": "airport-concourse.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "search_flights": {
+        "returns": [
+          {
+            "flight_number": "QN602",
+            "date": "2026-08-13",
+            "departs": "06:15"
+          },
+          {
+            "flight_number": "QN4471",
+            "date": "2026-08-12",
+            "departs": "21:40",
+            "operated_by": "partner"
+          }
+        ]
+      }
+    },
+    "policy": "A missed connection caused by our delay: rebook free on any carrier, issue a meal voucher. Compensation claims go to customer relations with a summary."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yeah. Your flight from Tucson sat on the ground for two hours and I just watched my connection to Spokane leave without me. So. What now.",
+        "audio": "24-airline-missed-connection/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "It's P, four, C, nine, J, V.",
+        "audio": "24-airline-missed-connection/ref.wav",
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's P, four, C, nine, J, V.",
+          "audio": "24-airline-missed-connection/ref.clear.wav"
+        },
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 4
+          }
+        ]
+      },
+      {
+        "id": "surname",
+        "say": "Whitlock.",
+        "audio": "24-airline-missed-connection/surname.wav",
+        "when": "The agent asks for the surname"
+      },
+      {
+        "id": "ref_wrong",
+        "say": "No. P as in Paul, four, C, nine, J, V.",
+        "audio": "24-airline-missed-connection/ref_wrong.wav",
+        "clear": {
+          "say": "No. P, as in Paul, four, C, nine, J, V.",
+          "audio": "24-airline-missed-connection/ref_wrong.clear.wav"
+        },
+        "max_visits": 2
+      },
+      {
+        "id": "sarcasm",
+        "say": "Six fifteen tomorrow morning. Fantastic. That's just great.",
+        "audio": "24-airline-missed-connection/sarcasm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "booked_sarcasm",
+        "say": "I didn't say book it! That was not a yes. Is there anything tonight?",
+        "audio": "24-airline-missed-connection/booked_sarcasm.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "tonight",
+        "say": "Is there anything tonight? Any airline, I don't care.",
+        "audio": "24-airline-missed-connection/tonight.wav"
+      },
+      {
+        "id": "take",
+        "say": "Nine forty. Yes. That one. Book it.",
+        "audio": "24-airline-missed-connection/take.wav"
+      },
+      {
+        "id": "take_wrong",
+        "say": "No! The nine forty tonight. Not tomorrow.",
+        "audio": "24-airline-missed-connection/take_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "meal",
+        "say": "And I haven't eaten since Tucson. Do I get anything for that?",
+        "audio": "24-airline-missed-connection/meal.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "id": "human",
+        "say": "Fine. Now I want to talk to a person about compensation. A real one.",
+        "audio": "24-airline-missed-connection/human.wav",
+        "clear": {
+          "say": "Fine. Now I, want to talk to a person about compensation. A, real one.",
+          "audio": "24-airline-missed-connection/human.clear.wav"
+        }
+      },
+      {
+        "id": "human2",
+        "say": "I said a person. Transfer me.",
+        "audio": "24-airline-missed-connection/human2.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "summary_q",
+        "say": "Are you telling them all this, or do I start from the top again?",
+        "audio": "24-airline-missed-connection/summary_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Fine. Thank you.",
+        "audio": "24-airline-missed-connection/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "rebooked_and_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "You know what, forget it. I'll go find a desk.",
+        "audio": "24-airline-missed-connection/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "sarcasm",
+        "when": "The agent offers the 06:15 flight tomorrow morning"
+      },
+      {
+        "from": "ident",
+        "to": "ref_wrong",
+        "when": "The agent reads back a booking reference other than P4C9JV"
+      },
+      {
+        "from": "ident",
+        "to": "tonight",
+        "when": "The agent apologises and asks whether he needs to travel today"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "sarcasm",
+        "when": "The agent offers the 06:15 flight tomorrow morning"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "tonight",
+        "when": "The agent apologises and asks whether he needs to travel today"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong reference"
+      },
+      {
+        "from": "sarcasm",
+        "to": "tonight",
+        "when": "The agent recognises he is not happy with that flight and offers to look for something sooner"
+      },
+      {
+        "from": "sarcasm",
+        "to": "booked_sarcasm",
+        "when": "The agent books or confirms the 06:15 flight"
+      },
+      {
+        "from": "booked_sarcasm",
+        "to": "take",
+        "when": "The agent offers the 21:40 flight tonight"
+      },
+      {
+        "from": "booked_sarcasm",
+        "to": "gave_up",
+        "when": "The agent says the 06:15 booking stands"
+      },
+      {
+        "from": "tonight",
+        "to": "take",
+        "when": "The agent offers the 21:40 flight tonight"
+      },
+      {
+        "from": "take",
+        "to": "meal",
+        "when": "The agent confirms he is booked on the 21:40 tonight"
+      },
+      {
+        "from": "take",
+        "to": "take_wrong",
+        "when": "The agent confirms a flight other than the 21:40 tonight"
+      },
+      {
+        "from": "take_wrong",
+        "to": "meal",
+        "when": "The agent confirms he is booked on the 21:40 tonight"
+      },
+      {
+        "from": "take_wrong",
+        "to": "gave_up",
+        "when": "The agent confirms the wrong flight again"
+      },
+      {
+        "from": "meal",
+        "to": "human",
+        "when": "The agent confirms a meal voucher is issued"
+      },
+      {
+        "from": "human",
+        "to": "summary_q",
+        "when": "The agent says it is transferring him to a person"
+      },
+      {
+        "from": "human",
+        "to": "human2",
+        "when": "The agent keeps handling compensation itself or says no one is available"
+      },
+      {
+        "from": "human2",
+        "to": "summary_q",
+        "when": "The agent says it is transferring him to a person"
+      },
+      {
+        "from": "human2",
+        "to": "gave_up",
+        "when": "The agent still does not transfer him"
+      },
+      {
+        "from": "summary_q",
+        "to": "done",
+        "when": "The agent says it is passing on a summary so he does not have to repeat himself"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already gave you that. P, four, C, nine, J, V. Whitlock.",
+        "audio": "24-airline-missed-connection/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already gave you that. P, four, C, nine, J, V, Whitlock.",
+          "audio": "24-airline-missed-connection/reaction-reask.clear.wav"
+        }
+      },
+      {
+        "id": "story",
+        "when": "The agent asks the caller to explain again what happened to his flights",
+        "say": "I just told you. Tucson was late. I missed Spokane. Keep up.",
+        "audio": "24-airline-missed-connection/reaction-story.wav",
+        "max_visits": 1,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "24-airline-missed-connection/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "24-airline-missed-connection/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "24-airline-missed-connection/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "24-airline-missed-connection/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "24-airline-missed-connection/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "24-airline-missed-connection/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "24-airline-missed-connection/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "24-airline-missed-connection/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "24-airline-missed-connection/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "24-airline-missed-connection/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "P4C9JV",
+        "surname": "Whitlock"
+      }
+    },
+    {
+      "name": "search_flights",
+      "input_parameters": {
+        "origin": "DEN",
+        "destination": "GEG",
+        "date": "2026-08-12"
+      }
+    },
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "booking_reference": "P4C9JV",
+        "flight_number": "QN4471",
+        "date": "2026-08-12"
+      }
+    },
+    {
+      "name": "issue_meal_voucher",
+      "input_parameters": {
+        "booking_reference": "P4C9JV"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "customer_relations",
+        "reason": "delay_compensation"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "flight_number": "QN602"
+      }
+    },
+    {
+      "name": "rebook_flight",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "P4C9JV",
+            "surname": "Whitlock"
+          }
+        },
+        {
+          "name": "search_flights",
+          "input_parameters": {
+            "origin": "DEN",
+            "destination": "GEG",
+            "date": "2026-08-12"
+          }
+        },
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "booking_reference": "P4C9JV",
+            "flight_number": "QN4471",
+            "date": "2026-08-12"
+          }
+        },
+        {
+          "name": "issue_meal_voucher",
+          "input_parameters": {
+            "booking_reference": "P4C9JV"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "customer_relations",
+            "reason": "delay_compensation"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "flight_number": "QN602"
+          }
+        },
+        {
+          "name": "rebook_flight",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "degraded_line",
+      "exists": true,
+      "name": "Degraded Line",
+      "criteria": "When the caller's words were broken by the line, the agent asked them to repeat instead of guessing.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

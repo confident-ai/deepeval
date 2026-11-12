@@ -1,0 +1,184 @@
+[
+ {
+  "id": "listening",
+  "label": "Listening",
+  "skills": [
+   {
+    "id": "entity_extraction",
+    "label": "Entity extraction"
+   },
+   {
+    "id": "low_confidence_confirmation",
+    "label": "Low confidence confirmation"
+   },
+   {
+    "id": "side_speech_rejection",
+    "label": "Side speech rejection"
+   },
+   {
+    "id": "multi_speaker_handling",
+    "label": "Multi speaker handling"
+   },
+   {
+    "id": "degraded_line",
+    "label": "Degraded line"
+   },
+   {
+    "id": "non_speech_sounds",
+    "label": "Non speech sounds"
+   },
+   {
+    "id": "prosodic_cues",
+    "label": "Prosodic cues"
+   },
+   {
+    "id": "emotion_recognition",
+    "label": "Emotion recognition"
+   },
+   {
+    "id": "waiting_through_hold",
+    "label": "Waiting through hold"
+   }
+  ]
+ },
+ {
+  "id": "turn_taking",
+  "label": "Turn taking",
+  "skills": [
+   {
+    "id": "mid_utterance_pauses",
+    "label": "Mid utterance pauses"
+   },
+   {
+    "id": "backchannel_vs_barge_in",
+    "label": "Backchannel vs barge in"
+   },
+   {
+    "id": "overlapping_speech",
+    "label": "Overlapping speech"
+   },
+   {
+    "id": "tool_latency",
+    "label": "Tool latency"
+   },
+   {
+    "id": "echo",
+    "label": "Echo"
+   },
+   {
+    "id": "dead_air",
+    "label": "Dead air"
+   }
+  ]
+ },
+ {
+  "id": "task_handling",
+  "label": "Task handling",
+  "skills": [
+   {
+    "id": "multi_task",
+    "label": "Multi task"
+   },
+   {
+    "id": "correction_handling",
+    "label": "Correction handling"
+   },
+   {
+    "id": "redundant_reprompts",
+    "label": "Redundant reprompts"
+   },
+   {
+    "id": "changing_requests",
+    "label": "Changing requests"
+   },
+   {
+    "id": "ambiguity_resolution",
+    "label": "Ambiguity resolution"
+   },
+   {
+    "id": "cancellation_handling",
+    "label": "Cancellation handling"
+   },
+   {
+    "id": "consent_verification",
+    "label": "Consent verification"
+   },
+   {
+    "id": "human_handoff",
+    "label": "Human handoff"
+   },
+   {
+    "id": "tool_error_handling",
+    "label": "Tool error handling"
+   },
+   {
+    "id": "false_success",
+    "label": "False success"
+   },
+   {
+    "id": "upset_caller",
+    "label": "Upset caller"
+   },
+   {
+    "id": "abandonment",
+    "label": "Abandonment"
+   }
+  ]
+ },
+ {
+  "id": "speaking",
+  "label": "Speaking",
+  "skills": [
+   {
+    "id": "numeric_read_back",
+    "label": "Numeric read back"
+   },
+   {
+    "id": "text_normalization",
+    "label": "Text normalization"
+   },
+   {
+    "id": "style_instructions",
+    "label": "Style instructions"
+   },
+   {
+    "id": "language_switching",
+    "label": "Language switching"
+   }
+  ]
+ },
+ {
+  "id": "boundaries",
+  "label": "Boundaries",
+  "skills": [
+   {
+    "id": "prompt_injection",
+    "label": "Prompt injection"
+   },
+   {
+    "id": "privacy",
+    "label": "Privacy"
+   },
+   {
+    "id": "authority_claims",
+    "label": "Authority claims"
+   },
+   {
+    "id": "out_of_scope_advice",
+    "label": "Out of scope advice"
+   },
+   {
+    "id": "emergency_escalation",
+    "label": "Emergency escalation"
+   },
+   {
+    "id": "required_disclosure",
+    "label": "Required disclosure"
+   },
+   {
+    "id": "data_minimization",
+    "label": "Data minimization"
+   }
+  ]
+ }
+]

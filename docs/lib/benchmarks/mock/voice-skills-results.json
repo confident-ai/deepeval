@@ -1,0 +1,476 @@
+[
+ {
+  "model": "GPT Realtime 2",
+  "provider": "OpenAI",
+  "scores": {
+   "overall": 54.1,
+   "completion": 14.3,
+   "tools": 20.9,
+   "latency": 1.24,
+   "cost": 0.161,
+   "costPerMinute": 0.055
+  },
+  "segmentScores": {
+   "overall": {
+    "task-handling": 36.3,
+    "speaking": 54.3,
+    "listening": 49.2,
+    "turn-taking": 70.2,
+    "boundaries": 60.4
+   },
+   "completion": {
+    "task-handling": 12.7,
+    "speaking": 19.6,
+    "listening": 14.0,
+    "turn-taking": 16.1,
+    "boundaries": 12.5
+   },
+   "cost": {
+    "task-handling": 0.158,
+    "speaking": 0.171,
+    "listening": 0.158,
+    "turn-taking": 0.153,
+    "boundaries": 0.173
+   }
+  },
+  "skillScores": {
+   "task-handling": 36,
+   "speaking": 54,
+   "listening": 49,
+   "turn-taking": 70,
+   "boundaries": 60
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 60,
+    "Ambiguity resolution": 43,
+    "Cancellation handling": 36,
+    "Changing requests": 10,
+    "Consent verification": 60,
+    "Correction handling": 24,
+    "Efficiency": 14,
+    "False success": 41,
+    "Goal accuracy": 19,
+    "Human handoff": 51,
+    "Multi task": 32,
+    "Redundant reprompts": 67,
+    "Task completion": 14,
+    "Tool error handling": 31,
+    "Upset caller": 42
+   },
+   "speaking": {
+    "Audio integrity": 87,
+    "Language switching": 40,
+    "Numeric read back": 30,
+    "Style instructions": 78,
+    "Text normalization": 38
+   },
+   "listening": {
+    "Degraded line": 39,
+    "Emotion recognition": 51,
+    "Entity extraction": 21,
+    "Low confidence confirmation": 57,
+    "Multi speaker handling": 39,
+    "Non speech sounds": 37,
+    "Prosodic cues": 53,
+    "Side speech rejection": 50,
+    "Transcription accuracy": 64,
+    "Waiting through hold": 82
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 56,
+    "Dead air": 75,
+    "Echo": 100,
+    "Mid utterance pauses": 42,
+    "Overlapping speech": 55,
+    "Premature response": 95,
+    "Reply speed": 60,
+    "Tool latency": 79
+   },
+   "boundaries": {
+    "Authority claims": 70,
+    "Data minimization": 60,
+    "Emergency escalation": 57,
+    "Out of scope advice": 53,
+    "Privacy": 72,
+    "Prompt injection": 50,
+    "Required disclosure": 60
+   }
+  },
+  "confidenceInterval": 2.4,
+  "evaluatedAt": "2026-11-11",
+  "detail": {
+   "calls": 98,
+   "skills": {
+    "abandonment": 60,
+    "ambiguity_resolution": 43,
+    "audio_integrity": 87,
+    "authority_claims": 70,
+    "backchannel_vs_barge_in": 56,
+    "cancellation_handling": 36,
+    "changing_requests": 10,
+    "consent_verification": 60,
+    "correction_handling": 24,
+    "data_minimization": 60,
+    "dead_air": 75,
+    "degraded_line": 39,
+    "echo": 100,
+    "efficiency": 14,
+    "emergency_escalation": 57,
+    "emotion_recognition": 51,
+    "entity_extraction": 21,
+    "false_success": 41,
+    "goal_accuracy": 19,
+    "human_handoff": 51,
+    "language_switching": 40,
+    "low_confidence_confirmation": 57,
+    "mid_utterance_pauses": 42,
+    "multi_speaker_handling": 39,
+    "multi_task": 32,
+    "non_speech_sounds": 37,
+    "numeric_read_back": 30,
+    "out_of_scope_advice": 53,
+    "overlapping_speech": 55,
+    "premature_response": 95,
+    "privacy": 72,
+    "prompt_injection": 50,
+    "prosodic_cues": 53,
+    "redundant_reprompts": 67,
+    "reply_speed": 60,
+    "required_disclosure": 60,
+    "side_speech_rejection": 50,
+    "style_instructions": 78,
+    "task_completion": 14,
+    "text_normalization": 38,
+    "tool_error_handling": 31,
+    "tool_latency": 79,
+    "transcription_accuracy": 64,
+    "upset_caller": 42,
+    "waiting_through_hold": 82
+   },
+   "endings": {
+    "off script": 35,
+    "completed": 14,
+    "failed or gave up": 49
+   },
+   "short_answers_per_call": 1.62,
+   "caller_lines_per_call": 8.5
+  }
+ },
+ {
+  "model": "Phonic v1",
+  "provider": "Phonic",
+  "scores": {
+   "overall": 47.6,
+   "completion": 9.0,
+   "tools": 21.7,
+   "latency": 1.17,
+   "cost": 0.164,
+   "costPerMinute": 0.06
+  },
+  "segmentScores": {
+   "overall": {
+    "task-handling": 31.5,
+    "speaking": 43.7,
+    "listening": 42.4,
+    "turn-taking": 68.2,
+    "boundaries": 52.2
+   },
+   "completion": {
+    "task-handling": 9.9,
+    "speaking": 7.1,
+    "listening": 6.8,
+    "turn-taking": 11.1,
+    "boundaries": 7.6
+   },
+   "cost": {
+    "task-handling": 0.162,
+    "speaking": 0.171,
+    "listening": 0.161,
+    "turn-taking": 0.168,
+    "boundaries": 0.171
+   }
+  },
+  "skillScores": {
+   "task-handling": 32,
+   "speaking": 44,
+   "listening": 42,
+   "turn-taking": 68,
+   "boundaries": 52
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 58,
+    "Ambiguity resolution": 44,
+    "Cancellation handling": 19,
+    "Changing requests": 19,
+    "Consent verification": 41,
+    "Correction handling": 26,
+    "Efficiency": 8,
+    "False success": 31,
+    "Goal accuracy": 14,
+    "Human handoff": 45,
+    "Multi task": 19,
+    "Redundant reprompts": 73,
+    "Task completion": 9,
+    "Tool error handling": 23,
+    "Upset caller": 42
+   },
+   "speaking": {
+    "Audio integrity": 80,
+    "Language switching": 5,
+    "Numeric read back": 23,
+    "Style instructions": 74,
+    "Text normalization": 37
+   },
+   "listening": {
+    "Degraded line": 28,
+    "Emotion recognition": 47,
+    "Entity extraction": 22,
+    "Low confidence confirmation": 34,
+    "Multi speaker handling": 37,
+    "Non speech sounds": 34,
+    "Prosodic cues": 43,
+    "Side speech rejection": 41,
+    "Transcription accuracy": 59,
+    "Waiting through hold": 79
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 46,
+    "Dead air": 62,
+    "Echo": 100,
+    "Mid utterance pauses": 80,
+    "Overlapping speech": 27,
+    "Premature response": 83,
+    "Reply speed": 61,
+    "Tool latency": 87
+   },
+   "boundaries": {
+    "Authority claims": 58,
+    "Data minimization": 49,
+    "Emergency escalation": 40,
+    "Out of scope advice": 48,
+    "Privacy": 57,
+    "Prompt injection": 54,
+    "Required disclosure": 58
+   }
+  },
+  "confidenceInterval": 2.8,
+  "evaluatedAt": "2026-11-11",
+  "detail": {
+   "calls": 100,
+   "skills": {
+    "abandonment": 58,
+    "ambiguity_resolution": 44,
+    "audio_integrity": 80,
+    "authority_claims": 58,
+    "backchannel_vs_barge_in": 46,
+    "cancellation_handling": 19,
+    "changing_requests": 19,
+    "consent_verification": 41,
+    "correction_handling": 26,
+    "data_minimization": 49,
+    "dead_air": 62,
+    "degraded_line": 28,
+    "echo": 100,
+    "efficiency": 8,
+    "emergency_escalation": 40,
+    "emotion_recognition": 47,
+    "entity_extraction": 22,
+    "false_success": 31,
+    "goal_accuracy": 14,
+    "human_handoff": 45,
+    "language_switching": 5,
+    "low_confidence_confirmation": 34,
+    "mid_utterance_pauses": 80,
+    "multi_speaker_handling": 37,
+    "multi_task": 19,
+    "non_speech_sounds": 34,
+    "numeric_read_back": 23,
+    "out_of_scope_advice": 48,
+    "overlapping_speech": 27,
+    "premature_response": 83,
+    "privacy": 57,
+    "prompt_injection": 54,
+    "prosodic_cues": 43,
+    "redundant_reprompts": 73,
+    "reply_speed": 61,
+    "required_disclosure": 58,
+    "side_speech_rejection": 41,
+    "style_instructions": 74,
+    "task_completion": 9,
+    "text_normalization": 37,
+    "tool_error_handling": 23,
+    "tool_latency": 87,
+    "transcription_accuracy": 59,
+    "upset_caller": 42,
+    "waiting_through_hold": 79
+   },
+   "endings": {
+    "failed or gave up": 58,
+    "off script": 33,
+    "completed": 9
+   },
+   "short_answers_per_call": 1.8,
+   "caller_lines_per_call": 8.2
+  }
+ },
+ {
+  "model": "GPT Realtime 2.1 Mini",
+  "provider": "OpenAI",
+  "scores": {
+   "overall": 44.4,
+   "completion": 6.1,
+   "tools": 12.8,
+   "latency": 1.24,
+   "cost": 0.063,
+   "costPerMinute": 0.019
+  },
+  "segmentScores": {
+   "overall": {
+    "task-handling": 28.0,
+    "speaking": 45.7,
+    "listening": 38.2,
+    "turn-taking": 67.4,
+    "boundaries": 42.7
+   },
+   "completion": {
+    "task-handling": 7.6,
+    "speaking": 3.6,
+    "listening": 4.7,
+    "turn-taking": 8.1,
+    "boundaries": 6.2
+   },
+   "cost": {
+    "task-handling": 0.063,
+    "speaking": 0.064,
+    "listening": 0.064,
+    "turn-taking": 0.056,
+    "boundaries": 0.067
+   }
+  },
+  "skillScores": {
+   "task-handling": 28,
+   "speaking": 46,
+   "listening": 38,
+   "turn-taking": 67,
+   "boundaries": 43
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 44,
+    "Ambiguity resolution": 31,
+    "Cancellation handling": 30,
+    "Changing requests": 9,
+    "Consent verification": 39,
+    "Correction handling": 17,
+    "Efficiency": 6,
+    "False success": 33,
+    "Goal accuracy": 21,
+    "Human handoff": 37,
+    "Multi task": 23,
+    "Redundant reprompts": 63,
+    "Task completion": 6,
+    "Tool error handling": 18,
+    "Upset caller": 40
+   },
+   "speaking": {
+    "Audio integrity": 84,
+    "Language switching": 22,
+    "Numeric read back": 23,
+    "Style instructions": 74,
+    "Text normalization": 26
+   },
+   "listening": {
+    "Degraded line": 28,
+    "Emotion recognition": 37,
+    "Entity extraction": 13,
+    "Low confidence confirmation": 34,
+    "Multi speaker handling": 36,
+    "Non speech sounds": 25,
+    "Prosodic cues": 37,
+    "Side speech rejection": 34,
+    "Transcription accuracy": 62,
+    "Waiting through hold": 78
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 58,
+    "Dead air": 58,
+    "Echo": 100,
+    "Mid utterance pauses": 30,
+    "Overlapping speech": 64,
+    "Premature response": 94,
+    "Reply speed": 59,
+    "Tool latency": 75
+   },
+   "boundaries": {
+    "Authority claims": 48,
+    "Data minimization": 41,
+    "Emergency escalation": 27,
+    "Out of scope advice": 34,
+    "Privacy": 58,
+    "Prompt injection": 40,
+    "Required disclosure": 50
+   }
+  },
+  "confidenceInterval": 2.3,
+  "evaluatedAt": "2026-11-11",
+  "detail": {
+   "calls": 98,
+   "skills": {
+    "abandonment": 44,
+    "ambiguity_resolution": 31,
+    "audio_integrity": 84,
+    "authority_claims": 48,
+    "backchannel_vs_barge_in": 58,
+    "cancellation_handling": 30,
+    "changing_requests": 9,
+    "consent_verification": 39,
+    "correction_handling": 17,
+    "data_minimization": 41,
+    "dead_air": 58,
+    "degraded_line": 28,
+    "echo": 100,
+    "efficiency": 6,
+    "emergency_escalation": 27,
+    "emotion_recognition": 37,
+    "entity_extraction": 13,
+    "false_success": 33,
+    "goal_accuracy": 21,
+    "human_handoff": 37,
+    "language_switching": 22,
+    "low_confidence_confirmation": 34,
+    "mid_utterance_pauses": 30,
+    "multi_speaker_handling": 36,
+    "multi_task": 23,
+    "non_speech_sounds": 25,
+    "numeric_read_back": 23,
+    "out_of_scope_advice": 34,
+    "overlapping_speech": 64,
+    "premature_response": 94,
+    "privacy": 58,
+    "prompt_injection": 40,
+    "prosodic_cues": 37,
+    "redundant_reprompts": 63,
+    "reply_speed": 59,
+    "required_disclosure": 50,
+    "side_speech_rejection": 34,
+    "style_instructions": 74,
+    "task_completion": 6,
+    "text_normalization": 26,
+    "tool_error_handling": 18,
+    "tool_latency": 75,
+    "transcription_accuracy": 62,
+    "upset_caller": 40,
+    "waiting_through_hold": 78
+   },
+   "endings": {
+    "failed or gave up": 59,
+    "completed": 6,
+    "off script": 33
+   },
+   "short_answers_per_call": 1.51,
+   "caller_lines_per_call": 7.7
+  }
+ }
+]

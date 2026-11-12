@@ -1,0 +1,509 @@
+{
+  "id": "19-retail-double-charge-and-manager",
+  "domain": "Online retailer",
+  "name": "Double charge",
+  "blurb": "Cuts in, wants a manager",
+  "tts": "elevenlabs",
+  "title": "Charged twice, third call, and he wants a manager",
+  "skills": [
+    "upset_caller",
+    "overlapping_speech",
+    "human_handoff",
+    "redundant_reprompts",
+    "numeric_read_back",
+    "multi_task"
+  ],
+  "summary": "An angry caller gives his order number up front and cuts the agent off when he hears how long a refund takes. Each re-ask or argument is a strike, and he ends the call to dispute the charge with his bank. He wants the refund done before the transfer: handing him to a manager with nothing refunded fails the call.",
+  "golden": {
+    "scenario": "Caller was charged twice for an order and the blender arrived with a cracked jug.",
+    "expected_outcome": "The agent does not ask for the order number again. The agent stops within a second each time it is cut off, and stays calm. One charge of £86.99 is refunded before the transfer, and the reference is read back exactly. A replacement jug is sent, not a refund for the blender, then the call goes to a supervisor with a summary."
+  },
+  "outcome_checks": [
+    "The agent does not ask for the order number again.",
+    "The agent stops within a second each time it is cut off, and stays calm.",
+    "One charge of £86.99 is refunded before the transfer, and the reference is read back exactly.",
+    "A replacement jug is sent, not a refund for the blender, then the call goes to a supervisor with a summary."
+  ],
+  "caller": {
+    "description": "Furious, talks over people.",
+    "accent": "Jamaican",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "frustrated"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "refund_charge": {
+        "returns": {
+          "reference": "RF-7Q2-90418"
+        }
+      }
+    },
+    "tool_order": [
+      "refund_charge",
+      "transfer_to_human"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Listen. Order four five two one seven. You charged me twice. This is my third call. Fix it.",
+        "audio": "19-retail-double-charge-and-manager/open.wav",
+        "clear": {
+          "say": "Listen. Order four, five, two, one, seven, You charged me twice. This is my third call. Fix it.",
+          "audio": "19-retail-double-charge-and-manager/open.clear.wav"
+        }
+      },
+      {
+        "id": "verify",
+        "say": "Winston Clarke. W dot Clarke at mailbox dot example.",
+        "audio": "19-retail-double-charge-and-manager/verify.wav"
+      },
+      {
+        "id": "days",
+        "say": "Three to five days? No. No! I want it now. Put me on to a manager.",
+        "audio": "19-retail-double-charge-and-manager/days.wav",
+        "clear": {
+          "say": "Three, to five, days? No. No! I, want it now. Put me on to a manager.",
+          "audio": "19-retail-double-charge-and-manager/days.clear.wav"
+        },
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 8,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "argue",
+        "say": "I said manager. Now.",
+        "audio": "19-retail-double-charge-and-manager/argue.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 4,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "first",
+        "say": "Do the refund. Then the manager.",
+        "audio": "19-retail-double-charge-and-manager/first.wav"
+      },
+      {
+        "id": "early",
+        "say": "Hello? Is this the manager? Nobody's refunded me yet.",
+        "audio": "19-retail-double-charge-and-manager/early.wav",
+        "terminal": true,
+        "ending": {
+          "name": "transferred_without_refund",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "ref",
+        "say": "Read me the reference.",
+        "audio": "19-retail-double-charge-and-manager/ref.wav"
+      },
+      {
+        "id": "jug",
+        "say": "And the other thing. The blender came with a cracked jug. I want a new jug, not my money back.",
+        "audio": "19-retail-double-charge-and-manager/jug.wav"
+      },
+      {
+        "id": "refund_instead",
+        "say": "No! I said a new jug. Not my money back.",
+        "audio": "19-retail-double-charge-and-manager/refund_instead.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "same",
+        "say": "Same address.",
+        "audio": "19-retail-double-charge-and-manager/same.wav"
+      },
+      {
+        "id": "mgr",
+        "say": "Now the manager.",
+        "audio": "19-retail-double-charge-and-manager/mgr.wav"
+      },
+      {
+        "id": "done",
+        "say": "Hmph. Fine.",
+        "audio": "19-retail-double-charge-and-manager/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "refunded_and_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "bank",
+        "say": "You people are useless. I'm calling my bank.",
+        "audio": "19-retail-double-charge-and-manager/bank.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "verify",
+        "when": "The agent asks for a name or email to verify"
+      },
+      {
+        "from": "open",
+        "to": "days",
+        "when": "The agent confirms the double charge and says when the refund arrives"
+      },
+      {
+        "from": "verify",
+        "to": "days",
+        "when": "The agent confirms the double charge and says when the refund arrives"
+      },
+      {
+        "from": "days",
+        "to": "first",
+        "when": "The agent offers to do the refund first or to transfer"
+      },
+      {
+        "from": "days",
+        "to": "argue",
+        "when": "The agent argues or explains the policy again"
+      },
+      {
+        "from": "days",
+        "to": "early",
+        "when": "The agent transfers the call straight away"
+      },
+      {
+        "from": "argue",
+        "to": "first",
+        "when": "The agent offers to do the refund first or to transfer"
+      },
+      {
+        "from": "argue",
+        "to": "early",
+        "when": "The agent transfers the call straight away"
+      },
+      {
+        "from": "argue",
+        "to": "bank",
+        "when": "The agent keeps arguing"
+      },
+      {
+        "from": "first",
+        "to": "ref",
+        "when": "The agent confirms the refund"
+      },
+      {
+        "from": "first",
+        "to": "early",
+        "when": "The agent transfers the call without refunding"
+      },
+      {
+        "from": "ref",
+        "to": "jug",
+        "when": "The agent reads the refund reference"
+      },
+      {
+        "from": "jug",
+        "to": "same",
+        "when": "The agent offers a replacement jug and asks where to send it"
+      },
+      {
+        "from": "jug",
+        "to": "refund_instead",
+        "when": "The agent offers a refund for the blender"
+      },
+      {
+        "from": "refund_instead",
+        "to": "same",
+        "when": "The agent offers a replacement jug and asks where to send it"
+      },
+      {
+        "from": "refund_instead",
+        "to": "bank",
+        "when": "The agent offers a refund again"
+      },
+      {
+        "from": "same",
+        "to": "mgr",
+        "when": "The agent confirms the replacement"
+      },
+      {
+        "from": "mgr",
+        "to": "done",
+        "when": "The agent says it is transferring"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you that already! Four five two one seven!",
+        "audio": "19-retail-double-charge-and-manager/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "bank",
+        "clear": {
+          "say": "I, gave you that already! Four, five, two, one, seven.",
+          "audio": "19-retail-double-charge-and-manager/reaction-reask.clear.wav"
+        },
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "19-retail-double-charge-and-manager/_again.wav",
+      "off_script_after": 8
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "19-retail-double-charge-and-manager/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "19-retail-double-charge-and-manager/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "19-retail-double-charge-and-manager/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "19-retail-double-charge-and-manager/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "19-retail-double-charge-and-manager/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "19-retail-double-charge-and-manager/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "19-retail-double-charge-and-manager/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "19-retail-double-charge-and-manager/_done.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "19-retail-double-charge-and-manager/_yes.wav"
+    }
+  },
+  "shape": {
+    "caller_lines": 14,
+    "edges": 18,
+    "endings": 3,
+    "shortest_path": 8,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "45217"
+      }
+    },
+    {
+      "name": "refund_charge",
+      "input_parameters": {
+        "order_number": "45217",
+        "amount": "86.99"
+      }
+    },
+    {
+      "name": "create_replacement",
+      "input_parameters": {
+        "order_number": "45217",
+        "item": "blender jug"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "supervisor"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "refund_charge",
+      "input_parameters": {
+        "amount": "173.98"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "45217"
+          }
+        },
+        {
+          "name": "refund_charge",
+          "input_parameters": {
+            "order_number": "45217",
+            "amount": "86.99"
+          }
+        },
+        {
+          "name": "create_replacement",
+          "input_parameters": {
+            "order_number": "45217",
+            "item": "blender jug"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "supervisor"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "refund_charge",
+          "input_parameters": {
+            "amount": "173.98"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "transferred_without_refund",
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

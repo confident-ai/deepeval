@@ -206,6 +206,16 @@ class BaseVoiceConnector(ABC):
     def take_pending_agent_events(self) -> List[AgentEvent]:
         return []
 
+    def take_agent_speech_during_uplink(self) -> List[List[AgentEvent]]:
+        """Whole replies the agent finished while the caller was still talking.
+
+        A caller who goes quiet mid-turn may be answered before they carry on.
+        That speech is not the reply to the turn, so it is handed over on its
+        own, one list of events per reply, and whatever the agent has only
+        started saying is left to be heard as the reply.
+        """
+        return []
+
     @property
     def signals_turn_complete(self) -> bool:
         """Whether the transport says outright when the agent's turn is over.
