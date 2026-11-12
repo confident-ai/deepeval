@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import re
+from functools import partial
 from difflib import SequenceMatcher
 from typing import Any, Callable, Dict, List
 
@@ -30,6 +31,7 @@ Today is {today}.
 {sections}"""
 
 _SETTINGS = ("today", "policy", "voice_style", "tools", "tool_order", "knowledge")
+LANGUAGES = ["es", "fr", "pt", "pl"]
 _READS = ("lookup", "get", "find", "verify", "check", "search", "list")
 
 
@@ -160,9 +162,11 @@ def reference_agent(
     expected: Dict[str, List[Dict]] = {}
     for call in journey["expected_tools"]:
         expected.setdefault(call["name"], []).append(call["input_parameters"])
-    connector = (
-        PhonicConnector if model.startswith("phonic") else OpenAIRealtimeConnector
-    )
+    connector = OpenAIRealtimeConnector
+    if model.startswith("phonic"):
+        # Phonic only speaks the languages it is told about, so it is given
+        # every language a caller in the benchmark may switch to.
+        connector = partial(PhonicConnector, additional_languages=LANGUAGES)
     return connector(
         model=model,
         instructions=INSTRUCTIONS.format(

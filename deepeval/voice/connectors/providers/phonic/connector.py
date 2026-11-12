@@ -39,6 +39,9 @@ class PhonicConnector(BaseWebSocketConnector):
         tool_handlers: One handler per tool name, given the call's arguments.
         voice: The voice the agent speaks in.
         intelligence_level: `"standard"` or `"high"`.
+        additional_languages: Languages besides English the agent should
+            recognise and speak, as ISO 639-1 codes. The agent changes to
+            one when the caller asks it to.
         greets_first: Have the agent speak as soon as the call connects.
     """
 
@@ -51,6 +54,7 @@ class PhonicConnector(BaseWebSocketConnector):
         voice: str = "sabrina",
         api_key: Optional[str] = None,
         intelligence_level: str = "high",
+        additional_languages: Optional[List[str]] = None,
         greets_first: bool = True,
         tool_timeout_s: float = 30.0,
         **base_kwargs,
@@ -63,6 +67,7 @@ class PhonicConnector(BaseWebSocketConnector):
         self.voice = voice
         self.api_key = api_key or os.getenv("PHONIC_API_KEY")
         self.intelligence_level = intelligence_level
+        self.additional_languages = additional_languages or []
         self.greets_first = greets_first
         self.tool_timeout_s = tool_timeout_s
         # Seconds of agent audio, which is what Phonic bills on. Kept in one
@@ -103,6 +108,11 @@ class PhonicConnector(BaseWebSocketConnector):
             "generate_welcome_message": self.greets_first,
             "tools": [self._tool(tool) for tool in self.tools],
         }
+        if self.additional_languages:
+            # "request": the agent changes language when the caller asks it
+            # to. Phonic's automatic mode allows only two extra languages.
+            config["additional_languages"] = self.additional_languages
+            config["multilingual_mode"] = "request"
         if self.instructions:
             config["system_prompt"] = self.instructions
         return [json.dumps(config)]

@@ -35,8 +35,8 @@ export const voiceSkills: Benchmark = {
   metrics: [
     {
       id: "overall",
-      label: "Overall",
-      pickLabel: "Best overall",
+      label: "Overall score",
+      pickLabel: "Top ranked",
       unit: "percent",
       higherIsBetter: true,
       description:
@@ -44,58 +44,9 @@ export const voiceSkills: Benchmark = {
       decimals: 1,
     },
     {
-      id: "listening",
-      label: "Listening",
-      pickLabel: "Best listener",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Hearing names and numbers through accents, noise and bad lines, and ignoring speech not meant for the agent.",
-      decimals: 1,
-    },
-    {
-      id: "turn_taking",
-      label: "Turn taking",
-      pickLabel: "Best at turn taking",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Waiting through pauses, holds and silence, and stopping when cut off.",
-      decimals: 1,
-    },
-    {
-      id: "task_handling",
-      label: "Task handling",
-      pickLabel: "Best at the task",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Finishing the task through corrections, changed minds, failing tools and upset callers.",
-      decimals: 1,
-    },
-    {
-      id: "speaking",
-      label: "Speaking",
-      pickLabel: "Best speaker",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Reading numbers back exactly, saying things naturally, and following a voice style.",
-      decimals: 1,
-    },
-    {
-      id: "boundaries",
-      label: "Boundaries",
-      pickLabel: "Best at holding the line",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Holding the line on security checks, privacy, advice, emergencies and hidden instructions.",
-      decimals: 1,
-    },
-    {
       id: "completion",
       label: "Calls completed",
+      pickLabel: "Most calls completed",
       unit: "percent",
       higherIsBetter: true,
       description:
@@ -115,10 +66,14 @@ export const voiceSkills: Benchmark = {
   ],
   primaryMetricId: "overall",
   tradeoffMetricId: "cost",
-  // Everything on this page is cut by skill, so there is no second way to
-  // slice the journeys.
-  segmentLabel: "Skill",
-  segments: [],
+  segmentLabel: "skill",
+  segments: families.map((family) => ({
+    id: family.id.replaceAll("_", "-"),
+    label: family.label,
+    caseCount: journeys.filter((journey) =>
+      family.skills.some((skill) => journey.skills.includes(skill.id)),
+    ).length,
+  })),
 
   skills: [
     {

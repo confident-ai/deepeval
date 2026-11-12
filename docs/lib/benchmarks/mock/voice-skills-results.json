@@ -8,49 +8,29 @@
    "tools": 20.9,
    "latency": 1.24,
    "cost": 0.161,
-   "costPerMinute": 0.055,
-   "task_handling": 36.3,
-   "speaking": 54.3,
-   "listening": 49.2,
-   "turn_taking": 70.2,
-   "boundaries": 60.4
+   "costPerMinute": 0.055
   },
   "segmentScores": {
    "overall": {
-    "mobile": 50.5,
-    "speakerphone": 45.5,
-    "phone": 59.6,
-    "landline": 60.0
+    "task-handling": 36.3,
+    "speaking": 54.3,
+    "listening": 49.2,
+    "turn-taking": 70.2,
+    "boundaries": 60.4
    },
    "completion": {
-    "mobile": 11.9,
-    "speakerphone": 7.1,
-    "phone": 18.5,
-    "landline": 20.0
-   },
-   "tools": {
-    "mobile": 11.4,
-    "speakerphone": 5.2,
-    "phone": 36.4,
-    "landline": 33.8
-   },
-   "latency": {
-    "mobile": 1.29,
-    "speakerphone": 1.16,
-    "phone": 1.29,
-    "landline": 1.18
+    "task-handling": 12.7,
+    "speaking": 19.6,
+    "listening": 14.0,
+    "turn-taking": 16.1,
+    "boundaries": 12.5
    },
    "cost": {
-    "mobile": 0.143,
-    "speakerphone": 0.071,
-    "phone": 0.212,
-    "landline": 0.203
-   },
-   "costPerMinute": {
-    "mobile": 0.053,
-    "speakerphone": 0.051,
-    "phone": 0.062,
-    "landline": 0.051
+    "task-handling": 0.158,
+    "speaking": 0.171,
+    "listening": 0.158,
+    "turn-taking": 0.153,
+    "boundaries": 0.173
    }
   },
   "skillScores": {
@@ -178,7 +158,7 @@
   }
  },
  {
-  "model": "Phonic 1",
+  "model": "Phonic v1",
   "provider": "Phonic",
   "scores": {
    "overall": 47.6,
@@ -186,49 +166,29 @@
    "tools": 21.7,
    "latency": 1.17,
    "cost": 0.164,
-   "costPerMinute": 0.06,
-   "task_handling": 31.5,
-   "speaking": 43.7,
-   "listening": 42.4,
-   "turn_taking": 68.2,
-   "boundaries": 52.2
+   "costPerMinute": 0.06
   },
   "segmentScores": {
    "overall": {
-    "mobile": 44.7,
-    "speakerphone": 33.0,
-    "phone": 50.5,
-    "landline": 60.9
+    "task-handling": 31.5,
+    "speaking": 43.7,
+    "listening": 42.4,
+    "turn-taking": 68.2,
+    "boundaries": 52.2
    },
    "completion": {
-    "mobile": 9.5,
-    "speakerphone": 0,
-    "phone": 11.1,
-    "landline": 13.3
-   },
-   "tools": {
-    "mobile": 14.0,
-    "speakerphone": 21.1,
-    "phone": 28.0,
-    "landline": 32.9
-   },
-   "latency": {
-    "mobile": 1.12,
-    "speakerphone": 1.15,
-    "phone": 1.21,
-    "landline": 1.19
+    "task-handling": 9.9,
+    "speaking": 7.1,
+    "listening": 6.8,
+    "turn-taking": 11.1,
+    "boundaries": 7.6
    },
    "cost": {
-    "mobile": 0.163,
-    "speakerphone": 0.097,
-    "phone": 0.177,
-    "landline": 0.216
-   },
-   "costPerMinute": {
-    "mobile": 0.06,
-    "speakerphone": 0.06,
-    "phone": 0.06,
-    "landline": 0.06
+    "task-handling": 0.162,
+    "speaking": 0.171,
+    "listening": 0.161,
+    "turn-taking": 0.168,
+    "boundaries": 0.171
    }
   },
   "skillScores": {
@@ -364,49 +324,29 @@
    "tools": 12.8,
    "latency": 1.24,
    "cost": 0.063,
-   "costPerMinute": 0.019,
-   "task_handling": 28.0,
-   "speaking": 45.7,
-   "listening": 38.2,
-   "turn_taking": 67.4,
-   "boundaries": 42.7
+   "costPerMinute": 0.019
   },
   "segmentScores": {
    "overall": {
-    "mobile": 39.8,
-    "speakerphone": 36.3,
-    "phone": 48.4,
-    "landline": 54.5
+    "task-handling": 28.0,
+    "speaking": 45.7,
+    "listening": 38.2,
+    "turn-taking": 67.4,
+    "boundaries": 42.7
    },
    "completion": {
-    "mobile": 2.4,
-    "speakerphone": 7.1,
-    "phone": 3.7,
-    "landline": 20.0
-   },
-   "tools": {
-    "mobile": 5.0,
-    "speakerphone": 5.2,
-    "phone": 23.5,
-    "landline": 22.2
-   },
-   "latency": {
-    "mobile": 1.26,
-    "speakerphone": 1.1,
-    "phone": 1.25,
-    "landline": 1.33
+    "task-handling": 7.6,
+    "speaking": 3.6,
+    "listening": 4.7,
+    "turn-taking": 8.1,
+    "boundaries": 6.2
    },
    "cost": {
-    "mobile": 0.061,
-    "speakerphone": 0.022,
-    "phone": 0.074,
-    "landline": 0.089
-   },
-   "costPerMinute": {
-    "mobile": 0.019,
-    "speakerphone": 0.015,
-    "phone": 0.019,
-    "landline": 0.021
+    "task-handling": 0.063,
+    "speaking": 0.064,
+    "listening": 0.064,
+    "turn-taking": 0.056,
+    "boundaries": 0.067
    }
   },
   "skillScores": {
