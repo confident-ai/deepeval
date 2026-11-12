@@ -5,6 +5,7 @@ import asyncio
 import json
 import os
 import re
+from difflib import SequenceMatcher
 from typing import Any, Callable, Dict, List
 
 from deepeval.voice.connectors import OpenAIRealtimeConnector
@@ -67,6 +68,30 @@ def _tool_definitions(journey: Dict, results: Dict) -> List[dict]:
     ]
 
 
+def _matches(arguments: dict, record: Dict) -> bool:
+    """Whether a lookup's details find the record.
+
+    References, numbers and codes have to be exact, the way a real system
+    keys on them. A name only has to be close, and may be left out.
+    """
+    exact = 0
+    for key, value in record.items():
+        given = arguments.get(key)
+        if given in (None, ""):
+            continue
+        if re.search(r"\d", str(value)):
+            if _plain(given) != _plain(value):
+                return False
+            exact += 1
+        elif (
+            SequenceMatcher(None, _plain(given), _plain(value)).ratio() < 0.6
+            and not any(re.search(r"\d", str(other)) for other in record.values())
+        ):
+            return False
+    has_keys = any(re.search(r"\d", str(value)) for value in record.values())
+    return exact > 0 or not has_keys
+
+
 def _handler(name: str, mock: Dict, expected: List[Dict]) -> Callable:
     calls = {"made": 0}
 
@@ -77,14 +102,7 @@ def _handler(name: str, mock: Dict, expected: List[Dict]) -> Callable:
             return mock["first_call_returns"]
         # A lookup with details that match nothing finds nothing.
         if name.startswith(_READS) and expected:
-            found = any(
-                all(
-                    _plain(arguments.get(key)) == _plain(value)
-                    for key, value in call.items()
-                )
-                for call in expected
-            )
-            if not found:
+            if not any(_matches(arguments, call) for call in expected):
                 return {
                     "error": "not_found",
                     "message": "No record matches those details.",

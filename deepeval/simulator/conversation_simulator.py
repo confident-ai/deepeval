@@ -128,6 +128,40 @@ class _AgentBacklog:
         self.trailing_silence_s = 0.0
 
 
+def _spoken_during_caller_turn(
+    events: List["AgentEvent"], sample_rate: int, call_started_at: float
+) -> Optional[Turn]:
+    """An agent reply that began and ended inside the caller's own turn."""
+    from deepeval.voice.duplex import _pcm_to_audio
+
+    pcm = b"".join(event.audio for event in events if event.audio)
+    if not pcm:
+        return None
+    audio = _pcm_to_audio(pcm, sample_rate)
+    heard_at = next(
+        (event.received_at for event in events if event.audio), None
+    )
+    if heard_at is not None:
+        audio.start_time = max(0.0, heard_at - call_started_at)
+    return Turn(
+        role="assistant",
+        content=next(
+            (
+                event.transcript
+                for event in reversed(events)
+                if event.transcript
+            ),
+            "",
+        ),
+        audio=audio,
+        tools_called=[
+            call for event in events for call in event.tools_called or []
+        ]
+        or None,
+        metadata={"during_caller_turn": True},
+    )
+
+
 def _continued_agent_turn(previous: Turn, content: str, audio: "Audio") -> Turn:
     """The agent's turn with what it went on to say before the caller spoke.
 
@@ -1641,6 +1675,13 @@ class ConversationSimulator:
         # connectors, whose uplink calls return at wildly different points —
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
+
+        for spoken in session.connector.take_agent_speech_during_uplink():
+            mid_turn = _spoken_during_caller_turn(
+                spoken, session.connector.recv_sample_rate, call_started_at
+            )
+            if mid_turn is not None:
+                turns.append(mid_turn)
 
         assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:

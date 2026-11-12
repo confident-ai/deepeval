@@ -249,6 +249,28 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
             )
         return None
 
+    def take_agent_speech_during_uplink(self) -> List[List[AgentEvent]]:
+        waiting: List[AgentEvent] = []
+        while not self._inbound.empty():
+            waiting.append(self._inbound.get_nowait())
+        finished = max(
+            (
+                index
+                for index, event in enumerate(waiting)
+                if event.turn_complete
+            ),
+            default=-1,
+        )
+        for event in waiting[finished + 1 :]:
+            self._inbound.put_nowait(event)
+        replies: List[List[AgentEvent]] = [[]]
+        for event in waiting[: finished + 1]:
+            if event.turn_complete:
+                replies.append([])
+            else:
+                replies[-1].append(event)
+        return [reply for reply in replies if reply]
+
     async def _run_tools(self, calls: List[dict]) -> None:
         """Answer the tool calls of one response, then let the agent go on."""
         began = time.perf_counter()
