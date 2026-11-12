@@ -172,7 +172,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
     ) -> Dict:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset is not None
         ), "Example dataset is empty. Call load_benchmark."
         prompt: dict = HellaSwagTemplate.generate_output(
             train_set=self.shots_dataset,
@@ -206,7 +206,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
     ) -> List[Dict]:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset is not None
         ), "Example dataset is empty. Call load_benchmark."
 
         prompts = []
