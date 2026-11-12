@@ -6,6 +6,7 @@ import type {
   BenchmarkSegment,
   SkillFamily,
 } from "@/lib/benchmarks/types";
+import FilterMenu, { type FilterGroup, type FilterOption } from "../FilterMenu";
 import JourneyGraph from "../JourneyGraph";
 import styles from "./JourneyExplorer.module.scss";
 
@@ -15,39 +16,88 @@ type JourneyExplorerProps = {
   families: SkillFamily[];
 };
 
-const ALL = "all";
+const LINES = ["Phone line", "Weak mobile line", "Speakerphone", "Landline"];
+const AUDIO_PROBLEMS = [
+  "Audio cuts out",
+  "Garbled audio",
+  "Echo",
+  "Delay on the line",
+  "Static",
+];
 
 const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
   journeys,
   segments,
   families,
 }) => {
-  const [skill, setSkill] = useState(ALL);
-  const [condition, setCondition] = useState(ALL);
+  const [skills, setSkills] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<string[]>([]);
   const [activeId, setActiveId] = useState(journeys[0].id);
 
-  const matches = (
-    journey: BenchmarkJourney,
-    wantedSkill: string,
-    wantedCondition: string,
-  ) =>
-    (wantedSkill === ALL || journey.skills.includes(wantedSkill)) &&
-    (wantedCondition === ALL || journey.conditions.includes(wantedCondition));
-  const count = (wantedSkill: string, wantedCondition: string) =>
-    journeys.filter((journey) => matches(journey, wantedSkill, wantedCondition))
-      .length;
+  const accentOf = (journey: BenchmarkJourney) =>
+    journey.caller.split(" · ")[0];
+  const has = (journey: BenchmarkJourney, id: string) =>
+    journey.skills.includes(id) ||
+    journey.conditions.includes(id) ||
+    accentOf(journey) === id;
+  const option = (id: string, label: string): FilterOption => ({
+    id,
+    label,
+    count: journeys.filter((journey) => has(journey, id)).length,
+  });
+  const named = (ids: string[]) =>
+    ids
+      .map((id) => option(id, id))
+      .filter((entry) => entry.count > 0)
+      .sort((a, b) => b.count - a.count);
 
-  const conditions = [
+  const skillGroups: FilterGroup[] = families.map((family) => ({
+    id: family.id,
+    label: family.label,
+    options: family.skills.map((skill) => option(skill.id, skill.label)),
+  }));
+  const everyCondition = [
     ...new Set(journeys.flatMap((journey) => journey.conditions)),
-  ]
-    .map((name) => ({ name, total: count(ALL, name) }))
-    .sort((a, b) => b.total - a.total);
+  ];
+  const conditionGroups: FilterGroup[] = [
+    { id: "line", label: "Line", options: named(LINES) },
+    { id: "audio", label: "Audio problems", options: named(AUDIO_PROBLEMS) },
+    {
+      id: "background",
+      label: "Background",
+      options: named(
+        everyCondition.filter(
+          (name) => !LINES.includes(name) && !AUDIO_PROBLEMS.includes(name),
+        ),
+      ),
+    },
+    {
+      id: "accent",
+      label: "Accent",
+      options: named([...new Set(journeys.map(accentOf))]),
+    },
+  ];
+
+  // Ticks in one group widen the search; each group then narrows it.
+  const passes = (
+    journey: BenchmarkJourney,
+    groups: FilterGroup[],
+    ticked: string[],
+  ) =>
+    groups.every((group) => {
+      const wanted = group.options
+        .map((entry) => entry.id)
+        .filter((id) => ticked.includes(id));
+      return wanted.length === 0 || wanted.some((id) => has(journey, id));
+    });
 
   const topics = new Map(
     segments.map((segment) => [segment.id, segment.label]),
   );
-  const matching = journeys.filter((journey) =>
-    matches(journey, skill, condition),
+  const matching = journeys.filter(
+    (journey) =>
+      passes(journey, skillGroups, skills) &&
+      passes(journey, conditionGroups, conditions),
   );
   const shown = matching.length > 0 ? matching : journeys;
   const active = shown.find((journey) => journey.id === activeId) ?? shown[0];
@@ -55,40 +105,22 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
   return (
     <div className={styles.explorer}>
       <div className={styles.filters}>
-        <label>
-          Skills tested
-          <select
-            value={skill}
-            onChange={(event) => setSkill(event.target.value)}
-          >
-            <option value={ALL}>All skills ({count(ALL, condition)})</option>
-            {families.map((family) => (
-              <optgroup key={family.id} label={family.label}>
-                {family.skills.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label} ({count(option.id, condition)})
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
-        <label>
-          Call conditions
-          <select
-            value={condition}
-            onChange={(event) => setCondition(event.target.value)}
-          >
-            <option value={ALL}>All conditions ({count(skill, ALL)})</option>
-            {conditions.map(({ name }) => (
-              <option key={name} value={name}>
-                {name} ({count(skill, name)})
-              </option>
-            ))}
-          </select>
-        </label>
+        <FilterMenu
+          label="Skills tested"
+          groups={skillGroups}
+          selected={skills}
+          onChange={setSkills}
+        />
+        <FilterMenu
+          label="Call conditions"
+          groups={conditionGroups}
+          selected={conditions}
+          onChange={setConditions}
+        />
         <span className={styles.found}>
-          {matching.length} of {journeys.length} journeys
+          {matching.length === 0
+            ? "No journey matches, showing all"
+            : `${matching.length} of ${journeys.length} journeys`}
         </span>
       </div>
 
@@ -96,27 +128,27 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
         <div className={styles.top}>
           <div className={styles.rail}>
             <div className={styles.tabs} role="tablist" aria-label="Journeys">
-          {shown.map((journey) => (
-            <button
-              key={journey.id}
-              type="button"
-              role="tab"
-              aria-selected={journey.id === active.id}
-              className={styles.tab}
-              onClick={() => setActiveId(journey.id)}
-            >
-              <span className={styles.number}>
-                {String(journeys.indexOf(journey) + 1).padStart(2, "0")}
-              </span>
-              <span className={styles.tabBody}>
-                <span className={styles.tabLabel}>{journey.name}</span>
-                <span className={styles.blurb}>{journey.blurb}</span>
-                <span className={styles.topic}>
-                  {topics.get(journey.segmentId)}
-                </span>
-              </span>
-            </button>
-          ))}
+              {shown.map((journey) => (
+                <button
+                  key={journey.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={journey.id === active.id}
+                  className={styles.tab}
+                  onClick={() => setActiveId(journey.id)}
+                >
+                  <span className={styles.number}>
+                    {String(journeys.indexOf(journey) + 1).padStart(2, "0")}
+                  </span>
+                  <span className={styles.tabBody}>
+                    <span className={styles.tabLabel}>{journey.name}</span>
+                    <span className={styles.blurb}>{journey.blurb}</span>
+                    <span className={styles.topic}>
+                      {topics.get(journey.segmentId)}
+                    </span>
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
