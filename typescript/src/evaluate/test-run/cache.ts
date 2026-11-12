@@ -29,6 +29,9 @@ interface MetricConfiguration {
   evaluationParams?: string[] | null;
   rubric?: unknown[] | null;
   expectedSchema?: Record<string, unknown> | null;
+  topLogprobs?: number | null;
+  /** Fingerprint of the user's prompt overrides, never the functions. */
+  evaluationTemplate?: string | null;
 }
 
 /** Read off a metric without importing the metric classes into the cache. */
@@ -38,6 +41,8 @@ interface MetricDefinition {
   evaluationParams?: string[];
   rubric?: unknown[];
   expectedSchema?: ZodType;
+  topLogprobs?: number;
+  evaluationTemplate?: unknown;
 }
 
 interface CachedMetric {
@@ -105,6 +110,22 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
   });
 }
 
+/**
+ * Prompt overrides change what the judge is asked, so a cached score is only
+ * reused for the same overrides. Functions are keyed on their source text
+ * (same `String(fn)` per key), stored as JSON-ready strings — mirroring how
+ * `expectedSchema` is stored JSON-ready rather than as a Zod object.
+ */
+function templateFingerprint(override: unknown): string | null {
+  if (override == null) return null;
+  if (typeof override !== "object") return String(override);
+  return JSON.stringify(
+    Object.keys(override as Record<string, unknown>)
+      .sort()
+      .map((key) => [key, String((override as Record<string, unknown>)[key])]),
+  );
+}
+
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
   const definition = metric as BaseMetricCore & MetricDefinition;
   return {
@@ -121,6 +142,10 @@ function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
     expectedSchema: definition.expectedSchema
       ? toJsonSchema(definition.expectedSchema)
       : null,
+    // GEval's score is the log-prob weighted expectation over these
+    // alternatives (g-eval/utils.ts), so it belongs beside the other knobs.
+    topLogprobs: definition.topLogprobs ?? null,
+    evaluationTemplate: templateFingerprint(definition.evaluationTemplate),
   };
 }
 
@@ -143,7 +168,9 @@ function sameConfiguration(
     sameValue(a.evaluationSteps, b.evaluationSteps) &&
     sameValue(a.evaluationParams, b.evaluationParams) &&
     sameValue(a.rubric, b.rubric) &&
-    sameValue(a.expectedSchema, b.expectedSchema)
+    sameValue(a.expectedSchema, b.expectedSchema) &&
+    sameValue(a.topLogprobs, b.topLogprobs) &&
+    sameValue(a.evaluationTemplate, b.evaluationTemplate)
   );
 }
 
