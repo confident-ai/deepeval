@@ -135,11 +135,14 @@ def _assert_test_from_current_trace(
             # A root still parked under the open wrapper points at it too.
             is_promoted_root = root.parent_uuid is not None
 
-    effective_trace_output = (
-        current_trace.output
-        if current_trace.output is not None
-        else getattr(root_for_dfs, "output", None)
-    )
+    # OTel can explicitly record a null output. The promoted root only
+    # supplies output when the trace leaves it unset.
+    effective_trace_output = current_trace.output
+    if (
+        effective_trace_output is None
+        and "output" not in current_trace.model_fields_set
+    ):
+        effective_trace_output = getattr(root_for_dfs, "output", None)
 
     trace_api = create_api_trace(trace=current_trace, golden=golden)
     trace_api.status = (
