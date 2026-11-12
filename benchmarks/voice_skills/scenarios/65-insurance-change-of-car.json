@@ -342,8 +342,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "65-insurance-change-of-car/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "65-insurance-change-of-car/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "65-insurance-change-of-car/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "65-insurance-change-of-car/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "65-insurance-change-of-car/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "65-insurance-change-of-car/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "65-insurance-change-of-car/_yes.wav"
     }
   },
   "shape": {

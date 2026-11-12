@@ -173,6 +173,13 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
         self._interrupted = True
         self._playout.put_nowait(AgentEvent(turn_complete=True))
 
+    async def _send(self, message: Union[str, bytes]) -> None:
+        try:
+            await super()._send(message)
+        except ConnectionResetError:
+            # The call is closing; a frame still on its way out is dropped.
+            logger.debug("OpenAI Realtime socket closed while sending.")
+
     def _encode_outbound(self, pcm: bytes) -> str:
         return json.dumps(
             {

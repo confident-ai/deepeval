@@ -334,8 +334,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "59-broadband-number-port/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "59-broadband-number-port/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "59-broadband-number-port/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "59-broadband-number-port/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "59-broadband-number-port/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "59-broadband-number-port/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "59-broadband-number-port/_yes.wav"
     }
   },
   "shape": {

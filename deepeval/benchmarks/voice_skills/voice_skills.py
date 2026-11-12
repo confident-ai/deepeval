@@ -155,6 +155,11 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             max_user_simulations=self.max_user_simulations,
         )[0]
         metadata = test_case.metadata or {}
+        scripted = (journey.get("shape") or {}).get("shortest_path")
+        if scripted and "Shortest path" in metadata:
+            # Measured on the script as written, not on the shortcuts a
+            # caller can take when asked things out of order.
+            metadata["Shortest path"] = scripted
         self.test_cases.append(test_case)
 
         rows = []

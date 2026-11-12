@@ -308,8 +308,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "02-airline-cancel-one-passenger/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "02-airline-cancel-one-passenger/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "02-airline-cancel-one-passenger/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "02-airline-cancel-one-passenger/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "02-airline-cancel-one-passenger/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "02-airline-cancel-one-passenger/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "02-airline-cancel-one-passenger/_yes.wav"
     }
   },
   "shape": {

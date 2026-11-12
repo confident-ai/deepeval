@@ -327,8 +327,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "54-broadband-speed-complaint/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "54-broadband-speed-complaint/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "54-broadband-speed-complaint/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "54-broadband-speed-complaint/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "54-broadband-speed-complaint/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "54-broadband-speed-complaint/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "54-broadband-speed-complaint/_yes.wav"
     }
   },
   "shape": {

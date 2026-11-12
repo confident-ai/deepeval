@@ -262,8 +262,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "19-retail-double-charge-and-manager/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "19-retail-double-charge-and-manager/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "19-retail-double-charge-and-manager/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "19-retail-double-charge-and-manager/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "19-retail-double-charge-and-manager/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "19-retail-double-charge-and-manager/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "19-retail-double-charge-and-manager/_yes.wav"
     }
   },
   "shape": {

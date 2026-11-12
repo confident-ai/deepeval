@@ -66,7 +66,7 @@ class VoiceStyleMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        prepare_measure(self, test_case)
+        prepare_measure(self, test_case, audio=True)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -98,7 +98,7 @@ class VoiceStyleMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        prepare_measure(self, test_case)
+        prepare_measure(self, test_case, audio=True)
         with metric_progress_indicator(
             self,
             async_mode=True,

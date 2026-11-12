@@ -305,8 +305,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "85-roadside-dog-locked-in-hot-car/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "85-roadside-dog-locked-in-hot-car/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "85-roadside-dog-locked-in-hot-car/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "85-roadside-dog-locked-in-hot-car/_yes.wav"
     }
   },
   "shape": {

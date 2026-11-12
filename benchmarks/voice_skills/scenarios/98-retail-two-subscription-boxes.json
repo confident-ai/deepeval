@@ -292,8 +292,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "98-retail-two-subscription-boxes/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "98-retail-two-subscription-boxes/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "98-retail-two-subscription-boxes/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "98-retail-two-subscription-boxes/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "98-retail-two-subscription-boxes/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "98-retail-two-subscription-boxes/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "98-retail-two-subscription-boxes/_yes.wav"
     }
   },
   "shape": {

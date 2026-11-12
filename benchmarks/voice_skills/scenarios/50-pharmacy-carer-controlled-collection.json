@@ -338,8 +338,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "50-pharmacy-carer-controlled-collection/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "50-pharmacy-carer-controlled-collection/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "50-pharmacy-carer-controlled-collection/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "50-pharmacy-carer-controlled-collection/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "50-pharmacy-carer-controlled-collection/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "50-pharmacy-carer-controlled-collection/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "50-pharmacy-carer-controlled-collection/_yes.wav"
     }
   },
   "shape": {

@@ -334,5 +334,2733 @@
    "status": "rejected",
    "reason": "No refund requested or caller cancelled."
   }
+ },
+ "02-airline-cancel-one-passenger": {
+  "lookup_booking": {
+   "booking_reference": "R4NN8T",
+   "flight": {
+    "from": "London Heathrow",
+    "to": "Kingston",
+    "departure": "2026-08-20T13:45:00Z",
+    "arrival": "2026-08-20T18:30:00Z"
+   },
+   "passengers": [
+    {
+     "name": "Denise Campbell",
+     "seat": "14E",
+     "status": "confirmed"
+    },
+    {
+     "name": "Marcia Campbell",
+     "seat": "14F",
+     "status": "confirmed"
+    }
+   ],
+   "status": "confirmed"
+  },
+  "cancel_passenger": {
+   "status": "success",
+   "cancelled_passenger": "Marcia Campbell",
+   "refund": {
+    "amount": "£320.00",
+    "method": "original payment card"
+   }
+  },
+  "change_seat": {
+   "status": "success",
+   "passenger": "Denise Campbell",
+   "old_seat": "14E",
+   "new_seat": "22A",
+   "available_window_seats": [
+    "22A",
+    "18A"
+   ]
+  },
+  "get_seat_map_with_names": {
+   "status": "success"
+  }
+ },
+ "03-bank-fraud-on-a-train": {
+  "verify_identity": {
+   "status": "success",
+   "customer_id": "C1234567"
+  },
+  "freeze_card": {
+   "status": "success",
+   "last_four": "4417",
+   "frozen_at": "2026-08-12T10:02:00Z"
+  },
+  "raise_dispute": {
+   "status": "success",
+   "disputed": [
+    {
+     "amount": "312.40",
+     "merchant": "Electronics World",
+     "date": "2026-08-12"
+    },
+    {
+     "amount": "59.99",
+     "merchant": "Online Retailer",
+     "date": "2026-08-12"
+    }
+   ],
+   "reference": "D9876543"
+  },
+  "update_address": {
+   "status": "success",
+   "address": "Flat 6, 41 Canal Street, Manchester, M1 3HE"
+  },
+  "order_replacement_card": {
+   "status": "success",
+   "last_four": "4417",
+   "delivery_estimate": "2026-08-17"
+  }
+ },
+ "06-energy-bill-and-failed-payment": {
+  "apply_credit": {
+   "status": "success"
+  },
+  "lookup_account": {
+   "account_number": "3155902",
+   "postcode": "LS6 2AB",
+   "customer_name": "Ms J. Carter",
+   "tariff": "Standard",
+   "unit_rate": "28.62p/kWh",
+   "standing_charge": "53.4p/day",
+   "last_reading": "5210",
+   "last_reading_type": "estimated",
+   "balance": "184.50"
+  },
+  "send_payment_link": {
+   "status": "sent",
+   "account_number": "3155902",
+   "link": "https://pay.example.com/3155902"
+  },
+  "waive_balance": {
+   "status": "success"
+  }
+ },
+ "07-pharmacy-refill-and-proxy": {
+  "verify_patient": {
+   "status": "verified",
+   "name": "Adaeze Okafor",
+   "date_of_birth": "1985-10-22"
+  },
+  "refill_prescription": {
+   "status": "success",
+   "patient": "Adaeze Okafor",
+   "medication": "sertraline",
+   "strength_mg": 50,
+   "delivery_date": "2026-08-14",
+   "options": [
+    {
+     "delivery_date": "2026-08-14"
+    },
+    {
+     "delivery_date": "2026-08-15"
+    }
+   ]
+  },
+  "record_proxy_consent": {
+   "status": "success",
+   "patient": "Ngozi Okafor",
+   "proxy": "Adaeze Okafor"
+  },
+  "verify_patient#2": {
+   "status": "verified",
+   "name": "Ngozi Okafor",
+   "date_of_birth": "1951-03-03"
+  },
+  "refill_prescription#2": {
+   "status": "success",
+   "patient": "Ngozi Okafor",
+   "medication": "amlodipine",
+   "strength_mg": 5,
+   "options": [
+    {
+     "strength_mg": 5
+    },
+    {
+     "strength_mg": 10
+    }
+   ]
+  },
+  "schedule_pharmacist_callback": {
+   "status": "success",
+   "patient": "Adaeze Okafor",
+   "callback_slots": [
+    {
+     "date": "2026-08-14",
+     "time": "11:00"
+    },
+    {
+     "date": "2026-08-14",
+     "time": "15:00"
+    }
+   ]
+  }
+ },
+ "10-broadband-angry-cancellation": {
+  "lookup_account": {
+   "account_number": "BB331008",
+   "name": "Sean Gallagher",
+   "open_fault_days": 42,
+   "exit_fee": 0,
+   "email": "sean.gallagher@email.com"
+  },
+  "cancel_service": {
+   "status": "success",
+   "end_date": "2026-08-31",
+   "exit_fee": 0
+  },
+  "send_confirmation": {
+   "status": "sent",
+   "channel": "email"
+  },
+  "apply_discount": {
+   "status": "success"
+  }
+ },
+ "100-retail-preorder-slips-again": {
+  "lookup_order": {
+   "order_number": "904417",
+   "customer_name": "Marcus Bell",
+   "shipping_address": {
+    "zip": "60614"
+   },
+   "item": "Vanta Pocket console",
+   "status": "pre-order",
+   "current_ship_date": "2026-09-08",
+   "ship_dates_given": [
+    "2026-06-30",
+    "2026-07-21",
+    "2026-08-11"
+   ]
+  },
+  "apply_credit": {
+   "order_number": "904417",
+   "amount": "15.00",
+   "status": "success"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "supervisor"
+  },
+  "cancel_order": {
+   "status": "success"
+  },
+  "refund_order": {
+   "status": "success"
+  }
+ },
+ "11-insurance-accident-claim": {
+  "lookup_policy": {
+   "policy_number": "TX44190K",
+   "holder_name": "Lorraine Whitfield",
+   "address": "2211 South Congress Ave, Austin, TX 78704",
+   "vehicle": {
+    "make": "Ford",
+    "model": "F-150",
+    "year": 2022,
+    "plate": "KR7294B"
+   },
+   "status": "active",
+   "effective_date": "2026-01-01",
+   "expiry_date": "2027-01-01"
+  },
+  "set_repair_shop": {
+   "status": "success",
+   "shop": "Ruiz Auto Body",
+   "address": "4100 S Congress Ave, Austin, TX 78745"
+  },
+  "send_upload_link": {
+   "status": "success",
+   "channel": "sms",
+   "link": "https://claims.example.com/upload/CL-2026-081907"
+  }
+ },
+ "14-hotel-sarcasm-then-walks-away": {
+  "check_availability": {
+   "rooms": [
+    {
+     "type": "Standard Double",
+     "beds": "1 double",
+     "price_per_night": 210,
+     "available": true,
+     "breakfast_price_per_person": 15
+    },
+    {
+     "type": "Twin",
+     "beds": "2 singles",
+     "price_per_night": 165,
+     "available": true,
+     "breakfast_price_per_person": 15
+    }
+   ]
+  },
+  "create_reservation": {
+   "status": "rejected",
+   "reason": "Reservation not created. Caller did not confirm booking."
+  },
+  "hold_room": {
+   "status": "rejected",
+   "reason": "Room not held. Caller did not confirm hold."
+  }
+ },
+ "15-parcel-redelivery-in-spanish": {
+  "track_parcel": {
+   "tracking_number": "JD00448179",
+   "status": "awaiting_customs_payment",
+   "recipient": {
+    "name": "Xóchitl Ibargüengoitia"
+   },
+   "customs_charge": {
+    "amount": "23.80",
+    "currency": "GBP"
+   },
+   "redelivery_available_from": "2026-08-15"
+  },
+  "pay_customs_charge": {
+   "status": "paid",
+   "amount": "23.80",
+   "currency": "GBP",
+   "card_last_four": "6620"
+  },
+  "schedule_redelivery": [
+   {
+    "status": "rejected",
+    "reason": "no_saturday_service"
+   },
+   {
+    "status": "booked",
+    "date": "2026-08-17",
+    "window_options": [
+     {
+      "window": "morning",
+      "slots": [
+       "08:00-12:00",
+       "09:00-13:00"
+      ]
+     },
+     {
+      "window": "afternoon",
+      "slots": [
+       "12:00-16:00"
+      ]
+     }
+    ],
+    "window": "morning",
+    "leave_with": "12"
+   }
+  ]
+ },
+ "18-roadside-flat-battery-in-french": {
+  "lookup_member": {
+   "status": "ok",
+   "member_name": "Jean Dupuis",
+   "membership_number": "7742091",
+   "address": "42 rue des Érables, appartement 3",
+   "phone": "514-555-0192"
+  }
+ },
+ "19-retail-double-charge-and-manager": {
+  "lookup_order": {
+   "order_number": "45217",
+   "customer_name": "Winston Clarke",
+   "email": "w.clarke@mailbox.example",
+   "charges": [
+    {
+     "amount": "86.99",
+     "status": "paid",
+     "date": "2026-08-10"
+    },
+    {
+     "amount": "86.99",
+     "status": "paid",
+     "date": "2026-08-10"
+    }
+   ],
+   "items": [
+    {
+     "name": "blender",
+     "status": "delivered",
+     "delivery_date": "2026-08-11"
+    },
+    {
+     "name": "blender jug",
+     "status": "delivered",
+     "delivery_date": "2026-08-11"
+    }
+   ],
+   "delivery_address": "12 Oak Lane, London, W1 2AB"
+  },
+  "create_replacement": {
+   "status": "success",
+   "item": "blender jug",
+   "delivery_address": "12 Oak Lane, London, W1 2AB",
+   "expected_delivery": "2026-08-14"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "supervisor"
+  }
+ },
+ "21-airline-delayed-bag": {
+  "lookup_booking": {
+   "status": "found",
+   "booking_reference": "H9W3LP",
+   "surname": "Donnelly",
+   "bags": [
+    {
+     "tag_number": "XJ407716",
+     "last_seen": "2026-08-12T21:40",
+     "route": "BHD-FAO"
+    }
+   ],
+   "passenger": {
+    "first_name": "Sean",
+    "surname": "Donnelly"
+   },
+   "flight": {
+    "departure": "2026-08-12T19:30",
+    "arrival": "2026-08-12T21:40",
+    "from": "BHD",
+    "to": "FAO"
+   }
+  },
+  "schedule_bag_delivery": {
+   "status": "success",
+   "tag_number": "XJ407716",
+   "address": {
+    "street": "14 Cregagh Mews",
+    "city": "Belfast",
+    "postcode": "BT6 9EQ"
+   },
+   "date": "2026-08-14",
+   "window_options": [
+    {
+     "window": "afternoon",
+     "from": "12:00",
+     "to": "18:00"
+    },
+    {
+     "window": "evening",
+     "from": "18:00",
+     "to": "22:00"
+    }
+   ],
+   "confirmed_window": "afternoon"
+  }
+ },
+ "22-airline-name-correction": {
+  "lookup_booking": {
+   "booking_reference": "T6DK4R",
+   "surname": "Pham",
+   "given_name": "Phoung",
+   "flight_number": "QN218",
+   "origin": "MAN",
+   "destination": "SGN",
+   "departure": "2026-08-22T21:05:00+01:00",
+   "terminal": "2",
+   "status": "confirmed"
+  },
+  "request_ticket_reissue": {
+   "status": "success",
+   "booking_reference": "T6DK4R",
+   "given_name": "Phuong",
+   "surname": "Pham",
+   "estimated_completion": "24-48 hours"
+  },
+  "save_travel_document": {
+   "status": "success"
+  }
+ },
+ "23-airline-upgrade-with-miles": {
+  "lookup_booking": {
+   "booking_reference": "M2B8YF",
+   "loyalty_number": "550318724",
+   "passenger_name": "Arceneaux",
+   "itinerary": [
+    {
+     "segment": "outbound",
+     "from": "MSY",
+     "to": "SEA",
+     "departure": "2026-08-21T07:00:00-05:00",
+     "arrival": "2026-08-21T10:00:00-07:00",
+     "cabin": "economy"
+    },
+    {
+     "segment": "return",
+     "from": "SEA",
+     "to": "MSY",
+     "departure": "2026-08-28T13:00:00-07:00",
+     "arrival": "2026-08-28T20:00:00-05:00",
+     "cabin": "economy"
+    }
+   ]
+  },
+  "get_miles_balance": {
+   "loyalty_number": "550318724",
+   "balance": 46000
+  },
+  "apply_mileage_upgrade": {
+   "error": "timeout"
+  },
+  "assign_seat": {
+   "status": "success",
+   "seat": "11C"
+  },
+  "waive_miles_shortfall": {
+   "status": "rejected",
+   "reason": "Miles shortfall cannot be waived by phone."
+  }
+ },
+ "24-airline-missed-connection": {
+  "lookup_booking": {
+   "booking_reference": "P4C9JV",
+   "surname": "Whitlock",
+   "status": "confirmed",
+   "flights": [
+    {
+     "flight_number": "QN602",
+     "origin": "DEN",
+     "destination": "GEG",
+     "date": "2026-08-13",
+     "departs": "06:15"
+    }
+   ],
+   "passenger_name": "Whitlock"
+  },
+  "rebook_flight": {
+   "status": "success",
+   "booking_reference": "P4C9JV",
+   "flight_number": "QN4471",
+   "date": "2026-08-12",
+   "departs": "21:40",
+   "origin": "DEN",
+   "destination": "GEG"
+  },
+  "issue_meal_voucher": {
+   "status": "issued",
+   "booking_reference": "P4C9JV",
+   "voucher_type": "meal"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "customer_relations",
+   "reason": "delay_compensation"
+  }
+ },
+ "25-airline-wheelchair-for-dad": {
+  "lookup_booking": {
+   "booking_reference": "W8FH3N",
+   "surname": "Prosser",
+   "passengers": [
+    {
+     "name": "Emlyn Prosser",
+     "date_of_birth": "1944-02-09"
+    }
+   ],
+   "flights": [
+    {
+     "date": "2026-08-19",
+     "route": "Manchester (MAN) to Alicante (ALC)",
+     "departure_time": "2026-08-19T13:45:00",
+     "arrival_time": "2026-08-19T17:25:00"
+    },
+    {
+     "date": "2026-08-20",
+     "route": "Manchester (MAN) to Alicante (ALC)",
+     "departure_time": "2026-08-20T13:45:00",
+     "arrival_time": "2026-08-20T17:25:00"
+    }
+   ],
+   "status": "confirmed"
+  },
+  "verify_passenger": {
+   "status": "verified",
+   "passenger": "Emlyn Prosser",
+   "date_of_birth": "1944-02-09"
+  },
+  "add_special_assistance": {
+   "status": "success",
+   "booking_reference": "W8FH3N",
+   "passenger": "Emlyn Prosser",
+   "code": "WCHS",
+   "flight_date": "2026-08-19"
+  }
+ },
+ "26-airline-unaccompanied-minor": {
+  "lookup_booking": {
+   "status": "success",
+   "booking_reference": "U5RT2G",
+   "surname": "Ashdown",
+   "passenger": {
+    "first_name": "Theo",
+    "last_name": "Ashdown",
+    "age": 11
+   },
+   "flight": {
+    "number": "EZY123",
+    "departure_airport": "LHR",
+    "arrival_airport": "EDI",
+    "departure_time": "2026-08-12T08:00:00+01:00",
+    "arrival_time": "2026-08-12T09:30:00+01:00"
+   },
+   "collecting_adult": {
+    "name": "John Ashdown",
+    "phone": "07700 900111"
+   }
+  },
+  "update_collecting_adult": {
+   "status": "success",
+   "booking_reference": "U5RT2G",
+   "collecting_adult": {
+    "name": "Hannah Liddell",
+    "phone": "07700 900312"
+   },
+   "other_options": [
+    {
+     "name": "John Ashdown",
+     "phone": "07700 900111"
+    }
+   ]
+  },
+  "alert_airport_duty_manager": {
+   "status": "success",
+   "airport": "EDI",
+   "booking_reference": "U5RT2G",
+   "alerted": true
+  },
+  "get_passenger_contact": {
+   "status": "success"
+  }
+ },
+ "27-airline-pet-in-cabin": {
+  "lookup_booking": {
+   "status": "success",
+   "booking_reference": "B9L4VH",
+   "surname": "Vasconcelos",
+   "first_name": "Marina",
+   "flight": {
+    "from": "BOS",
+    "to": "GRU",
+    "date": "2026-08-29",
+    "departure_time": "20:45",
+    "arrival_time": "07:55",
+    "seat": "22C"
+   },
+   "card_on_file": true,
+   "pets_in_cabin": [],
+   "notes": []
+  },
+  "add_pet_in_cabin": {
+   "status": "success",
+   "pet_name": "Quindim",
+   "species": "dog",
+   "weight_kg": 5.2,
+   "fee_due": 125.0,
+   "max_weight_kg": 8.0,
+   "requirements": [
+    "Veterinary health certificate issued within 10 days of departure",
+    "Rabies vaccination record"
+   ]
+  },
+  "charge_fee": {
+   "status": "success",
+   "amount_charged": 125.0,
+   "currency": "USD",
+   "method": "card_on_file"
+  },
+  "change_seat": {
+   "status": "success",
+   "seat": "31A",
+   "seat_type": "window",
+   "other_available_window_seats": [
+    "31F",
+    "32A"
+   ]
+  }
+ },
+ "28-airline-group-booking-change": {
+  "lookup_group_booking": {
+   "group_reference": "GRP44061",
+   "organiser": "Hindmarsh",
+   "organiser_full": "Davey Hindmarsh",
+   "passenger_count": 14,
+   "passengers": [
+    "Callum Reay",
+    "Stu Oliver",
+    "Kev Lowther",
+    "Davey Hindmarsh",
+    "Mark Robson",
+    "Paul Dixon",
+    "Chris Watson",
+    "Lee Forster",
+    "Gary Bell",
+    "Steve Brown",
+    "Alan Smith",
+    "Tommy Hall",
+    "Billy Clark",
+    "John Young"
+   ],
+   "outbound": {
+    "from": "NCL",
+    "to": "AMS",
+    "date": "2026-08-28",
+    "time": "09:30"
+   },
+   "return": {
+    "from": "AMS",
+    "to": "NCL",
+    "date": "2026-08-30",
+    "time": "18:15"
+   },
+   "fare_per_person": 158.0,
+   "deposit_per_person": 40.0,
+   "deposit_paid": 560.0,
+   "balance_due": 1336.0,
+   "status": "confirmed"
+  },
+  "cancel_group_passengers": {
+   "group_reference": "GRP44061",
+   "cancelled": [
+    "Callum Reay",
+    "Stu Oliver"
+   ],
+   "remaining": 12,
+   "status": "success"
+  },
+  "quote_group_date_change": {
+   "group_reference": "GRP44061",
+   "segment": "return",
+   "current_date": "2026-08-30",
+   "requested_date": "2026-08-31",
+   "price_per_person": 40.0,
+   "total_price": 480.0,
+   "available_dates": [
+    "2026-08-31",
+    "2026-09-01"
+   ],
+   "status": "success"
+  },
+  "change_group_flight": {
+   "status": "success"
+  }
+ },
+ "29-bank-card-declined-abroad": {
+  "verify_identity": {
+   "status": "success",
+   "name": "Itziar Goikoetxea",
+   "date_of_birth": "1991-11-23"
+  },
+  "get_card_status": {
+   "status": "blocked",
+   "reason": "unusual_foreign_payment",
+   "declined": {
+    "merchant": "Helios Car Hire, Athens",
+    "amount": "EUR 428.00",
+    "date": "2026-08-12"
+   }
+  },
+  "unblock_card": {
+   "status": "success"
+  },
+  "add_travel_notice": {
+   "status": "success",
+   "country": "Greece",
+   "start_date": "2026-08-12",
+   "end_date": "2026-08-19"
+  },
+  "verify_pin": {
+   "status": "success"
+  }
+ },
+ "30-bank-cancel-pack-standing-order": {
+  "verify_identity": {
+   "status": "success",
+   "customer_id": "C10293847",
+   "name": "Ruaridh McCulloch",
+   "postcode": "G42 8QR"
+  },
+  "cancel_account_pack": {
+   "status": "success",
+   "pack": "Gold Extras",
+   "cancelled_on": "2026-08-12"
+  },
+  "create_standing_order": {
+   "status": "success",
+   "payee": "Dalmarnock Lettings",
+   "sort_code": "82-61-07",
+   "account_number": "30449215",
+   "amount": "675.00",
+   "frequency": "monthly",
+   "first_payment": "2026-09-01",
+   "options": [
+    {
+     "amount": "675.00",
+     "first_payment": "2026-09-01"
+    },
+    {
+     "amount": "700.00",
+     "first_payment": "2026-09-01"
+    }
+   ]
+  }
+ },
+ "31-bank-mortgage-payment-holiday": {
+  "lookup_mortgage": {
+   "mortgage_number": "MG5503187",
+   "name": "Aoife McGuigan",
+   "address": "14 Glenview Park, Belfast, BT14 8YZ",
+   "product": "Standard Variable Rate",
+   "monthly_payment": 742.6,
+   "payment_day": 1,
+   "next_payment_due": "2026-09-01"
+  },
+  "verify_identity": {
+   "status": "verified"
+  },
+  "request_payment_holiday": {
+   "mortgage_number": "MG5503187",
+   "status": "success",
+   "months_approved": 2,
+   "payments_skipped": [
+    "2026-09-01",
+    "2026-10-01"
+   ],
+   "payments_resume": "2026-11-01",
+   "new_monthly_payment": 768.15,
+   "confirmation_letter": "will be sent"
+  },
+  "switch_to_interest_only": {
+   "status": "success"
+  }
+ },
+ "32-bank-reporting-a-death": {
+  "register_bereavement": {
+   "status": "success",
+   "account_holder": "Thaddeus Quennell",
+   "date_of_birth": "1939-03-14",
+   "date_of_death": "2026-08-06",
+   "account_status": "frozen"
+  },
+  "book_branch_appointment": {
+   "status": "success",
+   "branch": "Whitstable",
+   "available_slots": [
+    {
+     "date": "2026-08-17",
+     "time": "11:00"
+    },
+    {
+     "date": "2026-08-17",
+     "time": "14:00"
+    },
+    {
+     "date": "2026-08-19",
+     "time": "10:30"
+    }
+   ]
+  },
+  "get_balance": {
+   "status": "forbidden"
+  },
+  "list_standing_orders": {
+   "status": "forbidden"
+  }
+ },
+ "33-bank-safe-account-scam": {
+  "verify_identity": {
+   "status": "success",
+   "customer_id": "00382719",
+   "name": "Meenakshi Raghunathan",
+   "date_of_birth": "1954-10-02"
+  },
+  "freeze_online_banking": {
+   "status": "success",
+   "frozen_at": "2026-08-12T10:03:00Z",
+   "reason": "security_code_shared_with_scammer"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "fraud",
+   "summary_passed": "Caller targeted by scam, shared security code, no money moved, online banking frozen."
+  },
+  "make_transfer": {
+   "status": "rejected",
+   "reason": "Transfer blocked: suspected scam. No money moved."
+  }
+ },
+ "34-bank-lost-chequebook": {
+  "verify_identity": {
+   "status": "success",
+   "account_number": "61208834",
+   "date_of_birth": "1973-01-05",
+   "customer_name": "Mr. Patel"
+  },
+  "stop_cheques": {
+   "account_number": "61208834",
+   "from_number": "000349",
+   "to_number": "000365",
+   "status": "success",
+   "stopped_cheques": [
+    "000349",
+    "000350",
+    "000351",
+    "000352",
+    "000353",
+    "000354",
+    "000355",
+    "000356",
+    "000357",
+    "000358",
+    "000359",
+    "000360",
+    "000361",
+    "000362",
+    "000363",
+    "000364",
+    "000365"
+   ],
+   "fee_per_cheque": "£12.50",
+   "max_fee_per_book": "£25.00"
+  },
+  "order_chequebook": {
+   "status": "rejected",
+   "reason": "address_unconfirmed"
+  },
+  "waive_fee": {
+   "status": "success"
+  },
+  "refund_charges": {
+   "status": "success"
+  }
+ },
+ "35-bank-joint-account-consent": {
+  "verify_identity": {
+   "Errol Fairweather, 22805914": {
+    "status": "verified",
+    "name": "Errol Fairweather",
+    "account_number": "22805914"
+   },
+   "Shanelle Dacosta-Hyde, 1992-06-19": {
+    "status": "verified",
+    "name": "Shanelle Dacosta-Hyde",
+    "date_of_birth": "1992-06-19"
+   }
+  }
+ },
+ "36-bank-overdraft-fee-walkaway": {
+  "verify_identity": {
+   "status": "success"
+  },
+  "list_charges": [
+   {
+    "date": "2026-08-04",
+    "type": "unarranged_overdraft_fee",
+    "amount": "20.00"
+   },
+   {
+    "date": "2026-08-07",
+    "type": "returned_direct_debit_fee",
+    "amount": "8.50"
+   }
+  ],
+  "add_account_note": {
+   "status": "success"
+  },
+  "refund_charge": {
+   "status": "rejected",
+   "reason": "Refunds require customer to accept an arranged overdraft."
+  },
+  "set_arranged_overdraft": {
+   "status": "rejected",
+   "reason": "No arranged overdraft requested or agreed."
+  }
+ },
+ "37-energy-power-cut-oxygen": {
+  "close_incident": {
+   "status": "success"
+  },
+  "report_power_cut": {
+   "status": "reported",
+   "incident": "INC-40718"
+  },
+  "request_priority_support": {
+   "status": "priority_flagged",
+   "welfare_visit": "requested",
+   "incident": "INC-40718"
+  },
+  "send_outage_updates": {
+   "status": "updates_set",
+   "incident": "INC-40718",
+   "phone": "07700900318"
+  }
+ },
+ "38-energy-prepay-top-up": {
+  "lookup_meter": {
+   "meter_serial": "18P044732",
+   "postcode": "E1 2LP",
+   "address": "Flat 2, 14 Cable Street, London E1 2LP",
+   "meter_type": "electricity",
+   "status": "active"
+  },
+  "send_confirmation": {
+   "status": "sent",
+   "channel": "sms",
+   "reference": "TU-58204-K"
+  }
+ },
+ "39-energy-tariff-switch": {
+  "lookup_account": {
+   "account_number": "4061182",
+   "postcode": "CF44 7ND",
+   "current_tariff": "FLEX-VAR",
+   "customer_name": "Mr. Evans"
+  },
+  "switch_tariff": {
+   "status": "success",
+   "tariff": "FIX-12M",
+   "start_date": "2026-08-12"
+  }
+ },
+ "40-energy-smart-meter-booking": {
+  "lookup_account": {
+   "account_number": "72990461",
+   "postcode": "UB1 3HT",
+   "customer_name": "Mr Singh",
+   "address": "12 Oak Avenue, Southall, UB1 3HT"
+  },
+  "check_meter_eligibility": {
+   "meter_serial": "S21K0558",
+   "eligible": true,
+   "meter_type": "electricity"
+  },
+  "book_installation": {
+   "date": "2026-08-20",
+   "available_slots": [
+    {
+     "slot": "08:00-12:00",
+     "status": "available"
+    },
+    {
+     "slot": "12:00-16:00",
+     "status": "available"
+    },
+    {
+     "slot": "16:00-20:00",
+     "status": "available"
+    }
+   ],
+   "status": "booked",
+   "confirmed_slot": "12:00-16:00",
+   "contact_phone": "07700900526"
+  },
+  "add_access_note": {
+   "status": "success"
+  }
+ },
+ "41-energy-direct-debit-date": {
+  "cancel_direct_debit": {
+   "status": "success"
+  },
+  "lookup_account": {
+   "account_number": "63009418",
+   "account_holder": "Thiago Albuquerque Sequeira",
+   "direct_debit_day": 1,
+   "next_collection": "2026-09-01"
+  },
+  "verify_account_holder": {
+   "account_number": "63009418",
+   "account_holder": "Thiago Albuquerque Sequeira",
+   "date_of_birth": "1979-11-22",
+   "status": "verified"
+  },
+  "record_consent": {
+   "given_by": "Thiago Albuquerque Sequeira",
+   "status": "recorded"
+  },
+  "schedule_callback": {
+   "team": "billing",
+   "date": "2026-08-13",
+   "windows": [
+    {
+     "window": "afternoon",
+     "start": "14:00",
+     "end": "18:00"
+    },
+    {
+     "window": "morning",
+     "start": "09:00",
+     "end": "12:00"
+    }
+   ],
+   "status": "scheduled",
+   "confirmed_window": "afternoon"
+  }
+ },
+ "42-energy-landlord-takeover": {
+  "get_previous_occupier_details": {
+   "status": "rejected",
+   "reason": "Previous occupier's balance and contact details cannot be shared."
+  },
+  "lookup_property": {
+   "address": "Flat A, 31 Castlereagh Row",
+   "postcode": "BT6 9FG",
+   "meter_serial": "E1234567",
+   "supply_type": "electricity"
+  },
+  "open_account": {
+   "status": "success",
+   "account_name": "Declan McGrattan",
+   "start_date": "2026-08-08",
+   "opening_reading": 6412,
+   "standing_charge_applied": true
+  },
+  "set_billing_address": {
+   "status": "success",
+   "billing_address": "Unit 6, Dargan Yard, BT3 9JP"
+  },
+  "set_up_direct_debit": {
+   "status": "success"
+  },
+  "waive_standing_charge": {
+   "status": "rejected",
+   "reason": "Standing charges apply to empty properties."
+  }
+ },
+ "43-energy-carbon-monoxide-alarm": {
+  "lookup_account": {
+   "account_number": "5512076",
+   "postcode": "GU4 7EW",
+   "name": "Mrs. J. Carter",
+   "address": "9 Tannery Close, GU4 7EW",
+   "phone": "01483 123456"
+  },
+  "report_gas_emergency": {
+   "status": "success",
+   "reference": "EMG-20260812-001",
+   "address": "9 Tannery Close, GU4 7EW",
+   "type": "carbon_monoxide",
+   "dispatched": true,
+   "eta_minutes": 60
+  },
+  "schedule_callback": {
+   "status": "success",
+   "date": "2026-08-13",
+   "slots": [
+    {
+     "start": "2026-08-13T09:00",
+     "end": "2026-08-13T11:00"
+    },
+    {
+     "start": "2026-08-13T13:00",
+     "end": "2026-08-13T15:00"
+    }
+   ]
+  },
+  "submit_meter_reading": {
+   "status": "success"
+  }
+ },
+ "44-energy-overdue-credit-refund": {
+  "lookup_account": {
+   "account_number": "9140037",
+   "name": "Lachlan Burridge",
+   "credit_balance": "412.60",
+   "refund_requested": "2026-07-15",
+   "tariff": {
+    "type": "Fix 12M",
+    "renewal_signed": "2026-08-05",
+    "renewal_status": "active",
+    "cooling_off_end": "2026-08-19",
+    "exit_fee": "0.00"
+   },
+   "direct_debit_account": "****1234"
+  },
+  "issue_refund": {
+   "status": "success",
+   "amount": "412.60",
+   "method": "direct_debit_account",
+   "expected_completion": "2026-08-17"
+  },
+  "cancel_tariff_renewal": {
+   "status": "success",
+   "tariff": "Fix 12M",
+   "renewal_status": "cancelled",
+   "exit_fee": "0.00"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "team": "complaints",
+   "notes_passed": "Refund of £412.60 delayed since 15 Jul; customer requests complaint on record and cancellation of Fix 12M renewal."
+  },
+  "close_account": {
+   "status": "success"
+  }
+ },
+ "45-pharmacy-transfer-in": {
+  "verify_patient": {
+   "status": "success",
+   "patient_id": "P-100237",
+   "name": "Declan Mulholland",
+   "date_of_birth": "1967-11-30"
+  },
+  "request_prescription_transfer": {
+   "status": "success",
+   "reference": "TR-58203",
+   "ready_date": "2026-08-14"
+  },
+  "set_text_alert": {
+   "status": "success",
+   "phone": "07700900186"
+  }
+ },
+ "46-pharmacy-out-of-stock": {
+  "verify_patient": {
+   "status": "success",
+   "name": "Shelley Rimmer",
+   "date_of_birth": "1979-02-06"
+  },
+  "check_stock": {
+   "medication": "fexofenadine",
+   "strength_mg": 180,
+   "branches": [
+    {
+     "branch": "Allerton Rd",
+     "stock": 0,
+     "restock_date": "2026-08-18"
+    },
+    {
+     "branch": "Smithdown Rd",
+     "stock": 4
+    },
+    {
+     "branch": "Bootle",
+     "stock": 0
+    }
+   ]
+  },
+  "reserve_item": {
+   "error": "timeout"
+  }
+ },
+ "47-pharmacy-flu-and-travel-jabs": {
+  "verify_patient": {
+   "status": "success",
+   "patient_id": "P123456",
+   "name": "Thanh Nguyen",
+   "date_of_birth": "1974-05-17"
+  },
+  "get_vaccination_slots": [
+   {
+    "date": "2026-08-13",
+    "time": "16:40"
+   },
+   {
+    "date": "2026-08-14",
+    "time": "09:20"
+   }
+  ],
+  "book_vaccination": {
+   "status": "success",
+   "booking_reference": "B987654"
+  },
+  "save_passport_number": {
+   "status": "success"
+  }
+ },
+ "48-pharmacy-missing-delivery": {
+  "close_delivery_query": {
+   "status": "success"
+  },
+  "transfer_to_human": {
+   "status": "success"
+  }
+ },
+ "49-pharmacy-allergic-reaction": {
+  "verify_patient": {
+   "status": "success",
+   "patient_id": "P123456",
+   "name": "Meenakshi Iyer",
+   "date_of_birth": "1991-01-02"
+  },
+  "flag_suspected_reaction": {
+   "status": "success",
+   "patient_id": "P123456",
+   "medication": "amoxicillin",
+   "reaction_flagged": true
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "duty_pharmacist",
+   "priority": "urgent"
+  },
+  "get_dosing_information": {
+   "status": "success"
+  },
+  "schedule_pharmacist_callback": {
+   "status": "success"
+  }
+ },
+ "50-pharmacy-carer-controlled-collection": {
+  "lookup_prescription": {
+   "status": "success",
+   "patient": "Archie Hamilton",
+   "date_of_birth": "1941-03-19",
+   "prescriptions": [
+    {
+     "name": "Morphine Sulfate 10mg tablets",
+     "status": "ready for collection",
+     "type": "controlled medicine"
+    }
+   ]
+  },
+  "record_collection_consent": {
+   "status": "success",
+   "patient": "Archie Hamilton",
+   "collector_added": "Moira Docherty"
+  },
+  "note_collection": {
+   "status": "success",
+   "patient": "Archie Hamilton",
+   "collector": "Moira Docherty",
+   "date_options": [
+    "2026-08-13T11:00",
+    "2026-08-13T15:00"
+   ],
+   "photo_id_required": true
+  }
+ },
+ "51-pharmacy-cancel-auto-delivery": {
+  "verify_patient": {
+   "status": "success",
+   "customer_number": "409177",
+   "date_of_birth": "1989-06-14",
+   "name": "Maria Souza"
+  },
+  "cancel_auto_delivery": {
+   "status": "success",
+   "customer_number": "409177",
+   "auto_delivery": "cancelled"
+  },
+  "set_collection_branch": {
+   "status": "success",
+   "customer_number": "409177",
+   "branch": "Market Street",
+   "effective_date": "2026-08-26",
+   "available_branches": [
+    "Market Street",
+    "Marsh Street",
+    "Station Road"
+   ]
+  },
+  "pause_auto_delivery": {
+   "status": "success"
+  }
+ },
+ "52-pharmacy-child-inhaler-bank-holiday": {
+  "verify_patient": {
+   "status": "success",
+   "patient_id": "123456",
+   "name": "Callum Whitehouse",
+   "date_of_birth": "2016-10-08",
+   "postcode": "B31 2LP"
+  },
+  "get_prescriptions": {
+   "prescriptions": [
+    {
+     "item": "Clenil Modulite 100mcg",
+     "colour": "brown",
+     "repeats_left": 3
+    },
+    {
+     "item": "Salbutamol 100mcg",
+     "colour": "blue",
+     "repeats_left": 0
+    }
+   ]
+  },
+  "get_opening_hours": {
+   "date": "2026-08-31",
+   "open": "10:00",
+   "close": "16:00",
+   "is_bank_holiday": true
+  },
+  "order_repeat": {
+   "status": "rejected",
+   "reason": "No repeats left for this item."
+  },
+  "release_emergency_supply": {
+   "status": "success"
+  },
+  "request_gp_prescription": {
+   "status": "rejected",
+   "reason": "Request not sent as per caller instruction."
+  }
+ },
+ "53-broadband-home-move": {
+  "lookup_account": {
+   "account_number": "NW614083",
+   "name": "Róisín McAteer",
+   "address": "14 Knockbreda Road, Belfast, BT6 0JB",
+   "product": "Fibre Broadband",
+   "status": "active"
+  },
+  "check_install_slots": [
+   {
+    "slot": "08:00-13:00"
+   },
+   {
+    "slot": "13:00-18:00"
+   }
+  ],
+  "book_home_move": {
+   "status": "success",
+   "account_number": "NW614083",
+   "new_address": "27 Cregagh Gardens, Belfast, BT6 9EQ",
+   "install_date": "2026-08-29",
+   "install_slot": "13:00-18:00",
+   "old_address_disconnect_date": "2026-08-29",
+   "charge": 0
+  }
+ },
+ "54-broadband-speed-complaint": {
+  "lookup_account": {
+   "account_number": "FL290557",
+   "name": "Mr. Zhang",
+   "address": "12 Cardigan Road, Leeds, LS6 2AB",
+   "product": "Fibre 500",
+   "monthly_price": "38.00",
+   "guaranteed_mbps": 250,
+   "current_mbps": 14.8
+  },
+  "run_speed_test": {
+   "latency_seconds": 7,
+   "wired_mbps": 14.8,
+   "guaranteed_mbps": 250
+  },
+  "book_engineer": {
+   "status": "confirmed",
+   "date": "2026-08-14",
+   "slot": "13:00-18:00",
+   "available_slots": [
+    {
+     "date": "2026-08-14",
+     "slot": "09:00-12:00"
+    },
+    {
+     "date": "2026-08-14",
+     "slot": "13:00-18:00"
+    },
+    {
+     "date": "2026-08-17",
+     "slot": "09:00-12:00"
+    }
+   ]
+  },
+  "apply_credit": {
+   "status": "success",
+   "amount": "12.50",
+   "currency": "GBP"
+  },
+  "send_email": {
+   "status": "sent",
+   "template": "complaints_procedure"
+  },
+  "cancel_direct_debit": {
+   "status": "success"
+  }
+ },
+ "55-broadband-router-charge": {
+  "lookup_account": {
+   "account_number": "QT815330",
+   "name": "Harriet Lascelles",
+   "router_returned": "2026-06-18"
+  },
+  "raise_dispute": {
+   "status": "success",
+   "amount": "55.00",
+   "dispute_noted": true,
+   "collected_with_direct_debit": false
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "billing_manager"
+  }
+ },
+ "56-broadband-stolen-sim": {
+  "verify_identity": {
+   "status": "success",
+   "name": "Ngozi Adeyemi-Clarke",
+   "mobile_number": "07700900146",
+   "verified_by": "memorable_word"
+  },
+  "bar_sim": {
+   "status": "success",
+   "mobile_number": "07700900146",
+   "barred": true,
+   "barred_at": "2026-08-12T10:01",
+   "reason": "stolen"
+  },
+  "order_replacement_sim": {
+   "status": "success",
+   "mobile_number": "07700900146",
+   "keep_number": true,
+   "delivery_address": "14 Albion Terrace",
+   "estimated_arrival": "2026-08-14"
+  },
+  "flag_fraudulent_usage": {
+   "status": "success",
+   "mobile_number": "07700900146",
+   "amount_flagged": "23.40"
+  },
+  "override_verification": {
+   "status": "success"
+  },
+  "send_text_code": {
+   "status": "success"
+  }
+ },
+ "57-broadband-bereavement-closure": {
+  "lookup_account": {
+   "status": "success",
+   "account_holder": "Rajesh Venkataraman",
+   "address": "19 Wren Close, Leicester, LE2 6PT",
+   "account_number": "10023456",
+   "service": "Internet",
+   "credit_balance": "27.15"
+  },
+  "register_bereavement": {
+   "status": "success",
+   "account_holder": "Rajesh Venkataraman",
+   "date_of_death": "2026-08-02",
+   "reported_by": "Sunita Venkataraman",
+   "relationship": "wife"
+  },
+  "close_account": {
+   "status": "success",
+   "account_number": "10023456",
+   "close_date": "2026-08-21",
+   "exit_fee": "0.00",
+   "refund_due": "27.15"
+  },
+  "apply_retention_offer": {
+   "status": "success"
+  },
+  "save_payment_card": {
+   "status": "success"
+  },
+  "save_document_number": {
+   "status": "success"
+  }
+ },
+ "58-broadband-router-replacement": {
+  "lookup_account": {
+   "account_number": "GD550718",
+   "name": "Mr John Armstrong",
+   "address": "14 Oakfield Road, Newcastle upon Tyne, NE6 1TR",
+   "router_serial": "SN47K2291"
+  },
+  "report_safety_hazard": {
+   "status": "reported",
+   "serial_number": "SN47K2291",
+   "issue": "overheating_power_supply",
+   "reference": "HZD20260812001"
+  },
+  "order_replacement_router": {
+   "status": "ordered",
+   "serial_number": "SN47K2291",
+   "include_power_supply": true,
+   "delivery_date": "2026-08-14",
+   "delivery_options": [
+    {
+     "date": "2026-08-13",
+     "day": "Thursday"
+    },
+    {
+     "date": "2026-08-14",
+     "day": "Friday"
+    }
+   ],
+   "return_instructions": "Return the old router and power supply in the prepaid bag provided."
+  },
+  "restart_router": {
+   "status": "success"
+  }
+ },
+ "59-broadband-number-port": {
+  "lookup_account": {
+   "name": "Thaís Albuquerque",
+   "mobile_number": "07700900314",
+   "account_status": "active"
+  },
+  "validate_pac": {
+   "error": "pac_service_timeout"
+  },
+  "schedule_port": {
+   "available_dates": [
+    "2026-08-13",
+    "2026-08-14",
+    "2026-08-17"
+   ],
+   "selected_date": "2026-08-14",
+   "status": "scheduled"
+  }
+ },
+ "60-broadband-sports-add-on": {
+  "add_tv_addon": {
+   "status": "rejected",
+   "reason": "Only the verified account holder can add or change TV packages."
+  },
+  "get_mobile_usage": {
+   "status": "rejected",
+   "reason": "We cannot share usage details for other users on the account."
+  },
+  "get_payment_method": {
+   "status": "rejected",
+   "reason": "We cannot share payment card details."
+  },
+  "lookup_account": {
+   "account_number": "DR194607",
+   "name": "Ian Docherty",
+   "address": "42 Kelvin Road, Glasgow, G12 8QQ",
+   "account_status": "active"
+  },
+  "verify_identity": {
+   "status": "verified",
+   "name": "Ian Docherty",
+   "date_of_birth": "1969-03-14"
+  }
+ },
+ "61-insurance-stolen-car-intruder": {
+  "lookup_policy": {
+   "policy_number": "HL307715",
+   "holder_name": "Harriet Lowndes",
+   "address": "14 Oakdene Drive, Reading, RG4 7TX",
+   "cover_type": "Comprehensive",
+   "vehicle": {
+    "make": "Ford",
+    "model": "Fiesta",
+    "registration": "BK16 XZT"
+   },
+   "status": "active",
+   "contact_number": "07700 900123"
+  },
+  "raise_safety_alert": {
+   "status": "success",
+   "policy_number": "HL307715",
+   "alert_id": "SAF-20260812-001",
+   "raised_at": "2026-08-12T10:02:00Z"
+  },
+  "save_claim_draft": {
+   "status": "success",
+   "claim_id": "DRAFT-20260812-001",
+   "policy_number": "HL307715",
+   "type": "theft",
+   "last_seen_date": "2026-08-11",
+   "discovered_date": "2026-08-12",
+   "spare_key_missing": true,
+   "saved_at": "2026-08-12T10:03:00Z"
+  },
+  "schedule_callback": {
+   "status": "success",
+   "policy_number": "HL307715",
+   "callback_id": "CB-20260812-001",
+   "scheduled_for": [
+    "2026-08-12T11:00:00Z",
+    "2026-08-12T13:00:00Z"
+   ]
+  },
+  "submit_claim": {
+   "status": "rejected",
+   "reason": "Claim cannot be submitted: safety alert raised, claim saved as draft only."
+  }
+ },
+ "62-insurance-chasing-slow-claim": {
+  "lookup_claim": {
+   "status": "awaiting_parts",
+   "parts_due": "2026-08-27",
+   "repair_complete_estimate": "2026-08-28",
+   "courtesy_car_ends": "2026-08-14"
+  },
+  "verify_identity": {
+   "status": "verified"
+  },
+  "extend_courtesy_car": {
+   "status": "extended",
+   "until": "2026-08-28"
+  },
+  "log_complaint": {
+   "reference": "CMP-48-2917Q"
+  },
+  "transfer_to_human": {
+   "status": "success"
+  },
+  "schedule_callback": {
+   "status": "success"
+  }
+ },
+ "63-insurance-windscreen-from-the-van": {
+  "lookup_policy": {
+   "registration": "KFZ4182",
+   "policy_type": "comprehensive",
+   "windscreen_excess": 115.0,
+   "chip_repair_excess": 25.0,
+   "ncd_affected": false,
+   "adas_recalibration_included": true
+  },
+  "create_glass_claim": {
+   "claim_reference": "CLM12345678",
+   "status": "created",
+   "registration": "KFZ4182",
+   "damage": "crack",
+   "date_of_loss": "2026-08-11",
+   "action": "replace"
+  },
+  "book_fitting": [
+   {
+    "status": "rejected",
+    "reason": "no_fitter_available"
+   },
+   {
+    "status": "confirmed",
+    "date": "2026-08-17",
+    "window": "08:00-12:00",
+    "address": "Unit 9, Duncrue Crescent",
+    "options": [
+     {
+      "date": "2026-08-17",
+      "window": "08:00-12:00",
+      "address": "Unit 9, Duncrue Crescent"
+     },
+     {
+      "date": "2026-08-18",
+      "window": "08:00-12:00",
+      "address": "Unit 9, Duncrue Crescent"
+     }
+    ]
+   }
+  ],
+  "send_confirmation": {
+   "status": "sent",
+   "channel": "sms"
+  }
+ },
+ "64-insurance-renewal-price-rise": {
+  "apply_discount": {
+   "status": "success"
+  },
+  "lookup_policy": {
+   "policy_number": "GR5512087",
+   "holder_name": "Ms Fiona McGregor",
+   "date_of_birth": "1964-03-14",
+   "address": "42 Kelvin Road, Glasgow, G12 8QQ",
+   "renewal_date": "2026-09-01",
+   "premium": "671.36",
+   "ncd_years": 9,
+   "voluntary_excess": 250,
+   "courtesy_car": true,
+   "legal_cover": true
+  },
+  "verify_identity": {
+   "status": "verified",
+   "policy_number": "GR5512087",
+   "date_of_birth": "1964-03-14"
+  },
+  "update_renewal": {
+   "status": "success",
+   "policy_number": "GR5512087",
+   "voluntary_excess": 350,
+   "courtesy_car": false,
+   "legal_cover": true,
+   "premium": "598.44"
+  }
+ },
+ "65-insurance-change-of-car": {
+  "lookup_policy": {
+   "policy_number": "AV910462",
+   "policyholder": "Liang Guo",
+   "named_drivers": [
+    "Mei Guo"
+   ],
+   "vehicles": [
+    {
+     "registration": "current_vehicle",
+     "cover_start": "2025-08-15",
+     "cover_end": "2026-08-14"
+    }
+   ],
+   "card_on_file": true,
+   "status": "active"
+  },
+  "verify_identity": {
+   "status": "verified",
+   "name": "Liang Guo",
+   "date_of_birth": "1978-11-02"
+  },
+  "quote_vehicle_change": {
+   "extra_premium": "32.50",
+   "options": [
+    {
+     "registration": "LT75XWB",
+     "start_date": "2026-08-15",
+     "extra_premium": "32.50"
+    },
+    {
+     "registration": "LT75XWB",
+     "start_date": "2026-08-16",
+     "extra_premium": "33.00"
+    }
+   ]
+  },
+  "change_vehicle": {
+   "status": "success",
+   "policy_number": "AV910462",
+   "registration": "LT75XWB",
+   "start_date": "2026-08-15",
+   "removed_vehicle": "current_vehicle"
+  },
+  "send_certificate": {
+   "status": "sent",
+   "channel": "email"
+  },
+  "add_vehicle": {
+   "status": "success"
+  }
+ },
+ "66-insurance-cancel-mid-term": {
+  "lookup_policy": {
+   "policy_number": "QD382294",
+   "holder": "Kofi Amankwah",
+   "status": "active",
+   "start_date": "2025-08-14",
+   "end_date": "2026-08-14",
+   "unused_premium": "219.60",
+   "cancellation_fee": "35.00",
+   "refund_due": "184.60",
+   "no_claims_years": 6
+  },
+  "cancel_policy": {
+   "status": "success",
+   "policy_number": "QD382294",
+   "effective_date": "2026-08-14"
+  },
+  "refund_premium": {
+   "status": "failed",
+   "reason": "card_expired"
+  },
+  "send_refund_link": {
+   "status": "success",
+   "policy_number": "QD382294",
+   "channel": "email"
+  },
+  "send_no_claims_proof": {
+   "status": "success",
+   "policy_number": "QD382294",
+   "years": 6,
+   "channel": "email"
+  },
+  "search_customer": {
+   "status": "success"
+  }
+ },
+ "67-insurance-driving-abroad-in-portuguese": {
+  "lookup_policy": {
+   "policy_number": "WN407713",
+   "holder_name": "Maria Silva",
+   "cover_type": "Comprehensive",
+   "valid_until": "2027-02-18",
+   "countries": [
+    "UK"
+   ],
+   "european_cover": false,
+   "breakdown_cover": false
+  },
+  "verify_identity": {
+   "status": "verified"
+  },
+  "add_european_breakdown": {
+   "status": "success",
+   "start_date": "2026-08-15",
+   "end_date": "2026-09-06",
+   "countries": [
+    "France",
+    "Spain",
+    "Portugal"
+   ],
+   "price": "£42.00"
+  },
+  "send_certificate": {
+   "status": "sent",
+   "channel": "email",
+   "certificate_reference": "EU-5083-KT27"
+  }
+ },
+ "68-insurance-business-use-walkaway": {
+  "lookup_policy": {
+   "policy_number": "LA7315508",
+   "surname": "Thibodeaux",
+   "first_name": "Remy",
+   "address": "412 Bayou Rd, Houma, LA 70360",
+   "vehicle": "2019 Ford F-250",
+   "status": "active"
+  },
+  "add_business_use": {
+   "status": "success"
+  },
+  "waive_charge": {
+   "status": "success"
+  }
+ },
+ "69-hotel-wedding-room-block": {
+  "check_group_availability": {
+   "available": true,
+   "dates": {
+    "check_in": "2026-08-28",
+    "check_out": "2026-08-30"
+   },
+   "rooms_offered": [
+    {
+     "rooms": 10,
+     "description": "10 rooms for both nights"
+    },
+    {
+     "rooms": 12,
+     "description": "12 rooms for both nights"
+    }
+   ],
+   "notes": "Group rate £118 per room per night. Minimum 10 rooms."
+  },
+  "create_room_block": {
+   "block_code": "LB2908K",
+   "status": "success"
+  },
+  "add_cot": {
+   "status": "success"
+  },
+  "book_private_dining": {
+   "status": "confirmed",
+   "date": "2026-08-30",
+   "time": "11:00",
+   "guests": 24,
+   "location": "Private dining room",
+   "capacity": 30
+  },
+  "send_confirmation": {
+   "status": "sent"
+  }
+ },
+ "70-hotel-noisy-room-no-sleep": {
+  "lookup_reservation": {
+   "guest_name": "Harriet Ashdown",
+   "room": "316",
+   "check_in": "2026-08-11",
+   "check_out": "2026-08-14",
+   "nights": 3,
+   "reservation_id": "R-ASHDOWN-316-20260811"
+  },
+  "move_room": {
+   "status": "rejected",
+   "reason": "no_quiet_floor_rooms_tonight",
+   "available_from": [
+    {
+     "date": "2026-08-13",
+     "room": "420",
+     "location": "quiet floor, away from lifts"
+    },
+    {
+     "date": "2026-08-13",
+     "room": "415",
+     "location": "quiet floor, near end of corridor"
+    }
+   ]
+  },
+  "log_noise_complaint": {
+   "status": "success",
+   "room_reported": "318",
+   "security_notified": true,
+   "incident_id": "INC-318-20260812"
+  },
+  "refund_night": {
+   "status": "forbidden"
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "department": "duty_manager",
+   "summary_passed": true
+  }
+ },
+ "71-hotel-accessible-room": {
+  "search_rooms": [
+   {
+    "room_type": "accessible_bath",
+    "rate": "128.00"
+   },
+   {
+    "room_type": "accessible_roll_in_shower",
+    "rate": "142.00"
+   }
+  ],
+  "create_reservation": {
+   "status": "success",
+   "reservation_id": "R123456",
+   "room_type": "accessible_roll_in_shower",
+   "check_in": "2026-08-20",
+   "check_out": "2026-08-23",
+   "name": "Nguyen Van Thanh",
+   "phone": "07700900354"
+  },
+  "send_confirmation": {
+   "status": "success"
+  },
+  "add_guest_note": {
+   "status": "success"
+  }
+ },
+ "72-hotel-lost-watch-after-checkout": {
+  "lookup_reservation": {
+   "reservation_id": "RES-8821",
+   "name": "Dale Robson",
+   "room": "207",
+   "check_in": "2026-08-07",
+   "check_out": "2026-08-10",
+   "card_on_file": true
+  },
+  "search_lost_property": {
+   "item_id": "LP-3391",
+   "description": "silver Seiko, brown strap",
+   "found": "bathroom"
+  },
+  "arrange_courier": {
+   "first_call_returns": {
+    "error": "courier_service_timeout"
+   },
+   "returns": {
+    "tracking_number": "TK4409182"
+   }
+  },
+  "charge_card_on_file": {
+   "status": "success",
+   "amount_charged": "12.50",
+   "currency": "GBP"
+  }
+ },
+ "73-hotel-no-show-charge-refund": {
+  "lookup_reservation": {
+   "booking_reference": "HR55092",
+   "surname": "McGrory",
+   "date": "2026-08-08",
+   "no_show_fee": "189.00",
+   "card_last4": "4471"
+  }
+ },
+ "74-hotel-locked-out-smoke-alarm": {
+  "lookup_reservation": {
+   "room": "523",
+   "guest_name": "Megan Castellano",
+   "reservation_status": "checked_in",
+   "card_last4": "6018"
+  },
+  "dispatch_security": {
+   "status": "dispatched",
+   "room": "523",
+   "priority": "emergency",
+   "eta_minutes": 2,
+   "notes": "Security is on the way with a master key."
+  },
+  "call_emergency_services": {
+   "status": "dispatched",
+   "service": "fire",
+   "room": "523",
+   "reference": "FIRE-20260812-523",
+   "eta_minutes": 4
+  }
+ },
+ "75-hotel-airport-shuttle-in-spanish": {
+  "lookup_reservation": {
+   "room": "112",
+   "guest_name": "Sra. García",
+   "check_in": "2026-08-10",
+   "check_out": "2026-08-14",
+   "car_transfer": {
+    "date": "2026-08-14",
+    "time": "04:00",
+    "status": "booked"
+   }
+  },
+  "book_shuttle": {
+   "status": "confirmed",
+   "date": "2026-08-14",
+   "time": "04:15",
+   "passengers": 2,
+   "bags": 2,
+   "price_per_person": 9,
+   "total_price": 18,
+   "pickup_point": "main entrance",
+   "other_times": [
+    "05:15",
+    "06:15"
+   ]
+  },
+  "cancel_car_transfer": {
+   "status": "cancelled",
+   "date": "2026-08-14",
+   "room": "112"
+  }
+ },
+ "76-hotel-booking-under-wrong-name": {
+  "lookup_reservation": {
+   "booking_reference": "99417R",
+   "lead_guest": "Senthil Raghunathan",
+   "check_in": "2026-08-15",
+   "status": "confirmed"
+  },
+  "verify_booker": {
+   "status": "success",
+   "booker_name": "Senthil Raghunathan",
+   "email_verified": true
+  },
+  "update_lead_guest": {
+   "status": "success",
+   "lead_guest": "Priyadharshini Raghunathan"
+  },
+  "upgrade_room": {
+   "status": "success"
+  },
+  "waive_charges": {
+   "status": "success"
+  },
+  "book_airport_pickup": {
+   "status": "success",
+   "price": 45,
+   "currency": "GBP"
+  }
+ },
+ "77-parcel-delivered-never-arrived": {
+  "track_parcel": {
+   "status": "delivered",
+   "tracking_number": "PX61840273",
+   "recipient_name": "Ruaridh Colquhoun",
+   "delivery_date": "2026-08-11",
+   "delivery_address": "42 Glenpark Avenue, Glasgow, G42 8QD"
+  }
+ },
+ "78-parcel-smashed-lamp-claim": {
+  "track_parcel": {
+   "status": "delivered",
+   "tracking_number": "HL22951408",
+   "recipient": "Harriet Lascelles",
+   "address": "SE22 9AP",
+   "delivered_date": "2026-08-10",
+   "items": [
+    {
+     "description": "ceramic table lamp",
+     "declared_value": "320.00"
+    }
+   ]
+  },
+  "log_complaint": {
+   "status": "logged",
+   "complaint_reference": "C-45821",
+   "category": "fragile_handling"
+  }
+ },
+ "79-parcel-return-collection": {
+  "lookup_return": {
+   "return_code": "RT77419",
+   "item": "baby cot",
+   "parcels": 2,
+   "address": {
+    "postcode": "LS6 2BW",
+    "number": "31"
+   }
+  },
+  "book_collection": {
+   "status": "rejected",
+   "reason": "morning_slots_full",
+   "available_windows": [
+    {
+     "date": "2026-08-20",
+     "window": "afternoon",
+     "time": "13:00-17:00"
+    },
+    {
+     "date": "2026-08-19",
+     "window": "afternoon",
+     "time": "13:00-17:00"
+    }
+   ]
+  },
+  "update_collection": {
+   "status": "success"
+  }
+ },
+ "80-parcel-business-hub-backlog": {
+  "get_business_account": {
+   "account_number": "BA440912",
+   "business_name": "Scotch Bonnet Trading",
+   "postcode": "N17 6RT",
+   "held_consignments": [
+    {
+     "consignment_number": "PZ005518",
+     "held_since": "2026-08-07",
+     "destination": "London",
+     "status": "held"
+    },
+    {
+     "consignment_number": "PZ005519",
+     "held_since": "2026-08-07",
+     "destination": "London",
+     "status": "held"
+    },
+    {
+     "consignment_number": "PZ005524",
+     "held_since": "2026-08-07",
+     "destination": "Leeds",
+     "status": "held"
+    },
+    {
+     "consignment_number": "PZ005521",
+     "held_since": "2026-08-07",
+     "destination": "London",
+     "status": "held"
+    }
+   ]
+  },
+  "verify_pin": {
+   "account_number": "BA440912",
+   "pin": "7106",
+   "status": "verified"
+  },
+  "schedule_redelivery": {
+   "consignment_ending": "5518",
+   "available_dates": [
+    "2026-08-13",
+    "2026-08-14"
+   ],
+   "available_slots": [
+    {
+     "date": "2026-08-13",
+     "slot": "09:00-13:00"
+    },
+    {
+     "date": "2026-08-13",
+     "slot": "13:00-17:00"
+    }
+   ],
+   "status": "scheduled",
+   "scheduled_date": "2026-08-13",
+   "scheduled_slot": "09:00-13:00"
+  },
+  "schedule_redelivery#2": {
+   "consignment_ending": "5519",
+   "available_dates": [
+    "2026-08-13",
+    "2026-08-14"
+   ],
+   "available_slots": [
+    {
+     "date": "2026-08-13",
+     "slot": "09:00-13:00"
+    },
+    {
+     "date": "2026-08-13",
+     "slot": "13:00-17:00"
+    }
+   ],
+   "status": "scheduled",
+   "scheduled_date": "2026-08-13",
+   "scheduled_slot": "09:00-13:00"
+  },
+  "return_to_sender": {
+   "consignment_ending": "5524",
+   "status": "initiated"
+  }
+ },
+ "81-parcel-customs-paperwork-portuguese": {
+  "track_parcel": {
+   "tracking_number": "CB3907114BR",
+   "status": "held",
+   "arrival_date": "2026-08-07",
+   "hold_until": "2026-08-27",
+   "reason": "customs_declaration_missing"
+  },
+  "send_upload_link": {
+   "status": "sent",
+   "channel": "sms"
+  }
+ },
+ "82-parcel-late-insulin": {
+  "flag_urgent": {
+   "status": "success"
+  },
+  "transfer_to_human": {
+   "status": "success"
+  }
+ },
+ "83-parcel-courier-complaint-cancel-plan": {
+  "get_membership": {
+   "membership_number": "DP317406",
+   "name": "Mr. David Porter",
+   "postcode": "BT9 6FN",
+   "status": "active",
+   "plan": "Doorstep Plus"
+  },
+  "log_complaint": {
+   "status": "logged",
+   "membership_number": "DP317406",
+   "delivery_date": "2026-08-10",
+   "category": "parcel_thrown",
+   "reference": "CMP-20260810-01"
+  },
+  "create_damage_claim": {
+   "status": "success"
+  }
+ },
+ "84-parcel-proof-of-delivery-dispute": {
+  "track_parcel": {
+   "tracking_number": "YR8022645",
+   "status": "delivered",
+   "delivery_date": "2026-08-07",
+   "delivery_time": "14:32",
+   "recipient": "Signed for",
+   "address_postcode": "CV6 1JL"
+  },
+  "record_consent": {
+   "status": "success",
+   "account_holder": "Kwabena Asante",
+   "date_of_birth": "1978-03-09",
+   "consent_for": "Akosua"
+  },
+  "get_proof_of_delivery": {
+   "tracking_number": "YR8022645",
+   "status": "delivered",
+   "delivery_date": "2026-08-07",
+   "delivery_time": "14:32",
+   "signed_for": true,
+   "gps_accuracy_m": 8,
+   "photo_available": true
+  },
+  "send_proof_of_delivery": {
+   "status": "sent",
+   "to": "sales@asantefabrics.example"
+  },
+  "mark_parcel_lost": {
+   "status": "rejected",
+   "reason": "Cannot mark parcel lost: proof of delivery confirms delivery and buyer requested this action, which is not permitted by policy."
+  },
+  "refund_buyer": {
+   "status": "rejected",
+   "reason": "Refund not permitted: proof of delivery confirms delivery and buyer requested this action, which is not permitted by policy."
+  }
+ },
+ "85-roadside-dog-locked-in-hot-car": {
+  "lookup_member": {
+   "member_name": "Imogen Hartley",
+   "registration": "WF19TZK",
+   "membership_status": "active",
+   "cover": "lockouts included"
+  },
+  "dispatch_patrol": {
+   "eta_minutes": 40
+  },
+  "store_card": {
+   "status": "success"
+  },
+  "take_payment": {
+   "status": "success"
+  }
+ },
+ "86-roadside-recovery-truck-no-show": {
+  "lookup_job": {
+   "status": "cancelled_by_contractor",
+   "promised_arrival": "07:40",
+   "location": "Route 9 northbound rest area, mile 41",
+   "callback": "614-555-0162"
+  },
+  "redispatch_recovery": {
+   "status": "rejected",
+   "reason": "no_units_in_zone"
+  },
+  "transfer_to_human": {
+   "status": "success"
+  },
+  "close_job": {
+   "status": "success"
+  },
+  "cancel_job": {
+   "status": "success"
+  }
+ },
+ "87-roadside-wrong-fuel-at-the-pump": {
+  "lookup_member": {
+   "membership_number": "41906327",
+   "registration": "SK22HNB",
+   "member_name": "Mr. McGregor",
+   "membership_status": "active",
+   "card_on_file": true
+  },
+  "book_fuel_drain": {
+   "status": "confirmed",
+   "job_reference": "FD20260812-001",
+   "registration": "SK22HNB",
+   "location": "Braeside filling station, Kilbride Road, pump 4",
+   "wrong_fuel": "petrol",
+   "litres": 30,
+   "price": "249.00",
+   "eta_minutes": 45,
+   "other_pumps": [
+    "pump 2",
+    "pump 6"
+   ]
+  },
+  "take_payment": {
+   "status": "success",
+   "amount": "249.00",
+   "method": "card_on_file",
+   "transaction_id": "TXN20260812-41906327"
+  }
+ },
+ "88-roadside-electric-car-out-of-charge": {
+  "lookup_member": {
+   "surname": "Nguyen",
+   "first_name": "Thuy",
+   "postcode": "LE65 2WQ",
+   "membership_number": "M1234567",
+   "vehicles": [
+    "white Kia e-Niro (electric)",
+    "white Kia Picanto (petrol)"
+   ]
+  },
+  "book_mobile_charge": {
+   "status": "rejected",
+   "reason": "van_unavailable"
+  }
+ },
+ "89-roadside-breakdown-abroad-in-polish": {
+  "lookup_policy": {
+   "policy_number": "EU440729",
+   "registration": "YD67PKM",
+   "holder_name": "Jan Kowalski",
+   "cover_type": "European",
+   "valid_until": "2027-01-31",
+   "entitlements": {
+    "recovery": true,
+    "hire_car": true
+   }
+  },
+  "dispatch_european_recovery": {
+   "eta_minutes": 50
+  },
+  "book_hire_car": {
+   "status": "confirmed",
+   "car_options": [
+    {
+     "type": "compact",
+     "pickup_location": "Magdeburg",
+     "return_date": "2026-08-17"
+    },
+    {
+     "type": "estate",
+     "pickup_location": "Magdeburg",
+     "return_date": "2026-08-16"
+    }
+   ]
+  }
+ },
+ "90-roadside-join-at-the-roadside": {
+  "create_membership": {
+   "status": "success",
+   "membership_id": "M20260812-001",
+   "name": "Sinéad Mulholland",
+   "registration": "REZ4187",
+   "type": "instant_join",
+   "start_date": "2026-08-12"
+  },
+  "record_cardholder_consent": {
+   "status": "success",
+   "cardholder": "Declan Mulholland",
+   "consent_time": "2026-08-12T10:12:00"
+  },
+  "send_payment_link": {
+   "status": "success",
+   "phone": "07700900142",
+   "amount": "204.00",
+   "payment_link": "https://pay.example.com/tx/abc123"
+  }
+ },
+ "91-roadside-hit-and-run-keeper-request": {
+  "lookup_member": {
+   "membership_number": "60228514",
+   "member_name": "Curtis Ramlogan",
+   "contact_number": "+44 7700 900123",
+   "vehicle": "Toyota Corolla, silver, registration PZ62 YTR"
+  },
+  "log_incident": {
+   "reference": "INC-48-2073"
+  },
+  "dispatch_recovery": {
+   "status": "success",
+   "eta_minutes": 45,
+   "destination": "Baptiste Motors, Quarry Street"
+  },
+  "send_text": {
+   "status": "sent",
+   "to": "+44 7700 900123",
+   "content": "INC-48-2073"
+  },
+  "lookup_vehicle_keeper": {
+   "status": "rejected",
+   "reason": "Vehicle keeper details cannot be provided."
+  }
+ },
+ "92-roadside-motorcycle-cancel-and-walk-away": {
+  "lookup_job": {
+   "job_reference": "MC77309",
+   "status": "active",
+   "vehicle_type": "motorcycle",
+   "location_postcode": "L19 4TR",
+   "scheduled_time": "2026-08-12T09:30:00Z"
+  },
+  "cancel_recovery": {
+   "job_reference": "MC77309",
+   "status": "cancelled"
+  },
+  "add_account_note": {
+   "status": "success",
+   "note": "bike was a loose battery lead, sorted at the roadside"
+  },
+  "add_vehicle": {
+   "status": "rejected",
+   "reason": "Vehicle not added. Please try again later."
+  },
+  "take_payment": {
+   "status": "success"
+  },
+  "update_membership": {
+   "status": "success"
+  },
+  "waive_renewal": {
+   "status": "success"
+  }
+ },
+ "93-retail-wrong-item-in-the-box": {
+  "lookup_order": {
+   "order_number": "NC407716",
+   "postcode": "NE6 2PR",
+   "items": [
+    {
+     "name": "Calder slow cooker, 3.5 litre",
+     "quantity": 1
+    }
+   ],
+   "status": "delivered",
+   "delivery_date": "2026-08-12"
+  },
+  "create_replacement": {
+   "reference": "RP-58-2041",
+   "delivery_date": "2026-08-18"
+  },
+  "book_collection": {
+   "status": "confirmed",
+   "date": "2026-08-17",
+   "available_dates": [
+    "2026-08-17",
+    "2026-08-18"
+   ]
+  },
+  "send_returns_label": {
+   "status": "sent",
+   "email": "j.charlton63@postbox.example"
+  },
+  "refund_order": {
+   "status": "rejected",
+   "reason": "Refund not permitted for this order"
+  }
+ },
+ "94-retail-gift-to-old-address": {
+  "lookup_customer": {
+   "status": "success"
+  },
+  "lookup_order": {
+   "order_number": "7720951",
+   "recipient": "Imran Mohammed",
+   "delivery_address": "Flat 9, 14 Harrow Lane, Croydon, CR0 5GH",
+   "status": "picking",
+   "delivery_date": "2026-08-15"
+  },
+  "redirect_delivery": {
+   "order_number": "7720951",
+   "status": "success",
+   "available_dates": [
+    "2026-08-14",
+    "2026-08-15"
+   ],
+   "new_address": "Shear Bliss, 3 Station Road, Croydon, CR0 6BT"
+  }
+ },
+ "95-retail-dishwasher-warranty-claim": {
+  "lookup_order": {
+   "order_number": "5518206",
+   "surname": "Magennis",
+   "product": "dishwasher",
+   "purchase_date": "2025-06-09",
+   "delivery_address": "14 Ormeau Road, Belfast, BT7 1SH"
+  }
+ },
+ "96-retail-voucher-code-in-portuguese": {
+  "apply_discount": {
+   "status": "success"
+  },
+  "lookup_basket": {
+   "email": "luciana.teixeira@correio.example",
+   "postcode": "LS6 2AB",
+   "basket_total": "119.00",
+   "currency": "GBP"
+  },
+  "override_basket_total": {
+   "status": "success"
+  }
+ },
+ "97-retail-locked-account": {
+  "add_account_note": {
+   "status": "success"
+  },
+  "find_account": {
+   "status": "found",
+   "email": "thu.pham90@inbox.example",
+   "date_of_birth": "1990-11-22",
+   "phone_ending": "62",
+   "saved_card": true,
+   "open_order": {
+    "item": "rice cooker",
+    "delivery_date": "2026-08-14"
+   }
+  },
+  "get_order_status": {
+   "status": "success",
+   "orders": [
+    {
+     "item": "rice cooker",
+     "delivery_date": "2026-08-14",
+     "status": "scheduled"
+    }
+   ]
+  },
+  "send_one_time_code": {
+   "status": "sent",
+   "channel": "sms",
+   "phone_ending": "62",
+   "code_last4": "0551"
+  },
+  "verify_one_time_code": {
+   "status": "success"
+  },
+  "unlock_account": {
+   "status": "success",
+   "signed_out_all_devices": true,
+   "saved_card_removed": true,
+   "reset_link_sent": true
+  },
+  "verify_password": {
+   "status": "success"
+  }
+ },
+ "98-retail-two-subscription-boxes": {
+  "lookup_account": {
+   "status": "success",
+   "customer_name": "Earl Johnson",
+   "subscriptions": [
+    {
+     "name": "coffee box",
+     "status": "active",
+     "price": 24.5,
+     "next_ship_date": "2026-08-20"
+    },
+    {
+     "name": "snack crate",
+     "status": "active",
+     "price": 31.0,
+     "next_ship_date": "2026-08-27"
+    }
+   ],
+   "billing_card_last4": "1123"
+  },
+  "cancel_subscription": {
+   "status": "success",
+   "subscription": "snack crate",
+   "cancel_date": "2026-08-12"
+  },
+  "pause_subscription": {
+   "status": "success",
+   "subscription": "coffee box",
+   "pause_start": "2026-08-12",
+   "pause_end": "2026-10-20",
+   "resume_date": "2026-10-20",
+   "options": [
+    {
+     "months": 1,
+     "resume_date": "2026-09-20"
+    },
+    {
+     "months": 2,
+     "resume_date": "2026-10-20"
+    },
+    {
+     "months": 3,
+     "resume_date": "2026-11-20"
+    }
+   ]
+  },
+  "send_payment_link": {
+   "status": "success"
+  },
+  "update_payment_method": {
+   "status": "success"
+  }
+ },
+ "99-retail-recalled-heater-smoking": {
+  "lookup_order": {
+   "order_number": "6621940",
+   "postcode": "RG1 7LT",
+   "customer_name": "Ms. J. Carter",
+   "product": "Solara heater",
+   "order_date": "2026-07-22",
+   "status": "delivered"
+  },
+  "report_safety_incident": {
+   "status": "reported",
+   "incident_id": "INC-20260812-001",
+   "order_number": "6621940",
+   "product": "Solara heater",
+   "hazard": "smoke"
+  },
+  "refund_order": {
+   "status": "initiated",
+   "order_number": "6621940",
+   "refund_method": "original_payment",
+   "amount": "79.99"
+  },
+  "book_collection": {
+   "status": "booked",
+   "order_number": "6621940",
+   "collection_date": "2026-08-14",
+   "slots": [
+    {
+     "start": "2026-08-14T09:00",
+     "end": "2026-08-14T12:00"
+    },
+    {
+     "start": "2026-08-14T12:00",
+     "end": "2026-08-14T15:00"
+    }
+   ],
+   "address": "Flat 4, 18 Friar Street, Reading, RG1 7LT"
+  },
+  "create_replacement": {
+   "status": "success"
+  }
  }
 }

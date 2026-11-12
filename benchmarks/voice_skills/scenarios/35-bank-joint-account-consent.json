@@ -310,8 +310,34 @@
     ],
     "catch_all": {
       "say": "Sorry, can you say that again?",
-      "audio": "catch-all.wav",
-      "off_script_after": 2
+      "audio": "35-bank-joint-account-consent/_again.wav",
+      "off_script_after": 4
+    },
+    "short_answers": {
+      "fine": {
+        "say": "Yes, that's fine.",
+        "audio": "35-bank-joint-account-consent/_fine.wav"
+      },
+      "no": {
+        "say": "No.",
+        "audio": "35-bank-joint-account-consent/_no.wav"
+      },
+      "unsure": {
+        "say": "I'm not sure, sorry.",
+        "audio": "35-bank-joint-account-consent/_unsure.wav"
+      },
+      "carry_on": {
+        "say": "Can we just carry on?",
+        "audio": "35-bank-joint-account-consent/_carry_on.wav"
+      },
+      "again": {
+        "say": "Sorry, can you say that again?",
+        "audio": "35-bank-joint-account-consent/_again.wav"
+      }
+    },
+    "confirm": {
+      "say": "Yes, that's right.",
+      "audio": "35-bank-joint-account-consent/_yes.wav"
     }
   },
   "shape": {

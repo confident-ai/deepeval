@@ -45,7 +45,9 @@ class SimulationEfficiencyMetric(BaseVoiceMetric):
         user_turns = sum(
             1
             for turn in test_case.turns
-            if turn.role == "user" and turn.content
+            if turn.role == "user"
+            and turn.content
+            and not (turn.metadata or {}).get("confirmation")
         )
         if not user_turns:
             return None, "The simulated user never spoke.", {}

@@ -5,7 +5,9 @@ the call."""
 import glob
 import json
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel
 
 from deepeval.dataset import ConversationalGolden, Persona
 from deepeval.dataset.golden import BackgroundNoiseSettings, LineSettings
@@ -82,10 +84,70 @@ def _events(
     return built
 
 
-def _says(dataset_path: str, text: str, audio: Optional[str]):
+def _says(
+    dataset_path: str,
+    text: str,
+    audio: Optional[str],
+    metadata: Optional[Dict] = None,
+):
     def action() -> Turn:
         return Turn(
-            role="user", content=text, audio=_recording(dataset_path, audio)
+            role="user",
+            content=text,
+            audio=_recording(dataset_path, audio),
+            metadata=metadata,
+        )
+
+    return action
+
+
+class ShortAnswer(BaseModel):
+    reply: Literal["fine", "no", "unsure", "carry_on", "again"]
+
+
+SHORT_ANSWER_PROMPT = """You are playing a caller on the phone to a company. The agent has just said something your script has no line for, so you can only give one of five short answers.
+
+What the call is about: {scenario}
+What you want to be true by the end: {outcome}
+
+The agent just said:
+<<<
+{reply}
+>>>
+
+Pick the answer the caller would give:
+- "fine": the agent proposes or asks to confirm something that agrees with what the caller wants. Said as "Yes, that's fine."
+- "no": what the agent proposes, assumes or asks to confirm goes against what the caller wants, or is not true. Said as "No."
+- "unsure": the agent asks for something the caller would not know or has not been given. Said as "I'm not sure, sorry."
+- "carry_on": the agent is stalling, chatting, or asking about something that does not matter to this call. Said as "Can we just carry on?"
+- "again": what the agent said was cut off or made no sense. Said as "Sorry, can you say that again?"
+
+Reply with JSON only: {{"reply": "<one of fine, no, unsure, carry_on, again>"}}"""
+
+
+def _short_answer(dataset_path: str, answers: Dict, journey: Journey):
+    """The caller's reply to something the script did not see coming: one of
+    a few short recorded answers, picked to fit what the caller wants."""
+
+    async def action(simulator=None, last_assistant_turn=None) -> Turn:
+        key = "again"
+        said = last_assistant_turn.content if last_assistant_turn else ""
+        if simulator is not None and said:
+            choice = await simulator.a_generate_schema(
+                SHORT_ANSWER_PROMPT.format(
+                    scenario=journey["golden"]["scenario"],
+                    outcome=journey["golden"]["expected_outcome"],
+                    reply=said,
+                ),
+                ShortAnswer,
+            )
+            key = getattr(choice, "reply", None) or "again"
+        answer = answers.get(key) or answers["again"]
+        return Turn(
+            role="user",
+            content=answer["say"],
+            audio=_recording(dataset_path, answer.get("audio")),
+            metadata={"short_answer": key},
         )
 
     return action
@@ -109,6 +171,85 @@ def _repeats(dataset_path: str, recordings: Dict[str, Optional[str]]):
         )
 
     return action
+
+
+LOOK_AHEAD = 2
+
+
+def _answer_out_of_order(
+    nodes: List[SimulationNode], groups: List[SimulationGroup]
+) -> None:
+    """Let the caller answer a question the script expected later.
+
+    A real caller asked for their date of birth before their reference gives
+    it. So every line can lead to a detail not yet given, and to the lines
+    the script would have reached within a couple of steps. Corrections,
+    failures and endings stay where the script put them: they have to be
+    earned.
+    """
+
+    def ordinary(node: SimulationNode) -> bool:
+        return (
+            not node.terminal and not node.fails and node.max_visits is None
+        )
+
+    scripted = {id(node): list(node.edges) for node in nodes}
+    details = [pair for group in groups for pair in group.members]
+    for node in nodes:
+        if node.terminal:
+            continue
+        reached = {id(child) for child, _ in node.edges} | {id(node)}
+        ahead, frontier = [], [node]
+        for _ in range(LOOK_AHEAD):
+            frontier = [
+                child
+                for current in frontier
+                for child, _ in scripted[id(current)]
+                if ordinary(child)
+            ]
+            for current in frontier:
+                ahead.extend(scripted[id(current)])
+        for child, when in details + ahead:
+            if id(child) in reached or not ordinary(child):
+                continue
+            reached.add(id(child))
+            node.add_node(child, when)
+
+
+def _confirm_read_backs(
+    lines: List[Dict],
+    nodes: Dict[str, SimulationNode],
+    dataset_path: str,
+    confirm: Dict,
+) -> None:
+    """Let the caller say yes to an agent that reads a detail back correctly.
+
+    Without it, a careful agent that checks what it heard is treated as one
+    asking for the detail again. The yes is not counted as a caller turn when
+    efficiency is worked out, so checking costs the agent nothing.
+    """
+    for line in lines:
+        node = nodes[line["id"]]
+        if node.terminal:
+            continue
+        yes = SimulationNode(
+            action=_says(
+                dataset_path,
+                confirm["say"],
+                confirm.get("audio"),
+                metadata={"confirmation": True},
+            ),
+            name="confirms",
+        )
+        yes.edges = list(node.edges)
+        node.add_node(
+            yes,
+            when=(
+                "The agent repeats back what the caller just said "
+                f'("{line["say"]}") without getting any of it wrong, and '
+                "asks whether that is right"
+            ),
+        )
 
 
 def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
@@ -146,6 +287,12 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
             source.add_group(groups[edge["to"]])
         else:
             source.add_node(nodes[edge["to"]], when=edge["when"])
+
+    _answer_out_of_order(list(nodes.values()), list(groups.values()))
+    if graph.get("confirm"):
+        _confirm_read_backs(
+            graph["nodes"], nodes, dataset_path, graph["confirm"]
+        )
 
     root = nodes[graph["start"]]
     for reaction in graph.get("reactions", []):
@@ -187,10 +334,15 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
             ),
         )
     if fallback:
+        answers = graph.get("short_answers")
         root.off_script(
             SimulationNode(
-                action=_says(
-                    dataset_path, fallback["say"], fallback.get("audio")
+                action=(
+                    _short_answer(dataset_path, answers, journey)
+                    if answers
+                    else _says(
+                        dataset_path, fallback["say"], fallback.get("audio")
+                    )
                 ),
                 name="off_script",
                 max_visits=fallback.get("off_script_after"),
