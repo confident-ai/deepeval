@@ -19,10 +19,10 @@ deepeval recommend metrics
 
 ## Required Arguments
 
-To use the `ContextualRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+To use the `ContextualRelevancyMetric`, you'll need to provide
+the following arguments in your [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- <Term py="actual_output" ts="actualOutput"/>
 - <Term py="retrieval_context" ts="retrievalContext"/>
 
 :::note
@@ -49,9 +49,6 @@ from deepeval.metrics import ContextualRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval import evaluate
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
-
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
 
@@ -62,7 +59,6 @@ metric = ContextualRelevancyMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
     retrieval_context=retrieval_context
 )
 
@@ -82,9 +78,6 @@ import { ContextualRelevancyMetric } from "deepeval/metrics";
 import { LLMTestCase } from "deepeval/test-case";
 import { evaluate } from "deepeval";
 
-// Replace this with the actual output from your LLM application
-const actualOutput = "We offer a 30-day full refund at no extra cost.";
-
 // Replace this with the actual retrieved context from your RAG pipeline
 const retrievalContext = ["All customers are eligible for a 30 day full refund at no extra cost."];
 
@@ -95,7 +88,6 @@ const metric = new ContextualRelevancyMetric({
 });
 const testCase = new LLMTestCase({
   input: "What if these shoes don't fit?",
-  actualOutput,
   retrievalContext,
 });
 
@@ -135,7 +127,6 @@ metric = ContextualRelevancyMetric(
 )
 test_case = LLMTestCase(
     input=f"Tell me about this landmark in France: {MLLMImage(...)}",
-    actual_output=f"This appears to be Eiffel Tower, which is a famous landmark in France"
     retrieval_context=retrieval_context
 )
 
@@ -168,7 +159,6 @@ const metric = new ContextualRelevancyMetric({
 });
 const testCase = new LLMTestCase({
   input: `Tell me about this landmark in France: ${new MLLMImage({ url: "..." })}`,
-  actualOutput: `This appears to be Eiffel Tower, which is a famous landmark in France`,
   retrievalContext,
 });
 
@@ -231,7 +221,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", retrieval_context=["..."])
     update_current_span(test_case=test_case)
     return
 
@@ -259,7 +249,7 @@ const innerComponent = observe({
   metrics: [metric],
   fn: async () => {
     // Set test case at runtime
-    const testCase = new LLMTestCase({ input: "...", actualOutput: "..." });
+    const testCase = new LLMTestCase({ input: "...", retrievalContext: ["..."] });
     updateCurrentSpan({ testCase });
   },
 });
