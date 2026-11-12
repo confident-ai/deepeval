@@ -8,7 +8,12 @@
    "tools": 20.9,
    "latency": 1.24,
    "cost": 0.161,
-   "costPerMinute": 0.055
+   "costPerMinute": 0.055,
+   "task_handling": 36.3,
+   "speaking": 54.3,
+   "listening": 49.2,
+   "turn_taking": 70.2,
+   "boundaries": 60.4
   },
   "segmentScores": {
    "overall": {
@@ -181,7 +186,12 @@
    "tools": 21.7,
    "latency": 1.17,
    "cost": 0.161,
-   "costPerMinute": 0.06
+   "costPerMinute": 0.06,
+   "task_handling": 32.0,
+   "speaking": 43.8,
+   "listening": 43.0,
+   "turn_taking": 67.9,
+   "boundaries": 52.3
   },
   "segmentScores": {
    "overall": {
@@ -354,7 +364,12 @@
    "tools": 12.8,
    "latency": 1.24,
    "cost": 0.063,
-   "costPerMinute": 0.019
+   "costPerMinute": 0.019,
+   "task_handling": 28.0,
+   "speaking": 45.7,
+   "listening": 38.2,
+   "turn_taking": 67.4,
+   "boundaries": 42.7
   },
   "segmentScores": {
    "overall": {

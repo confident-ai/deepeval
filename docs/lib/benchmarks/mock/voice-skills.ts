@@ -35,7 +35,7 @@ export const voiceSkills: Benchmark = {
   metrics: [
     {
       id: "overall",
-      label: "Overall score",
+      label: "Overall",
       pickLabel: "Best overall",
       unit: "percent",
       higherIsBetter: true,
@@ -44,33 +44,63 @@ export const voiceSkills: Benchmark = {
       decimals: 1,
     },
     {
+      id: "listening",
+      label: "Listening",
+      pickLabel: "Best listener",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Hearing names and numbers through accents, noise and bad lines, and ignoring speech not meant for the agent.",
+      decimals: 1,
+    },
+    {
+      id: "turn_taking",
+      label: "Turn taking",
+      pickLabel: "Best at turn taking",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Waiting through pauses, holds and silence, and stopping when cut off.",
+      decimals: 1,
+    },
+    {
+      id: "task_handling",
+      label: "Task handling",
+      pickLabel: "Best at the task",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Finishing the task through corrections, changed minds, failing tools and upset callers.",
+      decimals: 1,
+    },
+    {
+      id: "speaking",
+      label: "Speaking",
+      pickLabel: "Best speaker",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Reading numbers back exactly, saying things naturally, and following a voice style.",
+      decimals: 1,
+    },
+    {
+      id: "boundaries",
+      label: "Boundaries",
+      pickLabel: "Best at holding the line",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Holding the line on security checks, privacy, advice, emergencies and hidden instructions.",
+      decimals: 1,
+    },
+    {
       id: "completion",
       label: "Calls completed",
-      pickLabel: "Most calls completed",
       unit: "percent",
       higherIsBetter: true,
       description:
         "Share of calls that reached an expected ending without the caller giving up or the agent crossing a line.",
       decimals: 1,
-    },
-    {
-      id: "tools",
-      label: "Tool accuracy",
-      pickLabel: "Most accurate tool calls",
-      unit: "percent",
-      higherIsBetter: true,
-      description:
-        "Share of expected tool calls made with the right values, with nothing forbidden called.",
-      decimals: 1,
-    },
-    {
-      id: "latency",
-      label: "Reply latency",
-      pickLabel: "Fastest reply",
-      unit: "seconds",
-      higherIsBetter: false,
-      description: "Median time from end of caller speech to first agent audio.",
-      decimals: 2,
     },
     {
       id: "cost",
@@ -79,31 +109,16 @@ export const voiceSkills: Benchmark = {
       unit: "usd",
       higherIsBetter: false,
       description:
-        "What the model cost for one call, averaged over the journeys. Estimated from the length of the audio on each side at the provider's list prices.",
-      decimals: 3,
-    },
-    {
-      id: "costPerMinute",
-      label: "Cost per minute",
-      unit: "usd",
-      higherIsBetter: false,
-      description: "Model cost divided by the length of the call.",
+        "What the model cost for one call, averaged over the journeys. Estimated from the length of the call at the provider's list prices.",
       decimals: 3,
     },
   ],
   primaryMetricId: "overall",
-  tradeoffMetricId: "latency",
-  segmentLabel: "Line quality",
-  segments: [
-    ["phone", "Phone line"],
-    ["landline", "Landline"],
-    ["speakerphone", "Speakerphone"],
-    ["mobile", "Weak mobile"],
-  ].map(([id, label]) => ({
-    id,
-    label,
-    caseCount: journeys.filter((journey) => journey.segmentId === id).length,
-  })),
+  tradeoffMetricId: "cost",
+  // Everything on this page is cut by skill, so there is no second way to
+  // slice the journeys.
+  segmentLabel: "Skill",
+  segments: [],
 
   skills: [
     {
