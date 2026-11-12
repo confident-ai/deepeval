@@ -70,7 +70,7 @@ const clamp = (scale: number) =>
   Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 
 const JourneyGraph: React.FC<JourneyGraphProps> = ({ graph, lines }) => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(graph.start);
   const [edgeId, setEdgeId] = useState<string | null>(null);
   const selected = graph.nodes.find((node) => node.id === selectedId);
   const condition = graph.edges.find((edge) => edge.id === edgeId);

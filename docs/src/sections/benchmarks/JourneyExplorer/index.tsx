@@ -16,8 +16,6 @@ type JourneyExplorerProps = {
   families: SkillFamily[];
 };
 
-type Grouping = "industry" | "skill";
-
 const ALL = "all";
 
 const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
@@ -25,99 +23,64 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
   segments,
   families,
 }) => {
-  const [grouping, setGrouping] = useState<Grouping>("industry");
-  const [segmentId, setSegmentId] = useState(ALL);
-  const [familyId, setFamilyId] = useState(families[0]?.id ?? ALL);
+  const [familyId, setFamilyId] = useState(ALL);
   const [skillId, setSkillId] = useState(ALL);
   const [activeId, setActiveId] = useState(journeys[0].id);
 
-  const tests = (journey: BenchmarkJourney, skills: string[]) =>
-    skills.some((skill) => journey.skills.includes(skill));
-  const count = (matching: BenchmarkJourney[]) => matching.length;
+  const testing = (skills: string[]) =>
+    journeys.filter((journey) =>
+      skills.some((skill) => journey.skills.includes(skill)),
+    );
+  const skillsOf = (family: SkillFamily) =>
+    family.skills.map((skill) => skill.id);
 
-  const industries: PillOption<string>[] = [
-    { id: ALL, label: "All", count: journeys.length },
-    ...segments.map((segment) => ({
-      id: segment.id,
-      label: segment.label,
-      count: count(journeys.filter((journey) => journey.segmentId === segment.id)),
-    })),
-  ];
   const family = families.find((candidate) => candidate.id === familyId);
-  const familySkills = (family?.skills ?? []).map((skill) => skill.id);
-  const familyPills: PillOption<string>[] = families.map((candidate) => ({
-    id: candidate.id,
-    label: candidate.label,
-    count: count(
-      journeys.filter((journey) =>
-        tests(journey, candidate.skills.map((skill) => skill.id)),
-      ),
-    ),
-  }));
-  const skillPills: PillOption<string>[] = [
-    {
-      id: ALL,
-      label: "Any",
-      count: count(journeys.filter((journey) => tests(journey, familySkills))),
-    },
-    ...(family?.skills ?? []).map((skill) => ({
-      id: skill.id,
-      label: skill.label,
-      count: count(journeys.filter((journey) => tests(journey, [skill.id]))),
+  const familyPills: PillOption<string>[] = [
+    { id: ALL, label: "All", count: journeys.length },
+    ...families.map((candidate) => ({
+      id: candidate.id,
+      label: candidate.label,
+      count: testing(skillsOf(candidate)).length,
     })),
   ];
+  const skillPills: PillOption<string>[] = family
+    ? [
+        { id: ALL, label: "Any", count: testing(skillsOf(family)).length },
+        ...family.skills.map((skill) => ({
+          id: skill.id,
+          label: skill.label,
+          count: testing([skill.id]).length,
+        })),
+      ]
+    : [];
 
   const topics = new Map(
     segments.map((segment) => [segment.id, segment.label]),
   );
-  const matching =
-    grouping === "industry"
-      ? journeys.filter(
-          (journey) => segmentId === ALL || journey.segmentId === segmentId,
-        )
-      : journeys.filter((journey) =>
-          tests(journey, skillId === ALL ? familySkills : [skillId]),
-        );
-  const shown = matching.length > 0 ? matching : journeys;
+  const shown = !family
+    ? journeys
+    : testing(skillId === ALL ? skillsOf(family) : [skillId]);
   const active = shown.find((journey) => journey.id === activeId) ?? shown[0];
 
   return (
     <div className={styles.explorer}>
       <div className={styles.filters}>
         <FilterPills
-          options={[
-            { id: "industry", label: "By industry" },
-            { id: "skill", label: "By what is tested" },
-          ]}
-          value={grouping}
-          onChange={setGrouping}
-          label="Group journeys"
+          options={familyPills}
+          value={familyId}
+          onChange={(id) => {
+            setFamilyId(id);
+            setSkillId(ALL);
+          }}
+          label="What is tested"
         />
-        {grouping === "industry" ? (
+        {family && (
           <FilterPills
-            options={industries}
-            value={segmentId}
-            onChange={setSegmentId}
-            label="Industry"
+            options={skillPills}
+            value={skillId}
+            onChange={setSkillId}
+            label="Skill"
           />
-        ) : (
-          <>
-            <FilterPills
-              options={familyPills}
-              value={familyId}
-              onChange={(id) => {
-                setFamilyId(id);
-                setSkillId(ALL);
-              }}
-              label="Skill family"
-            />
-            <FilterPills
-              options={skillPills}
-              value={skillId}
-              onChange={setSkillId}
-              label="Skill"
-            />
-          </>
         )}
       </div>
 

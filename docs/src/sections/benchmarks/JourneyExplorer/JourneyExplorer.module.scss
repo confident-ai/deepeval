@@ -148,16 +148,17 @@
 
 .main {
   min-width: 0;
+  container-type: inline-size;
 }
 
 .scenario {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--color-fd-border);
 
-  @media (max-width: 1000px) {
+  @container (max-width: 860px) {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.9rem;
   }
@@ -174,7 +175,10 @@
     font-weight: 600;
   }
 
+  // Every summary is written to fill exactly four lines at this width.
   p {
+    width: 33.75rem;
+    max-width: 100%;
     margin: 0;
     font-size: 13px;
     line-height: 1.6;
