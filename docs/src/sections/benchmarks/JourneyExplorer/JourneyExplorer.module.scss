@@ -11,15 +11,7 @@
 
 .top {
   display: grid;
-  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 19rem);
-
-  @media (max-width: 1100px) {
-    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
-
-    > :last-child {
-      grid-column: 1 / -1;
-    }
-  }
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
 
   @media (max-width: 820px) {
     grid-template-columns: minmax(0, 1fr);

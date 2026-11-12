@@ -8,7 +8,6 @@ import type {
 } from "@/lib/benchmarks/types";
 import FilterPills, { type PillOption } from "../FilterPills";
 import JourneyGraph from "../JourneyGraph";
-import JourneyRecordings from "../JourneyRecordings";
 import styles from "./JourneyExplorer.module.scss";
 
 type JourneyExplorerProps = {
@@ -172,8 +171,6 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
               lines={active.lines}
             />
           </div>
-
-          <JourneyRecordings key={active.id} journey={active} />
         </div>
       </div>
     </div>
