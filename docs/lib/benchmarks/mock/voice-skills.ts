@@ -1,6 +1,12 @@
-import type { Benchmark, BenchmarkJourney, SkillFamily } from "../types";
+import type {
+  Benchmark,
+  BenchmarkJourney,
+  LeaderboardEntry,
+  SkillFamily,
+} from "../types";
 import families from "./voice-skills-families.json";
 import journeys from "./voice-skills-journeys.json";
+import results from "./voice-skills-results.json";
 
 export const voiceSkills: Benchmark = {
   slug: "voice-skills",
@@ -15,7 +21,7 @@ export const voiceSkills: Benchmark = {
     method: "mixed",
     summary:
       "Tool calls, the ending the call reached, timing and efficiency are checked in code. An LLM judge grades the skills that need judgement, one criterion each, and a model that hears audio grades voice style.",
-    runsPerCase: 3,
+    runsPerCase: 1,
   },
   dataset: {
     size: journeys.length,
@@ -28,22 +34,34 @@ export const voiceSkills: Benchmark = {
   },
   metrics: [
     {
-      id: "pass3",
-      label: "pass³",
-      pickLabel: "Most reliable",
+      id: "overall",
+      label: "Overall score",
+      pickLabel: "Best overall",
       unit: "percent",
       higherIsBetter: true,
       description:
-        "Share of journeys that reach an expected ending and pass every metric on all three calls.",
+        "The average of the five skill families. Each family is the average of its skills, and each skill is its average score over the journeys that test it.",
+      decimals: 1,
     },
     {
-      id: "efficiency",
-      label: "Efficiency",
-      pickLabel: "Most direct",
+      id: "completion",
+      label: "Calls completed",
+      pickLabel: "Most calls completed",
       unit: "percent",
       higherIsBetter: true,
       description:
-        "The fewest caller turns the journey allows, divided by the turns the call took.",
+        "Share of calls that reached an expected ending without the caller giving up or the agent crossing a line.",
+      decimals: 1,
+    },
+    {
+      id: "tools",
+      label: "Tool accuracy",
+      pickLabel: "Most accurate tool calls",
+      unit: "percent",
+      higherIsBetter: true,
+      description:
+        "Share of expected tool calls made with the right values, with nothing forbidden called.",
+      decimals: 1,
     },
     {
       id: "latency",
@@ -54,8 +72,26 @@ export const voiceSkills: Benchmark = {
       description: "Median time from end of caller speech to first agent audio.",
       decimals: 2,
     },
+    {
+      id: "cost",
+      label: "Cost per call",
+      pickLabel: "Cheapest call",
+      unit: "usd",
+      higherIsBetter: false,
+      description:
+        "What the model cost for one call, averaged over the journeys. Estimated from the length of the audio on each side at the provider's list prices.",
+      decimals: 3,
+    },
+    {
+      id: "costPerMinute",
+      label: "Cost per minute",
+      unit: "usd",
+      higherIsBetter: false,
+      description: "Model cost divided by the length of the call.",
+      decimals: 3,
+    },
   ],
-  primaryMetricId: "pass3",
+  primaryMetricId: "overall",
   tradeoffMetricId: "latency",
   segmentLabel: "Industry",
   segments: [
@@ -107,7 +143,7 @@ export const voiceSkills: Benchmark = {
         "Holding the line on security checks, privacy, advice, emergencies and instructions hidden in what the caller dictates.",
     },
   ],
-  entries: [],
+  entries: results as unknown as LeaderboardEntry[],
   methodology: [
     {
       title: "The caller is a graph",
@@ -126,8 +162,12 @@ export const voiceSkills: Benchmark = {
       body: "A call is graded only on the skills it tests, each with its own check, so a pass rate per skill is taken over the journeys that test it.",
     },
     {
-      title: "Three calls per journey",
-      body: "pass³ counts a journey only when all three calls pass, which separates reliable agents from lucky ones.",
+      title: "One reference agent, many models",
+      body: "Each model runs as the same agent: the same instructions, and the policy, records and tools of the journey it is on. Only the model changes.",
+    },
+    {
+      title: "One call per journey, for now",
+      body: "These first results are one call per journey. Three calls each, with a journey counted only when all three pass, come next.",
     },
   ],
   runSnippet: `from deepeval.benchmarks import VoiceSkills
@@ -147,9 +187,9 @@ print(benchmark.skill_scores)`,
         "A script carries on whatever the agent does. A graph lets the caller react: correct a wrong digit, get short after being asked twice, and hang up after a third time. That is what a real caller does, and it makes a weak agent's call longer and harder.",
     },
     {
-      question: "Why are there no results yet?",
+      question: "Why are the scores so low?",
       answer:
-        "This is a preview of the journeys and the grading. Models are added once their runs are complete and checked.",
+        "The callers are hard on purpose: strong accents, weak lines, noise, changed minds and requests the agent must refuse. Few calls are completed, so the overall score, which averages the skills, is what separates models today.",
     },
     {
       question: "Can I see exactly what the caller says?",

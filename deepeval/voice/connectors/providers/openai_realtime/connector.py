@@ -69,6 +69,9 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
         self.greets_first = greets_first
         self.transcription_model = transcription_model
         self.tool_timeout_s = tool_timeout_s
+        # Tokens the model was billed for, summed over the call. Kept in one
+        # dict so a clone made for the call reports into the same place.
+        self.usage: Dict[str, int] = {}
         self._spoken = ""
         self._continuing = False
         self._turn_tools: List[ToolCall] = []
@@ -235,6 +238,7 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
 
         if kind == "response.done":
             response = message.get("response") or {}
+            self._count_usage(response.get("usage") or {})
             calls = [
                 item
                 for item in response.get("output") or []
@@ -255,6 +259,22 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
                 (message.get("error") or {}).get("message"),
             )
         return None
+
+    def _count_usage(self, usage: dict) -> None:
+        spent = {
+            "responses": 1,
+            "input_tokens": usage.get("input_tokens", 0),
+            "output_tokens": usage.get("output_tokens", 0),
+        }
+        for side in ("input", "output"):
+            details = usage.get(f"{side}_token_details") or {}
+            for kind in ("audio_tokens", "text_tokens", "cached_tokens"):
+                spent[f"{side}_{kind}"] = details.get(kind, 0)
+            cached = details.get("cached_tokens_details") or {}
+            for kind in ("audio_tokens", "text_tokens"):
+                spent[f"{side}_cached_{kind}"] = cached.get(kind, 0)
+        for key, value in spent.items():
+            self.usage[key] = self.usage.get(key, 0) + (value or 0)
 
     def take_agent_speech_during_uplink(self) -> List[List[AgentEvent]]:
         waiting: List[AgentEvent] = []

@@ -160,6 +160,10 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             # Measured on the script as written, not on the shortcuts a
             # caller can take when asked things out of order.
             metadata["Shortest path"] = scripted
+        usage = getattr(voice_config.connector, "usage", None)
+        if usage:
+            metadata["Agent usage"] = dict(usage)
+            test_case.metadata = metadata
         self.test_cases.append(test_case)
 
         rows = []
