@@ -36,6 +36,9 @@ export type LeaderboardEntry = {
   segmentScores: Record<string, Record<string, number>>;
   // 0 to 100, higher is better, keyed by `BenchmarkSkill.id`.
   skillScores: Record<string, number>;
+  // The scores inside each skill, where a benchmark breaks its skills down:
+  // `subScores[skillId][label]`, 0 to 100.
+  subScores?: Record<string, Record<string, number>>;
   // Half-width of the 95% interval on the primary metric, in metric units.
   confidenceInterval?: number;
   openWeights?: boolean;

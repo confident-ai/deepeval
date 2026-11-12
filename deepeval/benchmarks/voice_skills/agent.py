@@ -8,7 +8,11 @@ import re
 from difflib import SequenceMatcher
 from typing import Any, Callable, Dict, List
 
-from deepeval.voice.connectors import OpenAIRealtimeConnector
+from deepeval.voice.connectors import (
+    BaseVoiceConnector,
+    OpenAIRealtimeConnector,
+    PhonicConnector,
+)
 
 INSTRUCTIONS = """You are the phone agent on the customer line of a company in this industry: {domain}. This is a live phone call.
 
@@ -121,8 +125,12 @@ def _handler(name: str, mock: Dict, expected: List[Dict]) -> Callable:
 
 def reference_agent(
     journey: Dict, model: str, dataset_path: str
-) -> OpenAIRealtimeConnector:
-    """The reference agent for one journey, run on `model`."""
+) -> BaseVoiceConnector:
+    """The reference agent for one journey, run on `model`.
+
+    A model named `phonic-...` runs on Phonic; anything else on OpenAI's
+    Realtime API.
+    """
     setup = journey.get("agent_setup") or {}
     results_path = os.path.join(dataset_path, "tool_results.json")
     results: Dict[str, Dict] = {}
@@ -152,7 +160,10 @@ def reference_agent(
     expected: Dict[str, List[Dict]] = {}
     for call in journey["expected_tools"]:
         expected.setdefault(call["name"], []).append(call["input_parameters"])
-    return OpenAIRealtimeConnector(
+    connector = (
+        PhonicConnector if model.startswith("phonic") else OpenAIRealtimeConnector
+    )
+    return connector(
         model=model,
         instructions=INSTRUCTIONS.format(
             domain=journey["domain"],

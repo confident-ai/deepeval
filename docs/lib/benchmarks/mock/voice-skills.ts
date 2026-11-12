@@ -10,7 +10,7 @@ import results from "./voice-skills-results.json";
 
 export const voiceSkills: Benchmark = {
   slug: "voice-skills",
-  name: "Voice Skills",
+  name: "DeepEval VoiceBench Hard",
   category: "voice-agents",
   tagline: "Does the caller get what they rang for, or hang up?",
   summary:
@@ -93,18 +93,12 @@ export const voiceSkills: Benchmark = {
   ],
   primaryMetricId: "overall",
   tradeoffMetricId: "latency",
-  segmentLabel: "Industry",
+  segmentLabel: "Line quality",
   segments: [
-    ["airline", "Airline"],
-    ["retail-bank", "Retail bank"],
-    ["energy-supplier", "Energy supplier"],
-    ["pharmacy", "Pharmacy"],
-    ["broadband", "Broadband"],
-    ["motor-insurance", "Motor insurance"],
-    ["hotel", "Hotel"],
-    ["parcel-delivery", "Parcel delivery"],
-    ["roadside-assistance", "Roadside assistance"],
-    ["online-retailer", "Online retailer"],
+    ["phone", "Phone line"],
+    ["landline", "Landline"],
+    ["speakerphone", "Speakerphone"],
+    ["mobile", "Weak mobile"],
   ].map(([id, label]) => ({
     id,
     label,

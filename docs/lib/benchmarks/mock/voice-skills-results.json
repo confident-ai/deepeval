@@ -12,76 +12,40 @@
   },
   "segmentScores": {
    "overall": {
-    "airline": 60.2,
-    "retail-bank": 54.4,
-    "energy-supplier": 53.1,
-    "pharmacy": 56.1,
-    "broadband": 54.4,
-    "online-retailer": 56.7,
-    "motor-insurance": 51.9,
-    "hotel": 51.3,
-    "parcel-delivery": 48.1,
-    "roadside-assistance": 51.8
+    "mobile": 50.5,
+    "speakerphone": 45.5,
+    "phone": 59.6,
+    "landline": 60.0
    },
    "completion": {
-    "airline": 30.0,
-    "retail-bank": 10.0,
-    "energy-supplier": 20.0,
-    "pharmacy": 0,
-    "broadband": 10.0,
-    "online-retailer": 30.0,
-    "motor-insurance": 10.0,
-    "hotel": 10.0,
-    "parcel-delivery": 11.1,
-    "roadside-assistance": 10.0
+    "mobile": 11.9,
+    "speakerphone": 7.1,
+    "phone": 18.5,
+    "landline": 20.0
    },
    "tools": {
-    "airline": 22.5,
-    "retail-bank": 27.0,
-    "energy-supplier": 23.5,
-    "pharmacy": 11.1,
-    "broadband": 19.7,
-    "online-retailer": 33.7,
-    "motor-insurance": 18.5,
-    "hotel": 16.7,
-    "parcel-delivery": 33.7,
-    "roadside-assistance": 2.5
+    "mobile": 11.4,
+    "speakerphone": 5.2,
+    "phone": 36.4,
+    "landline": 33.8
    },
    "latency": {
-    "airline": 1.2,
-    "retail-bank": 1.28,
-    "energy-supplier": 1.11,
-    "pharmacy": 1.23,
-    "broadband": 1.12,
-    "online-retailer": 1.26,
-    "motor-insurance": 1.34,
-    "hotel": 1.41,
-    "parcel-delivery": 1.34,
-    "roadside-assistance": 1.24
+    "mobile": 1.29,
+    "speakerphone": 1.16,
+    "phone": 1.29,
+    "landline": 1.18
    },
    "cost": {
-    "airline": 0.166,
-    "retail-bank": 0.153,
-    "energy-supplier": 0.188,
-    "pharmacy": 0.157,
-    "broadband": 0.14,
-    "online-retailer": 0.161,
-    "motor-insurance": 0.207,
-    "hotel": 0.158,
-    "parcel-delivery": 0.164,
-    "roadside-assistance": 0.116
+    "mobile": 0.143,
+    "speakerphone": 0.071,
+    "phone": 0.212,
+    "landline": 0.203
    },
    "costPerMinute": {
-    "airline": 0.062,
-    "retail-bank": 0.046,
-    "energy-supplier": 0.062,
-    "pharmacy": 0.056,
-    "broadband": 0.059,
-    "online-retailer": 0.056,
-    "motor-insurance": 0.056,
-    "hotel": 0.059,
-    "parcel-delivery": 0.043,
-    "roadside-assistance": 0.058
+    "mobile": 0.053,
+    "speakerphone": 0.051,
+    "phone": 0.062,
+    "landline": 0.051
    }
   },
   "skillScores": {
@@ -90,6 +54,63 @@
    "listening": 49,
    "turn-taking": 70,
    "boundaries": 60
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 60,
+    "Ambiguity resolution": 43,
+    "Cancellation handling": 36,
+    "Changing requests": 10,
+    "Consent verification": 60,
+    "Correction handling": 24,
+    "Efficiency": 14,
+    "False success": 41,
+    "Goal accuracy": 19,
+    "Human handoff": 51,
+    "Multi task": 32,
+    "Redundant reprompts": 67,
+    "Task completion": 14,
+    "Tool error handling": 31,
+    "Upset caller": 42
+   },
+   "speaking": {
+    "Audio integrity": 87,
+    "Language switching": 40,
+    "Numeric read back": 30,
+    "Style instructions": 78,
+    "Text normalization": 38
+   },
+   "listening": {
+    "Degraded line": 39,
+    "Emotion recognition": 51,
+    "Entity extraction": 21,
+    "Low confidence confirmation": 57,
+    "Multi speaker handling": 39,
+    "Non speech sounds": 37,
+    "Prosodic cues": 53,
+    "Side speech rejection": 50,
+    "Transcription accuracy": 64,
+    "Waiting through hold": 82
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 56,
+    "Dead air": 75,
+    "Echo": 100,
+    "Mid utterance pauses": 42,
+    "Overlapping speech": 55,
+    "Premature response": 95,
+    "Reply speed": 60,
+    "Tool latency": 79
+   },
+   "boundaries": {
+    "Authority claims": 70,
+    "Data minimization": 60,
+    "Emergency escalation": 57,
+    "Out of scope advice": 53,
+    "Privacy": 72,
+    "Prompt injection": 50,
+    "Required disclosure": 60
+   }
   },
   "confidenceInterval": 2.4,
   "evaluatedAt": "2026-11-11",
@@ -152,6 +173,179 @@
   }
  },
  {
+  "model": "Phonic 1",
+  "provider": "Phonic",
+  "scores": {
+   "overall": 47.8,
+   "completion": 8.2,
+   "tools": 21.7,
+   "latency": 1.17,
+   "cost": 0.161,
+   "costPerMinute": 0.06
+  },
+  "segmentScores": {
+   "overall": {
+    "mobile": 45.0,
+    "speakerphone": 33.0,
+    "phone": 50.5,
+    "landline": 60.9
+   },
+   "completion": {
+    "mobile": 7.7,
+    "speakerphone": 0,
+    "phone": 11.1,
+    "landline": 13.3
+   },
+   "tools": {
+    "mobile": 13.3,
+    "speakerphone": 21.1,
+    "phone": 28.0,
+    "landline": 32.9
+   },
+   "latency": {
+    "mobile": 1.12,
+    "speakerphone": 1.15,
+    "phone": 1.21,
+    "landline": 1.19
+   },
+   "cost": {
+    "mobile": 0.156,
+    "speakerphone": 0.097,
+    "phone": 0.177,
+    "landline": 0.216
+   },
+   "costPerMinute": {
+    "mobile": 0.06,
+    "speakerphone": 0.06,
+    "phone": 0.06,
+    "landline": 0.06
+   }
+  },
+  "skillScores": {
+   "task-handling": 32,
+   "speaking": 44,
+   "listening": 43,
+   "turn-taking": 68,
+   "boundaries": 52
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 60,
+    "Ambiguity resolution": 44,
+    "Cancellation handling": 19,
+    "Changing requests": 19,
+    "Consent verification": 41,
+    "Correction handling": 28,
+    "Efficiency": 7,
+    "False success": 31,
+    "Goal accuracy": 14,
+    "Human handoff": 48,
+    "Multi task": 19,
+    "Redundant reprompts": 73,
+    "Task completion": 8,
+    "Tool error handling": 25,
+    "Upset caller": 42
+   },
+   "speaking": {
+    "Audio integrity": 80,
+    "Language switching": 5,
+    "Numeric read back": 23,
+    "Style instructions": 74,
+    "Text normalization": 37
+   },
+   "listening": {
+    "Degraded line": 30,
+    "Emotion recognition": 46,
+    "Entity extraction": 22,
+    "Low confidence confirmation": 34,
+    "Multi speaker handling": 37,
+    "Non speech sounds": 37,
+    "Prosodic cues": 44,
+    "Side speech rejection": 41,
+    "Transcription accuracy": 59,
+    "Waiting through hold": 79
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 46,
+    "Dead air": 59,
+    "Echo": 100,
+    "Mid utterance pauses": 80,
+    "Overlapping speech": 27,
+    "Premature response": 83,
+    "Reply speed": 61,
+    "Tool latency": 87
+   },
+   "boundaries": {
+    "Authority claims": 58,
+    "Data minimization": 49,
+    "Emergency escalation": 37,
+    "Out of scope advice": 48,
+    "Privacy": 61,
+    "Prompt injection": 54,
+    "Required disclosure": 58
+   }
+  },
+  "confidenceInterval": 2.7,
+  "evaluatedAt": "2026-11-11",
+  "detail": {
+   "calls": 97,
+   "skills": {
+    "abandonment": 60,
+    "ambiguity_resolution": 44,
+    "audio_integrity": 80,
+    "authority_claims": 58,
+    "backchannel_vs_barge_in": 46,
+    "cancellation_handling": 19,
+    "changing_requests": 19,
+    "consent_verification": 41,
+    "correction_handling": 28,
+    "data_minimization": 49,
+    "dead_air": 59,
+    "degraded_line": 30,
+    "echo": 100,
+    "efficiency": 7,
+    "emergency_escalation": 37,
+    "emotion_recognition": 46,
+    "entity_extraction": 22,
+    "false_success": 31,
+    "goal_accuracy": 14,
+    "human_handoff": 48,
+    "language_switching": 5,
+    "low_confidence_confirmation": 34,
+    "mid_utterance_pauses": 80,
+    "multi_speaker_handling": 37,
+    "multi_task": 19,
+    "non_speech_sounds": 37,
+    "numeric_read_back": 23,
+    "out_of_scope_advice": 48,
+    "overlapping_speech": 27,
+    "premature_response": 83,
+    "privacy": 61,
+    "prompt_injection": 54,
+    "prosodic_cues": 44,
+    "redundant_reprompts": 73,
+    "reply_speed": 61,
+    "required_disclosure": 58,
+    "side_speech_rejection": 41,
+    "style_instructions": 74,
+    "task_completion": 8,
+    "text_normalization": 37,
+    "tool_error_handling": 25,
+    "tool_latency": 87,
+    "transcription_accuracy": 59,
+    "upset_caller": 42,
+    "waiting_through_hold": 79
+   },
+   "endings": {
+    "failed or gave up": 57,
+    "off script": 32,
+    "completed": 8
+   },
+   "short_answers_per_call": 1.78,
+   "caller_lines_per_call": 8.2
+  }
+ },
+ {
   "model": "GPT Realtime 2.1 Mini",
   "provider": "OpenAI",
   "scores": {
@@ -164,76 +358,40 @@
   },
   "segmentScores": {
    "overall": {
-    "airline": 43.4,
-    "retail-bank": 44.6,
-    "energy-supplier": 43.0,
-    "pharmacy": 41.4,
-    "broadband": 52.0,
-    "online-retailer": 43.6,
-    "motor-insurance": 41.4,
-    "hotel": 37.3,
-    "parcel-delivery": 41.3,
-    "roadside-assistance": 44.8
+    "mobile": 39.8,
+    "speakerphone": 36.3,
+    "phone": 48.4,
+    "landline": 54.5
    },
    "completion": {
-    "airline": 10.0,
-    "retail-bank": 10.0,
-    "energy-supplier": 10.0,
-    "pharmacy": 0,
-    "broadband": 0,
-    "online-retailer": 20.0,
-    "motor-insurance": 0,
-    "hotel": 0,
-    "parcel-delivery": 0,
-    "roadside-assistance": 10.0
+    "mobile": 2.4,
+    "speakerphone": 7.1,
+    "phone": 3.7,
+    "landline": 20.0
    },
    "tools": {
-    "airline": 4.5,
-    "retail-bank": 14.5,
-    "energy-supplier": 19.5,
-    "pharmacy": 11.1,
-    "broadband": 11.2,
-    "online-retailer": 15.0,
-    "motor-insurance": 22.5,
-    "hotel": 13.3,
-    "parcel-delivery": 9.6,
-    "roadside-assistance": 5.8
+    "mobile": 5.0,
+    "speakerphone": 5.2,
+    "phone": 23.5,
+    "landline": 22.2
    },
    "latency": {
-    "airline": 1.26,
-    "retail-bank": 1.17,
-    "energy-supplier": 1.22,
-    "pharmacy": 1.34,
-    "broadband": 1.16,
-    "online-retailer": 1.53,
-    "motor-insurance": 1.34,
-    "hotel": 1.26,
-    "parcel-delivery": 1.17,
-    "roadside-assistance": 1.13
+    "mobile": 1.26,
+    "speakerphone": 1.1,
+    "phone": 1.25,
+    "landline": 1.33
    },
    "cost": {
-    "airline": 0.062,
-    "retail-bank": 0.069,
-    "energy-supplier": 0.066,
-    "pharmacy": 0.071,
-    "broadband": 0.069,
-    "online-retailer": 0.067,
-    "motor-insurance": 0.071,
-    "hotel": 0.051,
-    "parcel-delivery": 0.056,
-    "roadside-assistance": 0.048
+    "mobile": 0.061,
+    "speakerphone": 0.022,
+    "phone": 0.074,
+    "landline": 0.089
    },
    "costPerMinute": {
-    "airline": 0.02,
-    "retail-bank": 0.02,
-    "energy-supplier": 0.02,
-    "pharmacy": 0.02,
-    "broadband": 0.018,
-    "online-retailer": 0.02,
-    "motor-insurance": 0.017,
-    "hotel": 0.019,
-    "parcel-delivery": 0.02,
-    "roadside-assistance": 0.019
+    "mobile": 0.019,
+    "speakerphone": 0.015,
+    "phone": 0.019,
+    "landline": 0.021
    }
   },
   "skillScores": {
@@ -242,6 +400,63 @@
    "listening": 38,
    "turn-taking": 67,
    "boundaries": 43
+  },
+  "subScores": {
+   "task-handling": {
+    "Abandonment": 44,
+    "Ambiguity resolution": 31,
+    "Cancellation handling": 30,
+    "Changing requests": 9,
+    "Consent verification": 39,
+    "Correction handling": 17,
+    "Efficiency": 6,
+    "False success": 33,
+    "Goal accuracy": 21,
+    "Human handoff": 37,
+    "Multi task": 23,
+    "Redundant reprompts": 63,
+    "Task completion": 6,
+    "Tool error handling": 18,
+    "Upset caller": 40
+   },
+   "speaking": {
+    "Audio integrity": 84,
+    "Language switching": 22,
+    "Numeric read back": 23,
+    "Style instructions": 74,
+    "Text normalization": 26
+   },
+   "listening": {
+    "Degraded line": 28,
+    "Emotion recognition": 37,
+    "Entity extraction": 13,
+    "Low confidence confirmation": 34,
+    "Multi speaker handling": 36,
+    "Non speech sounds": 25,
+    "Prosodic cues": 37,
+    "Side speech rejection": 34,
+    "Transcription accuracy": 62,
+    "Waiting through hold": 78
+   },
+   "turn-taking": {
+    "Backchannel vs barge in": 58,
+    "Dead air": 58,
+    "Echo": 100,
+    "Mid utterance pauses": 30,
+    "Overlapping speech": 64,
+    "Premature response": 94,
+    "Reply speed": 59,
+    "Tool latency": 75
+   },
+   "boundaries": {
+    "Authority claims": 48,
+    "Data minimization": 41,
+    "Emergency escalation": 27,
+    "Out of scope advice": 34,
+    "Privacy": 58,
+    "Prompt injection": 40,
+    "Required disclosure": 50
+   }
   },
   "confidenceInterval": 2.3,
   "evaluatedAt": "2026-11-11",

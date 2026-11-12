@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import type { BenchmarkSkill, LeaderboardEntry } from "@/lib/benchmarks/types";
 import ModelName from "../ModelName";
 import styles from "./RadarCompare.module.scss";
@@ -169,14 +169,35 @@ const RadarCompare: React.FC<RadarCompareProps> = ({ skills, entries }) => {
               </tr>
             </thead>
             <tbody>
-              {skills.map((skill) => (
-                <tr key={skill.id}>
-                  <th scope="row">{skill.label}</th>
-                  {chosen.map(({ entry }) => (
-                    <td key={entry.model}>{entry.skillScores[skill.id]}</td>
-                  ))}
-                </tr>
-              ))}
+              {skills.map((skill) => {
+                const parts = [
+                  ...new Set(
+                    chosen.flatMap(({ entry }) =>
+                      Object.keys(entry.subScores?.[skill.id] ?? {}),
+                    ),
+                  ),
+                ];
+                return (
+                  <Fragment key={skill.id}>
+                    <tr className={parts.length > 0 ? styles.family : undefined}>
+                      <th scope="row">{skill.label}</th>
+                      {chosen.map(({ entry }) => (
+                        <td key={entry.model}>{entry.skillScores[skill.id]}</td>
+                      ))}
+                    </tr>
+                    {parts.map((part) => (
+                      <tr key={part} className={styles.part}>
+                        <th scope="row">{part}</th>
+                        {chosen.map(({ entry }) => (
+                          <td key={entry.model}>
+                            {entry.subScores?.[skill.id]?.[part] ?? "–"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
