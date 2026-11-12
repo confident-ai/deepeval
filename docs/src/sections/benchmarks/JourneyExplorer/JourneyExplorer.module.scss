@@ -19,8 +19,35 @@
 }
 
 .filters {
-  display: grid;
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+
+  label {
+    display: grid;
+    gap: 0.3rem;
+    font-size: 12px;
+    color: var(--color-fd-muted-foreground);
+  }
+
+  select {
+    min-width: 15rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--color-fd-border);
+    border-radius: 0;
+    background: var(--color-fd-card);
+    font: inherit;
+    font-size: 13px;
+    color: var(--color-fd-foreground);
+  }
+}
+
+.found {
+  margin-left: auto;
+  padding-bottom: 0.5rem;
+  font-size: 13px;
+  color: var(--color-fd-muted-foreground);
 }
 
 .tested {

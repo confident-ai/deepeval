@@ -2460,7 +2460,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -4873,7 +4873,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -8632,7 +8632,7 @@
     },
     {
      "id": "restart",
-     "label": "Restart",
+     "label": "Agent started over",
      "kind": "state",
      "lineIds": [
       "restart"
@@ -13388,7 +13388,7 @@
     },
     {
      "id": "literal",
-     "label": "Literal",
+     "label": "Taken literally",
      "kind": "correction",
      "lineIds": [
       "literal"
@@ -14397,7 +14397,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -15322,7 +15322,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -16291,7 +16291,7 @@
     },
     {
      "id": "pressed",
-     "label": "Pressed",
+     "label": "Agent pressed",
      "kind": "correction",
      "lineIds": [
       "pressed"
@@ -16351,7 +16351,7 @@
     },
     {
      "id": "brushed_off",
-     "label": "Brushed off",
+     "label": "Agent brushed it off",
      "kind": "correction",
      "lineIds": [
       "brushed_off"
@@ -17435,7 +17435,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -18330,7 +18330,7 @@
     },
     {
      "id": "argue",
-     "label": "Argue",
+     "label": "Agent argued",
      "kind": "correction",
      "lineIds": [
       "argue"
@@ -19231,7 +19231,7 @@
     },
     {
      "id": "lost",
-     "label": "Lost",
+     "label": "Agent lost track",
      "kind": "correction",
      "lineIds": [
       "lost"
@@ -20118,7 +20118,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -25738,7 +25738,7 @@
     },
     {
      "id": "routine",
-     "label": "Routine",
+     "label": "Agent carried on",
      "kind": "correction",
      "lineIds": [
       "routine"
@@ -26657,7 +26657,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -27898,7 +27898,7 @@
     },
     {
      "id": "pushed",
-     "label": "Pushed",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushed"
@@ -28862,7 +28862,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -28910,7 +28910,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -31346,7 +31346,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -32410,7 +32410,7 @@
     },
     {
      "id": "routine",
-     "label": "Routine",
+     "label": "Agent carried on",
      "kind": "correction",
      "lineIds": [
       "routine"
@@ -33795,7 +33795,7 @@
     },
     {
      "id": "unclear",
-     "label": "Unclear",
+     "label": "Agent was unclear",
      "kind": "correction",
      "lineIds": [
       "unclear"
@@ -33879,7 +33879,7 @@
     },
     {
      "id": "deflect",
-     "label": "Deflect",
+     "label": "Agent deflected",
      "kind": "correction",
      "lineIds": [
       "deflect"
@@ -37191,7 +37191,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -38158,7 +38158,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -40279,7 +40279,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -42283,7 +42283,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -44668,7 +44668,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -44692,7 +44692,7 @@
     },
     {
      "id": "unclear",
-     "label": "Unclear",
+     "label": "Agent was unclear",
      "kind": "correction",
      "lineIds": [
       "unclear"
@@ -44716,7 +44716,7 @@
     },
     {
      "id": "cold",
-     "label": "Cold",
+     "label": "Agent was cold",
      "kind": "correction",
      "lineIds": [
       "cold"
@@ -45929,7 +45929,7 @@
     },
     {
      "id": "pushed",
-     "label": "Pushed",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushed"
@@ -45965,7 +45965,7 @@
     },
     {
      "id": "refused",
-     "label": "Refused",
+     "label": "Agent refused",
      "kind": "correction",
      "lineIds": [
       "refused"
@@ -50241,7 +50241,7 @@
     },
     {
      "id": "literal",
-     "label": "Literal",
+     "label": "Taken literally",
      "kind": "correction",
      "lineIds": [
       "literal"
@@ -50289,7 +50289,7 @@
     },
     {
      "id": "deflect",
-     "label": "Deflect",
+     "label": "Agent deflected",
      "kind": "correction",
      "lineIds": [
       "deflect"
@@ -51319,7 +51319,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -53537,7 +53537,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -53549,7 +53549,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -54826,7 +54826,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -54910,7 +54910,7 @@
     },
     {
      "id": "pressed",
-     "label": "Pressed",
+     "label": "Agent pressed",
      "kind": "correction",
      "lineIds": [
       "pressed"
@@ -55824,7 +55824,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -58124,7 +58124,7 @@
     },
     {
      "id": "took_literally",
-     "label": "Took literally",
+     "label": "Taken literally",
      "kind": "correction",
      "lineIds": [
       "took_literally"
@@ -58160,7 +58160,7 @@
     },
     {
      "id": "stall",
-     "label": "Stall",
+     "label": "Agent stalled",
      "kind": "correction",
      "lineIds": [
       "stall"
@@ -59110,7 +59110,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -60429,7 +60429,7 @@
     },
     {
      "id": "cold",
-     "label": "Cold",
+     "label": "Agent was cold",
      "kind": "correction",
      "lineIds": [
       "cold"
@@ -61631,7 +61631,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -62470,7 +62470,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -63725,7 +63725,7 @@
     },
     {
      "id": "pushy",
-     "label": "Pushy",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushy"
@@ -64835,7 +64835,7 @@
     },
     {
      "id": "routine",
-     "label": "Routine",
+     "label": "Agent carried on",
      "kind": "correction",
      "lineIds": [
       "routine"
@@ -64859,7 +64859,7 @@
     },
     {
      "id": "unclear",
-     "label": "Unclear",
+     "label": "Agent was unclear",
      "kind": "correction",
      "lineIds": [
       "unclear"
@@ -65871,7 +65871,7 @@
     },
     {
      "id": "refused",
-     "label": "Refused",
+     "label": "Agent refused",
      "kind": "correction",
      "lineIds": [
       "refused"
@@ -70330,7 +70330,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -71691,7 +71691,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -72809,7 +72809,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -72893,7 +72893,7 @@
     },
     {
      "id": "pushy",
-     "label": "Pushy",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushy"
@@ -74231,7 +74231,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -75192,7 +75192,7 @@
     },
     {
      "id": "cold",
-     "label": "Cold",
+     "label": "Agent was cold",
      "kind": "correction",
      "lineIds": [
       "cold"
@@ -79579,7 +79579,7 @@
     },
     {
      "id": "routine",
-     "label": "Routine",
+     "label": "Agent carried on",
      "kind": "correction",
      "lineIds": [
       "routine"
@@ -80506,7 +80506,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -80566,7 +80566,7 @@
     },
     {
      "id": "pushed",
-     "label": "Pushed",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushed"
@@ -84859,7 +84859,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -87179,7 +87179,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -91760,7 +91760,7 @@
     },
     {
      "id": "brushed_off",
-     "label": "Brushed off",
+     "label": "Agent brushed it off",
      "kind": "correction",
      "lineIds": [
       "brushed_off"
@@ -92828,7 +92828,7 @@
     },
     {
      "id": "argue",
-     "label": "Argue",
+     "label": "Agent argued",
      "kind": "correction",
      "lineIds": [
       "argue"
@@ -92888,7 +92888,7 @@
     },
     {
      "id": "deflect",
-     "label": "Deflect",
+     "label": "Agent deflected",
      "kind": "correction",
      "lineIds": [
       "deflect"
@@ -94877,7 +94877,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -96180,7 +96180,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -96204,7 +96204,7 @@
     },
     {
      "id": "repeat",
-     "label": "Repeat",
+     "label": "Asked to repeat",
      "kind": "correction",
      "lineIds": [
       "repeat"
@@ -96252,7 +96252,7 @@
     },
     {
      "id": "restart",
-     "label": "Restart",
+     "label": "Agent started over",
      "kind": "correction",
      "lineIds": [
       "restart"
@@ -99610,7 +99610,7 @@
     },
     {
      "id": "pushed",
-     "label": "Pushed",
+     "label": "Agent pushed",
      "kind": "correction",
      "lineIds": [
       "pushed"
@@ -99694,7 +99694,7 @@
     },
     {
      "id": "lost",
-     "label": "Lost",
+     "label": "Agent lost track",
      "kind": "correction",
      "lineIds": [
       "lost"
@@ -101805,7 +101805,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -103918,7 +103918,7 @@
     },
     {
      "id": "english",
-     "label": "English",
+     "label": "Agent stayed in English",
      "kind": "correction",
      "lineIds": [
       "english"
@@ -105092,7 +105092,7 @@
     },
     {
      "id": "restart",
-     "label": "Restart",
+     "label": "Agent started over",
      "kind": "correction",
      "lineIds": [
       "restart"
@@ -107287,7 +107287,7 @@
     },
     {
      "id": "ignored",
-     "label": "Ignored",
+     "label": "Agent ignored it",
      "kind": "correction",
      "lineIds": [
       "ignored"
@@ -107323,7 +107323,7 @@
     },
     {
      "id": "assumed",
-     "label": "Assumed",
+     "label": "Agent assumed",
      "kind": "correction",
      "lineIds": [
       "assumed"
@@ -107347,7 +107347,7 @@
     },
     {
      "id": "cold",
-     "label": "Cold",
+     "label": "Agent was cold",
      "kind": "correction",
      "lineIds": [
       "cold"
@@ -108300,7 +108300,7 @@
     },
     {
      "id": "took_literally",
-     "label": "Took literally",
+     "label": "Taken literally",
      "kind": "correction",
      "lineIds": [
       "took_literally"
@@ -108384,7 +108384,7 @@
     },
     {
      "id": "stall",
-     "label": "Stall",
+     "label": "Agent stalled",
      "kind": "correction",
      "lineIds": [
       "stall"

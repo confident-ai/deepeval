@@ -6,7 +6,6 @@ import type {
   BenchmarkSegment,
   SkillFamily,
 } from "@/lib/benchmarks/types";
-import FilterPills, { type PillOption } from "../FilterPills";
 import JourneyGraph from "../JourneyGraph";
 import styles from "./JourneyExplorer.module.scss";
 
@@ -23,65 +22,74 @@ const JourneyExplorer: React.FC<JourneyExplorerProps> = ({
   segments,
   families,
 }) => {
-  const [familyId, setFamilyId] = useState(ALL);
-  const [skillId, setSkillId] = useState(ALL);
+  const [skill, setSkill] = useState(ALL);
+  const [condition, setCondition] = useState(ALL);
   const [activeId, setActiveId] = useState(journeys[0].id);
 
-  const testing = (skills: string[]) =>
-    journeys.filter((journey) =>
-      skills.some((skill) => journey.skills.includes(skill)),
-    );
-  const skillsOf = (family: SkillFamily) =>
-    family.skills.map((skill) => skill.id);
+  const matches = (
+    journey: BenchmarkJourney,
+    wantedSkill: string,
+    wantedCondition: string,
+  ) =>
+    (wantedSkill === ALL || journey.skills.includes(wantedSkill)) &&
+    (wantedCondition === ALL || journey.conditions.includes(wantedCondition));
+  const count = (wantedSkill: string, wantedCondition: string) =>
+    journeys.filter((journey) => matches(journey, wantedSkill, wantedCondition))
+      .length;
 
-  const family = families.find((candidate) => candidate.id === familyId);
-  const familyPills: PillOption<string>[] = [
-    { id: ALL, label: "All", count: journeys.length },
-    ...families.map((candidate) => ({
-      id: candidate.id,
-      label: candidate.label,
-      count: testing(skillsOf(candidate)).length,
-    })),
-  ];
-  const skillPills: PillOption<string>[] = family
-    ? [
-        { id: ALL, label: "Any", count: testing(skillsOf(family)).length },
-        ...family.skills.map((skill) => ({
-          id: skill.id,
-          label: skill.label,
-          count: testing([skill.id]).length,
-        })),
-      ]
-    : [];
+  const conditions = [
+    ...new Set(journeys.flatMap((journey) => journey.conditions)),
+  ]
+    .map((name) => ({ name, total: count(ALL, name) }))
+    .sort((a, b) => b.total - a.total);
 
   const topics = new Map(
     segments.map((segment) => [segment.id, segment.label]),
   );
-  const shown = !family
-    ? journeys
-    : testing(skillId === ALL ? skillsOf(family) : [skillId]);
+  const matching = journeys.filter((journey) =>
+    matches(journey, skill, condition),
+  );
+  const shown = matching.length > 0 ? matching : journeys;
   const active = shown.find((journey) => journey.id === activeId) ?? shown[0];
 
   return (
     <div className={styles.explorer}>
       <div className={styles.filters}>
-        <FilterPills
-          options={familyPills}
-          value={familyId}
-          onChange={(id) => {
-            setFamilyId(id);
-            setSkillId(ALL);
-          }}
-          label="What is tested"
-        />
-        {family && (
-          <FilterPills
-            options={skillPills}
-            value={skillId}
-            onChange={setSkillId}
-            label="Skill"
-          />
-        )}
+        <label>
+          Skills tested
+          <select
+            value={skill}
+            onChange={(event) => setSkill(event.target.value)}
+          >
+            <option value={ALL}>All skills ({count(ALL, condition)})</option>
+            {families.map((family) => (
+              <optgroup key={family.id} label={family.label}>
+                {family.skills.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label} ({count(option.id, condition)})
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <label>
+          Call conditions
+          <select
+            value={condition}
+            onChange={(event) => setCondition(event.target.value)}
+          >
+            <option value={ALL}>All conditions ({count(skill, ALL)})</option>
+            {conditions.map(({ name }) => (
+              <option key={name} value={name}>
+                {name} ({count(skill, name)})
+              </option>
+            ))}
+          </select>
+        </label>
+        <span className={styles.found}>
+          {matching.length} of {journeys.length} journeys
+        </span>
       </div>
 
       <div className={styles.wrap}>
