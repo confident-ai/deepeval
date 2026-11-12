@@ -61,15 +61,25 @@ class ConversationalBaseNode(PromptMixin):
                 start, end = self.turn_window
             else:
                 start, end = 0, len(test_case.turns) - 1
+            turn_params = [
+                param
+                for param in self.evaluation_params
+                if param.value in Turn.model_fields
+            ]
             text += "Full Conversation: \n"
             for index in range(start, end + 1):
                 turn = test_case.turns[index]
-                for param in self.evaluation_params:
+                for param in turn_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
                         value = repr(value)
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
+            for param in self.evaluation_params:
+                if param in turn_params:
+                    continue
+                value = getattr(test_case, param.value)
+                text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n\n"
         return text
 
 

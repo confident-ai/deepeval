@@ -797,3 +797,33 @@ class TestConversationalGEvalLeaf:
 
         assert copied.strict_mode is False
         assert copied.threshold == 0.9
+
+
+def test_task_node_renders_conversation_level_params_once():
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="Where is Dr. Lee?"),
+            Turn(role="assistant", content="Room 4."),
+        ],
+        context=["Dr. Lee is in room 4"],
+        user_description="A patient",
+        chatbot_role="A receptionist",
+    )
+    node = ConversationalTaskNode(
+        instructions="Summarize",
+        output_label="Summary",
+        children=[],
+        evaluation_params=[
+            MultiTurnParams.CONTENT,
+            MultiTurnParams.CONTEXT,
+            MultiTurnParams.USER_DESCRIPTION,
+            MultiTurnParams.CHATBOT_ROLE,
+        ],
+    )
+
+    text = node._resolve_text(test_case, None, {})
+
+    assert text.count("Content:") == 2
+    assert text.count("Context:\n['Dr. Lee is in room 4']") == 1
+    assert text.count("User Description:\nA patient") == 1
+    assert text.count("Chatbot Role:\nA receptionist") == 1
