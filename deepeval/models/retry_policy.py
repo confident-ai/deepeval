@@ -772,6 +772,10 @@ DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
 KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
 LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
 OPENROUTER_ERROR_POLICY = OPENAI_ERROR_POLICY
+# The Grid AI is reached through the OpenAI SDK (OpenAI-compatible gateway), so it
+# shares OpenAI's error taxonomy.
+THEGRID_ERROR_POLICY = OPENAI_ERROR_POLICY
+
 # Portkey is reached through the OpenAI SDK (OpenAI-compatible gateway), so it
 # raises the same exception classes and shares OpenAI's retry classification.
 PORTKEY_ERROR_POLICY = OPENAI_ERROR_POLICY
@@ -1080,6 +1084,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.OPENROUTER.value: OPENROUTER_ERROR_POLICY,
     PS.PORTKEY.value: PORTKEY_ERROR_POLICY,
     PS.TYPESAFE.value: TYPESAFE_ERROR_POLICY,
+    PS.THEGRID.value: THEGRID_ERROR_POLICY,
     PS.ASSEMBLYAI.value: SPEECH_ERROR_POLICY,
     PS.CARTESIA.value: SPEECH_ERROR_POLICY,
     PS.DEEPGRAM.value: SPEECH_ERROR_POLICY,
@@ -1108,6 +1113,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.OPENROUTER.value: _opt_pred(OPENROUTER_ERROR_POLICY),
     PS.PORTKEY.value: _opt_pred(PORTKEY_ERROR_POLICY),
     PS.TYPESAFE.value: _opt_pred(TYPESAFE_ERROR_POLICY),
+    PS.THEGRID.value: _opt_pred(THEGRID_ERROR_POLICY),
     PS.ASSEMBLYAI.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.CARTESIA.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.DEEPGRAM.value: _opt_pred(SPEECH_ERROR_POLICY),
