@@ -91,6 +91,26 @@ def _says(dataset_path: str, text: str, audio: Optional[str]):
     return action
 
 
+REPEAT_WHEN = (
+    "The agent asks the caller to repeat or confirm what they just said, or "
+    "says it did not catch it or could not find it"
+)
+
+
+def _repeats(dataset_path: str, recordings: Dict[str, Optional[str]]):
+    """Says the caller's last line again, the way a person asked to would."""
+
+    def action(last_user_turn: Optional[Turn] = None) -> Turn:
+        text = last_user_turn.content if last_user_turn else ""
+        return Turn(
+            role="user",
+            content=text,
+            audio=_recording(dataset_path, recordings.get(text)),
+        )
+
+    return action
+
+
 def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
     graph = journey["graph"]
     nodes: Dict[str, SimulationNode] = {}
@@ -141,6 +161,31 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
             then=nodes[reaction["after_max_visits"]],
         )
     fallback = graph.get("catch_all")
+    asked_again = {reaction["id"] for reaction in graph.get("reactions", [])}
+    if fallback and "reask" not in asked_again:
+        # A journey with no line for being asked again still has a caller
+        # who would repeat themselves twice before giving up.
+        recordings = {
+            line["say"]: line.get("audio")
+            for line in graph["nodes"] + graph.get("reactions", [])
+        }
+        root.add_reaction(
+            SimulationNode(
+                action=_repeats(dataset_path, recordings),
+                name="repeat",
+                max_visits=2,
+            ),
+            when=REPEAT_WHEN,
+            then=SimulationNode(
+                action=_says(
+                    dataset_path, fallback["say"], fallback.get("audio")
+                ),
+                name="gave_up_repeating",
+                terminal=True,
+                ending="off_script",
+                fails=True,
+            ),
+        )
     if fallback:
         root.off_script(
             SimulationNode(

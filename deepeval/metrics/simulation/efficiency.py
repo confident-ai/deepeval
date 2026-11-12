@@ -36,6 +36,12 @@ class SimulationEfficiencyMetric(BaseVoiceMetric):
                 "that is not a failure.",
                 {},
             )
+        if metadata.get("Simulation failed"):
+            return (
+                0.0,
+                "The call failed, so how quickly it went does not count.",
+                {},
+            )
         user_turns = sum(
             1
             for turn in test_case.turns

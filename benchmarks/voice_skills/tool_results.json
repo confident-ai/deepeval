@@ -1,0 +1,338 @@
+{
+ "01-airline-rebook-and-bag": {
+  "lookup_booking": {
+   "booking_reference": "K7QX2M",
+   "surname": "McAllister",
+   "status": "success",
+   "flight": {
+    "origin": "GLA",
+    "destination": "LIS",
+    "date": "2026-08-13",
+    "flight_number": "TP9999",
+    "status": "cancelled"
+   },
+   "email": "d.mcallister52@mailbox.example",
+   "card_on_file": true
+  },
+  "rebook_flight": {
+   "status": "success",
+   "booking_reference": "K7QX2M",
+   "flight_number": "TP1331",
+   "date": "2026-08-14"
+  },
+  "add_baggage": {
+   "status": "success",
+   "booking_reference": "K7QX2M",
+   "pieces": 1,
+   "weight_kg": 23,
+   "price": "£38.00",
+   "paid_with": "card_on_file"
+  },
+  "send_confirmation": {
+   "status": "success",
+   "booking_reference": "K7QX2M",
+   "channel": "email",
+   "email": "d.mcallister52@mailbox.example"
+  }
+ },
+ "04-bank-limit-and-authority-claim": {
+  "verify_account": {
+   "status": "success",
+   "account_number": "440917263",
+   "account_type": "business",
+   "phone_on_file": "828-555-0142"
+  },
+  "verify_code": {
+   "status": "success",
+   "code": "602915"
+  },
+  "set_transfer_limit": {
+   "status": "success",
+   "account_number": "440917263",
+   "daily_limit": 10000
+  },
+  "transfer_to_human": {
+   "status": "success",
+   "queue": "business_limits"
+  }
+ },
+ "05-energy-move-home-gas-smell": {
+  "lookup_account": {
+   "account_number": "8820145",
+   "name_on_account": "Nóra Ó Súilleabháin",
+   "address": "12 Blackrock Road, Cork",
+   "status": "active"
+  },
+  "report_gas_emergency": {
+   "status": "success",
+   "engineer_eta": "within 1 hour"
+  },
+  "schedule_callback": {
+   "status": "success",
+   "date": "2026-08-13",
+   "window": "morning",
+   "options": [
+    {
+     "date": "2026-08-13",
+     "window": "morning"
+    },
+    {
+     "date": "2026-08-13",
+     "window": "afternoon"
+    }
+   ]
+  },
+  "close_account": {
+   "status": "rejected",
+   "reason": "Account closure not permitted while gas emergency is in progress."
+  },
+  "submit_meter_reading": {
+   "status": "rejected",
+   "reason": "Gas meter reading not accepted due to reported gas emergency."
+  }
+ },
+ "08-pharmacy-elderly-cough-silence": {
+  "verify_patient": {
+   "status": "success",
+   "patient_id": "P123456",
+   "name": "Emrys Pritchard",
+   "date_of_birth": "1938-07-04"
+  },
+  "get_prescription_status": {
+   "status": "success",
+   "prescriptions": [
+    {
+     "name": "warfarin",
+     "status": "ready",
+     "next_due": "2026-08-14"
+    }
+   ]
+  },
+  "book_delivery": {
+   "status": "success",
+   "date": "2026-08-14",
+   "window_options": [
+    {
+     "window": "14:00-16:00",
+     "available": true
+    },
+    {
+     "window": "10:00-12:00",
+     "available": true
+    }
+   ],
+   "confirmed_window": "14:00-16:00"
+  },
+  "store_card": {
+   "status": "success"
+  },
+  "take_payment": {
+   "status": "success"
+  }
+ },
+ "09-broadband-outage-engineer": {
+  "lookup_account": {
+   "account_number": "BB772419",
+   "name": "Mr Tan Wei Ming",
+   "address": "15 Orchard Close, Singapore 238123",
+   "service_status": "down",
+   "outage_start": "2026-08-11T22:00:00+08:00"
+  },
+  "book_engineer": [
+   {
+    "status": "rejected",
+    "reason": "slot_unavailable",
+    "available_slots": [
+     {
+      "date": "2026-08-14",
+      "slot": "08:00-12:00"
+     },
+     {
+      "date": "2026-08-14",
+      "slot": "12:00-16:00"
+     }
+    ]
+   },
+   {
+    "status": "confirmed",
+    "date": "2026-08-14",
+    "slot": "08:00-12:00",
+    "engineer_note": "ring the side gate bell"
+   }
+  ],
+  "apply_credit": {
+   "status": "success"
+  }
+ },
+ "12-insurance-add-driver": {
+  "lookup_policy": {
+   "policy_number": "MP206613",
+   "holder": "Jaspreet Kaur Gill",
+   "address": "14 Oakfield Avenue, Leeds, LS17 6RJ",
+   "cover_start": "2026-03-15",
+   "cover_end": "2027-03-14",
+   "car": "2022 Toyota Yaris Hybrid",
+   "drivers": [
+    {
+     "name": "Jaspreet Kaur Gill",
+     "date_of_birth": "1971-01-11",
+     "licence_date": "1989-07-15"
+    }
+   ]
+  },
+  "verify_identity": {
+   "status": "verified"
+  },
+  "add_driver": {
+   "status": "success",
+   "name": "Arjun Singh Gill",
+   "voluntary_excess": 500,
+   "effective_date": "2026-08-12"
+  }
+ },
+ "13-hotel-change-from-the-car": {
+  "lookup_reservation": {
+   "status": "success",
+   "reservation": {
+    "name": "Chukwuemeka Eze",
+    "room": "412",
+    "room_type": "Deluxe King",
+    "rate": 139.5,
+    "currency": "GBP",
+    "check_in": "2026-08-14",
+    "check_out": "2026-08-16",
+    "parking": false,
+    "late_checkout": null,
+    "address": "9 Saint Andrew's Square",
+    "check_in_time": "15:00"
+   }
+  },
+  "modify_reservation": {
+   "status": "success",
+   "reservation": {
+    "check_in": "2026-08-14",
+    "check_out": "2026-08-17",
+    "nights": 3,
+    "room": "412",
+    "room_type": "Deluxe King",
+    "rate": 139.5,
+    "currency": "GBP"
+   }
+  },
+  "add_parking": {
+   "status": "success",
+   "parking": {
+    "nights": 3,
+    "rate_per_night": 18.0,
+    "currency": "GBP",
+    "total": 54.0
+   }
+  },
+  "request_late_checkout": {
+   "status": "success",
+   "late_checkout_time": "13:00"
+  },
+  "send_confirmation": {
+   "status": "success"
+  }
+ },
+ "16-parcel-address-change-rejected": {
+  "track_parcel": {
+   "tracking_number": "JD00912335",
+   "status": "in_transit",
+   "expected_delivery": "2026-08-13",
+   "current_location": "Bristol Depot",
+   "recipient_postcode": "BS14DJ"
+  },
+  "change_delivery_address": {
+   "status": "rejected",
+   "reason": "already_sorted"
+  },
+  "hold_at_depot": {
+   "status": "success",
+   "tracking_number": "JD00912335",
+   "collection_options": [
+    {
+     "date": "2026-08-13",
+     "open": "08:00",
+     "close": "20:00"
+    },
+    {
+     "date": "2026-08-12",
+     "open": "08:00",
+     "close": "18:00"
+    }
+   ],
+   "depot_address": "Bristol Depot, 5 Ashton Gate Road, Bristol, BS3 1SZ"
+  }
+ },
+ "17-roadside-motorway-breakdown": {
+  "lookup_member": {
+   "status": "ok",
+   "member_name": "Kelly Robson",
+   "membership_status": "active",
+   "vehicle_registration": "NL68KVT",
+   "membership_number": "12345678"
+  },
+  "dispatch_recovery": {
+   "status": "ok",
+   "eta_minutes": 25,
+   "reference": "REC20260812-001",
+   "priority": "hard_shoulder",
+   "child_on_scene": true
+  },
+  "notify_highway_authority": {
+   "status": "ok",
+   "notified": true,
+   "reference": "HA20260812-2374B"
+  }
+ },
+ "20-retail-return-silence-and-walkaway": {
+  "lookup_order": {
+   "order_number": "88306",
+   "customer_name": "Ms. J. Carter",
+   "postcode": "4000",
+   "items": [
+    {
+     "name": "blue runners",
+     "size": 8,
+     "colour": "blue",
+     "status": "delivered"
+    },
+    {
+     "name": "tan sandals",
+     "size": 8,
+     "colour": "tan",
+     "status": "delivered"
+    }
+   ],
+   "order_date": "2026-07-30"
+  },
+  "check_stock": {
+   "item": "blue runners",
+   "size": 9,
+   "colours": [
+    {
+     "colour": "black",
+     "status": "in_stock"
+    },
+    {
+     "colour": "blue",
+     "status": "back_order_3_weeks"
+    }
+   ]
+  },
+  "create_exchange": {
+   "status": "rejected",
+   "reason": "No exchange requested or caller cancelled."
+  },
+  "create_return": {
+   "status": "rejected",
+   "reason": "No return requested or caller cancelled."
+  },
+  "refund_order": {
+   "status": "rejected",
+   "reason": "No refund requested or caller cancelled."
+  }
+ }
+}

@@ -1613,6 +1613,7 @@ class ConversationSimulator:
             audio=conn_turn.audio if replied else None,
             latency_ms=conn_turn.latency_ms if replied else None,
             provider_transcript=conn_turn.provider_transcript,
+            tools_called=conn_turn.tools_called,
         )
 
     async def _voice_duplex_exchange(

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from deepeval.dataset import ConversationalGolden
-from deepeval.test_case import Audio, Turn
+from deepeval.test_case import Audio, ToolCall, Turn
 from deepeval.models.tts._frames import pcm_chunk
 from deepeval.voice.background import BackgroundMixer, mix_background
 from deepeval.voice.caller_speech import _scaled
@@ -100,6 +100,7 @@ class _AgentUtterance:
     pcm: bytearray = field(default_factory=bytearray)
     transcript: str = ""
     provider_transcript_parts: List[str] = field(default_factory=list)
+    tools_called: List[ToolCall] = field(default_factory=list)
     first_audio_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
@@ -127,6 +128,7 @@ class _AgentUtterance:
         self.pcm = bytearray()
         self.transcript = ""
         self.provider_transcript_parts = []
+        self.tools_called = []
         self.first_audio_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
@@ -627,6 +629,7 @@ class DuplexExchange:
                 provider_transcript=(
                     " ".join(utterance.provider_transcript_parts) or None
                 ),
+                tools_called=list(utterance.tools_called) or None,
                 metadata=(
                     {**(metadata or {}), "backchannels": utterance.backchannels}
                     if utterance.backchannels
@@ -827,6 +830,9 @@ class DuplexExchange:
                     utterance.provider_transcript_parts.append(
                         event.provider_transcript
                     )
+
+                if event.tools_called:
+                    utterance.tools_called.extend(event.tools_called)
 
                 if event.audio and self.echo:
                     if (

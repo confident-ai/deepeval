@@ -1,4 +1,5 @@
-from typing import Dict, List, Optional, Union
+from dataclasses import replace
+from typing import Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -14,7 +15,9 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.simulator import ConversationSimulator
 from deepeval.simulator.controller import proceed
 from deepeval.telemetry import capture_benchmark_run
+from deepeval.test_case import ConversationalTestCase
 from deepeval.voice import VoiceConfig
+from deepeval.voice.connectors import BaseVoiceConnector
 
 
 class VoiceSkillsResult(BaseModel):
@@ -68,6 +71,7 @@ class VoiceSkills(DeepEvalBaseBenchmark):
         self.max_user_simulations = max_user_simulations
         self.journeys: List[Journey] = self.load_benchmark_dataset()
         self.predictions = None
+        self.test_cases: List[ConversationalTestCase] = []
         self.journey_scores: Optional[Dict[str, bool]] = None
         self.skill_scores: Optional[Dict[str, float]] = None
         self.overall_score: Optional[float] = None
@@ -84,14 +88,34 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             journey for journey in journeys if journey["id"] in self.journey_ids
         ]
 
-    def evaluate(self, voice_config: VoiceConfig) -> VoiceSkillsResult:
+    def evaluate(
+        self,
+        voice_config: Optional[VoiceConfig] = None,
+        agent: Optional[Callable[[Journey], BaseVoiceConnector]] = None,
+    ) -> VoiceSkillsResult:
+        """Run every journey against one agent.
+
+        Pass `voice_config` for an agent that is already deployed, or `agent`
+        to build one per journey, which is what a journey's own policy,
+        records and tools need.
+        """
         import pandas as pd
+
+        if voice_config is None and agent is None:
+            raise ValueError("Pass `voice_config` or `agent`.")
 
         with capture_benchmark_run("VoiceSkills", len(self.journeys)):
             rows = []
             for journey in self.journeys:
                 for run in range(1, self.n_runs + 1):
-                    rows += self._call(journey, run, voice_config)
+                    config = voice_config
+                    if agent is not None:
+                        config = (
+                            replace(voice_config, connector=agent(journey))
+                            if voice_config is not None
+                            else VoiceConfig(connector=agent(journey))
+                        )
+                    rows += self._call(journey, run, config)
 
             self.predictions = pd.DataFrame(rows)
             graded = self.predictions[self.predictions["passed"].notna()]
@@ -131,6 +155,7 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             max_user_simulations=self.max_user_simulations,
         )[0]
         metadata = test_case.metadata or {}
+        self.test_cases.append(test_case)
 
         rows = []
         metrics = build_metrics(

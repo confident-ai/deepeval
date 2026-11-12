@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from typing import Awaitable, AsyncIterator, Callable, Optional, Union
+from typing import Awaitable, AsyncIterator, Callable, List, Optional, Union
 
-from deepeval.test_case import Audio
+from deepeval.test_case import Audio, ToolCall
 
 
 @dataclass
@@ -11,6 +11,7 @@ class ConnectorTurn:
     provider_transcript: Optional[str] = None  # what the agent heard us say
     latency_ms: Optional[float] = None  # user-audio-sent -> first agent audio
     interrupted: bool = False  # True when we successfully barged in (duplex)
+    tools_called: Optional[List[ToolCall]] = None  # tools the agent ran
     # Process-local monotonic capture times. The simulator converts these to
     # call-relative Audio.start_time values before the test case is serialized.
     input_audio_started_at: Optional[float] = None
@@ -36,6 +37,8 @@ class AgentEvent:
     transcript: Optional[str] = None
     provider_transcript: Optional[str] = None
     turn_complete: bool = False
+    # Tools the agent ran, for connectors that can see them.
+    tools_called: Optional[List[ToolCall]] = None
     # Process-local monotonic time this event arrived from the agent. The
     # consumer can be busy (synthesizing a barge, for instance) long after a
     # frame lands, so reading the clock at consumption time would credit the
