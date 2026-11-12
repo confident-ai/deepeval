@@ -166,6 +166,7 @@ export default async function BenchmarkPage({ params }: PageProps) {
             <JourneyExplorer
               journeys={journeys}
               segments={benchmark.segments}
+              families={benchmark.skillFamilies ?? []}
             />
           )}
         </DatasetSection>

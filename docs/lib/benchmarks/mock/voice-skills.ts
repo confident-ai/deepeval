@@ -1,4 +1,5 @@
-import type { Benchmark, BenchmarkJourney } from "../types";
+import type { Benchmark, BenchmarkJourney, SkillFamily } from "../types";
+import families from "./voice-skills-families.json";
 import journeys from "./voice-skills-journeys.json";
 
 export const voiceSkills: Benchmark = {
@@ -58,17 +59,22 @@ export const voiceSkills: Benchmark = {
   tradeoffMetricId: "latency",
   segmentLabel: "Industry",
   segments: [
-    { id: "airline", label: "Airline", caseCount: 2 },
-    { id: "retail-bank", label: "Retail bank", caseCount: 2 },
-    { id: "energy-supplier", label: "Energy supplier", caseCount: 2 },
-    { id: "pharmacy", label: "Pharmacy", caseCount: 2 },
-    { id: "broadband", label: "Broadband", caseCount: 2 },
-    { id: "motor-insurance", label: "Motor insurance", caseCount: 2 },
-    { id: "hotel", label: "Hotel", caseCount: 2 },
-    { id: "parcel-delivery", label: "Parcel delivery", caseCount: 2 },
-    { id: "roadside-assistance", label: "Roadside assistance", caseCount: 2 },
-    { id: "online-retailer", label: "Online retailer", caseCount: 2 },
-  ],
+    ["airline", "Airline"],
+    ["retail-bank", "Retail bank"],
+    ["energy-supplier", "Energy supplier"],
+    ["pharmacy", "Pharmacy"],
+    ["broadband", "Broadband"],
+    ["motor-insurance", "Motor insurance"],
+    ["hotel", "Hotel"],
+    ["parcel-delivery", "Parcel delivery"],
+    ["roadside-assistance", "Roadside assistance"],
+    ["online-retailer", "Online retailer"],
+  ].map(([id, label]) => ({
+    id,
+    label,
+    caseCount: journeys.filter((journey) => journey.segmentId === id).length,
+  })),
+
   skills: [
     {
       id: "listening",
@@ -152,4 +158,5 @@ print(benchmark.skill_scores)`,
     },
   ],
   journeys: journeys as BenchmarkJourney[],
+  skillFamilies: families as SkillFamily[],
 };

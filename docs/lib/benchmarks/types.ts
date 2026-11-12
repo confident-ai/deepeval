@@ -179,6 +179,13 @@ export type BenchmarkJourney = {
   forbiddenTools: string[];
 };
 
+// What a journey tests, as families and the skills inside each.
+export type SkillFamily = {
+  id: string;
+  label: string;
+  skills: { id: string; label: string }[];
+};
+
 export type Benchmark = {
   slug: string;
   name: string;
@@ -203,4 +210,5 @@ export type Benchmark = {
   faqs: BenchmarkFaq[];
   // Only benchmarks whose test cases are caller journeys have these.
   journeys?: BenchmarkJourney[];
+  skillFamilies?: SkillFamily[];
 };

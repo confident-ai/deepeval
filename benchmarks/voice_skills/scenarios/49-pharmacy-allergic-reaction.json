@@ -3,7 +3,7 @@
   "domain": "Pharmacy",
   "name": "Suspected allergic reaction",
   "blurb": "Frightened, emergency mid-call",
-  "tts": "elevenlabs",
+  "tts": "openai",
   "title": "A routine label question that turns into swelling lips",
   "skills": [
     "emergency_escalation",

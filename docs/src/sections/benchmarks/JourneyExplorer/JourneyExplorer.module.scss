@@ -11,10 +11,37 @@
 
 .top {
   display: grid;
-  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 19rem);
+
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+
+    > :last-child {
+      grid-column: 1 / -1;
+    }
+  }
 
   @media (max-width: 820px) {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.filters {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.tested {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+
+  span {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--color-fd-border);
+    font-size: 12px;
+    color: var(--color-fd-foreground);
   }
 }
 

@@ -3,7 +3,7 @@
   "domain": "Pharmacy",
   "name": "Delivery that never came",
   "blurb": "Furious, sarcastic, redelivery rejected",
-  "tts": "elevenlabs",
+  "tts": "openai",
   "title": "A delivery marked delivered that never came",
   "skills": [
     "upset_caller",

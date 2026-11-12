@@ -1,0 +1,119 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-left: 1px solid var(--color-fd-border);
+
+  @media (max-width: 1100px) {
+    border-top: 1px solid var(--color-fd-border);
+    border-left: 0;
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-fd-border);
+  font-size: 14px;
+  font-weight: 600;
+
+  small {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.all {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-fd-foreground);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-fd-background);
+  cursor: pointer;
+
+  svg {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+}
+
+// As tall as the graph beside it; the list scrolls inside.
+.scroll {
+  position: relative;
+  flex: 1;
+  min-height: 16rem;
+}
+
+.list {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0.35rem 0;
+  overflow-y: auto;
+  list-style: none;
+
+  @media (max-width: 1100px) {
+    position: static;
+    max-height: 22rem;
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.45rem 1rem;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-fd-muted-foreground);
+
+  &[data-active="true"] {
+    background: var(--color-fd-muted);
+    color: var(--color-fd-foreground);
+  }
+
+  &[data-aside="true"] {
+    font-size: 12px;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 1px;
+    border: 1px solid var(--color-fd-border);
+    border-radius: 50%;
+    background: var(--color-fd-card);
+    color: var(--color-fd-foreground);
+    cursor: pointer;
+
+    svg {
+      width: 0.55rem;
+      height: 0.55rem;
+    }
+  }
+
+  span > svg {
+    display: inline;
+    width: 11px;
+    height: 11px;
+    margin-right: 0.3rem;
+    vertical-align: -1px;
+    color: #d99a1c;
+  }
+}

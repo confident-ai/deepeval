@@ -58,7 +58,7 @@ def _recording(dataset_path: str, relative: Optional[str]) -> Optional[Audio]:
 
 
 def _events(
-    dataset_path: str, records: List[Dict]
+    dataset_path: str, records: List[Dict], caller_voice: str = "female"
 ) -> List[voice_events.VoiceEvent]:
     """The voice events a node file lists. Kinds the simulator cannot place
     on a node yet, such as a scripted cut-in, are left out."""
@@ -74,6 +74,10 @@ def _events(
         }
         if "audio" in kind.__dataclass_fields__:
             fields["audio"] = _recording(dataset_path, record.get("audio"))
+        if kind is voice_events.NonSpeechSound:
+            # One recorded sound per kind and voice, shared by every journey.
+            sound = f'sounds/{record.get("kind", "cough")}-{caller_voice}.wav'
+            fields["audio"] = _recording(dataset_path, sound)
         built.append(kind(**fields))
     return built
 
@@ -100,7 +104,11 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
             ending=ending["name"] if ending else None,
             fails=bool(node.get("fails_call"))
             or (ending is not None and ending["result"] == "failure"),
-            events=_events(dataset_path, node.get("events", [])),
+            events=_events(
+                dataset_path,
+                node.get("events", []),
+                journey["caller"].get("voice", "female"),
+            ),
         )
         whens[node["id"]] = node.get("when", "")
     groups = {
