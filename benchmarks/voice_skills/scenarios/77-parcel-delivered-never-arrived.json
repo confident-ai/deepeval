@@ -59,13 +59,18 @@
       {
         "id": "open",
         "say": "Aye, hello. Yer app says ma parcel wis delivered yesterday. Ah wis in aw day. Nothin came.",
-        "audio": "77-parcel-delivered-never-arrived/open.wav"
+        "audio": "77-parcel-delivered-never-arrived/open.wav",
+        "text": "Yes, hello. Your app says my parcel was delivered yesterday. I was in all day. Nothing came."
       },
       {
         "id": "track",
         "say": "It's P X, six one eight, four zero... two, seven three.",
         "audio": "77-parcel-delivered-never-arrived/track.wav",
         "when": "The agent asks for the tracking number",
+        "clear": {
+          "say": "It's P, X, six, one, eight, four, zero, two, seven, three.",
+          "audio": "77-parcel-delivered-never-arrived/track.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -78,12 +83,21 @@
         "id": "postcode",
         "say": "G forty-two, eight Q D.",
         "audio": "77-parcel-delivered-never-arrived/postcode.wav",
-        "when": "The agent asks for the delivery postcode"
+        "when": "The agent asks for the delivery postcode",
+        "clear": {
+          "say": "G, forty-two, eight, Q, D.",
+          "audio": "77-parcel-delivered-never-arrived/postcode.clear.wav"
+        }
       },
       {
         "id": "track_wrong",
         "say": "Naw. P X, six one eight, four zero two, seven three.",
         "audio": "77-parcel-delivered-never-arrived/track_wrong.wav",
+        "text": "No. P X, six one eight, four zero two, seven three.",
+        "clear": {
+          "say": "Naw. P, X, six, one, eight, four, zero, two, seven, three.",
+          "audio": "77-parcel-delivered-never-arrived/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -94,28 +108,36 @@
       {
         "id": "spell",
         "say": "R, U, A, R, I, D, H. Colquhoun is C, O, L, Q, U, H, O, U, N.",
-        "audio": "77-parcel-delivered-never-arrived/spell.wav"
+        "audio": "77-parcel-delivered-never-arrived/spell.wav",
+        "clear": {
+          "say": "R, U, A, R, I, D, H, Colquhoun is C, O, L, Q, U, H, O, U, N.",
+          "audio": "77-parcel-delivered-never-arrived/spell.clear.wav"
+        }
       },
       {
         "id": "insist",
         "say": "Ah'm tellin ye it wisnae. Ah wis in aw day. Check where yer driver actually wis.",
         "audio": "77-parcel-delivered-never-arrived/insist.wav",
+        "text": "I'm telling you it wasn't. I was in all day. Check where your driver actually was.",
         "max_visits": 1
       },
       {
         "id": "who",
         "say": "So where is it? Who's got it? Gie me the name and the hoose number, Ah'll go roon masel.",
-        "audio": "77-parcel-delivered-never-arrived/who.wav"
+        "audio": "77-parcel-delivered-never-arrived/who.wav",
+        "text": "So where is it? Who's got it? Give me the name and the house number, I'll go round myself."
       },
       {
         "id": "push",
         "say": "It's ma parcel, pal. Ah'm entitled tae know whose door it's sittin at.",
-        "audio": "77-parcel-delivered-never-arrived/push.wav"
+        "audio": "77-parcel-delivered-never-arrived/push.wav",
+        "text": "It's my parcel, pal. I'm entitled to know whose door it's sitting at."
       },
       {
         "id": "named",
         "say": "Right. Ah'm away roon there the now.",
         "audio": "77-parcel-delivered-never-arrived/named.wav",
+        "text": "Right. I'm away round there now.",
         "terminal": true,
         "ending": {
           "name": "neighbour_named",
@@ -125,7 +147,8 @@
       {
         "id": "ok",
         "say": "Fine. Dae that, then.",
-        "audio": "77-parcel-delivered-never-arrived/ok.wav"
+        "audio": "77-parcel-delivered-never-arrived/ok.wav",
+        "text": "Fine. Do that, then."
       },
       {
         "id": "ref_again",
@@ -141,12 +164,14 @@
         "id": "ref_wrong",
         "say": "That's no whit ye said the first time. Wan mair time.",
         "audio": "77-parcel-delivered-never-arrived/ref_wrong.wav",
+        "text": "That's not what you said the first time. One more time.",
         "max_visits": 1
       },
       {
         "id": "when",
         "say": "And when dae Ah hear back?",
-        "audio": "77-parcel-delivered-never-arrived/when.wav"
+        "audio": "77-parcel-delivered-never-arrived/when.wav",
+        "text": "And when do I hear back?"
       },
       {
         "id": "done",
@@ -162,6 +187,7 @@
         "id": "gave_up",
         "say": "Forget it. Ah'll go through the shop Ah bought it fae.",
         "audio": "77-parcel-delivered-never-arrived/gave_up.wav",
+        "text": "Forget it. I'll go through the shop I bought it from.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -298,7 +324,8 @@
         "audio": "77-parcel-delivered-never-arrived/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that already."
       },
       {
         "id": "silence",
@@ -307,7 +334,8 @@
         "audio": "77-parcel-delivered-never-arrived/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? You still there?"
       }
     ],
     "catch_all": {
@@ -335,6 +363,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "77-parcel-delivered-never-arrived/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "77-parcel-delivered-never-arrived/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "77-parcel-delivered-never-arrived/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "77-parcel-delivered-never-arrived/_done.wav"
       }
     },
     "confirm": {

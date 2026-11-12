@@ -73,6 +73,10 @@
         "say": "It's P, four, C, nine, J, V.",
         "audio": "24-airline-missed-connection/ref.wav",
         "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's P, four, C, nine, J, V.",
+          "audio": "24-airline-missed-connection/ref.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -91,6 +95,10 @@
         "id": "ref_wrong",
         "say": "No. P as in Paul, four, C, nine, J, V.",
         "audio": "24-airline-missed-connection/ref_wrong.wav",
+        "clear": {
+          "say": "No. P, as in Paul, four, C, nine, J, V.",
+          "audio": "24-airline-missed-connection/ref_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -141,7 +149,11 @@
       {
         "id": "human",
         "say": "Fine. Now I want to talk to a person about compensation. A real one.",
-        "audio": "24-airline-missed-connection/human.wav"
+        "audio": "24-airline-missed-connection/human.wav",
+        "clear": {
+          "say": "Fine. Now I, want to talk to a person about compensation. A, real one.",
+          "audio": "24-airline-missed-connection/human.clear.wav"
+        }
       },
       {
         "id": "human2",
@@ -304,7 +316,11 @@
         "audio": "24-airline-missed-connection/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already gave you that. P, four, C, nine, J, V, Whitlock.",
+          "audio": "24-airline-missed-connection/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "story",
@@ -341,6 +357,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "24-airline-missed-connection/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "24-airline-missed-connection/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "24-airline-missed-connection/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "24-airline-missed-connection/_done.wav"
       }
     },
     "confirm": {

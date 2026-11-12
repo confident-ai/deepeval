@@ -45,6 +45,11 @@
         "id": "open",
         "say": "Howdy. I got two of them monthly boxes with y'all, and I need to... change a couple things on 'em.",
         "audio": "98-retail-two-subscription-boxes/open.wav",
+        "text": "Howdy. I got two of them monthly boxes with you all, and I need to... change a couple things on them.",
+        "clear": {
+          "say": "Howdy. I, got two, of them monthly boxes with y'all, and I, need to. change a couple things on 'em.",
+          "audio": "98-retail-two-subscription-boxes/open.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -57,18 +62,27 @@
         "id": "phone",
         "say": "It's four two three, five five five, zero one four eight.",
         "audio": "98-retail-two-subscription-boxes/phone.wav",
-        "when": "The agent asks for the phone number on the account"
+        "when": "The agent asks for the phone number on the account",
+        "clear": {
+          "say": "It's four, two, three, five, five, five, zero, one, four, eight.",
+          "audio": "98-retail-two-subscription-boxes/phone.clear.wav"
+        }
       },
       {
         "id": "zip",
         "say": "Three seven six, eight three.",
         "audio": "98-retail-two-subscription-boxes/zip.wav",
-        "when": "The agent asks for the zip code"
+        "when": "The agent asks for the zip code",
+        "clear": {
+          "say": "Three, seven, six, eight, three.",
+          "audio": "98-retail-two-subscription-boxes/zip.clear.wav"
+        }
       },
       {
         "id": "which",
         "say": "Well, the snack crate, I want that'n cancelled outright. And the coffee... I reckon just hold off on the coffee a while.",
         "audio": "98-retail-two-subscription-boxes/which.wav",
+        "text": "Well, the snack crate, I want that one cancelled outright. And the coffee... I reckon just hold off on the coffee a while.",
         "events": [
           {
             "type": "MidSentencePause",
@@ -81,23 +95,27 @@
         "id": "mixed",
         "say": "Naw, naw, you got it backwards. Cancel the snacks. The coffee just gets held a while.",
         "audio": "98-retail-two-subscription-boxes/mixed.wav",
+        "text": "No, no, you got it backwards. Cancel the snacks. The coffee just gets held a while.",
         "max_visits": 1
       },
       {
         "id": "offer1",
         "say": "Naw, I appreciate it, but go on and cancel it.",
-        "audio": "98-retail-two-subscription-boxes/offer1.wav"
+        "audio": "98-retail-two-subscription-boxes/offer1.wav",
+        "text": "No, I appreciate it, but go on and cancel it."
       },
       {
         "id": "offer2",
         "say": "I done told you no. Cancel it.",
         "audio": "98-retail-two-subscription-boxes/offer2.wav",
+        "text": "I already told you no. Cancel it.",
         "max_visits": 1
       },
       {
         "id": "how_long",
         "say": "Two months. So it'd start back up in... October, I reckon.",
         "audio": "98-retail-two-subscription-boxes/how_long.wav",
+        "text": "Two months. So it would start back up in... October, I reckon.",
         "events": [
           {
             "type": "MidSentencePause",
@@ -110,6 +128,7 @@
         "id": "months_wrong",
         "say": "Naw, two months. Back on the twentieth of October.",
         "audio": "98-retail-two-subscription-boxes/months_wrong.wav",
+        "text": "No, two months. Back on the twentieth of October.",
         "max_visits": 2
       },
       {
@@ -120,12 +139,14 @@
       {
         "id": "card",
         "say": "Alright. Now, I was fixin' to switch the card it bills to, while I got you.",
-        "audio": "98-retail-two-subscription-boxes/card.wav"
+        "audio": "98-retail-two-subscription-boxes/card.wav",
+        "text": "Alright. Now, I was fixing to switch the card it bills to, while I got you."
       },
       {
         "id": "nevermind",
         "say": "Aw, shoot, I ain't got my glasses for all that. Never mind. Leave the card be.",
-        "audio": "98-retail-two-subscription-boxes/nevermind.wav"
+        "audio": "98-retail-two-subscription-boxes/nevermind.wav",
+        "text": "Oh, shoot, I don't have my glasses for all that. Never mind. Leave the card be."
       },
       {
         "id": "acted",
@@ -140,7 +161,8 @@
       {
         "id": "recap",
         "say": "So what've I got now, all told?",
-        "audio": "98-retail-two-subscription-boxes/recap.wav"
+        "audio": "98-retail-two-subscription-boxes/recap.wav",
+        "text": "So what have I got now, all told?"
       },
       {
         "id": "done",
@@ -156,6 +178,7 @@
         "id": "gave_up",
         "say": "Aw, forget it. I'll get my daughter to do it on the computer.",
         "audio": "98-retail-two-subscription-boxes/gave_up.wav",
+        "text": "Oh, forget it. I'll get my daughter to do it on the computer.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -287,7 +310,12 @@
         "audio": "98-retail-two-subscription-boxes/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already gave you that. Four two three, five five five, zero one four eight.",
+        "clear": {
+          "say": "I, done give you that. Four, two, three, five, five, five, zero, one, four, eight.",
+          "audio": "98-retail-two-subscription-boxes/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -315,6 +343,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "98-retail-two-subscription-boxes/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "98-retail-two-subscription-boxes/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "98-retail-two-subscription-boxes/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "98-retail-two-subscription-boxes/_done.wav"
       }
     },
     "confirm": {

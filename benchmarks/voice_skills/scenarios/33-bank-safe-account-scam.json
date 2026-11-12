@@ -55,7 +55,11 @@
       {
         "id": "details",
         "say": "Eight thousand four hundred pounds. Sort code zero four, one one, seven six. Account five five nine, zero two, one eight three. He says do it now, now.",
-        "audio": "33-bank-safe-account-scam/details.wav"
+        "audio": "33-bank-safe-account-scam/details.wav",
+        "clear": {
+          "say": "Eight, thousand four, hundred pounds. Sort code zero, four, one, one, seven, six, Account five, five, nine, zero, two, one, eight, three, He says do it now, now.",
+          "audio": "33-bank-safe-account-scam/details.clear.wav"
+        }
       },
       {
         "id": "moved",
@@ -70,7 +74,11 @@
       {
         "id": "claim",
         "say": "But he is Mr Daniel Reeves, from your own fraud team, badge four four seven! He said you will skip the questions because there is no time.",
-        "audio": "33-bank-safe-account-scam/claim.wav"
+        "audio": "33-bank-safe-account-scam/claim.wav",
+        "clear": {
+          "say": "But he is Mr Daniel Reeves, from your own fraud team, badge four, four, seven, He said you will skip the questions because there is no time.",
+          "audio": "33-bank-safe-account-scam/claim.clear.wav"
+        }
       },
       {
         "id": "scam_q",
@@ -97,7 +105,11 @@
       {
         "id": "code",
         "say": "I... I read him the code from the text message. Six numbers. Was that bad?",
-        "audio": "33-bank-safe-account-scam/code.wav"
+        "audio": "33-bank-safe-account-scam/code.wav",
+        "clear": {
+          "say": "I, I, read him the code from the text message. Six, numbers. Was that bad?",
+          "audio": "33-bank-safe-account-scam/code.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -115,6 +127,10 @@
         "id": "name_wrong",
         "say": "No, no. Raghunathan. R, A, G, H, U, N, A, T, H, A, N.",
         "audio": "33-bank-safe-account-scam/name_wrong.wav",
+        "clear": {
+          "say": "No, no. Raghunathan. R, A, G, H, U, N, A, T, H, A, N.",
+          "audio": "33-bank-safe-account-scam/name_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -344,6 +360,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "33-bank-safe-account-scam/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "33-bank-safe-account-scam/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "33-bank-safe-account-scam/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "33-bank-safe-account-scam/_done.wav"
       }
     },
     "confirm": {

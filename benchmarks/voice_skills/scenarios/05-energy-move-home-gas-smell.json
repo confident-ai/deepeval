@@ -49,6 +49,10 @@
         "id": "acct",
         "say": "Right. It's eight eight two, zero one four, five.",
         "audio": "05-energy-move-home-gas-smell/acct.wav",
+        "clear": {
+          "say": "Right. It's eight, eight, two, zero, one, four, five.",
+          "audio": "05-energy-move-home-gas-smell/acct.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -69,18 +73,28 @@
       {
         "id": "spell",
         "say": "O with a fada. Then S, U with a fada, I, double L, E, A, B, H, A with a fada, I, N.",
-        "audio": "05-energy-move-home-gas-smell/spell.wav"
+        "audio": "05-energy-move-home-gas-smell/spell.wav",
+        "text": "O with an accent. Then S, U with an accent, I, double L, E, A, B, H, A with an accent, I, N.",
+        "clear": {
+          "say": "O, with a fada. Then S, U, with a fada, I, double L, E, A, B, H, A, with a fada, I, N.",
+          "audio": "05-energy-move-home-gas-smell/spell.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No, no. There's a fada on the O and on the U. I'll spell it for you.",
         "audio": "05-energy-move-home-gas-smell/name_wrong.wav",
+        "text": "No, no. There's an accent on the O and on the U. I'll spell it for you.",
         "max_visits": 1
       },
       {
         "id": "elec",
         "say": "The electric is four seven, two nine one.",
         "audio": "05-energy-move-home-gas-smell/elec.wav",
+        "clear": {
+          "say": "The electric is four, seven, two, nine, one.",
+          "audio": "05-energy-move-home-gas-smell/elec.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -93,12 +107,17 @@
         "id": "elec_wrong",
         "say": "No. Four seven, two nine one.",
         "audio": "05-energy-move-home-gas-smell/elec_wrong.wav",
+        "clear": {
+          "say": "No. Four, seven, two, nine, one.",
+          "audio": "05-energy-move-home-gas-smell/elec_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "gas",
         "say": "The gas is... wait now. There's a fierce smell of gas here by the meter, now that I'm at it.",
         "audio": "05-energy-move-home-gas-smell/gas.wav",
+        "text": "The gas is... wait now. There's a strong smell of gas here by the meter, now that I'm at it.",
         "events": [
           {
             "type": "TrailsOff"
@@ -124,7 +143,8 @@
       {
         "id": "leave",
         "say": "Oh. Right. I'll go out the front so. Will I stay on the phone?",
-        "audio": "05-energy-move-home-gas-smell/leave.wav"
+        "audio": "05-energy-move-home-gas-smell/leave.wav",
+        "text": "Oh. Right. I'll go out the front then. Will I stay on the phone?"
       },
       {
         "id": "addr",
@@ -144,7 +164,8 @@
       {
         "id": "tomorrow",
         "say": "Tomorrow morning is grand.",
-        "audio": "05-energy-move-home-gas-smell/tomorrow.wav"
+        "audio": "05-energy-move-home-gas-smell/tomorrow.wav",
+        "text": "Tomorrow morning is fine."
       },
       {
         "id": "done",
@@ -273,7 +294,11 @@
         "audio": "05-energy-move-home-gas-smell/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "rang_off"
+        "after_max_visits": "rang_off",
+        "clear": {
+          "say": "I, gave you that already, love. Eight, eight, two, zero, one, four, five.",
+          "audio": "05-energy-move-home-gas-smell/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -301,6 +326,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "05-energy-move-home-gas-smell/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "05-energy-move-home-gas-smell/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "05-energy-move-home-gas-smell/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "05-energy-move-home-gas-smell/_done.wav"
       }
     },
     "confirm": {

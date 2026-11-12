@@ -288,6 +288,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "14-hotel-sarcasm-then-walks-away/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "14-hotel-sarcasm-then-walks-away/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "14-hotel-sarcasm-then-walks-away/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "14-hotel-sarcasm-then-walks-away/_done.wav"
       }
     },
     "confirm": {

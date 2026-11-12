@@ -101,7 +101,11 @@
         "id": "reg",
         "say": "It's a silver Skoda. W, F, one nine, T, Z, K.",
         "audio": "85-roadside-dog-locked-in-hot-car/reg.wav",
-        "when": "The agent asks for the registration"
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "It's a silver Skoda. W, F, one, nine, T, Z, K.",
+          "audio": "85-roadside-dog-locked-in-hot-car/reg.clear.wav"
+        }
       },
       {
         "id": "eta",
@@ -124,6 +128,10 @@
         "id": "card",
         "say": "Look, I'll pay for whatever's fastest. I've got my card here, it's four seven two nine...",
         "audio": "85-roadside-dog-locked-in-hot-car/card.wav",
+        "clear": {
+          "say": "Look, I'll pay for whatever's fastest. I've got my card here, it's four, seven, two, nine.",
+          "audio": "85-roadside-dog-locked-in-hot-car/card.clear.wav"
+        },
         "events": [
           {
             "type": "TrailsOff"
@@ -134,6 +142,10 @@
         "id": "card_more",
         "say": "Six six one zero, three three eight five, nine one two four.",
         "audio": "85-roadside-dog-locked-in-hot-car/card_more.wav",
+        "clear": {
+          "say": "Six, six, one, zero, three, three, eight, five, nine, one, two, four.",
+          "audio": "85-roadside-dog-locked-in-hot-car/card_more.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -328,6 +340,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "85-roadside-dog-locked-in-hot-car/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "85-roadside-dog-locked-in-hot-car/_done.wav"
       }
     },
     "confirm": {

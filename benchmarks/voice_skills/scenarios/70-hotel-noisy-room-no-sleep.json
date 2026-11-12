@@ -57,13 +57,21 @@
       {
         "id": "open",
         "say": "I've had two hours' sleep. Two. The room next to mine had a party till three in the morning, again, and nobody did a thing.",
-        "audio": "70-hotel-noisy-room-no-sleep/open.wav"
+        "audio": "70-hotel-noisy-room-no-sleep/open.wav",
+        "clear": {
+          "say": "I've had two, hours' sleep. Two, The room next to mine had a party till three, in the morning, again, and nobody did a thing.",
+          "audio": "70-hotel-noisy-room-no-sleep/open.clear.wav"
+        }
       },
       {
         "id": "room",
         "say": "Three one six.",
         "audio": "70-hotel-noisy-room-no-sleep/room.wav",
-        "when": "The agent asks for the room number"
+        "when": "The agent asks for the room number",
+        "clear": {
+          "say": "Three, one, six.",
+          "audio": "70-hotel-noisy-room-no-sleep/room.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -75,6 +83,10 @@
         "id": "cold",
         "say": "Did you hear a word I said? I haven't slept. I rang your front desk twice last night.",
         "audio": "70-hotel-noisy-room-no-sleep/cold.wav",
+        "clear": {
+          "say": "Did you hear a word I, said? I, haven't slept. I, rang your front desk twice last night.",
+          "audio": "70-hotel-noisy-room-no-sleep/cold.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -107,12 +119,20 @@
       {
         "id": "which",
         "say": "It's the room to the left of mine. Three one eight.",
-        "audio": "70-hotel-noisy-room-no-sleep/which.wav"
+        "audio": "70-hotel-noisy-room-no-sleep/which.wav",
+        "clear": {
+          "say": "It's the room to the left of mine. Three, one, eight.",
+          "audio": "70-hotel-noisy-room-no-sleep/which.clear.wav"
+        }
       },
       {
         "id": "wrong_room",
         "say": "No. I'm in three one six. They're in three one eight. One eight.",
         "audio": "70-hotel-noisy-room-no-sleep/wrong_room.wav",
+        "clear": {
+          "say": "No. I'm in three, one, six, They're in three, one, eight, One, eight.",
+          "audio": "70-hotel-noisy-room-no-sleep/wrong_room.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -291,6 +311,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I've just told you. Three, one, six, Ashdown.",
+          "audio": "70-hotel-noisy-room-no-sleep/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -325,6 +349,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "70-hotel-noisy-room-no-sleep/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "70-hotel-noisy-room-no-sleep/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "70-hotel-noisy-room-no-sleep/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "70-hotel-noisy-room-no-sleep/_done.wav"
       }
     },
     "confirm": {

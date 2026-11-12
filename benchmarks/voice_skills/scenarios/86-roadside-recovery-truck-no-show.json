@@ -65,7 +65,11 @@
       {
         "id": "open",
         "say": "Yeah. Job number R T, five five zero, eight one three. Your tow truck was supposed to be here at seven forty. It is ten o'clock. Where is it?",
-        "audio": "86-roadside-recovery-truck-no-show/open.wav"
+        "audio": "86-roadside-recovery-truck-no-show/open.wav",
+        "clear": {
+          "say": "Yeah. Job number R, T, five, five, zero, eight, one, three, Your tow truck was supposed to be here at seven, forty. It is ten o'clock. Where is it?",
+          "audio": "86-roadside-recovery-truck-no-show/open.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -77,7 +81,11 @@
         "id": "phone",
         "say": "Six one four, five five five, zero one six two.",
         "audio": "86-roadside-recovery-truck-no-show/phone.wav",
-        "when": "The agent asks for a callback number"
+        "when": "The agent asks for a callback number",
+        "clear": {
+          "say": "Six, one, four, five, five, five, zero, one, six, two.",
+          "audio": "86-roadside-recovery-truck-no-show/phone.clear.wav"
+        }
       },
       {
         "id": "cancelled",
@@ -145,6 +153,10 @@
         "id": "ref_wrong",
         "say": "No! R T, five five zero, eight one three. Write it down.",
         "audio": "86-roadside-recovery-truck-no-show/ref_wrong.wav",
+        "clear": {
+          "say": "No! R, T, five, five, zero, eight, one, three, Write it down.",
+          "audio": "86-roadside-recovery-truck-no-show/ref_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -301,7 +313,11 @@
         "audio": "86-roadside-recovery-truck-no-show/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, gave you that already. R, T, five, five, zero, eight, one, three, Third time I've called.",
+          "audio": "86-roadside-recovery-truck-no-show/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -329,6 +345,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "86-roadside-recovery-truck-no-show/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "86-roadside-recovery-truck-no-show/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "86-roadside-recovery-truck-no-show/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "86-roadside-recovery-truck-no-show/_done.wav"
       }
     },
     "confirm": {

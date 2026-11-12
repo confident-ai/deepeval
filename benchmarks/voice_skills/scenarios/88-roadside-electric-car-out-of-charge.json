@@ -74,18 +74,30 @@
         "id": "name",
         "say": "Nguyen. N, G, U, Y, E, N. First name Thuy.",
         "audio": "88-roadside-electric-car-out-of-charge/name.wav",
-        "when": "The agent asks for her name"
+        "when": "The agent asks for her name",
+        "clear": {
+          "say": "Nguyen. N, G, U, Y, E, N, First name Thuy.",
+          "audio": "88-roadside-electric-car-out-of-charge/name.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "L E six five, two W Q.",
         "audio": "88-roadside-electric-car-out-of-charge/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "L, E, six, five, two, W, Q.",
+          "audio": "88-roadside-electric-car-out-of-charge/postcode.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No. N, G, U, Y, E, N. Nguyen.",
         "audio": "88-roadside-electric-car-out-of-charge/name_wrong.wav",
+        "clear": {
+          "say": "No. N, G, U, Y, E, N, Nguyen.",
+          "audio": "88-roadside-electric-car-out-of-charge/name_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -117,7 +129,11 @@
       {
         "id": "charger",
         "say": "Wait. No. At home the charger is slow, and I must be at work at two. Take it to a fast charger, the nearest one.",
-        "audio": "88-roadside-electric-car-out-of-charge/charger.wav"
+        "audio": "88-roadside-electric-car-out-of-charge/charger.wav",
+        "clear": {
+          "say": "Wait. No. At home the charger is slow, and I, must be at work at two, Take it to a fast charger, the nearest one.",
+          "audio": "88-roadside-electric-car-out-of-charge/charger.clear.wav"
+        }
       },
       {
         "id": "van",
@@ -339,7 +355,11 @@
         "audio": "88-roadside-electric-car-out-of-charge/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, told you already. Nguyen. L, E, six, five, two, W, Q.",
+          "audio": "88-roadside-electric-car-out-of-charge/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -367,6 +387,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "88-roadside-electric-car-out-of-charge/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "88-roadside-electric-car-out-of-charge/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "88-roadside-electric-car-out-of-charge/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "88-roadside-electric-car-out-of-charge/_done.wav"
       }
     },
     "confirm": {

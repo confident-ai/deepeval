@@ -59,6 +59,7 @@
         "id": "switch",
         "say": "My number of client is... Desculpa, posso falar em português? É mais fácil para mim.",
         "audio": "51-pharmacy-cancel-auto-delivery/switch.wav",
+        "text": "My client number is... Sorry, can I speak in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -70,73 +71,98 @@
         "id": "english",
         "say": "Desculpa, não percebo bem. Em português, por favor?",
         "audio": "51-pharmacy-cancel-auto-delivery/english.wav",
+        "text": "Sorry, I don't understand well. In Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "conta",
         "say": "O número de cliente é quatro, zero, nove, um, sete, sete.",
         "audio": "51-pharmacy-cancel-auto-delivery/conta.wav",
-        "when": "The agent asks for the customer number"
+        "when": "The agent asks for the customer number",
+        "text": "The client number is four, zero, nine, one, seven, seven.",
+        "clear": {
+          "say": "O, número de cliente é quatro, zero, nove, um, sete, sete.",
+          "audio": "51-pharmacy-cancel-auto-delivery/conta.clear.wav"
+        }
       },
       {
         "id": "nasc",
         "say": "Catorze de junho de mil novecentos e oitenta e nove.",
         "audio": "51-pharmacy-cancel-auto-delivery/nasc.wav",
-        "when": "The agent asks for the date of birth"
+        "when": "The agent asks for the date of birth",
+        "text": "Fourteenth of June, nineteen eighty-nine."
       },
       {
         "id": "repeat",
         "say": "Quatro. Zero. Nove. Um. Sete. Sete.",
         "audio": "51-pharmacy-cancel-auto-delivery/repeat.wav",
+        "text": "Four. Zero. Nine. One. Seven. Seven.",
+        "clear": {
+          "say": "Quatro, Zero, Nove, Um, Sete, Sete.",
+          "audio": "51-pharmacy-cancel-auto-delivery/repeat.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "num_wrong",
         "say": "Não. Quatro, zero, nove, um, sete, sete.",
         "audio": "51-pharmacy-cancel-auto-delivery/num_wrong.wav",
+        "text": "No. Four, zero, nine, one, seven, seven.",
+        "clear": {
+          "say": "Não. Quatro, zero, nove, um, sete, sete.",
+          "audio": "51-pharmacy-cancel-auto-delivery/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "cancel",
         "say": "Quero cancelar a entrega automática. Mudei de emprego e nunca estou em casa.",
-        "audio": "51-pharmacy-cancel-auto-delivery/cancel.wav"
+        "audio": "51-pharmacy-cancel-auto-delivery/cancel.wav",
+        "text": "I want to cancel the automatic delivery. I changed jobs and I'm never at home."
       },
       {
         "id": "offer1",
         "say": "Não, obrigada. Só quero cancelar.",
-        "audio": "51-pharmacy-cancel-auto-delivery/offer1.wav"
+        "audio": "51-pharmacy-cancel-auto-delivery/offer1.wav",
+        "text": "No, thank you. I just want to cancel."
       },
       {
         "id": "offer2",
         "say": "Já disse que não. Cancele, por favor.",
         "audio": "51-pharmacy-cancel-auto-delivery/offer2.wav",
+        "text": "I've already said no. Cancel, please.",
         "max_visits": 1
       },
       {
         "id": "branch",
         "say": "Sim. Agora quero levantar na loja de Market Street, ao pé do meu trabalho.",
-        "audio": "51-pharmacy-cancel-auto-delivery/branch.wav"
+        "audio": "51-pharmacy-cancel-auto-delivery/branch.wav",
+        "text": "Yes. Now I want to pick up at the Market Street store, near my work."
       },
       {
         "id": "branch_wrong",
         "say": "Não, Market Street. Não é Marsh Street. Market, como mercado.",
         "audio": "51-pharmacy-cancel-auto-delivery/branch_wrong.wav",
+        "text": "No, Market Street. It's not Marsh Street. Market, like market.",
         "max_visits": 1
       },
       {
         "id": "quando",
         "say": "A partir da próxima receita, a de quarta-feira, vinte e seis de agosto.",
-        "audio": "51-pharmacy-cancel-auto-delivery/quando.wav"
+        "audio": "51-pharmacy-cancel-auto-delivery/quando.wav",
+        "text": "Starting from the next prescription, the one for Wednesday, twenty-sixth of August."
       },
       {
         "id": "confirm",
         "say": "Sim, está certo.",
-        "audio": "51-pharmacy-cancel-auto-delivery/confirm.wav"
+        "audio": "51-pharmacy-cancel-auto-delivery/confirm.wav",
+        "text": "Yes, that's right."
       },
       {
         "id": "done",
         "say": "Muito obrigada. Bom dia.",
         "audio": "51-pharmacy-cancel-auto-delivery/done.wav",
+        "text": "Thank you very much. Good morning.",
         "terminal": true,
         "ending": {
           "name": "cancelled_and_moved",
@@ -147,6 +173,7 @@
         "id": "desistiu",
         "say": "Assim não dá. Vou à loja. Adeus.",
         "audio": "51-pharmacy-cancel-auto-delivery/desistiu.wav",
+        "text": "Like this it doesn't work. I'm going to the store. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -304,7 +331,8 @@
         "audio": "51-pharmacy-cancel-auto-delivery/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "desistiu"
+        "after_max_visits": "desistiu",
+        "text": "In Portuguese, please."
       },
       {
         "id": "reask",
@@ -313,7 +341,12 @@
         "audio": "51-pharmacy-cancel-auto-delivery/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "desistiu"
+        "after_max_visits": "desistiu",
+        "text": "I've already told you. Four, zero, nine, one, seven, seven. Fourteenth of June, eighty-nine.",
+        "clear": {
+          "say": "Já lhe disse. Quatro, zero, nove, um, sete, sete, Catorze de junho de oitenta e nove.",
+          "audio": "51-pharmacy-cancel-auto-delivery/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -341,6 +374,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "51-pharmacy-cancel-auto-delivery/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "51-pharmacy-cancel-auto-delivery/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "51-pharmacy-cancel-auto-delivery/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "51-pharmacy-cancel-auto-delivery/_done.wav"
       }
     },
     "confirm": {

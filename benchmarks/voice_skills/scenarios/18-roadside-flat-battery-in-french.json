@@ -58,12 +58,17 @@
       {
         "id": "member",
         "say": "Seven seven four, two zero nine, one.",
-        "audio": "18-roadside-flat-battery-in-french/member.wav"
+        "audio": "18-roadside-flat-battery-in-french/member.wav",
+        "clear": {
+          "say": "Seven, seven, four, two, zero, nine, one.",
+          "audio": "18-roadside-flat-battery-in-french/member.clear.wav"
+        }
       },
       {
         "id": "switch",
         "say": "At home. Excusez-moi, c'est plus facile en français pour moi. Je peux continuer en français?",
         "audio": "18-roadside-flat-battery-in-french/switch.wav",
+        "text": "At home. Excuse me, it's easier in French for me. Can I continue in French?",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -75,56 +80,66 @@
         "id": "english",
         "say": "Désolé, en français, s'il vous plaît?",
         "audio": "18-roadside-flat-battery-in-french/english.wav",
+        "text": "Sorry, in French, please?",
         "max_visits": 2
       },
       {
         "id": "addr",
         "say": "Quarante-deux, rue des Érables, appartement trois.",
-        "audio": "18-roadside-flat-battery-in-french/addr.wav"
+        "audio": "18-roadside-flat-battery-in-french/addr.wav",
+        "text": "Forty-two, Maple Street, apartment three."
       },
       {
         "id": "addr_wrong",
         "say": "Non. Quarante-deux. Rue des Érables. Appartement trois.",
         "audio": "18-roadside-flat-battery-in-french/addr_wrong.wav",
+        "text": "No. Forty-two. Maple Street. Apartment three.",
         "max_visits": 2
       },
       {
         "id": "symptom",
         "say": "Quand je tourne la clé, ça fait juste clic-clic. Les lumières sont faibles.",
         "audio": "18-roadside-flat-battery-in-french/symptom.wav",
-        "when": "The agent asks what happens when he starts the car"
+        "when": "The agent asks what happens when he starts the car",
+        "text": "When I turn the key, it just goes click-click. The lights are weak."
       },
       {
         "id": "car",
         "say": "Une Mazda trois, deux mille dix-neuf, grise.",
         "audio": "18-roadside-flat-battery-in-french/car.wav",
-        "when": "The agent asks for the vehicle"
+        "when": "The agent asks for the vehicle",
+        "text": "A Mazda three, two thousand nineteen, gray."
       },
       {
         "id": "deadline",
         "say": "Oui, dans mon entrée. Mais je dois partir pour l'aéroport à quatorze heures.",
-        "audio": "18-roadside-flat-battery-in-french/deadline.wav"
+        "audio": "18-roadside-flat-battery-in-french/deadline.wav",
+        "text": "Yes, in my driveway. But I have to leave for the airport at fourteen hours."
       },
       {
         "id": "too_late",
         "say": "Mais c'est trop tard! Je vous ai dit quatorze heures.",
         "audio": "18-roadside-flat-battery-in-french/too_late.wav",
+        "text": "But it's too late! I told you fourteen hours.",
         "max_visits": 1
       },
       {
         "id": "price",
         "say": "D'accord. Et si la batterie est morte, vous pouvez la remplacer sur place? C'est combien?",
-        "audio": "18-roadside-flat-battery-in-french/price.wav"
+        "audio": "18-roadside-flat-battery-in-french/price.wav",
+        "text": "Okay. And if the battery is dead, can you replace it on site? How much is it?"
       },
       {
         "id": "send",
         "say": "Ça va. Envoyez-le.",
-        "audio": "18-roadside-flat-battery-in-french/send.wav"
+        "audio": "18-roadside-flat-battery-in-french/send.wav",
+        "text": "That's fine. Send him."
       },
       {
         "id": "done",
         "say": "Merci beaucoup. Au revoir.",
         "audio": "18-roadside-flat-battery-in-french/done.wav",
+        "text": "Thank you very much. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "battery_callout_sent",
@@ -135,6 +150,7 @@
         "id": "taxi",
         "say": "Laissez faire. Je vais prendre un taxi.",
         "audio": "18-roadside-flat-battery-in-french/taxi.wav",
+        "text": "Never mind. I'll take a taxi.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -250,7 +266,8 @@
         "audio": "18-roadside-flat-battery-in-french/reaction-echo.wav",
         "max_visits": 3,
         "then": "resume",
-        "after_max_visits": "taxi"
+        "after_max_visits": "taxi",
+        "text": "No, I didn't say anything. Continue."
       },
       {
         "id": "back_to_english",
@@ -259,7 +276,8 @@
         "audio": "18-roadside-flat-battery-in-french/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "taxi"
+        "after_max_visits": "taxi",
+        "text": "In French, please."
       }
     ],
     "catch_all": {
@@ -287,6 +305,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "18-roadside-flat-battery-in-french/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "18-roadside-flat-battery-in-french/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "18-roadside-flat-battery-in-french/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "18-roadside-flat-battery-in-french/_done.wav"
       }
     },
     "confirm": {

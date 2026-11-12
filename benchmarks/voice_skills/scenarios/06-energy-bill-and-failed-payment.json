@@ -63,6 +63,10 @@
         "say": "Account number is three one, five five nine, zero two.",
         "audio": "06-energy-bill-and-failed-payment/acct.wav",
         "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account number is three, one, five, five, nine, zero, two.",
+          "audio": "06-energy-bill-and-failed-payment/acct.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -80,12 +84,20 @@
         "id": "postcode",
         "say": "L S six, two A B.",
         "audio": "06-energy-bill-and-failed-payment/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "L, S, six, two, A, B.",
+          "audio": "06-energy-bill-and-failed-payment/postcode.clear.wav"
+        }
       },
       {
         "id": "acct_wrong",
         "say": "No. Three one, five five nine, zero two.",
         "audio": "06-energy-bill-and-failed-payment/acct_wrong.wav",
+        "clear": {
+          "say": "No. Three, one, five, five, nine, zero, two.",
+          "audio": "06-energy-bill-and-failed-payment/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -101,12 +113,20 @@
       {
         "id": "wrong",
         "say": "That is wrong. My meter says four nine eight seven.",
-        "audio": "06-energy-bill-and-failed-payment/wrong.wav"
+        "audio": "06-energy-bill-and-failed-payment/wrong.wav",
+        "clear": {
+          "say": "That is wrong. My meter says four, nine, eight, seven.",
+          "audio": "06-energy-bill-and-failed-payment/wrong.clear.wav"
+        }
       },
       {
         "id": "pay",
         "say": "Okay, better. I pay now. Card ending nine zero zero four.",
-        "audio": "06-energy-bill-and-failed-payment/pay.wav"
+        "audio": "06-energy-bill-and-failed-payment/pay.wav",
+        "clear": {
+          "say": "Okay, better. I, pay now. Card ending nine, zero, zero, four.",
+          "audio": "06-energy-bill-and-failed-payment/pay.clear.wav"
+        }
       },
       {
         "id": "believed",
@@ -274,7 +294,11 @@
         "audio": "06-energy-bill-and-failed-payment/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already said. Three, one, five, five, nine, zero, two, L, S, six, two, A, B.",
+          "audio": "06-energy-bill-and-failed-payment/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -302,6 +326,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "06-energy-bill-and-failed-payment/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "06-energy-bill-and-failed-payment/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "06-energy-bill-and-failed-payment/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "06-energy-bill-and-failed-payment/_done.wav"
       }
     },
     "confirm": {

@@ -50,7 +50,8 @@
       {
         "id": "open",
         "say": "Good morning. Mi daughter getting married end of the month and mi need rooms fi the family.",
-        "audio": "69-hotel-wedding-room-block/open.wav"
+        "audio": "69-hotel-wedding-room-block/open.wav",
+        "text": "Good morning. My daughter is getting married at the end of the month and I need rooms for the family."
       },
       {
         "id": "dates",
@@ -62,7 +63,11 @@
         "id": "name",
         "say": "Put it under Beverley Lattibeaudiere. L, A, double T, I, B, E, A, U, D, I, E, R, E.",
         "audio": "69-hotel-wedding-room-block/name.wav",
-        "when": "The agent asks for a name for the block"
+        "when": "The agent asks for a name for the block",
+        "clear": {
+          "say": "Put it under Beverley Lattibeaudiere. L, A, double T, I, B, E, A, U, D, I, E, R, E.",
+          "audio": "69-hotel-wedding-room-block/name.clear.wav"
+        }
       },
       {
         "id": "rooms",
@@ -78,6 +83,7 @@
         "id": "assumed",
         "say": "Hold on, mi never tell you which one yet. Twelve. Mi want twelve.",
         "audio": "69-hotel-wedding-room-block/assumed.wav",
+        "text": "Hold on, I never told you which one yet. Twelve. I want twelve.",
         "max_visits": 1
       },
       {
@@ -108,7 +114,12 @@
       {
         "id": "split",
         "say": "Wait now. Two of the rooms only coming the Saturday night. So ten for the two nights, two for the one night.",
-        "audio": "69-hotel-wedding-room-block/split.wav"
+        "audio": "69-hotel-wedding-room-block/split.wav",
+        "text": "Wait now. Two of the rooms are only coming the Saturday night. So ten for the two nights, two for the one night.",
+        "clear": {
+          "say": "Wait now. Two, of the rooms only coming the Saturday night. So ten for the two, nights, two, for the one, night.",
+          "audio": "69-hotel-wedding-room-block/split.clear.wav"
+        }
       },
       {
         "id": "split_wrong",
@@ -120,6 +131,7 @@
         "id": "cot",
         "say": "And put a cot in one of them... no, forget the cot, the baby stopping with her granny.",
         "audio": "69-hotel-wedding-room-block/cot.wav",
+        "text": "And put a cot in one of them... no, forget the cot, the baby is staying with her granny.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -129,12 +141,14 @@
       {
         "id": "brunch",
         "say": "One more thing. The Sunday morning mi want a brunch for all of we. Twenty-four people, eleven o'clock.",
-        "audio": "69-hotel-wedding-room-block/brunch.wav"
+        "audio": "69-hotel-wedding-room-block/brunch.wav",
+        "text": "One more thing. The Sunday morning I want a brunch for all of us. Twenty-four people, eleven o'clock."
       },
       {
         "id": "code",
         "say": "Read mi that block code again, slow. Mi writing it down.",
         "audio": "69-hotel-wedding-room-block/code.wav",
+        "text": "Read me that block code again, slow. I am writing it down.",
         "events": [
           {
             "type": "AsksToRepeat"
@@ -145,6 +159,7 @@
         "id": "done",
         "say": "Lovely. Send everything to mi email. Bye bye.",
         "audio": "69-hotel-wedding-room-block/done.wav",
+        "text": "Lovely. Send everything to my email. Bye bye.",
         "terminal": true,
         "ending": {
           "name": "block_and_brunch_booked",
@@ -155,6 +170,7 @@
         "id": "gave_up",
         "say": "No sir. Mi going try the hotel down the road.",
         "audio": "69-hotel-wedding-room-block/gave_up.wav",
+        "text": "No sir. I am going to try the hotel down the road.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -276,7 +292,8 @@
         "audio": "69-hotel-wedding-room-block/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I told you that already. Lattibeaudiere, Friday the twenty-eighth to Sunday the thirtieth."
       }
     ],
     "catch_all": {
@@ -304,6 +321,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "69-hotel-wedding-room-block/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "69-hotel-wedding-room-block/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "69-hotel-wedding-room-block/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "69-hotel-wedding-room-block/_done.wav"
       }
     },
     "confirm": {

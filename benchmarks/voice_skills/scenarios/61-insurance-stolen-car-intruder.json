@@ -64,12 +64,20 @@
         "id": "policy",
         "say": "It's, um, H L, three zero, seven seven, one five.",
         "audio": "61-insurance-stolen-car-intruder/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "It's, um, H, L, three, zero, seven, seven, one, five.",
+          "audio": "61-insurance-stolen-car-intruder/policy.clear.wav"
+        }
       },
       {
         "id": "policy_wrong",
         "say": "No. Sorry. H L, three zero, seven seven, one five.",
         "audio": "61-insurance-stolen-car-intruder/policy_wrong.wav",
+        "clear": {
+          "say": "No. Sorry. H, L, three, zero, seven, seven, one, five.",
+          "audio": "61-insurance-stolen-car-intruder/policy_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -81,7 +89,11 @@
       {
         "id": "last_seen",
         "say": "I parked it about ten last night. I came down at seven this morning and the drive was empty.",
-        "audio": "61-insurance-stolen-car-intruder/last_seen.wav"
+        "audio": "61-insurance-stolen-car-intruder/last_seen.wav",
+        "clear": {
+          "say": "I, parked it about ten last night. I, came down at seven, this morning and the drive was empty.",
+          "audio": "61-insurance-stolen-car-intruder/last_seen.clear.wav"
+        }
       },
       {
         "id": "keys",
@@ -306,7 +318,11 @@
         "audio": "61-insurance-stolen-car-intruder/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I've just told you that! H, L, three, zero, seven, seven, one, five.",
+          "audio": "61-insurance-stolen-car-intruder/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -334,6 +350,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "61-insurance-stolen-car-intruder/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "61-insurance-stolen-car-intruder/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "61-insurance-stolen-car-intruder/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "61-insurance-stolen-car-intruder/_done.wav"
       }
     },
     "confirm": {

@@ -64,6 +64,10 @@
         "say": "The serial is one eight P, zero four four, seven three two.",
         "audio": "38-energy-prepay-top-up/serial.wav",
         "when": "The agent asks for the meter serial number",
+        "clear": {
+          "say": "The serial is one, eight, P, zero, four, four, seven, three, two.",
+          "audio": "38-energy-prepay-top-up/serial.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -82,18 +86,30 @@
         "id": "postcode",
         "say": "E one, two L P.",
         "audio": "38-energy-prepay-top-up/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "E, one, two, L, P.",
+          "audio": "38-energy-prepay-top-up/postcode.clear.wav"
+        }
       },
       {
         "id": "serial_wrong",
         "say": "No, no. The last is seven three two. My son is reading it wrong.",
         "audio": "38-energy-prepay-top-up/serial_wrong.wav",
+        "clear": {
+          "say": "No, no. The last is seven, three, two, My son is reading it wrong.",
+          "audio": "38-energy-prepay-top-up/serial_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "code",
         "say": "Okay. Five five zero one, two two eight nine, zero four one six, seven seven three zero, nine one one two.",
         "audio": "38-energy-prepay-top-up/code.wav",
+        "clear": {
+          "say": "Okay. Five, five, zero, one, two, two, eight, nine, zero, four, one, six, seven, seven, three, zero, nine, one, one, two.",
+          "audio": "38-energy-prepay-top-up/code.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -106,6 +122,10 @@
         "id": "code_wrong",
         "say": "No. The third part is zero four one six.",
         "audio": "38-energy-prepay-top-up/code_wrong.wav",
+        "clear": {
+          "say": "No. The third part is zero, four, one, six.",
+          "audio": "38-energy-prepay-top-up/code_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -294,7 +314,11 @@
         "audio": "38-energy-prepay-top-up/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, told you already. One, eight, P, zero, four, four, seven, three, two, E, one, two, L, P.",
+          "audio": "38-energy-prepay-top-up/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -322,6 +346,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "38-energy-prepay-top-up/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "38-energy-prepay-top-up/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "38-energy-prepay-top-up/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "38-energy-prepay-top-up/_done.wav"
       }
     },
     "confirm": {

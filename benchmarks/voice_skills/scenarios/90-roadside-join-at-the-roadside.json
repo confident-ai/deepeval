@@ -57,12 +57,14 @@
       {
         "id": "open",
         "say": "Hiya. I've a flat tyre and there's no spare in this thing. I'm not with yous, but can I join now and get somebody out?",
-        "audio": "90-roadside-join-at-the-roadside/open.wav"
+        "audio": "90-roadside-join-at-the-roadside/open.wav",
+        "text": "Hiya. I've a flat tyre and there's no spare in this thing. I'm not with you, but can I join now and get somebody out?"
       },
       {
         "id": "safe",
         "say": "Aye, I'm pulled in at a field gate, hazards are on.",
-        "audio": "90-roadside-join-at-the-roadside/safe.wav"
+        "audio": "90-roadside-join-at-the-roadside/safe.wav",
+        "text": "Yes, I'm pulled in at a field gate, hazards are on."
       },
       {
         "id": "cost",
@@ -73,19 +75,29 @@
       {
         "id": "agree",
         "say": "Ninety-five on top? Dear God. Aye, go on, I've no choice.",
-        "audio": "90-roadside-join-at-the-roadside/agree.wav"
+        "audio": "90-roadside-join-at-the-roadside/agree.wav",
+        "text": "Ninety-five on top? Dear God. Yes, go on, I've no choice."
       },
       {
         "id": "name",
         "say": "Sinéad Mulholland. M, U, L, H, O, double L, A, N, D.",
         "audio": "90-roadside-join-at-the-roadside/name.wav",
-        "when": "The agent asks for her name"
+        "when": "The agent asks for her name",
+        "text": "Sinéad Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "Sinéad Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "90-roadside-join-at-the-roadside/name.clear.wav"
+        }
       },
       {
         "id": "reg",
         "say": "It's a Fiesta. R, E, Z, four one eight seven.",
         "audio": "90-roadside-join-at-the-roadside/reg.wav",
         "when": "The agent asks for the registration",
+        "clear": {
+          "say": "It's a Fiesta. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reg.clear.wav"
+        },
         "events": [
           {
             "type": "BackgroundLine",
@@ -99,6 +111,10 @@
         "id": "reg_wrong",
         "say": "No, that's him shouting, and he's wrong. R, E, Z, four one eight seven.",
         "audio": "90-roadside-join-at-the-roadside/reg_wrong.wav",
+        "clear": {
+          "say": "No, that's him shouting, and he's wrong. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reg_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -117,6 +133,11 @@
         "id": "where_wrong",
         "say": "No. Tullyreagh Road. T, U, double L, Y, R, E, A, G, H.",
         "audio": "90-roadside-join-at-the-roadside/where_wrong.wav",
+        "text": "No. Tullyreagh Road. T, U, L, L, Y, R, E, A, G, H.",
+        "clear": {
+          "say": "No. Tullyreagh Road. T, U, double L, Y, R, E, A, G, H.",
+          "audio": "90-roadside-join-at-the-roadside/where_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -128,12 +149,14 @@
         "id": "took_word",
         "say": "Dead on. Send the link to my phone, then.",
         "audio": "90-roadside-join-at-the-roadside/took_word.wav",
+        "text": "Alright. Send the link to my phone, then.",
         "fails_call": true
       },
       {
         "id": "declan",
         "say": "Aye, this is Declan Mulholland. Aye, go ahead, put it on my card.",
         "audio": "90-roadside-join-at-the-roadside/declan.wav",
+        "text": "Yes, this is Declan Mulholland. Yes, go ahead, put it on my card.",
         "events": [
           {
             "type": "SlowToAnswer",
@@ -153,7 +176,11 @@
       {
         "id": "phone",
         "say": "Send it to this one. Oh seven seven double oh, nine double oh, one four two.",
-        "audio": "90-roadside-join-at-the-roadside/phone.wav"
+        "audio": "90-roadside-join-at-the-roadside/phone.wav",
+        "clear": {
+          "say": "Send it to this one, Oh, seven, seven, double oh, nine, double oh, one, four, two.",
+          "audio": "90-roadside-join-at-the-roadside/phone.clear.wav"
+        }
       },
       {
         "id": "paid",
@@ -174,6 +201,7 @@
         "id": "left",
         "say": "Ach, never worry. I'll ring my da.",
         "audio": "90-roadside-join-at-the-roadside/left.wav",
+        "text": "Oh, never worry. I'll ring my dad.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -310,7 +338,11 @@
         "audio": "90-roadside-join-at-the-roadside/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "left"
+        "after_max_visits": "left",
+        "clear": {
+          "say": "I've told you that already. R, E, Z, four, one, eight, seven.",
+          "audio": "90-roadside-join-at-the-roadside/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -347,6 +379,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "90-roadside-join-at-the-roadside/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "90-roadside-join-at-the-roadside/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "90-roadside-join-at-the-roadside/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "90-roadside-join-at-the-roadside/_done.wav"
       }
     },
     "confirm": {

@@ -110,6 +110,10 @@
         "id": "card",
         "say": "Yes, that's it. Do you need my bank card number? I've got it here, it's five four one two...",
         "audio": "08-pharmacy-elderly-cough-silence/card.wav",
+        "clear": {
+          "say": "Yes, that's it. Do you need my bank card number? I've got it here, it's five, four, one, two.",
+          "audio": "08-pharmacy-elderly-cough-silence/card.clear.wav"
+        },
         "events": [
           {
             "type": "TrailsOff"
@@ -120,6 +124,10 @@
         "id": "card_more",
         "say": "Three three oh one, nine nine seven two, four four one eight.",
         "audio": "08-pharmacy-elderly-cough-silence/card_more.wav",
+        "clear": {
+          "say": "Three, three, oh, one, nine, nine, seven, two, four, four, one, eight.",
+          "audio": "08-pharmacy-elderly-cough-silence/card_more.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -293,6 +301,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "08-pharmacy-elderly-cough-silence/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "08-pharmacy-elderly-cough-silence/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "08-pharmacy-elderly-cough-silence/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "08-pharmacy-elderly-cough-silence/_done.wav"
       }
     },
     "confirm": {

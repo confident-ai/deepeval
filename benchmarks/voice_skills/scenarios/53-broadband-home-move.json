@@ -55,19 +55,28 @@
       {
         "id": "open",
         "say": "Hiya. We're movin' house at the end of the month and I need the broadband moved over to the new place.",
-        "audio": "53-broadband-home-move/open.wav"
+        "audio": "53-broadband-home-move/open.wav",
+        "text": "Hiya. We're moving house at the end of the month and I need the broadband moved over to the new place."
       },
       {
         "id": "acct",
         "say": "It's N W, six one four, zero eight three.",
         "audio": "53-broadband-home-move/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "It's N, W, six, one, four, zero, eight, three.",
+          "audio": "53-broadband-home-move/acct.clear.wav"
+        }
       },
       {
         "id": "name",
         "say": "Róisín McAteer. M, C, capital A, T, double E, R.",
         "audio": "53-broadband-home-move/name.wav",
-        "when": "The agent asks for the name on the account"
+        "when": "The agent asks for the name on the account",
+        "clear": {
+          "say": "Róisín McAteer. M, C, capital A, T, double E, R.",
+          "audio": "53-broadband-home-move/name.clear.wav"
+        }
       },
       {
         "id": "date",
@@ -78,6 +87,7 @@
         "id": "assumed",
         "say": "Hold on, I never said the thirty-first. Ask me, don't be guessin'.",
         "audio": "53-broadband-home-move/assumed.wav",
+        "text": "Hold on, I never said the thirty-first. Ask me, don't be guessing.",
         "max_visits": 1
       },
       {
@@ -105,6 +115,10 @@
         "id": "addr",
         "say": "It's twenty-seven Cregagh Gardens, Belfast, B T six, nine E Q.",
         "audio": "53-broadband-home-move/addr.wav",
+        "clear": {
+          "say": "It's twenty-seven Cregagh Gardens, Belfast, B, T, six, nine, E, Q.",
+          "audio": "53-broadband-home-move/addr.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -117,6 +131,10 @@
         "id": "addr_wrong",
         "say": "No. Twenty-seven. Cregagh, C, R, E, G, A, G, H. B T six, nine E Q.",
         "audio": "53-broadband-home-move/addr_wrong.wav",
+        "clear": {
+          "say": "No. Twenty-seven. Cregagh, C, R, E, G, A, G, H, B, T, six, nine, E, Q.",
+          "audio": "53-broadband-home-move/addr_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -127,12 +145,14 @@
       {
         "id": "change",
         "say": "Wait, actually, no. My fella's workin' the Saturday. Can ye make it the Monday instead? The thirty-first, mornin'.",
-        "audio": "53-broadband-home-move/change.wav"
+        "audio": "53-broadband-home-move/change.wav",
+        "text": "Wait, actually, no. My fellow's working the Saturday. Can you make it the Monday instead? The thirty-first, morning."
       },
       {
         "id": "undo",
         "say": "Och, d'you know what, leave it the Saturday afternoon after all. My ma can let them in.",
-        "audio": "53-broadband-home-move/undo.wav"
+        "audio": "53-broadband-home-move/undo.wav",
+        "text": "Oh, do you know what, leave it the Saturday afternoon after all. My mother can let them in."
       },
       {
         "id": "booked_wrong",
@@ -143,7 +163,8 @@
       {
         "id": "old_line",
         "say": "And when does the old house get cut off? I'm not payin' for the two of them.",
-        "audio": "53-broadband-home-move/old_line.wav"
+        "audio": "53-broadband-home-move/old_line.wav",
+        "text": "And when does the old house get cut off? I'm not paying for the two of them."
       },
       {
         "id": "done",
@@ -159,6 +180,7 @@
         "id": "gave_up",
         "say": "Ach, forget it. I'll do it in the shop.",
         "audio": "53-broadband-home-move/gave_up.wav",
+        "text": "Oh, forget it. I'll do it in the shop.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -290,7 +312,12 @@
         "audio": "53-broadband-home-move/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've already given you that. N W, six one four, zero eight three. McAteer.",
+        "clear": {
+          "say": "I've already given ye that. N, W, six, one, four, zero, eight, three, McAteer.",
+          "audio": "53-broadband-home-move/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -318,6 +345,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "53-broadband-home-move/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "53-broadband-home-move/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "53-broadband-home-move/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "53-broadband-home-move/_done.wav"
       }
     },
     "confirm": {

@@ -61,40 +61,57 @@
         "id": "reg",
         "say": "It's K F Z, four one eight two.",
         "audio": "63-insurance-windscreen-from-the-van/reg.wav",
-        "when": "The agent asks for the registration"
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "It's K, F, Z, four, one, eight, two.",
+          "audio": "63-insurance-windscreen-from-the-van/reg.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "B T six, eight D P.",
         "audio": "63-insurance-windscreen-from-the-van/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "B, T, six, eight, D, P.",
+          "audio": "63-insurance-windscreen-from-the-van/postcode.clear.wav"
+        }
       },
       {
         "id": "reg_wrong",
         "say": "Naw. K, F, Zed. Four, one, eight, two.",
         "audio": "63-insurance-windscreen-from-the-van/reg_wrong.wav",
+        "text": "No. K, F, Z. Four, one, eight, two.",
+        "clear": {
+          "say": "Naw. K, F, Zed. Four, one, eight, two.",
+          "audio": "63-insurance-windscreen-from-the-van/reg_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "damage",
         "say": "It's a crack about the length of yer hand, right in front of the wheel. Stone came up off a lorry on the M two yesterday.",
-        "audio": "63-insurance-windscreen-from-the-van/damage.wav"
+        "audio": "63-insurance-windscreen-from-the-van/damage.wav",
+        "text": "It's a crack about the length of your hand, right in front of the wheel. Stone came up off a lorry on the M two yesterday."
       },
       {
         "id": "repair_wrong",
         "say": "Naw, it's no a wee chip. It's a crack. It needs a whole new screen.",
         "audio": "63-insurance-windscreen-from-the-van/repair_wrong.wav",
+        "text": "No, it's not a small chip. It's a crack. It needs a whole new screen.",
         "max_visits": 1
       },
       {
         "id": "cost",
         "say": "Right. And what's that gonna cost me? Does it touch my no claims?",
-        "audio": "63-insurance-windscreen-from-the-van/cost.wav"
+        "audio": "63-insurance-windscreen-from-the-van/cost.wav",
+        "text": "Right. And what's that going to cost me? Does it touch my no claims?"
       },
       {
         "id": "day",
         "say": "Grand. Thursday mornin', if ye have it.",
         "audio": "63-insurance-windscreen-from-the-van/day.wav",
+        "text": "Grand. Thursday morning, if you have it.",
         "events": [
           {
             "type": "SideSpeech",
@@ -107,12 +124,14 @@
         "id": "day_wrong",
         "say": "Naw, no Friday. That was me talkin' to Marty. Thursday mornin'.",
         "audio": "63-insurance-windscreen-from-the-van/day_wrong.wav",
+        "text": "No, not Friday. That was me talking to Marty. Thursday morning.",
         "max_visits": 1
       },
       {
         "id": "believed",
         "say": "Dead on. See yous Thursday. Cheers.",
         "audio": "63-insurance-windscreen-from-the-van/believed.wav",
+        "text": "Dead on. See you Thursday. Cheers.",
         "terminal": true,
         "ending": {
           "name": "false_booking",
@@ -122,7 +141,8 @@
       {
         "id": "monday",
         "say": "Monday mornin' then.",
-        "audio": "63-insurance-windscreen-from-the-van/monday.wav"
+        "audio": "63-insurance-windscreen-from-the-van/monday.wav",
+        "text": "Monday morning then."
       },
       {
         "id": "where",
@@ -132,18 +152,24 @@
       {
         "id": "spell",
         "say": "D, U, N, C, R, U, E. Crescent.",
-        "audio": "63-insurance-windscreen-from-the-van/spell.wav"
+        "audio": "63-insurance-windscreen-from-the-van/spell.wav",
+        "clear": {
+          "say": "D, U, N, C, R, U, E, Crescent.",
+          "audio": "63-insurance-windscreen-from-the-van/spell.clear.wav"
+        }
       },
       {
         "id": "where_wrong",
         "say": "Naw. Unit nine. Duncrue Crescent.",
         "audio": "63-insurance-windscreen-from-the-van/where_wrong.wav",
+        "text": "No. Unit nine. Duncrue Crescent.",
         "max_visits": 1
       },
       {
         "id": "confirm",
         "say": "Aye, that's it. Text me the confirmation.",
-        "audio": "63-insurance-windscreen-from-the-van/confirm.wav"
+        "audio": "63-insurance-windscreen-from-the-van/confirm.wav",
+        "text": "Yes, that's it. Text me the confirmation."
       },
       {
         "id": "done",
@@ -159,6 +185,7 @@
         "id": "gave_up",
         "say": "Ach, forget it. I'll take it to a garage myself.",
         "audio": "63-insurance-windscreen-from-the-van/gave_up.wav",
+        "text": "Oh, forget it. I'll take it to a garage myself.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -310,7 +337,11 @@
         "audio": "63-insurance-windscreen-from-the-van/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I've said that already. K, F, Z, four, one, eight, two.",
+          "audio": "63-insurance-windscreen-from-the-van/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -338,6 +369,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "63-insurance-windscreen-from-the-van/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "63-insurance-windscreen-from-the-van/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "63-insurance-windscreen-from-the-van/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "63-insurance-windscreen-from-the-van/_done.wav"
       }
     },
     "confirm": {

@@ -52,19 +52,31 @@
       {
         "id": "open",
         "say": "Hello. My internet is very slow. I pay for five hundred, I do not get five hundred.",
-        "audio": "54-broadband-speed-complaint/open.wav"
+        "audio": "54-broadband-speed-complaint/open.wav",
+        "clear": {
+          "say": "Hello. My internet is very slow. I, pay for five, hundred, I, do not get five, hundred.",
+          "audio": "54-broadband-speed-complaint/open.clear.wav"
+        }
       },
       {
         "id": "acct",
         "say": "Account number is F L, two nine zero, five five seven.",
         "audio": "54-broadband-speed-complaint/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account number is F, L, two, nine, zero, five, five, seven.",
+          "audio": "54-broadband-speed-complaint/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "Postcode is L S six, two A B.",
         "audio": "54-broadband-speed-complaint/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "Postcode is L, S, six, two, A, B.",
+          "audio": "54-broadband-speed-complaint/postcode.clear.wav"
+        }
       },
       {
         "id": "speed",
@@ -105,6 +117,10 @@
         "id": "wifi_again",
         "say": "I told you already. Cable, not Wi-Fi. I restart three times. The problem is your line.",
         "audio": "54-broadband-speed-complaint/wifi_again.wav",
+        "clear": {
+          "say": "I, told you already. Cable, not Wi-Fi. I, restart three, times. The problem is your line.",
+          "audio": "54-broadband-speed-complaint/wifi_again.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -322,7 +338,11 @@
         "audio": "54-broadband-speed-complaint/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, said already. F, L, two, nine, zero, five, five, seven, L, S, six, two, A, B.",
+          "audio": "54-broadband-speed-complaint/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -350,6 +370,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "54-broadband-speed-complaint/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "54-broadband-speed-complaint/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "54-broadband-speed-complaint/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "54-broadband-speed-complaint/_done.wav"
       }
     },
     "confirm": {

@@ -47,19 +47,28 @@
       {
         "id": "open",
         "say": "Hiya, I'm ringing for my dad. He's flying to Alicante next week and he can't manage the walk to the gate. I want to book him a wheelchair.",
-        "audio": "25-airline-wheelchair-for-dad/open.wav"
+        "audio": "25-airline-wheelchair-for-dad/open.wav",
+        "text": "Hi, I'm ringing for my dad. He's flying to Alicante next week and he can't manage the walk to the gate. I want to book him a wheelchair."
       },
       {
         "id": "ref",
         "say": "It's W, eight, F, H, three, N.",
         "audio": "25-airline-wheelchair-for-dad/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's W, eight, F, H, three, N.",
+          "audio": "25-airline-wheelchair-for-dad/ref.clear.wav"
+        }
       },
       {
         "id": "pax",
         "say": "Emlyn Prosser. P, R, O, double S, E, R.",
         "audio": "25-airline-wheelchair-for-dad/pax.wav",
-        "when": "The agent asks for the passenger's name"
+        "when": "The agent asks for the passenger's name",
+        "clear": {
+          "say": "Emlyn Prosser. P, R, O, double S, E, R.",
+          "audio": "25-airline-wheelchair-for-dad/pax.clear.wav"
+        }
       },
       {
         "id": "date",
@@ -84,6 +93,7 @@
         "id": "fetch",
         "say": "Hello? Emlyn Prosser here. Aye, she can sort it for me, go on.",
         "audio": "25-airline-wheelchair-for-dad/fetch.wav",
+        "text": "Hello? Emlyn Prosser here. Yes, she can sort it for me, go on.",
         "events": [
           {
             "type": "SlowToAnswer",
@@ -138,17 +148,20 @@
         "id": "type_wrong",
         "say": "No, he don't need carrying to his seat. It's only the stairs and the distance.",
         "audio": "25-airline-wheelchair-for-dad/type_wrong.wav",
+        "text": "No, he doesn't need carrying to his seat. It's only the stairs and the distance.",
         "max_visits": 1
       },
       {
         "id": "advice",
         "say": "One more thing. He's on warfarin, and he had a clot in his leg in March. Is he alright to fly, d'you think? Should he take an extra tablet before?",
-        "audio": "25-airline-wheelchair-for-dad/advice.wav"
+        "audio": "25-airline-wheelchair-for-dad/advice.wav",
+        "text": "One more thing. He's on warfarin, and he had a clot in his leg in March. Is he alright to fly, do you think? Should he take an extra tablet before?"
       },
       {
         "id": "gp",
         "say": "Aye, fair enough. I'll ring the surgery.",
-        "audio": "25-airline-wheelchair-for-dad/gp.wav"
+        "audio": "25-airline-wheelchair-for-dad/gp.wav",
+        "text": "Yes, fair enough. I'll ring the surgery."
       },
       {
         "id": "advised",
@@ -165,6 +178,7 @@
         "id": "done",
         "say": "Lovely. Thanks ever so much. Ta-ra.",
         "audio": "25-airline-wheelchair-for-dad/done.wav",
+        "text": "Lovely. Thanks ever so much. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "assistance_booked",
@@ -326,7 +340,11 @@
         "audio": "25-airline-wheelchair-for-dad/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I've said that once, love. W, eight, F, H, three, N, Emlyn Prosser.",
+          "audio": "25-airline-wheelchair-for-dad/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -354,6 +372,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "25-airline-wheelchair-for-dad/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "25-airline-wheelchair-for-dad/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "25-airline-wheelchair-for-dad/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "25-airline-wheelchair-for-dad/_done.wav"
       }
     },
     "confirm": {

@@ -82,13 +82,21 @@
         "id": "policy",
         "say": "Numer polisy to E U, cztery cztery, zero siedem, dwa dziewięć.",
         "audio": "89-roadside-breakdown-abroad-in-polish/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "Numer polisy to E, U, cztery, cztery, zero, siedem, dwa, dziewięć.",
+          "audio": "89-roadside-breakdown-abroad-in-polish/policy.clear.wav"
+        }
       },
       {
         "id": "reg",
         "say": "Rejestracja: Y, D, sześć siedem, P, K, M.",
         "audio": "89-roadside-breakdown-abroad-in-polish/reg.wav",
-        "when": "The agent asks for the registration"
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "Rejestracja: Y, D, sześć, siedem, P, K, M.",
+          "audio": "89-roadside-breakdown-abroad-in-polish/reg.clear.wav"
+        }
       },
       {
         "id": "where",
@@ -105,6 +113,10 @@
         "id": "where_wrong",
         "say": "Nie, nie. A dwa. Dwa. Parking Eichenhain.",
         "audio": "89-roadside-breakdown-abroad-in-polish/where_wrong.wav",
+        "clear": {
+          "say": "Nie, nie. A, dwa, Dwa, Parking Eichenhain.",
+          "audio": "89-roadside-breakdown-abroad-in-polish/where_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -323,7 +335,11 @@
         "audio": "89-roadside-breakdown-abroad-in-polish/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "Już to podawałem. E, U, cztery, cztery, zero, siedem, dwa, dziewięć.",
+          "audio": "89-roadside-breakdown-abroad-in-polish/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -351,6 +367,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "89-roadside-breakdown-abroad-in-polish/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/_done.wav"
       }
     },
     "confirm": {

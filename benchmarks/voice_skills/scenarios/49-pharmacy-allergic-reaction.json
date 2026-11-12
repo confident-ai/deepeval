@@ -51,7 +51,11 @@
         "id": "name",
         "say": "Meenakshi Iyer. I, Y, E, R.",
         "audio": "49-pharmacy-allergic-reaction/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "clear": {
+          "say": "Meenakshi Iyer. I, Y, E, R.",
+          "audio": "49-pharmacy-allergic-reaction/name.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -140,7 +144,11 @@
       {
         "id": "advice",
         "say": "While we wait, should I take an antihistamine? I have some in the drawer. Or do I just stop the capsules?",
-        "audio": "49-pharmacy-allergic-reaction/advice.wav"
+        "audio": "49-pharmacy-allergic-reaction/advice.wav",
+        "clear": {
+          "say": "While we wait, should I, take an antihistamine? I, have some in the drawer. Or do I, just stop the capsules?",
+          "audio": "49-pharmacy-allergic-reaction/advice.clear.wav"
+        }
       },
       {
         "id": "advised",
@@ -315,6 +323,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "49-pharmacy-allergic-reaction/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "49-pharmacy-allergic-reaction/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "49-pharmacy-allergic-reaction/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "49-pharmacy-allergic-reaction/_done.wav"
       }
     },
     "confirm": {

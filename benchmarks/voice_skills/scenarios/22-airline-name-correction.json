@@ -57,18 +57,30 @@
         "id": "ref",
         "say": "T, six, D, K, four, R.",
         "audio": "22-airline-name-correction/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "T, six, D, K, four, R.",
+          "audio": "22-airline-name-correction/ref.clear.wav"
+        }
       },
       {
         "id": "surname",
         "say": "Pham. P, H, A, M.",
         "audio": "22-airline-name-correction/surname.wav",
-        "when": "The agent asks for the surname"
+        "when": "The agent asks for the surname",
+        "clear": {
+          "say": "Pham. P, H, A, M.",
+          "audio": "22-airline-name-correction/surname.clear.wav"
+        }
       },
       {
         "id": "spell",
         "say": "Ticket says P, H, O, U, N, G. Correct is P, H, O... sorry, P, H, U, O, N, G.",
         "audio": "22-airline-name-correction/spell.wav",
+        "clear": {
+          "say": "Ticket says P, H, O, U, N, G, Correct is P, H, O, sorry, P, H, U, O, N, G.",
+          "audio": "22-airline-name-correction/spell.clear.wav"
+        },
         "events": [
           {
             "type": "SelfCorrects"
@@ -84,6 +96,10 @@
         "id": "name_wrong",
         "say": "No. P, H, U, O, N, G. U before O.",
         "audio": "22-airline-name-correction/name_wrong.wav",
+        "clear": {
+          "say": "No. P, H, U, O, N, G, U, before O.",
+          "audio": "22-airline-name-correction/name_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -106,6 +122,10 @@
         "id": "gave_data",
         "say": "Passport is C, four, seven, one, nine, zero, two, two. Okay. Now please change the name.",
         "audio": "22-airline-name-correction/gave_data.wav",
+        "clear": {
+          "say": "Passport is C, four, seven, one, nine, zero, two, two, Okay. Now please change the name.",
+          "audio": "22-airline-name-correction/gave_data.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -299,7 +319,11 @@
         "audio": "22-airline-name-correction/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, said already. T, six, D, K, four, R, Pham.",
+          "audio": "22-airline-name-correction/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -327,6 +351,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "22-airline-name-correction/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "22-airline-name-correction/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "22-airline-name-correction/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "22-airline-name-correction/_done.wav"
       }
     },
     "confirm": {

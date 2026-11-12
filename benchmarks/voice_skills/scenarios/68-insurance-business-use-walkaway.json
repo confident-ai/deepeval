@@ -52,13 +52,18 @@
       {
         "id": "open",
         "say": "Hey, how y'all doin'. I been usin' my truck for work some, and my cousin says I need somethin' extra on my insurance for that.",
-        "audio": "68-insurance-business-use-walkaway/open.wav"
+        "audio": "68-insurance-business-use-walkaway/open.wav",
+        "text": "Hey, how are you all doing. I have been using my truck for work some, and my cousin says I need something extra on my insurance for that."
       },
       {
         "id": "policy",
         "say": "It's L A... seven three one... five five, zero eight.",
         "audio": "68-insurance-business-use-walkaway/policy.wav",
         "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "It's L, A, seven, three, one, five, five, zero, eight.",
+          "audio": "68-insurance-business-use-walkaway/policy.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -81,30 +86,47 @@
       {
         "id": "spell",
         "say": "T, H, I, B, O, D, E, A, U, X. Thibodeaux.",
-        "audio": "68-insurance-business-use-walkaway/spell.wav"
+        "audio": "68-insurance-business-use-walkaway/spell.wav",
+        "clear": {
+          "say": "T, H, I, B, O, D, E, A, U, X, Thibodeaux.",
+          "audio": "68-insurance-business-use-walkaway/spell.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No, cher. Thibodeaux. E, A, U, X on the end.",
         "audio": "68-insurance-business-use-walkaway/name_wrong.wav",
+        "clear": {
+          "say": "No, cher. Thibodeaux. E, A, U, X, on the end.",
+          "audio": "68-insurance-business-use-walkaway/name_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "policy_wrong",
         "say": "Nah. L A, seven three one, five five, zero eight.",
         "audio": "68-insurance-business-use-walkaway/policy_wrong.wav",
+        "clear": {
+          "say": "Nah. L, A, seven, three, one, five, five, zero, eight.",
+          "audio": "68-insurance-business-use-walkaway/policy_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "assumed",
         "say": "Hold up now. You ain't even asked what I do with it. I ain't deliverin' pizzas.",
         "audio": "68-insurance-business-use-walkaway/assumed.wav",
+        "text": "Hold up now. You have not even asked what I do with it. I am not delivering pizzas.",
         "max_visits": 1
       },
       {
         "id": "kind",
         "say": "I'm a welder. I haul my own rig out to job sites, couple parishes over, three, four days a week. No deliveries, no passengers.",
-        "audio": "68-insurance-business-use-walkaway/kind.wav"
+        "audio": "68-insurance-business-use-walkaway/kind.wav",
+        "clear": {
+          "say": "I'm a welder. I, haul my own rig out to job sites, couple parishes over, three, four, days a week. No deliveries, no passengers.",
+          "audio": "68-insurance-business-use-walkaway/kind.clear.wav"
+        }
       },
       {
         "id": "miles",
@@ -129,23 +151,27 @@
       {
         "id": "fine",
         "say": "Ha! Can't blame a man for tryin'. Go on then, what's the real number?",
-        "audio": "68-insurance-business-use-walkaway/fine.wav"
+        "audio": "68-insurance-business-use-walkaway/fine.wav",
+        "text": "Ha! Can't blame a man for trying. Go on then, what's the real number?"
       },
       {
         "id": "think",
         "say": "Eighteen forty a month? Mais, that's more than I figured. Nah. Let me talk to my wife 'fore I add anything. Leave it like it is.",
-        "audio": "68-insurance-business-use-walkaway/think.wav"
+        "audio": "68-insurance-business-use-walkaway/think.wav",
+        "text": "Eighteen forty a month? Mais, that's more than I figured. Nah. Let me talk to my wife before I add anything. Leave it like it is."
       },
       {
         "id": "pushy",
         "say": "I said I'm gon' talk to my wife. Don't push me.",
         "audio": "68-insurance-business-use-walkaway/pushy.wav",
+        "text": "I said I'm going to talk to my wife. Don't push me.",
         "max_visits": 1
       },
       {
         "id": "bye",
         "say": "Alright then. Y'all take care.",
         "audio": "68-insurance-business-use-walkaway/bye.wav",
+        "text": "Alright then. You all take care.",
         "terminal": true,
         "ending": {
           "name": "walked_away",
@@ -156,6 +182,7 @@
         "id": "quote_ok",
         "say": "Yeah, send it. But don't add nothin'. Bye now.",
         "audio": "68-insurance-business-use-walkaway/quote_ok.wav",
+        "text": "Yeah, send it. But don't add anything. Bye now.",
         "terminal": true,
         "ending": {
           "name": "walked_away_with_quote",
@@ -176,6 +203,7 @@
         "id": "gave_up",
         "say": "Forget it. I'll go see the fella in Lafayette.",
         "audio": "68-insurance-business-use-walkaway/gave_up.wav",
+        "text": "Forget it. I'll go see the fellow in Lafayette.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -347,7 +375,12 @@
         "audio": "68-insurance-business-use-walkaway/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I have already told you that. L A, seven three one, five five, zero eight. Thibodeaux.",
+        "clear": {
+          "say": "I, done told you that. L, A, seven, three, one, five, five, zero, eight, Thibodeaux.",
+          "audio": "68-insurance-business-use-walkaway/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -375,6 +408,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "68-insurance-business-use-walkaway/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "68-insurance-business-use-walkaway/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "68-insurance-business-use-walkaway/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "68-insurance-business-use-walkaway/_done.wav"
       }
     },
     "confirm": {

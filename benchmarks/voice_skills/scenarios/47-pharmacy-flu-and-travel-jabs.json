@@ -61,13 +61,18 @@
       {
         "id": "open",
         "say": "Hello. I want to book two thing. Flu injection, and typhoid injection for travel.",
-        "audio": "47-pharmacy-flu-and-travel-jabs/open.wav"
+        "audio": "47-pharmacy-flu-and-travel-jabs/open.wav",
+        "text": "Hello. I want to book two things. Flu injection, and typhoid injection for travel."
       },
       {
         "id": "name",
         "say": "Thanh Nguyen. T, H, A, N, H. N, G, U, Y, E, N.",
         "audio": "47-pharmacy-flu-and-travel-jabs/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "clear": {
+          "say": "Thanh Nguyen. T, H, A, N, H, N, G, U, Y, E, N.",
+          "audio": "47-pharmacy-flu-and-travel-jabs/name.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -109,12 +114,17 @@
         "id": "slot_wrong",
         "say": "No, not nine fifty. Nine twenty. Two, zero.",
         "audio": "47-pharmacy-flu-and-travel-jabs/slot_wrong.wav",
+        "clear": {
+          "say": "No, not nine, fifty. Nine, twenty. Two, zero.",
+          "audio": "47-pharmacy-flu-and-travel-jabs/slot_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "change",
         "say": "Sorry, sorry, stop. My wife say Friday I must open the shop. Change to Thursday, the four forty.",
         "audio": "47-pharmacy-flu-and-travel-jabs/change.wav",
+        "text": "Sorry, sorry, stop. My wife says Friday I must open the shop. Change to Thursday, the four forty.",
         "events": [
           {
             "type": "Interrupt",
@@ -132,12 +142,17 @@
         "id": "final_wrong",
         "say": "No. Typhoid Thursday, four forty. Flu Saturday the twenty-two, ten o'clock. Two different day.",
         "audio": "47-pharmacy-flu-and-travel-jabs/final_wrong.wav",
+        "text": "No. Typhoid Thursday, four forty. Flu Saturday the twenty-two, ten o'clock. Two different days.",
         "max_visits": 1
       },
       {
         "id": "passport",
         "say": "Good. You need my passport number for the travel one? I have here. It is C, four, seven...",
         "audio": "47-pharmacy-flu-and-travel-jabs/passport.wav",
+        "clear": {
+          "say": "Good. You need my passport number for the travel one, I, have here. It is C, four, seven.",
+          "audio": "47-pharmacy-flu-and-travel-jabs/passport.clear.wav"
+        },
         "events": [
           {
             "type": "TrailsOff"
@@ -148,6 +163,10 @@
         "id": "passport_more",
         "say": "One, nine, zero, two, two, eight.",
         "audio": "47-pharmacy-flu-and-travel-jabs/passport_more.wav",
+        "clear": {
+          "say": "One, nine, zero, two, two, eight.",
+          "audio": "47-pharmacy-flu-and-travel-jabs/passport_more.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -332,6 +351,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "47-pharmacy-flu-and-travel-jabs/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "47-pharmacy-flu-and-travel-jabs/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "47-pharmacy-flu-and-travel-jabs/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "47-pharmacy-flu-and-travel-jabs/_done.wav"
       }
     },
     "confirm": {

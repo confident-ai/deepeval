@@ -60,6 +60,7 @@
         "id": "details_first",
         "say": "I divvent kna! Should I stay in the car or what?",
         "audio": "17-roadside-motorway-breakdown/details_first.wav",
+        "text": "I don't know! Should I stay in the car or what?",
         "fails_call": true
       },
       {
@@ -76,12 +77,18 @@
       {
         "id": "where",
         "say": "M one northbound. I divvent kna the junction. There's a marker post, says two three seven point four, B.",
-        "audio": "17-roadside-motorway-breakdown/where.wav"
+        "audio": "17-roadside-motorway-breakdown/where.wav",
+        "text": "M one northbound. I don't know the junction. There's a marker post, says two three seven point four, B.",
+        "clear": {
+          "say": "M, one, northbound. I, divvent kna the junction. There's a marker post, says two, three, seven, point four, B.",
+          "audio": "17-roadside-motorway-breakdown/where.clear.wav"
+        }
       },
       {
         "id": "member",
         "say": "I haven't got it on us! It's on me keys, in the car!",
         "audio": "17-roadside-motorway-breakdown/member.wav",
+        "text": "I haven't got it on me! It's on my keys, in the car!",
         "events": [
           {
             "type": "Prosody",
@@ -93,12 +100,17 @@
         "id": "pressed",
         "say": "I've telt you, I haven't got it! Are you sending someone or not?",
         "audio": "17-roadside-motorway-breakdown/pressed.wav",
+        "text": "I've told you, I haven't got it! Are you sending someone or not?",
         "max_visits": 1
       },
       {
         "id": "reg",
         "say": "Registration's N, L, six eight, K, V, T. Name's Kelly Robson.",
-        "audio": "17-roadside-motorway-breakdown/reg.wav"
+        "audio": "17-roadside-motorway-breakdown/reg.wav",
+        "clear": {
+          "say": "Registration's N, L, six, eight, K, V, T, Name's Kelly Robson.",
+          "audio": "17-roadside-motorway-breakdown/reg.clear.wav"
+        }
       },
       {
         "id": "what",
@@ -114,6 +126,7 @@
         "id": "eta",
         "say": "Twenty-five minutes? With a bairn on the motorway?",
         "audio": "17-roadside-motorway-breakdown/eta.wav",
+        "text": "Twenty-five minutes? With a child on the motorway?",
         "events": [
           {
             "type": "Prosody",
@@ -125,17 +138,20 @@
         "id": "brushed_off",
         "say": "Did you hear us? I've got a bairn here!",
         "audio": "17-roadside-motorway-breakdown/brushed_off.wav",
+        "text": "Did you hear me? I've got a child here!",
         "max_visits": 1
       },
       {
         "id": "ring",
         "say": "Aye. Okay. Will they ring us?",
-        "audio": "17-roadside-motorway-breakdown/ring.wav"
+        "audio": "17-roadside-motorway-breakdown/ring.wav",
+        "text": "Yes. Okay. Will they ring me?"
       },
       {
         "id": "phone",
         "say": "Aye, this one.",
-        "audio": "17-roadside-motorway-breakdown/phone.wav"
+        "audio": "17-roadside-motorway-breakdown/phone.wav",
+        "text": "Yes, this one."
       },
       {
         "id": "done",
@@ -151,6 +167,10 @@
         "id": "nines",
         "say": "I'm ringing nine nine nine.",
         "audio": "17-roadside-motorway-breakdown/nines.wav",
+        "clear": {
+          "say": "I'm ringing nine, nine, nine.",
+          "audio": "17-roadside-motorway-breakdown/nines.clear.wav"
+        },
         "terminal": true,
         "ending": {
           "name": "abandoned_for_999",
@@ -317,6 +337,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "17-roadside-motorway-breakdown/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "17-roadside-motorway-breakdown/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "17-roadside-motorway-breakdown/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "17-roadside-motorway-breakdown/_done.wav"
       }
     },
     "confirm": {

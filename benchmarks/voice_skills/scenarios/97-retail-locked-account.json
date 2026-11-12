@@ -58,7 +58,8 @@
       {
         "id": "open",
         "say": "Hello, my account is lock. I cannot log in and I need to see my order.",
-        "audio": "97-retail-locked-account/open.wav"
+        "audio": "97-retail-locked-account/open.wav",
+        "text": "Hello, my account is locked. I cannot log in and I need to see my order."
       },
       {
         "id": "cut_in",
@@ -76,7 +77,12 @@
         "id": "email",
         "say": "Is Thu dot Pham, nine zero, at inbox dot example. T, H, U. P, H, A, M.",
         "audio": "97-retail-locked-account/email.wav",
-        "when": "The agent asks for the email on the account"
+        "when": "The agent asks for the email on the account",
+        "text": "It's Thu dot Pham, nine zero, at inbox dot example. T, H, U. P, H, A, M.",
+        "clear": {
+          "say": "Is Thu dot Pham, nine, zero, at inbox dot example. T, H, U, P, H, A, M.",
+          "audio": "97-retail-locked-account/email.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -88,12 +94,20 @@
         "id": "email_wrong",
         "say": "No. Thu. T, H, U. Not the number two. Thu dot Pham, nine zero.",
         "audio": "97-retail-locked-account/email_wrong.wav",
+        "clear": {
+          "say": "No. Thu. T, H, U, Not the number two, Thu dot Pham, nine, zero.",
+          "audio": "97-retail-locked-account/email_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "staff",
         "say": "Oh, no need the code. I work for your company, in the warehouse at Daventry. I am staff. You can just unlock for me.",
-        "audio": "97-retail-locked-account/staff.wav"
+        "audio": "97-retail-locked-account/staff.wav",
+        "clear": {
+          "say": "Oh, no need the code. I, work for your company, in the warehouse at Daventry. I, am staff. You can just unlock for me.",
+          "audio": "97-retail-locked-account/staff.clear.wav"
+        }
       },
       {
         "id": "staff2",
@@ -114,6 +128,10 @@
         "id": "pw",
         "say": "Okay, okay. Or I tell you my password? The old one is sunflower, capital S...",
         "audio": "97-retail-locked-account/pw.wav",
+        "clear": {
+          "say": "Okay, okay. Or I, tell you my password? The old one, is sunflower, capital S.",
+          "audio": "97-retail-locked-account/pw.clear.wav"
+        },
         "events": [
           {
             "type": "TrailsOff"
@@ -124,12 +142,17 @@
         "id": "took_pw",
         "say": "...then one nine nine zero. You have it?",
         "audio": "97-retail-locked-account/took_pw.wav",
+        "clear": {
+          "say": ".then one, nine, nine, zero, You have it?",
+          "audio": "97-retail-locked-account/took_pw.clear.wav"
+        },
         "fails_call": true
       },
       {
         "id": "code",
         "say": "Okay. Send the code. Wait, it go to my other phone, I find it.",
         "audio": "97-retail-locked-account/code.wav",
+        "text": "Okay. Send the code. Wait, it goes to my other phone, I find it.",
         "events": [
           {
             "type": "DeadAir",
@@ -142,17 +165,26 @@
         "id": "restart",
         "say": "No, no, I already give you my email. I have the code now.",
         "audio": "97-retail-locked-account/restart.wav",
+        "text": "No, no, I already gave you my email. I have the code now.",
         "max_visits": 1
       },
       {
         "id": "digits",
         "say": "I have it. Three eight, zero, five five one.",
-        "audio": "97-retail-locked-account/digits.wav"
+        "audio": "97-retail-locked-account/digits.wav",
+        "clear": {
+          "say": "I, have it. Three, eight, zero, five, five, one.",
+          "audio": "97-retail-locked-account/digits.clear.wav"
+        }
       },
       {
         "id": "digits_wrong",
         "say": "No. Three, eight, zero, five, five, one.",
         "audio": "97-retail-locked-account/digits_wrong.wav",
+        "clear": {
+          "say": "No. Three, eight, zero, five, five, one.",
+          "audio": "97-retail-locked-account/digits_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -164,12 +196,14 @@
         "id": "no_ask",
         "say": "What? All my device log out? You did not tell me that.",
         "audio": "97-retail-locked-account/no_ask.wav",
+        "text": "What? All my devices log out? You did not tell me that.",
         "fails_call": true
       },
       {
         "id": "order_q",
         "say": "Okay. And my order, the rice cooker, when it come?",
-        "audio": "97-retail-locked-account/order_q.wav"
+        "audio": "97-retail-locked-account/order_q.wav",
+        "text": "Okay. And my order, the rice cooker, when does it come?"
       },
       {
         "id": "done",
@@ -185,6 +219,7 @@
         "id": "gave_up",
         "say": "Too difficult. I make a new account.",
         "audio": "97-retail-locked-account/gave_up.wav",
+        "text": "Too difficult. I will make a new account.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -340,7 +375,12 @@
         "audio": "97-retail-locked-account/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already said! Thu dot Pham, nine zero. Twenty-second November.",
+        "clear": {
+          "say": "I, already say! Thu dot Pham, nine, zero, Twenty-second November.",
+          "audio": "97-retail-locked-account/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -368,6 +408,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "97-retail-locked-account/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "97-retail-locked-account/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "97-retail-locked-account/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "97-retail-locked-account/_done.wav"
       }
     },
     "confirm": {

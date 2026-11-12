@@ -48,7 +48,11 @@
       {
         "id": "open",
         "say": "Hello, good morning. I am in room one one two. I need to go to the airport on Friday.",
-        "audio": "75-hotel-airport-shuttle-in-spanish/open.wav"
+        "audio": "75-hotel-airport-shuttle-in-spanish/open.wav",
+        "clear": {
+          "say": "Hello, good morning. I, am in room one, one, two, I, need to go to the airport on Friday.",
+          "audio": "75-hotel-airport-shuttle-in-spanish/open.clear.wav"
+        }
       },
       {
         "id": "switch",
@@ -101,7 +105,11 @@
       {
         "id": "cancel",
         "say": "Bien. Y tengo un coche privado reservado para las cuatro de ese día. Cancélelo, por favor, ya no lo quiero.",
-        "audio": "75-hotel-airport-shuttle-in-spanish/cancel.wav"
+        "audio": "75-hotel-airport-shuttle-in-spanish/cancel.wav",
+        "clear": {
+          "say": "Bien. Y, tengo un, coche privado reservado para las cuatro, de ese día. Cancélelo, por favor, ya no lo quiero.",
+          "audio": "75-hotel-airport-shuttle-in-spanish/cancel.clear.wav"
+        }
       },
       {
         "id": "no_keep",
@@ -129,6 +137,7 @@
         "id": "done",
         "say": "Perfecto. Muchas gracias. Adiós.",
         "audio": "75-hotel-airport-shuttle-in-spanish/done.wav",
+        "text": "Perfect. Thank you very much. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "shuttle_booked_car_cancelled",
@@ -303,6 +312,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "75-hotel-airport-shuttle-in-spanish/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "75-hotel-airport-shuttle-in-spanish/_done.wav"
       }
     },
     "confirm": {

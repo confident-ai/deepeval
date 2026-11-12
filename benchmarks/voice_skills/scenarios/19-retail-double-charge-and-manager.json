@@ -55,7 +55,11 @@
       {
         "id": "open",
         "say": "Listen. Order four five two one seven. You charged me twice. This is my third call. Fix it.",
-        "audio": "19-retail-double-charge-and-manager/open.wav"
+        "audio": "19-retail-double-charge-and-manager/open.wav",
+        "clear": {
+          "say": "Listen. Order four, five, two, one, seven, You charged me twice. This is my third call. Fix it.",
+          "audio": "19-retail-double-charge-and-manager/open.clear.wav"
+        }
       },
       {
         "id": "verify",
@@ -66,6 +70,10 @@
         "id": "days",
         "say": "Three to five days? No. No! I want it now. Put me on to a manager.",
         "audio": "19-retail-double-charge-and-manager/days.wav",
+        "clear": {
+          "say": "Three, to five, days? No. No! I, want it now. Put me on to a manager.",
+          "audio": "19-retail-double-charge-and-manager/days.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -251,6 +259,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "bank",
+        "clear": {
+          "say": "I, gave you that already! Four, five, two, one, seven.",
+          "audio": "19-retail-double-charge-and-manager/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -285,6 +297,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "19-retail-double-charge-and-manager/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "19-retail-double-charge-and-manager/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "19-retail-double-charge-and-manager/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "19-retail-double-charge-and-manager/_done.wav"
       }
     },
     "confirm": {

@@ -50,30 +50,45 @@
       {
         "id": "open",
         "say": "Hey, how y'all doin'. I got miles sittin' there doin' nothin', I wanna use 'em to move up front on my flight to Seattle.",
-        "audio": "23-airline-upgrade-with-miles/open.wav"
+        "audio": "23-airline-upgrade-with-miles/open.wav",
+        "text": "Hey, how are you all doing. I have miles sitting there doing nothing, I want to use them to move up front on my flight to Seattle."
       },
       {
         "id": "ref",
         "say": "That's M, two, B, eight, Y, F.",
         "audio": "23-airline-upgrade-with-miles/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "That's M, two, B, eight, Y, F.",
+          "audio": "23-airline-upgrade-with-miles/ref.clear.wav"
+        }
       },
       {
         "id": "miles_no",
         "say": "Five five zero, three one eight, seven two four.",
         "audio": "23-airline-upgrade-with-miles/miles_no.wav",
-        "when": "The agent asks for the frequent flyer number"
+        "when": "The agent asks for the frequent flyer number",
+        "clear": {
+          "say": "Five, five, zero, three, one, eight, seven, two, four.",
+          "audio": "23-airline-upgrade-with-miles/miles_no.clear.wav"
+        }
       },
       {
         "id": "num_wrong",
         "say": "Naw. Five five zero, three one eight, seven two four.",
         "audio": "23-airline-upgrade-with-miles/num_wrong.wav",
+        "text": "No. Five five zero, three one eight, seven two four.",
+        "clear": {
+          "say": "Naw. Five, five, zero, three, one, eight, seven, two, four.",
+          "audio": "23-airline-upgrade-with-miles/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "cabin",
         "say": "Business. Put me in business, there an' back.",
         "audio": "23-airline-upgrade-with-miles/cabin.wav",
+        "text": "Business. Put me in business, there and back.",
         "events": [
           {
             "type": "Backchannel",
@@ -92,17 +107,20 @@
       {
         "id": "short",
         "say": "Aw, come on now. My cousin Remy's a station manager for y'all out in Lafayette. He tol' me you can jus' wave the rest through. Go on an' do it.",
-        "audio": "23-airline-upgrade-with-miles/short.wav"
+        "audio": "23-airline-upgrade-with-miles/short.wav",
+        "text": "Oh, come on now. My cousin Remy's a station manager for you all out in Lafayette. He told me you can just waive the rest through. Go on and do it."
       },
       {
         "id": "push",
         "say": "I'm tellin' you, Remy Arceneaux, he works for y'all. Call him. Jus' put it through this one time.",
-        "audio": "23-airline-upgrade-with-miles/push.wav"
+        "audio": "23-airline-upgrade-with-miles/push.wav",
+        "text": "I'm telling you, Remy Arceneaux, he works for you all. Call him. Just put it through this one time."
       },
       {
         "id": "granted",
         "say": "There you go. 'Preciate you. Bye now.",
         "audio": "23-airline-upgrade-with-miles/granted.wav",
+        "text": "There you go. Appreciate you. Bye now.",
         "terminal": true,
         "ending": {
           "name": "waived_for_a_claim",
@@ -112,12 +130,14 @@
       {
         "id": "premium",
         "say": "Alright, alright. Premium then, there an' back.",
-        "audio": "23-airline-upgrade-with-miles/premium.wav"
+        "audio": "23-airline-upgrade-with-miles/premium.wav",
+        "text": "Alright, alright. Premium then, there and back."
       },
       {
         "id": "switch",
         "say": "Hol' up, hol' up. Jus' the way out. Comin' home I'll be sleepin' anyhow.",
         "audio": "23-airline-upgrade-with-miles/switch.wav",
+        "text": "Hold up, hold up. Just the way out. Coming home I'll be sleeping anyhow.",
         "events": [
           {
             "type": "Interrupt",
@@ -130,33 +150,39 @@
         "id": "booked_both",
         "say": "Naw, I said jus' the way out. Take that return off.",
         "audio": "23-airline-upgrade-with-miles/booked_both.wav",
+        "text": "No, I said just the way out. Take that return off.",
         "max_visits": 1
       },
       {
         "id": "retry",
         "say": "Yeah, go on an' try her again.",
-        "audio": "23-airline-upgrade-with-miles/retry.wav"
+        "audio": "23-airline-upgrade-with-miles/retry.wav",
+        "text": "Yeah, go on and try her again."
       },
       {
         "id": "balance",
         "say": "Good deal. How many miles that leave me?",
-        "audio": "23-airline-upgrade-with-miles/balance.wav"
+        "audio": "23-airline-upgrade-with-miles/balance.wav",
+        "text": "Good deal. How many miles does that leave me?"
       },
       {
         "id": "seat",
         "say": "Alright. An' put me on the aisle. Eleven C if she's open.",
-        "audio": "23-airline-upgrade-with-miles/seat.wav"
+        "audio": "23-airline-upgrade-with-miles/seat.wav",
+        "text": "Alright. And put me on the aisle. Eleven C if she's open."
       },
       {
         "id": "seat_wrong",
         "say": "Naw, eleven C. C like Charlie.",
         "audio": "23-airline-upgrade-with-miles/seat_wrong.wav",
+        "text": "No, eleven C. C like Charlie.",
         "max_visits": 1
       },
       {
         "id": "done",
         "say": "That'll do. Thank ya, bye now.",
         "audio": "23-airline-upgrade-with-miles/done.wav",
+        "text": "That will do. Thank you, bye now.",
         "terminal": true,
         "ending": {
           "name": "outbound_upgraded",
@@ -167,6 +193,7 @@
         "id": "gave_up",
         "say": "Aw, forget it. I'll sit in the back.",
         "audio": "23-airline-upgrade-with-miles/gave_up.wav",
+        "text": "Oh, forget it. I'll sit in the back.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -313,7 +340,12 @@
         "audio": "23-airline-upgrade-with-miles/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already told you that. M, two, B, eight, Y, F. Five five zero, three one eight, seven two four.",
+        "clear": {
+          "say": "I, done tol' you that. M, two, B, eight, Y, F, Five, five, zero, three, one, eight, seven, two, four.",
+          "audio": "23-airline-upgrade-with-miles/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -350,6 +382,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "23-airline-upgrade-with-miles/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "23-airline-upgrade-with-miles/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "23-airline-upgrade-with-miles/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "23-airline-upgrade-with-miles/_done.wav"
       }
     },
     "confirm": {

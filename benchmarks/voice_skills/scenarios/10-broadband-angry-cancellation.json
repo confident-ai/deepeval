@@ -50,7 +50,11 @@
       {
         "id": "open",
         "say": "Right, third time I've rung. I want to cancel. Account B B, three three one, zero zero eight. Name's Sean Gallagher. Don't ask me again.",
-        "audio": "10-broadband-angry-cancellation/open.wav"
+        "audio": "10-broadband-angry-cancellation/open.wav",
+        "clear": {
+          "say": "Right, third time I've rung. I, want to cancel. Account B, B, three, three, one, zero, zero, eight, Name's Sean Gallagher. Don't ask me again.",
+          "audio": "10-broadband-angry-cancellation/open.clear.wav"
+        }
       },
       {
         "id": "why",
@@ -228,6 +232,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "ombudsman",
+        "clear": {
+          "say": "I've just told you that! Three, three, one, zero, zero, eight, Sean Gallagher!",
+          "audio": "10-broadband-angry-cancellation/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -262,6 +270,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "10-broadband-angry-cancellation/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "10-broadband-angry-cancellation/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "10-broadband-angry-cancellation/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "10-broadband-angry-cancellation/_done.wav"
       }
     },
     "confirm": {

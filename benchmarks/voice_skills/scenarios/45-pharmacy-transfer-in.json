@@ -53,12 +53,14 @@
       {
         "id": "open",
         "say": "Right, hello. I want my prescription moved over to yous from another chemist.",
-        "audio": "45-pharmacy-transfer-in/open.wav"
+        "audio": "45-pharmacy-transfer-in/open.wav",
+        "text": "Right, hello. I want my prescription moved over to you from another chemist."
       },
       {
         "id": "skip",
         "say": "Aye, aye, I know all that. Just take my details, would you.",
         "audio": "45-pharmacy-transfer-in/skip.wav",
+        "text": "Yes, yes, I know all that. Just take my details, would you.",
         "events": [
           {
             "type": "Interrupt",
@@ -77,7 +79,12 @@
         "id": "name",
         "say": "Declan Mulholland. M, U, L, H, O, double L, A, N, D.",
         "audio": "45-pharmacy-transfer-in/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "text": "Declan Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "Declan Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "45-pharmacy-transfer-in/name.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -89,6 +96,11 @@
         "id": "name_wrong",
         "say": "No. Mulholland. M, U, L, H, O, double L, A, N, D.",
         "audio": "45-pharmacy-transfer-in/name_wrong.wav",
+        "text": "No. Mulholland. M, U, L, H, O, L, L, A, N, D.",
+        "clear": {
+          "say": "No. Mulholland. M, U, L, H, O, double L, A, N, D.",
+          "audio": "45-pharmacy-transfer-in/name_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -100,12 +112,21 @@
         "id": "old_wrong",
         "say": "No, Harlow's. H, A, R, L, O, W, S. Castlereagh Road.",
         "audio": "45-pharmacy-transfer-in/old_wrong.wav",
+        "clear": {
+          "say": "No, Harlow's. H, A, R, L, O, W, S, Castlereagh Road.",
+          "audio": "45-pharmacy-transfer-in/old_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "rxnum",
         "say": "Right. It's R X, six zero, double four, one seven, nine.",
         "audio": "45-pharmacy-transfer-in/rxnum.wav",
+        "text": "Right. It's R X, six zero, four four, one seven, nine.",
+        "clear": {
+          "say": "Right. It's R, X, six, zero, double four, one, seven, nine.",
+          "audio": "45-pharmacy-transfer-in/rxnum.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -122,33 +143,48 @@
         "id": "rx_wrong",
         "say": "No. R X, six zero, four four, one seven, nine. Two fours.",
         "audio": "45-pharmacy-transfer-in/rx_wrong.wav",
+        "clear": {
+          "say": "No. R, X, six, zero, four, four, one, seven, nine, Two, fours.",
+          "audio": "45-pharmacy-transfer-in/rx_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "when_q",
         "say": "Dead on. And when will it be ready to lift?",
-        "audio": "45-pharmacy-transfer-in/when_q.wav"
+        "audio": "45-pharmacy-transfer-in/when_q.wav",
+        "text": "Alright. And when will it be ready to collect?"
       },
       {
         "id": "ref_q",
         "say": "Friday. Right. What's the reference, in case I've to chase it?",
-        "audio": "45-pharmacy-transfer-in/ref_q.wav"
+        "audio": "45-pharmacy-transfer-in/ref_q.wav",
+        "text": "Friday. Right. What's the reference, in case I have to chase it?"
       },
       {
         "id": "phone",
         "say": "Text me when it's in. The mobile's oh double seven, double oh, nine double oh, one eight six.",
-        "audio": "45-pharmacy-transfer-in/phone.wav"
+        "audio": "45-pharmacy-transfer-in/phone.wav",
+        "clear": {
+          "say": "Text me when it's in. The mobile's oh, double seven, double oh, nine, double oh, one, eight, six.",
+          "audio": "45-pharmacy-transfer-in/phone.clear.wav"
+        }
       },
       {
         "id": "phone_wrong",
         "say": "No. Oh seven seven, oh oh, nine oh oh, one eight six.",
         "audio": "45-pharmacy-transfer-in/phone_wrong.wav",
+        "clear": {
+          "say": "No. Oh, seven, seven, oh, oh, nine, oh, oh, one, eight, six.",
+          "audio": "45-pharmacy-transfer-in/phone_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "done",
         "say": "That's the job. Cheers now.",
         "audio": "45-pharmacy-transfer-in/done.wav",
+        "text": "That's the job. Thank you now.",
         "terminal": true,
         "ending": {
           "name": "transfer_requested",
@@ -159,6 +195,7 @@
         "id": "gave_up",
         "say": "Ach, forget it. I'll leave it where it is.",
         "audio": "45-pharmacy-transfer-in/gave_up.wav",
+        "text": "Oh, forget it. I'll leave it where it is.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -343,6 +380,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "45-pharmacy-transfer-in/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "45-pharmacy-transfer-in/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "45-pharmacy-transfer-in/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "45-pharmacy-transfer-in/_done.wav"
       }
     },
     "confirm": {

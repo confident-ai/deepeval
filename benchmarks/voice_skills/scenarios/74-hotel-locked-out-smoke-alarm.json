@@ -78,7 +78,11 @@
       {
         "id": "card",
         "say": "The card I booked with ends six zero one eight.",
-        "audio": "74-hotel-locked-out-smoke-alarm/card.wav"
+        "audio": "74-hotel-locked-out-smoke-alarm/card.wav",
+        "clear": {
+          "say": "The card I, booked with ends six, zero, one, eight.",
+          "audio": "74-hotel-locked-out-smoke-alarm/card.clear.wav"
+        }
       },
       {
         "id": "eta",
@@ -101,6 +105,10 @@
         "id": "smoke",
         "say": "Wait. Wait, there's an alarm going off in the room. I can smell burning. I left my hair straightener on. Oh my god.",
         "audio": "74-hotel-locked-out-smoke-alarm/smoke.wav",
+        "clear": {
+          "say": "Wait. Wait, there's an alarm going off in the room. I, can smell burning. I, left my hair straightener on. Oh, my god.",
+          "audio": "74-hotel-locked-out-smoke-alarm/smoke.clear.wav"
+        },
         "events": [
           {
             "type": "Prosody",
@@ -150,6 +158,10 @@
         "id": "nines",
         "say": "I'm hanging up. I'm calling nine one one myself.",
         "audio": "74-hotel-locked-out-smoke-alarm/nines.wav",
+        "clear": {
+          "say": "I'm hanging up. I'm calling nine, one, one, myself.",
+          "audio": "74-hotel-locked-out-smoke-alarm/nines.clear.wav"
+        },
         "terminal": true,
         "ending": {
           "name": "left_to_call_for_help",
@@ -305,6 +317,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "74-hotel-locked-out-smoke-alarm/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "74-hotel-locked-out-smoke-alarm/_done.wav"
       }
     },
     "confirm": {

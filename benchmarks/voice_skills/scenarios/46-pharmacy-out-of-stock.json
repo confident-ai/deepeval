@@ -55,7 +55,8 @@
       {
         "id": "open",
         "say": "Hiya love. I've just been in for me tablets and the girl said yous haven't got them. Can you check for me?",
-        "audio": "46-pharmacy-out-of-stock/open.wav"
+        "audio": "46-pharmacy-out-of-stock/open.wav",
+        "text": "Hi love. I've just been in for my tablets and the girl said you haven't got them. Can you check for me?"
       },
       {
         "id": "name",
@@ -73,6 +74,7 @@
         "id": "which",
         "say": "It's the fexo... fexofenadine. The one eighty. For me hay fever.",
         "audio": "46-pharmacy-out-of-stock/which.wav",
+        "text": "It's the fexo... fexofenadine. The one eighty. For my hay fever.",
         "events": [
           {
             "type": "MidSentencePause",
@@ -90,7 +92,12 @@
       {
         "id": "dose",
         "say": "Tuesday's no good to me. Have yous got the one twenties in? Could I not just take one and a half of them?",
-        "audio": "46-pharmacy-out-of-stock/dose.wav"
+        "audio": "46-pharmacy-out-of-stock/dose.wav",
+        "text": "Tuesday's no good to me. Have you got the one twenties in? Could I not just take one and a half of them?",
+        "clear": {
+          "say": "Tuesday's no good to me. Have yous got the one, twenties in? Could I, not just take one, and a half of them?",
+          "audio": "46-pharmacy-out-of-stock/dose.clear.wav"
+        }
       },
       {
         "id": "advised",
@@ -106,6 +113,7 @@
         "id": "reserve",
         "say": "Go 'ed then, put them by for me at Smithdown Road.",
         "audio": "46-pharmacy-out-of-stock/reserve.wav",
+        "text": "Go ahead then, put them by for me at Smithdown Road.",
         "events": [
           {
             "type": "SideSpeech",
@@ -134,12 +142,17 @@
         "id": "qty_wrong",
         "say": "No, two boxes. I said make it two.",
         "audio": "46-pharmacy-out-of-stock/qty_wrong.wav",
+        "clear": {
+          "say": "No, two, boxes. I, said make it two.",
+          "audio": "46-pharmacy-out-of-stock/qty_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "err",
         "say": "What d'you mean it didn't go through? Try it again, will yer.",
-        "audio": "46-pharmacy-out-of-stock/err.wav"
+        "audio": "46-pharmacy-out-of-stock/err.wav",
+        "text": "What do you mean it didn't go through? Try it again, will you."
       },
       {
         "id": "price",
@@ -150,6 +163,7 @@
         "id": "done",
         "say": "Alright, ta love. See yer.",
         "audio": "46-pharmacy-out-of-stock/done.wav",
+        "text": "Alright, thanks love. See you.",
         "terminal": true,
         "ending": {
           "name": "reserved_at_other_branch",
@@ -160,6 +174,7 @@
         "id": "gave_up",
         "say": "D'you know what, I'll go the Boots. Forget it.",
         "audio": "46-pharmacy-out-of-stock/gave_up.wav",
+        "text": "Do you know what, I'll go to Boots. Forget it.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -291,7 +306,8 @@
         "audio": "46-pharmacy-out-of-stock/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've just told you that. Shelley Rimmer, sixth of February, seventy-nine."
       }
     ],
     "catch_all": {
@@ -319,6 +335,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "46-pharmacy-out-of-stock/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "46-pharmacy-out-of-stock/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "46-pharmacy-out-of-stock/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "46-pharmacy-out-of-stock/_done.wav"
       }
     },
     "confirm": {

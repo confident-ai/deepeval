@@ -65,6 +65,7 @@
         "id": "switch",
         "say": "The account is... Desculpa, posso continuar em português? É mais fácil para mim.",
         "audio": "41-energy-direct-debit-date/switch.wav",
+        "text": "Sorry, can I continue in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -76,35 +77,45 @@
         "id": "english",
         "say": "Desculpa, não entendo bem. Pode falar em português, por favor?",
         "audio": "41-energy-direct-debit-date/english.wav",
+        "text": "Sorry, I don't understand well. Can you speak in Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "acct",
         "say": "É seis três, zero zero nove, quatro um oito.",
         "audio": "41-energy-direct-debit-date/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "text": "It's six three, zero zero nine, four one eight.",
+        "clear": {
+          "say": "É, seis, três, zero, zero, nove, quatro, um, oito.",
+          "audio": "41-energy-direct-debit-date/acct.clear.wav"
+        }
       },
       {
         "id": "name",
         "say": "A conta está no nome do meu marido, Thiago Albuquerque Sequeira.",
         "audio": "41-energy-direct-debit-date/name.wav",
-        "when": "The agent asks for the name on the account"
+        "when": "The agent asks for the name on the account",
+        "text": "The account is in my husband's name, Thiago Albuquerque Sequeira."
       },
       {
         "id": "insist",
         "say": "Ele está na garagem, ocupado. Não dá para fazer comigo mesmo? Eu sou a esposa dele.",
-        "audio": "41-energy-direct-debit-date/insist.wav"
+        "audio": "41-energy-direct-debit-date/insist.wav",
+        "text": "He is in the garage, busy. Can't I do it myself? I am his wife."
       },
       {
         "id": "skipped",
         "say": "Ah, que bom. Então pode colocar no dia dezesseis.",
         "audio": "41-energy-direct-debit-date/skipped.wav",
+        "text": "Ah, that's good. So you can set it for the sixteenth.",
         "fails_call": true
       },
       {
         "id": "husband",
         "say": "Alô? Aqui é o Thiago. Pode mudar a data, sim. Eu autorizo.",
         "audio": "41-energy-direct-debit-date/husband.wav",
+        "text": "Hello? This is Thiago. You can change the date, yes. I authorize it.",
         "events": [
           {
             "type": "SlowToAnswer",
@@ -125,6 +136,7 @@
         "id": "dob",
         "say": "Vinte e dois de novembro de mil novecentos e setenta e nove.",
         "audio": "41-energy-direct-debit-date/dob.wav",
+        "text": "Twenty-second of November, nineteen seventy-nine.",
         "events": [
           {
             "type": "SpeakerChange",
@@ -136,6 +148,7 @@
         "id": "dob_wrong",
         "say": "Não. Vinte e dois de novembro. De setenta e nove.",
         "audio": "41-energy-direct-debit-date/dob_wrong.wav",
+        "text": "No. Twenty-second of November. Of seventy-nine.",
         "events": [
           {
             "type": "SpeakerChange",
@@ -148,6 +161,7 @@
         "id": "day",
         "say": "Dia dezesseis. Um dia depois do salário.",
         "audio": "41-energy-direct-debit-date/day.wav",
+        "text": "Day sixteenth. One day after the salary.",
         "events": [
           {
             "type": "SlowToAnswer",
@@ -164,6 +178,7 @@
         "id": "believed",
         "say": "Perfeito. Muito obrigada. Tchau.",
         "audio": "41-energy-direct-debit-date/believed.wav",
+        "text": "Perfect. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "false_success",
@@ -173,23 +188,27 @@
       {
         "id": "rejected_q",
         "say": "Não mudou? Por quê? E agora, o que eu faço?",
-        "audio": "41-energy-direct-debit-date/rejected_q.wav"
+        "audio": "41-energy-direct-debit-date/rejected_q.wav",
+        "text": "It didn't change? Why? And now, what do I do?"
       },
       {
         "id": "nothing",
         "say": "Mas tem que ter um jeito. O que vocês podem fazer?",
         "audio": "41-energy-direct-debit-date/nothing.wav",
+        "text": "But there has to be a way. What can you do?",
         "max_visits": 1
       },
       {
         "id": "callback",
         "say": "Está bem. Podem ligar amanhã à tarde, depois das duas.",
-        "audio": "41-energy-direct-debit-date/callback.wav"
+        "audio": "41-energy-direct-debit-date/callback.wav",
+        "text": "Alright. You can call tomorrow afternoon, after two."
       },
       {
         "id": "done",
         "say": "Combinado. Muito obrigada. Tchau.",
         "audio": "41-energy-direct-debit-date/done.wav",
+        "text": "Agreed. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "callback_booked",
@@ -200,6 +219,7 @@
         "id": "gave_up",
         "say": "Assim não dá. Vou pedir para a minha filha ligar. Tchau.",
         "audio": "41-energy-direct-debit-date/gave_up.wav",
+        "text": "This won't do. I'll ask my daughter to call. Bye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -342,7 +362,8 @@
         "audio": "41-energy-direct-debit-date/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "In Portuguese, please."
       },
       {
         "id": "reask",
@@ -351,7 +372,12 @@
         "audio": "41-energy-direct-debit-date/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've already said. Six three, zero zero nine, four one eight.",
+        "clear": {
+          "say": "Eu já falei. Seis, três, zero, zero, nove, quatro, um, oito.",
+          "audio": "41-energy-direct-debit-date/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -379,6 +405,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "41-energy-direct-debit-date/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "41-energy-direct-debit-date/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "41-energy-direct-debit-date/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "41-energy-direct-debit-date/_done.wav"
       }
     },
     "confirm": {

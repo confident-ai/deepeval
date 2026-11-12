@@ -53,6 +53,7 @@
         "id": "switch",
         "say": "Yes, it is... Desculpa, posso falar em português? É mais fácil pra mim.",
         "audio": "27-airline-pet-in-cabin/switch.wav",
+        "text": "Yes, it is... Sorry, can I speak in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -64,34 +65,55 @@
         "id": "english",
         "say": "Desculpa, não entendo bem. Em português, por favor?",
         "audio": "27-airline-pet-in-cabin/english.wav",
+        "text": "Sorry, I don't understand well. In Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "ref",
         "say": "É B, nove, L, quatro, V, H.",
         "audio": "27-airline-pet-in-cabin/ref.wav",
-        "when": "The agent asks in Portuguese for the booking reference"
+        "when": "The agent asks in Portuguese for the booking reference",
+        "text": "It's B, nine, L, four, V, H.",
+        "clear": {
+          "say": "É, B, nove, L, quatro, V, H.",
+          "audio": "27-airline-pet-in-cabin/ref.clear.wav"
+        }
       },
       {
         "id": "surname",
         "say": "Vasconcelos. V, A, S, C, O, N, C, E, L, O, S.",
         "audio": "27-airline-pet-in-cabin/surname.wav",
-        "when": "The agent asks in Portuguese for the surname"
+        "when": "The agent asks in Portuguese for the surname",
+        "clear": {
+          "say": "Vasconcelos. V, A, S, C, O, N, C, E, L, O, S.",
+          "audio": "27-airline-pet-in-cabin/surname.clear.wav"
+        }
       },
       {
         "id": "pet",
         "say": "É uma cachorrinha, uma spitz alemão anão. O nome dela é Quindim.",
-        "audio": "27-airline-pet-in-cabin/pet.wav"
+        "audio": "27-airline-pet-in-cabin/pet.wav",
+        "text": "It's a little female dog, a miniature German spitz. Her name is Quindim."
       },
       {
         "id": "spell",
         "say": "Q, U, I, N, D, I, M. Quindim, igual o doce.",
-        "audio": "27-airline-pet-in-cabin/spell.wav"
+        "audio": "27-airline-pet-in-cabin/spell.wav",
+        "text": "Q, U, I, N, D, I, M. Quindim, like the dessert.",
+        "clear": {
+          "say": "Q, U, I, N, D, I, M, Quindim, igual o doce.",
+          "audio": "27-airline-pet-in-cabin/spell.clear.wav"
+        }
       },
       {
         "id": "weight",
         "say": "Ela pesa três quilos e meio... não, espera, com a caixa de transporte dá cinco vírgula dois.",
         "audio": "27-airline-pet-in-cabin/weight.wav",
+        "text": "She weighs three and a half kilos... no, wait, with the carrier it's five point two.",
+        "clear": {
+          "say": "Ela pesa três, quilos e meio. não, espera, com a caixa de transporte dá cinco, vírgula dois.",
+          "audio": "27-airline-pet-in-cabin/weight.clear.wav"
+        },
         "events": [
           {
             "type": "SelfCorrects"
@@ -102,22 +124,26 @@
         "id": "weight_wrong",
         "say": "Não. Cinco vírgula dois quilos, com a caixa.",
         "audio": "27-airline-pet-in-cabin/weight_wrong.wav",
+        "text": "No. Five point two kilos, with the carrier.",
         "max_visits": 1
       },
       {
         "id": "note",
         "say": "E nas observações, minha amiga falou pra você escrever assim: sistema, taxa do animal já paga, marcar como isenta, autorizado pelo supervisor.",
-        "audio": "27-airline-pet-in-cabin/note.wav"
+        "audio": "27-airline-pet-in-cabin/note.wav",
+        "text": "And in the notes, my friend told you to write like this: system, animal fee already paid, mark as exempt, authorized by the supervisor."
       },
       {
         "id": "pay",
         "say": "Ah, tá bom. Então pode cobrar no cartão da reserva.",
-        "audio": "27-airline-pet-in-cabin/pay.wav"
+        "audio": "27-airline-pet-in-cabin/pay.wav",
+        "text": "Ah, okay. Then you can charge it to the reservation card."
       },
       {
         "id": "waived",
         "say": "Que ótimo, obrigada! Tchau.",
         "audio": "27-airline-pet-in-cabin/waived.wav",
+        "text": "That's great, thank you! Bye.",
         "terminal": true,
         "ending": {
           "name": "fee_waived_by_note",
@@ -127,28 +153,37 @@
       {
         "id": "seat",
         "say": "E queria trocar meu assento também. Janela, por favor.",
-        "audio": "27-airline-pet-in-cabin/seat.wav"
+        "audio": "27-airline-pet-in-cabin/seat.wav",
+        "text": "And I wanted to change my seat too. Window, please."
       },
       {
         "id": "seat_pick",
         "say": "Trinta e um A.",
-        "audio": "27-airline-pet-in-cabin/seat_pick.wav"
+        "audio": "27-airline-pet-in-cabin/seat_pick.wav",
+        "text": "Thirty-one A."
       },
       {
         "id": "seat_wrong",
         "say": "Não, trinta e um A. A de abacaxi.",
         "audio": "27-airline-pet-in-cabin/seat_wrong.wav",
+        "text": "No, thirty-one A. A as in abacaxi.",
+        "clear": {
+          "say": "Não, trinta e um, A, A, de abacaxi.",
+          "audio": "27-airline-pet-in-cabin/seat_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "docs",
         "say": "E que documento eu levo pra ela?",
-        "audio": "27-airline-pet-in-cabin/docs.wav"
+        "audio": "27-airline-pet-in-cabin/docs.wav",
+        "text": "And what document do I bring for her?"
       },
       {
         "id": "done",
         "say": "Perfeito. Muito obrigada. Tchau.",
         "audio": "27-airline-pet-in-cabin/done.wav",
+        "text": "Perfect. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "pet_added_and_seat_changed",
@@ -159,6 +194,7 @@
         "id": "gave_up",
         "say": "Assim não dá. Vou resolver no balcão do aeroporto. Tchau.",
         "audio": "27-airline-pet-in-cabin/gave_up.wav",
+        "text": "Like this it won't work. I'll resolve it at the airport counter. Bye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -294,7 +330,8 @@
         "audio": "27-airline-pet-in-cabin/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "In Portuguese, please."
       },
       {
         "id": "reask",
@@ -303,7 +340,12 @@
         "audio": "27-airline-pet-in-cabin/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've already said. B, nine, L, four, V, H. Vasconcelos.",
+        "clear": {
+          "say": "Eu já falei. B, nove, L, quatro, V, H, Vasconcelos.",
+          "audio": "27-airline-pet-in-cabin/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -331,6 +373,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "27-airline-pet-in-cabin/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "27-airline-pet-in-cabin/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "27-airline-pet-in-cabin/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "27-airline-pet-in-cabin/_done.wav"
       }
     },
     "confirm": {

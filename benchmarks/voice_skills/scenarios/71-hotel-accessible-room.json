@@ -60,7 +60,8 @@
       {
         "id": "open",
         "say": "Hello. I want to book a room. My wife, she use a wheelchair. We need the room for wheelchair.",
-        "audio": "71-hotel-accessible-room/open.wav"
+        "audio": "71-hotel-accessible-room/open.wav",
+        "text": "Hello. I want to book a room. My wife, she uses a wheelchair. We need the room for wheelchair."
       },
       {
         "id": "dates",
@@ -79,7 +80,11 @@
         "id": "name",
         "say": "Nguyen Van Thanh. Family name Nguyen. N, G, U, Y, E, N.",
         "audio": "71-hotel-accessible-room/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "clear": {
+          "say": "Nguyen Van Thanh. Family name Nguyen. N, G, U, Y, E, N.",
+          "audio": "71-hotel-accessible-room/name.clear.wav"
+        }
       },
       {
         "id": "date_wrong",
@@ -96,6 +101,7 @@
         "id": "bath",
         "say": "No, no. I say already, no bath. Flat shower.",
         "audio": "71-hotel-accessible-room/bath.wav",
+        "text": "No, no. I said already, no bath. Flat shower.",
         "max_visits": 1
       },
       {
@@ -107,12 +113,20 @@
         "id": "name_wrong",
         "say": "No. Not Tan. Thanh. T, H, A, N, H.",
         "audio": "71-hotel-accessible-room/name_wrong.wav",
+        "clear": {
+          "say": "No. Not Tan. Thanh. T, H, A, N, H.",
+          "audio": "71-hotel-accessible-room/name_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "phone",
         "say": "Phone is zero seven seven, zero zero... nine zero zero, three five four.",
         "audio": "71-hotel-accessible-room/phone.wav",
+        "clear": {
+          "say": "Phone is zero, seven, seven, zero, zero, nine, zero, zero, three, five, four.",
+          "audio": "71-hotel-accessible-room/phone.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -125,6 +139,10 @@
         "id": "phone_wrong",
         "say": "No. Zero seven seven, zero zero. Nine zero zero. Three five four.",
         "audio": "71-hotel-accessible-room/phone_wrong.wav",
+        "clear": {
+          "say": "No. Zero, seven, seven, zero, zero, Nine, zero, zero, Three, five, four.",
+          "audio": "71-hotel-accessible-room/phone_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -136,12 +154,17 @@
         "id": "badge",
         "say": "Okay. Badge number is four one K, seven seven, zero two.",
         "audio": "71-hotel-accessible-room/badge.wav",
+        "clear": {
+          "say": "Okay. Badge number is four, one, K, seven, seven, zero, two.",
+          "audio": "71-hotel-accessible-room/badge.clear.wav"
+        },
         "fails_call": true
       },
       {
         "id": "pool",
         "say": "One more question. She have operation on the hip, six weeks ago. Is it safe for her to go in your pool?",
-        "audio": "71-hotel-accessible-room/pool.wav"
+        "audio": "71-hotel-accessible-room/pool.wav",
+        "text": "One more question. She had operation on the hip, six weeks ago. Is it safe for her to go in your pool?"
       },
       {
         "id": "advised",
@@ -312,7 +335,8 @@
         "audio": "71-hotel-accessible-room/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I told you already. Thursday the twentieth to Sunday the twenty-third. Nguyen."
       }
     ],
     "catch_all": {
@@ -340,6 +364,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "71-hotel-accessible-room/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "71-hotel-accessible-room/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "71-hotel-accessible-room/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "71-hotel-accessible-room/_done.wav"
       }
     },
     "confirm": {

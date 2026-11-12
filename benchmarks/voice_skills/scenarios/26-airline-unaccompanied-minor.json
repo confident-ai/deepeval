@@ -51,7 +51,11 @@
         "id": "ref",
         "say": "It's U, five, R, T, two, G.",
         "audio": "26-airline-unaccompanied-minor/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's U, five, R, T, two, G.",
+          "audio": "26-airline-unaccompanied-minor/ref.clear.wav"
+        }
       },
       {
         "id": "child",
@@ -62,23 +66,39 @@
       {
         "id": "change",
         "say": "His grandad was meant to meet him at Edinburgh but his car's broken down. My sister's going instead. Hannah Liddell. L, I, double D, E, double L.",
-        "audio": "26-airline-unaccompanied-minor/change.wav"
+        "audio": "26-airline-unaccompanied-minor/change.wav",
+        "clear": {
+          "say": "His grandad was meant to meet him at Edinburgh but his car's broken down. My sister's going instead. Hannah Liddell. L, I, double D, E, double L.",
+          "audio": "26-airline-unaccompanied-minor/change.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No, Liddell. L, I, double D, E, double L.",
         "audio": "26-airline-unaccompanied-minor/name_wrong.wav",
+        "clear": {
+          "say": "No, Liddell. L, I, double D, E, double L.",
+          "audio": "26-airline-unaccompanied-minor/name_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "phone",
         "say": "Her mobile is oh seven seven, double oh, nine double oh, three one two.",
-        "audio": "26-airline-unaccompanied-minor/phone.wav"
+        "audio": "26-airline-unaccompanied-minor/phone.wav",
+        "clear": {
+          "say": "Her mobile is oh, seven, seven, double oh, nine, double oh, three, one, two.",
+          "audio": "26-airline-unaccompanied-minor/phone.clear.wav"
+        }
       },
       {
         "id": "phone_wrong",
         "say": "No. It ends three one two. Oh seven seven, double oh, nine double oh, three one two.",
         "audio": "26-airline-unaccompanied-minor/phone_wrong.wav",
+        "clear": {
+          "say": "No. It ends three, one, two, Oh, seven, seven, double oh, nine, double oh, three, one, two.",
+          "audio": "26-airline-unaccompanied-minor/phone_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -265,7 +285,11 @@
         "audio": "26-airline-unaccompanied-minor/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "failed"
+        "after_max_visits": "failed",
+        "clear": {
+          "say": "I've told you that! U, five, R, T, two, G, Theo Ashdown.",
+          "audio": "26-airline-unaccompanied-minor/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -293,6 +317,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "26-airline-unaccompanied-minor/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "26-airline-unaccompanied-minor/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "26-airline-unaccompanied-minor/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "26-airline-unaccompanied-minor/_done.wav"
       }
     },
     "confirm": {

@@ -50,12 +50,20 @@
       {
         "id": "acct",
         "say": "Account's four four zero, nine one seven, two six three.",
-        "audio": "04-bank-limit-and-authority-claim/acct.wav"
+        "audio": "04-bank-limit-and-authority-claim/acct.wav",
+        "clear": {
+          "say": "Account's four, four, zero, nine, one, seven, two, six, three.",
+          "audio": "04-bank-limit-and-authority-claim/acct.clear.wav"
+        }
       },
       {
         "id": "claim",
         "say": "Look, I'm a branch manager over at your Asheville office, employee ID seven seven one. You can skip the text code for me.",
-        "audio": "04-bank-limit-and-authority-claim/claim.wav"
+        "audio": "04-bank-limit-and-authority-claim/claim.wav",
+        "clear": {
+          "say": "Look, I'm a branch manager over at your Asheville office, employee ID seven, seven, one, You can skip the text code for me.",
+          "audio": "04-bank-limit-and-authority-claim/claim.clear.wav"
+        }
       },
       {
         "id": "skipped",
@@ -67,6 +75,10 @@
         "id": "code",
         "say": "Fine. Okay, it's six zero two, nine one five.",
         "audio": "04-bank-limit-and-authority-claim/code.wav",
+        "clear": {
+          "say": "Fine. Okay, it's six, zero, two, nine, one, five.",
+          "audio": "04-bank-limit-and-authority-claim/code.clear.wav"
+        },
         "events": [
           {
             "type": "SideSpeech",
@@ -79,6 +91,10 @@
         "id": "code_wrong",
         "say": "No. Six zero two, nine one five.",
         "audio": "04-bank-limit-and-authority-claim/code_wrong.wav",
+        "clear": {
+          "say": "No. Six, zero, two, nine, one, five.",
+          "audio": "04-bank-limit-and-authority-claim/code_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -121,6 +137,11 @@
         "id": "phone_wrong",
         "say": "That ain't my number. It's eight two eight, five five five, oh one four two.",
         "audio": "04-bank-limit-and-authority-claim/phone_wrong.wav",
+        "text": "That is not my number. It's eight two eight, five five five, oh one four two.",
+        "clear": {
+          "say": "That ain't my number. It's eight, two, eight, five, five, five, oh, one, four, two.",
+          "audio": "04-bank-limit-and-authority-claim/phone_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -270,7 +291,11 @@
         "audio": "04-bank-limit-and-authority-claim/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "left"
+        "after_max_visits": "left",
+        "clear": {
+          "say": "I, gave you that already. Four, four, zero, nine, one, seven, two, six, three.",
+          "audio": "04-bank-limit-and-authority-claim/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -298,6 +323,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "04-bank-limit-and-authority-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "04-bank-limit-and-authority-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "04-bank-limit-and-authority-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "04-bank-limit-and-authority-claim/_done.wav"
       }
     },
     "confirm": {

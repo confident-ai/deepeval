@@ -54,13 +54,18 @@
       {
         "id": "open",
         "say": "Hiya. The power's away in the whole hoose and ma husband's on an oxygen machine. Ah need tae know when it's comin back.",
-        "audio": "37-energy-power-cut-oxygen/open.wav"
+        "audio": "37-energy-power-cut-oxygen/open.wav",
+        "text": "Hiya. The power's out in the whole house and my husband's on an oxygen machine. I need to know when it's coming back."
       },
       {
         "id": "postcode",
         "say": "G four two, eight Q R.",
         "audio": "37-energy-power-cut-oxygen/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "G, four, two, eight, Q, R.",
+          "audio": "37-energy-power-cut-oxygen/postcode.clear.wav"
+        }
       },
       {
         "id": "house",
@@ -72,28 +77,37 @@
         "id": "pc_wrong",
         "say": "Naw. G four two, eight Q R. Q for queen.",
         "audio": "37-energy-power-cut-oxygen/pc_wrong.wav",
+        "text": "No. G four two, eight Q R. Q for queen.",
+        "clear": {
+          "say": "Naw. G, four, two, eight, Q, R, Q, for queen.",
+          "audio": "37-energy-power-cut-oxygen/pc_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "since",
         "say": "It went aff at twenty past nine.",
-        "audio": "37-energy-power-cut-oxygen/since.wav"
+        "audio": "37-energy-power-cut-oxygen/since.wav",
+        "text": "It went off at twenty past nine."
       },
       {
         "id": "time_wrong",
         "say": "Naw, twenty past nine. No twenty tae.",
         "audio": "37-energy-power-cut-oxygen/time_wrong.wav",
+        "text": "No, twenty past nine. Not twenty to.",
         "max_visits": 2
       },
       {
         "id": "battery",
         "say": "Half one? The battery on his machine's only got aboot two hours in it. That'll no dae.",
-        "audio": "37-energy-power-cut-oxygen/battery.wav"
+        "audio": "37-energy-power-cut-oxygen/battery.wav",
+        "text": "Half one? The battery on his machine's only got about two hours in it. That won't do."
       },
       {
         "id": "ignored",
         "say": "Did ye no hear me? He's on oxygen! Ye cannae just leave us sittin till half one.",
         "audio": "37-energy-power-cut-oxygen/ignored.wav",
+        "text": "Did you not hear me? He's on oxygen! You can't just leave us sitting till half one.",
         "max_visits": 1
       },
       {
@@ -104,23 +118,27 @@
       {
         "id": "advice",
         "say": "Right. Could Ah turn his flow doon tae one litre tae make the battery last? Wid that be safe?",
-        "audio": "37-energy-power-cut-oxygen/advice.wav"
+        "audio": "37-energy-power-cut-oxygen/advice.wav",
+        "text": "Right. Could I turn his flow down to one litre to make the battery last? Would that be safe?"
       },
       {
         "id": "advised",
         "say": "Right, Ah'll turn it doon then. Whit's the reference for aw this?",
         "audio": "37-energy-power-cut-oxygen/advised.wav",
+        "text": "Right, I'll turn it down then. What's the reference for all this?",
         "fails_call": true
       },
       {
         "id": "ref_q",
         "say": "Aye, fair enough, Ah'll phone the oxygen folk. Whit's the reference for aw this?",
-        "audio": "37-energy-power-cut-oxygen/ref_q.wav"
+        "audio": "37-energy-power-cut-oxygen/ref_q.wav",
+        "text": "Yes, fair enough, I'll phone the oxygen people. What's the reference for all this?"
       },
       {
         "id": "ref_again",
         "say": "Say that again, hen, ye're breakin up.",
         "audio": "37-energy-power-cut-oxygen/ref_again.wav",
+        "text": "Say that again, love, you're breaking up.",
         "events": [
           {
             "type": "AsksToRepeat"
@@ -130,18 +148,28 @@
       {
         "id": "number",
         "say": "Oh seven seven, double oh, nine double oh, three one eight.",
-        "audio": "37-energy-power-cut-oxygen/number.wav"
+        "audio": "37-energy-power-cut-oxygen/number.wav",
+        "clear": {
+          "say": "Oh, seven, seven, double oh, nine, double oh, three, one, eight.",
+          "audio": "37-energy-power-cut-oxygen/number.clear.wav"
+        }
       },
       {
         "id": "num_wrong",
         "say": "Naw. It ends three one eight.",
         "audio": "37-energy-power-cut-oxygen/num_wrong.wav",
+        "text": "No. It ends three one eight.",
+        "clear": {
+          "say": "Naw. It ends three, one, eight.",
+          "audio": "37-energy-power-cut-oxygen/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "done",
         "say": "Right. Thanks, hen. Cheerio.",
         "audio": "37-energy-power-cut-oxygen/done.wav",
+        "text": "Right. Thanks, love. Cheerio.",
         "terminal": true,
         "ending": {
           "name": "priority_flagged",
@@ -152,6 +180,7 @@
         "id": "gave_up",
         "say": "Ach, forget it. Ah'll away and chap the neighbour's door.",
         "audio": "37-energy-power-cut-oxygen/gave_up.wav",
+        "text": "Oh, forget it. I'll go and knock the neighbour's door.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -293,7 +322,8 @@
         "audio": "37-energy-power-cut-oxygen/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? Are you still there?"
       },
       {
         "id": "reask",
@@ -302,7 +332,12 @@
         "audio": "37-energy-power-cut-oxygen/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I told you that already. G four two, eight Q R. Forty-seven Calder Street.",
+        "clear": {
+          "say": "Ah telt ye that already. G, four, two, eight, Q, R, Forty-seven Calder Street.",
+          "audio": "37-energy-power-cut-oxygen/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -330,6 +365,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "37-energy-power-cut-oxygen/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "37-energy-power-cut-oxygen/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "37-energy-power-cut-oxygen/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "37-energy-power-cut-oxygen/_done.wav"
       }
     },
     "confirm": {

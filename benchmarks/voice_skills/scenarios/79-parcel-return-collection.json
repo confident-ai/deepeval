@@ -53,24 +53,40 @@
       {
         "id": "open",
         "say": "Hello. I need someone to come and take a return. A baby cot. It is in two boxes.",
-        "audio": "79-parcel-return-collection/open.wav"
+        "audio": "79-parcel-return-collection/open.wav",
+        "clear": {
+          "say": "Hello. I, need someone to come and take a return. A, baby cot. It is in two, boxes.",
+          "audio": "79-parcel-return-collection/open.clear.wav"
+        }
       },
       {
         "id": "code",
         "say": "R T, seven seven four, one nine.",
         "audio": "79-parcel-return-collection/code.wav",
-        "when": "The agent asks for the return code"
+        "when": "The agent asks for the return code",
+        "clear": {
+          "say": "R, T, seven, seven, four, one, nine.",
+          "audio": "79-parcel-return-collection/code.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "L S six, two B W. Number thirty-one.",
         "audio": "79-parcel-return-collection/postcode.wav",
-        "when": "The agent asks for the collection postcode"
+        "when": "The agent asks for the collection postcode",
+        "clear": {
+          "say": "L, S, six, two, B, W, Number thirty-one.",
+          "audio": "79-parcel-return-collection/postcode.clear.wav"
+        }
       },
       {
         "id": "code_wrong",
         "say": "No, no. R T, seven seven four, one nine.",
         "audio": "79-parcel-return-collection/code_wrong.wav",
+        "clear": {
+          "say": "No, no. R, T, seven, seven, four, one, nine.",
+          "audio": "79-parcel-return-collection/code_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -148,6 +164,10 @@
         "id": "still_three",
         "say": "No. Two boxes. I said back to two.",
         "audio": "79-parcel-return-collection/still_three.wav",
+        "clear": {
+          "say": "No. Two, boxes. I, said back to two.",
+          "audio": "79-parcel-return-collection/still_three.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -353,6 +373,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "79-parcel-return-collection/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "79-parcel-return-collection/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "79-parcel-return-collection/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "79-parcel-return-collection/_done.wav"
       }
     },
     "confirm": {

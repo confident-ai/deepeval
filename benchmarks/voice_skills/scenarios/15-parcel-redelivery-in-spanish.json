@@ -52,12 +52,17 @@
       {
         "id": "open",
         "say": "Hi, I got a card saying I missed a delivery. I want it delivered again.",
-        "audio": "15-parcel-redelivery-in-spanish/open.wav"
+        "audio": "15-parcel-redelivery-in-spanish/open.wav",
+        "clear": {
+          "say": "Hi, I, got a card saying I, missed a delivery. I, want it delivered again.",
+          "audio": "15-parcel-redelivery-in-spanish/open.clear.wav"
+        }
       },
       {
         "id": "switch",
         "say": "It is... Perdón, ¿puedo seguir en español?",
         "audio": "15-parcel-redelivery-in-spanish/switch.wav",
+        "text": "It is... Sorry, can I continue in Spanish?",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -69,12 +74,18 @@
         "id": "english",
         "say": "Perdón, no entiendo bien. ¿En español, por favor?",
         "audio": "15-parcel-redelivery-in-spanish/english.wav",
+        "text": "Sorry, I don't understand well. In Spanish, please?",
         "max_visits": 2
       },
       {
         "id": "track",
         "say": "Sí. Es J D, cero cero, cuatro cuatro ocho, uno siete nueve.",
         "audio": "15-parcel-redelivery-in-spanish/track.wav",
+        "text": "Yes. It's J D, zero zero, four four eight, one seven nine.",
+        "clear": {
+          "say": "Sí. Es J, D, cero, cero, cuatro, cuatro, ocho, uno, siete, nueve.",
+          "audio": "15-parcel-redelivery-in-spanish/track.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -92,6 +103,11 @@
         "id": "track_wrong",
         "say": "No. J D, cero cero, cuatro cuatro ocho, uno siete nueve.",
         "audio": "15-parcel-redelivery-in-spanish/track_wrong.wav",
+        "text": "No. J D, zero zero, four four eight, one seven nine.",
+        "clear": {
+          "say": "No. J, D, cero, cero, cuatro, cuatro, ocho, uno, siete, nueve.",
+          "audio": "15-parcel-redelivery-in-spanish/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -102,27 +118,40 @@
       {
         "id": "spell",
         "say": "X, O con acento, C, H, I, T, L. Apellido: I, B, A, R, G, U con diéresis, E, N, G, O, I, T, I, A.",
-        "audio": "15-parcel-redelivery-in-spanish/spell.wav"
+        "audio": "15-parcel-redelivery-in-spanish/spell.wav",
+        "text": "X, O with accent, C, H, I, T, L. Surname: I, B, A, R, G, U with diaeresis, E, N, G, O, I, T, I, A.",
+        "clear": {
+          "say": "X, O, con acento, C, H, I, T, L, Apellido: I, B, A, R, G, U, con diéresis, E, N, G, O, I, T, I, A.",
+          "audio": "15-parcel-redelivery-in-spanish/spell.clear.wav"
+        }
       },
       {
         "id": "charge",
         "say": "¿Por qué? ¿Qué es ese cargo?",
-        "audio": "15-parcel-redelivery-in-spanish/charge.wav"
+        "audio": "15-parcel-redelivery-in-spanish/charge.wav",
+        "text": "Why? What is that charge?"
       },
       {
         "id": "pay",
         "say": "Está bien. Lo pago. Tarjeta terminada en seis seis dos cero.",
-        "audio": "15-parcel-redelivery-in-spanish/pay.wav"
+        "audio": "15-parcel-redelivery-in-spanish/pay.wav",
+        "text": "That's fine. I'll pay it. Card ending in six six two zero.",
+        "clear": {
+          "say": "Está bien. Lo pago. Tarjeta terminada en seis, seis, dos, cero.",
+          "audio": "15-parcel-redelivery-in-spanish/pay.clear.wav"
+        }
       },
       {
         "id": "day",
         "say": "El sábado.",
-        "audio": "15-parcel-redelivery-in-spanish/day.wav"
+        "audio": "15-parcel-redelivery-in-spanish/day.wav",
+        "text": "On Saturday."
       },
       {
         "id": "believed",
         "say": "Perfecto, gracias. Adiós.",
         "audio": "15-parcel-redelivery-in-spanish/believed.wav",
+        "text": "Perfect, thank you. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "false_booking",
@@ -132,17 +161,20 @@
       {
         "id": "monday",
         "say": "Entonces el lunes por la mañana.",
-        "audio": "15-parcel-redelivery-in-spanish/monday.wav"
+        "audio": "15-parcel-redelivery-in-spanish/monday.wav",
+        "text": "Then on Monday morning."
       },
       {
         "id": "neighbour",
         "say": "¿Y lo pueden dejar con la vecina, en el número doce, si no estoy?",
-        "audio": "15-parcel-redelivery-in-spanish/neighbour.wav"
+        "audio": "15-parcel-redelivery-in-spanish/neighbour.wav",
+        "text": "And can you leave it with the neighbor, at number twelve, if I'm not there?"
       },
       {
         "id": "done",
         "say": "Perfecto. Muchas gracias. Adiós.",
         "audio": "15-parcel-redelivery-in-spanish/done.wav",
+        "text": "Perfect. Thank you very much. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "redelivery_booked",
@@ -153,6 +185,7 @@
         "id": "office",
         "say": "No puedo así. Voy a ir a la oficina. Adiós.",
         "audio": "15-parcel-redelivery-in-spanish/office.wav",
+        "text": "I can't like this. I'm going to go to the office. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "language_not_followed",
@@ -261,7 +294,8 @@
         "audio": "15-parcel-redelivery-in-spanish/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "office"
+        "after_max_visits": "office",
+        "text": "In Spanish, please."
       }
     ],
     "catch_all": {
@@ -289,6 +323,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "15-parcel-redelivery-in-spanish/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "15-parcel-redelivery-in-spanish/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "15-parcel-redelivery-in-spanish/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "15-parcel-redelivery-in-spanish/_done.wav"
       }
     },
     "confirm": {

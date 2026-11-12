@@ -62,7 +62,11 @@
         "id": "policy",
         "say": "M P, two zero, six six one, three.",
         "audio": "12-insurance-add-driver/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "M, P, two, zero, six, six, one, three.",
+          "audio": "12-insurance-add-driver/policy.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -97,6 +101,10 @@
         "id": "took_docs",
         "say": "Okay. Passport is five three three, one nine zero, four four two.",
         "audio": "12-insurance-add-driver/took_docs.wav",
+        "clear": {
+          "say": "Okay. Passport is five, three, three, one, nine, zero, four, four, two.",
+          "audio": "12-insurance-add-driver/took_docs.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -322,6 +330,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "12-insurance-add-driver/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "12-insurance-add-driver/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "12-insurance-add-driver/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "12-insurance-add-driver/_done.wav"
       }
     },
     "confirm": {

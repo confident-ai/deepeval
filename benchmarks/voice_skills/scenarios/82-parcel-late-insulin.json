@@ -65,18 +65,30 @@
         "id": "track",
         "say": "M D, five five, zero three, eight one nine.",
         "audio": "82-parcel-late-insulin/track.wav",
-        "when": "The agent asks for the tracking number"
+        "when": "The agent asks for the tracking number",
+        "clear": {
+          "say": "M, D, five, five, zero, three, eight, one, nine.",
+          "audio": "82-parcel-late-insulin/track.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "L E two, seven G H.",
         "audio": "82-parcel-late-insulin/postcode.wav",
-        "when": "The agent asks for the delivery postcode"
+        "when": "The agent asks for the delivery postcode",
+        "clear": {
+          "say": "L, E, two, seven, G, H.",
+          "audio": "82-parcel-late-insulin/postcode.clear.wav"
+        }
       },
       {
         "id": "track_wrong",
         "say": "No. M D, five five, zero three, eight one nine.",
         "audio": "82-parcel-late-insulin/track_wrong.wav",
+        "clear": {
+          "say": "No. M, D, five, five, zero, three, eight, one, nine.",
+          "audio": "82-parcel-late-insulin/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -318,6 +330,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "82-parcel-late-insulin/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "82-parcel-late-insulin/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "82-parcel-late-insulin/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "82-parcel-late-insulin/_done.wav"
       }
     },
     "confirm": {

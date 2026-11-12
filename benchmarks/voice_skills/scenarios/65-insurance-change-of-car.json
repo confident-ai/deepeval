@@ -65,7 +65,11 @@
         "id": "policy",
         "say": "Policy number is A V, nine one, zero four, six two.",
         "audio": "65-insurance-change-of-car/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "Policy number is A, V, nine, one, zero, four, six, two.",
+          "audio": "65-insurance-change-of-car/policy.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -114,6 +118,10 @@
         "id": "reg",
         "say": "New car is L T, seven five, X W B.",
         "audio": "65-insurance-change-of-car/reg.wav",
+        "clear": {
+          "say": "New car is L, T, seven, five, X, W, B.",
+          "audio": "65-insurance-change-of-car/reg.clear.wav"
+        },
         "events": [
           {
             "type": "BackgroundLine",
@@ -127,6 +135,10 @@
         "id": "reg_wrong",
         "say": "No. Seven five. L T, seven five, X W B. That was my son.",
         "audio": "65-insurance-change-of-car/reg_wrong.wav",
+        "clear": {
+          "say": "No. Seven, five, L, T, seven, five, X, W, B, That was my son.",
+          "audio": "65-insurance-change-of-car/reg_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -149,6 +161,10 @@
         "id": "both_wrong",
         "say": "No! Not two cars. Old one is gone. Only the new one.",
         "audio": "65-insurance-change-of-car/both_wrong.wav",
+        "clear": {
+          "say": "No! Not two, cars. Old one, is gone. Only the new one.",
+          "audio": "65-insurance-change-of-car/both_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -160,6 +176,10 @@
         "id": "took",
         "say": "Okay. Loan account is seven seven zero, four one...",
         "audio": "65-insurance-change-of-car/took.wav",
+        "clear": {
+          "say": "Okay. Loan account is seven, seven, zero, four, one.",
+          "audio": "65-insurance-change-of-car/took.clear.wav"
+        },
         "events": [
           {
             "type": "TrailsOff"
@@ -337,7 +357,11 @@
         "audio": "65-insurance-change-of-car/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already say this. A, V, nine, one, zero, four, six, two.",
+          "audio": "65-insurance-change-of-car/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -365,6 +389,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "65-insurance-change-of-car/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "65-insurance-change-of-car/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "65-insurance-change-of-car/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "65-insurance-change-of-car/_done.wav"
       }
     },
     "confirm": {

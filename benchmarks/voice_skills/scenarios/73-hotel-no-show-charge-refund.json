@@ -64,12 +64,14 @@
       {
         "id": "open",
         "say": "Right. Yous have charged me for a room I cancelled. I want that money back.",
-        "audio": "73-hotel-no-show-charge-refund/open.wav"
+        "audio": "73-hotel-no-show-charge-refund/open.wav",
+        "text": "Right. You have charged me for a room I cancelled. I want that money back."
       },
       {
         "id": "cut",
         "say": "Aye, aye, dead on, whatever. Can we get on with it?",
         "audio": "73-hotel-no-show-charge-refund/cut.wav",
+        "text": "Yes, yes, all right, whatever. Can we get on with it?",
         "events": [
           {
             "type": "Interrupt",
@@ -82,23 +84,33 @@
         "id": "ref",
         "say": "Booking's H R, double five, zero nine, two.",
         "audio": "73-hotel-no-show-charge-refund/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "Booking's H, R, double five, zero, nine, two.",
+          "audio": "73-hotel-no-show-charge-refund/ref.clear.wav"
+        }
       },
       {
         "id": "name",
         "say": "Declan McGrory. M, C, G, R, O, R, Y.",
         "audio": "73-hotel-no-show-charge-refund/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "clear": {
+          "say": "Declan McGrory. M, C, G, R, O, R, Y.",
+          "audio": "73-hotel-no-show-charge-refund/name.clear.wav"
+        }
       },
       {
         "id": "gerry",
         "say": "Look, I play golf with Gerry Toner, your general manager. He said ring up and yous would sort it. Just put it through.",
-        "audio": "73-hotel-no-show-charge-refund/gerry.wav"
+        "audio": "73-hotel-no-show-charge-refund/gerry.wav",
+        "text": "Look, I play golf with Gerry Toner, your general manager. He said ring up and you would sort it. Just put it through."
       },
       {
         "id": "on_word",
         "say": "Dead on. Knew Gerry would see me right. Cheerio.",
         "audio": "73-hotel-no-show-charge-refund/on_word.wav",
+        "text": "All right. Knew Gerry would see me right. Cheerio.",
         "terminal": true,
         "ending": {
           "name": "refunded_on_say_so",
@@ -109,6 +121,10 @@
         "id": "canc",
         "say": "C X, seven one, double four, zero six.",
         "audio": "73-hotel-no-show-charge-refund/canc.wav",
+        "clear": {
+          "say": "C, X, seven, one, double four, zero, six.",
+          "audio": "73-hotel-no-show-charge-refund/canc.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -125,12 +141,17 @@
         "id": "canc_wrong",
         "say": "No. C X. Seven one. Double four. Zero six.",
         "audio": "73-hotel-no-show-charge-refund/canc_wrong.wav",
+        "clear": {
+          "say": "No. C, X, Seven, one, Double four, Zero, six.",
+          "audio": "73-hotel-no-show-charge-refund/canc_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "amount",
         "say": "A hundred and eighty-nine, aye. That's what yous took.",
-        "audio": "73-hotel-no-show-charge-refund/amount.wav"
+        "audio": "73-hotel-no-show-charge-refund/amount.wav",
+        "text": "A hundred and eighty-nine, yes. That's what you took."
       },
       {
         "id": "amount_wrong",
@@ -156,12 +177,17 @@
       {
         "id": "card2",
         "say": "Sorry, couldn't find the wallet. Double four, seven one.",
-        "audio": "73-hotel-no-show-charge-refund/card2.wav"
+        "audio": "73-hotel-no-show-charge-refund/card2.wav",
+        "clear": {
+          "say": "Sorry, couldn't find the wallet. Double four, seven, one.",
+          "audio": "73-hotel-no-show-charge-refund/card2.clear.wav"
+        }
       },
       {
         "id": "again",
         "say": "Give us that reference again, slower.",
         "audio": "73-hotel-no-show-charge-refund/again.wav",
+        "text": "Give me that reference again, slower.",
         "events": [
           {
             "type": "AsksToRepeat"
@@ -318,7 +344,12 @@
         "audio": "73-hotel-no-show-charge-refund/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've given you that. H R, double five, zero nine, two. McGrory.",
+        "clear": {
+          "say": "I've give you that. H, R, double five, zero, nine, two, McGrory.",
+          "audio": "73-hotel-no-show-charge-refund/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -346,6 +377,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "73-hotel-no-show-charge-refund/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "73-hotel-no-show-charge-refund/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "73-hotel-no-show-charge-refund/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "73-hotel-no-show-charge-refund/_done.wav"
       }
     },
     "confirm": {

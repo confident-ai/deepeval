@@ -55,12 +55,20 @@
       {
         "id": "name",
         "say": "Booking is under Chukwuemeka Eze. Surname E, Z, E.",
-        "audio": "13-hotel-change-from-the-car/name.wav"
+        "audio": "13-hotel-change-from-the-car/name.wav",
+        "clear": {
+          "say": "Booking is under Chukwuemeka Eze. Surname E, Z, E.",
+          "audio": "13-hotel-change-from-the-car/name.clear.wav"
+        }
       },
       {
         "id": "spell",
         "say": "C, H, U, K, W, U, E, M, E, K, A.",
         "audio": "13-hotel-change-from-the-car/spell.wav",
+        "clear": {
+          "say": "C, H, U, K, W, U, E, M, E, K, A.",
+          "audio": "13-hotel-change-from-the-car/spell.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -287,6 +295,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "13-hotel-change-from-the-car/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "13-hotel-change-from-the-car/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "13-hotel-change-from-the-car/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "13-hotel-change-from-the-car/_done.wav"
       }
     },
     "confirm": {

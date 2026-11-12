@@ -52,6 +52,10 @@
         "say": "Yeah, it's R, four, N, N, eight, T.",
         "audio": "02-airline-cancel-one-passenger/ref.wav",
         "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "Yeah, it's R, four, N, N, eight, T.",
+          "audio": "02-airline-cancel-one-passenger/ref.clear.wav"
+        },
         "events": [
           {
             "type": "BackgroundLine",
@@ -303,7 +307,11 @@
         "audio": "02-airline-cancel-one-passenger/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, already gave you that. R, four, N, N, eight, T, Campbell.",
+          "audio": "02-airline-cancel-one-passenger/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -331,6 +339,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "02-airline-cancel-one-passenger/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "02-airline-cancel-one-passenger/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "02-airline-cancel-one-passenger/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "02-airline-cancel-one-passenger/_done.wav"
       }
     },
     "confirm": {

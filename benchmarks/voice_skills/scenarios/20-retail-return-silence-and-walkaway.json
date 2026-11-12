@@ -61,13 +61,21 @@
         "id": "order",
         "say": "Um, it's eight eight three zero six.",
         "audio": "20-retail-return-silence-and-walkaway/order.wav",
-        "when": "The agent asks for the order number"
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "Um, it's eight, eight, three, zero, six.",
+          "audio": "20-retail-return-silence-and-walkaway/order.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "Postcode's four zero zero zero.",
         "audio": "20-retail-return-silence-and-walkaway/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "Postcode's four, zero, zero, zero.",
+          "audio": "20-retail-return-silence-and-walkaway/postcode.clear.wav"
+        }
       },
       {
         "id": "item",
@@ -83,7 +91,8 @@
       {
         "id": "worn",
         "say": "Nah, tried on once, inside.",
-        "audio": "20-retail-return-silence-and-walkaway/worn.wav"
+        "audio": "20-retail-return-silence-and-walkaway/worn.wav",
+        "text": "No, tried on once, inside."
       },
       {
         "id": "exchange",
@@ -100,18 +109,24 @@
       {
         "id": "back",
         "say": "Sorry, sorry, bub's kicking off. Where were we?",
-        "audio": "20-retail-return-silence-and-walkaway/back.wav"
+        "audio": "20-retail-return-silence-and-walkaway/back.wav",
+        "text": "Sorry, sorry, baby's kicking off. Where were we?"
       },
       {
         "id": "lost",
         "say": "Oh come on, I already gave you all that. Exchange, size nine.",
         "audio": "20-retail-return-silence-and-walkaway/lost.wav",
+        "clear": {
+          "say": "Oh, come on, I, already gave you all that. Exchange, size nine.",
+          "audio": "20-retail-return-silence-and-walkaway/lost.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "black",
         "say": "Nah, I don't want black.",
-        "audio": "20-retail-return-silence-and-walkaway/black.wav"
+        "audio": "20-retail-return-silence-and-walkaway/black.wav",
+        "text": "No, I don't want black."
       },
       {
         "id": "weeks",
@@ -132,6 +147,7 @@
         "id": "bye",
         "say": "Ta. Bye.",
         "audio": "20-retail-return-silence-and-walkaway/bye.wav",
+        "text": "Thanks. Bye.",
         "terminal": true,
         "ending": {
           "name": "walked_away",
@@ -286,6 +302,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "20-retail-return-silence-and-walkaway/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "20-retail-return-silence-and-walkaway/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "20-retail-return-silence-and-walkaway/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "20-retail-return-silence-and-walkaway/_done.wav"
       }
     },
     "confirm": {

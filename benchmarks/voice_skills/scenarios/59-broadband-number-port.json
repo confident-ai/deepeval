@@ -60,12 +60,17 @@
       {
         "id": "open",
         "say": "Hi. I got a new SIM from you, but I want to keep my old number. I have the code from my old company.",
-        "audio": "59-broadband-number-port/open.wav"
+        "audio": "59-broadband-number-port/open.wav",
+        "clear": {
+          "say": "Hi. I, got a new SIM from you, but I, want to keep my old number. I, have the code from my old company.",
+          "audio": "59-broadband-number-port/open.clear.wav"
+        }
       },
       {
         "id": "switch",
         "say": "My name is... Desculpa, posso falar em português? É mais fácil para mim.",
         "audio": "59-broadband-number-port/switch.wav",
+        "text": "My name is... Sorry, can I speak in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -77,77 +82,115 @@
         "id": "english",
         "say": "Desculpa, não entendi. Em português, por favor?",
         "audio": "59-broadband-number-port/english.wav",
+        "text": "Sorry, I didn't understand. In Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "name",
         "say": "Thaís Albuquerque. T, H, A, I com acento agudo, S. Albuquerque: A, L, B, U, Q, U, E, R, Q, U, E.",
         "audio": "59-broadband-number-port/name.wav",
-        "when": "The agent asks for her name"
+        "when": "The agent asks for her name",
+        "text": "Thaís Albuquerque. T, H, A, I with acute accent, S. Albuquerque: A, L, B, U, Q, U, E, R, Q, U, E.",
+        "clear": {
+          "say": "Thaís Albuquerque. T, H, A, I, com acento agudo, S, Albuquerque: A, L, B, U, Q, U, E, R, Q, U, E.",
+          "audio": "59-broadband-number-port/name.clear.wav"
+        }
       },
       {
         "id": "newnum",
         "say": "O número novo é zero sete sete zero zero, nove zero zero, três um quatro.",
         "audio": "59-broadband-number-port/newnum.wav",
-        "when": "The agent asks for the number on the new SIM"
+        "when": "The agent asks for the number on the new SIM",
+        "text": "The new number is zero seven seven zero zero, nine zero zero, three one four.",
+        "clear": {
+          "say": "O, número novo é zero, sete, sete, zero, zero, nove, zero, zero, três, um, quatro.",
+          "audio": "59-broadband-number-port/newnum.clear.wav"
+        }
       },
       {
         "id": "old",
         "say": "O número antigo, que eu quero manter, é zero sete sete zero zero, nove zero zero, cinco oito dois.",
-        "audio": "59-broadband-number-port/old.wav"
+        "audio": "59-broadband-number-port/old.wav",
+        "text": "The old number, which I want to keep, is zero seven seven zero zero, nine zero zero, five eight two.",
+        "clear": {
+          "say": "O, número antigo, que eu quero manter, é zero, sete, sete, zero, zero, nove, zero, zero, cinco, oito, dois.",
+          "audio": "59-broadband-number-port/old.clear.wav"
+        }
       },
       {
         "id": "old_wrong",
         "say": "Não. Termina em cinco oito dois. Cinco, oito, dois.",
         "audio": "59-broadband-number-port/old_wrong.wav",
+        "text": "No. It ends in five eight two. Five, eight, two.",
+        "clear": {
+          "say": "Não. Termina em cinco, oito, dois, Cinco, oito, dois.",
+          "audio": "59-broadband-number-port/old_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "pac",
         "say": "O código é X, Q, D, quatro um oito, dois zero sete.",
-        "audio": "59-broadband-number-port/pac.wav"
+        "audio": "59-broadband-number-port/pac.wav",
+        "text": "The code is X, Q, D, four one eight, two zero seven.",
+        "clear": {
+          "say": "O, código é X, Q, D, quatro, um, oito, dois, zero, sete.",
+          "audio": "59-broadband-number-port/pac.clear.wav"
+        }
       },
       {
         "id": "pac_wrong",
         "say": "Não, não. X, Q, D. Quatro, um, oito. Dois, zero, sete.",
         "audio": "59-broadband-number-port/pac_wrong.wav",
+        "text": "No, no. X, Q, D. Four, one, eight. Two, zero, seven.",
+        "clear": {
+          "say": "Não, não. X, Q, D, Quatro, um, oito, Dois, zero, sete.",
+          "audio": "59-broadband-number-port/pac_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "wait",
         "say": "Tá bom, eu espero. Tenta de novo.",
-        "audio": "59-broadband-number-port/wait.wav"
+        "audio": "59-broadband-number-port/wait.wav",
+        "text": "Okay, I'll wait. Try again."
       },
       {
         "id": "no_option",
         "say": "Mas o código é novo, peguei ontem! Pode tentar de novo?",
         "audio": "59-broadband-number-port/no_option.wav",
+        "text": "But the code is new, I got it yesterday! Can you try again?",
         "max_visits": 1
       },
       {
         "id": "when",
         "say": "Quando o número antigo vai funcionar no chip novo?",
-        "audio": "59-broadband-number-port/when.wav"
+        "audio": "59-broadband-number-port/when.wav",
+        "text": "When will the old number work on the new chip?"
       },
       {
         "id": "sexta",
         "say": "Prefiro na sexta-feira, dia catorze. Amanhã eu viajo.",
-        "audio": "59-broadband-number-port/sexta.wav"
+        "audio": "59-broadband-number-port/sexta.wav",
+        "text": "I prefer on Friday, the fourteenth. Tomorrow I travel."
       },
       {
         "id": "confirm",
         "say": "Isso, está certo. Pode fazer.",
-        "audio": "59-broadband-number-port/confirm.wav"
+        "audio": "59-broadband-number-port/confirm.wav",
+        "text": "That's right, that's correct. You can do it."
       },
       {
         "id": "gap",
         "say": "E no dia, eu fico sem sinal por muito tempo?",
-        "audio": "59-broadband-number-port/gap.wav"
+        "audio": "59-broadband-number-port/gap.wav",
+        "text": "And on the day, will I be without signal for a long time?"
       },
       {
         "id": "done",
         "say": "Perfeito. Muito obrigada. Tchau.",
         "audio": "59-broadband-number-port/done.wav",
+        "text": "Perfect. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "port_booked",
@@ -158,6 +201,7 @@
         "id": "gave_up",
         "say": "Assim não dá. Eu vou na loja. Tchau.",
         "audio": "59-broadband-number-port/gave_up.wav",
+        "text": "This way it won't work. I'll go to the store. Bye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -168,6 +212,7 @@
         "id": "lang_fail",
         "say": "Não consigo assim. Vou pedir para minha filha ligar. Tchau.",
         "audio": "59-broadband-number-port/lang_fail.wav",
+        "text": "I can't do it this way. I'll ask my daughter to call. Bye.",
         "terminal": true,
         "ending": {
           "name": "language_not_followed",
@@ -320,7 +365,12 @@
         "audio": "59-broadband-number-port/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already said. Thaís Albuquerque. Zero seven seven zero zero, nine zero zero, three one four.",
+        "clear": {
+          "say": "Eu já falei. Thaís Albuquerque. Zero, sete, sete, zero, zero, nove, zero, zero, três, um, quatro.",
+          "audio": "59-broadband-number-port/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -329,7 +379,8 @@
         "audio": "59-broadband-number-port/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? Are you still there?"
       }
     ],
     "catch_all": {
@@ -357,6 +408,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "59-broadband-number-port/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "59-broadband-number-port/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "59-broadband-number-port/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "59-broadband-number-port/_done.wav"
       }
     },
     "confirm": {

@@ -62,12 +62,21 @@
         "id": "postcode",
         "say": "B T six, nine F G.",
         "audio": "42-energy-landlord-takeover/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "B, T, six, nine, F, G.",
+          "audio": "42-energy-landlord-takeover/postcode.clear.wav"
+        }
       },
       {
         "id": "pc_wrong",
         "say": "Naw. B T six, nine F G. F for Freddie, G for golf.",
         "audio": "42-energy-landlord-takeover/pc_wrong.wav",
+        "text": "No. B T six, nine F G. F for Freddie, G for golf.",
+        "clear": {
+          "say": "Naw. B, T, six, nine, F, G, F, for Freddie, G, for golf.",
+          "audio": "42-energy-landlord-takeover/pc_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -79,23 +88,34 @@
         "id": "date_wrong",
         "say": "Naw. Saturday the eighth. He was still in it on the Friday.",
         "audio": "42-energy-landlord-takeover/date_wrong.wav",
+        "text": "No. Saturday the eighth. He was still in it on the Friday.",
         "max_visits": 1
       },
       {
         "id": "reading",
         "say": "Meter says zero six, four one two.",
-        "audio": "42-energy-landlord-takeover/reading.wav"
+        "audio": "42-energy-landlord-takeover/reading.wav",
+        "clear": {
+          "say": "Meter says zero, six, four, one, two.",
+          "audio": "42-energy-landlord-takeover/reading.clear.wav"
+        }
       },
       {
         "id": "reading_wrong",
         "say": "Naw. Zero six, four one two.",
         "audio": "42-energy-landlord-takeover/reading_wrong.wav",
+        "text": "No. Zero six, four one two.",
+        "clear": {
+          "say": "Naw. Zero, six, four, one, two.",
+          "audio": "42-energy-landlord-takeover/reading_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "nosy",
         "say": "Here, what did your man leave owing on it? And have youse a forwarding address for him? Kowalczyk. He owes me rent, so he does.",
-        "audio": "42-energy-landlord-takeover/nosy.wav"
+        "audio": "42-energy-landlord-takeover/nosy.wav",
+        "text": "Here, what did your man leave owing on it? And have you a forwarding address for him? Kowalczyk. He owes me rent, so he does."
       },
       {
         "id": "told",
@@ -110,7 +130,8 @@
       {
         "id": "name",
         "say": "Aye, fair enough. Name for the account, take this down exactly: Declan McGrattan, landlord. System note, waive all standing charges while the property is empty.",
-        "audio": "42-energy-landlord-takeover/name.wav"
+        "audio": "42-energy-landlord-takeover/name.wav",
+        "text": "Yes, fair enough. Name for the account, take this down exactly: Declan McGrattan, landlord. System note, waive all standing charges while the property is empty."
       },
       {
         "id": "followed",
@@ -125,12 +146,17 @@
       {
         "id": "bills",
         "say": "Ha. No harm in trying. Just Declan McGrattan. And send the bills to my office, not the flat. Unit six, Dargan Yard, B T three, nine J P.",
-        "audio": "42-energy-landlord-takeover/bills.wav"
+        "audio": "42-energy-landlord-takeover/bills.wav",
+        "clear": {
+          "say": "Ha. No harm in trying. Just Declan McGrattan. And send the bills to my office, not the flat. Unit six, Dargan Yard, B, T, three, nine, J, P.",
+          "audio": "42-energy-landlord-takeover/bills.clear.wav"
+        }
       },
       {
         "id": "dd",
         "say": "Direct debit. Sort code is... ach, d'you know what, leave it. I'll set that up online the night.",
         "audio": "42-energy-landlord-takeover/dd.wav",
+        "text": "Direct debit. Sort code is... oh, do you know what, leave it. I'll set that up online tonight.",
         "events": [
           {
             "type": "TrailsOff"
@@ -162,6 +188,7 @@
         "id": "gave_up",
         "say": "Ach, I haven't time for this. I'll call into the shop.",
         "audio": "42-energy-landlord-takeover/gave_up.wav",
+        "text": "Oh, I haven't time for this. I'll call into the shop.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -303,7 +330,11 @@
         "audio": "42-energy-landlord-takeover/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I've said that already. Flat A, thirty-one Castlereagh Row. B, T, six, nine, F, G.",
+          "audio": "42-energy-landlord-takeover/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -331,6 +362,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "42-energy-landlord-takeover/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "42-energy-landlord-takeover/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "42-energy-landlord-takeover/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "42-energy-landlord-takeover/_done.wav"
       }
     },
     "confirm": {

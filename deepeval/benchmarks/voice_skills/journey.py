@@ -102,13 +102,18 @@ def _says(
 
 
 class ShortAnswer(BaseModel):
-    reply: Literal["fine", "no", "unsure", "carry_on", "again"]
+    reply: Literal[
+        "fine", "go_ahead", "okay", "no", "unsure", "carry_on", "done", "again"
+    ]
 
 
 SHORT_ANSWER_PROMPT = """You are playing a caller on the phone to a company. The agent has just said something your script has no line for, so you can only give one of five short answers.
 
 What the call is about: {scenario}
 What you want to be true by the end: {outcome}
+
+The call so far:
+{history}
 
 The agent just said:
 <<<
@@ -117,7 +122,10 @@ The agent just said:
 
 Pick the answer the caller would give:
 - "fine": the agent proposes or asks to confirm something that agrees with what the caller wants. Said as "Yes, that's fine."
+- "go_ahead": the agent offers to do something the caller wants, or asks permission to carry on. Said as "Yes, go ahead."
+- "okay": the agent gives an instruction or a piece of information and waits to be acknowledged. Said as "Okay."
 - "no": what the agent proposes, assumes or asks to confirm goes against what the caller wants, or is not true. Said as "No."
+- "done": the agent is wrapping up or asks if there is anything else, and everything the caller rang about has been dealt with. Never pick this while something the caller wants is still outstanding. Said as "No, that's all, thanks. Bye."
 - "unsure": the agent asks for something the caller would not know or has not been given. Said as "I'm not sure, sorry."
 - "carry_on": the agent is stalling, chatting, or asking about something that does not matter to this call. Said as "Can we just carry on?"
 - "again": what the agent said was cut off or made no sense. Said as "Sorry, can you say that again?"
@@ -129,7 +137,9 @@ def _short_answer(dataset_path: str, answers: Dict, journey: Journey):
     """The caller's reply to something the script did not see coming: one of
     a few short recorded answers, picked to fit what the caller wants."""
 
-    async def action(simulator=None, last_assistant_turn=None) -> Turn:
+    async def action(
+        simulator=None, last_assistant_turn=None, turns=None
+    ) -> Turn:
         key = "again"
         said = last_assistant_turn.content if last_assistant_turn else ""
         if simulator is not None and said:
@@ -137,6 +147,11 @@ def _short_answer(dataset_path: str, answers: Dict, journey: Journey):
                 SHORT_ANSWER_PROMPT.format(
                     scenario=journey["golden"]["scenario"],
                     outcome=journey["golden"]["expected_outcome"],
+                    history="\n".join(
+                        f'{"Caller" if turn.role == "user" else "Agent"}: '
+                        f"{turn.content}"
+                        for turn in (turns or [])[-12:]
+                    ),
                     reply=said,
                 ),
                 ShortAnswer,
@@ -173,7 +188,7 @@ def _repeats(dataset_path: str, recordings: Dict[str, Optional[str]]):
     return action
 
 
-LOOK_AHEAD = 2
+LOOK_AHEAD = 4
 
 
 def _answer_out_of_order(
@@ -246,7 +261,7 @@ def _confirm_read_backs(
             yes,
             when=(
                 "The agent repeats back what the caller just said "
-                f'("{line["say"]}") without getting any of it wrong, and '
+                f'("{line.get("text", line["say"])}") without getting any of it wrong, and '
                 "asks whether that is right"
             ),
         )
@@ -259,7 +274,9 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
     for node in graph["nodes"]:
         ending = node.get("ending")
         nodes[node["id"]] = SimulationNode(
-            action=_says(dataset_path, node["say"], node.get("audio")),
+            action=_says(
+                dataset_path, node.get("text", node["say"]), node.get("audio")
+            ),
             name=node["id"],
             max_visits=node.get("max_visits"),
             ending=ending["name"] if ending else None,
@@ -299,7 +316,9 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
         root.add_reaction(
             SimulationNode(
                 action=_says(
-                    dataset_path, reaction["say"], reaction.get("audio")
+                    dataset_path,
+                    reaction.get("text", reaction["say"]),
+                    reaction.get("audio"),
                 ),
                 name=reaction["id"],
                 max_visits=reaction.get("max_visits"),
@@ -313,7 +332,7 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
         # A journey with no line for being asked again still has a caller
         # who would repeat themselves twice before giving up.
         recordings = {
-            line["say"]: line.get("audio")
+            line.get("text", line["say"]): line.get("audio")
             for line in graph["nodes"] + graph.get("reactions", [])
         }
         root.add_reaction(
@@ -349,6 +368,20 @@ def build_graph(journey: Journey, dataset_path: str) -> SimulationNode:
             )
         )
     return root
+
+
+def stop_when_caller_is_done(turns: List[Turn]) -> Any:
+    """Ends the call once the caller has said goodbye and been answered."""
+    from deepeval.simulator.controller import end, proceed
+
+    said = [turn for turn in turns if turn.role == "user"]
+    if (
+        said
+        and turns[-1].role == "assistant"
+        and (said[-1].metadata or {}).get("short_answer") == "done"
+    ):
+        return end("The caller said there was nothing else.")
+    return proceed()
 
 
 def build_golden(journey: Journey, dataset_path: str) -> ConversationalGolden:

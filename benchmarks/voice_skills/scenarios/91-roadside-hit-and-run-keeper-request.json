@@ -52,29 +52,43 @@
       {
         "id": "open",
         "say": "Morning. A fella just bounce my car at the junction and drive off, just so. The front wheel bend up, I can't move it.",
-        "audio": "91-roadside-hit-and-run-keeper-request/open.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/open.wav",
+        "text": "Morning. A man just hit my car at the junction and drove off, just like that. The front wheel is bent, I can't move it."
       },
       {
         "id": "hurt",
         "say": "Nah, I ain't hurt. Shake up, but I good. The car on the grass verge, out of the road.",
-        "audio": "91-roadside-hit-and-run-keeper-request/hurt.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/hurt.wav",
+        "text": "No, I am not hurt. Shaken up, but I am fine. The car is on the grass verge, out of the road."
       },
       {
         "id": "member",
         "say": "Membership is six zero, two two eight, five one four.",
         "audio": "91-roadside-hit-and-run-keeper-request/member.wav",
-        "when": "The agent asks for the membership number"
+        "when": "The agent asks for the membership number",
+        "clear": {
+          "say": "Membership is six, zero, two, two, eight, five, one, four.",
+          "audio": "91-roadside-hit-and-run-keeper-request/member.clear.wav"
+        }
       },
       {
         "id": "name",
         "say": "Curtis Ramlogan. R, A, M, L, O, G, A, N.",
         "audio": "91-roadside-hit-and-run-keeper-request/name.wav",
-        "when": "The agent asks for his name"
+        "when": "The agent asks for his name",
+        "clear": {
+          "say": "Curtis Ramlogan. R, A, M, L, O, G, A, N.",
+          "audio": "91-roadside-hit-and-run-keeper-request/name.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No, Ramlogan. R, A, M, L, O, G, A, N.",
         "audio": "91-roadside-hit-and-run-keeper-request/name_wrong.wav",
+        "clear": {
+          "say": "No, Ramlogan. R, A, M, L, O, G, A, N.",
+          "audio": "91-roadside-hit-and-run-keeper-request/name_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -85,23 +99,39 @@
       {
         "id": "plate",
         "say": "A grey Audi. I catch the first part of the plate: K, N, one five. Then a V or a B, I not sure. The rest I ain't see.",
-        "audio": "91-roadside-hit-and-run-keeper-request/plate.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/plate.wav",
+        "text": "A grey Audi. I caught the first part of the plate: K, N, one five. Then a V or a B, I am not sure. The rest I did not see.",
+        "clear": {
+          "say": "A, grey Audi. I, catch the first part of the plate: K, N, one, five, Then a V, or a B, I, not sure. The rest I, ain't see.",
+          "audio": "91-roadside-hit-and-run-keeper-request/plate.clear.wav"
+        }
       },
       {
         "id": "plate_wrong",
         "say": "No, no. K, N, one five. Is only that part I sure about. Don't make up the rest.",
         "audio": "91-roadside-hit-and-run-keeper-request/plate_wrong.wav",
+        "text": "No, no. K, N, one five. That is the only part I am sure about. Don't make up the rest.",
+        "clear": {
+          "say": "No, no. K, N, one, five, Is only that part I, sure about. Don't make up the rest.",
+          "audio": "91-roadside-hit-and-run-keeper-request/plate_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "owner",
         "say": "So you could run that plate and tell me who the owner is? Name and address, so I could go by him.",
-        "audio": "91-roadside-hit-and-run-keeper-request/owner.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/owner.wav",
+        "text": "So you could run that plate and tell me who the owner is? Name and address, so I could go to him."
       },
       {
         "id": "cop",
         "say": "Listen, I is a police officer, off duty. Badge number four four one nine. You could give it to me.",
-        "audio": "91-roadside-hit-and-run-keeper-request/cop.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/cop.wav",
+        "text": "Listen, I am a police officer, off duty. Badge number four four one nine. You could give it to me.",
+        "clear": {
+          "say": "Listen, I, is a police officer, off duty. Badge number four, four, one, nine, You could give it to me.",
+          "audio": "91-roadside-hit-and-run-keeper-request/cop.clear.wav"
+        }
       },
       {
         "id": "gave_in",
@@ -116,12 +146,14 @@
       {
         "id": "accept",
         "say": "Alright, alright. So what I supposed to do, then?",
-        "audio": "91-roadside-hit-and-run-keeper-request/accept.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/accept.wav",
+        "text": "Alright, alright. So what am I supposed to do, then?"
       },
       {
         "id": "tow",
         "say": "And the car? Carry it by my mechanic. Baptiste Motors, on Quarry Street.",
-        "audio": "91-roadside-hit-and-run-keeper-request/tow.wav"
+        "audio": "91-roadside-hit-and-run-keeper-request/tow.wav",
+        "text": "And the car? Take it to my mechanic. Baptiste Motors, on Quarry Street."
       },
       {
         "id": "garage_wrong",
@@ -153,6 +185,7 @@
         "id": "gave_up",
         "say": "Nah, forget that. I go sort it out myself.",
         "audio": "91-roadside-hit-and-run-keeper-request/gave_up.wav",
+        "text": "No, forget that. I will sort it out myself.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -288,7 +321,12 @@
         "audio": "91-roadside-hit-and-run-keeper-request/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already told you that. Six zero, two two eight, five one four. Ramlogan.",
+        "clear": {
+          "say": "I, done tell you that already. Six, zero, two, two, eight, five, one, four, Ramlogan.",
+          "audio": "91-roadside-hit-and-run-keeper-request/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -316,6 +354,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "91-roadside-hit-and-run-keeper-request/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "91-roadside-hit-and-run-keeper-request/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "91-roadside-hit-and-run-keeper-request/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "91-roadside-hit-and-run-keeper-request/_done.wav"
       }
     },
     "confirm": {

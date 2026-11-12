@@ -51,24 +51,38 @@
       {
         "id": "open",
         "say": "Alreet. Me router's knackered, it keeps turnin' itself off and on. I need a new one sent oot.",
-        "audio": "58-broadband-router-replacement/open.wav"
+        "audio": "58-broadband-router-replacement/open.wav",
+        "text": "Alright. My router's broken, it keeps turning itself off and on. I need a new one sent out."
       },
       {
         "id": "acct",
         "say": "Account's G D, five five zero, seven one eight.",
         "audio": "58-broadband-router-replacement/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account's G, D, five, five, zero, seven, one, eight.",
+          "audio": "58-broadband-router-replacement/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "N E six, one T R.",
         "audio": "58-broadband-router-replacement/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "N, E, six, one, T, R.",
+          "audio": "58-broadband-router-replacement/postcode.clear.wav"
+        }
       },
       {
         "id": "serial",
         "say": "Reet. It's S N, four seven, K, two two, nine. No, hang on. Nine one. S N, four seven, K, two two, nine one.",
         "audio": "58-broadband-router-replacement/serial.wav",
+        "text": "Right. It's S N, four seven, K, two two, nine. No, hang on. Nine one. S N, four seven, K, two two, nine one.",
+        "clear": {
+          "say": "Reet. It's S, N, four, seven, K, two, two, nine, No, hang on. Nine, one, S, N, four, seven, K, two, two, nine, one.",
+          "audio": "58-broadband-router-replacement/serial.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -88,23 +102,31 @@
         "id": "serial_wrong",
         "say": "Nah. It ends nine one. S N, four seven, K, two two, nine, one.",
         "audio": "58-broadband-router-replacement/serial_wrong.wav",
+        "text": "No. It ends nine one. S N, four seven, K, two two, nine, one.",
+        "clear": {
+          "say": "Nah. It ends nine, one, S, N, four, seven, K, two, two, nine, one.",
+          "audio": "58-broadband-router-replacement/serial_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "hot",
         "say": "Mind, the plug for it's roastin' hot, and it stinks of burnin' plastic.",
-        "audio": "58-broadband-router-replacement/hot.wav"
+        "audio": "58-broadband-router-replacement/hot.wav",
+        "text": "Mind, the plug for it's roasting hot, and it stinks of burning plastic."
       },
       {
         "id": "ignored",
         "say": "Are ye listenin'? I said it's burnin' hot, man. What do I dee with it?",
         "audio": "58-broadband-router-replacement/ignored.wav",
+        "text": "Are you listening? I said it's burning hot, man. What do I do with it?",
         "max_visits": 1
       },
       {
         "id": "unplugged",
         "say": "Aye, reet, it's off at the wall. Nee smoke or owt. So can ye send us a new one, plug an' all?",
-        "audio": "58-broadband-router-replacement/unplugged.wav"
+        "audio": "58-broadband-router-replacement/unplugged.wav",
+        "text": "Yes, right, it's off at the wall. No smoke or anything. So can you send us a new one, plug and all?"
       },
       {
         "id": "day",
@@ -122,22 +144,26 @@
         "id": "day_wrong",
         "say": "Nah, not Thursday, I was askin' the wife. Friday.",
         "audio": "58-broadband-router-replacement/day_wrong.wav",
+        "text": "No, not Thursday, I was asking the wife. Friday.",
         "max_visits": 1
       },
       {
         "id": "old",
         "say": "And what do I dee with the old one? Hoy it in the bin?",
-        "audio": "58-broadband-router-replacement/old.wav"
+        "audio": "58-broadband-router-replacement/old.wav",
+        "text": "And what do I do with the old one? Throw it in the bin?"
       },
       {
         "id": "meantime",
         "say": "So I've nee internet till Friday, then?",
-        "audio": "58-broadband-router-replacement/meantime.wav"
+        "audio": "58-broadband-router-replacement/meantime.wav",
+        "text": "So I've no internet till Friday, then?"
       },
       {
         "id": "done",
         "say": "Champion. Cheers, ta-ra.",
         "audio": "58-broadband-router-replacement/done.wav",
+        "text": "Great. Cheers, goodbye.",
         "terminal": true,
         "ending": {
           "name": "made_safe_and_replaced",
@@ -148,6 +174,7 @@
         "id": "hazard",
         "say": "Forget it, I'll sort it mesel'.",
         "audio": "58-broadband-router-replacement/hazard.wav",
+        "text": "Forget it, I'll sort it myself.",
         "terminal": true,
         "ending": {
           "name": "hazard_ignored",
@@ -158,6 +185,7 @@
         "id": "gave_up",
         "say": "Ye're not gettin' it. I'll ring back later.",
         "audio": "58-broadband-router-replacement/gave_up.wav",
+        "text": "You're not getting it. I'll ring back later.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -269,7 +297,12 @@
         "audio": "58-broadband-router-replacement/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that. G D, five five zero, seven one eight.",
+        "clear": {
+          "say": "I've telt ye that. G, D, five, five, zero, seven, one, eight.",
+          "audio": "58-broadband-router-replacement/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -297,6 +330,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "58-broadband-router-replacement/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "58-broadband-router-replacement/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "58-broadband-router-replacement/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "58-broadband-router-replacement/_done.wav"
       }
     },
     "confirm": {

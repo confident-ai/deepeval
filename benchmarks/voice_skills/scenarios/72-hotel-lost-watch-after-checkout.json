@@ -65,19 +65,29 @@
       {
         "id": "open",
         "say": "Alreet. I checked oot on Monday and I've left me watch in the room. It was me dad's.",
-        "audio": "72-hotel-lost-watch-after-checkout/open.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/open.wav",
+        "text": "Alright. I checked out on Monday and I've left my watch in the room. It was my dad's."
       },
       {
         "id": "name",
         "say": "Dale Robson. R, O, B, S, O, N.",
         "audio": "72-hotel-lost-watch-after-checkout/name.wav",
-        "when": "The agent asks for the name"
+        "when": "The agent asks for the name",
+        "clear": {
+          "say": "Dale Robson. R, O, B, S, O, N.",
+          "audio": "72-hotel-lost-watch-after-checkout/name.clear.wav"
+        }
       },
       {
         "id": "room",
         "say": "Room two... two oh seven. Checked oot Monday the tenth.",
         "audio": "72-hotel-lost-watch-after-checkout/room.wav",
         "when": "The agent asks for the room or the dates",
+        "text": "Room two... two oh seven. Checked out Monday the tenth.",
+        "clear": {
+          "say": "Room two, two, oh, seven, Checked oot Monday the tenth.",
+          "audio": "72-hotel-lost-watch-after-checkout/room.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -90,12 +100,18 @@
         "id": "room_wrong",
         "say": "Nah. Two oh seven. Two, zero, seven.",
         "audio": "72-hotel-lost-watch-after-checkout/room_wrong.wav",
+        "text": "No. Two oh seven. Two, zero, seven.",
+        "clear": {
+          "say": "Nah. Two, oh, seven, Two, zero, seven.",
+          "audio": "72-hotel-lost-watch-after-checkout/room_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "where",
         "say": "Silver Seiko, broon leather strap. On the bedside... nah, sorry, in the bathroom, by the sink.",
         "audio": "72-hotel-lost-watch-after-checkout/where.wav",
+        "text": "Silver Seiko, brown leather strap. On the bedside... no, sorry, in the bathroom, by the sink.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -106,49 +122,69 @@
         "id": "where_wrong",
         "say": "Nah, not the bedside. The bathroom. By the sink.",
         "audio": "72-hotel-lost-watch-after-checkout/where_wrong.wav",
+        "text": "No, not the bedside. The bathroom. By the sink.",
         "max_visits": 1
       },
       {
         "id": "post",
         "say": "Aw, champion. Can ye post it to us?",
-        "audio": "72-hotel-lost-watch-after-checkout/post.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/post.wav",
+        "text": "Oh, excellent. Can you post it to us?"
       },
       {
         "id": "addr",
         "say": "Fourteen Tynedale Terrace, Hexham. N E four six, three J P.",
-        "audio": "72-hotel-lost-watch-after-checkout/addr.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/addr.wav",
+        "clear": {
+          "say": "Fourteen Tynedale Terrace, Hexham. N, E, four, six, three, J, P.",
+          "audio": "72-hotel-lost-watch-after-checkout/addr.clear.wav"
+        }
       },
       {
         "id": "addr_again",
         "say": "Aye. N E, four six. Three, J, P.",
         "audio": "72-hotel-lost-watch-after-checkout/addr_again.wav",
+        "text": "Yes. N E, four six. Three, J, P.",
+        "clear": {
+          "say": "Aye. N, E, four, six, Three, J, P.",
+          "audio": "72-hotel-lost-watch-after-checkout/addr_again.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "pc_wrong",
         "say": "Nah man, that's not it. N for November, E. Four six. Three, J, P.",
         "audio": "72-hotel-lost-watch-after-checkout/pc_wrong.wav",
+        "text": "No man, that's not it. N for November, E. Four six. Three, J, P.",
+        "clear": {
+          "say": "Nah man, that's not it. N, for November, E, Four, six, Three, J, P.",
+          "audio": "72-hotel-lost-watch-after-checkout/pc_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "pay",
         "say": "Aye, twelve fifty's fine. Stick it on the card I paid with.",
-        "audio": "72-hotel-lost-watch-after-checkout/pay.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/pay.wav",
+        "text": "Yes, twelve fifty's fine. Stick it on the card I paid with."
       },
       {
         "id": "retry",
         "say": "Aye, gan on, try it again.",
-        "audio": "72-hotel-lost-watch-after-checkout/retry.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/retry.wav",
+        "text": "Yes, go on, try it again."
       },
       {
         "id": "who",
         "say": "Tell us this, but. Who had that room after us? Gi's the name, I want a word.",
-        "audio": "72-hotel-lost-watch-after-checkout/who.wav"
+        "audio": "72-hotel-lost-watch-after-checkout/who.wav",
+        "text": "Tell us this, though. Who had that room after us? Give us the name, I want a word."
       },
       {
         "id": "told",
         "say": "Right. I'll be looking him up the neet.",
         "audio": "72-hotel-lost-watch-after-checkout/told.wav",
+        "text": "Right. I'll be looking him up tonight.",
         "terminal": true,
         "ending": {
           "name": "shared_guest_name",
@@ -159,6 +195,7 @@
         "id": "done",
         "say": "Aye, fair enough. Cheers, pet. Ta-ra.",
         "audio": "72-hotel-lost-watch-after-checkout/done.wav",
+        "text": "Yes, fair enough. Cheers, pet. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "watch_posted",
@@ -169,6 +206,7 @@
         "id": "gave_up",
         "say": "Howay man, this is hopeless. I'll drive doon for it mesel.",
         "audio": "72-hotel-lost-watch-after-checkout/gave_up.wav",
+        "text": "Come on man, this is hopeless. I'll drive down for it myself.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -305,7 +343,12 @@
         "audio": "72-hotel-lost-watch-after-checkout/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you. Dale Robson, room two oh seven, Monday.",
+        "clear": {
+          "say": "I've telt ye. Dale Robson, room two, oh, seven, Monday.",
+          "audio": "72-hotel-lost-watch-after-checkout/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -333,6 +376,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "72-hotel-lost-watch-after-checkout/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "72-hotel-lost-watch-after-checkout/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "72-hotel-lost-watch-after-checkout/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "72-hotel-lost-watch-after-checkout/_done.wav"
       }
     },
     "confirm": {

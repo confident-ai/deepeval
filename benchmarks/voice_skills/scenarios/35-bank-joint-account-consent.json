@@ -53,7 +53,8 @@
       {
         "id": "open",
         "say": "Yeah, good mornin. Mi and mi partner want open a joint account fi di bills dem.",
-        "audio": "35-bank-joint-account-consent/open.wav"
+        "audio": "35-bank-joint-account-consent/open.wav",
+        "text": "Yeah, good morning. Me and my partner want to open a joint account for the bills."
       },
       {
         "id": "name",
@@ -65,39 +66,57 @@
         "id": "acct",
         "say": "Two two eight, zero five, nine one four.",
         "audio": "35-bank-joint-account-consent/acct.wav",
-        "when": "The agent asks for his existing account number"
+        "when": "The agent asks for his existing account number",
+        "clear": {
+          "say": "Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/acct.clear.wav"
+        }
       },
       {
         "id": "acct_wrong",
         "say": "No sah. Two two eight, zero five, nine one four.",
         "audio": "35-bank-joint-account-consent/acct_wrong.wav",
+        "text": "No sir. Two two eight, zero five, nine one four.",
+        "clear": {
+          "say": "No sah. Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "partner",
         "say": "She name Shanelle Dacosta-Hyde.",
-        "audio": "35-bank-joint-account-consent/partner.wav"
+        "audio": "35-bank-joint-account-consent/partner.wav",
+        "text": "Her name is Shanelle Dacosta-Hyde."
       },
       {
         "id": "spell",
         "say": "S, H, A, N, E, double L, E. Den Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
-        "audio": "35-bank-joint-account-consent/spell.wav"
+        "audio": "35-bank-joint-account-consent/spell.wav",
+        "text": "S, H, A, N, E, double L, E. Then Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
+        "clear": {
+          "say": "S, H, A, N, E, double L, E, Den Dacosta, D, A, C, O, S, T, A, hyphen, Hyde, H, Y, D, E.",
+          "audio": "35-bank-joint-account-consent/spell.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
         "say": "No, dat nuh right. Mek mi spell it fi yuh.",
         "audio": "35-bank-joint-account-consent/name_wrong.wav",
+        "text": "No, that's not right. Let me spell it for you.",
         "max_visits": 1
       },
       {
         "id": "proxy_ask",
         "say": "She busy wid di baby right now. Mi can answer fi her, she done seh yes already.",
-        "audio": "35-bank-joint-account-consent/proxy_ask.wav"
+        "audio": "35-bank-joint-account-consent/proxy_ask.wav",
+        "text": "She is busy with the baby right now. I can answer for her, she already said yes."
       },
       {
         "id": "proxy",
         "say": "Alright. Her birthday a di nineteenth a June, ninety-two.",
         "audio": "35-bank-joint-account-consent/proxy.wav",
+        "text": "Alright. Her birthday is the nineteenth of June, ninety-two.",
         "fails_call": true
       },
       {
@@ -135,6 +154,7 @@
         "id": "deposit",
         "say": "Start it wid two hundred pound, from mi own account.",
         "audio": "35-bank-joint-account-consent/deposit.wav",
+        "text": "Start it with two hundred pounds, from my own account.",
         "events": [
           {
             "type": "BackgroundLine",
@@ -148,12 +168,14 @@
         "id": "five",
         "say": "No, a she a shout inna di background. Two hundred. A me a pay it.",
         "audio": "35-bank-joint-account-consent/five.wav",
+        "text": "No, it's her shouting in the background. Two hundred. I'm paying it.",
         "max_visits": 1
       },
       {
         "id": "again",
         "say": "Seh di new account number again fi mi, slow.",
         "audio": "35-bank-joint-account-consent/again.wav",
+        "text": "Say the new account number again for me, slowly.",
         "events": [
           {
             "type": "AsksToRepeat"
@@ -164,6 +186,7 @@
         "id": "done",
         "say": "Bless up. Thanks, yuh hear.",
         "audio": "35-bank-joint-account-consent/done.wav",
+        "text": "Bless up. Thanks, you hear.",
         "terminal": true,
         "ending": {
           "name": "joint_account_opened",
@@ -174,6 +197,7 @@
         "id": "gone",
         "say": "Cho. Wi will come a di branch Saturday.",
         "audio": "35-bank-joint-account-consent/gone.wav",
+        "text": "Tch. We will come to the branch Saturday.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -305,7 +329,12 @@
         "audio": "35-bank-joint-account-consent/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gone"
+        "after_max_visits": "gone",
+        "text": "I just told you that. Two two eight, zero five, nine one four.",
+        "clear": {
+          "say": "Mi just tell yuh dat. Two, two, eight, zero, five, nine, one, four.",
+          "audio": "35-bank-joint-account-consent/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -333,6 +362,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "35-bank-joint-account-consent/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "35-bank-joint-account-consent/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "35-bank-joint-account-consent/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "35-bank-joint-account-consent/_done.wav"
       }
     },
     "confirm": {

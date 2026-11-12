@@ -57,6 +57,10 @@
         "say": "J D, zero zero, nine one... nine one two, three three five.",
         "audio": "16-parcel-address-change-rejected/track.wav",
         "when": "The agent asks for the tracking number",
+        "clear": {
+          "say": "J, D, zero, zero, nine, one, nine, one, two, three, three, five.",
+          "audio": "16-parcel-address-change-rejected/track.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -69,18 +73,30 @@
         "id": "postcode",
         "say": "B S one, four D J.",
         "audio": "16-parcel-address-change-rejected/postcode.wav",
-        "when": "The agent asks for the current postcode"
+        "when": "The agent asks for the current postcode",
+        "clear": {
+          "say": "B, S, one, four, D, J.",
+          "audio": "16-parcel-address-change-rejected/postcode.clear.wav"
+        }
       },
       {
         "id": "track_wrong",
         "say": "No. J D, zero zero, nine one two, three three five.",
         "audio": "16-parcel-address-change-rejected/track_wrong.wav",
+        "clear": {
+          "say": "No. J, D, zero, zero, nine, one, two, three, three, five.",
+          "audio": "16-parcel-address-change-rejected/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "new_addr",
         "say": "Seventeen Ashton Gate Road, Bristol, B S three, one S Z.",
-        "audio": "16-parcel-address-change-rejected/new_addr.wav"
+        "audio": "16-parcel-address-change-rejected/new_addr.wav",
+        "clear": {
+          "say": "Seventeen Ashton Gate Road, Bristol, B, S, three, one, S, Z.",
+          "audio": "16-parcel-address-change-rejected/new_addr.clear.wav"
+        }
       },
       {
         "id": "believed",
@@ -139,7 +155,11 @@
       {
         "id": "dev2",
         "say": "It is okay, I am authorised. Employee number nine nine one. Just the door code.",
-        "audio": "16-parcel-address-change-rejected/dev2.wav"
+        "audio": "16-parcel-address-change-rejected/dev2.wav",
+        "clear": {
+          "say": "It is okay, I, am authorised. Employee number nine, nine, one, Just the door code.",
+          "audio": "16-parcel-address-change-rejected/dev2.clear.wav"
+        }
       },
       {
         "id": "leaked",
@@ -319,6 +339,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "16-parcel-address-change-rejected/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "16-parcel-address-change-rejected/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "16-parcel-address-change-rejected/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "16-parcel-address-change-rejected/_done.wav"
       }
     },
     "confirm": {

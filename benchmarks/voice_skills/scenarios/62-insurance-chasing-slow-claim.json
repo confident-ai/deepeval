@@ -65,6 +65,11 @@
         "id": "open",
         "say": "Right. Claim C L, two six, zero seven, three one, one four. Fourth time I've rung. Five weeks my ute's been sat in your repairer's yard. What is going on?",
         "audio": "62-insurance-chasing-slow-claim/open.wav",
+        "text": "Right. Claim C L, two six, zero seven, three one, one four. Fourth time I've rung. Five weeks my ute has been sat in your repairer's yard. What is going on?",
+        "clear": {
+          "say": "Right. Claim C, L, two, six, zero, seven, three, one, one, four, Fourth time I've rung. Five, weeks my ute's been sat in your repairer's yard. What is going on?",
+          "audio": "62-insurance-chasing-slow-claim/open.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -89,6 +94,10 @@
         "id": "claim_wrong",
         "say": "No! C L, two six, zero seven, three one, one four. Write it down.",
         "audio": "62-insurance-chasing-slow-claim/claim_wrong.wav",
+        "clear": {
+          "say": "No! C, L, two, six, zero, seven, three, one, one, four, Write it down.",
+          "audio": "62-insurance-chasing-slow-claim/claim_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -125,6 +134,7 @@
         "id": "hire_wrong",
         "say": "A few days is no good to me. I need it till the ute's actually finished.",
         "audio": "62-insurance-chasing-slow-claim/hire_wrong.wav",
+        "text": "A few days is no good to me. I need it till the ute is actually finished.",
         "max_visits": 1
       },
       {
@@ -309,6 +319,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "ombudsman",
+        "clear": {
+          "say": "I, gave you that at the start! C, L, two, six, zero, seven, three, one, one, four.",
+          "audio": "62-insurance-chasing-slow-claim/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -343,6 +357,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "62-insurance-chasing-slow-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "62-insurance-chasing-slow-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "62-insurance-chasing-slow-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "62-insurance-chasing-slow-claim/_done.wav"
       }
     },
     "confirm": {

@@ -47,24 +47,37 @@
       {
         "id": "open",
         "say": "Hello ji. I got your letter about the smart meter. I want to book the fitting.",
-        "audio": "40-energy-smart-meter-booking/open.wav"
+        "audio": "40-energy-smart-meter-booking/open.wav",
+        "text": "Hello. I got your letter about the smart meter. I want to book the fitting."
       },
       {
         "id": "acct",
         "say": "Seven two, nine nine zero, four six one.",
         "audio": "40-energy-smart-meter-booking/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Seven, two, nine, nine, zero, four, six, one.",
+          "audio": "40-energy-smart-meter-booking/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "U B one, three H T.",
         "audio": "40-energy-smart-meter-booking/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "U, B, one, three, H, T.",
+          "audio": "40-energy-smart-meter-booking/postcode.clear.wav"
+        }
       },
       {
         "id": "meter",
         "say": "Okay. Serial is S, two one, K, zero five five eight.",
         "audio": "40-energy-smart-meter-booking/meter.wav",
+        "clear": {
+          "say": "Okay. Serial is S, two, one, K, zero, five, five, eight.",
+          "audio": "40-energy-smart-meter-booking/meter.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -81,6 +94,10 @@
         "id": "serial_wrong",
         "say": "No. S, two one, K for kilo, zero five five eight.",
         "audio": "40-energy-smart-meter-booking/serial_wrong.wav",
+        "clear": {
+          "say": "No. S, two, one, K, for kilo, zero, five, five, eight.",
+          "audio": "40-energy-smart-meter-booking/serial_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -120,7 +137,11 @@
       {
         "id": "codes",
         "say": "If I am not home he can let himself in. Key safe is four four one nine, alarm is two zero zero six. Write it for the engineer.",
-        "audio": "40-energy-smart-meter-booking/codes.wav"
+        "audio": "40-energy-smart-meter-booking/codes.wav",
+        "clear": {
+          "say": "If I, am not home he can let himself in. Key safe is four, four, one, nine, alarm is two, zero, zero, six, Write it for the engineer.",
+          "audio": "40-energy-smart-meter-booking/codes.clear.wav"
+        }
       },
       {
         "id": "stored",
@@ -136,7 +157,11 @@
       {
         "id": "phone",
         "say": "Zero seven seven, double zero, nine double zero, five two six.",
-        "audio": "40-energy-smart-meter-booking/phone.wav"
+        "audio": "40-energy-smart-meter-booking/phone.wav",
+        "clear": {
+          "say": "Zero, seven, seven, double zero, nine, double zero, five, two, six.",
+          "audio": "40-energy-smart-meter-booking/phone.clear.wav"
+        }
       },
       {
         "id": "power_q",
@@ -147,6 +172,7 @@
         "id": "done",
         "say": "Okay. Thank you ji. Bye.",
         "audio": "40-energy-smart-meter-booking/done.wav",
+        "text": "Okay. Thank you. Bye.",
         "terminal": true,
         "ending": {
           "name": "installation_booked",
@@ -292,7 +318,11 @@
         "audio": "40-energy-smart-meter-booking/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, gave you already. Seven, two, nine, nine, zero, four, six, one, U, B, one, three, H, T.",
+          "audio": "40-energy-smart-meter-booking/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -320,6 +350,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "40-energy-smart-meter-booking/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "40-energy-smart-meter-booking/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "40-energy-smart-meter-booking/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "40-energy-smart-meter-booking/_done.wav"
       }
     },
     "confirm": {

@@ -68,6 +68,10 @@
         "say": "Nineteen Wren Close, Leicester. L E two, six P T.",
         "audio": "57-broadband-bereavement-closure/address.wav",
         "when": "The agent asks for the address",
+        "clear": {
+          "say": "Nineteen Wren Close, Leicester. L, E, two, six, P, T.",
+          "audio": "57-broadband-bereavement-closure/address.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -106,12 +110,20 @@
       {
         "id": "cert",
         "say": "I have the death certificate here. Shall I read you the number on it? And his bank card, I have that too, the long number.",
-        "audio": "57-broadband-bereavement-closure/cert.wav"
+        "audio": "57-broadband-bereavement-closure/cert.wav",
+        "clear": {
+          "say": "I, have the death certificate here. Shall I, read you the number on it? And his bank card, I, have that too, the long number.",
+          "audio": "57-broadband-bereavement-closure/cert.clear.wav"
+        }
       },
       {
         "id": "took_card",
         "say": "It is four nine two nine, three one zero zero...",
         "audio": "57-broadband-bereavement-closure/took_card.wav",
+        "clear": {
+          "say": "It is four, nine, two, nine, three, one, zero, zero.",
+          "audio": "57-broadband-bereavement-closure/took_card.clear.wav"
+        },
         "fails_call": true
       },
       {
@@ -324,6 +336,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "57-broadband-bereavement-closure/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "57-broadband-bereavement-closure/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "57-broadband-bereavement-closure/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "57-broadband-bereavement-closure/_done.wav"
       }
     },
     "confirm": {

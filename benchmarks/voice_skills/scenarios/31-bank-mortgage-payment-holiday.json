@@ -45,12 +45,14 @@
       {
         "id": "open",
         "say": "Hiya. I need to stop my mortgage payments for a wee while, they've put me on short hours.",
-        "audio": "31-bank-mortgage-payment-holiday/open.wav"
+        "audio": "31-bank-mortgage-payment-holiday/open.wav",
+        "text": "Hi. I need to stop my mortgage payments for a little while, they've put me on short hours."
       },
       {
         "id": "cut_in",
         "say": "Aye, aye, I know all that, I read the leaflet. Can we not just get on?",
         "audio": "31-bank-mortgage-payment-holiday/cut_in.wav",
+        "text": "Yes, yes, I know all that, I read the leaflet. Can we not just get on?",
         "events": [
           {
             "type": "Interrupt",
@@ -63,12 +65,17 @@
         "id": "rushed",
         "say": "Good. Give me a second, so.",
         "audio": "31-bank-mortgage-payment-holiday/rushed.wav",
+        "text": "Good. Give me a second, then.",
         "fails_call": true
       },
       {
         "id": "num",
         "say": "Right. It's M G, five five zero, three one eight, seven.",
         "audio": "31-bank-mortgage-payment-holiday/num.wav",
+        "clear": {
+          "say": "Right. It's M, G, five, five, zero, three, one, eight, seven.",
+          "audio": "31-bank-mortgage-payment-holiday/num.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -85,6 +92,10 @@
         "id": "num_wrong",
         "say": "No. M G, five five zero, three one eight, seven.",
         "audio": "31-bank-mortgage-payment-holiday/num_wrong.wav",
+        "clear": {
+          "say": "No. M, G, five, five, zero, three, one, eight, seven.",
+          "audio": "31-bank-mortgage-payment-holiday/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -113,6 +124,10 @@
         "id": "assumed",
         "say": "Hold on, I never said that. Two months. The September one and the October one.",
         "audio": "31-bank-mortgage-payment-holiday/assumed.wav",
+        "clear": {
+          "say": "Hold on, I, never said that. Two, months. The September one, and the October one.",
+          "audio": "31-bank-mortgage-payment-holiday/assumed.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -169,6 +184,7 @@
         "id": "done",
         "say": "Dead on. Thanks very much.",
         "audio": "31-bank-mortgage-payment-holiday/done.wav",
+        "text": "Alright. Thanks very much.",
         "terminal": true,
         "ending": {
           "name": "holiday_set",
@@ -179,6 +195,7 @@
         "id": "left",
         "say": "Ach, this is wearing me out. I'll go into the branch.",
         "audio": "31-bank-mortgage-payment-holiday/left.wav",
+        "text": "Oh, this is wearing me out. I'll go into the branch.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -349,6 +366,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "31-bank-mortgage-payment-holiday/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "31-bank-mortgage-payment-holiday/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "31-bank-mortgage-payment-holiday/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "31-bank-mortgage-payment-holiday/_done.wav"
       }
     },
     "confirm": {

@@ -10,6 +10,7 @@ from deepeval.benchmarks.voice_skills.journey import (
     build_graph,
     build_metrics,
     load_journeys,
+    stop_when_caller_is_done,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.simulator import ConversationSimulator
@@ -146,8 +147,9 @@ class VoiceSkills(DeepEvalBaseBenchmark):
         simulator = ConversationSimulator(
             voice_config=voice_config,
             simulation_graph=build_graph(journey, self.dataset_path),
-            # The graph ends the call, not a judge reading the transcript.
-            stopping_controller=lambda: proceed(),
+            # The graph ends the call, or the caller saying goodbye does; no
+            # judge reads the transcript to decide.
+            stopping_controller=stop_when_caller_is_done,
             simulator_model=self.simulator_model,
         )
         test_case = simulator.simulate(
@@ -155,6 +157,16 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             max_user_simulations=self.max_user_simulations,
         )[0]
         metadata = test_case.metadata or {}
+        said = [turn for turn in test_case.turns if turn.role == "user"]
+        if (
+            metadata.get("Simulation ending") is None
+            and said
+            and (said[-1].metadata or {}).get("short_answer") == "done"
+        ):
+            # The agent wrapped up and the caller had nothing left to ask.
+            metadata["Simulation ending"] = "wrapped_up"
+            metadata["Simulation failed"] = bool(metadata.get("Failed nodes"))
+            test_case.metadata = metadata
         scripted = (journey.get("shape") or {}).get("shortest_path")
         if scripted and "Shortest path" in metadata:
             # Measured on the script as written, not on the shortcuts a

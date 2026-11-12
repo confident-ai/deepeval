@@ -47,12 +47,14 @@
       {
         "id": "open",
         "say": "Alreet. I've got a group booking for the football lads, fowerteen of we gannin' to Amsterdam. Some have dropped oot and I need them teken off.",
-        "audio": "28-airline-group-booking-change/open.wav"
+        "audio": "28-airline-group-booking-change/open.wav",
+        "text": "Alright. I've got a group booking for the football lads, fourteen of us going to Amsterdam. Some have dropped out and I need them taken off."
       },
       {
         "id": "cutin",
         "say": "Aye, aye, I knaa aal that. Just get on with it, man.",
         "audio": "28-airline-group-booking-change/cutin.wav",
+        "text": "Yes, yes, I know all that. Just get on with it, man.",
         "events": [
           {
             "type": "Interrupt",
@@ -65,13 +67,21 @@
         "id": "skipped",
         "say": "It's G, R, P, four four zero, six one. Hindmarsh. Davey Hindmarsh.",
         "audio": "28-airline-group-booking-change/skipped.wav",
+        "clear": {
+          "say": "It's G, R, P, four, four, zero, six, one, Hindmarsh. Davey Hindmarsh.",
+          "audio": "28-airline-group-booking-change/skipped.clear.wav"
+        },
         "fails_call": true
       },
       {
         "id": "ref",
         "say": "It's G, R, P, four four zero, six one.",
         "audio": "28-airline-group-booking-change/ref.wav",
-        "when": "The agent asks for the group reference"
+        "when": "The agent asks for the group reference",
+        "clear": {
+          "say": "It's G, R, P, four, four, zero, six, one.",
+          "audio": "28-airline-group-booking-change/ref.clear.wav"
+        }
       },
       {
         "id": "org",
@@ -83,6 +93,7 @@
         "id": "count",
         "say": "Tek three off. So fowerteen doon to... hang on, nah, Kev's back in. Two off. Twelve gannin'.",
         "audio": "28-airline-group-booking-change/count.wav",
+        "text": "Take three off. So fourteen down to... hang on, no, Kev's back in. Two off. Twelve going.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -93,49 +104,61 @@
         "id": "count_wrong",
         "say": "Nah, man. Two off, not three. Kev Lowther's still gannin'. Twelve of we.",
         "audio": "28-airline-group-booking-change/count_wrong.wav",
+        "text": "No, man. Two off, not three. Kev Lowther's still going. Twelve of us.",
         "max_visits": 2
       },
       {
         "id": "who",
         "say": "Callum Reay, that's R, E, A, Y, and Stu Oliver.",
-        "audio": "28-airline-group-booking-change/who.wav"
+        "audio": "28-airline-group-booking-change/who.wav",
+        "clear": {
+          "say": "Callum Reay, that's R, E, A, Y, and Stu Oliver.",
+          "audio": "28-airline-group-booking-change/who.clear.wav"
+        }
       },
       {
         "id": "offer1",
         "say": "Nah. Naebody else is comin'. Just tek them off.",
-        "audio": "28-airline-group-booking-change/offer1.wav"
+        "audio": "28-airline-group-booking-change/offer1.wav",
+        "text": "No. Nobody else is coming. Just take them off."
       },
       {
         "id": "offer2",
         "say": "Are ye not listenin'? Tek them off.",
         "audio": "28-airline-group-booking-change/offer2.wav",
+        "text": "Are you not listening? Take them off.",
         "max_visits": 1
       },
       {
         "id": "balance_q",
         "say": "Reet. And what's left to pay on the balance noo?",
-        "audio": "28-airline-group-booking-change/balance_q.wav"
+        "audio": "28-airline-group-booking-change/balance_q.wav",
+        "text": "Right. And what's left to pay on the balance now?"
       },
       {
         "id": "change_q",
         "say": "While I'm on. Can ye move the flight hyem to the Monday instead of the Sunday? For the lot of we.",
-        "audio": "28-airline-group-booking-change/change_q.wav"
+        "audio": "28-airline-group-booking-change/change_q.wav",
+        "text": "While I'm on. Can you move the flight home to the Monday instead of the Sunday? For all of us."
       },
       {
         "id": "abandon",
         "say": "Fower hundred and eighty quid? Nah, forget that. Leave it as it is.",
-        "audio": "28-airline-group-booking-change/abandon.wav"
+        "audio": "28-airline-group-booking-change/abandon.wav",
+        "text": "Four hundred and eighty quid? No, forget that. Leave it as it is."
       },
       {
         "id": "pushed",
         "say": "I said leave it, man. Divvn't touch the flights.",
         "audio": "28-airline-group-booking-change/pushed.wav",
+        "text": "I said leave it, man. Don't touch the flights.",
         "max_visits": 1
       },
       {
         "id": "done",
         "say": "Champion. Ta-ra.",
         "audio": "28-airline-group-booking-change/done.wav",
+        "text": "Great. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "two_cancelled_flights_unchanged",
@@ -146,6 +169,7 @@
         "id": "gave_up",
         "say": "Howay, man. I'll gan doon the travel shop.",
         "audio": "28-airline-group-booking-change/gave_up.wav",
+        "text": "Come on, man. I'll go down the travel shop.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -283,7 +307,12 @@
         "audio": "28-airline-group-booking-change/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've just told you. G, R, P, four four zero, six one. Hindmarsh.",
+        "clear": {
+          "say": "I've just telt ye. G, R, P, four, four, zero, six, one, Hindmarsh.",
+          "audio": "28-airline-group-booking-change/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -311,6 +340,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "28-airline-group-booking-change/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "28-airline-group-booking-change/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "28-airline-group-booking-change/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "28-airline-group-booking-change/_done.wav"
       }
     },
     "confirm": {

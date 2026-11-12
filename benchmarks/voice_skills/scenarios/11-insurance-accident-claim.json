@@ -56,6 +56,10 @@
         "id": "policy",
         "say": "Okay. Policy T X, four four one, nine zero, K.",
         "audio": "11-insurance-accident-claim/policy.wav",
+        "clear": {
+          "say": "Okay. Policy T, X, four, four, one, nine, zero, K.",
+          "audio": "11-insurance-accident-claim/policy.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -98,6 +102,10 @@
         "id": "other",
         "say": "His name was Dale Brooks. Plate is K, R, seven two nine four, B.",
         "audio": "11-insurance-accident-claim/other.wav",
+        "clear": {
+          "say": "His name was Dale Brooks. Plate is K, R, seven, two, nine, four, B.",
+          "audio": "11-insurance-accident-claim/other.clear.wav"
+        },
         "events": [
           {
             "type": "Backchannel",
@@ -117,6 +125,10 @@
         "id": "plate_wrong",
         "say": "No. K, R, seven two nine four, B as in boy.",
         "audio": "11-insurance-accident-claim/plate_wrong.wav",
+        "clear": {
+          "say": "No. K, R, seven, two, nine, four, B, as in boy.",
+          "audio": "11-insurance-accident-claim/plate_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -297,7 +309,11 @@
         "audio": "11-insurance-accident-claim/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, already gave you that, hon. T, X, four, four, one, nine, zero, K.",
+          "audio": "11-insurance-accident-claim/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -325,6 +341,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "11-insurance-accident-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "11-insurance-accident-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "11-insurance-accident-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "11-insurance-accident-claim/_done.wav"
       }
     },
     "confirm": {

@@ -61,13 +61,18 @@
       {
         "id": "open",
         "say": "Hello. I lose my chequebook, the business account. I want to stop the cheques and order new book.",
-        "audio": "34-bank-lost-chequebook/open.wav"
+        "audio": "34-bank-lost-chequebook/open.wav",
+        "text": "Hello. I lost my chequebook, the business account. I want to stop the cheques and order a new book."
       },
       {
         "id": "acct",
         "say": "Six one two, zero eight, eight three four.",
         "audio": "34-bank-lost-chequebook/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Six, one, two, zero, eight, eight, three, four.",
+          "audio": "34-bank-lost-chequebook/acct.clear.wav"
+        }
       },
       {
         "id": "dob",
@@ -79,23 +84,37 @@
         "id": "acct_wrong",
         "say": "No. Six one two. Zero eight. Eight three four.",
         "audio": "34-bank-lost-chequebook/acct_wrong.wav",
+        "clear": {
+          "say": "No. Six, one, two, Zero, eight, Eight, three, four.",
+          "audio": "34-bank-lost-chequebook/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "range",
         "say": "From zero zero zero, three four nine, to zero zero zero, three six five. Before that one I already use.",
-        "audio": "34-bank-lost-chequebook/range.wav"
+        "audio": "34-bank-lost-chequebook/range.wav",
+        "text": "From zero zero zero, three four nine, to zero zero zero, three six five. Before that one I already used.",
+        "clear": {
+          "say": "From zero, zero, zero, three, four, nine, to zero, zero, zero, three, six, five, Before that one, I, already use.",
+          "audio": "34-bank-lost-chequebook/range.clear.wav"
+        }
       },
       {
         "id": "range_wrong",
         "say": "No, no. Start three four nine. End three six five. Seventeen cheques.",
         "audio": "34-bank-lost-chequebook/range_wrong.wav",
+        "clear": {
+          "say": "No, no. Start three, four, nine, End three, six, five, Seventeen cheques.",
+          "audio": "34-bank-lost-chequebook/range_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "fee",
         "say": "How much the fee for this?",
-        "audio": "34-bank-lost-chequebook/fee.wav"
+        "audio": "34-bank-lost-chequebook/fee.wav",
+        "text": "How much is the fee for this?"
       },
       {
         "id": "ok_fee",
@@ -120,7 +139,8 @@
       {
         "id": "note",
         "say": "Okay, okay, I only try. Write: lost at the wholesale market on Monday.",
-        "audio": "34-bank-lost-chequebook/note.wav"
+        "audio": "34-bank-lost-chequebook/note.wav",
+        "text": "Okay, okay, I only tried. Write: lost at the wholesale market on Monday."
       },
       {
         "id": "wait",
@@ -151,7 +171,8 @@
       {
         "id": "how",
         "say": "Not ordered? So what I must do?",
-        "audio": "34-bank-lost-chequebook/how.wav"
+        "audio": "34-bank-lost-chequebook/how.wav",
+        "text": "Not ordered? So what must I do?"
       },
       {
         "id": "done",
@@ -167,6 +188,7 @@
         "id": "hung",
         "say": "Too difficult. I come to the branch myself.",
         "audio": "34-bank-lost-chequebook/hung.wav",
+        "text": "Too difficult. I will come to the branch myself.",
         "terminal": true,
         "ending": {
           "name": "hung_up",
@@ -303,7 +325,12 @@
         "audio": "34-bank-lost-chequebook/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung"
+        "after_max_visits": "hung",
+        "text": "I said already. Six one two, zero eight, eight three four.",
+        "clear": {
+          "say": "I, say already. Six, one, two, zero, eight, eight, three, four.",
+          "audio": "34-bank-lost-chequebook/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -331,6 +358,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "34-bank-lost-chequebook/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "34-bank-lost-chequebook/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "34-bank-lost-chequebook/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "34-bank-lost-chequebook/_done.wav"
       }
     },
     "confirm": {

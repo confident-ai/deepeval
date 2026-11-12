@@ -55,6 +55,10 @@
         "say": "It's, hang on. Six six, two, one nine... one nine four, zero.",
         "audio": "99-retail-recalled-heater-smoking/order.wav",
         "when": "The agent asks for the order number",
+        "clear": {
+          "say": "It's, hang on. Six, six, two, one, nine, one, nine, four, zero.",
+          "audio": "99-retail-recalled-heater-smoking/order.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -67,12 +71,20 @@
         "id": "postcode",
         "say": "R G one, seven L T.",
         "audio": "99-retail-recalled-heater-smoking/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "R, G, one, seven, L, T.",
+          "audio": "99-retail-recalled-heater-smoking/postcode.clear.wav"
+        }
       },
       {
         "id": "order_wrong",
         "say": "No. Six six two, one nine four zero. Sorry, I keep coughing.",
         "audio": "99-retail-recalled-heater-smoking/order_wrong.wav",
+        "clear": {
+          "say": "No. Six, six, two, one, nine, four, zero, Sorry, I, keep coughing.",
+          "audio": "99-retail-recalled-heater-smoking/order_wrong.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -146,7 +158,11 @@
       {
         "id": "refund",
         "say": "A refund. I don't want another one of those in the house.",
-        "audio": "99-retail-recalled-heater-smoking/refund.wav"
+        "audio": "99-retail-recalled-heater-smoking/refund.wav",
+        "clear": {
+          "say": "A, refund. I, don't want another one, of those in the house.",
+          "audio": "99-retail-recalled-heater-smoking/refund.clear.wav"
+        }
       },
       {
         "id": "collect",
@@ -321,6 +337,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "99-retail-recalled-heater-smoking/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "99-retail-recalled-heater-smoking/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "99-retail-recalled-heater-smoking/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "99-retail-recalled-heater-smoking/_done.wav"
       }
     },
     "confirm": {

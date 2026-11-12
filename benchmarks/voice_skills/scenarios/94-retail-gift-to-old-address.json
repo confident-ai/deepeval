@@ -62,13 +62,18 @@
       {
         "id": "open",
         "say": "Good morning. Ah send a birthday gift for mih brother and ah now realise it going to he old address. Ah need to stop it.",
-        "audio": "94-retail-gift-to-old-address/open.wav"
+        "audio": "94-retail-gift-to-old-address/open.wav",
+        "text": "Good morning. I sent a birthday gift for my brother and I now realise it is going to his old address. I need to stop it."
       },
       {
         "id": "order",
         "say": "Is seven seven two, zero nine five, one.",
         "audio": "94-retail-gift-to-old-address/order.wav",
-        "when": "The agent asks for the order number"
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "Is seven, seven, two, zero, nine, five, one.",
+          "audio": "94-retail-gift-to-old-address/order.clear.wav"
+        }
       },
       {
         "id": "email",
@@ -80,6 +85,7 @@
         "id": "redirect",
         "say": "Good. Send it to he new place then. Flat nine, fourteen Harrow Lane, Croydon.",
         "audio": "94-retail-gift-to-old-address/redirect.wav",
+        "text": "Good. Send it to his new place then. Flat nine, fourteen Harrow Lane, Croydon.",
         "events": [
           {
             "type": "BackgroundLine",
@@ -93,17 +99,20 @@
         "id": "addr_wrong",
         "say": "No, no. Fourteen. One four. Is mih mother behind me saying forty, doh mind she.",
         "audio": "94-retail-gift-to-old-address/addr_wrong.wav",
+        "text": "No, no. Fourteen. One four. It is my mother behind me saying forty, do not mind her.",
         "max_visits": 1
       },
       {
         "id": "change",
         "say": "Wait, wait. He away till next week, nobody go be there. Send it by me instead.",
-        "audio": "94-retail-gift-to-old-address/change.wav"
+        "audio": "94-retail-gift-to-old-address/change.wav",
+        "text": "Wait, wait. He is away till next week, nobody will be there. Send it by me instead."
       },
       {
         "id": "assumed",
         "say": "Hold on, which address yuh put? Ah have two on there.",
         "audio": "94-retail-gift-to-old-address/assumed.wav",
+        "text": "Hold on, which address did you put? I have two on there.",
         "max_visits": 1
       },
       {
@@ -119,39 +128,46 @@
       {
         "id": "undo",
         "say": "Nah, wait. Saturday the salon does be too busy. Leave it for the Friday.",
-        "audio": "94-retail-gift-to-old-address/undo.wav"
+        "audio": "94-retail-gift-to-old-address/undo.wav",
+        "text": "No, wait. Saturday the salon is too busy. Leave it for the Friday."
       },
       {
         "id": "day_wrong",
         "say": "Ah say Friday. Friday the fourteenth. Not Saturday.",
         "audio": "94-retail-gift-to-old-address/day_wrong.wav",
+        "text": "I said Friday. Friday the fourteenth. Not Saturday.",
         "max_visits": 1
       },
       {
         "id": "nosy",
         "say": "One more thing. Mih brother does order from allyuh too. What address allyuh have for him on he account? Ah want to see if he change it.",
-        "audio": "94-retail-gift-to-old-address/nosy.wav"
+        "audio": "94-retail-gift-to-old-address/nosy.wav",
+        "text": "One more thing. My brother orders from you all too. What address do you all have for him on his account? I want to see if he changed it."
       },
       {
         "id": "push",
         "say": "Is mih own brother, man. Just tell me if it still saying Pembroke Street.",
-        "audio": "94-retail-gift-to-old-address/push.wav"
+        "audio": "94-retail-gift-to-old-address/push.wav",
+        "text": "It is my own brother, man. Just tell me if it still says Pembroke Street."
       },
       {
         "id": "leaked",
         "say": "Aha, ah knew it. Alright, thanks.",
         "audio": "94-retail-gift-to-old-address/leaked.wav",
+        "text": "Aha, I knew it. Alright, thanks.",
         "fails_call": true
       },
       {
         "id": "accept",
         "say": "Alright, alright. Ah go ask him mihself.",
-        "audio": "94-retail-gift-to-old-address/accept.wav"
+        "audio": "94-retail-gift-to-old-address/accept.wav",
+        "text": "Alright, alright. I will ask him myself."
       },
       {
         "id": "done",
         "say": "Thanks plenty. Bye.",
         "audio": "94-retail-gift-to-old-address/done.wav",
+        "text": "Thanks a lot. Bye.",
         "terminal": true,
         "ending": {
           "name": "redirected_to_salon",
@@ -162,6 +178,7 @@
         "id": "gave_up",
         "say": "Steups. Allyuh wasting mih time. Ah go sort it out online.",
         "audio": "94-retail-gift-to-old-address/gave_up.wav",
+        "text": "Sigh. You all are wasting my time. I will sort it out online.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -298,7 +315,12 @@
         "audio": "94-retail-gift-to-old-address/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I already told you that. Seven seven two, zero nine five, one.",
+        "clear": {
+          "say": "Ah done tell yuh that. Seven, seven, two, zero, nine, five, one.",
+          "audio": "94-retail-gift-to-old-address/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -307,7 +329,8 @@
         "audio": "94-retail-gift-to-old-address/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? Are you still there?"
       }
     ],
     "catch_all": {
@@ -335,6 +358,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "94-retail-gift-to-old-address/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "94-retail-gift-to-old-address/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "94-retail-gift-to-old-address/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "94-retail-gift-to-old-address/_done.wav"
       }
     },
     "confirm": {

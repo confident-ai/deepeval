@@ -67,13 +67,21 @@
         "id": "ref",
         "say": "D, L, four four, nine, zero, two.",
         "audio": "48-pharmacy-missing-delivery/ref.wav",
-        "when": "The agent asks for the order reference"
+        "when": "The agent asks for the order reference",
+        "clear": {
+          "say": "D, L, four, four, nine, zero, two.",
+          "audio": "48-pharmacy-missing-delivery/ref.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "T N nine, one R Q.",
         "audio": "48-pharmacy-missing-delivery/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "T, N, nine, one, R, Q.",
+          "audio": "48-pharmacy-missing-delivery/postcode.clear.wav"
+        }
       },
       {
         "id": "sarcasm",
@@ -139,6 +147,10 @@
         "id": "num_wrong",
         "say": "No. Oh double seven, double oh, nine double oh, three five one.",
         "audio": "48-pharmacy-missing-delivery/num_wrong.wav",
+        "clear": {
+          "say": "No. Oh, double seven, double oh, nine, double oh, three, five, one.",
+          "audio": "48-pharmacy-missing-delivery/num_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -303,6 +315,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, have already given you that! D, L, four, four, nine, zero, two.",
+          "audio": "48-pharmacy-missing-delivery/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -346,6 +362,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "48-pharmacy-missing-delivery/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "48-pharmacy-missing-delivery/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "48-pharmacy-missing-delivery/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "48-pharmacy-missing-delivery/_done.wav"
       }
     },
     "confirm": {

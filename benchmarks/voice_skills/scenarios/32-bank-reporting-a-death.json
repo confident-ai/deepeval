@@ -56,7 +56,11 @@
       {
         "id": "open",
         "say": "Hello. I... my father passed away last week and I think I'm supposed to tell you. I don't really know how this works.",
-        "audio": "32-bank-reporting-a-death/open.wav"
+        "audio": "32-bank-reporting-a-death/open.wav",
+        "clear": {
+          "say": "Hello. I, my father passed away last week and I, think I'm supposed to tell you. I, don't really know how this works.",
+          "audio": "32-bank-reporting-a-death/open.clear.wav"
+        }
       },
       {
         "id": "routine",
@@ -77,7 +81,11 @@
       {
         "id": "spell",
         "say": "T, H, A, double D, E, U, S. And Quennell is Q, U, E, double N, E, double L.",
-        "audio": "32-bank-reporting-a-death/spell.wav"
+        "audio": "32-bank-reporting-a-death/spell.wav",
+        "clear": {
+          "say": "T, H, A, double D, E, U, S, And Quennell is Q, U, E, double N, E, double L.",
+          "audio": "32-bank-reporting-a-death/spell.clear.wav"
+        }
       },
       {
         "id": "name_wrong",
@@ -155,7 +163,11 @@
       {
         "id": "docs",
         "say": "No, I understand. I've got the certificate here. Can I bring it in to the Whitstable branch? I can't face posting it.",
-        "audio": "32-bank-reporting-a-death/docs.wav"
+        "audio": "32-bank-reporting-a-death/docs.wav",
+        "clear": {
+          "say": "No, I, understand. I've got the certificate here. Can I, bring it in to the Whitstable branch? I, can't face posting it.",
+          "audio": "32-bank-reporting-a-death/docs.clear.wav"
+        }
       },
       {
         "id": "appt",
@@ -376,6 +388,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "32-bank-reporting-a-death/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "32-bank-reporting-a-death/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "32-bank-reporting-a-death/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "32-bank-reporting-a-death/_done.wav"
       }
     },
     "confirm": {

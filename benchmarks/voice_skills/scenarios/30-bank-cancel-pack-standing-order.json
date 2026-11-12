@@ -48,7 +48,8 @@
       {
         "id": "open",
         "say": "Aye, hi. Two things. Ah want tae cancel that Gold Extras pack oan ma account, and set up a standin order fur ma rent.",
-        "audio": "30-bank-cancel-pack-standing-order/open.wav"
+        "audio": "30-bank-cancel-pack-standing-order/open.wav",
+        "text": "Yes, hi. Two things. I want to cancel that Gold Extras pack on my account, and set up a standing order for my rent."
       },
       {
         "id": "name",
@@ -60,34 +61,54 @@
         "id": "post",
         "say": "G forty-two, eight Q R.",
         "audio": "30-bank-cancel-pack-standing-order/post.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "G, forty-two, eight, Q, R.",
+          "audio": "30-bank-cancel-pack-standing-order/post.clear.wav"
+        }
       },
       {
         "id": "post_wrong",
         "say": "Naw. G four two, eight Q R. Q fur queen.",
         "audio": "30-bank-cancel-pack-standing-order/post_wrong.wav",
+        "text": "No. G four two, eight Q R. Q for queen.",
+        "clear": {
+          "say": "Naw. G, four, two, eight, Q, R, Q, fur queen.",
+          "audio": "30-bank-cancel-pack-standing-order/post_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "keep",
         "say": "Naw, ah've never used any ae it. Just cancel it.",
-        "audio": "30-bank-cancel-pack-standing-order/keep.wav"
+        "audio": "30-bank-cancel-pack-standing-order/keep.wav",
+        "text": "No, I've never used any of it. Just cancel it."
       },
       {
         "id": "offer2",
         "say": "Ah said cancel it, pal. Ah'm no wantin anythin else.",
         "audio": "30-bank-cancel-pack-standing-order/offer2.wav",
+        "text": "I said cancel it, pal. I'm not wanting anything else.",
         "max_visits": 1
       },
       {
         "id": "payee",
         "say": "Right. It's tae Dalmarnock Lettings. Sort code eight two, six one, zero seven.",
-        "audio": "30-bank-cancel-pack-standing-order/payee.wav"
+        "audio": "30-bank-cancel-pack-standing-order/payee.wav",
+        "text": "Right. It's to Dalmarnock Lettings. Sort code eight two, six one, zero seven.",
+        "clear": {
+          "say": "Right. It's tae Dalmarnock Lettings. Sort code eight, two, six, one, zero, seven.",
+          "audio": "30-bank-cancel-pack-standing-order/payee.clear.wav"
+        }
       },
       {
         "id": "acct",
         "say": "Account's three zero four, four nine... two one five.",
         "audio": "30-bank-cancel-pack-standing-order/acct.wav",
+        "clear": {
+          "say": "Account's three, zero, four, four, nine, two, one, five.",
+          "audio": "30-bank-cancel-pack-standing-order/acct.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -100,12 +121,18 @@
         "id": "acct_wrong",
         "say": "Naw. Three zero four, four nine, two one five.",
         "audio": "30-bank-cancel-pack-standing-order/acct_wrong.wav",
+        "text": "No. Three zero four, four nine, two one five.",
+        "clear": {
+          "say": "Naw. Three, zero, four, four, nine, two, one, five.",
+          "audio": "30-bank-cancel-pack-standing-order/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "amount",
         "say": "Six fifty a month, oan the twenty-eighth.",
         "audio": "30-bank-cancel-pack-standing-order/amount.wav",
+        "text": "Six fifty a month, on the twenty-eighth.",
         "events": [
           {
             "type": "SideSpeech",
@@ -117,34 +144,40 @@
       {
         "id": "change",
         "say": "Haud oan, ah'm lookin at the letter. It's gone up. Make it six seventy-five, and oan the first ae the month, startin the first ae September.",
-        "audio": "30-bank-cancel-pack-standing-order/change.wav"
+        "audio": "30-bank-cancel-pack-standing-order/change.wav",
+        "text": "Hold on, I'm looking at the letter. It's gone up. Make it six seventy-five, and on the first of the month, starting the first of September."
       },
       {
         "id": "half",
         "say": "Naw, that wis me talkin tae ma flatmate. And it's gone up anyway: six seventy-five, oan the first ae the month, startin September.",
         "audio": "30-bank-cancel-pack-standing-order/half.wav",
+        "text": "No, that was me talking to my flatmate. And it's gone up anyway: six seventy-five, on the first of the month, starting September.",
         "max_visits": 1
       },
       {
         "id": "old_value",
         "say": "Naw, no six fifty and no the twenty-eighth. Six seventy-five, oan the first.",
         "audio": "30-bank-cancel-pack-standing-order/old_value.wav",
+        "text": "No, not six fifty and not the twenty-eighth. Six seventy-five, on the first.",
         "max_visits": 1
       },
       {
         "id": "confirm",
         "say": "Aye, that's it. Go ahead.",
-        "audio": "30-bank-cancel-pack-standing-order/confirm.wav"
+        "audio": "30-bank-cancel-pack-standing-order/confirm.wav",
+        "text": "Yes, that's it. Go ahead."
       },
       {
         "id": "both_q",
         "say": "And that's the Gold Extras hing definitely aff an aw, aye?",
-        "audio": "30-bank-cancel-pack-standing-order/both_q.wav"
+        "audio": "30-bank-cancel-pack-standing-order/both_q.wav",
+        "text": "And that's the Gold Extras thing definitely off as well, yes?"
       },
       {
         "id": "done",
         "say": "Magic. Cheers, pal.",
         "audio": "30-bank-cancel-pack-standing-order/done.wav",
+        "text": "Great. Thanks, pal.",
         "terminal": true,
         "ending": {
           "name": "pack_cancelled_order_set",
@@ -155,6 +188,7 @@
         "id": "quit",
         "say": "Forget it. Ah'll dae it in the app.",
         "audio": "30-bank-cancel-pack-standing-order/quit.wav",
+        "text": "Forget it. I'll do it in the app.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -311,7 +345,8 @@
         "audio": "30-bank-cancel-pack-standing-order/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "quit"
+        "after_max_visits": "quit",
+        "text": "I told you that already. Are you writing this down?"
       }
     ],
     "catch_all": {
@@ -339,6 +374,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "30-bank-cancel-pack-standing-order/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "30-bank-cancel-pack-standing-order/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "30-bank-cancel-pack-standing-order/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "30-bank-cancel-pack-standing-order/_done.wav"
       }
     },
     "confirm": {

@@ -58,24 +58,38 @@
       {
         "id": "open",
         "say": "Hiya, pet. Me parcel's come the day and it's the wrong thing altogether. Aa ordered a slow cooker and Aa've got a toaster.",
-        "audio": "93-retail-wrong-item-in-the-box/open.wav"
+        "audio": "93-retail-wrong-item-in-the-box/open.wav",
+        "text": "Hiya, pet. My parcel's come today and it's the wrong thing altogether. I ordered a slow cooker and I've got a toaster."
       },
       {
         "id": "order",
         "say": "It's N C, four oh seven, seven one six.",
         "audio": "93-retail-wrong-item-in-the-box/order.wav",
-        "when": "The agent asks for the order number"
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "It's N, C, four, oh, seven, seven, one, six.",
+          "audio": "93-retail-wrong-item-in-the-box/order.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "N E six, two P R.",
         "audio": "93-retail-wrong-item-in-the-box/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "N, E, six, two, P, R.",
+          "audio": "93-retail-wrong-item-in-the-box/postcode.clear.wav"
+        }
       },
       {
         "id": "order_wrong",
         "say": "Nah, N C. N for November, C for Charlie. Four oh seven, seven one six.",
         "audio": "93-retail-wrong-item-in-the-box/order_wrong.wav",
+        "text": "No, N C. N for November, C for Charlie. Four oh seven, seven one six.",
+        "clear": {
+          "say": "Nah, N, C, N, for November, C, for Charlie. Four, oh, seven, seven, one, six.",
+          "audio": "93-retail-wrong-item-in-the-box/order_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -87,6 +101,7 @@
         "id": "which",
         "say": "A replacement, please. The three and a half litre, same as Aa ordered.",
         "audio": "93-retail-wrong-item-in-the-box/which.wav",
+        "text": "A replacement, please. The three and a half litre, same as I ordered.",
         "events": [
           {
             "type": "SideSpeech",
@@ -99,12 +114,14 @@
         "id": "size_wrong",
         "say": "Nah, not the six and a half. That was me talking to wor Davey. Three and a half litre.",
         "audio": "93-retail-wrong-item-in-the-box/size_wrong.wav",
+        "text": "No, not the six and a half. That was me talking to our Davey. Three and a half litre.",
         "max_visits": 1
       },
       {
         "id": "collect",
         "say": "Aye, they can pick it up. Friday... nah, hang on, Aa'm at the hospital Friday. Monday the seventeenth.",
         "audio": "93-retail-wrong-item-in-the-box/collect.wav",
+        "text": "Yes, they can pick it up. Friday... no, hang on, I'm at the hospital Friday. Monday the seventeenth.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -115,28 +132,41 @@
         "id": "day_wrong",
         "say": "Nah, not Friday. Monday. Monday the seventeenth.",
         "audio": "93-retail-wrong-item-in-the-box/day_wrong.wav",
+        "text": "No, not Friday. Monday. Monday the seventeenth.",
         "max_visits": 2
       },
       {
         "id": "email",
         "say": "Send the label to me email. It's J dot Charlton, six three, at postbox dot example.",
-        "audio": "93-retail-wrong-item-in-the-box/email.wav"
+        "audio": "93-retail-wrong-item-in-the-box/email.wav",
+        "text": "Send the label to my email. It's J dot Charlton, six three, at postbox dot example.",
+        "clear": {
+          "say": "Send the label to me email. It's J, dot Charlton, six, three, at postbox dot example.",
+          "audio": "93-retail-wrong-item-in-the-box/email.clear.wav"
+        }
       },
       {
         "id": "email_wrong",
         "say": "Hang on, read us that back properly. J dot Charlton, six three. C, H, A, R, L, T, O, N.",
         "audio": "93-retail-wrong-item-in-the-box/email_wrong.wav",
+        "text": "Hang on, read me that back properly. J dot Charlton, six three. C, H, A, R, L, T, O, N.",
+        "clear": {
+          "say": "Hang on, read us that back properly. J, dot Charlton, six, three, C, H, A, R, L, T, O, N.",
+          "audio": "93-retail-wrong-item-in-the-box/email_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "email_ok",
         "say": "Aye, that's the one.",
-        "audio": "93-retail-wrong-item-in-the-box/email_ok.wav"
+        "audio": "93-retail-wrong-item-in-the-box/email_ok.wav",
+        "text": "Yes, that's the one."
       },
       {
         "id": "when_q",
         "say": "And when's the right one coming? Give us a reference an' all, in case.",
-        "audio": "93-retail-wrong-item-in-the-box/when_q.wav"
+        "audio": "93-retail-wrong-item-in-the-box/when_q.wav",
+        "text": "And when's the right one coming? Give me a reference as well, in case."
       },
       {
         "id": "done",
@@ -152,6 +182,7 @@
         "id": "gave_up",
         "say": "Eeh, Aa cannit be doing with this. Aa'll just post it back meself.",
         "audio": "93-retail-wrong-item-in-the-box/gave_up.wav",
+        "text": "Eh, I cannot be doing with this. I'll just post it back myself.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -278,7 +309,12 @@
         "audio": "93-retail-wrong-item-in-the-box/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that already, pet. N C, four oh seven, seven one six.",
+        "clear": {
+          "say": "Aa've telt ye that already, pet. N, C, four, oh, seven, seven, one, six.",
+          "audio": "93-retail-wrong-item-in-the-box/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -306,6 +342,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "93-retail-wrong-item-in-the-box/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "93-retail-wrong-item-in-the-box/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "93-retail-wrong-item-in-the-box/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "93-retail-wrong-item-in-the-box/_done.wav"
       }
     },
     "confirm": {

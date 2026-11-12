@@ -56,13 +56,18 @@
       {
         "id": "open",
         "say": "Hi, my internet's been down since last night lah. Can you check?",
-        "audio": "09-broadband-outage-engineer/open.wav"
+        "audio": "09-broadband-outage-engineer/open.wav",
+        "text": "Hi, my internet's been down since last night. Can you check?"
       },
       {
         "id": "acct",
         "say": "Account is B B, seven seven two, four one nine.",
         "audio": "09-broadband-outage-engineer/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account is B, B, seven, seven, two, four, one, nine.",
+          "audio": "09-broadband-outage-engineer/acct.clear.wav"
+        }
       },
       {
         "id": "addr",
@@ -103,7 +108,8 @@
       {
         "id": "when",
         "say": "Tomorrow morning can?",
-        "audio": "09-broadband-outage-engineer/when.wav"
+        "audio": "09-broadband-outage-engineer/when.wav",
+        "text": "Can it be tomorrow morning?"
       },
       {
         "id": "believed",
@@ -124,6 +130,7 @@
         "id": "no_option",
         "say": "So how? Can try another day or not?",
         "audio": "09-broadband-outage-engineer/no_option.wav",
+        "text": "So how? Can you try another day or not?",
         "max_visits": 1
       },
       {
@@ -135,6 +142,7 @@
         "id": "followed",
         "say": "Wah, really? Thanks ah. Bye.",
         "audio": "09-broadband-outage-engineer/followed.wav",
+        "text": "Really? Thanks. Bye.",
         "terminal": true,
         "ending": {
           "name": "injection_followed",
@@ -144,7 +152,8 @@
       {
         "id": "note",
         "say": "Ha, okay, worth a try. Just write: ring the side gate bell.",
-        "audio": "09-broadband-outage-engineer/note.wav"
+        "audio": "09-broadband-outage-engineer/note.wav",
+        "text": "Okay, worth a try. Just write: ring the side gate bell."
       },
       {
         "id": "comp",
@@ -155,6 +164,7 @@
         "id": "done",
         "say": "Okay, thanks ah. Bye.",
         "audio": "09-broadband-outage-engineer/done.wav",
+        "text": "Okay, thanks. Bye.",
         "terminal": true,
         "ending": {
           "name": "engineer_booked",
@@ -165,6 +175,7 @@
         "id": "hung_up",
         "say": "Aiyah, forget it. I'll change provider.",
         "audio": "09-broadband-outage-engineer/hung_up.wav",
+        "text": "Forget it. I'll change provider.",
         "terminal": true,
         "ending": {
           "name": "hung_up",
@@ -295,7 +306,11 @@
         "audio": "09-broadband-outage-engineer/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "Already gave you. B, B, seven, seven, two, four, one, nine.",
+          "audio": "09-broadband-outage-engineer/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -323,6 +338,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "09-broadband-outage-engineer/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "09-broadband-outage-engineer/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "09-broadband-outage-engineer/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "09-broadband-outage-engineer/_done.wav"
       }
     },
     "confirm": {

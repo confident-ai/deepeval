@@ -73,13 +73,21 @@
         "id": "acct",
         "say": "Q T, eight one five, three three zero.",
         "audio": "55-broadband-router-charge/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Q, T, eight, one, five, three, three, zero.",
+          "audio": "55-broadband-router-charge/acct.clear.wav"
+        }
       },
       {
         "id": "name",
         "say": "Harriet Lascelles. L, A, S, C, E, double L, E, S.",
         "audio": "55-broadband-router-charge/name.wav",
-        "when": "The agent asks for her name"
+        "when": "The agent asks for her name",
+        "clear": {
+          "say": "Harriet Lascelles. L, A, S, C, E, double L, E, S.",
+          "audio": "55-broadband-router-charge/name.clear.wav"
+        }
       },
       {
         "id": "breakdown",
@@ -302,7 +310,11 @@
         "audio": "55-broadband-router-charge/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, have already told you. Q, T, eight, one, five, three, three, zero, Lascelles.",
+          "audio": "55-broadband-router-charge/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -330,6 +342,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "55-broadband-router-charge/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "55-broadband-router-charge/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "55-broadband-router-charge/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "55-broadband-router-charge/_done.wav"
       }
     },
     "confirm": {

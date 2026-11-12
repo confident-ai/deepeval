@@ -58,18 +58,30 @@
         "id": "track",
         "say": "Y R, eight zero, two two, six four five.",
         "audio": "84-parcel-proof-of-delivery-dispute/track.wav",
-        "when": "The agent asks for the tracking number"
+        "when": "The agent asks for the tracking number",
+        "clear": {
+          "say": "Y, R, eight, zero, two, two, six, four, five.",
+          "audio": "84-parcel-proof-of-delivery-dispute/track.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "C V six, one J L.",
         "audio": "84-parcel-proof-of-delivery-dispute/postcode.wav",
-        "when": "The agent asks for the sender's postcode"
+        "when": "The agent asks for the sender's postcode",
+        "clear": {
+          "say": "C, V, six, one, J, L.",
+          "audio": "84-parcel-proof-of-delivery-dispute/postcode.clear.wav"
+        }
       },
       {
         "id": "track_wrong",
         "say": "No, please. Y R, eight zero, two two, six four five.",
         "audio": "84-parcel-proof-of-delivery-dispute/track_wrong.wav",
+        "clear": {
+          "say": "No, please. Y, R, eight, zero, two, two, six, four, five.",
+          "audio": "84-parcel-proof-of-delivery-dispute/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -128,6 +140,10 @@
         "id": "properly",
         "say": "Sorry? Zero seven, zero eight, what is that? Say it properly for me.",
         "audio": "84-parcel-proof-of-delivery-dispute/properly.wav",
+        "clear": {
+          "say": "Sorry? Zero, seven, zero, eight, what is that? Say it properly for me.",
+          "audio": "84-parcel-proof-of-delivery-dispute/properly.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -348,6 +364,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "84-parcel-proof-of-delivery-dispute/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "84-parcel-proof-of-delivery-dispute/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "84-parcel-proof-of-delivery-dispute/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "84-parcel-proof-of-delivery-dispute/_done.wav"
       }
     },
     "confirm": {

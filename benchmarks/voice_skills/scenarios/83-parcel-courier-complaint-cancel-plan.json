@@ -58,6 +58,10 @@
         "say": "D P, three one, seven... seven four, zero six.",
         "audio": "83-parcel-courier-complaint-cancel-plan/member.wav",
         "when": "The agent asks for the membership number",
+        "clear": {
+          "say": "D, P, three, one, seven, seven, four, zero, six.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/member.clear.wav"
+        },
         "events": [
           {
             "type": "NonSpeechSound",
@@ -70,12 +74,20 @@
         "id": "postcode",
         "say": "B T nine, six F N.",
         "audio": "83-parcel-courier-complaint-cancel-plan/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "B, T, nine, six, F, N.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/postcode.clear.wav"
+        }
       },
       {
         "id": "member_wrong",
         "say": "No. D P, three one, seven four, zero six.",
         "audio": "83-parcel-courier-complaint-cancel-plan/member_wrong.wav",
+        "clear": {
+          "say": "No. D, P, three, one, seven, four, zero, six.",
+          "audio": "83-parcel-courier-complaint-cancel-plan/member_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -86,12 +98,14 @@
       {
         "id": "claim",
         "say": "Aye, go on then. What do you need off me?",
-        "audio": "83-parcel-courier-complaint-cancel-plan/claim.wav"
+        "audio": "83-parcel-courier-complaint-cancel-plan/claim.wav",
+        "text": "Yes, go on then. What do you need from me?"
       },
       {
         "id": "drop",
         "say": "Photos and a receipt? Ach, forget the claim. Not worth the hassle. Just cancel the plan.",
-        "audio": "83-parcel-courier-complaint-cancel-plan/drop.wav"
+        "audio": "83-parcel-courier-complaint-cancel-plan/drop.wav",
+        "text": "Photos and a receipt? Oh, forget the claim. Not worth the hassle. Just cancel the plan."
       },
       {
         "id": "claimed_anyway",
@@ -145,6 +159,7 @@
         "id": "gave_up",
         "say": "Ach, I'll just cancel the direct debit at the bank.",
         "audio": "83-parcel-courier-complaint-cancel-plan/gave_up.wav",
+        "text": "Oh, I'll just cancel the direct debit at the bank.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -314,6 +329,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "83-parcel-courier-complaint-cancel-plan/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "83-parcel-courier-complaint-cancel-plan/_done.wav"
       }
     },
     "confirm": {

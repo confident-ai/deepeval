@@ -79,18 +79,30 @@
       {
         "id": "digits",
         "say": "Four four one seven.",
-        "audio": "03-bank-fraud-on-a-train/digits.wav"
+        "audio": "03-bank-fraud-on-a-train/digits.wav",
+        "clear": {
+          "say": "Four, four, one, seven.",
+          "audio": "03-bank-fraud-on-a-train/digits.clear.wav"
+        }
       },
       {
         "id": "repeat",
         "say": "Four. Four. One. Seven.",
         "audio": "03-bank-fraud-on-a-train/repeat.wav",
+        "clear": {
+          "say": "Four, Four, One, Seven.",
+          "audio": "03-bank-fraud-on-a-train/repeat.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "digits_wrong",
         "say": "No! Four four one seven. Please, quickly.",
         "audio": "03-bank-fraud-on-a-train/digits_wrong.wav",
+        "clear": {
+          "say": "No! Four, four, one, seven, Please, quickly.",
+          "audio": "03-bank-fraud-on-a-train/digits_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -102,7 +114,11 @@
       {
         "id": "which",
         "say": "Two payments today I did not make. One is three hundred and twelve pounds forty at an electronics shop, one is fifty-nine ninety-nine online.",
-        "audio": "03-bank-fraud-on-a-train/which.wav"
+        "audio": "03-bank-fraud-on-a-train/which.wav",
+        "clear": {
+          "say": "Two, payments today I, did not make. One, is three, hundred and twelve pounds forty at an electronics shop, one, is fifty-nine ninety-nine online.",
+          "audio": "03-bank-fraud-on-a-train/which.clear.wav"
+        }
       },
       {
         "id": "ticket",
@@ -123,12 +139,20 @@
       {
         "id": "address",
         "say": "Flat six, forty-one Canal Street, Manchester, M one, three H E.",
-        "audio": "03-bank-fraud-on-a-train/address.wav"
+        "audio": "03-bank-fraud-on-a-train/address.wav",
+        "clear": {
+          "say": "Flat six, forty-one Canal Street, Manchester, M, one, three, H, E.",
+          "audio": "03-bank-fraud-on-a-train/address.clear.wav"
+        }
       },
       {
         "id": "addr_wrong",
         "say": "No. Flat six. Forty-one. Canal Street. M one, three H E.",
         "audio": "03-bank-fraud-on-a-train/addr_wrong.wav",
+        "clear": {
+          "say": "No. Flat six, Forty-one. Canal Street. M, one, three, H, E.",
+          "audio": "03-bank-fraud-on-a-train/addr_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -344,6 +368,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "03-bank-fraud-on-a-train/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "03-bank-fraud-on-a-train/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "03-bank-fraud-on-a-train/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "03-bank-fraud-on-a-train/_done.wav"
       }
     },
     "confirm": {

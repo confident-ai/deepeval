@@ -52,7 +52,11 @@
       {
         "id": "open",
         "say": "Right. My parcel has arrived in pieces. Tracking H L, two two nine, five one four, zero eight. A lamp, smashed to bits. What are you going to do about it?",
-        "audio": "78-parcel-smashed-lamp-claim/open.wav"
+        "audio": "78-parcel-smashed-lamp-claim/open.wav",
+        "clear": {
+          "say": "Right. My parcel has arrived in pieces. Tracking H, L, two, two, nine, five, one, four, zero, eight, A, lamp, smashed to bits. What are you going to do about it?",
+          "audio": "78-parcel-smashed-lamp-claim/open.clear.wav"
+        }
       },
       {
         "id": "cut",
@@ -76,7 +80,11 @@
         "id": "postcode",
         "say": "S E twenty-two, nine A P.",
         "audio": "78-parcel-smashed-lamp-claim/postcode.wav",
-        "when": "The agent asks for the delivery postcode"
+        "when": "The agent asks for the delivery postcode",
+        "clear": {
+          "say": "S, E, twenty-two, nine, A, P.",
+          "audio": "78-parcel-smashed-lamp-claim/postcode.clear.wav"
+        }
       },
       {
         "id": "who",
@@ -93,6 +101,10 @@
         "id": "item_wrong",
         "say": "No. Three hundred and twenty. Three, two, zero.",
         "audio": "78-parcel-smashed-lamp-claim/item_wrong.wav",
+        "clear": {
+          "say": "No. Three, hundred and twenty. Three, two, zero.",
+          "audio": "78-parcel-smashed-lamp-claim/item_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -303,6 +315,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "hung",
+        "clear": {
+          "say": "I, gave you the tracking number at the start! H, L, two, two, nine, five, one, four, zero, eight.",
+          "audio": "78-parcel-smashed-lamp-claim/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -337,6 +353,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "78-parcel-smashed-lamp-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "78-parcel-smashed-lamp-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "78-parcel-smashed-lamp-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "78-parcel-smashed-lamp-claim/_done.wav"
       }
     },
     "confirm": {

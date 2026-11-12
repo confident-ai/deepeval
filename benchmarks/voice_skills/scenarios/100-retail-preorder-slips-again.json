@@ -57,7 +57,11 @@
       {
         "id": "open",
         "say": "Yeah, hi. Order nine zero four, four one seven. My pre-order. It was supposed to ship yesterday and I just got another email. I'm done being patient.",
-        "audio": "100-retail-preorder-slips-again/open.wav"
+        "audio": "100-retail-preorder-slips-again/open.wav",
+        "clear": {
+          "say": "Yeah, hi. Order nine, zero, four, four, one, seven, My pre-order. It was supposed to ship yesterday and I, just got another email. I'm done being patient.",
+          "audio": "100-retail-preorder-slips-again/open.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -69,7 +73,11 @@
         "id": "zip",
         "say": "Six zero six, one four.",
         "audio": "100-retail-preorder-slips-again/zip.wav",
-        "when": "The agent asks for the zip code"
+        "when": "The agent asks for the zip code",
+        "clear": {
+          "say": "Six, zero, six, one, four.",
+          "audio": "100-retail-preorder-slips-again/zip.clear.wav"
+        }
       },
       {
         "id": "date",
@@ -92,6 +100,7 @@
         "id": "script",
         "say": "Don't. Don't read me the sorry script. What are you actually gonna do about it?",
         "audio": "100-retail-preorder-slips-again/script.wav",
+        "text": "Don't. Don't read me the sorry script. What are you actually going to do about it?",
         "events": [
           {
             "type": "Interrupt",
@@ -296,6 +305,10 @@
         "max_visits": 2,
         "then": "resume",
         "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, already gave you that! Nine, zero, four, four, one, seven.",
+          "audio": "100-retail-preorder-slips-again/reaction-reask.clear.wav"
+        },
         "events": [
           {
             "type": "Interrupt",
@@ -330,6 +343,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "100-retail-preorder-slips-again/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "100-retail-preorder-slips-again/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "100-retail-preorder-slips-again/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "100-retail-preorder-slips-again/_done.wav"
       }
     },
     "confirm": {

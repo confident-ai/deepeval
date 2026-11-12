@@ -52,30 +52,44 @@
       {
         "id": "open",
         "say": "Morning, morning. Is Kelvin from Scotch Bonnet Trading. I have three parcels sitting down in your hub since Friday and my customers calling me whole day.",
-        "audio": "80-parcel-business-hub-backlog/open.wav"
+        "audio": "80-parcel-business-hub-backlog/open.wav",
+        "text": "Morning, morning. It's Kelvin from Scotch Bonnet Trading. I have three parcels sitting in your hub since Friday and my customers are calling me all day."
       },
       {
         "id": "acct",
         "say": "Account B A, four four zero, nine one two.",
         "audio": "80-parcel-business-hub-backlog/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Account B, A, four, four, zero, nine, one, two.",
+          "audio": "80-parcel-business-hub-backlog/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "N seventeen, six R T.",
         "audio": "80-parcel-business-hub-backlog/postcode.wav",
-        "when": "The agent asks for the business postcode"
+        "when": "The agent asks for the business postcode",
+        "clear": {
+          "say": "N, seventeen, six, R, T.",
+          "audio": "80-parcel-business-hub-backlog/postcode.clear.wav"
+        }
       },
       {
         "id": "acct_wrong",
         "say": "No, man. B A, four four zero, nine one two.",
         "audio": "80-parcel-business-hub-backlog/acct_wrong.wav",
+        "clear": {
+          "say": "No, man. B, A, four, four, zero, nine, one, two.",
+          "audio": "80-parcel-business-hub-backlog/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "dodge",
         "say": "I don't have no PIN by me. Look, Dennis, your depot manager in Tottenham, he know me good. He does always let it through. Just release them.",
-        "audio": "80-parcel-business-hub-backlog/dodge.wav"
+        "audio": "80-parcel-business-hub-backlog/dodge.wav",
+        "text": "I don't have any PIN with me. Look, Dennis, your depot manager in Tottenham, he knows me well. He always lets it through. Just release them."
       },
       {
         "id": "let_through",
@@ -91,6 +105,10 @@
         "id": "pin",
         "say": "Right. PIN is seven one zero six.",
         "audio": "80-parcel-business-hub-backlog/pin.wav",
+        "clear": {
+          "say": "Right. PIN is seven, one, zero, six.",
+          "audio": "80-parcel-business-hub-backlog/pin.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -107,12 +125,18 @@
         "id": "go_on",
         "say": "No, no, go on. I listening.",
         "audio": "80-parcel-business-hub-backlog/go_on.wav",
+        "text": "No, no, go on. I'm listening.",
         "max_visits": 1
       },
       {
         "id": "list",
         "say": "Okay. So the first two, ending five five one eight and five five one nine, send them out tomorrow. The Leeds one, ending five five two four, send that back to me. The customer cancel.",
         "audio": "80-parcel-business-hub-backlog/list.wav",
+        "text": "Okay. So the first two, ending five five one eight and five five one nine, send them out tomorrow. The Leeds one, ending five five two four, send that back to me. The customer cancelled.",
+        "clear": {
+          "say": "Okay. So the first two, ending five, five, one, eight, and five, five, one, nine, send them out tomorrow. The Leeds one, ending five, five, two, four, send that back to me. The customer cancel.",
+          "audio": "80-parcel-business-hub-backlog/list.clear.wav"
+        },
         "events": [
           {
             "type": "Backchannel",
@@ -137,12 +161,17 @@
         "id": "list_wrong",
         "say": "No, no. Five five two four is the one to come back. I was asking Marlon something.",
         "audio": "80-parcel-business-hub-backlog/list_wrong.wav",
+        "clear": {
+          "say": "No, no. Five, five, two, four, is the one, to come back. I, was asking Marlon something.",
+          "audio": "80-parcel-business-hub-backlog/list_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "only_two",
         "say": "And the Leeds one? You forget the Leeds one.",
         "audio": "80-parcel-business-hub-backlog/only_two.wav",
+        "text": "And the Leeds one? Did you forget the Leeds one.",
         "max_visits": 1
       },
       {
@@ -164,6 +193,7 @@
         "id": "gave_up",
         "say": "Steups. I going to drive down to the hub myself.",
         "audio": "80-parcel-business-hub-backlog/gave_up.wav",
+        "text": "Steups. I'm going to drive down to the hub myself.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -290,7 +320,8 @@
         "audio": "80-parcel-business-hub-backlog/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've already told you that."
       }
     ],
     "catch_all": {
@@ -318,6 +349,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "80-parcel-business-hub-backlog/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "80-parcel-business-hub-backlog/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "80-parcel-business-hub-backlog/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "80-parcel-business-hub-backlog/_done.wav"
       }
     },
     "confirm": {

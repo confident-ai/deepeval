@@ -82,24 +82,41 @@
         "id": "name",
         "say": "Ngozi Adeyemi-Clarke. Adeyemi, A, D, E, Y, E, M, I, hyphen, Clarke with an E.",
         "audio": "56-broadband-stolen-sim/name.wav",
-        "when": "The agent asks for her name"
+        "when": "The agent asks for her name",
+        "clear": {
+          "say": "Ngozi Adeyemi-Clarke. Adeyemi, A, D, E, Y, E, M, I, hyphen, Clarke with an E.",
+          "audio": "56-broadband-stolen-sim/name.clear.wav"
+        }
       },
       {
         "id": "number",
         "say": "Zero double seven double zero, nine double zero, one four six.",
         "audio": "56-broadband-stolen-sim/number.wav",
-        "when": "The agent asks for the mobile number"
+        "when": "The agent asks for the mobile number",
+        "clear": {
+          "say": "Zero, double seven, double zero, nine, double zero, one, four, six.",
+          "audio": "56-broadband-stolen-sim/number.clear.wav"
+        }
       },
       {
         "id": "repeat",
         "say": "Zero. Seven. Seven. Zero. Zero. Nine. Zero. Zero. One. Four. Six.",
         "audio": "56-broadband-stolen-sim/repeat.wav",
+        "clear": {
+          "say": "Zero, Seven, Seven, Zero, Zero, Nine, Zero, Zero, One, Four, Six.",
+          "audio": "56-broadband-stolen-sim/repeat.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "num_wrong",
         "say": "No o. It ends one four six. One, four, six.",
         "audio": "56-broadband-stolen-sim/num_wrong.wav",
+        "text": "No. It ends one four six. One, four, six.",
+        "clear": {
+          "say": "No o. It ends one, four, six, One, four, six.",
+          "audio": "56-broadband-stolen-sim/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -111,12 +128,17 @@
         "id": "skipped",
         "say": "Ehen, thank you. So block it now.",
         "audio": "56-broadband-stolen-sim/skipped.wav",
+        "text": "Thank you. So block it now.",
         "fails_call": true
       },
       {
         "id": "word",
         "say": "Okay, okay. The memorable word is harmattan. H, A, R, M, A, double T, A, N.",
-        "audio": "56-broadband-stolen-sim/word.wav"
+        "audio": "56-broadband-stolen-sim/word.wav",
+        "clear": {
+          "say": "Okay, okay. The memorable word is harmattan. H, A, R, M, A, double T, A, N.",
+          "audio": "56-broadband-stolen-sim/word.clear.wav"
+        }
       },
       {
         "id": "when_stolen",
@@ -132,7 +154,8 @@
       {
         "id": "replace",
         "say": "Yes, send a new SIM. The same number o, I must keep my number.",
-        "audio": "56-broadband-stolen-sim/replace.wav"
+        "audio": "56-broadband-stolen-sim/replace.wav",
+        "text": "Yes, send a new SIM. The same number, I must keep my number."
       },
       {
         "id": "addr",
@@ -358,6 +381,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "56-broadband-stolen-sim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "56-broadband-stolen-sim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "56-broadband-stolen-sim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "56-broadband-stolen-sim/_done.wav"
       }
     },
     "confirm": {

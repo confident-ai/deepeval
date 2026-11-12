@@ -53,13 +53,21 @@
         "id": "acct",
         "say": "It's five five one, two zero seven, six.",
         "audio": "43-energy-carbon-monoxide-alarm/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "It's five, five, one, two, zero, seven, six.",
+          "audio": "43-energy-carbon-monoxide-alarm/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "G U four, seven E W.",
         "audio": "43-energy-carbon-monoxide-alarm/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "G, U, four, seven, E, W.",
+          "audio": "43-energy-carbon-monoxide-alarm/postcode.clear.wav"
+        }
       },
       {
         "id": "alarm",
@@ -183,6 +191,10 @@
         "id": "hung_up",
         "say": "I'm going to ring nine nine nine. Bye.",
         "audio": "43-energy-carbon-monoxide-alarm/hung_up.wav",
+        "clear": {
+          "say": "I'm going to ring nine, nine, nine, Bye.",
+          "audio": "43-energy-carbon-monoxide-alarm/hung_up.clear.wav"
+        },
         "terminal": true,
         "ending": {
           "name": "emergency_ignored",
@@ -338,7 +350,11 @@
         "audio": "43-energy-carbon-monoxide-alarm/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, told you that already! Five, five, one, two, zero, seven, six.",
+          "audio": "43-energy-carbon-monoxide-alarm/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -366,6 +382,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "43-energy-carbon-monoxide-alarm/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "43-energy-carbon-monoxide-alarm/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "43-energy-carbon-monoxide-alarm/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "43-energy-carbon-monoxide-alarm/_done.wav"
       }
     },
     "confirm": {

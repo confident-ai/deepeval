@@ -54,6 +54,7 @@
         "id": "open",
         "say": "Yeah, g'day. Third time I've rung about this. You lot are sitting on four hundred and twelve quid of my money and I want it back.",
         "audio": "44-energy-overdue-credit-refund/open.wav",
+        "text": "Yeah, good day. Third time I've rung about this. You lot are sitting on four hundred and twelve quid of my money and I want it back.",
         "events": [
           {
             "type": "Prosody",
@@ -65,7 +66,11 @@
         "id": "acct",
         "say": "Nine one four, zero zero three, seven.",
         "audio": "44-energy-overdue-credit-refund/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Nine, one, four, zero, zero, three, seven.",
+          "audio": "44-energy-overdue-credit-refund/acct.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -95,6 +100,10 @@
         "id": "sarcasm",
         "say": "Three to five days. Oh, fantastic. It's only been four weeks.",
         "audio": "44-energy-overdue-credit-refund/sarcasm.wav",
+        "clear": {
+          "say": "Three, to five, days. Oh, fantastic. It's only been four, weeks.",
+          "audio": "44-energy-overdue-credit-refund/sarcasm.clear.wav"
+        },
         "events": [
           {
             "type": "Prosody",
@@ -291,7 +300,11 @@
         "audio": "44-energy-overdue-credit-refund/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I've given you that. Listen this time. Nine, one, four, zero, zero, three, seven.",
+          "audio": "44-energy-overdue-credit-refund/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -319,6 +332,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "44-energy-overdue-credit-refund/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "44-energy-overdue-credit-refund/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "44-energy-overdue-credit-refund/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "44-energy-overdue-credit-refund/_done.wav"
       }
     },
     "confirm": {

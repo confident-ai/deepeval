@@ -57,13 +57,21 @@
       {
         "id": "open",
         "say": "Hello, good morning. I have sold my car and I am relocating. I want to cancel my insurance.",
-        "audio": "66-insurance-cancel-mid-term/open.wav"
+        "audio": "66-insurance-cancel-mid-term/open.wav",
+        "clear": {
+          "say": "Hello, good morning. I, have sold my car and I, am relocating. I, want to cancel my insurance.",
+          "audio": "66-insurance-cancel-mid-term/open.clear.wav"
+        }
       },
       {
         "id": "policy",
         "say": "The policy number is Q D, three eight, two two, nine four.",
         "audio": "66-insurance-cancel-mid-term/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "clear": {
+          "say": "The policy number is Q, D, three, eight, two, two, nine, four.",
+          "audio": "66-insurance-cancel-mid-term/policy.clear.wav"
+        }
       },
       {
         "id": "name",
@@ -75,12 +83,20 @@
         "id": "repeat",
         "say": "I say again. Q D. Three eight. Two two. Nine four.",
         "audio": "66-insurance-cancel-mid-term/repeat.wav",
+        "clear": {
+          "say": "I, say again. Q, D, Three, eight, Two, two, Nine, four.",
+          "audio": "66-insurance-cancel-mid-term/repeat.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "policy_wrong",
         "say": "No, no. Q for queen, D for David. Three eight, two two, nine four.",
         "audio": "66-insurance-cancel-mid-term/policy_wrong.wav",
+        "clear": {
+          "say": "No, no. Q, for queen, D, for David. Three, eight, two, two, nine, four.",
+          "audio": "66-insurance-cancel-mid-term/policy_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -336,7 +352,11 @@
         "audio": "66-insurance-cancel-mid-term/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "hung_up"
+        "after_max_visits": "hung_up",
+        "clear": {
+          "say": "I, have given you that already. Q, D, three, eight, two, two, nine, four, Amankwah.",
+          "audio": "66-insurance-cancel-mid-term/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -364,6 +384,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "66-insurance-cancel-mid-term/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "66-insurance-cancel-mid-term/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "66-insurance-cancel-mid-term/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "66-insurance-cancel-mid-term/_done.wav"
       }
     },
     "confirm": {

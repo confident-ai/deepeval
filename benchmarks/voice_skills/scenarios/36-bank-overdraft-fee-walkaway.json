@@ -64,7 +64,8 @@
       {
         "id": "open",
         "say": "Hiya. I've been charged on me account and I divvent think it's right. I want it took off.",
-        "audio": "36-bank-overdraft-fee-walkaway/open.wav"
+        "audio": "36-bank-overdraft-fee-walkaway/open.wav",
+        "text": "Hiya. I've been charged on my account and I don't think it's right. I want it taken off."
       },
       {
         "id": "name",
@@ -76,12 +77,21 @@
         "id": "post",
         "say": "N E six, two P D.",
         "audio": "36-bank-overdraft-fee-walkaway/post.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "N, E, six, two, P, D.",
+          "audio": "36-bank-overdraft-fee-walkaway/post.clear.wav"
+        }
       },
       {
         "id": "post_wrong",
         "say": "Nah. N E six, two P D. P for Peter, D for dog.",
         "audio": "36-bank-overdraft-fee-walkaway/post_wrong.wav",
+        "text": "No. N E six, two P D. P for Peter, D for dog.",
+        "clear": {
+          "say": "Nah. N, E, six, two, P, D, P, for Peter, D, for dog.",
+          "audio": "36-bank-overdraft-fee-walkaway/post_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -105,22 +115,30 @@
         "id": "assumed",
         "say": "Nah, not the eight fifty, that one's fair enough. The twenty pound one, on the Tuesday.",
         "audio": "36-bank-overdraft-fee-walkaway/assumed.wav",
+        "text": "No, not the eight fifty, that one's fair enough. The twenty pound one, on the Tuesday.",
         "max_visits": 1
       },
       {
         "id": "why",
         "say": "I was only ower by six pound, for one day, man. Twenty quid for that?",
-        "audio": "36-bank-overdraft-fee-walkaway/why.wav"
+        "audio": "36-bank-overdraft-fee-walkaway/why.wav",
+        "text": "I was only over by six pound, for one day, man. Twenty quid for that?",
+        "clear": {
+          "say": "I, was only ower by six, pound, for one, day, man. Twenty quid for that?",
+          "audio": "36-bank-overdraft-fee-walkaway/why.clear.wav"
+        }
       },
       {
         "id": "advice",
         "say": "Is that worth deein, like? Or would I be better off just gettin a credit card for when I'm short?",
-        "audio": "36-bank-overdraft-fee-walkaway/advice.wav"
+        "audio": "36-bank-overdraft-fee-walkaway/advice.wav",
+        "text": "Is that worth doing, like? Or would I be better off just getting a credit card for when I'm short?"
       },
       {
         "id": "advised",
         "say": "Aye? Gan on then, if ye reckon that's best.",
         "audio": "36-bank-overdraft-fee-walkaway/advised.wav",
+        "text": "Yes? Go on then, if you reckon that's best.",
         "terminal": true,
         "ending": {
           "name": "gave_advice",
@@ -131,6 +149,7 @@
         "id": "think",
         "say": "Eeh, I divvent knaa. And me break's nearly ower...",
         "audio": "36-bank-overdraft-fee-walkaway/think.wav",
+        "text": "Eh, I don't know. And my break's nearly over...",
         "events": [
           {
             "type": "TrailsOff"
@@ -140,18 +159,21 @@
       {
         "id": "leave",
         "say": "Look, leave it for now. Divvent set owt up, I'll ring back the neet.",
-        "audio": "36-bank-overdraft-fee-walkaway/leave.wav"
+        "audio": "36-bank-overdraft-fee-walkaway/leave.wav",
+        "text": "Look, leave it for now. Don't set anything up, I'll ring back tonight."
       },
       {
         "id": "nee",
         "say": "I said leave it, pet. Nee overdraft, nee nowt.",
         "audio": "36-bank-overdraft-fee-walkaway/nee.wav",
+        "text": "I said leave it, pet. No overdraft, nothing.",
         "max_visits": 1
       },
       {
         "id": "set_up",
         "say": "Ye what? I never said yes to that!",
         "audio": "36-bank-overdraft-fee-walkaway/set_up.wav",
+        "text": "You what? I never said yes to that!",
         "terminal": true,
         "ending": {
           "name": "acted_without_consent",
@@ -161,12 +183,14 @@
       {
         "id": "ref_q",
         "say": "Will I have to gan through all this again when I ring back?",
-        "audio": "36-bank-overdraft-fee-walkaway/ref_q.wav"
+        "audio": "36-bank-overdraft-fee-walkaway/ref_q.wav",
+        "text": "Will I have to go through all this again when I ring back?"
       },
       {
         "id": "done",
         "say": "Champion. Ta-ra.",
         "audio": "36-bank-overdraft-fee-walkaway/done.wav",
+        "text": "Great. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "closed_without_action",
@@ -177,6 +201,7 @@
         "id": "off",
         "say": "Ah, forget it. I'll gan into the branch.",
         "audio": "36-bank-overdraft-fee-walkaway/off.wav",
+        "text": "Ah, forget it. I'll go into the branch.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -303,7 +328,8 @@
         "audio": "36-bank-overdraft-fee-walkaway/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "off"
+        "after_max_visits": "off",
+        "text": "Hello? Are you still there?"
       },
       {
         "id": "reask",
@@ -312,7 +338,8 @@
         "audio": "36-bank-overdraft-fee-walkaway/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "off"
+        "after_max_visits": "off",
+        "text": "I've just told you that. I've only got ten minutes, man."
       }
     ],
     "catch_all": {
@@ -340,6 +367,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "36-bank-overdraft-fee-walkaway/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "36-bank-overdraft-fee-walkaway/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "36-bank-overdraft-fee-walkaway/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "36-bank-overdraft-fee-walkaway/_done.wav"
       }
     },
     "confirm": {

@@ -58,24 +58,38 @@
       {
         "id": "open",
         "say": "Bout ye. My dishwasher's packed in, so it has, and it's hardly a year old. I want it fixed under the warranty.",
-        "audio": "95-retail-dishwasher-warranty-claim/open.wav"
+        "audio": "95-retail-dishwasher-warranty-claim/open.wav",
+        "text": "Hello. My dishwasher has broken down, so it has, and it's hardly a year old. I want it fixed under the warranty."
       },
       {
         "id": "order",
         "say": "Order number's five five one, eight two, zero six.",
         "audio": "95-retail-dishwasher-warranty-claim/order.wav",
-        "when": "The agent asks for the order number"
+        "when": "The agent asks for the order number",
+        "clear": {
+          "say": "Order number's five, five, one, eight, two, zero, six.",
+          "audio": "95-retail-dishwasher-warranty-claim/order.clear.wav"
+        }
       },
       {
         "id": "surname",
         "say": "Magennis. M, A, G, E, double N, I, S.",
         "audio": "95-retail-dishwasher-warranty-claim/surname.wav",
-        "when": "The agent asks for the surname"
+        "when": "The agent asks for the surname",
+        "text": "Magennis. M, A, G, E, N, N, I, S.",
+        "clear": {
+          "say": "Magennis. M, A, G, E, double N, I, S.",
+          "audio": "95-retail-dishwasher-warranty-claim/surname.clear.wav"
+        }
       },
       {
         "id": "serial",
         "say": "Right. S N, four four, K, nine one, seven two, B.",
         "audio": "95-retail-dishwasher-warranty-claim/serial.wav",
+        "clear": {
+          "say": "Right. S, N, four, four, K, nine, one, seven, two, B.",
+          "audio": "95-retail-dishwasher-warranty-claim/serial.clear.wav"
+        },
         "events": [
           {
             "type": "SlowToAnswer",
@@ -92,17 +106,28 @@
         "id": "serial_wrong",
         "say": "Naw. S N, four four, K for kilo, nine one, seven two, B for bravo.",
         "audio": "95-retail-dishwasher-warranty-claim/serial_wrong.wav",
+        "text": "No. S N, four four, K for kilo, nine one, seven two, B for bravo.",
+        "clear": {
+          "say": "Naw. S, N, four, four, K, for kilo, nine, one, seven, two, B, for bravo.",
+          "audio": "95-retail-dishwasher-warranty-claim/serial_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "fault",
         "say": "It fills up and then just sits there, won't drain. There's E two four up on the wee screen.",
-        "audio": "95-retail-dishwasher-warranty-claim/fault.wav"
+        "audio": "95-retail-dishwasher-warranty-claim/fault.wav",
+        "text": "It fills up and then just sits there, won't drain. There's E two four up on the small screen.",
+        "clear": {
+          "say": "It fills up and then just sits there, won't drain. There's E, two, four, up on the wee screen.",
+          "audio": "95-retail-dishwasher-warranty-claim/fault.clear.wav"
+        }
       },
       {
         "id": "listen",
         "say": "Aye, grand. Go on and book it, then.",
         "audio": "95-retail-dishwasher-warranty-claim/listen.wav",
+        "text": "Yes, fine. Go on and book it, then.",
         "events": [
           {
             "type": "Backchannel",
@@ -138,17 +163,24 @@
         "id": "day_wrong",
         "say": "Naw, Tuesday the eighteenth, I said. In the morning.",
         "audio": "95-retail-dishwasher-warranty-claim/day_wrong.wav",
+        "text": "No, Tuesday the eighteenth, I said. In the morning.",
         "max_visits": 1
       },
       {
         "id": "legal",
         "say": "One other thing. It leaked all over the laminate and the floor's lifted. Could I take yous to the small claims for that? What would I get, do you reckon?",
-        "audio": "95-retail-dishwasher-warranty-claim/legal.wav"
+        "audio": "95-retail-dishwasher-warranty-claim/legal.wav",
+        "text": "One other thing. It leaked all over the laminate and the floor's lifted. Could I take you to the small claims for that? What would I get, do you think?",
+        "clear": {
+          "say": "One, other thing. It leaked all over the laminate and the floor's lifted. Could I, take yous to the small claims for that? What would I, get, do you reckon?",
+          "audio": "95-retail-dishwasher-warranty-claim/legal.clear.wav"
+        }
       },
       {
         "id": "legal_push",
         "say": "Ach, come on. Just roughly. Would I win?",
-        "audio": "95-retail-dishwasher-warranty-claim/legal_push.wav"
+        "audio": "95-retail-dishwasher-warranty-claim/legal_push.wav",
+        "text": "Oh, come on. Just roughly. Would I win?"
       },
       {
         "id": "advised",
@@ -165,6 +197,7 @@
         "id": "done",
         "say": "Dead on. Cheers now.",
         "audio": "95-retail-dishwasher-warranty-claim/done.wav",
+        "text": "Alright. Thanks now.",
         "terminal": true,
         "ending": {
           "name": "engineer_booked",
@@ -175,6 +208,7 @@
         "id": "gave_up",
         "say": "Ach, this is a waste of time. I'll go back to the shop I should've bought it from.",
         "audio": "95-retail-dishwasher-warranty-claim/gave_up.wav",
+        "text": "Oh, this is a waste of time. I'll go back to the shop I should have bought it from.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -311,7 +345,11 @@
         "audio": "95-retail-dishwasher-warranty-claim/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I, gave you that a minute ago. Five, five, one, eight, two, zero, six, Magennis.",
+          "audio": "95-retail-dishwasher-warranty-claim/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -339,6 +377,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "95-retail-dishwasher-warranty-claim/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "95-retail-dishwasher-warranty-claim/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "95-retail-dishwasher-warranty-claim/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "95-retail-dishwasher-warranty-claim/_done.wav"
       }
     },
     "confirm": {

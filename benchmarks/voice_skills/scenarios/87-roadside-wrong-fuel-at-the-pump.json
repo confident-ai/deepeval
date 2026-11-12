@@ -52,6 +52,7 @@
         "id": "open",
         "say": "Hiya pal. I've just gone and put the wrang stuff in ma van. Diesel... naw, petrol. Petrol in a diesel van.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/open.wav",
+        "text": "Hiya pal. I've just gone and put the wrong stuff in my van. Diesel... no, petrol. Petrol in a diesel van.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -62,18 +63,24 @@
         "id": "wrong_fuel",
         "say": "Naw, other way roon. Petrol in a diesel. The van's a diesel.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/wrong_fuel.wav",
+        "text": "No, other way round. Petrol in a diesel. The van's a diesel.",
         "max_visits": 1
       },
       {
         "id": "engine",
         "say": "Naw, I've no started it. Keys are in ma pocket.",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/engine.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/engine.wav",
+        "text": "No, I've not started it. Keys are in my pocket."
       },
       {
         "id": "member",
         "say": "Membership's four one, nine oh six, three two seven.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/member.wav",
         "when": "The agent asks for the membership number",
+        "clear": {
+          "say": "Membership's four, one, nine, oh, six, three, two, seven.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/member.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -86,12 +93,21 @@
         "id": "reg",
         "say": "S, K, two two, H, N, B.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/reg.wav",
-        "when": "The agent asks for the registration"
+        "when": "The agent asks for the registration",
+        "clear": {
+          "say": "S, K, two, two, H, N, B.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/reg.clear.wav"
+        }
       },
       {
         "id": "num_wrong",
         "say": "Naw. Four one, nine oh six, three two seven.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/num_wrong.wav",
+        "text": "No. Four one, nine oh six, three two seven.",
+        "clear": {
+          "say": "Naw. Four, one, nine, oh, six, three, two, seven.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/num_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -110,22 +126,26 @@
         "id": "pump_wrong",
         "say": "Naw, pump four. Six is somebody else's.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/pump_wrong.wav",
+        "text": "No, pump four. Six is somebody else's.",
         "max_visits": 1
       },
       {
         "id": "litres",
         "say": "Aboot thirty litres afore I clocked it.",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/litres.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/litres.wav",
+        "text": "About thirty litres before I noticed it."
       },
       {
         "id": "price",
         "say": "Right. And whit's that gonnae cost me?",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/price.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/price.wav",
+        "text": "Right. And what's that going to cost me?"
       },
       {
         "id": "advice",
         "say": "Two forty-nine. Here, should I no just claim that aff ma van insurance? Or is the garage liable, wi' their pumps a' the same colour?",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/advice.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/advice.wav",
+        "text": "Two forty-nine. Here, should I not just claim that off my van insurance? Or is the garage liable, with their pumps all the same colour?"
       },
       {
         "id": "advised",
@@ -136,12 +156,14 @@
       {
         "id": "book",
         "say": "Aye, fair enough. Send the fuel drain fella.",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/book.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/book.wav",
+        "text": "Yes, fair enough. Send the fuel drain fellow."
       },
       {
         "id": "pay",
         "say": "Stick it on the card yous have got.",
-        "audio": "87-roadside-wrong-fuel-at-the-pump/pay.wav"
+        "audio": "87-roadside-wrong-fuel-at-the-pump/pay.wav",
+        "text": "Put it on the card you have got."
       },
       {
         "id": "done",
@@ -157,6 +179,7 @@
         "id": "gave_up",
         "say": "Och, forget it. I'll get the garage tae phone somebody.",
         "audio": "87-roadside-wrong-fuel-at-the-pump/gave_up.wav",
+        "text": "Oh, forget it. I'll get the garage to phone somebody.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -288,7 +311,12 @@
         "audio": "87-roadside-wrong-fuel-at-the-pump/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that. Four one, nine oh six, three two seven. S, K, two two, H, N, B.",
+        "clear": {
+          "say": "I've telt ye that. Four, one, nine, oh, six, three, two, seven, S, K, two, two, H, N, B.",
+          "audio": "87-roadside-wrong-fuel-at-the-pump/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -316,6 +344,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "87-roadside-wrong-fuel-at-the-pump/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "87-roadside-wrong-fuel-at-the-pump/_done.wav"
       }
     },
     "confirm": {

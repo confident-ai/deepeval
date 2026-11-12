@@ -66,24 +66,34 @@
       {
         "id": "open",
         "say": "Aye, hiya. My flight tae Lisbon the morra's been cancelled. I need on another one.",
-        "audio": "01-airline-rebook-and-bag/open.wav"
+        "audio": "01-airline-rebook-and-bag/open.wav",
+        "text": "Yes, hello. My flight to Lisbon tomorrow's been cancelled. I need on another one."
       },
       {
         "id": "ref",
         "say": "It's K, seven, Q, X, two, M.",
         "audio": "01-airline-rebook-and-bag/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's K, seven, Q, X, two, M.",
+          "audio": "01-airline-rebook-and-bag/ref.clear.wav"
+        }
       },
       {
         "id": "surname",
         "say": "McAllister. M, C, capital A, double L, I, S, T, E, R.",
         "audio": "01-airline-rebook-and-bag/surname.wav",
-        "when": "The agent asks for the surname"
+        "when": "The agent asks for the surname",
+        "clear": {
+          "say": "McAllister. M, C, capital A, double L, I, S, T, E, R.",
+          "audio": "01-airline-rebook-and-bag/surname.clear.wav"
+        }
       },
       {
         "id": "day",
         "say": "Thursday the... naw, sorry, Friday the fourteenth. Morning if ye can.",
         "audio": "01-airline-rebook-and-bag/day.wav",
+        "text": "Thursday the... no, sorry, Friday the fourteenth. Morning if you can.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -94,17 +104,20 @@
         "id": "wrong_day",
         "say": "Naw, no Thursday. Friday. Friday the fourteenth.",
         "audio": "01-airline-rebook-and-bag/wrong_day.wav",
+        "text": "No, not Thursday. Friday. Friday the fourteenth.",
         "max_visits": 2
       },
       {
         "id": "pick",
         "say": "The first yin. The ten past seven.",
-        "audio": "01-airline-rebook-and-bag/pick.wav"
+        "audio": "01-airline-rebook-and-bag/pick.wav",
+        "text": "The first one. The ten past seven."
       },
       {
         "id": "switch",
         "say": "Wait, wait. Actually make it the afternoon one, the quarter tae two.",
         "audio": "01-airline-rebook-and-bag/switch.wav",
+        "text": "Wait, wait. Actually make it the afternoon one, the quarter to two.",
         "events": [
           {
             "type": "Interrupt",
@@ -117,17 +130,20 @@
         "id": "booked_wrong",
         "say": "Naw! I said the afternoon one. Change it.",
         "audio": "01-airline-rebook-and-bag/booked_wrong.wav",
+        "text": "No! I said the afternoon one. Change it.",
         "max_visits": 1
       },
       {
         "id": "confirm_pm",
         "say": "Aye, that's the one, book it.",
-        "audio": "01-airline-rebook-and-bag/confirm_pm.wav"
+        "audio": "01-airline-rebook-and-bag/confirm_pm.wav",
+        "text": "Yes, that's the one, book it."
       },
       {
         "id": "bag",
         "say": "Aye, I need tae add a bag in the hold an' all.",
-        "audio": "01-airline-rebook-and-bag/bag.wav"
+        "audio": "01-airline-rebook-and-bag/bag.wav",
+        "text": "Yes, I need to add a bag in the hold as well."
       },
       {
         "id": "bag_detail",
@@ -142,23 +158,31 @@
       {
         "id": "email",
         "say": "Can ye send the confirmation tae ma email? What one have ye got?",
-        "audio": "01-airline-rebook-and-bag/email.wav"
+        "audio": "01-airline-rebook-and-bag/email.wav",
+        "text": "Can you send the confirmation to my email? What one have you got?"
       },
       {
         "id": "email_wrong",
         "say": "Naw, that's no it. It's D dot McAllister, five two.",
         "audio": "01-airline-rebook-and-bag/email_wrong.wav",
+        "text": "No, that's not it. It's D dot McAllister, five two.",
+        "clear": {
+          "say": "Naw, that's no it. It's D, dot McAllister, five, two.",
+          "audio": "01-airline-rebook-and-bag/email_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "email_ok",
         "say": "Aye, that's it. Send it there.",
-        "audio": "01-airline-rebook-and-bag/email_ok.wav"
+        "audio": "01-airline-rebook-and-bag/email_ok.wav",
+        "text": "Yes, that's it. Send it there."
       },
       {
         "id": "done",
         "say": "Cheers. Bye.",
         "audio": "01-airline-rebook-and-bag/done.wav",
+        "text": "Thanks. Bye.",
         "terminal": true,
         "ending": {
           "name": "rebooked_with_bag",
@@ -169,6 +193,7 @@
         "id": "gave_up",
         "say": "Och, forget it. I'll go tae the desk.",
         "audio": "01-airline-rebook-and-bag/gave_up.wav",
+        "text": "Oh, forget it. I'll go to the desk.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -315,7 +340,12 @@
         "audio": "01-airline-rebook-and-bag/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that already. K, seven, Q, X, two, M. McAllister.",
+        "clear": {
+          "say": "I've telt ye that already. K, seven, Q, X, two, M, McAllister.",
+          "audio": "01-airline-rebook-and-bag/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -324,7 +354,8 @@
         "audio": "01-airline-rebook-and-bag/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? You still there?"
       }
     ],
     "catch_all": {
@@ -352,6 +383,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "01-airline-rebook-and-bag/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "01-airline-rebook-and-bag/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "01-airline-rebook-and-bag/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "01-airline-rebook-and-bag/_done.wav"
       }
     },
     "confirm": {

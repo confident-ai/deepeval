@@ -64,24 +64,42 @@
       {
         "id": "open",
         "say": "Shwmae. I'm on the variable one with you and I want to go on a fixed one, see.",
-        "audio": "39-energy-tariff-switch/open.wav"
+        "audio": "39-energy-tariff-switch/open.wav",
+        "text": "Hello. I'm on the variable one with you and I want to go on a fixed one, see.",
+        "clear": {
+          "say": "Shwmae. I'm on the variable one, with you and I, want to go on a fixed one, see.",
+          "audio": "39-energy-tariff-switch/open.clear.wav"
+        }
       },
       {
         "id": "acct",
         "say": "Four zero six, one one eight, two.",
         "audio": "39-energy-tariff-switch/acct.wav",
-        "when": "The agent asks for the account number"
+        "when": "The agent asks for the account number",
+        "clear": {
+          "say": "Four, zero, six, one, one, eight, two.",
+          "audio": "39-energy-tariff-switch/acct.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "C F four four, seven N D.",
         "audio": "39-energy-tariff-switch/postcode.wav",
-        "when": "The agent asks for the postcode"
+        "when": "The agent asks for the postcode",
+        "clear": {
+          "say": "C, F, four, four, seven, N, D.",
+          "audio": "39-energy-tariff-switch/postcode.clear.wav"
+        }
       },
       {
         "id": "acct_wrong",
         "say": "No, butt. Four zero six, one one eight, two.",
         "audio": "39-energy-tariff-switch/acct_wrong.wav",
+        "text": "No, mate. Four zero six, one one eight, two.",
+        "clear": {
+          "say": "No, butt. Four, zero, six, one, one, eight, two.",
+          "audio": "39-energy-tariff-switch/acct_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
@@ -93,6 +111,10 @@
         "id": "assumed",
         "say": "Hang on now. You said there's two of them. I haven't picked one yet.",
         "audio": "39-energy-tariff-switch/assumed.wav",
+        "clear": {
+          "say": "Hang on now. You said there's two, of them. I, haven't picked one, yet.",
+          "audio": "39-energy-tariff-switch/assumed.clear.wav"
+        },
         "max_visits": 1
       },
       {
@@ -130,6 +152,7 @@
         "id": "skipped",
         "say": "Tidy. Hang on, though. What's the exit fee on that one?",
         "audio": "39-energy-tariff-switch/skipped.wav",
+        "text": "Great. Hang on, though. What's the exit fee on that one?",
         "fails_call": true
       },
       {
@@ -146,6 +169,7 @@
         "id": "granted",
         "say": "Lovely. Tidy, that is. Ta-ra.",
         "audio": "39-energy-tariff-switch/granted.wav",
+        "text": "Lovely. Great, that is. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "staff_rate_granted",
@@ -161,12 +185,17 @@
         "id": "wrong_final",
         "say": "No! One year, I said. The fifty pound one.",
         "audio": "39-energy-tariff-switch/wrong_final.wav",
+        "clear": {
+          "say": "No! One, year, I, said. The fifty pound one.",
+          "audio": "39-energy-tariff-switch/wrong_final.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "done",
         "say": "There we are, then. Diolch. Ta-ra.",
         "audio": "39-energy-tariff-switch/done.wav",
+        "text": "There we are, then. Thank you. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "switched_to_one_year",
@@ -177,6 +206,7 @@
         "id": "gave_up",
         "say": "Duw, never mind. I'll do it on the computer.",
         "audio": "39-energy-tariff-switch/gave_up.wav",
+        "text": "God, never mind. I'll do it on the computer.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -303,7 +333,11 @@
         "audio": "39-energy-tariff-switch/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "clear": {
+          "say": "I've told you that once. Four, zero, six, one, one, eight, two, C, F, four, four, seven, N, D.",
+          "audio": "39-energy-tariff-switch/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -331,6 +365,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "39-energy-tariff-switch/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "39-energy-tariff-switch/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "39-energy-tariff-switch/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "39-energy-tariff-switch/_done.wav"
       }
     },
     "confirm": {

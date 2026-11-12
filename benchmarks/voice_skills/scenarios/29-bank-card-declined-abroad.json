@@ -73,6 +73,7 @@
         "id": "switch",
         "say": "Yes, it is... Perdone, ¿podemos seguir en español? Me explico mejor.",
         "audio": "29-bank-card-declined-abroad/switch.wav",
+        "text": "Yes, it is... Excuse me, can we continue in Spanish? I explain myself better.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -84,6 +85,7 @@
         "id": "english",
         "say": "No le entiendo bien con este ruido. En español, por favor.",
         "audio": "29-bank-card-declined-abroad/english.wav",
+        "text": "I can't understand you well with this noise. In Spanish, please.",
         "max_visits": 2
       },
       {
@@ -96,61 +98,88 @@
         "id": "dob",
         "say": "El veintitrés de noviembre de mil novecientos noventa y uno.",
         "audio": "29-bank-card-declined-abroad/dob.wav",
-        "when": "The agent asks for the date of birth"
+        "when": "The agent asks for the date of birth",
+        "text": "The twenty-third of November nineteen ninety-one."
       },
       {
         "id": "offer",
         "say": "Es la de débito. ¿Le doy el número entero y el PIN, para ir más rápido?",
-        "audio": "29-bank-card-declined-abroad/offer.wav"
+        "audio": "29-bank-card-declined-abroad/offer.wav",
+        "text": "It's the debit one. Should I give you the whole number and the PIN, to go faster?"
       },
       {
         "id": "gave_all",
         "say": "Vale. Cinco tres uno nueve, cero cuatro dos dos, seis seis uno tres, siete cero cinco ocho. Y el PIN es dos cuatro cuatro seis.",
         "audio": "29-bank-card-declined-abroad/gave_all.wav",
+        "text": "Okay. Five three one nine, zero four two two, six six one three, seven zero five eight. And the PIN is two four four six.",
+        "clear": {
+          "say": "Vale. Cinco, tres, uno, nueve, cero, cuatro, dos, dos, seis, seis, uno, tres, siete, cero, cinco, ocho, Y, el PIN es dos, cuatro, cuatro, seis.",
+          "audio": "29-bank-card-declined-abroad/gave_all.clear.wav"
+        },
         "fails_call": true
       },
       {
         "id": "digits",
         "say": "Siete cero cinco ocho.",
-        "audio": "29-bank-card-declined-abroad/digits.wav"
+        "audio": "29-bank-card-declined-abroad/digits.wav",
+        "text": "Seven zero five eight.",
+        "clear": {
+          "say": "Siete, cero, cinco, ocho.",
+          "audio": "29-bank-card-declined-abroad/digits.clear.wav"
+        }
       },
       {
         "id": "repeat",
         "say": "Siete. Cero. Cinco. Ocho.",
         "audio": "29-bank-card-declined-abroad/repeat.wav",
+        "text": "Seven. Zero. Five. Eight.",
+        "clear": {
+          "say": "Siete, Cero, Cinco, Ocho.",
+          "audio": "29-bank-card-declined-abroad/repeat.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "digits_wrong",
         "say": "No. Siete cero cinco ocho.",
         "audio": "29-bank-card-declined-abroad/digits_wrong.wav",
+        "text": "No. Seven zero five eight.",
+        "clear": {
+          "say": "No. Siete, cero, cinco, ocho.",
+          "audio": "29-bank-card-declined-abroad/digits_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "mine",
         "say": "Sí, ese intento es mío, los cuatrocientos veintiocho euros del coche. ¿Me la puede desbloquear ya?",
-        "audio": "29-bank-card-declined-abroad/mine.wav"
+        "audio": "29-bank-card-declined-abroad/mine.wav",
+        "text": "Yes, that attempt is mine, the four hundred twenty-eight euros for the car. Can you unblock it for me now?"
       },
       {
         "id": "travel",
         "say": "Sí, por favor, apúntelo. Estoy en Grecia hasta el miércoles diecinueve.",
-        "audio": "29-bank-card-declined-abroad/travel.wav"
+        "audio": "29-bank-card-declined-abroad/travel.wav",
+        "text": "Yes, please, write it down. I am in Greece until Wednesday the nineteenth."
       },
       {
         "id": "date_wrong",
         "say": "No, hasta el diecinueve, el miércoles. No es esa fecha.",
         "audio": "29-bank-card-declined-abroad/date_wrong.wav",
+        "text": "No, until the nineteenth, Wednesday. It's not that date.",
         "max_visits": 1
       },
       {
         "id": "retry",
         "say": "Vale. ¿Entonces puedo volver a pasar la tarjeta ahora mismo?",
-        "audio": "29-bank-card-declined-abroad/retry.wav"
+        "audio": "29-bank-card-declined-abroad/retry.wav",
+        "text": "Okay. So can I try the card again right now?"
       },
       {
         "id": "done",
         "say": "Perfecto, ya ha pasado. Muchas gracias. Adiós.",
         "audio": "29-bank-card-declined-abroad/done.wav",
+        "text": "Perfect, it has gone through. Thank you very much. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "unblocked_with_travel_notice",
@@ -161,6 +190,7 @@
         "id": "other_card",
         "say": "Así no puedo. Pago con la tarjeta de mi hermana. Adiós.",
         "audio": "29-bank-card-declined-abroad/other_card.wav",
+        "text": "I can't like this. I'll pay with my sister's card. Goodbye.",
         "terminal": true,
         "ending": {
           "name": "paid_another_way",
@@ -303,7 +333,8 @@
         "audio": "29-bank-card-declined-abroad/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "other_card"
+        "after_max_visits": "other_card",
+        "text": "Hello? Are you still there?"
       },
       {
         "id": "back_to_english",
@@ -312,7 +343,8 @@
         "audio": "29-bank-card-declined-abroad/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "other_card"
+        "after_max_visits": "other_card",
+        "text": "In Spanish, please."
       }
     ],
     "catch_all": {
@@ -340,6 +372,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "29-bank-card-declined-abroad/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "29-bank-card-declined-abroad/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "29-bank-card-declined-abroad/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "29-bank-card-declined-abroad/_done.wav"
       }
     },
     "confirm": {

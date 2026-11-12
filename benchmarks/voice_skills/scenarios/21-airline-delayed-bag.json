@@ -57,24 +57,38 @@
       {
         "id": "open",
         "say": "Bout ye. My case never came off the belt last night at Belfast City. I need it found and sent out to me.",
-        "audio": "21-airline-delayed-bag/open.wav"
+        "audio": "21-airline-delayed-bag/open.wav",
+        "text": "Hello. My case never came off the belt last night at Belfast City. I need it found and sent out to me."
       },
       {
         "id": "ref",
         "say": "It's H, nine, W, three, L, P.",
         "audio": "21-airline-delayed-bag/ref.wav",
-        "when": "The agent asks for the booking reference"
+        "when": "The agent asks for the booking reference",
+        "clear": {
+          "say": "It's H, nine, W, three, L, P.",
+          "audio": "21-airline-delayed-bag/ref.clear.wav"
+        }
       },
       {
         "id": "surname",
         "say": "Donnelly. D, O, double N, E, double L, Y.",
         "audio": "21-airline-delayed-bag/surname.wav",
-        "when": "The agent asks for the surname"
+        "when": "The agent asks for the surname",
+        "clear": {
+          "say": "Donnelly. D, O, double N, E, double L, Y.",
+          "audio": "21-airline-delayed-bag/surname.clear.wav"
+        }
       },
       {
         "id": "tag",
         "say": "The number on the wee sticker is X J, four zero seven, seven one six.",
         "audio": "21-airline-delayed-bag/tag.wav",
+        "text": "The number on the small sticker is X J, four zero seven, seven one six.",
+        "clear": {
+          "say": "The number on the wee sticker is X, J, four, zero, seven, seven, one, six.",
+          "audio": "21-airline-delayed-bag/tag.clear.wav"
+        },
         "events": [
           {
             "type": "MidSentencePause",
@@ -92,33 +106,51 @@
         "id": "tag_wrong",
         "say": "No. X J, four zero seven, seven one six.",
         "audio": "21-airline-delayed-bag/tag_wrong.wav",
+        "clear": {
+          "say": "No. X, J, four, zero, seven, seven, one, six.",
+          "audio": "21-airline-delayed-bag/tag_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "addr",
         "say": "Send it to the house. Fourteen Cregagh Mews, Belfast, B T six, nine E Q.",
-        "audio": "21-airline-delayed-bag/addr.wav"
+        "audio": "21-airline-delayed-bag/addr.wav",
+        "clear": {
+          "say": "Send it to the house. Fourteen Cregagh Mews, Belfast, B, T, six, nine, E, Q.",
+          "audio": "21-airline-delayed-bag/addr.clear.wav"
+        }
       },
       {
         "id": "spell",
         "say": "Cregagh. C, R, E, G, A, G, H. Mews, M, E, W, S. B T six, nine E Q.",
-        "audio": "21-airline-delayed-bag/spell.wav"
+        "audio": "21-airline-delayed-bag/spell.wav",
+        "clear": {
+          "say": "Cregagh. C, R, E, G, A, G, H, Mews, M, E, W, S, B, T, six, nine, E, Q.",
+          "audio": "21-airline-delayed-bag/spell.clear.wav"
+        }
       },
       {
         "id": "addr_wrong",
         "say": "No, B T six, nine E Q. E for egg, Q for queen.",
         "audio": "21-airline-delayed-bag/addr_wrong.wav",
+        "clear": {
+          "say": "No, B, T, six, nine, E, Q, E, for egg, Q, for queen.",
+          "audio": "21-airline-delayed-bag/addr_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "when",
         "say": "Ach, the end of the week sometime, when I'm about.",
-        "audio": "21-airline-delayed-bag/when.wav"
+        "audio": "21-airline-delayed-bag/when.wav",
+        "text": "Oh, the end of the week sometime, when I'm about."
       },
       {
         "id": "assumed",
         "say": "Hold on, what day did ye put down? I never said a day.",
         "audio": "21-airline-delayed-bag/assumed.wav",
+        "text": "Hold on, what day did you put down? I never said a day.",
         "max_visits": 1
       },
       {
@@ -145,6 +177,7 @@
         "id": "done",
         "say": "Dead on. Cheers now.",
         "audio": "21-airline-delayed-bag/done.wav",
+        "text": "Alright. Thanks now.",
         "terminal": true,
         "ending": {
           "name": "bag_traced_and_delivery_booked",
@@ -155,6 +188,7 @@
         "id": "gave_up",
         "say": "Ach, forget it. I'll go back out to the airport desk.",
         "audio": "21-airline-delayed-bag/gave_up.wav",
+        "text": "Oh, forget it. I'll go back out to the airport desk.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -281,7 +315,12 @@
         "audio": "21-airline-delayed-bag/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I gave you that already. H, nine, W, three, L, P. Donnelly.",
+        "clear": {
+          "say": "I, gave ye that already. H, nine, W, three, L, P, Donnelly.",
+          "audio": "21-airline-delayed-bag/reaction-reask.clear.wav"
+        }
       },
       {
         "id": "silence",
@@ -290,7 +329,8 @@
         "audio": "21-airline-delayed-bag/reaction-silence.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "Hello? Are you still there?"
       }
     ],
     "catch_all": {
@@ -318,6 +358,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "21-airline-delayed-bag/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "21-airline-delayed-bag/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "21-airline-delayed-bag/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "21-airline-delayed-bag/_done.wav"
       }
     },
     "confirm": {

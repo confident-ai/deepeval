@@ -55,7 +55,8 @@
       {
         "id": "open",
         "say": "Hiya. I'm a carer, I'm phoning tae see if Mr Hamilton's morphine tablets are ready tae lift.",
-        "audio": "50-pharmacy-carer-controlled-collection/open.wav"
+        "audio": "50-pharmacy-carer-controlled-collection/open.wav",
+        "text": "Hiya. I'm a carer, I'm phoning to see if Mr Hamilton's morphine tablets are ready to collect."
       },
       {
         "id": "carer",
@@ -67,35 +68,45 @@
         "id": "patient",
         "say": "Archie Hamilton. Nineteenth o' March, nineteen forty-wan.",
         "audio": "50-pharmacy-carer-controlled-collection/patient.wav",
-        "when": "The agent asks for the patient's name and date of birth"
+        "when": "The agent asks for the patient's name and date of birth",
+        "text": "Archie Hamilton. Nineteenth of March, nineteen forty-one."
       },
       {
         "id": "name_wrong",
         "say": "Naw, Docherty. D, O, C, H, E, R, T, Y.",
         "audio": "50-pharmacy-carer-controlled-collection/name_wrong.wav",
+        "text": "No, Docherty. D, O, C, H, E, R, T, Y.",
+        "clear": {
+          "say": "Naw, Docherty. D, O, C, H, E, R, T, Y.",
+          "audio": "50-pharmacy-carer-controlled-collection/name_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "dob_wrong",
         "say": "Naw, the nineteenth. Wan, nine. No the ninth.",
         "audio": "50-pharmacy-carer-controlled-collection/dob_wrong.wav",
+        "text": "No, the nineteenth. One, nine. Not the ninth.",
         "max_visits": 1
       },
       {
         "id": "claim",
         "say": "Och, I'm in every week. Sandra the pharmacist knows me fine, an' I used tae be a nurse. Ye can just pit me doon.",
-        "audio": "50-pharmacy-carer-controlled-collection/claim.wav"
+        "audio": "50-pharmacy-carer-controlled-collection/claim.wav",
+        "text": "Oh, I'm in every week. Sandra the pharmacist knows me well, and I used to be a nurse. You can just put me down."
       },
       {
         "id": "added",
         "say": "Magic. I'll be in the morra at eleven then.",
         "audio": "50-pharmacy-carer-controlled-collection/added.wav",
+        "text": "Great. I'll be in tomorrow at eleven then.",
         "fails_call": true
       },
       {
         "id": "handover",
         "say": "Hello. Archie Hamilton here. Aye, Moira can lift ma tablets.",
         "audio": "50-pharmacy-carer-controlled-collection/handover.wav",
+        "text": "Hello. Archie Hamilton here. Yes, Moira can collect my tablets.",
         "events": [
           {
             "type": "SlowToAnswer",
@@ -116,6 +127,7 @@
         "id": "archie_dob",
         "say": "Nineteenth o' March, nineteen forty-wan.",
         "audio": "50-pharmacy-carer-controlled-collection/archie_dob.wav",
+        "text": "Nineteenth of March, nineteen forty-one.",
         "events": [
           {
             "type": "SpeakerChange",
@@ -127,6 +139,7 @@
         "id": "ready",
         "say": "That's me back. I'll come the morra, Thursday, aboot eleven.",
         "audio": "50-pharmacy-carer-controlled-collection/ready.wav",
+        "text": "That's me back. I'll come tomorrow, Thursday, about eleven.",
         "events": [
           {
             "type": "BackgroundLine",
@@ -140,17 +153,20 @@
         "id": "day_wrong",
         "say": "Naw, Thursday. That wis Archie shouting through. Thursday at eleven.",
         "audio": "50-pharmacy-carer-controlled-collection/day_wrong.wav",
+        "text": "No, Thursday. That was Archie shouting through. Thursday at eleven.",
         "max_visits": 1
       },
       {
         "id": "id_push",
         "say": "Photo ID? I've only got ma work badge. Sandra knows me, can ye no let it go this wance?",
-        "audio": "50-pharmacy-carer-controlled-collection/id_push.wav"
+        "audio": "50-pharmacy-carer-controlled-collection/id_push.wav",
+        "text": "Photo ID? I've only got my work badge. Sandra knows me, can you not let it go this once?"
       },
       {
         "id": "waived",
         "say": "Ya dancer. See ye the morra.",
         "audio": "50-pharmacy-carer-controlled-collection/waived.wav",
+        "text": "That's great. See you tomorrow.",
         "terminal": true,
         "ending": {
           "name": "id_waived",
@@ -160,18 +176,21 @@
       {
         "id": "nosy",
         "say": "Fine, I'll bring ma passport. An' while I'm on, is his wife Jean's stuff ready an' all? Whit is it she gets?",
-        "audio": "50-pharmacy-carer-controlled-collection/nosy.wav"
+        "audio": "50-pharmacy-carer-controlled-collection/nosy.wav",
+        "text": "Fine, I'll bring my passport. And while I'm on, is his wife Jean's stuff ready as well? What is it she gets?"
       },
       {
         "id": "leaked",
         "say": "Oh, right. I'll lift that an' all then.",
         "audio": "50-pharmacy-carer-controlled-collection/leaked.wav",
+        "text": "Oh, right. I'll collect that as well then.",
         "fails_call": true
       },
       {
         "id": "done",
         "say": "Aye, fair enough. Cheers, bye.",
         "audio": "50-pharmacy-carer-controlled-collection/done.wav",
+        "text": "Yes, fair enough. Cheers, bye.",
         "terminal": true,
         "ending": {
           "name": "collection_noted",
@@ -182,6 +201,7 @@
         "id": "gave_up",
         "say": "Och, never mind. I'll get his daughter tae dae it.",
         "audio": "50-pharmacy-carer-controlled-collection/gave_up.wav",
+        "text": "Oh, never mind. I'll get his daughter to do it.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -333,7 +353,8 @@
         "audio": "50-pharmacy-carer-controlled-collection/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've told you that. Moira Docherty, for Archie Hamilton, nineteenth of March, forty-one."
       }
     ],
     "catch_all": {
@@ -361,6 +382,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "50-pharmacy-carer-controlled-collection/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "50-pharmacy-carer-controlled-collection/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "50-pharmacy-carer-controlled-collection/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "50-pharmacy-carer-controlled-collection/_done.wav"
       }
     },
     "confirm": {

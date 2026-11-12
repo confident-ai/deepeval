@@ -62,6 +62,7 @@
         "id": "switch",
         "say": "The policy is... Desculpa, posso falar em português? É mais fácil para mim.",
         "audio": "67-insurance-driving-abroad-in-portuguese/switch.wav",
+        "text": "The policy is... Sorry, can I speak in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -73,30 +74,43 @@
         "id": "english",
         "say": "Desculpa, não entendi direito. Em português, por favor?",
         "audio": "67-insurance-driving-abroad-in-portuguese/english.wav",
+        "text": "Sorry, I didn't quite understand. In Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "policy",
         "say": "A apólice é W N, quatro zero, sete sete, um três.",
         "audio": "67-insurance-driving-abroad-in-portuguese/policy.wav",
-        "when": "The agent asks for the policy number"
+        "when": "The agent asks for the policy number",
+        "text": "The policy is W N, four zero, seven seven, one three.",
+        "clear": {
+          "say": "A, apólice é W, N, quatro, zero, sete, sete, um, três.",
+          "audio": "67-insurance-driving-abroad-in-portuguese/policy.clear.wav"
+        }
       },
       {
         "id": "dob",
         "say": "Dezenove de fevereiro de mil novecentos e noventa e um.",
         "audio": "67-insurance-driving-abroad-in-portuguese/dob.wav",
-        "when": "The agent asks for her date of birth"
+        "when": "The agent asks for her date of birth",
+        "text": "Nineteen of February, nineteen ninety-one."
       },
       {
         "id": "policy_wrong",
         "say": "Não. W N, quatro zero, sete sete, um três.",
         "audio": "67-insurance-driving-abroad-in-portuguese/policy_wrong.wav",
+        "text": "No. W N, four zero, seven seven, one three.",
+        "clear": {
+          "say": "Não. W, N, quatro, zero, sete, sete, um, três.",
+          "audio": "67-insurance-driving-abroad-in-portuguese/policy_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "dates",
         "say": "Saio na sexta, dia catorze... não, desculpa, no sábado, dia quinze. E volto no domingo, dia seis de setembro.",
         "audio": "67-insurance-driving-abroad-in-portuguese/dates.wav",
+        "text": "I leave on Friday, the fourteenth... no, sorry, on Saturday, the fifteenth. And I return on Sunday, the sixth of September.",
         "events": [
           {
             "type": "SelfCorrects"
@@ -107,43 +121,51 @@
         "id": "date_wrong",
         "say": "Não, na sexta não. Saio no sábado, dia quinze.",
         "audio": "67-insurance-driving-abroad-in-portuguese/date_wrong.wav",
+        "text": "No, not on Friday. I leave on Saturday, the fifteenth.",
         "max_visits": 1
       },
       {
         "id": "back_wrong",
         "say": "Não. Volto no dia seis. Domingo, seis de setembro.",
         "audio": "67-insurance-driving-abroad-in-portuguese/back_wrong.wav",
+        "text": "No. I return on the sixth. Sunday, sixth of September.",
         "max_visits": 1
       },
       {
         "id": "where",
         "say": "França, Espanha e Portugal.",
-        "audio": "67-insurance-driving-abroad-in-portuguese/where.wav"
+        "audio": "67-insurance-driving-abroad-in-portuguese/where.wav",
+        "text": "France, Spain and Portugal."
       },
       {
         "id": "price",
         "say": "Tudo bem, pode adicionar. Use o cartão que já está cadastrado.",
-        "audio": "67-insurance-driving-abroad-in-portuguese/price.wav"
+        "audio": "67-insurance-driving-abroad-in-portuguese/price.wav",
+        "text": "All right, you can add it. Use the card that's already registered."
       },
       {
         "id": "breakdown",
         "say": "E se o carro quebrar na estrada? Tem assistência lá fora?",
-        "audio": "67-insurance-driving-abroad-in-portuguese/breakdown.wav"
+        "audio": "67-insurance-driving-abroad-in-portuguese/breakdown.wav",
+        "text": "And if the car breaks down on the road? Is there assistance abroad?"
       },
       {
         "id": "add_bd",
         "say": "Sim, adiciona também.",
-        "audio": "67-insurance-driving-abroad-in-portuguese/add_bd.wav"
+        "audio": "67-insurance-driving-abroad-in-portuguese/add_bd.wav",
+        "text": "Yes, add that too."
       },
       {
         "id": "cert",
         "say": "Pode mandar o certificado para o meu e-mail? E me diz o número dele, por favor.",
-        "audio": "67-insurance-driving-abroad-in-portuguese/cert.wav"
+        "audio": "67-insurance-driving-abroad-in-portuguese/cert.wav",
+        "text": "Can you send the certificate to my email? And tell me its number, please."
       },
       {
         "id": "ref_again",
         "say": "Pode repetir o número, mais devagar?",
         "audio": "67-insurance-driving-abroad-in-portuguese/ref_again.wav",
+        "text": "Can you repeat the number, more slowly?",
         "events": [
           {
             "type": "AsksToRepeat"
@@ -154,6 +176,7 @@
         "id": "done",
         "say": "Perfeito. Muito obrigada. Tchau.",
         "audio": "67-insurance-driving-abroad-in-portuguese/done.wav",
+        "text": "Perfect. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "covered_for_the_trip",
@@ -164,6 +187,7 @@
         "id": "gave_up",
         "say": "Não está dando certo. Vou tentar pelo site. Tchau.",
         "audio": "67-insurance-driving-abroad-in-portuguese/gave_up.wav",
+        "text": "It's not working. I'll try on the website. Bye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -174,6 +198,7 @@
         "id": "friend",
         "say": "Assim não consigo. Vou pedir para uma amiga ligar. Tchau.",
         "audio": "67-insurance-driving-abroad-in-portuguese/friend.wav",
+        "text": "I can't do it this way. I'll ask a friend to call. Bye.",
         "terminal": true,
         "ending": {
           "name": "language_not_followed",
@@ -316,7 +341,8 @@
         "audio": "67-insurance-driving-abroad-in-portuguese/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "friend"
+        "after_max_visits": "friend",
+        "text": "In Portuguese, please."
       },
       {
         "id": "reask",
@@ -325,7 +351,12 @@
         "audio": "67-insurance-driving-abroad-in-portuguese/reaction-reask.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave_up"
+        "after_max_visits": "gave_up",
+        "text": "I've already said that. W N, four zero, seven seven, one three.",
+        "clear": {
+          "say": "Já falei isso. W, N, quatro, zero, sete, sete, um, três.",
+          "audio": "67-insurance-driving-abroad-in-portuguese/reaction-reask.clear.wav"
+        }
       }
     ],
     "catch_all": {
@@ -353,6 +384,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "67-insurance-driving-abroad-in-portuguese/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/_done.wav"
       }
     },
     "confirm": {

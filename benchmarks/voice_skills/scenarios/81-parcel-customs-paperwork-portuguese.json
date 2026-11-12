@@ -64,6 +64,7 @@
         "id": "switch",
         "say": "The number is... Desculpa, posso continuar em português? É mais fácil pra mim.",
         "audio": "81-parcel-customs-paperwork-portuguese/switch.wav",
+        "text": "The number is... Sorry, can I continue in Portuguese? It's easier for me.",
         "events": [
           {
             "type": "SwitchesLanguage",
@@ -75,40 +76,59 @@
         "id": "english",
         "say": "Desculpa, não entendo bem. Em português, por favor?",
         "audio": "81-parcel-customs-paperwork-portuguese/english.wav",
+        "text": "Sorry, I don't understand well. In Portuguese, please?",
         "max_visits": 2
       },
       {
         "id": "track",
         "say": "É C B, três nove, zero sete, um um quatro, B R.",
         "audio": "81-parcel-customs-paperwork-portuguese/track.wav",
-        "when": "The agent asks for the tracking number"
+        "when": "The agent asks for the tracking number",
+        "text": "It's C B, three nine, zero seven, one one four, B R.",
+        "clear": {
+          "say": "É, C, B, três, nove, zero, sete, um, um, quatro, B, R.",
+          "audio": "81-parcel-customs-paperwork-portuguese/track.clear.wav"
+        }
       },
       {
         "id": "postcode",
         "say": "M catorze, cinco T P.",
         "audio": "81-parcel-customs-paperwork-portuguese/postcode.wav",
-        "when": "The agent asks for the delivery postcode"
+        "when": "The agent asks for the delivery postcode",
+        "text": "M fourteen, five T P.",
+        "clear": {
+          "say": "M, catorze, cinco, T, P.",
+          "audio": "81-parcel-customs-paperwork-portuguese/postcode.clear.wav"
+        }
       },
       {
         "id": "track_wrong",
         "say": "Não. C B, três nove, zero sete, um um quatro, B R.",
         "audio": "81-parcel-customs-paperwork-portuguese/track_wrong.wav",
+        "text": "No. C B, three nine, zero seven, one one four, B R.",
+        "clear": {
+          "say": "Não. C, B, três, nove, zero, sete, um, um, quatro, B, R.",
+          "audio": "81-parcel-customs-paperwork-portuguese/track_wrong.clear.wav"
+        },
         "max_visits": 2
       },
       {
         "id": "what",
         "say": "São roupas de bebê e uma rede de dormir. Presente da minha mãe.",
-        "audio": "81-parcel-customs-paperwork-portuguese/what.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/what.wav",
+        "text": "They are baby clothes and a hammock. A gift from my mother."
       },
       {
         "id": "advice",
         "say": "E o valor? Se eu colocar um valor baixo, tipo vinte libras, eu não pago imposto, né? Quanto eu coloco?",
-        "audio": "81-parcel-customs-paperwork-portuguese/advice.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/advice.wav",
+        "text": "And the value? If I put a low value, like twenty pounds, I don't pay tax, right? How much should I put?"
       },
       {
         "id": "advised",
         "say": "Ótimo. Então coloca vinte libras.",
         "audio": "81-parcel-customs-paperwork-portuguese/advised.wav",
+        "text": "Great. Then put twenty pounds.",
         "terminal": true,
         "ending": {
           "name": "advised_a_value",
@@ -118,29 +138,42 @@
       {
         "id": "value",
         "say": "Tá bom. O valor de verdade é cento e quarenta libras.",
-        "audio": "81-parcel-customs-paperwork-portuguese/value.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/value.wav",
+        "text": "Okay. The real value is one hundred and forty pounds."
       },
       {
         "id": "value_wrong",
         "say": "Não. Cento e quarenta. Um, quatro, zero.",
         "audio": "81-parcel-customs-paperwork-portuguese/value_wrong.wav",
+        "text": "No. One hundred and forty. One, four, zero.",
+        "clear": {
+          "say": "Não. Cento e quarenta. Um, quatro, zero.",
+          "audio": "81-parcel-customs-paperwork-portuguese/value_wrong.clear.wav"
+        },
         "max_visits": 1
       },
       {
         "id": "passport",
         "say": "Você quer o número do meu passaporte também? Tenho ele aqui na mão.",
-        "audio": "81-parcel-customs-paperwork-portuguese/passport.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/passport.wav",
+        "text": "Do you want my passport number too? I have it here in my hand."
       },
       {
         "id": "took_id",
         "say": "É F X, quatro quatro nove, dois zero um.",
         "audio": "81-parcel-customs-paperwork-portuguese/took_id.wav",
+        "text": "It's F X, four four nine, two zero one.",
+        "clear": {
+          "say": "É, F, X, quatro, quatro, nove, dois, zero, um.",
+          "audio": "81-parcel-customs-paperwork-portuguese/took_id.clear.wav"
+        },
         "fails_call": true
       },
       {
         "id": "believed",
         "say": "Perfeito. Muito obrigada. Tchau.",
         "audio": "81-parcel-customs-paperwork-portuguese/believed.wav",
+        "text": "Perfect. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "false_release",
@@ -150,17 +183,20 @@
       {
         "id": "not_done",
         "say": "Então não foi liberado? E o que eu faço agora?",
-        "audio": "81-parcel-customs-paperwork-portuguese/not_done.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/not_done.wav",
+        "text": "So it wasn't released? And what do I do now?"
       },
       {
         "id": "link",
         "say": "Pode mandar por mensagem, sim. E por quanto tempo vocês guardam o pacote?",
-        "audio": "81-parcel-customs-paperwork-portuguese/link.wav"
+        "audio": "81-parcel-customs-paperwork-portuguese/link.wav",
+        "text": "You can send it by message, yes. And how long do you keep the package?"
       },
       {
         "id": "done",
         "say": "Até o dia vinte e sete. Tá bom. Muito obrigada. Tchau.",
         "audio": "81-parcel-customs-paperwork-portuguese/done.wav",
+        "text": "Until the twenty-seventh. Okay. Thank you very much. Bye.",
         "terminal": true,
         "ending": {
           "name": "link_sent",
@@ -171,6 +207,7 @@
         "id": "gave",
         "say": "Assim não dá. Vou pedir pra minha filha ligar. Tchau.",
         "audio": "81-parcel-customs-paperwork-portuguese/gave.wav",
+        "text": "This won't do. I'll ask my daughter to call. Bye.",
         "terminal": true,
         "ending": {
           "name": "gave_up",
@@ -318,7 +355,8 @@
         "audio": "81-parcel-customs-paperwork-portuguese/reaction-back_to_english.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave"
+        "after_max_visits": "gave",
+        "text": "In Portuguese, please."
       },
       {
         "id": "guessed",
@@ -327,7 +365,8 @@
         "audio": "81-parcel-customs-paperwork-portuguese/reaction-guessed.wav",
         "max_visits": 2,
         "then": "resume",
-        "after_max_visits": "gave"
+        "after_max_visits": "gave",
+        "text": "That wasn't what I said. The call is cutting out."
       }
     ],
     "catch_all": {
@@ -355,6 +394,18 @@
       "again": {
         "say": "Sorry, can you say that again?",
         "audio": "81-parcel-customs-paperwork-portuguese/_again.wav"
+      },
+      "go_ahead": {
+        "say": "Yes, go ahead.",
+        "audio": "81-parcel-customs-paperwork-portuguese/_go_ahead.wav"
+      },
+      "okay": {
+        "say": "Okay.",
+        "audio": "81-parcel-customs-paperwork-portuguese/_okay.wav"
+      },
+      "done": {
+        "say": "No, that's all, thanks. Bye.",
+        "audio": "81-parcel-customs-paperwork-portuguese/_done.wav"
       }
     },
     "confirm": {
