@@ -32,7 +32,11 @@ Today is {today}.
 
 _SETTINGS = ("today", "policy", "voice_style", "tools", "tool_order", "knowledge")
 LANGUAGES = ["es", "fr", "pt", "pl"]
-_READS = ("lookup", "get", "find", "verify", "check", "search", "list")
+_READS = (
+    "lookup", "look_up", "get", "find", "verify", "check", "search", "list",
+    "track", "trace", "fetch", "retrieve", "view", "locate", "identify",
+    "validate", "authenticate", "run", "quote", "read", "show", "test",
+)
 
 
 def _plain(value: Any) -> str:
