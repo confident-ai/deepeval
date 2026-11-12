@@ -55,7 +55,7 @@ class OllamaModel(DeepEvalBaseLLM):
         model = require_param(
             model,
             provider_label="OllamaModel",
-            env_var_name="LOCAL_MODEL_NAME",
+            env_var_name="OLLAMA_MODEL_NAME",
             param_hint="model",
         )
 

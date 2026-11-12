@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { mergeEnvContent, parseEnvContent } from "../src/env.js";
 import {
   detectJudge,
   judgeEnvValues,
@@ -79,6 +80,42 @@ describe("judge detection", () => {
     ).toBe("local");
   });
 
+  it("lets USE_OLLAMA_MODEL decide before the marker value, like DeepEval", () => {
+    expect(
+      detectJudge({ USE_OLLAMA_MODEL: "true", OLLAMA_MODEL_NAME: "llama3.1" }),
+    ).toEqual({ provider: provider("ollama"), missing: [] });
+    expect(
+      detectJudge({
+        USE_OLLAMA_MODEL: "false",
+        USE_LOCAL_MODEL: "true",
+        LOCAL_MODEL_API_KEY: "ollama",
+      })?.provider.id,
+    ).toBe("local");
+  });
+
+  it.each(["on", "enabled", "t", "Y", '"yes"', `"'true'"`, `""true""`])(
+    "reads USE_OLLAMA_MODEL=%s as on, like DeepEval's parse_bool",
+    (value) => {
+      expect(
+        detectJudge({ USE_OLLAMA_MODEL: value, USE_LOCAL_MODEL: "true" })
+          ?.provider.id,
+      ).toBe("ollama");
+    },
+  );
+
+  it.each(["", "unknown", '" true "', `'"on"'`])(
+    "reads a present USE_OLLAMA_MODEL=%s as off, like DeepEval",
+    (value) => {
+      expect(
+        detectJudge({
+          USE_OLLAMA_MODEL: value,
+          USE_LOCAL_MODEL: "true",
+          LOCAL_MODEL_API_KEY: "ollama",
+        })?.provider.id,
+      ).toBe("local");
+    },
+  );
+
   it("treats credentials DeepEval can infer as optional", () => {
     // Bedrock falls back to the ambient AWS credential chain.
     expect(judgeMissing(provider("bedrock"), {})).toEqual([
@@ -140,6 +177,31 @@ describe("keys already in the environment", () => {
     expect(providersWithKey({ USE_LOCAL_MODEL: "true" })).toEqual([]);
   });
 
+  it("counts Ollama's marker as a missing local server key", () => {
+    expect(
+      judgeMissing(provider("local"), {
+        LOCAL_MODEL_API_KEY: "ollama",
+        LOCAL_MODEL_NAME: "m",
+        LOCAL_MODEL_BASE_URL: "http://x",
+      }),
+    ).toEqual(["LOCAL_MODEL_API_KEY"]);
+  });
+
+  it("still asks for a real key when Ollama is off but its marker remains", () => {
+    const env = {
+      USE_OLLAMA_MODEL: "false",
+      USE_LOCAL_MODEL: "true",
+      LOCAL_MODEL_API_KEY: "ollama",
+      LOCAL_MODEL_NAME: "m",
+      LOCAL_MODEL_BASE_URL: "http://x",
+    };
+    expect(detectJudge(env)).toEqual({
+      provider: provider("local"),
+      missing: ["LOCAL_MODEL_API_KEY"],
+    });
+    expect(providersWithKey(env)).toEqual([]);
+  });
+
   it("does not read Ollama's marker as a local server key", () => {
     expect(providersWithKey({ LOCAL_MODEL_API_KEY: "ollama" })).toEqual([]);
     expect(
@@ -189,6 +251,7 @@ describe("judge environment values", () => {
         settings: { OLLAMA_MODEL_NAME: "llama3.1" },
       }),
     ).toEqual({
+      USE_OLLAMA_MODEL: "true",
       USE_LOCAL_MODEL: "true",
       LOCAL_MODEL_API_KEY: "ollama",
       OLLAMA_MODEL_NAME: "llama3.1",
@@ -202,5 +265,88 @@ describe("judge environment values", () => {
       }),
     ).toEqual({ OPENAI_API_KEY: "sk-test" });
     expect(judgeVariables(provider("openai"))).toEqual(["OPENAI_API_KEY"]);
+  });
+});
+
+describe("switching away from Ollama", () => {
+  const legacy = {
+    USE_LOCAL_MODEL: "true",
+    LOCAL_MODEL_API_KEY: "ollama",
+    OLLAMA_MODEL_NAME: "llama3.1",
+  };
+  const ollama = { USE_OLLAMA_MODEL: "true", ...legacy };
+
+  const written = (
+    env: Record<string, string>,
+    values: Record<string, string | null>,
+  ) =>
+    parseEnvContent(
+      mergeEnvContent(
+        Object.entries(env)
+          .map(([key, value]) => `${key}=${value}`)
+          .join("\n"),
+        values,
+      ),
+    );
+
+  it.each([
+    ["Ollama", ollama],
+    ["an older Ollama config", legacy],
+  ])(
+    "removes what selected %s instead of writing a false flag",
+    (_name, env) => {
+      const values = judgeEnvValues(
+        provider("anthropic"),
+        { secrets: { ANTHROPIC_API_KEY: "sk-ant" } },
+        env,
+      );
+      expect(values).toEqual({
+        USE_OLLAMA_MODEL: null,
+        USE_LOCAL_MODEL: null,
+        LOCAL_MODEL_API_KEY: null,
+        USE_ANTHROPIC_MODEL: "true",
+        ANTHROPIC_API_KEY: "sk-ant",
+      });
+      const after = written(env, values);
+      expect(detectJudge(after)?.provider.id).toBe("anthropic");
+
+      const olderSetOllama = written(after, {
+        USE_LOCAL_MODEL: "true",
+        LOCAL_MODEL_API_KEY: "ollama",
+        OLLAMA_MODEL_NAME: "llama3.1",
+      });
+      expect(detectJudge(olderSetOllama)?.provider.id).toBe("ollama");
+    },
+  );
+
+  it("keeps a reused local server key and re-selects the local server", () => {
+    const env = { ...ollama, LOCAL_MODEL_API_KEY: "real-key" };
+    const values = judgeEnvValues(
+      provider("local"),
+      {
+        settings: {
+          LOCAL_MODEL_NAME: "my-model",
+          LOCAL_MODEL_BASE_URL: "http://localhost:8000/v1",
+        },
+      },
+      env,
+    );
+    const after = written(env, values);
+    expect(after.LOCAL_MODEL_API_KEY).toBe("real-key");
+    expect(after.USE_OLLAMA_MODEL).toBeUndefined();
+    expect(detectJudge(after)).toEqual({
+      provider: provider("local"),
+      missing: [],
+    });
+  });
+
+  it("writes nothing about Ollama when Ollama is not selected", () => {
+    expect(
+      judgeEnvValues(
+        provider("anthropic"),
+        { secrets: { ANTHROPIC_API_KEY: "sk-ant" } },
+        { USE_LOCAL_MODEL: "true", LOCAL_MODEL_API_KEY: "vllm" },
+      ),
+    ).toEqual({ USE_ANTHROPIC_MODEL: "true", ANTHROPIC_API_KEY: "sk-ant" });
   });
 });
