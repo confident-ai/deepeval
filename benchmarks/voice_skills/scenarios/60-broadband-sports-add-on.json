@@ -402,7 +402,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "60-broadband-sports-add-on/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {

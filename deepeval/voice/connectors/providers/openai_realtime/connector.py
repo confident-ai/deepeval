@@ -174,7 +174,9 @@ class OpenAIRealtimeConnector(BaseWebSocketConnector):
         while not self._playout.empty():
             self._playout.get_nowait()
         self._interrupted = True
-        self._playout.put_nowait(AgentEvent(turn_complete=True))
+        self._playout.put_nowait(
+            AgentEvent(turn_complete=True, interrupted=True)
+        )
 
     async def _send(self, message: Union[str, bytes]) -> None:
         try:

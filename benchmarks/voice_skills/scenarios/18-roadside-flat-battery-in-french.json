@@ -283,7 +283,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "18-roadside-flat-battery-in-french/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {

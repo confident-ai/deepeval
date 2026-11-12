@@ -9,7 +9,9 @@ from deepeval.benchmarks.voice_skills.journey import (
     build_golden,
     build_graph,
     build_metrics,
+    closed_without_the_work,
     load_journeys,
+    settle_ending,
     stop_when_caller_is_done,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -157,16 +159,8 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             max_user_simulations=self.max_user_simulations,
         )[0]
         metadata = test_case.metadata or {}
-        said = [turn for turn in test_case.turns if turn.role == "user"]
-        if (
-            metadata.get("Simulation ending") is None
-            and said
-            and (said[-1].metadata or {}).get("short_answer") == "done"
-        ):
-            # The agent wrapped up and the caller had nothing left to ask.
-            metadata["Simulation ending"] = "wrapped_up"
-            metadata["Simulation failed"] = bool(metadata.get("Failed nodes"))
-            test_case.metadata = metadata
+        settle_ending(test_case)
+        metadata = test_case.metadata or {}
         scripted = (journey.get("shape") or {}).get("shortest_path")
         if scripted and "Shortest path" in metadata:
             # Measured on the script as written, not on the shortcuts a
@@ -206,4 +200,17 @@ class VoiceSkills(DeepEvalBaseBenchmark):
             except Exception as error:
                 row["reason"] = f"Could not be graded: {error}"
             rows.append(row)
+        tools = next(
+            (row["score"] for row in rows if row["skill"] == "entity_extraction"),
+            None,
+        )
+        if closed_without_the_work(test_case, tools):
+            for row in rows:
+                if row["skill"] == "task_completion":
+                    row.update(
+                        score=0.0,
+                        passed=False,
+                        reason="The call was closed before every expected "
+                        "tool call was made.",
+                    )
         return rows

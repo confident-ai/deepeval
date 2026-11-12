@@ -105,12 +105,19 @@ class _SimulationGraphRunner:
         Tuple[str, str, Optional[SimulationNode], Optional[SimulationNode]]
     ]:
         """Every way out of the current node: its edges, then the reactions."""
+        said = lambda node: bool(state.visits.get(id(node)))
         choices = []
         for child, when in state.current.edges:
-            said_once = child.group is not None and state.visits.get(id(child))
-            if not said_once:
+            said_once = child.group is not None and said(child)
+            # A line already said in another place, out of turn, is not
+            # said again.
+            twin = getattr(child, "same_line_as", None)
+            if not said_once and not (twin is not None and said(twin)):
                 choices.append(("edge", when, child, None))
         for reaction, when, then in self.root.reactions:
+            twin = getattr(reaction, "same_line_as", None)
+            if twin is not None and (said(twin) or said(reaction)):
+                continue
             choices.append(("reaction", when, reaction, then))
         return choices
 
@@ -194,12 +201,15 @@ class _SimulationGraphRunner:
         simulator: "ConversationSimulator",
         state: _GraphConversationState,
         assistant_reply: str,
+        turns: Optional[List[Turn]] = None,
     ) -> None:
         choices = self._choices(state)
         if not choices:
             return  # No edges -> stay on current node (no LLM call).
         prompt = SimulationGraphTemplate.classify_edge(
-            assistant_reply, [when for _, when, _, _ in choices]
+            assistant_reply,
+            [when for _, when, _, _ in choices],
+            _recent(turns),
         )
         choice: EdgeChoice = simulator.generate_schema(prompt, EdgeChoice)
         self._follow(state, choices, choice)
@@ -248,12 +258,15 @@ class _SimulationGraphRunner:
         simulator: "ConversationSimulator",
         state: _GraphConversationState,
         assistant_reply: str,
+        turns: Optional[List[Turn]] = None,
     ) -> None:
         choices = self._choices(state)
         if not choices:
             return
         prompt = SimulationGraphTemplate.classify_edge(
-            assistant_reply, [when for _, when, _, _ in choices]
+            assistant_reply,
+            [when for _, when, _, _ in choices],
+            _recent(turns),
         )
         choice: EdgeChoice = await simulator.a_generate_schema(
             prompt, EdgeChoice
@@ -304,6 +317,18 @@ class _SimulationGraphRunner:
         supported = set(sig.parameters.keys())
         kwargs = {k: v for k, v in candidate_kwargs.items() if k in supported}
         return node.action(**kwargs)
+
+
+def _recent(turns: Optional[List[Turn]], keep: int = 8) -> str:
+    """The last few turns before the assistant's latest reply."""
+    earlier = list(turns or [])
+    if earlier and earlier[-1].role == "assistant":
+        earlier = earlier[:-1]
+    earlier = earlier[-keep:]
+    return "\n".join(
+        f'{"User" if turn.role == "user" else "Assistant"}: {turn.content}'
+        for turn in earlier
+    )
 
 
 def _normalize_user_turn(

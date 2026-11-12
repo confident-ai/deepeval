@@ -318,7 +318,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "85-roadside-dog-locked-in-hot-car/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {

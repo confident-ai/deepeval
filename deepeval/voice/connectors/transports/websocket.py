@@ -50,6 +50,7 @@ class InboundEvent:
     transcript: Optional[str] = None
     provider_transcript: Optional[str] = None
     turn_complete: bool = False
+    interrupted: bool = False
     pong_reply: Optional[Union[str, bytes]] = None
     ready: bool = False
 
@@ -288,7 +289,12 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                             )
                         )
                     if event.turn_complete:
-                        await self._inbound.put(AgentEvent(turn_complete=True))
+                        await self._inbound.put(
+                            AgentEvent(
+                                turn_complete=True,
+                                interrupted=event.interrupted,
+                            )
+                        )
                 elif msg.type in (
                     WSMsgType.CLOSED,
                     WSMsgType.CLOSING,

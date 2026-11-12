@@ -37,6 +37,9 @@ class AgentEvent:
     transcript: Optional[str] = None
     provider_transcript: Optional[str] = None
     turn_complete: bool = False
+    # Set with `turn_complete` when the agent stopped because it heard
+    # something, rather than because it had finished.
+    interrupted: bool = False
     # Tools the agent ran, for connectors that can see them.
     tools_called: Optional[List[ToolCall]] = None
     # Process-local monotonic time this event arrived from the agent. The

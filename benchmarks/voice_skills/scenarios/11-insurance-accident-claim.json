@@ -35,7 +35,7 @@
   "background": null,
   "agent_setup": {
     "today": "Wednesday 12 August 2026, 10:00",
-    "policy": "Before taking claim details say: this call is recorded, and giving false information on a claim is fraud.",
+    "policy": "Before asking the caller for anything, the policy number included, say: this call is recorded, and giving false information on a claim is fraud.",
     "tools": {
       "create_claim": {
         "returns": {
@@ -319,7 +319,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "11-insurance-accident-claim/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {
@@ -518,7 +518,7 @@
       "skill": "required_disclosure",
       "exists": true,
       "name": "Required Disclosure",
-      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "criteria": "The agent delivered the disclosure company policy requires, at the point the policy says, and finished it even when the caller interrupted.",
       "evaluation_params": [
         "content",
         "scenario",

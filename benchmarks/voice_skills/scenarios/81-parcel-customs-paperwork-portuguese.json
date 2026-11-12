@@ -372,7 +372,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "81-parcel-customs-paperwork-portuguese/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {
@@ -431,7 +431,12 @@
       "name": "submit_customs_declaration",
       "input_parameters": {
         "tracking_number": "CB3907114BR",
-        "contents": "baby clothes and a hammock",
+        "contents": {
+          "any_of": [
+            "baby clothes and a hammock",
+            "roupas de bebê e uma rede"
+          ]
+        },
         "value": "140.00",
         "gift": true
       }
@@ -515,7 +520,12 @@
           "name": "submit_customs_declaration",
           "input_parameters": {
             "tracking_number": "CB3907114BR",
-            "contents": "baby clothes and a hammock",
+            "contents": {
+              "any_of": [
+                "baby clothes and a hammock",
+                "roupas de bebê e uma rede"
+              ]
+            },
             "value": "140.00",
             "gift": true
           }

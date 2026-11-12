@@ -740,7 +740,7 @@ class ConversationSimulator:
 
             # Route to the next graph node based on the assistant reply.
             self._graph_runner.advance(
-                self, graph_state, assistant_turn.content
+                self, graph_state, assistant_turn.content, turns
             )
 
             if emission_end:
@@ -1066,7 +1066,7 @@ class ConversationSimulator:
                 route_started = time.perf_counter()
                 logger.debug("Simulation graph routing started")
                 await self._graph_runner.a_advance(
-                    self, graph_state, assistant_turn.content
+                    self, graph_state, assistant_turn.content, turns
                 )
                 logger.debug(
                     "Simulation graph routing finished after %.2fs",

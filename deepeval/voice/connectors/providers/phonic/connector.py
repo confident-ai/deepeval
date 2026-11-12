@@ -193,7 +193,7 @@ class PhonicConnector(BaseWebSocketConnector):
             self._interrupted = True
             self._keep_turn_open()
             self._spoken = ""
-            return InboundEvent(turn_complete=True)
+            return InboundEvent(turn_complete=True, interrupted=True)
 
         if kind == "assistant_finished_speaking":
             self._keep_turn_open()

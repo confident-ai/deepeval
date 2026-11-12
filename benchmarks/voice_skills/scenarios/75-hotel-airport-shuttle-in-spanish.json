@@ -290,7 +290,7 @@
     "catch_all": {
       "say": "Sorry, can you say that again?",
       "audio": "75-hotel-airport-shuttle-in-spanish/_again.wav",
-      "off_script_after": 4
+      "off_script_after": 8
     },
     "short_answers": {
       "fine": {

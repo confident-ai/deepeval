@@ -917,8 +917,12 @@ class DuplexExchange:
                         # Keep listening for follow-up agent speech briefly.
                         continue
                     elif utterance.started:
-                        # The agent said it was done and nobody was barging.
-                        await _finalize_assistant(interrupted=False)
+                        # Nobody was barging. The agent either finished or
+                        # stopped for something it heard, such as its own
+                        # voice coming back down the line.
+                        await _finalize_assistant(
+                            interrupted=event.interrupted
+                        )
                         exchange_done = True
                         continue
 
